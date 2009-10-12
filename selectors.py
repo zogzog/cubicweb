@@ -64,7 +64,7 @@ TRACED_OIDS = ()
 
 def lltrace(selector):
     # don't wrap selectors if not in development mode
-    if CubicWebConfiguration.mode == 'installed':
+    if CubicWebConfiguration.mode == 'system': # XXX config.debug
         return selector
     def traced(cls, *args, **kwargs):
         # /!\ lltrace decorates pure function or __call__ method, this

@@ -75,12 +75,6 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
 class ServerConfiguration(CubicWebConfiguration):
     """standalone RQL server"""
     name = 'repository'
-    if os.environ.get('APYCOT_ROOT'):
-        root = os.environ['APYCOT_ROOT']
-    elif CubicWebConfiguration.mode == 'dev':
-        BACKUP_DIR = CubicWebConfiguration.RUNTIME_DIR
-    else:
-        BACKUP_DIR = '/var/lib/cubicweb/backup/'
 
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])

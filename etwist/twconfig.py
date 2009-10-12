@@ -47,7 +47,7 @@ class TwistedConfiguration(WebConfiguration):
           'default': None,
           'help': 'if this option is set, use the specified user to start \
 the repository rather than the user running the command',
-          'group': 'main', 'inputlevel': (WebConfiguration.mode == 'installed') and 0 or 1,
+          'group': 'main', 'inputlevel': WebConfiguration.mode == 'system'
           }),
         ('session-time',
          {'type' : 'int',

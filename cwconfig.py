@@ -5,6 +5,51 @@
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
+
+If cubicweb is a mercurial checkout (eg `CWDEV` is true), located in
+`CW_SOFTWARE_ROOT`:
+
+ * main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
+   another one with `CW_INSTANCES_DIR` environment variable or simply add some
+   other directories by using `CW_CUBES_PATH`.
+
+ * cubicweb migration files are by default searched in
+   `<CW_SOFTWARE_ROOT>/misc/migration` instead of
+   `/usr/share/cubicweb/migration/`(unless another emplacement is specified
+   using `CW_MIGRATION_DIR`.
+
+ * Cubicweb will start in 'user' mode (see below)
+
+
+On startup, Cubicweb is using a specific *mode*. A mode corresponds to some
+default setting for various resource directories. There are currently 2 main
+modes : 'system', for system wide installation, and 'user', fur user local
+installation (e.g. no root privileges).
+
+'user' mode is activated automatically when cubicweb is a mercurial checkout
+(e.g.  has a .hg directory). You can also force mode by using the `CW_MODE`
+environment variable, to:
+
+* use system wide installation but user specific instances and all, without root
+  privileges on the system (`export CW_MODE=user`)
+
+* use local checkout of cubicweb on system wide instances (requires root
+  privileges on the system (`export CW_MODE=system`)
+
+ Here is the default resource directories settings according to start mode:
+
+* 'system': ::
+
+        CW_INSTANCES_DIR = /etc/cubicweb.d/
+        CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
+        CW_RUNTIME_DIR = /var/run/cubicweb/
+
+ * 'user': ::
+
+        CW_INSTANCES_DIR = ~/etc/cubicweb.d/
+        CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
+        CW_RUNTIME_DIR = /tmp
+
 .. envvar:: CW_CUBES_PATH
 
    Augments the default search path for cubes
@@ -138,6 +183,8 @@ CFGTYPE2ETYPE_MAP = {
 _forced_mode = os.environ.get('CW_MODE')
 assert _forced_mode in (None, 'system', 'user')
 
+CWDEV = exists(join(CW_SOFTWARE_ROOT, '.hg'))
+
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
     """
@@ -148,17 +195,22 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     log_format = '%(asctime)s - (%(name)s) %(levelname)s: %(message)s'
     # nor remove appobjects based on unused interface
     cleanup_interface_sobjects = True
+    # debug mode
+    debug = False
 
     if os.environ.get('APYCOT_ROOT'):
         mode = 'test'
         CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
         # create __init__ file
         file(join(CUBES_DIR, '__init__.py'), 'w').close()
-    elif (exists(join(CW_SOFTWARE_ROOT, '.hg')) and _forced_mode != 'system') or _forced_mode == 'user':
-        mode = 'dev'
+    elif (CWDEV and _forced_mode != 'system'):
+        mode = 'user'
         CUBES_DIR = abspath(normpath(join(CW_SOFTWARE_ROOT, '../cubes')))
     else:
-        mode = 'installed'
+        if _forced_mode == 'user':
+            mode = 'user'
+        else:
+            mode = 'system'
         CUBES_DIR = '/usr/share/cubicweb/cubes/'
 
     options = (
@@ -245,14 +297,14 @@ this option is set to yes",
         """return the shared data directory (i.e. directory where standard
         library views and data may be found)
         """
-        if cls.mode in ('dev', 'test') and not os.environ.get('APYCOT_ROOT'):
+        if CWDEV:
             return join(CW_SOFTWARE_ROOT, 'web')
         return cls.cube_dir('shared')
 
     @classmethod
     def i18n_lib_dir(cls):
         """return instance's i18n directory"""
-        if cls.mode in ('dev', 'test') and not os.environ.get('APYCOT_ROOT'):
+        if CWDEV:
             return join(CW_SOFTWARE_ROOT, 'i18n')
         return join(cls.shared_dir(), 'i18n')
 
@@ -261,7 +313,7 @@ this option is set to yes",
         cubes = set()
         for directory in cls.cubes_search_path():
             for cube in os.listdir(directory):
-                if isdir(join(directory, cube)) and not cube in ('CVS', '.svn', 'shared', '.hg'):
+                if isdir(join(directory, cube)) and not cube == 'shared':
                     cubes.add(cube)
         return sorted(cubes)
 
@@ -497,6 +549,7 @@ this option is set to yes",
                 logthreshold = 'DEBUG'
             else:
                 logthreshold = self['log-threshold']
+        self.debug = debug
         init_log(debug, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
@@ -538,7 +591,7 @@ this option is set to yes",
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
 
-    INSTANCE_DATA_DIR = None
+    INSTANCES_DATA_DIR = None
     if CubicWebNoAppConfiguration.mode == 'test':
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
@@ -546,15 +599,19 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
         MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
-    elif CubicWebNoAppConfiguration.mode == 'dev':
-        REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-        RUNTIME_DIR = tempfile.gettempdir()
-        MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
-    else: #mode = 'installed'
-        REGISTRY_DIR = '/etc/cubicweb.d/'
-        INSTANCE_DATA_DIR = '/var/lib/cubicweb/instances/'
-        RUNTIME_DIR = '/var/run/cubicweb/'
-        MIGRATION_DIR = '/usr/share/cubicweb/migration/'
+    else:
+        if CubicWebNoAppConfiguration.mode == 'user':
+            REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
+            RUNTIME_DIR = tempfile.gettempdir()
+            INSTANCES_DATA_DIR = cls.REGISTRY_DIR
+        else: #mode = 'system'
+            REGISTRY_DIR = '/etc/cubicweb.d/'
+            RUNTIME_DIR = '/var/run/cubicweb/'
+            INSTANCES_DATA_DIR = '/var/lib/cubicweb/instances/'
+        if CWDEV:
+            MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
+        else:
+            MIGRATION_DIR = '/usr/share/cubicweb/migration/'
 
     # for some commands (creation...) we don't want to initialize gettext
     set_language = True
@@ -612,8 +669,7 @@ the repository',
     @classmethod
     def instance_data_dir(cls):
         """return the instance data directory"""
-        return env_path('CW_INSTANCES_DATA_DIR',
-                        cls.INSTANCE_DATA_DIR or cls.REGISTRY_DIR,
+        return env_path('CW_INSTANCES_DATA_DIR', cls.INSTANCES_DATA_DIR,
                         'additional data')
 
     @classmethod
@@ -666,7 +722,7 @@ the repository',
 
     def default_log_file(self):
         """return default path to the log file of the instance'server"""
-        if self.mode == 'dev':
+        if self.mode == 'user':
             basepath = join(tempfile.gettempdir(), '%s-%s' % (basename(self.appid), self.name))
             path = basepath + '.log'
             i = 1

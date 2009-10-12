@@ -18,7 +18,7 @@ from logilab.common.clcommands import register_commands, pop_arg
 from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, underline_title
-from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
 from cubicweb.toolsutils import Command, main_run,  rm, create_dir
 
 def wait_process_end(pid, maxtry=10, waittime=1):
@@ -656,7 +656,7 @@ given, appropriate sources for migration will be automatically selected \
         for cube, fromversion, toversion in toupgrade:
             print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
-        if not (cwcfg.mode == 'dev' or self.config.nostartstop):
+        if not (CWDEV or self.config.nostartstop):
             StopInstanceCommand().stop_instance(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
@@ -679,7 +679,7 @@ given, appropriate sources for migration will be automatically selected \
         mih.shutdown()
         print
         print '-> instance migrated.'
-        if not (cwcfg.mode == 'dev' or self.config.nostartstop):
+        if not (CWDEV or self.config.nostartstop):
             StartInstanceCommand().start_instance(appid)
         print
 
