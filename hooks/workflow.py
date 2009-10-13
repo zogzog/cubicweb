@@ -337,15 +337,3 @@ class DelCustomWorkflow(SetCustomWorkflow):
         if typewf is not None:
             _WorkflowChangedOp(self._cw, eid=self.eidfrom, wfeid=typewf.eid)
 
-
-
-class DelWorkflowHook(WorkflowHook):
-    __regid__ = 'wfdel'
-    __select__ = WorkflowHook.__select__ & entity_implements('Workflow')
-    events = ('after_delete_entity',)
-
-    def __call__(self):
-        # cleanup unused state and transition
-        self._cw.execute('DELETE State X WHERE NOT X state_of Y')
-        self._cw.execute('DELETE Transition X WHERE NOT X transition_of Y')
-
