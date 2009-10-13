@@ -504,6 +504,7 @@ class LogFormTemplate(View):
 
     def login_form(self, id):
         _ = self._cw._
+        # XXX turn into a form
         self.w(u'<form method="post" action="%s" id="login_form">\n'
                % xml_escape(login_form_url(self._cw.vreg.config, self._cw)))
         self.w(u'<table>\n')
