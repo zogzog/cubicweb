@@ -21,13 +21,14 @@ from logilab.common.testlib import TestCase, InnerTest
 from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
-from logilab.common.decorators import cached, classproperty
+from logilab.common.decorators import cached, classproperty, clear_cache
 from logilab.common.deprecation import deprecated
 
-from cubicweb import NoSelectableObject, cwconfig, devtools, web, server
+from cubicweb import NoSelectableObject, AuthenticationError
+from cubicweb import cwconfig, devtools, web, server
 from cubicweb.dbapi import repo_connect, ConnectionProperties, ProgrammingError
 from cubicweb.sobjects import notification
-from cubicweb.web import application
+from cubicweb.web import Redirect, application
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser
 
@@ -226,7 +227,7 @@ class CubicWebTC(TestCase):
         cls.config.repository = lambda x=None: cls.repo
         # necessary for authentication tests
         cls.cnx.login = cls.admlogin
-        cls.cnx.password = cls.admpassword
+        cls.cnx.authinfo = {'password': cls.admpassword}
 
     @classmethod
     def _refresh_repo(cls):
@@ -497,6 +498,9 @@ class CubicWebTC(TestCase):
         ctrl = self.vreg['controllers'].select('json', req)
         return ctrl.publish(), req
 
+    def app_publish(self, req, path='view'):
+        return self.app.publish(path, req)
+
     def publish(self, req):
         """call the publish method of the edit controller"""
         ctrl = self.vreg['controllers'].select('edit', req)
@@ -508,22 +512,60 @@ class CubicWebTC(TestCase):
             raise
         return result
 
-    def expect_redirect_publish(self, req):
-        """call the publish method of the edit controller, expecting to get a
-        Redirect exception."""
+    def expect_redirect(self, callback, req):
+        """call the given callback with req as argument, expecting to get a
+        Redirect exception
+        """
         try:
-            self.publish(req)
-        except web.Redirect, ex:
+            res = callback(req)
+        except Redirect, ex:
             try:
                 path, params = ex.location.split('?', 1)
-            except:
-                path, params = ex.location, ""
-            req._url = path
-            cleanup = lambda p: (p[0], unquote(p[1]))
-            params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
-            return req.relative_path(False), params # path.rsplit('/', 1)[-1], params
+            except ValueError:
+                path = ex.location
+                params = {}
+            else:
+                cleanup = lambda p: (p[0], unquote(p[1]))
+                params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
+            path = path[len(req.base_url()):]
+            return path, params
         else:
             self.fail('expected a Redirect exception')
+
+    def expect_redirect_publish(self, req, path='view'):
+        """call the publish method of the application publisher, expecting to
+        get a Redirect exception
+        """
+        return self.expect_redirect(lambda x: self.publish(x, path), req)
+
+    def init_authentication(self, authmode, anonuser=None):
+        self.set_option('auth-mode', authmode)
+        self.set_option('anonymous-user', anonuser)
+        req = self.request()
+        origcnx = req.cnx
+        req.cnx = None
+        sh = self.app.session_handler
+        authm = sh.session_manager.authmanager
+        authm.authinforetreivers[-1].anoninfo = self.vreg.config.anonymous_user()
+        # not properly cleaned between tests
+        self.open_sessions = sh.session_manager._sessions = {}
+        return req, origcnx
+
+    def assertAuthSuccess(self, req, origcnx, nbsessions=1):
+        sh = self.app.session_handler
+        path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
+        cnx = req.cnx
+        self.assertEquals(len(self.open_sessions), nbsessions, self.open_sessions)
+        self.assertEquals(cnx.login, origcnx.login)
+        self.assertEquals(cnx.anonymous_connection, False)
+        self.assertEquals(path, 'view')
+        self.assertEquals(params, {'__message': 'welcome %s !' % cnx.user().login})
+
+    def assertAuthFailure(self, req):
+        self.assertRaises(AuthenticationError, self.app.connect, req)
+        self.assertEquals(req.cnx, None)
+        self.assertEquals(len(self.open_sessions), 0)
+        clear_cache(req, 'get_authorization')
 
     # content validation #######################################################
 
