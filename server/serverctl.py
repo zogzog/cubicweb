@@ -106,7 +106,7 @@ def repo_cnx(config):
         login, pwd = manager_userpasswd()
     while True:
         try:
-            return in_memory_cnx(config, login, pwd)
+            return in_memory_cnx(config, login, password=pwd)
         except AuthenticationError:
             print '-> Error: wrong user/password.'
             # reset cubes else we'll have an assertion error on next retry

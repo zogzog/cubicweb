@@ -111,20 +111,21 @@ def get_repository(method, database=None, config=None, vreg=None):
         except Exception, ex:
             raise ConnectionError(str(ex))
 
-def repo_connect(repo, login, password, cnxprops=None):
+def repo_connect(repo, login, **kwargs):
     """Constructor to create a new connection to the CubicWeb repository.
 
     Returns a Connection instance.
     """
-    cnxprops = cnxprops or ConnectionProperties('inmemory')
-    cnxid = repo.connect(unicode(login), password, cnxprops=cnxprops)
-    cnx = Connection(repo, cnxid, cnxprops)
-    if cnxprops.cnxtype == 'inmemory':
+    if not 'cnxprops' in kwargs:
+        kwargs['cnxprops'] = ConnectionProperties('inmemory')
+    cnxid = repo.connect(unicode(login), **kwargs)
+    cnx = Connection(repo, cnxid, kwargs['cnxprops'])
+    if kwargs['cnxprops'].cnxtype == 'inmemory':
         cnx.vreg = repo.vreg
     return cnx
 
-def connect(database=None, login=None, password=None, host=None, group=None,
-            cnxprops=None, setvreg=True, mulcnx=True, initlog=True):
+def connect(database=None, login=None, host=None, group=None,
+            cnxprops=None, setvreg=True, mulcnx=True, initlog=True, **kwargs):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
@@ -154,11 +155,11 @@ def connect(database=None, login=None, password=None, host=None, group=None,
         vreg.set_schema(schema)
     else:
         vreg = None
-    cnx = repo_connect(repo, login, password, cnxprops)
+    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     cnx.vreg = vreg
     return cnx
 
-def in_memory_cnx(config, login, password):
+def in_memory_cnx(config, login, **kwargs):
     """usefull method for testing and scripting to get a dbapi.Connection
     object connected to an in-memory repository instance
     """
@@ -171,7 +172,7 @@ def in_memory_cnx(config, login, password):
     repo = get_repository('inmemory', config=config, vreg=vreg)
     # connection to the CubicWeb repository
     cnxprops = ConnectionProperties('inmemory')
-    cnx = repo_connect(repo, login, password, cnxprops=cnxprops)
+    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     return repo, cnx
 
 

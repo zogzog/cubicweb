@@ -175,7 +175,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     session.commit()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, login, pwd)
+    repo, cnx = in_memory_cnx(config, login, password=pwd)
     assert len(repo.sources) == 1, repo.sources
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)

@@ -204,7 +204,7 @@ def init_test_database(config=None, configdir='data'):
         raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
-                              sources['admin']['password'] or 'xxx')
+                              password=sources['admin']['password'] or 'xxx')
     if driver == 'sqlite':
         install_sqlite_patch(repo.querier)
     return repo, cnx

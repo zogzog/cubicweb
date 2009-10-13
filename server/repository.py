@@ -378,7 +378,7 @@ class Repository(object):
             session.close()
         return login
 
-    def authenticate_user(self, session, login, password):
+    def authenticate_user(self, session, login, **kwargs):
         """validate login / password, raise AuthenticationError on failure
         return associated CWUser instance on success
         """
@@ -387,7 +387,7 @@ class Repository(object):
         for source in self.sources:
             if source.support_entity('CWUser'):
                 try:
-                    eid = source.authenticate(session, login, password)
+                    eid = source.authenticate(session, login, **kwargs)
                     break
                 except AuthenticationError:
                     continue
@@ -526,7 +526,7 @@ class Repository(object):
             session.close()
         return True
 
-    def connect(self, login, password, cnxprops=None):
+    def connect(self, login, **kwargs):
         """open a connection for a given user
 
         base_url may be needed to send mails
@@ -539,10 +539,10 @@ class Repository(object):
         session = self.internal_session()
         # try to get a user object
         try:
-            user = self.authenticate_user(session, login, password)
+            user = self.authenticate_user(session, login, **kwargs)
         finally:
             session.close()
-        session = Session(user, self, cnxprops)
+        session = Session(user, self, kwargs.get('cnxprops'))
         user._cw = user.cw_rset.req = session
         user.clear_related_cache()
         self._sessions[session.id] = session

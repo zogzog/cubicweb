@@ -295,14 +295,16 @@ class CubicWebTC(TestCase):
             self._orig_cnx.commit()
         return user
 
-    def login(self, login, password=None):
+    def login(self, login, **kwargs):
         """return a connection for the given login/password"""
         if login == self.admlogin:
             self.restore_connection()
         else:
+            if not kwargs:
+                kwargs['password'] = str(login)
             self.cnx = repo_connect(self.repo, unicode(login),
-                                    password or str(login),
-                                    ConnectionProperties('inmemory'))
+                                    cnxprops=ConnectionProperties('inmemory'),
+                                    **kwargs)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
         return self.cnx

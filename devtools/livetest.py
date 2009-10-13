@@ -151,7 +151,7 @@ class LiveTestCase(TestCase):
         # build a config, and get a connection
         self.config = LivetestConfiguration(self.cube, self.sourcefile)
         _, user, passwd, _ = loadconf()
-        self.repo, self.cnx = in_memory_cnx(self.config, user, passwd)
+        self.repo, self.cnx = in_memory_cnx(self.config, user, password=passwd)
         self.setup_db(self.cnx)
 
     def tearDown(self):

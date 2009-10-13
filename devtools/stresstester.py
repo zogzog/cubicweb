@@ -156,7 +156,7 @@ def run(args):
     # get local access to the repository
     print "Creating repo", prof_file
     repo = Repository(config, prof_file)
-    cnxid = repo.connect(user, password)
+    cnxid = repo.connect(user, password=password)
     # connection to the CubicWeb repository
     repo_cnx = Connection(repo, cnxid)
     repo_cursor = repo_cnx.cursor()

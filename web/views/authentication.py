@@ -81,13 +81,14 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=self.log_queries)
         try:
-            cnx = repo_connect(self.repo, login, password, cnxprops=cnxprops)
+            cnx = repo_connect(self.repo, login, password=password,
+                               cnxprops=cnxprops)
         except AuthenticationError:
             req.set_message(req._('authentication failure'))
             # restore an anonymous connection if possible
             anonlogin, anonpassword = self.vreg.config.anonymous_user()
             if anonlogin and anonlogin != login:
-                cnx = repo_connect(self.repo, anonlogin, anonpassword,
+                cnx = repo_connect(self.repo, anonlogin, password=anonpassword,
                                    cnxprops=cnxprops)
                 self._init_cnx(cnx, anonlogin, anonpassword)
             else:

@@ -57,7 +57,7 @@ class GAEAuthenticationManager(AbstractAuthenticationManager):
         clear_cache(req, 'cursor')
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=False)
-        cnx = repo_connect(self._repo, login, password, cnxprops=cnxprops)
+        cnx = repo_connect(self._repo, login, password=password, cnxprops=cnxprops)
         self._init_cnx(cnx, login, password)
         # associate the connection to the current request
         req.set_connection(cnx)
