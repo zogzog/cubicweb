@@ -257,7 +257,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
         }
 
     _allowed_form_types = ('main', 'inlined', 'muledit')
-    _allowed_values = {'main': ('attributes', 'relations', 'metadata', 'hidden'),
+    _allowed_values = {'main': ('attributes', 'inlined', 'relations',
+                                'metadata', 'hidden'),
                        'inlined': ('attributes', 'hidden'),
                        'muledit': ('attributes', 'hidden'),
                        }
@@ -311,7 +312,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
             for formtype, section in self.bw_tag_map[tag].iteritems():
                 warn('[3.6] add tag to autoform section by specifying form '
                      'type and tag. Replace %s by formtype=%s, section=%s'
-                     % (tag, formtype, section), DeprecationWarning, stacklevel=2)
+                     % (tag, formtype, section), DeprecationWarning,
+                     stacklevel=3)
                 self.tag_relation(key, formtype, section)
         assert formtype in self._allowed_form_types, \
                'formtype should be in (%s), not %s' % (
