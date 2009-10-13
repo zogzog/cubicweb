@@ -12,7 +12,7 @@ from datetime import time, datetime, timedelta
 
 from logilab.common.decorators import cached
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized, RegistryException, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.utils import ustrftime, strptime, todate, todatetime
 
@@ -254,8 +254,12 @@ class RequestSessionBase(object):
     def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
              **kwargs):
         """shortcut to self.vreg.view method avoiding to pass the request"""
-        return self.vreg[__registry].render(__vid, self, __fallback_oid,
-                                            rset=rset, **kwargs)
+        try:
+            view =  self.vreg[__registry].select(__vid, self, rset=rset, **kwargs)
+        except RegistryException:
+            view =  self.vreg[__registry].select(__fallback_oid, self,
+                                                 rset=rset, **kwargs)
+        return view.render(**kwargs)
 
     def format_date(self, date, date_format=None, time=False):
         """return a string for a date time according to instance's

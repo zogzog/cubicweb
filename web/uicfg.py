@@ -63,7 +63,7 @@ Automatic form configuration
 :autoform_section:
    where to display a relation in entity form, according to form type.
    `tag_attribute`, `tag_subject_of` and `tag_object_of` methods for this
-   relation tags expect two arguments additionaly to the relation key: a
+    relation tags expect two arguments additionaly to the relation key: a
    `formtype` and a `section`.
 
    formtype may be one of:

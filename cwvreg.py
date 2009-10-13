@@ -174,12 +174,13 @@ VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
 
 class ViewsRegistry(CWRegistry):
 
-    def main_template(self, req, oid='main-template', **kwargs):
+    def main_template(self, req, oid='main-template', rset=None, **kwargs):
         """display query by calling the given template (default to main),
         and returning the output as a string instead of requiring the [w]rite
         method as argument
         """
-        res = self.render(oid, req, **kwargs)
+        obj = self.select(oid, req, rset=rset, **kwargs)
+        res = obj.render(**kwargs)
         if isinstance(res, unicode):
             return res.encode(req.encoding)
         assert isinstance(res, str)

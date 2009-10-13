@@ -237,7 +237,7 @@ class ChangeLogView(StartupView):
 
 
 class ChangeLogAction(action.Action):
-    id = 'changelog'
+    __regid__ = 'changelog'
     __select__ = yes()
 
     category = 'footer'
@@ -245,11 +245,11 @@ class ChangeLogAction(action.Action):
     title = ChangeLogView.title
 
     def url(self):
-        return self.req.build_url('changelog')
+        return self._cw.build_url('changelog')
 
 
 class AboutAction(action.Action):
-    id = 'about'
+    __regid__ = 'about'
     __select__ = yes()
 
     category = 'footer'
@@ -257,5 +257,5 @@ class AboutAction(action.Action):
     title = _('about this site')
 
     def url(self):
-        return self.req.build_url('doc/about')
+        return self._cw.build_url('doc/about')
 

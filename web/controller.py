@@ -89,12 +89,12 @@ class Controller(AppObject):
         # XXX assigning to self really necessary?
         self.cw_rset = None
         if rql:
-            self.req.ensure_ro_rql(rql)
+            self._cw.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
-                rql = unicode(rql, self.req.encoding)
-            pp = self.vreg['components'].select_or_none('magicsearch', self.req)
+                rql = unicode(rql, self._cw.encoding)
+            pp = self._cw.vreg['components'].select_or_none('magicsearch', self._cw)
             if pp is not None:
-                self.cw_rset = pp.process_query(rql, self.req)
+                self.cw_rset = pp.process_query(rql)
         return self.cw_rset
 
     def check_expected_params(self, params):
@@ -103,7 +103,7 @@ class Controller(AppObject):
         """
         missing = []
         for param in params:
-            if not self.req.form.get(param):
+            if not self._cw.form.get(param):
                 missing.append(param)
         if missing:
             raise RequestError('missing required parameter(s): %s'
@@ -123,7 +123,7 @@ class Controller(AppObject):
         redirect_info = set()
         eidtypes = tuple(eidtypes)
         for eid, etype in eidtypes:
-            entity = self.req.entity_from_eid(eid, etype)
+            entity = self._cw.entity_from_eid(eid, etype)
             path, params = entity.after_deletion_path()
             redirect_info.add( (path, tuple(params.iteritems())) )
             entity.delete()
@@ -133,22 +133,22 @@ class Controller(AppObject):
         else:
             self._after_deletion_path = iter(redirect_info).next()
         if len(eidtypes) > 1:
-            self.req.set_message(self.req._('entities deleted'))
+            self._cw.set_message(self._cw._('entities deleted'))
         else:
-            self.req.set_message(self.req._('entity deleted'))
+            self._cw.set_message(self._cw._('entity deleted'))
 
     def delete_relations(self, rdefs):
         """delete relations from the repository"""
         # FIXME convert to using the syntax subject:relation:eids
-        execute = self.req.execute
+        execute = self._cw.execute
         for subj, rtype, obj in rdefs:
             rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
-        self.req.set_message(self.req._('relations deleted'))
+        self._cw.set_message(self._cw._('relations deleted'))
 
     def insert_relations(self, rdefs):
         """insert relations into the repository"""
-        execute = self.req.execute
+        execute = self._cw.execute
         for subj, rtype, obj in rdefs:
             rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
@@ -160,11 +160,11 @@ class Controller(AppObject):
         """
         newparams = {}
         # sets message if needed
-        if self.req.message:
-            newparams['__message'] = self.req.message
-        if self.req.form.has_key('__action_apply'):
+        if self._cw.message:
+            newparams['__message'] = self._cw.message
+        if self._cw.form.has_key('__action_apply'):
             self._return_to_edition_view(newparams)
-        if self.req.form.has_key('__action_cancel'):
+        if self._cw.form.has_key('__action_cancel'):
             self._return_to_lastpage(newparams)
         else:
             self._return_to_original_view(newparams)
@@ -173,7 +173,7 @@ class Controller(AppObject):
     def _return_to_original_view(self, newparams):
         """validate-button case"""
         # transforms __redirect[*] parameters into regular form parameters
-        newparams.update(redirect_params(self.req.form))
+        newparams.update(redirect_params(self._cw.form))
         # find out if we have some explicit `rql` needs
         rql = newparams.pop('rql', None)
         # if rql is needed (explicit __redirectrql or multiple deletions for
@@ -181,9 +181,9 @@ class Controller(AppObject):
         if rql:
             path = 'view'
             newparams['rql'] = rql
-        elif '__redirectpath' in self.req.form:
+        elif '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
-            path = self.req.form['__redirectpath']
+            path = self._cw.form['__redirectpath']
             if self._edited_entity and path != self._edited_entity.rest_path():
                 # XXX may be here on modification? if yes the message should be
                 # modified where __createdpath is detected (cw.web.request)
@@ -199,18 +199,18 @@ class Controller(AppObject):
         else:
             path = 'view'
         url = self._cw.build_url(path, **newparams)
-        url = append_url_params(url, self.req.form.get('__redirectparams'))
+        url = append_url_params(url, self._cw.form.get('__redirectparams'))
         raise Redirect(url)
 
 
     def _return_to_edition_view(self, newparams):
         """apply-button case"""
-        form = self.req.form
+        form = self._cw.form
         if self._edited_entity:
             path = self._edited_entity.rest_path()
             newparams.pop('rql', None)
         # else, fallback on the old `view?rql=...` url form
-        elif 'rql' in self.req.form:
+        elif 'rql' in self._cw.form:
             path = 'view'
             newparams['rql'] = form['rql']
         else:
@@ -232,13 +232,13 @@ class Controller(AppObject):
         __redirectpath is specifying that place if found, else we look in the
         request breadcrumbs for the last visited page.
         """
-        if '__redirectpath' in self.req.form:
+        if '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
-            path = self.req.form['__redirectpath']
+            path = self._cw.form['__redirectpath']
             url = self._cw.build_url(path, **newparams)
-            url = append_url_params(url, self.req.form.get('__redirectparams'))
+            url = append_url_params(url, self._cw.form.get('__redirectparams'))
         else:
-            url = self.req.last_visited_page()
+            url = self._cw.last_visited_page()
         raise Redirect(url)
 
 

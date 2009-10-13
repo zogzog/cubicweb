@@ -424,11 +424,12 @@ class HTMLPageFooter(View):
     def call(self, **kwargs):
         req = self._cw
         self.w(u'<div class="footer">')
-        actions = self.vreg['actions'].possible_actions(self.req, rset=self.rset)
+        actions = self._cw.vreg['actions'].possible_actions(self._cw,
+                                                            rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
             self.w(u'<a href="%s">%s</a>' % (action.url(),
-                                             self.req._(action.title)))
+                                             self._cw._(action.title)))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
         self.w(u'</div>')
