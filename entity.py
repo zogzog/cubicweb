@@ -824,7 +824,7 @@ class Entity(AppObject, dict):
         """
         from indexer.query_objects import tokenize
         # take care to cases where we're modyfying the schema
-        pending = self.req.transaction_data.setdefault('pendingrdefs', set())
+        pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
         words = []
         for rschema in self.e_schema.indexable_attributes():
             if (self.e_schema, rschema) in pending:
