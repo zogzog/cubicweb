@@ -12,6 +12,7 @@ import sha
 import time
 import random
 import base64
+from datetime import date
 from urlparse import urlsplit
 from itertools import count
 
@@ -442,7 +443,7 @@ class CubicWebRequestBase(DBAPIRequest):
         except KeyError:
             return Cookie.SimpleCookie()
 
-    def set_cookie(self, cookie, key, maxage=300):
+    def set_cookie(self, cookie, key, maxage=300, expires=None):
         """set / update a cookie key
 
         by default, cookie will be available for the next 5 minutes.
@@ -452,20 +453,15 @@ class CubicWebRequestBase(DBAPIRequest):
         morsel = cookie[key]
         if maxage is not None:
             morsel['Max-Age'] = maxage
+        if expires:
+            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
         # make sure cookie is set on the correct path
         morsel['path'] = self.base_url_path()
         self.add_header('Set-Cookie', morsel.OutputString())
 
     def remove_cookie(self, cookie, key):
         """remove a cookie by expiring it"""
-        morsel = cookie[key]
-        morsel['Max-Age'] = 0
-        # The only way to set up cookie age for IE is to use an old "expired"
-        # syntax. IE doesn't support Max-Age there is no library support for
-        # managing
-        # ===> Do _NOT_ comment this line :
-        morsel['expires'] = 'Thu, 01-Jan-1970 00:00:00 GMT'
-        self.add_header('Set-Cookie', morsel.OutputString())
+        self.set_cookie(cookie, key, maxage=0, expires=date(1970, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename

@@ -98,7 +98,7 @@ class FakeRequest(CubicWebRequestBase):
         """
         return self._headers.get(header, default)
 
-    def set_cookie(self, cookie, key, maxage=300):
+    def set_cookie(self, cookie, key, maxage=300, expires=None):
         """set / update a cookie key
 
         by default, cookie will be available for the next 5 minutes
