@@ -9,6 +9,7 @@ validity
 __docformat__ = "restructuredtext en"
 
 from cubicweb import ValidationError
+from cubicweb.schema import RQLVocabularyConstraint
 from cubicweb.selectors import entity_implements
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.server import hook
@@ -165,7 +166,8 @@ class CheckAttributeConstraintHook(IntegrityHook):
 
     def __call__(self):
         schema = self._cw.vreg.schema
-        for attr in self.entity.edited_attributes:
+        entity = self.entity
+        for attr in entity.edited_attributes:
             if schema.rschema(attr).is_final():
                 constraints = [c for c in entity.e_schema.constraints(attr)
                                if isinstance(c, RQLVocabularyConstraint)]
