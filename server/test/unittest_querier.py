@@ -907,7 +907,8 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne Y: Y nom 'toto'")
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 1)
-        self.execute("DELETE Personne Y WHERE Y nom 'toto'")
+        drset = self.execute("DELETE Personne Y WHERE Y nom 'toto'")
+        self.assertEqual(drset.rows, rset.rows)
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 0)
 
