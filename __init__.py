@@ -101,9 +101,9 @@ class RequestSessionMixIn(object):
         return self.decorate_rset(rset)
 
     def empty_rset(self):
-        """return a result set for the given eid without doing actual query
-        (we have the eid, we can suppose it exists and user has access to the
-        entity)
+        """return an empty result set. This is used e.g. to substitute
+        to a real result set if the user doesn't have permission to
+        access the results of a query.
         """
         from cubicweb.rset import ResultSet
         return self.decorate_rset(ResultSet([], 'Any X WHERE X eid -1'))
