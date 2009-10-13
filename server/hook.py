@@ -37,6 +37,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from logging import getLogger
+from itertools import chain
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
@@ -114,6 +115,14 @@ def regular_session(cls, req, **kwargs):
         return 0
     return 1
 
+
+class rechain(object):
+    def __init__(self, *iterators):
+        self.iterators = iterators
+    def __iter__(self):
+        return iter(chain(*self.iterators))
+
+
 class match_rtype(match_search_state):
     """accept if parameters specified as initializer arguments are specified
     in named arguments given to the selector
@@ -121,6 +130,14 @@ class match_rtype(match_search_state):
     :param *expected: parameters (eg `basestring`) which are expected to be
                       found in named arguments (kwargs)
     """
+    def __init__(self, *expected):
+        self.expected = expected
+        if len(expected) == 1:
+            try:
+                iter(expected[0])
+                self.expected = expected[0]
+            except TypeError:
+                pass
 
     @lltrace
     def __call__(self, cls, req, *args, **kwargs):
@@ -193,11 +210,11 @@ set_log_methods(Hook, getLogger('cubicweb.hook'))
 class PropagateSubjectRelationHook(Hook):
     """propagate permissions and nosy list when new entity are added"""
     events = ('after_add_relation',)
+
     # to set in concrete class
-    rtype = None
+    main_rtype = None
     subject_relations = None
     object_relations = None
-    accepts = None # subject_relations + object_relations
 
     def __call__(self):
         for eid in (self.eidfrom, self.eidto):
@@ -218,6 +235,7 @@ class PropagateSubjectRelationHook(Hook):
 class PropagateSubjectRelationAddHook(Hook):
     """propagate on existing entities when a permission or nosy list is added"""
     events = ('after_add_relation',)
+
     # to set in concrete class
     main_rtype = None
     subject_relations = None
@@ -241,6 +259,7 @@ class PropagateSubjectRelationAddHook(Hook):
 class PropagateSubjectRelationDelHook(Hook):
     """propagate on existing entities when a permission is deleted"""
     events = ('after_delete_relation',)
+
     # to set in concrete class
     main_rtype = None
     subject_relations = None
