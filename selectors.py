@@ -43,7 +43,7 @@ above by::
 __docformat__ = "restructuredtext en"
 
 import logging
-from warnings import warn
+from warnings import warn, filterwarnings
 
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
@@ -977,6 +977,10 @@ class score_entity(EntitySelector):
 
 
 # XXX DEPRECATED ##############################################################
+# XXX remove when deprecated functions are removed
+filterwarnings('ignore',
+               category=DeprecationWarning,
+               module='cubicweb.selectors')
 from cubicweb.vregistry import chainall
 
 yes_selector = deprecated()(yes)
@@ -1171,3 +1175,4 @@ def has_relation_compat(registered):
                                                 action=getattr(cls, 'require_permission', 'read'))
         return cls
     return plug_selector
+
