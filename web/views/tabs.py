@@ -195,7 +195,7 @@ class TabedPrimaryView(TabsMixin, primary.PrimaryView):
 
 
 class PrimaryTab(primary.PrimaryView):
-    id = 'main_tab'
+    __regid__ = 'main_tab'
     title = None
 
     def is_primary(self):

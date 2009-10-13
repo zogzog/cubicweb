@@ -366,7 +366,7 @@ class SiteInfoAction(ManagersAction):
 # footer actions ###############################################################
 
 class PoweredByAction(action.Action):
-    id = 'poweredby'
+    __regid__ = 'poweredby'
     __select__ = yes()
 
     category = 'footer'
