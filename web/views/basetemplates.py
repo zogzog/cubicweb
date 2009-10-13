@@ -58,7 +58,7 @@ class LoggedOutTemplate(LogInOutTemplate):
         # FIXME Deprecated code ?
         msg = self._cw._('you have been logged out')
         w(u'<h2>%s</h2>\n' % msg)
-        if self._cw.config['anonymous-user']:
+        if self._cw.vreg.config['anonymous-user']:
             indexurl = self._cw.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),
@@ -489,7 +489,7 @@ class LogFormTemplate(View):
 
         if message:
             self.display_message()
-        if self._cw.config['auth-mode'] == 'http':
+        if self._cw.vreg.config['auth-mode'] == 'http':
             # HTTP authentication
             pass
         else:
@@ -505,21 +505,27 @@ class LogFormTemplate(View):
     def login_form(self, id):
         _ = self._cw._
         self.w(u'<form method="post" action="%s" id="login_form">\n'
-               % xml_escape(login_form_url(self._cw.config, self._cw)))
+               % xml_escape(login_form_url(self._cw.vreg.config, self._cw)))
         self.w(u'<table>\n')
+        self.add_fields()
         self.w(u'<tr>\n')
-        msg = (self._cw.config['allow-email-login'] and _('login or email')) or _('login')
-        self.w(u'<td><label for="__login">%s</label></td>' % msg)
-        self.w(u'<td><input name="__login" id="__login" class="data" type="text" /></td>')
-        self.w(u'</tr><tr>\n')
-        self.w(u'<td><label for="__password" >%s</label></td>' % _('password'))
-        self.w(u'<td><input name="__password" id="__password" class="data" type="password" /></td>\n')
-        self.w(u'</tr><tr>\n')
         self.w(u'<td>&#160;</td><td><input type="submit" class="loginButton right" value="%s" />\n</td>' % _('log in'))
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
         self.w(u'</form>\n')
         self._cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+
+    def add_fields(self):
+        msg = (self._cw.vreg.config['allow-email-login'] and _('login or email')) or _('login')
+        self.add_field('__login', msg, 'text')
+        self.add_field('__password', self._cw._('password'), 'password')
+
+    def add_field(self, name, label, inputtype):
+        self.w(u'<tr>\n')
+        self.w(u'<td><label for="%s" >%s</label></td>' % (name, label))
+        self.w(u'<td><input name="%s" id="%s" class="data" type="%s" /></td>\n' %
+               (name, name, inputtype))
+        self.w(u'</tr>\n')
 
 
 def login_form_url(config, req):

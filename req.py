@@ -11,6 +11,7 @@ from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 
 from cubicweb import Unauthorized, RegistryException, typed_eid
 from cubicweb.rset import ResultSet
@@ -332,3 +333,13 @@ class RequestSessionBase(object):
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         raise NotImplementedError
+
+    @property
+    @deprecated('[3.6] use _cw.vreg.config')
+    def config(self):
+        return self.vreg.config
+
+    @property
+    @deprecated('[3.6] use _cw.vreg.schema')
+    def schema(self):
+        return self.vreg.schema

@@ -356,11 +356,11 @@ class SourceDbCWAttributeAdd(hook.Operation):
                            table, column, ex)
         # final relations are not infered, propagate
         try:
-            eschema = self.schema.eschema(rdef.subject)
+            eschema = self._cw.vreg.schema.eschema(rdef.subject)
         except KeyError:
             return # entity type currently being added
         # propagate attribute to children classes
-        rschema = self.schema.rschema(rdef.name)
+        rschema = self._cw.vreg.schema.rschema(rdef.name)
         # if relation type has been inserted in the same transaction, its final
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True

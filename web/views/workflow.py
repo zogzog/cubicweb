@@ -39,9 +39,9 @@ _abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
 _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 
 _afs = uicfg.autoform_section
-_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'generated')
-_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'generated')
-_afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 
 
 # IWorkflowable views #########################################################

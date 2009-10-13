@@ -199,19 +199,19 @@ class PropagateSubjectRelationHook(Hook):
     object_relations = None
     accepts = None # subject_relations + object_relations
 
-    def call(self, session, fromeid, rtype, toeid):
-        for eid in (fromeid, toeid):
-            etype = session.describe(eid)[0]
-            if not self.schema.eschema(etype).has_subject_relation(self.rtype):
+    def __call__(self):
+        for eid in (self.eidfrom, self.eidto):
+            etype = self._cw.describe(eid)[0]
+            if not self.schema.eschema(etype).has_subject_relation(self.main_rtype):
                 return
-        if rtype in self.subject_relations:
-            meid, seid = fromeid, toeid
+        if self.rtype in self.subject_relations:
+            meid, seid = self.eidfrom, self.eidto
         else:
-            assert rtype in self.object_relations
-            meid, seid = toeid, fromeid
-        session.unsafe_execute(
+            assert self.rtype in self.object_relations
+            meid, seid = self.eidto, self.eidfrom
+        self._cw.unsafe_execute(
             'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
-            % (self.rtype, self.rtype, self.rtype),
+            % (self.main_rtype, self.main_rtype, self.main_rtype),
             {'x': meid, 'e': seid}, ('x', 'e'))
 
 
@@ -219,48 +219,46 @@ class PropagateSubjectRelationAddHook(Hook):
     """propagate on existing entities when a permission or nosy list is added"""
     events = ('after_add_relation',)
     # to set in concrete class
-    rtype = None
+    main_rtype = None
     subject_relations = None
     object_relations = None
-    accepts = None # (self.rtype,)
 
-    def call(self, session, fromeid, rtype, toeid):
-        eschema = self.schema.eschema(session.describe(fromeid)[0])
-        execute = session.unsafe_execute
+    def __call__(self):
+        eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
             if eschema.has_subject_relation(rel):
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                        'X %s R, NOT R %s P' % (rtype, rel, rtype),
-                        {'x': fromeid, 'p': toeid}, 'x')
+                        'X %s R, NOT R %s P' % (self.rtype, rel, self.rtype),
+                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
         for rel in self.object_relations:
             if eschema.has_object_relation(rel):
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                        'R %s X, NOT R %s P' % (rtype, rel, rtype),
-                        {'x': fromeid, 'p': toeid}, 'x')
+                        'R %s X, NOT R %s P' % (self.rtype, rel, self.rtype),
+                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
 
 
 class PropagateSubjectRelationDelHook(Hook):
     """propagate on existing entities when a permission is deleted"""
     events = ('after_delete_relation',)
     # to set in concrete class
-    rtype = None
+    main_rtype = None
     subject_relations = None
     object_relations = None
-    accepts = None # (self.rtype,)
 
-    def call(self, session, fromeid, rtype, toeid):
-        eschema = self.schema.eschema(session.describe(fromeid)[0])
-        execute = session.unsafe_execute
+    def __call__(self):
+        eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
             if eschema.has_subject_relation(rel):
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                        'X %s R' % (rtype, rel),
-                        {'x': fromeid, 'p': toeid}, 'x')
+                        'X %s R' % (self.rtype, rel),
+                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
         for rel in self.object_relations:
             if eschema.has_object_relation(rel):
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                        'R %s X' % (rtype, rel),
-                        {'x': fromeid, 'p': toeid}, 'x')
+                        'R %s X' % (self.rtype, rel),
+                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
 
 
 # abstract classes for operation ###############################################

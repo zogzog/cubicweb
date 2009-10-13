@@ -212,7 +212,7 @@ class ServerMigrationHelper(MigrationHelper):
                 login, pwd = manager_userpasswd()
             while True:
                 try:
-                    self._cnx = repo_connect(self.repo, login, pwd)
+                    self._cnx = repo_connect(self.repo, login, password=pwd)
                     if not 'managers' in self._cnx.user(self.session).groups:
                         print 'migration need an account in the managers group'
                     else:

@@ -108,7 +108,7 @@ class UserLink(component.Component):
             self.anon_user_link()
 
     def anon_user_link(self):
-        if self._cw.config['auth-mode'] == 'cookie':
+        if self._cw.vreg.config['auth-mode'] == 'cookie':
             self.w(self._cw._('anonymous'))
             self.w(u'''&#160;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
                    % (self._cw._('i18n_login_popup')))

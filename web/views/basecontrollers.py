@@ -116,13 +116,13 @@ class ViewController(Controller):
             except Exception, ex:
                 self.exception('while handling __method')
                 req.set_message(req._("error while handling __method: %s") % req._(ex))
-        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.schema)
+        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
         try:
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except ObjectNotFound:
             self.warning("the view %s could not be found", vid)
             req.set_message(req._("The view %s could not be found") % vid)
-            vid = vid_from_rset(req, rset, self._cw.schema)
+            vid = vid_from_rset(req, rset, self._cw.vreg.schema)
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             if rset:
@@ -131,7 +131,7 @@ class ViewController(Controller):
                 req.set_message(req._("You have no access to this view or it can not "
                                       "be used to display the current data."))
             self.warning("the view %s can not be applied to this query", vid)
-            vid = vid_from_rset(req, rset, self._cw.schema)
+            vid = vid_from_rset(req, rset, self._cw.vreg.schema)
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         return view, rset
 
@@ -345,7 +345,7 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.schema)
+        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
         try:
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
