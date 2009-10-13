@@ -82,15 +82,15 @@ class FakeRequest(CubicWebRequestBase):
 
     def set_header(self, header, value):
         """set an output HTTP header"""
-        pass
+        self._headers[header] = value
 
     def add_header(self, header, value):
         """set an output HTTP header"""
-        pass
+        self._headers[header] = value # XXX
 
     def remove_header(self, header):
         """remove an output HTTP header"""
-        pass
+        self._headers.pop(header, None)
 
     def get_header(self, header, default=None):
         """return the value associated with the given input header,
@@ -103,11 +103,19 @@ class FakeRequest(CubicWebRequestBase):
 
         by default, cookie will be available for the next 5 minutes
         """
-        pass
+        morsel = cookie[key]
+        if maxage is not None:
+            morsel['Max-Age'] = maxage
+        if expires:
+            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
+        # make sure cookie is set on the correct path
+        morsel['path'] = self.base_url_path()
+        self.add_header('Set-Cookie', morsel.OutputString())
+        self.add_header('Cookie', morsel.OutputString())
 
     def remove_cookie(self, cookie, key):
-        """remove a cookie by expiring it"""
-        pass
+        self.remove_header('Set-Cookie')
+        self.remove_header('Cookie')
 
     def validate_cache(self):
         pass
