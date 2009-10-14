@@ -415,18 +415,11 @@ class WorkflowableMixIn(object):
     @cached
     def cwetype_workflow(self):
         """return the default workflow for entities of this type"""
-        # XXX CWEType method
-        wfrset = self.req.execute('Any WF WHERE X is ET, X eid %(x)s, '
-                                  'WF workflow_of ET', {'x': self.eid}, 'x')
-        if len(wfrset) == 1:
+        wfrset = self.req.execute('Any WF WHERE ET default_workflow WF, '
+                                  'ET name %(et)s', {'et': self.id})
+        if wfrset:
             return wfrset.get_entity(0, 0)
-        if len(wfrset) > 1:
-            for wf in wfrset.entities():
-                if wf.is_default_workflow_of(self.id):
-                    return wf
-            self.warning("can't find default workflow for %s", self.id)
-        else:
-            self.warning("can't find any workflow for %s", self.id)
+        self.warning("can't find any workflow for %s", self.id)
         return None
 
     def possible_transitions(self, type='normal'):
