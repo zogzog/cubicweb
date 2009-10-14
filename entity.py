@@ -18,7 +18,7 @@ from logilab.mtconverter import TransformData, TransformError, xml_escape
 from rql import parse
 from rql.utils import rqlvar_maker
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
@@ -338,7 +338,7 @@ class Entity(AppObject, dict):
         meaning that the entity has to be created
         """
         try:
-            int(self.eid)
+            typed_eid(self.eid)
             return True
         except (ValueError, TypeError):
             return False
