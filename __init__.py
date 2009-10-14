@@ -136,7 +136,14 @@ class RequestSessionMixIn(object):
         relations = []
         restrictions = set()
         cachekey = []
+        pending_relations = []
         for attr, value in kwargs.iteritems():
+            if isinstance(value, (tuple, list, set, frozenset)):
+                if len(value) == 1:
+                    value = iter(value).next()
+                else:
+                    pending_relations.append( (attr, value) )
+                    continue
             if hasattr(value, 'eid'): # non final relation
                 rvar = attr.upper()
                 # XXX safer detection of object relation
@@ -155,7 +162,16 @@ class RequestSessionMixIn(object):
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        return self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+        created = self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+        for attr, values in pending_relations:
+            if attr.startswith('reverse_'):
+                restr = 'Y %s X' % attr[len('reverse_'):]
+            else:
+                restr = 'X %s Y' % attr
+            self.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+                restr, ','.join(str(r.eid) for r in values)),
+                         {'x': created.eid}, 'x')
+        return created
 
     # url generation methods ##################################################
 

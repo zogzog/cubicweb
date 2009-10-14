@@ -470,15 +470,17 @@ du :eid:`1:*ReST*`'''
 
     def test_create_entity(self):
         p1 = self.add_entity('Personne', nom=u'fayolle', prenom=u'alexandre')
+        p2 = self.add_entity('Personne', nom=u'campeas', prenom=u'aurelien')
         note = self.add_entity('Note', type=u'z')
         req = self.request()
         p = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien',
-                              connait=p1, evaluee=p1,
+                              connait=p1, evaluee=[p1, p2],
                               reverse_ecrit_par=note)
         self.assertEquals(p.nom, 'di mascio')
         self.assertEquals([c.nom for c in p.connait], ['fayolle'])
-        self.assertEquals([c.nom for c in p.evaluee], ['fayolle'])
+        self.assertEquals(sorted([c.nom for c in p.evaluee]), ['campeas', 'fayolle'])
         self.assertEquals([c.type for c in p.reverse_ecrit_par], ['z'])
+
 
 
 if __name__ == '__main__':
