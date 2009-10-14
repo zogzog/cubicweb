@@ -845,9 +845,14 @@ class Entity(AppObject, dict):
             self._related_cache.pop('%s_%s' % (rtype, role), None)
 
     def clear_all_caches(self):
+        haseid = 'eid' in self
         self.clear()
         for rschema, _, role in self.e_schema.relation_definitions():
             self.clear_related_cache(rschema.type, role)
+        # set eid if it was in, else we may get nasty error while editing this
+        # entity if it's bound to a repo session
+        if haseid:
+            self['eid'] = self.eid
 
     # raw edition utilities ###################################################
 
