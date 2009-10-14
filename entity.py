@@ -872,6 +872,20 @@ class Entity(AppObject, dict):
             self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                              kwargs, 'x')
 
+    def set_relations(self, _cw_unsafe=False, **kwargs):
+        if _cw_unsafe:
+            execute = self.req.unsafe_execute
+        else:
+            execute = self.req.execute
+        for attr, values in kwargs.iteritems():
+            if attr.startswith('reverse_'):
+                restr = 'Y %s X' % attr[len('reverse_'):]
+            else:
+                restr = 'X %s Y' % attr
+            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+                restr, ','.join(str(r.eid) for r in values)),
+                    {'x': self.eid}, 'x')
+
     def delete(self):
         assert self.has_eid(), self.eid
         self.req.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
