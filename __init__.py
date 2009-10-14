@@ -24,6 +24,7 @@ from urllib import quote as urlquote, unquote as urlunquote
 from logilab.common.decorators import cached
 from logilab.common.logging_ext import set_log_methods
 
+
 if os.environ.get('APYCOT_ROOT'):
     logging.basicConfig(level=logging.CRITICAL)
 else:
@@ -122,30 +123,34 @@ class RequestSessionMixIn(object):
     def set_entity_cache(self, entity):
         pass
 
-    def create_entity(self, etype, *args, **kwargs):
+    def create_entity(self, etype, **kwargs):
         """add a new entity of the given type
         
         Example (in a shell session):
 
         c = create_entity('Company', name=u'Logilab')
-        create_entity('Person', ('works_for', 'Y'),
-                      Y=c.eid, firstname=u'John', lastname=u'Doe')
+        create_entity('Person', works_for=c, firstname=u'John', lastname=u'Doe')
 
         """
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = set()
         cachekey = []
-        for rtype, rvar in args:
-            relations.append('X %s %s' % (rtype, rvar))
-            restriction = '%s eid %%(%s)s' % (rvar, rvar)
-            if not restriction in restrictions:
-                restrictions.add(restriction)
-            cachekey.append(rvar)
-        for attr in kwargs:
-            if attr in cachekey:
-                continue
-            relations.append('X %s %%(%s)s' % (attr, attr))
+        for attr, value in kwargs.iteritems():
+            if hasattr(value, 'eid'): # non final relation
+                rvar = attr.upper()
+                # XXX safer detection of object relation
+                if attr.startswith('reverse_'):
+                    relations.append('%s %s X' % (rvar, attr[len('reverse_'):]))
+                else:
+                    relations.append('X %s %s' % (attr, rvar))
+                restriction = '%s eid %%(%s)s' % (rvar, attr)
+                if not restriction in restrictions:
+                    restrictions.add(restriction)
+                cachekey.append(attr)
+                kwargs[attr] = value.eid
+            else: # attribute
+                relations.append('X %s %%(%s)s' % (attr, attr))
         if relations:
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
