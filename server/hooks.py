@@ -553,13 +553,20 @@ def after_add_trinfo(session, entity):
     assert forentity.current_state.eid == entity['to_state'], (
         forentity.eid, forentity.current_state.name)
     if forentity.main_workflow.eid != forentity.current_workflow.eid:
+        SubWorkflowExitOp(session, forentity=forentity, trinfo=entity)
+
+class SubWorkflowExitOp(PreCommitOperation):
+    def precommit_event(self):
+        session = self.session
+        forentity = self.forentity
+        trinfo = self.trinfo
         # we're in a subworkflow, check if we've reached an exit point
         wftr = forentity.subworkflow_input_transition()
         if wftr is None:
             # inconsistency detected
-            msg = entity.req._("state doesn't belong to entity's current workflow")
-            raise ValidationError(entity.eid, {'to_state': msg})
-        tostate = wftr.get_exit_point(forentity, entity['to_state'])
+            msg = session._("state doesn't belong to entity's current workflow")
+            raise ValidationError(self.trinfo.eid, {'to_state': msg})
+        tostate = wftr.get_exit_point(forentity, trinfo['to_state'])
         if tostate is not None:
             # reached an exit point
             msg = session._('exiting from subworkflow %s')
