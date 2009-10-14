@@ -127,8 +127,9 @@ class RequestSessionMixIn(object):
         
         Example (in a shell session):
 
-        c = create_entity('Company', name='Logilab')
-        create_entity('Person', ('works_for', 'Y'), Y=c.eid, firstname='John', lastname='Doe')
+        c = create_entity('Company', name=u'Logilab')
+        create_entity('Person', ('works_for', 'Y'),
+                      Y=c.eid, firstname=u'John', lastname=u'Doe')
 
         """
         rql = 'INSERT %s X' % etype
