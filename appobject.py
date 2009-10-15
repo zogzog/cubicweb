@@ -251,7 +251,7 @@ class AppObject(object):
         the right hook to create an instance for example). By default the
         appobject is returned without any transformation.
         """
-        try:
+        try: # XXX < 3.6 bw compat
             pdefs = cls.property_defs
         except AttributeError:
             pdefs = getattr(cls, 'cw_property_defs', {})
