@@ -193,7 +193,7 @@ class Widget(object):
         if the field is monovalued (like all attribute fields, but not all non
         final relation fields
         """
-        if self.rschema.is_final():
+        if self.rschema.final:
             return entity.attribute_values(self.name)
         elif entity.has_eid():
             return [row[0] for row in entity.related(self.name, self.role)]
@@ -844,7 +844,7 @@ def widget_factory(vreg, subjschema, rschema, objschema, role='subject',
         eclass, objschema = _eclass_eschema(objschema)
     if eclass is not None and rschema in getattr(eclass, 'widgets', ()):
         wcls = WIDGETS[eclass.widgets[rschema]]
-    elif not rschema.is_final():
+    elif not rschema.final:
         card = rschema.rproperty(subjschema, objschema, 'cardinality')
         if role == 'object':
             multiple = card[1] in '+*'

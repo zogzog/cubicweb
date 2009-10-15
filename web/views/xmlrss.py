@@ -89,7 +89,7 @@ class XMLRsetView(AnyRsetView):
                 if '(' in tag:
                     attrs['expr'] = tag
                     tag = 'funccall'
-                if val is not None and not eschema(etype).is_final():
+                if val is not None and not eschema(etype).final:
                     attrs['eid'] = val
                     # csvrow.append(val) # val is eid in that case
                     val = self.view('textincontext', rset,

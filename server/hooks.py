@@ -244,7 +244,7 @@ def uniquecstrcheck_before_modification(session, entity):
     for attr, val in entity.items():
         if val is None:
             continue
-        if eschema.subject_relation(attr).is_final() and \
+        if eschema.subjrels[attr].final and \
                eschema.has_unique_values(attr):
             rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
             rset = session.unsafe_execute(rql, {'val': val})
@@ -257,7 +257,7 @@ def cstrcheck_after_update_attributes(session, entity):
         return
     schema = session.vreg.schema
     for attr in entity.edited_attributes:
-        if schema.rschema(attr).is_final():
+        if schema.rschema(attr).final:
             constraints = [c for c in entity.e_schema.constraints(attr)
                            if isinstance(c, RQLVocabularyConstraint)]
             if constraints:

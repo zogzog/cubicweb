@@ -346,8 +346,8 @@ class EntityFieldsForm(FieldsForm):
             for field in field.actual_fields(self):
                 fieldname = field.name
                 if fieldname != 'eid' and (
-                    (eschema.has_subject_relation(fieldname) or
-                     eschema.has_object_relation(fieldname))):
+                    (fieldname in eschema.subjrels or
+                     fieldname in eschema.objrels)):
                     field.eidparam = True
                     self.fields.append(HiddenInitialValueField(field))
         return super(EntityFieldsForm, self).build_context(values)
@@ -375,7 +375,7 @@ class EntityFieldsForm(FieldsForm):
             return INTERNAL_FIELD_VALUE
         if attr == '__type':
             return entity.id
-        if self.schema.rschema(attr).is_final():
+        if self.schema.rschema(attr).final:
             attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
                 return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
@@ -457,7 +457,7 @@ class EntityFieldsForm(FieldsForm):
         if isinstance(rtype, basestring):
             rtype = entity.schema.rschema(rtype)
         done = None
-        assert not rtype.is_final(), rtype
+        assert not rtype.final, rtype
         if entity.has_eid():
             done = set(e.eid for e in getattr(entity, str(rtype)))
         result = []

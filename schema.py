@@ -239,7 +239,7 @@ def system_etypes(schema):
     """return system entity types only: skip final, schema and application entities
     """
     for eschema in schema.entities():
-        if eschema.is_final() or eschema.schema_entity():
+        if eschema.final or eschema.schema_entity():
             continue
         yield eschema.type
 
@@ -301,7 +301,7 @@ class CubicWebEntitySchema(EntitySchema):
         may_need_has_text, has_has_text = False, False
         need_has_text = None
         for rschema in self.subject_relations():
-            if rschema.is_final():
+            if rschema.final:
                 if rschema == 'has_text':
                     has_has_text = True
                 elif self.rproperty(rschema, 'fulltextindexed'):
@@ -433,7 +433,7 @@ class CubicWebRelationSchema(RelationSchema):
 
     def rql_expression(self, expression, mainvars=None, eid=None):
         """rql expression factory"""
-        if self.is_final():
+        if self.final:
             return ERQLExpression(expression, mainvars, eid)
         return RRQLExpression(expression, mainvars, eid)
 
@@ -473,7 +473,7 @@ class CubicWebSchema(Schema):
         edef.name = bw_normalize_etype(edef.name)
         assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
         eschema = super(CubicWebSchema, self).add_entity_type(edef)
-        if not eschema.is_final():
+        if not eschema.final:
             # automatically add the eid relation to non final entity types
             rdef = ybo.RelationDefinition(eschema.type, 'eid', 'Int',
                                           cardinality='11', uid=True)

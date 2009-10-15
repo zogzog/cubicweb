@@ -169,7 +169,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         rschema = entity.schema.rschema(rtype)
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
-        if rschema.is_final():
+        if rschema.final:
             onsubmit = ("return inlineValidateAttributeForm('%(rtype)s', '%(eid)s', '%(divid)s', "
                         "%(reload)s, '%(default)s');")
             form = self._build_form(
@@ -400,7 +400,7 @@ class CopyFormView(EditionFormView):
                                  self.copying.eid)
         for rschema, _, role in form.relations_by_category(form.attrcategories,
                                                            'add'):
-            if not rschema.is_final():
+            if not rschema.final:
                 # ensure relation cache is filed
                 rset = self.copying.related(rschema, role)
                 self.newentity.set_related_cache(rschema, role, rset)

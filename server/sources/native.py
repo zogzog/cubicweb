@@ -71,7 +71,7 @@ def make_schema(selected, solution, table, typemap):
         try:
             sql.append('%s %s' % (name, typemap[ttype]))
         except KeyError:
-            # assert not schema(ttype).is_final()
+            # assert not schema(ttype).final
             sql.append('%s %s' % (name, typemap['Int']))
     return ','.join(sql), varmap
 

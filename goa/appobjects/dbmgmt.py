@@ -175,7 +175,7 @@ class ContentClear(StartupView):
         # XXX should use unsafe_execute with all hooks deactivated
         # XXX step by catching datastore errors?
         for eschema in self.schema.entities():
-            if eschema.is_final() or eschema in self.skip_etypes:
+            if eschema.final or eschema in self.skip_etypes:
                 continue
             self.req.execute('DELETE %s X' % eschema)
             self.w(u'deleted all %s entities<br/>' % eschema)

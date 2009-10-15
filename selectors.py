@@ -682,9 +682,9 @@ class relation_possible(EClassSelector):
         eschema = eclass.e_schema
         try:
             if self.role == 'object':
-                rschema = eschema.object_relation(self.rtype)
+                rschema = eschema.objrels[self.rtype]
             else:
-                rschema = eschema.subject_relation(self.rtype)
+                rschema = eschema.subjrels[self.rtype]
         except KeyError:
             return 0
         if self.target_etype is not None:
@@ -899,7 +899,7 @@ class has_add_permission(EClassSelector):
     """
     def score(self, cls, req, etype):
         eschema = cls.schema.eschema(etype)
-        if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
+        if not (eschema.final or eschema.is_subobject(strict=True)) \
                and eschema.has_perm(req, 'add'):
             return 1
         return 0

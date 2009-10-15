@@ -75,8 +75,8 @@ class SSPlanner(object):
                 if reverse:
                     rdefs[i] = rtype, RelationsStep.REVERSE_RELATION
                 else:
-                    rschema = eschema.subject_relation(rtype)
-                    if rschema.is_final() or rschema.inlined:
+                    rschema = eschema.subjrels[rtype]
+                    if rschema.final or rschema.inlined:
                         rdefs[i] = rtype, RelationsStep.FINAL
                     else:
                         rdefs[i] = rtype, RelationsStep.RELATION
@@ -147,7 +147,7 @@ class SSPlanner(object):
                 selected_index[rhs.as_string('utf-8')] = index
                 index += 1
             rschema = getrschema(relation.r_type)
-            if rschema.is_final() or rschema.inlined:
+            if rschema.final or rschema.inlined:
                 attrrelations.append(relation)
             else:
                 relations.append(relation)

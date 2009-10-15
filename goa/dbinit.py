@@ -90,7 +90,7 @@ def init_persistent_schema(ssession, schema):
     eschema = schema.eschema('CWEType')
     execute(rql, {'name': u'CWEType', 'descr': unicode(eschema.description)})
     for eschema in schema.entities():
-        if eschema.is_final() or eschema == 'CWEType':
+        if eschema.final or eschema == 'CWEType':
             continue
         execute(rql, {'name': unicode(eschema),
                       'descr': unicode(eschema.description)})

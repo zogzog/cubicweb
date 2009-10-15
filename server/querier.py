@@ -389,7 +389,7 @@ class InsertPlan(ExecutionPlan):
                     # add constant values to entity def
                     value = rhs.eval(self.args)
                     eschema = edef.e_schema
-                    attrtype = eschema.subject_relation(rtype).objects(eschema)[0]
+                    attrtype = eschema.subjrels[rtype].objects(eschema)[0]
                     if attrtype == 'Password' and isinstance(value, unicode):
                         value = value.encode('UTF8')
                     edef[rtype] = value

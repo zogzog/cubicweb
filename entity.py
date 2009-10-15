@@ -238,7 +238,7 @@ class Entity(AppObject, dict):
         _fetchattrs = []
         for attr in fetchattrs:
             try:
-                rschema = eschema.subject_relation(attr)
+                rschema = eschema.subjrels[attr]
             except KeyError:
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
                             attr, cls.id)
@@ -249,7 +249,7 @@ class Entity(AppObject, dict):
             selection.append(var)
             restriction = '%s %s %s' % (mainvar, attr, var)
             restrictions.append(restriction)
-            if not rschema.is_final():
+            if not rschema.final:
                 # XXX this does not handle several destination types
                 desttype = rschema.objects(eschema.type)[0]
                 card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
@@ -290,7 +290,7 @@ class Entity(AppObject, dict):
             needcheck = not cls.e_schema.has_unique_values(mainattr)
         else:
             for rschema in cls.e_schema.subject_relations():
-                if rschema.is_final() and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
+                if rschema.final and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
                     mainattr = str(rschema)
                     needcheck = False
                     break
@@ -487,7 +487,7 @@ class Entity(AppObject, dict):
         assert self.has_eid()
         execute = self.req.execute
         for rschema in self.e_schema.subject_relations():
-            if rschema.is_final() or rschema.meta:
+            if rschema.final or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
@@ -535,7 +535,7 @@ class Entity(AppObject, dict):
     def to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
         for rschema in self.e_schema.subject_relations():
-            if rschema.is_final():
+            if rschema.final:
                 continue
             if len(rschema.objects(self.e_schema)) > 1:
                 # ambigous relations, the querier doesn't handle

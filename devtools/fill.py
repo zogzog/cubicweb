@@ -347,7 +347,7 @@ class RelationsQueriesGenerator(object):
         queries = []
         #   1/ skip final relations and explictly ignored relations
         rels = [rschema for rschema in self.schema.relations()
-                if not (rschema.is_final() or rschema in ignored_relations)]
+                if not (rschema.final or rschema in ignored_relations)]
         # for each relation
         #   2/ take each possible couple (subj, obj)
         #   3/ analyze cardinality of relation

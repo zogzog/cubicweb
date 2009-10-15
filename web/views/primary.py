@@ -104,7 +104,7 @@ class PrimaryView(EntityView):
     def render_entity_attributes(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
-            if rschema.is_final() or vid == 'reledit':
+            if rschema.final or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
@@ -191,7 +191,7 @@ class PrimaryView(EntityView):
         self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
-        if rschema.is_final():
+        if rschema.final:
             show_label = self.show_attr_label
         else:
             show_label = self.show_rel_label

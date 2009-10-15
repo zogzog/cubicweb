@@ -1022,8 +1022,8 @@ class Repository(object):
         # XXX use entity.keys here since edited_attributes is not updated for
         # inline relations
         for attr in entity.keys():
-            rschema = eschema.subject_relation(attr)
-            if not rschema.is_final(): # inlined relation
+            rschema = eschema.subjrels[attr]
+            if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))
         entity.set_defaults()
         entity.check(creation=True)
@@ -1041,7 +1041,7 @@ class Repository(object):
             rtype = str(rschema)
             if rtype in VIRTUAL_RTYPES:
                 continue
-            if rschema.is_final():
+            if rschema.final:
                 entity.setdefault(rtype, None)
             else:
                 entity.set_related_cache(rtype, 'subject', session.empty_rset())
@@ -1081,8 +1081,8 @@ class Repository(object):
         for attr in edited_attributes:
             if attr == 'eid':
                 continue
-            rschema = eschema.subject_relation(attr)
-            if rschema.is_final():
+            rschema = eschema.subjrels[attr]
+            if rschema.final:
                 if eschema.rproperty(attr, 'fulltextindexed'):
                     need_fti_update = True
                 only_inline_rels = False

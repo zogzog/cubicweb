@@ -226,7 +226,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                     self.ldap: {'Y': s[0], 'X': s[0]}}, True)
 
     def test_complex_aggregat(self):
-        solindexes = set(range(len([e for e in self.schema.entities() if not e.is_final()])))
+        solindexes = set(range(len([e for e in self.schema.entities() if not e.final])))
         self._test('Any MAX(X)',
                    {self.system: {'X': solindexes}}, False)
 

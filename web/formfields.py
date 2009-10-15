@@ -524,7 +524,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
         help = rschema.rproperty(eschema, targetschema, 'description')
-        if rschema.is_final():
+        if rschema.final:
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
                 kwargs.setdefault('internationalizable', True)
             def get_default(form, es=eschema, rs=rschema):
@@ -540,7 +540,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     else:
         kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs.setdefault('help', help)
-    if rschema.is_final():
+    if rschema.final:
         if skip_meta_attr and rschema in eschema.meta_attributes():
             return None
         fieldclass = FIELDS[targetschema]

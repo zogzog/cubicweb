@@ -80,7 +80,7 @@ class OWLView(StartupView):
         """get a layout for a whole schema"""
         self.skiptypes = skiptypes
         entities = sorted(eschema for eschema in self.schema.entities()
-                          if not eschema.is_final() or eschema in skiptypes)
+                          if not eschema.final or eschema in skiptypes)
         self.w(u'<!-- classes definition -->')
         for eschema in entities:
             self.visit_entityschema(eschema)

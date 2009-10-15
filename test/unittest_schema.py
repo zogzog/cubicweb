@@ -88,7 +88,7 @@ class CubicWebSchemaTC(TestCase):
         self.assertEqual(esociete.type, 'Societe')
         self.assertEqual(schema.has_relation('TEST'), 0)
         self.assertEqual(schema.has_relation('test'), 1)
-        self.assertEqual(eperson.subject_relation('test').type, 'test')
+        self.assertEqual(eperson.subjrels['test'].type, 'test')
         self.assertEqual(schema.has_relation('Concerne'), 0)
         self.assertEqual(schema.has_relation('concerne'), 1)
         self.assertEqual(schema.rschema('concerne').type, 'concerne')

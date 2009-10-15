@@ -47,7 +47,7 @@ class SchemaViewer(object):
                                            klass='titleUnderline'),))
         layout.append(esection)
         eschemas = [eschema for eschema in schema.entities()
-                    if not (eschema.is_final() or eschema in skiptypes)]
+                    if not (eschema.final or eschema in skiptypes)]
         for eschema in sorted(eschemas):
             esection.append(self.visit_entityschema(eschema, skiptypes))
         if display_relations:
@@ -55,7 +55,7 @@ class SchemaViewer(object):
             rsection = Section(children=(title,))
             layout.append(rsection)
             relations = [rschema for rschema in schema.relations()
-                         if not (rschema.is_final() or rschema.type in skiptypes)]
+                         if not (rschema.final or rschema.type in skiptypes)]
             keys = [(rschema.type, rschema) for rschema in relations]
             for key, rschema in sorted(keys):
                 relstr = self.visit_relationschema(rschema)
@@ -143,7 +143,7 @@ class SchemaViewer(object):
         data.append(Section(children=rels, klass='rels'))
         data.append(Section(children=t_vars, klass='vars'))
         layout.append(Section(children=data, klass='entityAttributes'))
-        if eschema.is_final(): # stop here for final entities
+        if eschema.final: # stop here for final entities
             return layout
         _ = self.req._
         if self.req.user.matching_groups('managers'):

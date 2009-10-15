@@ -25,8 +25,8 @@ def check_entity_attributes(session, entity):
     for attr in editedattrs:
         if attr in defaults:
             continue
-        rschema = eschema.subject_relation(attr)
-        if rschema.is_final(): # non final relation are checked by other hooks
+        rschema = eschema.subjrels[attr]
+        if rschema.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
             rschema.check_perm(session, 'add', eid)
 

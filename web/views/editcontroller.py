@@ -95,7 +95,7 @@ class EditController(ViewController):
         # needs some information provided by those inlined relation. Moreover
         # this will generate less write queries.
         for rschema in entity.e_schema.subject_relations():
-            if rschema.is_final():
+            if rschema.final:
                 self.handle_attribute(entity, rschema, formparams)
             elif rschema.inlined:
                 self.handle_inlined_relation(rschema, formparams, entity)
@@ -129,11 +129,11 @@ class EditController(ViewController):
             formparams[var] = eid
             execute(rql, formparams)
         for rschema in entity.e_schema.subject_relations():
-            if rschema.is_final() or rschema.inlined:
+            if rschema.final or rschema.inlined:
                 continue
             self.handle_relation(rschema, formparams, 'subject', entity)
         for rschema in entity.e_schema.object_relations():
-            if rschema.is_final():
+            if rschema.final:
                 continue
             self.handle_relation(rschema, formparams, 'object', entity)
         if edited:
@@ -228,7 +228,7 @@ class EditController(ViewController):
                     #    self.relations.append('X %s_format %%(%s)s'
                     #                          % (attr, key))
                     # XXX suppose a File compatible schema
-                    if entity.e_schema.has_subject_relation('name') \
+                    if 'name' in entity.e_schema.subjrels \
                            and not formparams.get('name'):
                         formparams['name'] = value[0]
                         self.relations.append('X name %(name)s')

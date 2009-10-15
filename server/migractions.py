@@ -306,7 +306,7 @@ class ServerMigrationHelper(MigrationHelper):
             return
         newrschema = self.fs_schema[ertype]
         teid = self.repo.schema[ertype].eid
-        if 'update' in newrschema.ACTIONS or newrschema.is_final():
+        if 'update' in newrschema.ACTIONS or newrschema.final:
             # entity type
             exprtype = u'ERQLExpression'
         else:
@@ -643,7 +643,7 @@ class ServerMigrationHelper(MigrationHelper):
             # XXX (syt) plz explain: if we're adding an entity type, it should
             # not be there...
             eschema = instschema[etype]
-            if eschema.is_final():
+            if eschema.final:
                 instschema.del_entity_type(etype)
         else:
             eschema = self.fs_schema.eschema(etype)
@@ -686,7 +686,7 @@ class ServerMigrationHelper(MigrationHelper):
                         if role == 'subject':
                             subjschema = spschema
                             objschema = tschema
-                            if rschema.final and instspschema.has_subject_relation(rschema):
+                            if rschema.final and rschema in instspschema.subjrels:
                                 # attribute already set, has_rdef would check if
                                 # it's of the same type, we don't want this so
                                 # simply skip here
@@ -852,7 +852,7 @@ class ServerMigrationHelper(MigrationHelper):
         """unregister an existing relation definition"""
         rschema = self.repo.schema.rschema(rtype)
         # unregister the definition from CWAttribute or CWRelation
-        if rschema.is_final():
+        if rschema.final:
             etype = 'CWAttribute'
         else:
             etype = 'CWRelation'

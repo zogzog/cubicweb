@@ -32,7 +32,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
     allpossibletypes = {}
     for solution in solutions:
         for varname, etype in solution.iteritems():
-            if not varname in newroot.defined_vars or eschema(etype).is_final():
+            if not varname in newroot.defined_vars or eschema(etype).final:
                 continue
             allpossibletypes.setdefault(varname, set()).add(etype)
     for varname in sorted(allpossibletypes):
@@ -289,7 +289,7 @@ class RQLRewriter(object):
         stinfo = self.varinfo['stinfo']
         for rel in stinfo['relations']:
             rschema = self.schema.rschema(rel.r_type)
-            if rschema.is_final() or (rschema.inlined and
+            if rschema.final or (rschema.inlined and
                                       not rel in stinfo['rhsrelations']):
                 self.select.remove_node(rel)
                 rel.children[0].name = selectvar

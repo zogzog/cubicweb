@@ -86,7 +86,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
                     yield (rschema, targetschemas, role)
                     continue
-                if rschema.is_final():
+                if rschema.final:
                     if not rschema.has_perm(entity.req, permission, eid):
                         continue
                 elif role == 'subject':
@@ -126,7 +126,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         result = []
         for rschema, ttypes, role in cls.erelations_by_category(
             entity, categories, permission, strict=strict):
-            if rschema.is_final():
+            if rschema.final:
                 continue
             result.append((rschema.display_name(entity.req, role), rschema, role))
         return sorted(result)

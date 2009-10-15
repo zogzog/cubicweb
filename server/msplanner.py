@@ -334,7 +334,7 @@ class PartPlanInformation(object):
             for i, sol in enumerate(self._solutions):
                 vartype = sol[varname]
                 # skip final variable
-                if eschema(vartype).is_final():
+                if eschema(vartype).final:
                     break
                 for source in repo.sources:
                     if source.support_entity(vartype):
@@ -381,7 +381,7 @@ class PartPlanInformation(object):
             # process non final relations only
             # note: don't try to get schema for 'is' relation (not available
             # during bootstrap)
-            if not rel.is_types_restriction() and not rschema(rel.r_type).is_final():
+            if not rel.is_types_restriction() and not rschema(rel.r_type).final:
                 # nothing to do if relation is not supported by multiple sources
                 # or if some source has it listed in its cross_relations
                 # attribute
@@ -457,7 +457,7 @@ class PartPlanInformation(object):
             repo = self._repo
             rschema = self._schema.rschema
             for rel in self.plan.rqlst.main_relations:
-                if not rschema(rel.r_type).is_final():
+                if not rschema(rel.r_type).final:
                     # nothing to do if relation is not supported by multiple sources
                     if len(repo.rel_type_sources(rel.r_type)) < 2:
                         continue
@@ -730,7 +730,7 @@ class PartPlanInformation(object):
                             # its lhs/rhs variable isn't in "terms", and the
                             # other end *is* in "terms", mark it have to be
                             # selected
-                            if source.uri != 'system' and not rschema(rel.r_type).is_final():
+                            if source.uri != 'system' and not rschema(rel.r_type).final:
                                 lhs, rhs = rel.get_variable_parts()
                                 try:
                                     lhsvar = lhs.variable
@@ -1003,7 +1003,7 @@ class PartPlanInformation(object):
         for varname, mapping in step.outputmap.iteritems():
             if varname in inputmap and \
                    not (mapping == inputmap[varname] or
-                        self._schema.eschema(solutions[0][varname]).is_final()):
+                        self._schema.eschema(solutions[0][varname]).final):
                 self._conflicts.append((varname, inputmap[varname]))
         inputmap.update(step.outputmap)
         self.plan.add_step(step)
@@ -1359,7 +1359,7 @@ class TermsFiltererVisitor(object):
                 return False
         if not self.final and not relation in self.terms:
             rschema = self.schema.rschema(relation.r_type)
-            if not rschema.is_final():
+            if not rschema.final:
                 for term in relation.get_nodes((VariableRef, Constant)):
                     term = getattr(term, 'variable', term)
                     termsources = sorted(set(x[0] for x in self.ppi._term_sources(term)))
@@ -1370,7 +1370,7 @@ class TermsFiltererVisitor(object):
     def visit_relation(self, node, newroot, terms):
         if not node.is_types_restriction():
             if node in self.skip and self.solindices.issubset(self.skip[node]):
-                if not self.schema.rschema(node.r_type).is_final():
+                if not self.schema.rschema(node.r_type).final:
                     # can't really skip the relation if one variable is selected and only
                     # referenced by this relation
                     for vref in node.iget_nodes(VariableRef):
@@ -1403,7 +1403,7 @@ class TermsFiltererVisitor(object):
                 vref.unregister_reference()
             raise
         ored = node.ored()
-        if rschema.is_final() or rschema.inlined:
+        if rschema.final or rschema.inlined:
             vrefs = node.children[1].get_nodes(VariableRef)
             if not vrefs:
                 if not ored:

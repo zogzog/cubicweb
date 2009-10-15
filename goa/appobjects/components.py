@@ -67,7 +67,7 @@ def entity_types_no_count(self, eschemas):
     """
     req = self.req
     for eschema in eschemas:
-        if eschema.is_final() or not (eschema.has_perm(req, 'read') or
+        if eschema.final or not (eschema.has_perm(req, 'read') or
                                       eschema.has_local_role('read')):
             continue
         etype = eschema.type

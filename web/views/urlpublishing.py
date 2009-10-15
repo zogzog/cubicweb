@@ -156,7 +156,7 @@ class RestPathEvaluator(URLPathEvaluator):
             if len(parts) == 2:
                 attrname = parts.pop(0).lower()
                 try:
-                    cls.e_schema.subject_relation(attrname)
+                    cls.e_schema.subjrels[attrname]
                 except KeyError:
                     raise PathDontMatch()
             else:

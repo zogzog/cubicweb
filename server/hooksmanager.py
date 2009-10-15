@@ -286,7 +286,7 @@ class PropagateSubjectRelationHook(Hook):
     def call(self, session, fromeid, rtype, toeid):
         for eid in (fromeid, toeid):
             etype = session.describe(eid)[0]
-            if not self.schema.eschema(etype).has_subject_relation(self.rtype):
+            if self.rtype not in self.schema.eschema(etype).subjrels:
                 return
         if rtype in self.subject_relations:
             meid, seid = fromeid, toeid
@@ -312,12 +312,12 @@ class PropagateSubjectRelationAddHook(Hook):
         eschema = self.schema.eschema(session.describe(fromeid)[0])
         execute = session.unsafe_execute
         for rel in self.subject_relations:
-            if eschema.has_subject_relation(rel):
+            if rel in eschema.subjrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R, NOT R %s P' % (rtype, rel, rtype),
                         {'x': fromeid, 'p': toeid}, 'x')
         for rel in self.object_relations:
-            if eschema.has_object_relation(rel):
+            if rel in eschema.objrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X, NOT R %s P' % (rtype, rel, rtype),
                         {'x': fromeid, 'p': toeid}, 'x')
@@ -336,12 +336,12 @@ class PropagateSubjectRelationDelHook(Hook):
         eschema = self.schema.eschema(session.describe(fromeid)[0])
         execute = session.unsafe_execute
         for rel in self.subject_relations:
-            if eschema.has_subject_relation(rel):
+            if rel in eschema.subjrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R' % (rtype, rel),
                         {'x': fromeid, 'p': toeid}, 'x')
         for rel in self.object_relations:
-            if eschema.has_object_relation(rel):
+            if rel in eschema.objrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X' % (rtype, rel),
                         {'x': fromeid, 'p': toeid}, 'x')

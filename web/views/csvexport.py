@@ -45,7 +45,7 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
             csvrow = []
             for colindex, val in enumerate(row):
                 etype = descr[rowindex][colindex]
-                if val is not None and not eschema(etype).is_final():
+                if val is not None and not eschema(etype).final:
                     # csvrow.append(val) # val is eid in that case
                     content = self.view('textincontext', rset,
                                         row=rowindex, col=colindex)

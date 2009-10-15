@@ -206,7 +206,7 @@ class SourceDbCWRTypeUpdate(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         rschema = self.rschema
-        if rschema.is_final() or not 'inlined' in self.values:
+        if rschema.final or not 'inlined' in self.values:
             return # nothing to do
         inlined = self.values['inlined']
         entity = self.entity
@@ -444,7 +444,7 @@ class SourceDbRDefUpdate(PreCommitOperation):
                 sysource.create_index(self.session, table, column)
             else:
                 sysource.drop_index(self.session, table, column)
-        if 'cardinality' in self.values and self.rschema.is_final():
+        if 'cardinality' in self.values and self.rschema.final:
             adbh = self.session.pool.source('system').dbhelper
             if not adbh.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
@@ -818,7 +818,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     pendings = session.transaction_data.get('pendingeids', ())
     pendingrdefs = session.transaction_data.setdefault('pendingrdefs', set())
     # first delete existing relation if necessary
-    if rschema.is_final():
+    if rschema.final:
         rdeftype = 'CWAttribute'
         pendingrdefs.add((subjschema, rschema))
     else:
@@ -835,7 +835,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     # relations, but only if it's the last instance for this relation type
     # for other relations
 
-    if (rschema.is_final() or rschema.inlined):
+    if (rschema.final or rschema.inlined):
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R, '
                        'R eid %%(x)s, X from_entity E, E name %%(name)s'
                        % rdeftype, {'x': rteid, 'name': str(subjschema)})

@@ -85,7 +85,7 @@ def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
         card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
         composed = rschema.rproperty(sschema, oschema, 'composite') == neg_role(role)
-        if rschema.is_final():
+        if rschema.final:
             if rschema.meta or sschema.is_metadata(rschema) \
                     or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
@@ -185,7 +185,7 @@ def init_autoform_section(rtag, sschema, rschema, oschema, role):
                 composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
             if card in '1+':
                 section = 'primary'
-            elif rschema.is_final():
+            elif rschema.final:
                 section = 'secondary'
             else:
                 section = 'generic'

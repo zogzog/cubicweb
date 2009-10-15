@@ -1081,7 +1081,7 @@ class CWRQLTC(RQLGeneratorTC):
         self.assertEquals(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
         self.assertEquals(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
         self.assertEquals(var_sols('ISOBJECT'),
-                          set(x.type for x in self.schema.entities() if not x.is_final()))
+                          set(x.type for x in self.schema.entities() if not x.final))
         self.assertEquals(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
 
 
