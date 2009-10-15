@@ -234,7 +234,7 @@ class SQLGenAnnotator(object):
           syntax tree or because a solution for this variable has been removed
           due to security filtering)
         """
-        assert rqlst.TYPE == 'select', rqlst
+        #assert rqlst.TYPE == 'select', rqlst
         rqlst.has_text_query = self._annotate_union(rqlst)
 
     def _annotate_union(self, union):

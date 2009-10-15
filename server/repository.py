@@ -95,6 +95,7 @@ class FTIndexEntityOp(LateOperation):
     def commit_event(self):
         pass
 
+
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
 
@@ -109,6 +110,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if session.is_super_session:
         return
     ensure_card_respected(session.unsafe_execute, session, eidfrom, rtype, eidto)
+
 
 def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
@@ -126,6 +128,7 @@ def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     if card[1] in '1?':
         execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
                 {'x': eidfrom, 'y': eidto}, 'y')
+
 
 class Repository(object):
     """a repository provides access to a set of persistent storages for
