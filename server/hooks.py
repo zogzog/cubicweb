@@ -85,16 +85,18 @@ def setis_after_add_entity(session, entity):
     if hasattr(entity, '_cw_recreating'):
         return
     try:
-        session.add_relation(entity.eid, 'is',
-                             eschema_type_eid(session, entity.id))
+        #session.add_relation(entity.eid, 'is',
+        #                     eschema_type_eid(session, entity.id))
+        session.system_sql('INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                           % (entity.eid, eschema_type_eid(session, entity.id)))
     except IndexError:
         # during schema serialization, skip
         return
-    # XXX < 2.50 bw compat
-    if not session.get_shared_data('do-not-insert-is_instance_of'):
-        for etype in entity.e_schema.ancestors() + [entity.e_schema]:
-            session.add_relation(entity.eid, 'is_instance_of',
-                                 eschema_type_eid(session, etype))
+    for etype in entity.e_schema.ancestors() + [entity.e_schema]:
+        #session.add_relation(entity.eid, 'is_instance_of',
+        #                     eschema_type_eid(session, etype))
+        session.system_sql('INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                           % (entity.eid, eschema_type_eid(session, etype)))
 
 
 def setowner_after_add_user(session, entity):
