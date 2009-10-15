@@ -192,7 +192,19 @@ class EntityTC(EnvBasedTC):
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
         self.assertEquals(p.related_rql('evaluee'),
-                          'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
+                          'Any X,AA ORDERBY Z DESC '
+                          'WHERE X modification_date Z, E eid %(x)s, E evaluee X, '
+                          'X modification_date AA')
+
+        tag = self.vreg['etypes'].etype_class('Tag')(self.request())
+        self.assertEquals(tag.related_rql('tags', 'subject'),
+                          'Any X,AA ORDERBY Z DESC '
+                          'WHERE X modification_date Z, E eid %(x)s, E tags X, '
+                          'X modification_date AA')
+        self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
+                          'Any X,AA,AB ORDERBY AA ASC '
+                          'WHERE E eid %(x)s, E tags XE is IN (Personne), X nom AA, '
+                          'X modification_date AB')
 
     def test_unrelated_rql_security_1(self):
         user = self.request().user
