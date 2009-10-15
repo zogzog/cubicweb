@@ -115,7 +115,7 @@ class SecondaryView(EntityView):
     id = 'secondary'
     title = _('secondary')
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the secondary view for an entity
         secondary = icon + view(oneline)
         """
@@ -128,7 +128,7 @@ class OneLineView(EntityView):
     id = 'oneline'
     title = _('oneline')
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the one line view for an entity: linked text view
         """
         entity = self.entity(row, col)
@@ -222,7 +222,7 @@ class InContextView(EntityView):
 class OutOfContextView(EntityView):
     id = 'outofcontext'
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         desc = cut(entity.dc_description(), 50)
         self.w(u'<a href="%s" title="%s">' % (
