@@ -230,12 +230,16 @@ def cstrcheck_after_add_relation(session, eidfrom, rtype, eidto):
     this is delayed to a precommit time operation since other relation which
     will make constraint satisfied may be added later.
     """
+    if session.is_super_session:
+        return
     constraints = rproperty(session, rtype, eidfrom, eidto, 'constraints')
     if constraints:
         CheckConstraintsOperation(session, constraints=constraints,
                                   rdef=(eidfrom, rtype, eidto))
 
 def uniquecstrcheck_before_modification(session, entity):
+    if session.is_super_session:
+        return
     eschema = entity.e_schema
     for attr, val in entity.items():
         if val is None:
@@ -249,6 +253,8 @@ def uniquecstrcheck_before_modification(session, entity):
                 raise ValidationError(entity.eid, {attr: msg % val})
 
 def cstrcheck_after_update_attributes(session, entity):
+    if session.is_super_session:
+        return
     schema = session.vreg.schema
     for attr in entity.edited_attributes:
         if schema.rschema(attr).is_final():
@@ -306,6 +312,8 @@ def checkrel_if_necessary(session, opcls, rtype, eid):
 
 def cardinalitycheck_after_add_entity(session, entity):
     """check cardinalities are satisfied"""
+    if session.is_super_session:
+        return
     eid = entity.eid
     for rschema, targetschemas, x in entity.e_schema.relation_definitions():
         # skip automatically handled relations
@@ -327,6 +335,8 @@ def cardinalitycheck_after_add_entity(session, entity):
 
 def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
     """check cardinalities are satisfied"""
+    if session.is_super_session:
+        return
     if rtype in DONT_CHECK_RTYPES_ON_DEL:
         return
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
