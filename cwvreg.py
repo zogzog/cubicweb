@@ -298,9 +298,11 @@ class CubicWebVRegistry(VRegistry):
         self.register_objects(searchpath, force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
-        for etype in self.schema.entities():
-            etype = str(etype)
+        for eschema in self.schema.entities():
+            etype = str(eschema)
             self.case_insensitive_etypes[etype.lower()] = etype
+            clear_cache(eschema, 'ordered_relations')
+            clear_cache(eschema, 'meta_attributes')
 
     def _set_schema(self, schema):
         """set instance'schema"""
