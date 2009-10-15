@@ -106,7 +106,7 @@ class _CheckTrExitPoint(hook.Operation):
             outputs.add(ep.subwf_state.eid)
 
 
-class _SubWorkflowExitOp(PreCommitOperation):
+class _SubWorkflowExitOp(hook.Operation):
 
     def precommit_event(self):
         session = self.session

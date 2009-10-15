@@ -418,10 +418,10 @@ class WorkflowableMixIn(object):
         """return the default workflow for entities of this type"""
         # XXX CWEType method
         wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
-                                  'ET name %(et)s', {'et': self.id})
+                                  'ET name %(et)s', {'et': self.__regid__})
         if wfrset:
             return wfrset.get_entity(0, 0)
-        self.warning("can't find any workflow for %s", self.id)
+        self.warning("can't find any workflow for %s", self.__regid__)
         return None
 
     def possible_transitions(self, type='normal'):
