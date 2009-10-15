@@ -123,15 +123,19 @@ class RequestSessionMixIn(object):
     def set_entity_cache(self, entity):
         pass
 
-    def create_entity(self, etype, **kwargs):
+    def create_entity(self, etype, _cw_unsafe=False, **kwargs):
         """add a new entity of the given type
-        
+
         Example (in a shell session):
 
         c = create_entity('Company', name=u'Logilab')
         create_entity('Person', works_for=c, firstname=u'John', lastname=u'Doe')
 
         """
+        if _cw_unsafe:
+            execute = self.unsafe_execute
+        else:
+            execute = self.execute
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = set()
@@ -162,13 +166,13 @@ class RequestSessionMixIn(object):
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+        created = execute(rql, kwargs, cachekey).get_entity(0, 0)
         for attr, values in pending_relations:
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
             else:
                 restr = 'X %s Y' % attr
-            self.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
                          {'x': created.eid}, 'x')
         return created
