@@ -561,10 +561,10 @@ class CubicWebTC(TestCase):
         self.assertEquals(path, 'view')
         self.assertEquals(params, {'__message': 'welcome %s !' % cnx.user().login})
 
-    def assertAuthFailure(self, req):
+    def assertAuthFailure(self, req, nbsessions=0):
         self.assertRaises(AuthenticationError, self.app.connect, req)
         self.assertEquals(req.cnx, None)
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEquals(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')
 
     # content validation #######################################################
