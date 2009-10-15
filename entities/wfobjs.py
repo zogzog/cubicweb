@@ -444,14 +444,11 @@ class WorkflowableMixIn(object):
             kwargs['comment'] = comment
             if commentformat is not None:
                 kwargs['comment_format'] = commentformat
-        args = [('wf_info_for', 'E')]
-        kwargs['E'] = self.eid
+        kwargs['wf_info_for'] = self
         if treid is not None:
-            args.append( ('by_transition', 'T') )
-            kwargs['T'] = treid
+            kwargs['by_transition'] = self.req.entity_from_eid(treid)
         if tseid is not None:
-            args.append( ('to_state', 'S') )
-            kwargs['S'] = tseid
+            kwargs['to_state'] = self.req.entity_from_eid(tseid)
         return self.req.create_entity('TrInfo', *args, **kwargs)
 
     def fire_transition(self, tr, comment=None, commentformat=None):
