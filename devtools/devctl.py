@@ -219,10 +219,14 @@ def _iter_vreg_objids(vreg, done, prefix=None):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:
-                objid = '%s_%s' % (reg, obj.id)
+                objid = '%s_%s' % (reg, obj.__regid__)
                 if objid in done:
                     break
-                if obj.cw_property_defs:
+                try: # XXX < 3.6 bw compat
+                    pdefs = obj.property_defs
+                except AttributeError:
+                    pdefs = getattr(obj, 'cw_property_defs', {})
+                if pdefs:
                     yield objid
                     done.add(objid)
                     break
