@@ -15,7 +15,7 @@ from logilab.common.configuration import REQUIRED, Method, Configuration, \
 from logilab.common.decorators import wproperty, cached, clear_cache
 
 from cubicweb import CW_SOFTWARE_ROOT, RegistryNotFound
-from cubicweb.toolsutils import env_path, read_config, restrict_perms_to_user
+from cubicweb.toolsutils import read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
 from cubicweb.server import SOURCE_TYPES
 
@@ -75,12 +75,6 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
 class ServerConfiguration(CubicWebConfiguration):
     """standalone RQL server"""
     name = 'repository'
-    if os.environ.get('APYCOT_ROOT'):
-        root = os.environ['APYCOT_ROOT']
-    elif CubicWebConfiguration.mode == 'dev':
-        BACKUP_DIR = CubicWebConfiguration.RUNTIME_DIR
-    else:
-        BACKUP_DIR = '/var/lib/cubicweb/backup/'
 
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects', 'hooks'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])

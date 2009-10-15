@@ -21,6 +21,7 @@ from StringIO import StringIO
 
 from logilab.common.logging_ext import set_log_methods
 
+
 if os.environ.get('APYCOT_ROOT'):
     logging.basicConfig(level=logging.CRITICAL)
 else:
@@ -69,7 +70,6 @@ ETYPE_NAME_MAP = {# 3.2 migration
                   'EConstraint': 'CWConstraint',
                   'EPermission': 'CWPermission',
                   }
-
 
 
 # XXX cubic web cube migration map

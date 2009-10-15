@@ -157,7 +157,7 @@ class EditController(ViewController):
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
             self.delete_relations(parse_relations_descr(todelete))
         if formparams.has_key('__cloned_eid'):
-            entity.copy_relations(formparams['__cloned_eid'])
+            entity.copy_relations(typed_eid(formparams['__cloned_eid']))
         if formparams.has_key('__insert'):
             toinsert = self._cw.list_form_param('__insert', formparams, pop=True)
             self.insert_relations(parse_relations_descr(toinsert))

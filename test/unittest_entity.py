@@ -185,7 +185,19 @@ class EntityTC(CubicWebTC):
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
         self.assertEquals(p.related_rql('evaluee'),
-                          'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
+                          'Any X,AA ORDERBY Z DESC '
+                          'WHERE X modification_date Z, E eid %(x)s, E evaluee X, '
+                          'X modification_date AA')
+
+        tag = self.vreg['etypes'].etype_class('Tag')(self.request())
+        self.assertEquals(tag.related_rql('tags', 'subject'),
+                          'Any X,AA ORDERBY Z DESC '
+                          'WHERE X modification_date Z, E eid %(x)s, E tags X, '
+                          'X modification_date AA')
+        self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
+                          'Any X,AA,AB ORDERBY AA ASC '
+                          'WHERE E eid %(x)s, E tags XE is IN (Personne), X nom AA, '
+                          'X modification_date AB')
 
     def test_unrelated_rql_security_1(self):
         user = self.request().user
@@ -459,6 +471,21 @@ du :eid:`1:*ReST*`'''
         card = self.add_entity('Card', wikiid=u'', title=u'test')
         self.assertEquals(card.absolute_url(),
                           'http://testing.fr/cubicweb/card/eid/%s' % card.eid)
+
+    def test_create_entity(self):
+        p1 = self.add_entity('Personne', nom=u'fayolle', prenom=u'alexandre')
+        p2 = self.add_entity('Personne', nom=u'campeas', prenom=u'aurelien')
+        note = self.add_entity('Note', type=u'z')
+        req = self.request()
+        p = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien',
+                              connait=p1, evaluee=[p1, p2],
+                              reverse_ecrit_par=note)
+        self.assertEquals(p.nom, 'di mascio')
+        self.assertEquals([c.nom for c in p.connait], ['fayolle'])
+        self.assertEquals(sorted([c.nom for c in p.evaluee]), ['campeas', 'fayolle'])
+        self.assertEquals([c.type for c in p.reverse_ecrit_par], ['z'])
+
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

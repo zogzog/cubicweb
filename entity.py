@@ -18,7 +18,7 @@ from logilab.mtconverter import TransformData, TransformError, xml_escape
 from rql import parse
 from rql.utils import rqlvar_maker
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
@@ -232,7 +232,7 @@ class Entity(AppObject, dict):
         meaning that the entity has to be created
         """
         try:
-            int(self.eid)
+            typed_eid(self.eid)
             return True
         except (ValueError, TypeError):
             return False
@@ -587,14 +587,18 @@ class Entity(AppObject, dict):
     def related_rql(self, rtype, role='subject', targettypes=None):
         rschema = self._cw.vreg.schema[rtype]
         if role == 'subject':
+            restriction = 'E eid %%(x)s, E %s X' % rtype
             if targettypes is None:
                 targettypes = rschema.objects(self.e_schema)
-            restriction = 'E eid %%(x)s, E %s X' % rtype
+            else:
+                restriction += 'E is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, (self.e_schema,), targettypes, 0)
         else:
+            restriction = 'E eid %%(x)s, X %s E' % rtype
             if targettypes is None:
                 targettypes = rschema.subjects(self.e_schema)
-            restriction = 'E eid %%(x)s, X %s E' % rtype
+            else:
+                restriction += 'E is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
         if len(targettypes) > 1:
             fetchattrs_list = []
@@ -741,9 +745,14 @@ class Entity(AppObject, dict):
             self._related_cache.pop('%s_%s' % (rtype, role), None)
 
     def clear_all_caches(self):
+        haseid = 'eid' in self
         self.clear()
         for rschema, _, role in self.e_schema.relation_definitions():
             self.clear_related_cache(rschema.type, role)
+        # set eid if it was in, else we may get nasty error while editing this
+        # entity if it's bound to a repo session
+        if haseid:
+            self['eid'] = self.eid
 
     # raw edition utilities ###################################################
 
@@ -762,6 +771,20 @@ class Entity(AppObject, dict):
         else:
             self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                              kwargs, 'x')
+
+    def set_relations(self, _cw_unsafe=False, **kwargs):
+        if _cw_unsafe:
+            execute = self.req.unsafe_execute
+        else:
+            execute = self.req.execute
+        for attr, values in kwargs.iteritems():
+            if attr.startswith('reverse_'):
+                restr = 'Y %s X' % attr[len('reverse_'):]
+            else:
+                restr = 'X %s Y' % attr
+            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+                restr, ','.join(str(r.eid) for r in values)),
+                    {'x': self.eid}, 'x')
 
     def delete(self):
         assert self.has_eid(), self.eid

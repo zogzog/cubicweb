@@ -344,7 +344,7 @@ class CubicWebVRegistry(VRegistry):
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
         if force_reload is None:
-            force_reload = self.config.mode == 'dev'
+            force_reload = self.config.debugmode
         try:
             self._register_objects(path, force_reload)
         except RegistryOutOfDate:

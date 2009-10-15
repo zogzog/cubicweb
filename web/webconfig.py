@@ -172,7 +172,7 @@ if you want to allow everything',
 
         ('print-traceback',
          {'type' : 'yn',
-          'default': not CubicWebConfiguration.mode == 'installed',
+          'default': CubicWebConfiguration.mode != 'system',
           'help': 'print the traceback on the error page when an error occured',
           'group': 'web', 'inputlevel': 2,
           }),

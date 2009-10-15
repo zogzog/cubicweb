@@ -106,6 +106,34 @@ class _CheckTrExitPoint(hook.Operation):
             outputs.add(ep.subwf_state.eid)
 
 
+class _SubWorkflowExitOp(PreCommitOperation):
+
+    def precommit_event(self):
+        session = self.session
+        forentity = self.forentity
+        trinfo = self.trinfo
+        # we're in a subworkflow, check if we've reached an exit point
+        wftr = forentity.subworkflow_input_transition()
+        if wftr is None:
+            # inconsistency detected
+            msg = session._("state doesn't belong to entity's current workflow")
+            raise ValidationError(self.trinfo.eid, {'to_state': msg})
+        tostate = wftr.get_exit_point(forentity, trinfo['to_state'])
+        if tostate is not None:
+            # reached an exit point
+            msg = session._('exiting from subworkflow %s')
+            msg %= session._(forentity.current_workflow.name)
+            session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
+            # XXX iirk
+            req = forentity.req
+            forentity.req = session.super_session
+            try:
+                trinfo = forentity.change_state(tostate, msg, u'text/plain',
+                                                tr=wftr)
+            finally:
+                forentity.req = req
+
+
 # hooks ########################################################################
 
 class WorkflowHook(hook.Hook):
@@ -229,33 +257,13 @@ class FiredTransitionHook(WorkflowHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        session = self._cw
-        entity = self.entity
-        _change_state(session, entity['wf_info_for'],
-                      entity['from_state'], entity['to_state'])
-        forentity = session.entity_from_eid(entity['wf_info_for'])
-        assert forentity.current_state.eid == entity['to_state']
+        trinfo = self.entity
+        _change_state(self._cw, trinfo['wf_info_for'],
+                      trinfo['from_state'], trinfo['to_state'])
+        forentity = self._cw.entity_from_eid(trinfo['wf_info_for'])
+        assert forentity.current_state.eid == trinfo['to_state']
         if forentity.main_workflow.eid != forentity.current_workflow.eid:
-            # we're in a subworkflow, check if we've reached an exit point
-            wftr = forentity.subworkflow_input_transition()
-            if wftr is None:
-                # inconsistency detected
-                msg = session._("state doesn't belong to entity's current workflow")
-                raise ValidationError(entity.eid, {'to_state': msg})
-            tostate = wftr.get_exit_point(forentity, entity['to_state'])
-            if tostate is not None:
-                # reached an exit point
-                msg = session._('exiting from subworkflow %s')
-                msg %= session._(forentity.current_workflow.name)
-                session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
-                # XXX iirk
-                req = forentity._cw
-                forentity._cw = session.super_session
-                try:
-                    trinfo = forentity.change_state(tostate, msg, u'text/plain',
-                                                    tr=wftr)
-                finally:
-                    forentity._cw = req
+            _SubWorkflowExitOp(self._cw, forentity=forentity, trinfo=trinfo)
 
 
 class CheckInStateChangeAllowed(WorkflowHook):
