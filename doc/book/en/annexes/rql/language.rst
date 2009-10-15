@@ -11,13 +11,9 @@ The keywords are not case sensitive.
 
 ::
 
-     DISTINCT, INSERT, SET, DELETE,
-     WHERE, AND, OR, NOT, EXISTS,
-     IN, LIKE, UNION, WITH, BEING,
-     TRUE, FALSE, NULL, TODAY, NOW,
-     LIMIT, OFFSET,
-     HAVING, GROUPBY, ORDERBY, ASC, DESC
-
+  AND, ASC, BEING, DELETE, DESC, DISTINCT, EXISTS, FALSE, GROUPBY,
+  HAVING, ILIKE, IN, INSERT, LIKE, LIMIT, NOT, NOW, NULL, OFFSET,
+  OR, ORDERBY, SET, TODAY, TRUE, UNION, WHERE, WITH
 
 Variables and Typing
 ~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +72,7 @@ Comparison operators
 ````````````````````
 ::
 
-     =, <, <=, >=, >, ~=, IN, LIKE
+     =, <, <=, >=, >, ~=, IN, LIKE, ILIKE
 
 * The operator `=` is the default operator.
 
@@ -87,6 +83,8 @@ Comparison operators
 
      Any X WHERE X name ~= 'Th%'
      Any X WHERE X name LIKE '%lt'
+
+* The operator `ILIKE` is the case insensitive version of `LIKE`.
 
 * The operator `IN` provides a list of possible values:
   ::
