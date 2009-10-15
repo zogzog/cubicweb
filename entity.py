@@ -810,7 +810,7 @@ class Entity(AppObject, dict):
         else raise `KeyError`
         """
         res = self._related_cache['%s_%s' % (rtype, role)][entities]
-        if limit is not None:
+        if limit is not None and limit < len(rset):
             if entities:
                 res = res[:limit]
             else:
