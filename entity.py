@@ -695,14 +695,14 @@ class Entity(AppObject, dict):
             if targettypes is None:
                 targettypes = rschema.objects(self.e_schema)
             else:
-                restriction += 'E is IN (%s)' % ','.join(targettypes)
+                restriction += ', X is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, (self.e_schema,), targettypes, 0)
         else:
             restriction = 'E eid %%(x)s, X %s E' % rtype
             if targettypes is None:
                 targettypes = rschema.subjects(self.e_schema)
             else:
-                restriction += 'E is IN (%s)' % ','.join(targettypes)
+                restriction += ', X is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
         if len(targettypes) > 1:
             fetchattrs_list = []
