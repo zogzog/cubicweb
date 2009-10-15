@@ -175,11 +175,8 @@ class PrimaryView(EntityView):
 
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            if dispctrl.get('limit'):
-                rset = entity.related(rschema.type, role,
-                                      limit=self.maxrelated+1)
-            else:
-                rset = entity.related(rschema.type, role)
+            dispctrl.setdefault('limit', self.maxrelated)
+            rset = entity.related(rschema.type, role, limit=dispctrl['limit']+1)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
@@ -190,7 +187,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="section">')
         if showlabel:
             self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
-        self.wview(dispctrl.get('vid', defaultvid), rset)
+        self.wview(dispctrl.get('vid', defaultvid), rset, dispctrl=dispctrl)
         self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
@@ -204,12 +201,15 @@ class PrimaryView(EntityView):
 
 class RelatedView(EntityView):
     id = 'autolimited'
-    def call(self, title=None, **kwargs):
+
+    def call(self, dispctrl=None, **kwargs):
+        # nb: rset retreived using entity.related with limit + 1 if any
+        # because of that, we known that rset.printable_rql() will return
+        # rql with no limit set anyway (since it's handled manually)
+        if dispctrl is not None:
+            limit = dispctrl.get('limit')
         # if not too many entities, show them all in a list
-        maxrelated = self.req.property_value('navigation.related-limit')
-        if title:
-            self.w(u'<div class="title"><span>%s</span></div>' % title)
-        if self.rset.rowcount <= maxrelated:
+        if limit is None or self.rset.rowcount <= limit:
             if self.rset.rowcount == 1:
                 self.wview('incontext', self.rset, row=0)
             elif 1 < self.rset.rowcount <= 5:
@@ -220,8 +220,8 @@ class RelatedView(EntityView):
                 self.w(u'</div>')
         # else show links to display related entities
         else:
-            rql = self.rset.printable_rql()
-            self.rset.limit(maxrelated)
+            rql = rset.printable_rql()
+            self.rset.limit(limit) # remove extra entity
             self.w(u'<div>')
             self.wview('simplelist', self.rset)
             self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
