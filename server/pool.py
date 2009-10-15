@@ -180,10 +180,15 @@ class Operation(object):
         """return the index of  the lastest instance which is not a
         LateOperation instance
         """
-        for i, op in enumerate(self.session.pending_operations):
+        # faster by inspecting operation in reverse order for heavy transactions
+        i = None
+        for i, op in enumerate(reversed(self.session.pending_operations)):
             if isinstance(op, (LateOperation, SingleLastOperation)):
-                return i
-        return None
+                continue
+            return -i or None
+        if i is None:
+            return None
+        return -(i + 1)
 
     def handle_event(self, event):
         """delegate event handling to the opertaion"""
@@ -238,10 +243,15 @@ class LateOperation(Operation):
         """return the index of  the lastest instance which is not a
         SingleLastOperation instance
         """
-        for i, op in enumerate(self.session.pending_operations):
+        # faster by inspecting operation in reverse order for heavy transactions
+        i = None
+        for i, op in enumerate(reversed(self.session.pending_operations)):
             if isinstance(op, SingleLastOperation):
-                return i
-        return None
+                continue
+            return -i or None
+        if i is None:
+            return None
+        return -(i + 1)
 
 
 class SingleOperation(Operation):
@@ -261,10 +271,9 @@ class SingleOperation(Operation):
 
     def equivalent_index(self, operations):
         """return the index of the equivalent operation if any"""
-        equivalents = [i for i, op in enumerate(operations)
-                       if op.__class__ is self.__class__]
-        if equivalents:
-            return equivalents[0]
+        for i, op in enumerate(reversed(operations)):
+            if op.__class__ is self.__class__:
+                return -(i+1)
         return None
 
 
