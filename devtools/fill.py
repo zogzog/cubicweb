@@ -404,12 +404,14 @@ class RelationsQueriesGenerator(object):
             for subjeid, objeid in used:
                 if subjcard in '?1' and subjeid in subjeids:
                     subjeids.remove(subjeid)
-                    if objeid in objeids:
-                        objeids.remove(objeid)
+                    # XXX why?
+                    #if objeid in objeids:
+                    #    objeids.remove(objeid)
                 if objcard in '?1' and objeid in objeids:
                     objeids.remove(objeid)
-                    if subjeid in subjeids:
-                        subjeids.remove(subjeid)
+                    # XXX why?
+                    #if subjeid in subjeids:
+                    #    subjeids.remove(subjeid)
         if not subjeids:
             check_card_satisfied(objcard, objeids, subj, rschema, obj)
             return
