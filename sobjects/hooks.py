@@ -69,6 +69,8 @@ class TidyHtmlFields(Hook):
     accepts = ('Any',)
 
     def call(self, session, entity):
+        if session.is_super_session:
+            return
         metaattrs = entity.e_schema.meta_attributes()
         for metaattr, (metadata, attr) in metaattrs.iteritems():
             if metadata == 'format':
