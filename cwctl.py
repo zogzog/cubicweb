@@ -741,12 +741,23 @@ sources for migration will be automatically selected.",
     def run(self, args):
         appid = pop_arg(args, 99, msg="No instance specified !")
         if self.config.pyro:
+            from cubicweb import AuthenticationError
             from cubicweb.dbapi import connect
             from cubicweb.server.utils import manager_userpasswd
             from cubicweb.server.migractions import ServerMigrationHelper
-            login, pwd = manager_userpasswd(msg=None)
-            cnx = connect(appid, login=login, password=pwd,
-                          host=self.config.pyro_ns_host, mulcnx=False)
+            while True:
+                try:
+                    login, pwd = manager_userpasswd(msg=None)
+                    cnx = connect(appid, login=login, password=pwd,
+                                  host=self.config.pyro_ns_host, mulcnx=False)
+                except AuthenticationError, ex:
+                    print ex
+                except (KeyboardInterrupt, EOFError):
+                    print
+                    sys.exit(0)
+                else:
+                    break
+            cnx.load_appobjects()
             repo = cnx._repo
             mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
                                          # hack so it don't try to load fs schema
