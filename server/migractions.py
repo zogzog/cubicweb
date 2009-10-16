@@ -1083,10 +1083,10 @@ class ServerMigrationHelper(MigrationHelper):
             return session
         return self.cnx.request()
 
-    def cmd_create_entity(self, etype, *args, **kwargs):
+    def cmd_create_entity(self, etype, **kwargs):
         """add a new entity of the given type"""
         commit = kwargs.pop('commit', False)
-        entity = self._cw.create_entity(etype, *args, **kwargs)
+        entity = self._cw.create_entity(etype, **kwargs)
         if commit:
             self.commit()
         return entity
