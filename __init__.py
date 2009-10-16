@@ -141,11 +141,12 @@ class RequestSessionMixIn(object):
         restrictions = set()
         cachekey = []
         pending_relations = []
-        for attr, value in kwargs.iteritems():
+        for attr, value in kwargs.items():
             if isinstance(value, (tuple, list, set, frozenset)):
                 if len(value) == 1:
                     value = iter(value).next()
                 else:
+                    del kwargs[attr]
                     pending_relations.append( (attr, value) )
                     continue
             if hasattr(value, 'eid'): # non final relation
