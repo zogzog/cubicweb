@@ -92,7 +92,9 @@ class MigrationHelper(object):
 
     def __init__(self, config, interactive=True, verbosity=1):
         self.config = config
-        self.config.init_log(logthreshold=logging.ERROR, debug=True)
+        if config:
+            # no config on shell to a remote instance
+            self.config.init_log(logthreshold=logging.ERROR, debug=True)
         # 0: no confirmation, 1: only main commands confirmed, 2 ask for everything
         self.verbosity = verbosity
         self.need_wrap = True
