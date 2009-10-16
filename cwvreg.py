@@ -65,16 +65,28 @@ class CWRegistry(Registry):
             for appobject in appobjects:
                 appobject.vreg_initialization_completed()
 
-    def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
-        """select object, or fallback object if specified and the first one
-        isn't selectable, then render it
+    def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
+               **kwargs):
+        """Select object with the given id (`__oid`) then render it.  If the
+        object isn't selectable, try to select fallback object if
+        `__fallback_oid` is specified.
+
+        If specified `initargs` is expected to be a dictionnary containing
+        arguments that should be given to selection (hence to object's __init__
+        as well), but not to render(). Other arbitrary keyword arguments will be
+        given to selection *and* to render(), and so should be handled by
+        object's call or cell_call method..
         """
+        if initargs is None:
+            initargs = kwargs
+        else:
+            initargs.update(kwargsargs)
         try:
-            obj = self.select(__oid, req, rset=rset, **kwargs)
+            obj = self.select(__oid, req, rset=rset, **initargs)
         except NoSelectableObject:
             if __fallback_oid is None:
                 raise
-            obj = self.select(__fallback_oid, req, rset=rset, **kwargs)
+            obj = self.select(__fallback_oid, req, rset=rset, **initargs)
         return obj.render(**kwargs)
 
     def select_vobject(self, oid, *args, **kwargs):
