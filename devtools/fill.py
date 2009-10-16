@@ -399,10 +399,10 @@ class RelationsQueriesGenerator(object):
             # restrict object eids if possible
             # XXX the attempt to restrict below in completely wrong
             # disabling it for now
-##             objeids = select(restrictions, self.cursor)
-##         else:
-##             objeids = oedict.get(obj, frozenset())
-        objeids = oedict.get(obj, frozenset())
+            objeids = select(restrictions, self.cursor)
+        else:
+            objeids = oedict.get(obj, frozenset())
+##         objeids = oedict.get(obj, frozenset())
         if subjcard in '?1' or objcard in '?1':
             for subjeid, objeid in used:
                 if subjcard in '?1' and subjeid in subjeids:
