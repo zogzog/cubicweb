@@ -54,6 +54,7 @@ class ServerMigrationHelper(MigrationHelper):
     def __init__(self, config, schema, interactive=True,
                  repo=None, cnx=None, verbosity=1, connect=True):
         MigrationHelper.__init__(self, config, interactive, verbosity)
+        # no config on shell to a remote instance
         if not interactive:
             assert cnx
             assert repo
@@ -61,7 +62,8 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self._cnx = cnx
             self.repo = repo
-            self.session.data['rebuild-infered'] = False
+            if config is not None:
+                self.session.data['rebuild-infered'] = False
         elif connect:
             self.repo_connect()
         if not schema:
@@ -233,7 +235,10 @@ class ServerMigrationHelper(MigrationHelper):
 
     @property
     def session(self):
-        return self.repo._get_session(self.cnx.sessionid)
+        if self.config is not None:
+            return self.repo._get_session(self.cnx.sessionid)
+        # no access to session on remote instance
+        return None
 
     def commit(self):
         if hasattr(self, '_cnx'):
@@ -268,8 +273,7 @@ class ServerMigrationHelper(MigrationHelper):
     @cached
     def group_mapping(self):
         """cached group mapping"""
-        self.session.set_pool()
-        return ss.group_mapping(self.session)
+        return ss.group_mapping(self._cw)
 
     def exec_event_script(self, event, cubepath=None, funcname=None,
                           *args, **kwargs):
@@ -981,7 +985,6 @@ class ServerMigrationHelper(MigrationHelper):
 
          :rtype: `Workflow`
         """
-        self.session.set_pool() # ensure pool is set
         wf = self.cmd_create_entity('Workflow', name=unicode(name),
                                     **kwargs)
         if not isinstance(wfof, (list, tuple)):
@@ -1001,7 +1004,6 @@ class ServerMigrationHelper(MigrationHelper):
 
     # XXX remove once cmd_add_[state|transition] are removed
     def _get_or_create_wf(self, etypes):
-        self.session.set_pool() # ensure pool is set
         if not isinstance(etypes, (list, tuple)):
             etypes = (etypes,)
         rset = self.rqlexec('Workflow X WHERE X workflow_of ET, ET name %(et)s',
@@ -1041,16 +1043,14 @@ class ServerMigrationHelper(MigrationHelper):
         """set or add (if `reset` is False) groups and conditions for a
         transition
         """
-        self.session.set_pool() # ensure pool is set
-        tr = self.session.entity_from_eid(treid)
+        tr = self._cw.entity_from_eid(treid)
         tr.set_transition_permissions(requiredgroups, conditions, reset)
         if commit:
             self.commit()
 
     @deprecated('[3.5] use entity.fire_transition("transition") or entity.change_state("state")')
     def cmd_set_state(self, eid, statename, commit=False):
-        self.session.set_pool() # ensure pool is set
-        self.session.entity_from_eid(eid).change_state(statename)
+        self._cw.entity_from_eid(eid).change_state(statename)
         if commit:
             self.commit()
 
@@ -1074,11 +1074,18 @@ class ServerMigrationHelper(MigrationHelper):
 
     # other data migration commands ###########################################
 
+    @property
+    def _cw(self):
+        session = self.session
+        if session is not None:
+            session.set_pool()
+            return session
+        return self.cnx.request()
+
     def cmd_create_entity(self, etype, *args, **kwargs):
         """add a new entity of the given type"""
         commit = kwargs.pop('commit', False)
-        self.session.set_pool()
-        entity = self.session.create_entity(etype, *args, **kwargs)
+        entity = self._cw.create_entity(etype, *args, **kwargs)
         if commit:
             self.commit()
         return entity
@@ -1114,7 +1121,6 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
-        self.session.set_pool()
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)
@@ -1122,7 +1128,7 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = rql
             if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
                 try:
-                    res = self.session.execute(rql, kwargs, cachekey)
+                    res = self._cw.execute(rql, kwargs, cachekey)
                 except Exception, ex:
                     if self.confirm('error: %s\nabort?' % ex):
                         raise
@@ -1211,9 +1217,8 @@ class ForRqlIterator:
         if self.ask_confirm:
             if not self._h.confirm('execute rql: %s ?' % msg):
                 raise StopIteration
-        self._h.session.set_pool()
         try:
-            rset = self._h.session.execute(rql, kwargs)
+            rset = self._h._cw.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('error: %s\nabort?' % ex):
                 raise

@@ -685,10 +685,16 @@ given, appropriate sources for migration will be automatically selected \
 
 
 class ShellCommand(Command):
-    """Run an interactive migration shell. This is a python shell with
-    enhanced migration commands predefined in the namespace. An additional
-    argument may be given corresponding to a file containing commands to
-    execute in batch mode.
+    """Run an interactive migration shell on an instance. This is a python shell
+    with enhanced migration commands predefined in the namespace. An additional
+    argument may be given corresponding to a file containing commands to execute
+    in batch mode.
+
+    By default it will connect to a local instance using an in memory
+    connection, unless -P option is specified, in which case you will be
+    connected through pyro. In the later case, you won't have access to
+    repository internals (session, etc...) so most migration commands won't be
+    available.
 
     <instance>
       the identifier of the instance to connect.
@@ -698,46 +704,72 @@ class ShellCommand(Command):
     options = (
         ('system-only',
          {'short': 'S', 'action' : 'store_true',
-          'default': False,
           'help': 'only connect to the system source when the instance is '
           'using multiple sources. You can\'t use this option and the '
-          '--ext-sources option at the same time.'}),
+          '--ext-sources option at the same time.',
+          'group': 'local'
+         }),
 
         ('ext-sources',
          {'short': 'E', 'type' : 'csv', 'metavar': '<sources>',
-          'default': None,
           'help': "For multisources instances, specify to which sources the \
 repository should connect to for upgrading. When unspecified or 'all' given, \
 will connect to all defined sources. If 'migration' is given, appropriate \
 sources for migration will be automatically selected.",
+          'group': 'local'
           }),
 
         ('force',
          {'short': 'f', 'action' : 'store_true',
-          'default' : False,
-          'help': 'don\'t check instance is up to date.'}
-         ),
+          'help': 'don\'t check instance is up to date.',
+          'group': 'local'
+          }),
+
+        ('pyro',
+         {'short': 'P', 'action' : 'store_true',
+          'help': 'connect to a running instance through Pyro.',
+          'group': 'remote',
+          }),
+        ('pyro-ns-host',
+         {'short': 'H', 'type' : 'string', 'metavar': '<host[:port]>',
+          'help': 'Pyro name server host. If not set, will be detected by '
+          'using a broadcast query.',
+          'group': 'remote'
+          }),
         )
 
     def run(self, args):
         appid = pop_arg(args, 99, msg="No instance specified !")
-        config = cwcfg.config_for(appid)
-        if self.config.ext_sources:
-            assert not self.config.system_only
-            sources = self.config.ext_sources
-        elif self.config.system_only:
-            sources = ('system',)
+        if self.config.pyro:
+            from cubicweb.dbapi import connect
+            from cubicweb.server.utils import manager_userpasswd
+            from cubicweb.server.migractions import ServerMigrationHelper
+            login, pwd = manager_userpasswd(msg=None)
+            cnx = connect(appid, login=login, password=pwd,
+                          host=self.config.pyro_ns_host, mulcnx=False)
+            repo = cnx._repo
+            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
+                                         # hack so it don't try to load fs schema
+                                        schema=1)
         else:
-            sources = ('all',)
-        config.set_sources_mode(sources)
-        config.repairing = self.config.force
-        mih = config.migration_handler()
+            config = cwcfg.config_for(appid)
+            if self.config.ext_sources:
+                assert not self.config.system_only
+                sources = self.config.ext_sources
+            elif self.config.system_only:
+                sources = ('system',)
+            else:
+                sources = ('all',)
+            config.set_sources_mode(sources)
+            config.repairing = self.config.force
+            mih = config.migration_handler()
         if args:
             for arg in args:
                 mih.process_script(arg)
         else:
             mih.interactive_shell()
-        mih.shutdown()
+        if not self.config.pyro:
+            mih.shutdown()
 
 
 class RecompileInstanceCatalogsCommand(InstanceCommand):
