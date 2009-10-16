@@ -774,13 +774,17 @@ sources for migration will be automatically selected.",
             config.set_sources_mode(sources)
             config.repairing = self.config.force
             mih = config.migration_handler()
-        if args:
-            for arg in args:
-                mih.process_script(arg)
-        else:
-            mih.interactive_shell()
-        if not self.config.pyro:
-            mih.shutdown()
+        try:
+            if args:
+                for arg in args:
+                    mih.process_script(arg)
+            else:
+                mih.interactive_shell()
+        finally:
+            if not self.config.pyro:
+                mih.shutdown()
+            else:
+                cnx.close()
 
 
 class RecompileInstanceCatalogsCommand(InstanceCommand):
