@@ -71,7 +71,8 @@ DEFAULT_MSG = 'we need a manager connection on the repository \
 def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
                        passwdmsg='password'):
     if not user:
-        print msg
+        if msg:
+            print msg
         while not user:
             user = raw_input('login: ')
         user = unicode(user, sys.stdin.encoding)
