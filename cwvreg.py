@@ -374,6 +374,8 @@ class CubicWebVRegistry(VRegistry):
             implemented_interfaces = set()
             if 'Any' in self.get('etypes', ()):
                 for etype in self.schema.entities():
+                    if etype.final:
+                        continue
                     cls = self['etypes'].etype_class(etype)
                     for iface in cls.__implements__:
                         implemented_interfaces.update(iface.__mro__)
