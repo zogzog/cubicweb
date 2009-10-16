@@ -187,7 +187,8 @@ class PrimaryView(EntityView):
         self.w(u'<div class="section">')
         if showlabel:
             self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
-        self.wview(dispctrl.get('vid', defaultvid), rset, dispctrl=dispctrl)
+        self.wview(dispctrl.get('vid', defaultvid), rset,
+                   initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
@@ -202,12 +203,14 @@ class PrimaryView(EntityView):
 class RelatedView(EntityView):
     id = 'autolimited'
 
-    def call(self, dispctrl=None, **kwargs):
+    def call(self, **kwargs):
         # nb: rset retreived using entity.related with limit + 1 if any
         # because of that, we known that rset.printable_rql() will return
         # rql with no limit set anyway (since it's handled manually)
-        if dispctrl is not None:
-            limit = dispctrl.get('limit')
+        if 'dispctrl' in self.extra_kwargs:
+            limit = self.extra_kwargs['dispctrl'].get('limit')
+        else:
+            limit = None
         # if not too many entities, show them all in a list
         if limit is None or self.rset.rowcount <= limit:
             if self.rset.rowcount == 1:
