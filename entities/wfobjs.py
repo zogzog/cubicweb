@@ -449,8 +449,7 @@ class WorkflowableMixIn(object):
             kwargs['by_transition'] = self.req.entity_from_eid(treid)
         if tseid is not None:
             kwargs['to_state'] = self.req.entity_from_eid(tseid)
-        args = ()
-        return self.req.create_entity('TrInfo', *args, **kwargs)
+        return self.req.create_entity('TrInfo', **kwargs)
 
     def fire_transition(self, tr, comment=None, commentformat=None):
         """change the entity's state by firing transition of the given name in
