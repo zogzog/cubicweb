@@ -80,7 +80,7 @@ class CWRegistry(Registry):
         if initargs is None:
             initargs = kwargs
         else:
-            initargs.update(kwargsargs)
+            initargs.update(kwargs)
         try:
             obj = self.select(__oid, req, rset=rset, **initargs)
         except NoSelectableObject:
