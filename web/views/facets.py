@@ -100,8 +100,6 @@ class FilterBox(BoxTemplate):
             w(u'</fieldset>\n</form>\n')
         finally:
             rqlst.recover()
-            import cubicweb
-            cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
     def display_bookmark_link(self, rset):
         eschema = self.schema.eschema('Bookmark')
