@@ -277,7 +277,7 @@ def serialize_schema(cursor, schema, verbose=False):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    quiet = not os.environ('APYCOT_ROOT')
+    quiet = not os.environ['APYCOT_ROOT']
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
