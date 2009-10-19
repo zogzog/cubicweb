@@ -64,6 +64,7 @@ class IntegrityHook(hook.Hook):
     category = 'integrity'
 
 class UserIntegrityHook(IntegrityHook):
+    __abstract__ = True
     __select__ = IntegrityHook.__select__ & ~hook.regular_session()
 
 
