@@ -107,8 +107,8 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
                 if rel.optional in ('right', 'both'):
                     var.stinfo['optrelations'].add(newrel)
         # extract subquery solutions
-        solutions = [sol.copy() for sol in solutions]
-        cleanup_solutions(newselect, solutions)
+        mysolutions = [sol.copy() for sol in solutions]
+        cleanup_solutions(newselect, mysolutions)
         newselect.set_possible_types(solutions)
         # full sub-query
         aliases = [VariableRef(select.get_variable(avar.name, i))
