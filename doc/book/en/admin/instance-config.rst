@@ -65,7 +65,7 @@ of configuration file.
      https-url = `https://localhost/demo`
 
 Setting up the web
---------------------------------
+------------------
 :`web.embed-allowed`:
     regular expression matching sites which could be "embedded" in
     the site (controllers 'embed')
