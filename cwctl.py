@@ -777,7 +777,7 @@ sources for migration will be automatically selected.",
         try:
             if args:
                 for arg in args:
-                    mih.process_script(arg)
+                    mih.cmd_process_script(arg)
             else:
                 mih.interactive_shell()
         finally:

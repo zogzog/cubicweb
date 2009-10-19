@@ -146,7 +146,7 @@ class MigrationHelper(object):
         ctx['versions_map'] = vmap
         if self.config.accept_mode('Any') and 'cubicweb' in vmap:
             migrdir = self.config.migration_scripts_dir()
-            self.process_script(join(migrdir, 'bootstrapmigration_repository.py'))
+            self.cmd_process_script(join(migrdir, 'bootstrapmigration_repository.py'))
         for cube, fromversion, toversion in toupgrade:
             if cube == 'cubicweb':
                 migrdir = self.config.migration_scripts_dir()
@@ -161,7 +161,7 @@ class MigrationHelper(object):
                     if prevversion is not None and version != prevversion:
                         self.cube_upgraded(cube, prevversion)
                     prevversion = version
-                    self.process_script(script)
+                    self.cmd_process_script(script)
                 self.cube_upgraded(cube, toversion)
             else:
                 self.cube_upgraded(cube, toversion)
@@ -263,7 +263,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     context[attr[4:]] = getattr(self, attr)
         return context
 
-    def process_script(self, migrscript, funcname=None, *args, **kwargs):
+    def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
         in interactive mode,  display the migration script path, ask for
         confirmation and execute it if confirmed

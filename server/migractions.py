@@ -95,7 +95,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.backup_database(askconfirm=False)
         super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
-    def process_script(self, migrscript, funcname=None, *args, **kwargs):
+    def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
         in interactive mode,  display the migration script path, ask for
         confirmation and execute it if confirmed
@@ -105,7 +105,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if self.execscript_confirm(migrscript):
                     sqlexec(open(migrscript).read(), self.session.system_sql)
             else:
-                return super(ServerMigrationHelper, self).process_script(
+                return super(ServerMigrationHelper, self).cmd_process_script(
                     migrscript, funcname, *args, **kwargs)
             self.commit()
         except:
@@ -294,7 +294,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.confirm = yes
             self.execscript_confirm = yes
             try:
-                return self.process_script(apc, funcname, *args, **kwargs)
+                return self.cmd_process_script(apc, funcname, *args, **kwargs)
             finally:
                 self.confirm = confirm
                 self.execscript_confirm = execscript_confirm
