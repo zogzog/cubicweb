@@ -497,7 +497,7 @@ class RQLActionTC(ViewSelectorTC):
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,
                                               actions.DeleteAction,
-                                              actions.CopyAction,
+                                              actions.CopyAction,]
                               })
 
 
