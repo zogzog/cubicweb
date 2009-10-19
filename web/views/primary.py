@@ -187,7 +187,7 @@ class PrimaryView(EntityView):
     def _render_relation(self, rset, dispctrl, defaultvid, showlabel):
         self.w(u'<div class="section">')
         if showlabel:
-            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
+            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']),
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
