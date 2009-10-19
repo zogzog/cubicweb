@@ -83,7 +83,7 @@ class SetIsHook(MetaDataHook):
             #session.add_relation(entity.eid, 'is',
             #                     eschema_type_eid(session, entity.__regid__))
             session.system_sql('INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                           % (entity.eid, eschema_type_eid(session, entity.id)))
+                           % (entity.eid, eschema_type_eid(session, entity.__regid__)))
         except IndexError:
             # during schema serialization, skip
             return
