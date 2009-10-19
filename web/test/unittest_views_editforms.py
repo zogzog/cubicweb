@@ -6,9 +6,12 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
+from logilab.common.compat import any
+
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views.autoform import AutomaticEntityForm as AEF
 from cubicweb.web.formwidgets import AutoCompletionWidget
+
 def rbc(entity, category):
     return [(rschema.type, x) for rschema, tschemas, x in AEF.erelations_by_category(entity, category)]
 
