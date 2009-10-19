@@ -10,15 +10,13 @@ publisher to get a full CubicWeb web application
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from decimal import Decimal
-from datetime import datetime, date, timedelta
 from simplejson import dumps
 
 from logilab.common.deprecation import deprecated
 
 from urllib import quote as urlquote
 from cubicweb.web._exceptions import *
-
+from cubicweb.utils import CubicWebJsonEncoder
 
 INTERNAL_FIELD_VALUE = '__cubicweb_internal_field__'
 
@@ -47,22 +45,16 @@ LOGGER = getLogger('cubicweb.web')
 FACETTES = set()
 
 
-
 def json_dumps(value):
-    if isinstance(value, Decimal):
-        value = float(value)
-    elif isinstance(value, (date, datetime)):
-        value = value.strftime('%Y-%m-%d %H:%M')
-    elif isinstance(value, timedelta):
-        value = (value.days * 24*60*60) + value.seconds
-    try:
-        return dumps(value)
-    except TypeError:
-        return dumps(repr(value))
+    return dumps(value, cls=CubicWebJsonEncoder)
 
 def jsonize(function):
     def newfunc(*args, **kwargs):
-        return json_dumps(function(*args, **kwargs))
+        try:
+            value = function(*args, **kwargs)
+            return json_dumps(value)
+        except TypeError:
+            return json_dumps(repr(value))
     return newfunc
 
 @deprecated('use req.build_ajax_replace_url() instead')
