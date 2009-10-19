@@ -8,6 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 import sys
+import os
 from itertools import chain
 
 from logilab.common.shellutils import ProgressBar
@@ -276,19 +277,23 @@ def serialize_schema(cursor, schema, verbose=False):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    _title = '-> storing the schema in the database '
-    print _title,
+    quiet = not os.environ('APYCOT_ROOT')
+    if not quiet:
+        _title = '-> storing the schema in the database '
+        print _title,
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
-    if not verbose:
+    if not verbose and not quiet:
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
         pb = ProgressBar(pb_size, title=_title)
+    else:
+        pb = None
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
         if verbose:
             print rql
         cursor.execute(rql, {'ct': unicode(cstrtype)})
-        if not verbose:
+        if pb is not None:
             pb.update()
     groupmap = group_mapping(cursor, interactive=False)
     for ertype in aller:
@@ -304,15 +309,16 @@ def serialize_schema(cursor, schema, verbose=False):
             if verbose:
                 print rql
             cursor.execute(rql, kwargs)
-        if not verbose:
+        if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
         if verbose:
             print rql % kwargs
         cursor.execute(rql, kwargs)
-        if not verbose:
+        if pb is not None:
             pb.update()
-    print
+    if not quiet:
+        print
 
 
 def _ervalues(erschema):
