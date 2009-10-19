@@ -10,6 +10,9 @@ __docformat__ = "restructuredtext en"
 from cubicweb.server import hook
 from cubicweb.server.repository import ensure_card_respected
 
+from logilab.common.compat import any
+
+
 class SetUseEmailRelationOp(hook.Operation):
     """delay this operation to commit to avoid conflict with a late rql query
     already setting the relation
