@@ -91,15 +91,16 @@ class InlineHelpView(StartupView):
 
     def call(self):
         fid = self._cw.form['fid']
-        for lang in chain((self._cw.lang, self._cw.vreg.property_value('ui.language')),
-                          self._cw.config.available_languages()):
+        vreg = self._cw.vreg
+        for lang in chain((self._cw.lang, vreg.property_value('ui.language')),
+                          vreg.config.available_languages()):
             rid = '%s_%s.rst' % (fid, lang)
-            resourcedir = self._cw.config.locate_doc_file(rid)
+            resourcedir = vreg.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:
             raise NotFound
-        self.tocindex = build_toc(self._cw.config)
+        self.tocindex = build_toc(vreg.config)
         try:
             node = self.tocindex[fid]
         except KeyError:

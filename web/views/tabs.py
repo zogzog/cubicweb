@@ -92,7 +92,7 @@ class TabsMixin(LazyViewMixin):
                 tabkwargs = tabkwargs.copy()
             except ValueError:
                 tabid, tabkwargs = tab, {}
-            tabkwargs.setdefault('rset', self.rset)
+            tabkwargs.setdefault('rset', self.cw_rset)
             vid = tabkwargs.get('vid', tabid)
             try:
                 viewsvreg.select(vid, self._cw, **tabkwargs)
@@ -136,7 +136,7 @@ class TabsMixin(LazyViewMixin):
             w(u'<div id="%s">' % tabid)
             tabkwargs.setdefault('tabid', tabid)
             tabkwargs.setdefault('vid', tabid)
-            tabkwargs.setdefault('rset', self.rset)
+            tabkwargs.setdefault('rset', self.cw_rset)
             self.lazyview(**tabkwargs)
             w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated

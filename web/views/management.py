@@ -212,7 +212,7 @@ class ErrorView(AnyRsetView):
         else:
             exclass = ex.__class__.__name__
             ex = exc_message(ex, req.encoding)
-        if excinfo is not None and self._cw.config['print-traceback']:
+        if excinfo is not None and self._cw.vreg.config['print-traceback']:
             if exclass is None:
                 w(u'<div class="tb">%s</div>'
                        % xml_escape(ex).replace("\n","<br />"))
@@ -226,19 +226,19 @@ class ErrorView(AnyRsetView):
         # if excinfo is not None, it's probably not a bug
         if excinfo is None:
             return
-        vcconf = self._cw.config.vc_config()
+        vcconf = self._cw.vreg.config.vc_config()
         w(u"<div>")
         eversion = vcconf.get('cubicweb', self._cw._('no version information'))
         # NOTE: tuple wrapping needed since eversion is itself a tuple
         w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
         cversions = []
-        for cube in self._cw.config.cubes():
+        for cube in self._cw.vreg.config.cubes():
             cubeversion = vcconf.get(cube, self._cw._('no version information'))
             w(u"<b>Package %s version:</b> %s<br/>\n" % (cube, cubeversion))
             cversions.append((cube, cubeversion))
         w(u"</div>")
         # creates a bug submission link if submit-mail is set
-        if self._cw.config['submit-mail']:
+        if self._cw.vreg.config['submit-mail']:
             form = self._cw.vreg['forms'].select('base', self._cw, rset=None,
                                              mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
@@ -281,7 +281,7 @@ class ProcessInformationView(StartupView):
 
     def call(self, **kwargs):
         """display server information"""
-        vcconf = self._cw.config.vc_config()
+        vcconf = self._cw.vreg.config.vc_config()
         req = self._cw
         _ = req._
         # display main information
@@ -289,12 +289,12 @@ class ProcessInformationView(StartupView):
         self.w(u'<table border="1">')
         self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             'CubicWeb', vcconf.get('cubicweb', _('no version information'))))
-        for pkg in self._cw.config.cubes():
+        for pkg in self._cw.vreg.config.cubes():
             pkgversion = vcconf.get(pkg, _('no version information'))
             self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
                 pkg, pkgversion))
         self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('home'), self._cw.config.apphome))
+            _('home'), self._cw.vreg.config.apphome))
         self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('base url'), req.base_url()))
         self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (

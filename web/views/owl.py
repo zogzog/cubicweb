@@ -66,7 +66,7 @@ class OWLView(StartupView):
     def call(self, writeprefix=True):
         skipmeta = int(self._cw.form.get('skipmeta', True))
         if writeprefix:
-            self.w(OWL_OPENING_ROOT % {'appid': self._cw.schema.name})
+            self.w(OWL_OPENING_ROOT % {'appid': self._cw.vreg.schema.name})
         self.visit_schema(skiptypes=skipmeta and schema.SKIP_TYPES or ())
         if writeprefix:
             self.w(OWL_CLOSING_ROOT)
@@ -79,7 +79,7 @@ class OWLView(StartupView):
     def visit_schema(self, skiptypes):
         """get a layout for a whole schema"""
         self.skiptypes = skiptypes
-        entities = sorted(eschema for eschema in self._cw.schema.entities()
+        entities = sorted(eschema for eschema in self._cw.vreg.schema.entities()
                           if not eschema.final or eschema in skiptypes)
         self.w(u'<!-- classes definition -->')
         for eschema in entities:
@@ -151,7 +151,7 @@ class OWLABOXView(EntityView):
     content_type = 'application/xml' # 'text/xml'
 
     def call(self):
-        self.w(OWL_OPENING_ROOT % {'appid': self._cw.schema.name})
+        self.w(OWL_OPENING_ROOT % {'appid': self._cw.vreg.schema.name})
         for i in xrange(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(OWL_CLOSING_ROOT)

@@ -79,7 +79,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return self._cw.build_url('view', vid=self.__regid__)
 
     def _cookie_name(self, somestr):
-        return str('%s_property_%s' % (self._cw.config.appid, somestr))
+        return str('%s_property_%s' % (self._cw.vreg.config.appid, somestr))
 
     def _group_status(self, group, default=u'hidden'):
         """return css class name 'hidden' (collapsed), or '' (open)"""
