@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import implements
+from cubicweb.selectors import implements, one_line_rset
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web import action, box, uicfg
 from cubicweb.web.views import primary
@@ -21,7 +21,7 @@ _abaa.tag_object_of(('*', 'bookmarked_by', '*'), False)
 
 class FollowAction(action.Action):
     id = 'follow'
-    __select__ = implements('Bookmark')
+    __select__ = one_line_rset() & implements('Bookmark')
 
     title = _('follow')
     category = 'mainactions'
