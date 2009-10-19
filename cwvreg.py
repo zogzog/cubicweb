@@ -29,7 +29,7 @@ def clear_rtag_objects():
 
 
 def use_interfaces(obj):
-    """return interfaces used by the given object by searchinf for implements
+    """return interfaces used by the given object by searching for implements
     selectors, with a bw compat fallback to accepts_interfaces attribute
     """
     from cubicweb.selectors import implements
