@@ -193,6 +193,7 @@ class TableView(AnyRsetView):
     def get_columns(self, computed_labels, displaycols, headers, subvid,
                     cellvids, cellattrs, mainindex):
         columns = []
+        eschema = self._cw.vreg.schema.eschema
         for colindex, label in enumerate(computed_labels):
             if colindex not in displaycols:
                 continue
@@ -207,7 +208,7 @@ class TableView(AnyRsetView):
             # join, use the default non final subvid)
             if cellvids and colindex in cellvids:
                 column.append_renderer(cellvids[colindex], colindex)
-            elif coltype is not None and self._cw.schema.eschema(coltype).final:
+            elif coltype is not None and eschema(coltype).final:
                 column.append_renderer(self.finalview, colindex)
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
@@ -236,7 +237,7 @@ class TableView(AnyRsetView):
         if val is None:
             return u''
         etype = self.cw_rset.description[row][col]
-        if self._cw.schema.eschema(etype).final:
+        if self._cw.vreg.schema.eschema(etype).final:
             entity, rtype = self.cw_rset.related_entity(row, col)
             if entity is None:
                 return val # remove_html_tags() ?

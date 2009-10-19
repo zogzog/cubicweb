@@ -275,7 +275,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             sectdict.setdefault('inlined', 'hidden')
         # ensure we have a tag for each form type
         if not 'main' in sectdict:
-            if not rschema.is_final() and (
+            if not rschema.final and (
                 sectdict.get('inlined') == 'attributes' or
                 'inlined_attributes' in self.init_get(sschema, rschema, oschema,
                                                       neg_role(role))):
@@ -288,7 +288,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     sectdict['main'] = 'attributes'
                     if not 'muledit' in sectdict:
                         sectdict['muledit'] = 'attributes'
-                elif rschema.is_final():
+                elif rschema.final:
                     sectdict['main'] = 'attributes'
                 else:
                     sectdict['main'] = 'relations'
@@ -370,7 +370,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
                     yield (rschema, targetschemas, role)
                     continue
-                if rschema.is_final():
+                if rschema.final:
                     if not rschema.has_perm(entity._cw, permission, eid):
                         continue
                 elif role == 'subject':
