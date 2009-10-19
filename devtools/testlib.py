@@ -747,7 +747,7 @@ class AutoPopulateTest(CubicWebTC):
     application_rql = []
 
     no_auto_populate = ()
-    ignored_relations = ()
+    ignored_relations = set()
 
     def to_test_etypes(self):
         return unprotected_entities(self.schema, strict=True)
@@ -779,7 +779,7 @@ class AutoPopulateTest(CubicWebTC):
             rset = cu.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
-        ignored_relations = SYSTEM_RELATIONS + self.ignored_relations
+        ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
         for rschema in self.schema.relations():
             if rschema.final or rschema in ignored_relations:
                 continue
