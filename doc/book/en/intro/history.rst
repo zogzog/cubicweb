@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 A little history...
-======================
+===================
 
 *CubicWeb* is a semantic web application framework that Logilab_ started
 developing in 2001 as an offspring of its Narval_ research project. *CubicWeb*

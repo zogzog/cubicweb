@@ -10,6 +10,7 @@ The following chapters are reference material.
 
 .. toctree::
    :maxdepth: 1
+   :numbered:
 
    faq
    cookbook
