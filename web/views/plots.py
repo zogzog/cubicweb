@@ -112,7 +112,8 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
         for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
             plotid = '%s_%s' % (figid, idx)
             plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
-            plotdata.append("{label: '%s', data: %s}" % (label, plotid))
+            # XXX ugly but required in order to not crash my demo
+            plotdata.append("{label: '%s', data: %s}" % (label.replace(u'&', u''), plotid))
         req.html_headers.add_onload(self.onload %
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
