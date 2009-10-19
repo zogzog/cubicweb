@@ -816,25 +816,7 @@ class AfterDelCWETypeHook(DelCWETypeHook):
         self._cw.execute('DELETE Workflow X WHERE NOT X workflow_of Y')
 
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/hooks/syncschema.py
 class AfterAddCWETypeHook(DelCWETypeHook):
-=======
-def after_del_relation_type(session, rdefeid, rtype, rteid):
-
-
-# addition hooks ###############################################################
-
-def before_add_eetype(session, entity):
-    """before adding a CWEType entity:
-    * check that we are not using an existing entity type,
-    """
-    name = entity['name']
-    schema = session.schema
-    if name in schema and schema[name].eid is not None:
-        raise RepositoryError('an entity type %s already exists' % name)
-
-def after_add_eetype(session, entity):
->>>>>>> /tmp/schemahooks.py~other.2drHhu
     """after adding a CWEType entity:
     * create the necessary table
     * set creation_date and modification_date by creating the necessary
