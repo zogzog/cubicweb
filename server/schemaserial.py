@@ -277,7 +277,7 @@ def serialize_schema(cursor, schema, verbose=False):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    quiet = not os.environ['APYCOT_ROOT']
+    quiet = os.environ.get('APYCOT_ROOT')
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
@@ -299,7 +299,8 @@ def serialize_schema(cursor, schema, verbose=False):
     for ertype in aller:
         # skip eid and has_text relations
         if ertype in VIRTUAL_RTYPES:
-            pb.update()
+            if pb is not None:
+                pb.update()
             continue
         for rql, kwargs in erschema2rql(schema[ertype]):
             if verbose:
