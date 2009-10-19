@@ -247,7 +247,7 @@ class FireTransitionHook(WorkflowHook):
         nocheck = session.transaction_data.setdefault('skip-security', set())
         nocheck.add((entity.eid, 'from_state', fromstate.eid))
         nocheck.add((entity.eid, 'to_state', deststateeid))
-        FireAutotransitionOp(session, entity=forentity)
+        _FireAutotransitionOp(session, entity=forentity)
 
 
 class FiredTransitionHook(WorkflowHook):
