@@ -80,14 +80,18 @@ class SetIsHook(MetaDataHook):
         session = self._cw
         entity = self.entity
         try:
-            session.add_relation(entity.eid, 'is',
-                                 eschema_type_eid(session, entity.__regid__))
+            #session.add_relation(entity.eid, 'is',
+            #                     eschema_type_eid(session, entity.__regid__))
+            session.system_sql('INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                           % (entity.eid, eschema_type_eid(session, entity.id)))
         except IndexError:
             # during schema serialization, skip
             return
         for etype in entity.e_schema.ancestors() + [entity.e_schema]:
-            session.add_relation(entity.eid, 'is_instance_of',
-                                 eschema_type_eid(session, etype))
+            #session.add_relation(entity.eid, 'is_instance_of',
+            #                     eschema_type_eid(session, etype))
+            session.system_sql('INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                               % (entity.eid, eschema_type_eid(session, etype)))
 
 
 class SetOwnershipHook(MetaDataHook):

@@ -105,7 +105,7 @@ class PrimaryView(EntityView):
     def render_entity_attributes(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
-            if rschema.is_final() or vid == 'reledit':
+            if rschema.final or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
@@ -176,11 +176,8 @@ class PrimaryView(EntityView):
 
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            if dispctrl.get('limit'):
-                rset = entity.related(rschema.type, role,
-                                      limit=self.maxrelated+1)
-            else:
-                rset = entity.related(rschema.type, role)
+            dispctrl.setdefault('limit', self.maxrelated)
+            rset = entity.related(rschema.type, role, limit=dispctrl['limit']+1)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
@@ -191,11 +188,11 @@ class PrimaryView(EntityView):
         self.w(u'<div class="section">')
         if showlabel:
             self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
-        self.wview(dispctrl.get('vid', defaultvid), rset)
+                   initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
-        if rschema.is_final():
+        if rschema.final:
             show_label = self.show_attr_label
         else:
             show_label = self.show_rel_label
@@ -205,12 +202,16 @@ class PrimaryView(EntityView):
 
 class RelatedView(EntityView):
     __regid__ = 'autolimited'
-    def call(self, title=None, **kwargs):
-        # if not too many entities, show them all in a list
-        maxrelated = self._cw.property_value('navigation.related-limit')
-        if title:
-            self.w(u'<div class="title"><span>%s</span></div>' % title)
-        if self.cw_rset.rowcount <= maxrelated:
+
+    def call(self, **kwargs):
+        # nb: rset retreived using entity.related with limit + 1 if any
+        # because of that, we known that rset.printable_rql() will return
+        # rql with no limit set anyway (since it's handled manually)
+        if 'dispctrl' in self.extra_kwargs:
+            limit = self.extra_kwargs['dispctrl'].get('limit')
+        else:
+            limit = None
+        if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
                 self.wview('incontext', self.cw_rset, row=0)
             elif 1 < self.cw_rset.rowcount <= 5:
@@ -222,7 +223,7 @@ class RelatedView(EntityView):
         # else show links to display related entities
         else:
             rql = self.cw_rset.printable_rql()
-            self.cw_rset.limit(maxrelated)
+            self.cw_rset.limit(maxrelated) # remove extra entity
             self.w(u'<div>')
             self.wview('simplelist', self.cw_rset)
             self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),

@@ -39,7 +39,7 @@ def need_table_view(rset, schema):
         if not isinstance(selected[i+1], nodes.VariableRef):
             return True
         # if this is not a final entity
-        if not schema.eschema(etype).is_final():
+        if not schema.eschema(etype).final:
             return True
         # if this is a final entity not linked to the main variable
         var = selected[i+1].variable
@@ -74,7 +74,7 @@ def vid_from_rset(req, rset, schema):
     if nb_rows == 0 :
         return 'noresult'
     # entity result set
-    if not schema.eschema(rset.description[0][0]).is_final():
+    if not schema.eschema(rset.description[0][0]).final:
         if need_table_view(rset, schema):
             return 'table'
         if nb_rows == 1:

@@ -64,7 +64,7 @@ class SortedNavigation(NavigationComponent):
             def index_display(row):
                 entity = rset.get_entity(row, col)
                 return entity.printable_value(attrname, format='text/plain')
-        elif self._cw.schema.eschema(rset.description[0][col]).is_final():
+        elif self._cw.schema.eschema(rset.description[0][col]).final:
             def index_display(row):
                 return unicode(rset[row][col])
         else:
@@ -99,7 +99,7 @@ class SortedNavigation(NavigationComponent):
                 attrname = rel.r_type
                 if attrname == 'is':
                     continue
-                if not rschema(attrname).is_final():
+                if not rschema(attrname).final:
                     col = var.selected_index()
                     attrname = None
                 if col is None:

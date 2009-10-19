@@ -80,7 +80,7 @@ class TableView(AnyRsetView):
         eschema = self._cw.vreg.schema.eschema
         for i, etype in enumerate(self.cw_rset.description[0]):
             try:
-                if not eschema(etype).is_final():
+                if not eschema(etype).final:
                     return i
             except KeyError: # XXX possible?
                 continue
@@ -207,7 +207,7 @@ class TableView(AnyRsetView):
             # join, use the default non final subvid)
             if cellvids and colindex in cellvids:
                 column.append_renderer(cellvids[colindex], colindex)
-            elif coltype is not None and self._cw.schema.eschema(coltype).is_final():
+            elif coltype is not None and self._cw.schema.eschema(coltype).final:
                 column.append_renderer(self.finalview, colindex)
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
@@ -236,7 +236,7 @@ class TableView(AnyRsetView):
         if val is None:
             return u''
         etype = self.cw_rset.description[row][col]
-        if self._cw.schema.eschema(etype).is_final():
+        if self._cw.schema.eschema(etype).final:
             entity, rtype = self.cw_rset.related_entity(row, col)
             if entity is None:
                 return val # remove_html_tags() ?
@@ -261,7 +261,7 @@ class CellView(EntityView):
         :param cellvid: cell view (defaults to 'outofcontext')
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
-        if val is not None and not self._cw.schema.eschema(etype).is_final():
+        if val is not None and not self._cw.schema.eschema(etype).final:
             e = self.cw_rset.get_entity(row, col)
             e.view(cellvid or 'outofcontext', w=self.w)
         elif val is None:

@@ -216,7 +216,7 @@ class SourceDbCWRTypeUpdate(hook.Operation):
     def precommit_event(self):
         session = self.session
         rschema = self.rschema
-        if rschema.is_final() or not 'inlined' in self.values:
+        if rschema.final or not 'inlined' in self.values:
             return # nothing to do
         inlined = self.values['inlined']
         entity = self.entity
@@ -454,7 +454,7 @@ class SourceDbRDefUpdate(hook.Operation):
                 sysource.create_index(self.session, table, column)
             else:
                 sysource.drop_index(self.session, table, column)
-        if 'cardinality' in self.values and self.rschema.is_final():
+        if 'cardinality' in self.values and self.rschema.final:
             adbh = self.session.pool.source('system').dbhelper
             if not adbh.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
@@ -816,7 +816,25 @@ class AfterDelCWETypeHook(DelCWETypeHook):
         self._cw.execute('DELETE Workflow X WHERE NOT X workflow_of Y')
 
 
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/hooks/syncschema.py
 class AfterAddCWETypeHook(DelCWETypeHook):
+=======
+def after_del_relation_type(session, rdefeid, rtype, rteid):
+
+
+# addition hooks ###############################################################
+
+def before_add_eetype(session, entity):
+    """before adding a CWEType entity:
+    * check that we are not using an existing entity type,
+    """
+    name = entity['name']
+    schema = session.schema
+    if name in schema and schema[name].eid is not None:
+        raise RepositoryError('an entity type %s already exists' % name)
+
+def after_add_eetype(session, entity):
+>>>>>>> /tmp/schemahooks.py~other.2drHhu
     """after adding a CWEType entity:
     * create the necessary table
     * set creation_date and modification_date by creating the necessary
@@ -974,10 +992,11 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
     def __call__(self):
         session = self._cw
         subjschema, rschema, objschema = session.vreg.schema.schema_by_eid(self.eidfrom)
+        subjschema, rschema, objschema = session.schema.schema_by_eid(rdefeid)
         pendings = session.transaction_data.get('pendingeids', ())
         pendingrdefs = session.transaction_data.setdefault('pendingrdefs', set())
         # first delete existing relation if necessary
-        if rschema.is_final():
+        if rschema.final:
             rdeftype = 'CWAttribute'
             pendingrdefs.add((subjschema, rschema))
         else:
@@ -987,7 +1006,6 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
                 session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
         execute = session.unsafe_execute
-        rteid = self.eidto
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
                        'R eid %%(x)s' % rdeftype, {'x': rteid})
         lastrel = rset[0][0] == 0
@@ -995,7 +1013,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         # relations, but only if it's the last instance for this relation type
         # for other relations
 
-        if (rschema.is_final() or rschema.inlined):
+        if (rschema.final or rschema.inlined):
             rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R, '
                            'R eid %%(x)s, X from_entity E, E name %%(name)s'
                            % rdeftype, {'x': rteid, 'name': str(subjschema)})

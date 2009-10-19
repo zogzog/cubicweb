@@ -303,7 +303,7 @@ repository (default to 5 minutes).',
             needtranslation = []
             rows = rset.rows
             for i, etype in enumerate(descr[0]):
-                if (etype is None or not self.schema.eschema(etype).is_final()
+                if (etype is None or not self.schema.eschema(etype).final
                     or uidtype(union, i, etype, args)):
                     needtranslation.append(i)
             if needtranslation:
@@ -487,7 +487,7 @@ class RQL2RQL(object):
             raise
         if node.optional in ('left', 'both'):
             lhs += '?'
-        if node.r_type == 'eid' or not self.source.schema.rschema(node.r_type).is_final():
+        if node.r_type == 'eid' or not self.source.schema.rschema(node.r_type).final:
             self.need_translation = True
             self.current_operator = node.operator()
             if isinstance(node.children[0], Constant):

@@ -120,10 +120,10 @@ class EntityTC(CubicWebTC):
         Note = self.vreg['etypes'].etype_class('Note')
         peschema = Personne.e_schema
         seschema = Societe.e_schema
-        peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '1*')
-        peschema.subject_relation('connait').set_rproperty(peschema, peschema, 'cardinality', '11')
-        peschema.subject_relation('evaluee').set_rproperty(peschema, Note.e_schema, 'cardinality', '1*')
-        seschema.subject_relation('evaluee').set_rproperty(seschema, Note.e_schema, 'cardinality', '1*')
+        peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '1*')
+        peschema.subjrels['connait'].set_rproperty(peschema, peschema, 'cardinality', '11')
+        peschema.subjrels['evaluee'].set_rproperty(peschema, Note.e_schema, 'cardinality', '1*')
+        seschema.subjrels['evaluee'].set_rproperty(seschema, Note.e_schema, 'cardinality', '1*')
         # testing basic fetch_attrs attribute
         self.assertEquals(Personne.fetch_rql(user),
                           'Any X,AA,AB,AC ORDERBY AA ASC '
@@ -158,13 +158,13 @@ class EntityTC(CubicWebTC):
             self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
                               'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
-            peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '?*')
+            peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '?*')
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom',)
             self.assertEquals(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing relation with cardinality > 1
-            peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '**')
+            peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '**')
             self.assertEquals(Personne.fetch_rql(user),
                               'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB')
             # XXX test unauthorized attribute

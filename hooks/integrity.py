@@ -63,8 +63,11 @@ class IntegrityHook(hook.Hook):
     __abstract__ = True
     category = 'integrity'
 
+class UserIntegrityHook(IntegrityHook):
+    __select__ == IntegrityHook.__select__ & ~regular_session()
 
-class CheckCardinalityHook(IntegrityHook):
+
+class CheckCardinalityHook(UserIntegrityHook):
     """check cardinalities are satisfied"""
     __regid__ = 'checkcard'
     events = ('after_add_entity', 'before_delete_relation')
@@ -139,7 +142,7 @@ class _CheckConstraintsOp(hook.LateOperation):
         pass
 
 
-class CheckConstraintHook(IntegrityHook):
+class CheckConstraintHook(UserIntegrityHook):
     """check the relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -155,7 +158,7 @@ class CheckConstraintHook(IntegrityHook):
             _CheckConstraintsOp(self._cw, constraints=constraints,
                                rdef=(self.eidfrom, self.rtype, self.eidto))
 
-class CheckAttributeConstraintHook(IntegrityHook):
+class CheckAttributeConstraintHook(UserIntegrityHook):
     """check the attribute relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -168,7 +171,7 @@ class CheckAttributeConstraintHook(IntegrityHook):
         schema = self._cw.vreg.schema
         entity = self.entity
         for attr in entity.edited_attributes:
-            if schema.rschema(attr).is_final():
+            if schema.rschema(attr).final:
                 constraints = [c for c in entity.e_schema.constraints(attr)
                                if isinstance(c, RQLVocabularyConstraint)]
                 if constraints:
@@ -176,7 +179,7 @@ class CheckAttributeConstraintHook(IntegrityHook):
                                         rdef=(entity.eid, attr, None))
 
 
-class CheckUniqueHook(IntegrityHook):
+class CheckUniqueHook(UserIntegrityHook):
     __regid__ = 'checkunique'
     events = ('before_add_entity', 'before_update_entity')
 
@@ -184,7 +187,7 @@ class CheckUniqueHook(IntegrityHook):
         entity = self.entity
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
-            if eschema.subject_relation(attr).is_final() and \
+            if eschema.subject_relation(attr).final and \
                    eschema.has_unique_values(attr):
                 val = entity[attr]
                 if val is None:
@@ -253,7 +256,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
             self.entity['name'] = newname
 
 
-class TidyHtmlFields(IntegrityHook):
+class TidyHtmlFields(UserIntegrityHook):
     """tidy HTML in rich text strings"""
     __regid__ = 'htmltidy'
     events = ('before_add_entity', 'before_update_entity')

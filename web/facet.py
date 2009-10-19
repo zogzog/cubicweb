@@ -92,7 +92,7 @@ def _may_be_removed(rel, schema, mainvar):
             # constant restriction
             # XXX: X title LOWER(T) if it makes sense?
             return None
-        if rschema.is_final():
+        if rschema.final:
             if len(ovar.stinfo['relations']) == 1:
                 # attribute selection
                 return ovar

@@ -63,7 +63,7 @@ class AnyEntity(Entity):
 
     def dc_description(self, format='text/plain'):
         """return a suitable description for this entity"""
-        if self.e_schema.has_subject_relation('description'):
+        if 'description' in self.e_schema.subjrels:
             return self.printable_value('description', format=format)
         return u''
 

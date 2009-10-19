@@ -152,7 +152,7 @@ url: %(url)s
         for attr, oldvalue, newvalue in sorted(changes):
             # check current user has permission to see the attribute
             rschema = self.vreg.schema[attr]
-            if rschema.is_final():
+            if rschema.final:
                 if not rschema.has_perm(self.req, 'read', eid=self.rset[0][0]):
                     continue
             # XXX suppose it's a subject relation...

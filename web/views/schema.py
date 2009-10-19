@@ -88,11 +88,11 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
         schema = self._cw.schema
         # compute entities
         entities = sorted(eschema for eschema in schema.entities()
-                          if not (eschema.is_final() or eschema in skiptypes))
+                          if not (eschema.final or eschema in skiptypes))
         # compute relations
         if display_relations:
             relations = sorted(rschema for rschema in schema.relations()
-                               if not (rschema.is_final()
+                               if not (rschema.final
                                        or rschema in skiptypes
                                        or rschema in META_RTYPES))
         else:
@@ -337,7 +337,7 @@ class CWRTypeSchemaView(primary.PrimaryView):
         viewer = SchemaViewer(self._cw)
         layout = viewer.visit_relationschema(rschema)
         self.w(uilib.ureport_as_html(layout))
-        if not rschema.is_final():
+        if not rschema.final:
             msg = self._cw._('graphical schema for %s') % entity.name
             self.w(tags.img(src=entity.absolute_url(vid='schemagraph'),
                             alt=msg))

@@ -65,7 +65,7 @@ else:
             edef.name = edef.name.encode()
             assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
             eschema = super(CubicWebSchema, self).add_entity_type(edef)
-            if not eschema.is_final():
+            if not eschema.final:
                 # automatically add the eid relation to non final entity types
                 rdef = ybo.RelationDefinition(eschema.type, 'eid', 'Bytes',
                                               cardinality='?1', uid=True)

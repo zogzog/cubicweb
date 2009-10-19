@@ -40,7 +40,7 @@ class has_editable_relation(EntitySelector):
                  'optional argument', DeprecationWarning)
             editableattrs = form.editable_attributes()
         for rschema, targetschemas, role in editableattrs:
-            if not rschema.is_final():
+            if not rschema.final:
                 return 1
         return 0
 
@@ -66,7 +66,7 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
         if len(select.defined_vars) == 1 and len(select.solutions) == 1:
             rset._searched_etype = select.solutions[0].itervalues().next()
             eschema = req.schema.eschema(rset._searched_etype)
-            if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
+            if not (eschema.final or eschema.is_subobject(strict=True)) \
                    and eschema.has_perm(req, 'add'):
                 return 1
     return 0
@@ -270,7 +270,7 @@ class AddRelatedActions(action.Action):
         for role, rschemas in (('subject', eschema.subject_relations()),
                                ('object', eschema.object_relations())):
             for rschema in rschemas:
-                if rschema.is_final():
+                if rschema.final:
                     continue
                 # check the relation can be added as well
                 # XXX consider autoform_permissions_overrides?

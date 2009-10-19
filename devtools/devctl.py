@@ -144,13 +144,13 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         if etype not in libschema:
             add_msg(w, etype)
             add_msg(w, '%s_plural' % etype)
-            if not eschema.is_final():
+            if not eschema.final:
                 add_msg(w, 'This %s' % etype)
                 add_msg(w, 'New %s' % etype)
             if eschema.description and not eschema.description in done:
                 done.add(eschema.description)
                 add_msg(w, eschema.description)
-        if eschema.is_final():
+        if eschema.final:
             continue
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             for tschema in targetschemas:
@@ -201,7 +201,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
-        if not (schema.rschema(rtype).is_final() or rschema.symetric):
+        if not (schema.rschema(rtype).final or rschema.symetric):
             if rschema not in no_context_rtypes:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():

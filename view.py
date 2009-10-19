@@ -213,7 +213,7 @@ class View(AppObject):
         coltypes = rset.column_types(0)
         if len(coltypes) == 1:
             etype = iter(coltypes).next()
-            if not self._cw.schema.eschema(etype).is_final():
+            if not self._cw.schema.eschema(etype).final:
                 if len(rset) == 1:
                     entity = rset.get_entity(0, 0)
                     return entity.absolute_url(vid=self.__regid__)

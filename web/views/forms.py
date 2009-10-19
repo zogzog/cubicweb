@@ -349,7 +349,7 @@ class EntityFieldsForm(FieldsForm):
             return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
         if attr == '__type':
             return entity.__regid__
-        if self._cw.schema.rschema(attr).is_final():
+        if self.schema.rschema(attr).final:
             attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
                 return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
@@ -456,7 +456,7 @@ class EntityFieldsForm(FieldsForm):
         if isinstance(rtype, basestring):
             rtype = self._cw.vreg.schema.rschema(rtype)
         done = None
-        assert not rtype.is_final(), rtype
+        assert not rtype.final, rtype
         if entity.has_eid():
             done = set(e.eid for e in getattr(entity, str(rtype)))
         result = []

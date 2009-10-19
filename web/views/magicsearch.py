@@ -279,7 +279,7 @@ class QSPreProcessor(BaseQueryProcessor):
         eschema = self._cw.schema.eschema(etype)
         rtype = self._get_attribute_name(word2, eschema)
         # expand shortcut if rtype is a non final relation
-        if not self._cw.schema.rschema(rtype).is_final():
+        if not self._cw.schema.rschema(rtype).final:
             return self._expand_shortcut(etype, rtype, word3)
         if '%' in word3:
             searchop = 'LIKE '

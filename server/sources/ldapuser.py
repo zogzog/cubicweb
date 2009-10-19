@@ -632,7 +632,7 @@ class RQL2LDAPFilter(object):
             return ''
         lhs, rhs = relation.get_parts()
         # attribute relation
-        if self.source.schema.rschema(rtype).is_final():
+        if self.source.schema.rschema(rtype).final:
             # dunno what to do here, don't pretend anything else
             if lhs.name != self._mainvarname:
                 if lhs.name in self.mainvars:

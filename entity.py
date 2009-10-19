@@ -139,7 +139,7 @@ class Entity(AppObject, dict):
         _fetchattrs = []
         for attr in fetchattrs:
             try:
-                rschema = eschema.subject_relation(attr)
+                rschema = eschema.subjrels[attr]
             except KeyError:
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
                             attr, cls.__regid__)
@@ -150,7 +150,7 @@ class Entity(AppObject, dict):
             selection.append(var)
             restriction = '%s %s %s' % (mainvar, attr, var)
             restrictions.append(restriction)
-            if not rschema.is_final():
+            if not rschema.final:
                 # XXX this does not handle several destination types
                 desttype = rschema.objects(eschema.type)[0]
                 card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
@@ -184,7 +184,7 @@ class Entity(AppObject, dict):
             needcheck = not cls.e_schema.has_unique_values(mainattr)
         else:
             for rschema in cls.e_schema.subject_relations():
-                if rschema.is_final() and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
+                if rschema.final and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
                     mainattr = str(rschema)
                     needcheck = False
                     break
@@ -383,7 +383,7 @@ class Entity(AppObject, dict):
         assert self.has_eid()
         execute = self._cw.execute
         for rschema in self.e_schema.subject_relations():
-            if rschema.is_final() or rschema.meta:
+            if rschema.final or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
@@ -431,7 +431,7 @@ class Entity(AppObject, dict):
     def to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
         for rschema in self.e_schema.subject_relations():
-            if rschema.is_final():
+            if rschema.final:
                 continue
             if len(rschema.objects(self.e_schema)) > 1:
                 # ambigous relations, the querier doesn't handle
@@ -591,14 +591,14 @@ class Entity(AppObject, dict):
             if targettypes is None:
                 targettypes = rschema.objects(self.e_schema)
             else:
-                restriction += 'E is IN (%s)' % ','.join(targettypes)
+                restriction += ', X is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, (self.e_schema,), targettypes, 0)
         else:
             restriction = 'E eid %%(x)s, X %s E' % rtype
             if targettypes is None:
                 targettypes = rschema.subjects(self.e_schema)
             else:
-                restriction += 'E is IN (%s)' % ','.join(targettypes)
+                restriction += ', X is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
         if len(targettypes) > 1:
             fetchattrs_list = []
@@ -706,7 +706,7 @@ class Entity(AppObject, dict):
         else raise `KeyError`
         """
         res = self._related_cache['%s_%s' % (rtype, role)][entities]
-        if limit is not None:
+        if limit is not None and limit < len(res):
             if entities:
                 res = res[:limit]
             else:

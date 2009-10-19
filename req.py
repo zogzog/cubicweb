@@ -108,7 +108,8 @@ class RequestSessionBase(object):
 
     # XXX move to CWEntityManager or even better as factory method (unclear
     # where yet...)
-    def create_entity(self, etype, **kwargs):
+
+    def create_entity(self, etype, _cw_unsafe=False, **kwargs):
         """add a new entity of the given type
 
         Example (in a shell session):
@@ -117,16 +118,21 @@ class RequestSessionBase(object):
         create_entity('Person', works_for=c, firstname=u'John', lastname=u'Doe')
 
         """
+        if _cw_unsafe:
+            execute = self.unsafe_execute
+        else:
+            execute = self.execute
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = set()
         cachekey = []
         pending_relations = []
-        for attr, value in kwargs.iteritems():
+        for attr, value in kwargs.items():
             if isinstance(value, (tuple, list, set, frozenset)):
                 if len(value) == 1:
                     value = iter(value).next()
                 else:
+                    del kwargs[attr]
                     pending_relations.append( (attr, value) )
                     continue
             if hasattr(value, 'eid'): # non final relation
@@ -147,13 +153,13 @@ class RequestSessionBase(object):
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+        created = execute(rql, kwargs, cachekey).get_entity(0, 0)
         for attr, values in pending_relations:
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
             else:
                 restr = 'X %s Y' % attr
-            self.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
                          {'x': created.eid}, 'x')
         return created

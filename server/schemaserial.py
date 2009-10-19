@@ -64,7 +64,7 @@ def _update_database(schema, sqlcu):
     entity type tables and columns
     """
     for etype in schema.entities():
-        if etype.is_final():
+        if etype.final:
             continue
         try:
             sql = 'ALTER TABLE %s RENAME TO cw_%s' % (
@@ -76,7 +76,7 @@ def _update_database(schema, sqlcu):
         for rschema in etype.subject_relations():
             if rschema == 'has_text':
                 continue
-            if rschema.is_final() or rschema.inlined:
+            if rschema.final or rschema.inlined:
                 sql = 'ALTER TABLE cw_%s RENAME %s TO cw_%s' % (
                     etype, rschema, rschema)
                 print sql
@@ -326,7 +326,7 @@ def _ervalues(erschema):
         raise Exception("can't decode %s [was %s]" % (erschema.description, e))
     return {
         'name': type_,
-        'final': erschema.is_final(),
+        'final': erschema.final,
         'description': desc,
         }
 
@@ -340,7 +340,7 @@ HAS_FULLTEXT_CONTAINER = True
 
 def rschema_relations_values(rschema):
     values = _ervalues(rschema)
-    values['final'] = rschema.is_final()
+    values['final'] = rschema.final
     values['symetric'] = rschema.symetric
     values['inlined'] = rschema.inlined
     if HAS_FULLTEXT_CONTAINER:
@@ -402,7 +402,7 @@ def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None):
         # don't serialize infered relations
         if _props.get('infered'):
             continue
-        gen = genmap[rschema.is_final()]
+        gen = genmap[rschema.final]
         for rql, values in gen(rschema, subjtype, objtype, _props):
             yield rql, values
 

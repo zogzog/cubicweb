@@ -448,7 +448,7 @@ class Connection(object):
         return self._repo.get_schema()
 
     def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True,
-                      force_reload=None):
+                        force_reload=None):
         config = self.vreg.config
         if cubes is _MARKER:
             cubes = self._repo.get_cubes()

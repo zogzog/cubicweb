@@ -396,7 +396,7 @@ class ResultSet(object):
         etype = self.description[row][col]
         try:
             eschema = self.vreg.schema.eschema(etype)
-            if eschema.is_final():
+            if eschema.final:
                 raise NotAnEntity(etype)
         except KeyError:
             raise NotAnEntity(etype)
@@ -461,14 +461,14 @@ class ResultSet(object):
                 if outerselidx is None:
                     continue
                 if x == 'subject':
-                    rschema = eschema.subject_relation(attr)
-                    if rschema.is_final():
+                    rschema = eschema.subjrels[attr]
+                    if rschema.final:
                         entity[attr] = rowvalues[outerselidx]
                         continue
                     tetype = rschema.objects(etype)[0]
                     card = rschema.rproperty(etype, tetype, 'cardinality')[0]
                 else:
-                    rschema = eschema.object_relation(attr)
+                    rschema = eschema.objrels[attr]
                     tetype = rschema.subjects(etype)[0]
                     card = rschema.rproperty(tetype, etype, 'cardinality')[1]
                 # only keep value if it can't be multivalued
@@ -541,7 +541,7 @@ class ResultSet(object):
         locate_query_col = col
         rqlst = self.syntax_tree()
         etype = self.description[row][col]
-        if self.vreg.schema.eschema(etype).is_final():
+        if self.vreg.schema.eschema(etype).final:
             # final type, find a better one to locate the correct subquery
             # (ambiguous if possible)
             for i in xrange(len(rqlst.children[0].selection)):
@@ -550,7 +550,7 @@ class ResultSet(object):
                 coletype = self.description[row][i]
                 if coletype is None:
                     continue
-                if not self.vreg.schema.eschema(coletype).is_final():
+                if not self.vreg.schema.eschema(coletype).final:
                     etype = coletype
                     locate_query_col = i
                     if len(self.column_types(i)) > 1:

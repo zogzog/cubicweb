@@ -201,7 +201,7 @@ def set_qdata(getrschema, union, noinvariant):
         for rel in select.iget_nodes(Relation):
             if rel.neged(strict=True) and not rel.is_types_restriction():
                 rschema = getrschema(rel.r_type)
-                if not rschema.is_final():
+                if not rschema.final:
                     # if one of the relation's variable is ambiguous but not
                     # invariant, an intersection will be necessary
                     for vref in rel.get_nodes(VariableRef):
@@ -221,7 +221,7 @@ class SQLGenAnnotator(object):
     def __init__(self, schema):
         self.schema = schema
         self.nfdomain = frozenset(eschema.type for eschema in schema.entities()
-                                  if not eschema.is_final())
+                                  if not eschema.final)
 
     def annotate(self, rqlst):
         """add information to the rql syntax tree to help sources to do their
@@ -234,7 +234,7 @@ class SQLGenAnnotator(object):
           syntax tree or because a solution for this variable has been removed
           due to security filtering)
         """
-        assert rqlst.TYPE == 'select', rqlst
+        #assert rqlst.TYPE == 'select', rqlst
         rqlst.has_text_query = self._annotate_union(rqlst)
 
     def _annotate_union(self, union):
@@ -288,7 +288,7 @@ class IsAmbData(object):
         # set domains for each variable
         for varname, var in rqlst.defined_vars.iteritems():
             if var.stinfo['uidrels'] or \
-                   self.eschema(rqlst.solutions[0][varname]).is_final():
+                   self.eschema(rqlst.solutions[0][varname]).final:
                 ptypes = var.stinfo['possibletypes']
             else:
                 ptypes = set(self.nfdomain)
@@ -304,7 +304,7 @@ class IsAmbData(object):
             lhs, rhs = rel.get_variable_parts()
             if isinstance(lhs, VariableRef) or isinstance(rhs, VariableRef):
                 rschema = self.rschema(rel.r_type)
-                if rschema.inlined or rschema.is_final():
+                if rschema.inlined or rschema.final:
                     self.not_invariants.add(lhs.variable)
                 self.set_rel_constraint(lhs, rel, rschema.subjects)
                 self.set_rel_constraint(rhs, rel, rschema.objects)

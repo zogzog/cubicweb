@@ -45,7 +45,6 @@ class CubicWebDebugger(Debugger):
         file('/tmp/toto.html', 'w').write(data)
         webbrowser.open('file:///tmp/toto.html')
 
-
 def line_context_filter(line_no, center, before=3, after=None):
     """return true if line are in context
 
@@ -715,7 +714,7 @@ def how_many_dict(schema, cursor, how_many, skip):
     # compute how many entities by type we need to be able to satisfy relation constraint
     relmap = {}
     for rschema in schema.relations():
-        if rschema.is_final():
+        if rschema.final:
             continue
         for subj, obj in rschema.iter_rdefs():
             card = rschema.rproperty(subj, obj, 'cardinality')
@@ -759,6 +758,7 @@ class AutoPopulateTest(CubicWebTC):
     def post_populate(self, cursor):
         pass
 
+
     @nocoverage
     def auto_populate(self, how_many):
         """this method populates the database with `how_many` entities
@@ -779,9 +779,9 @@ class AutoPopulateTest(CubicWebTC):
             rset = cu.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
-        ignored_relations = SYSTEM_RELATIONS | set(self.ignored_relations)
+        ignored_relations = SYSTEM_RELATIONS + self.ignored_relations
         for rschema in self.schema.relations():
-            if rschema.is_final() or rschema in ignored_relations:
+            if rschema.final or rschema in ignored_relations:
                 continue
             rset = cu.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
             existingrels.setdefault(rschema.type, set()).update((x, y) for x, y in rset)

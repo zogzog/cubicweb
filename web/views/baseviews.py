@@ -115,7 +115,7 @@ class SecondaryView(EntityView):
     __regid__ = 'secondary'
     title = _('secondary')
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the secondary view for an entity
         secondary = icon + view(oneline)
         """
@@ -128,7 +128,7 @@ class OneLineView(EntityView):
     __regid__ = 'oneline'
     title = _('oneline')
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the one line view for an entity: linked text view
         """
         entity = self.cw_rset.get_entity(row, col)

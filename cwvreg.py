@@ -29,7 +29,7 @@ def clear_rtag_objects():
 
 
 def use_interfaces(obj):
-    """return interfaces used by the given object by searchinf for implements
+    """return interfaces used by the given object by searching for implements
     selectors, with a bw compat fallback to accepts_interfaces attribute
     """
     from cubicweb.selectors import implements
@@ -62,16 +62,28 @@ class CWRegistry(Registry):
         pass
 
     @deprecated('[3.6] select object, then use obj.render()')
-    def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
-        """select object, or fallback object if specified and the first one
-        isn't selectable, then render it
+    def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
+               **kwargs):
+        """Select object with the given id (`__oid`) then render it.  If the
+        object isn't selectable, try to select fallback object if
+        `__fallback_oid` is specified.
+
+        If specified `initargs` is expected to be a dictionnary containing
+        arguments that should be given to selection (hence to object's __init__
+        as well), but not to render(). Other arbitrary keyword arguments will be
+        given to selection *and* to render(), and so should be handled by
+        object's call or cell_call method..
         """
+        if initargs is None:
+            initargs = kwargs
+        else:
+            initargs.update(kwargs)
         try:
-            obj = self.select(__oid, req, rset=rset, **kwargs)
+            obj = self.select(__oid, req, rset=rset, **initargs)
         except NoSelectableObject:
             if __fallback_oid is None:
                 raise
-            obj = self.select(__fallback_oid, req, rset=rset, **kwargs)
+            obj = self.select(__fallback_oid, req, rset=rset, **initargs)
         return obj.render(**kwargs)
 
     @deprecated('[3.6] use select_or_none and test for obj.cw_propval("visible")')
@@ -305,9 +317,11 @@ class CubicWebVRegistry(VRegistry):
         self.register_objects(searchpath, force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
-        for etype in self.schema.entities():
-            etype = str(etype)
+        for eschema in self.schema.entities():
+            etype = str(eschema)
             self.case_insensitive_etypes[etype.lower()] = etype
+            clear_cache(eschema, 'ordered_relations')
+            clear_cache(eschema, 'meta_attributes')
 
     def _set_schema(self, schema):
         """set instance'schema"""
@@ -379,7 +393,7 @@ class CubicWebVRegistry(VRegistry):
             implemented_interfaces = set()
             if 'Any' in self.get('etypes', ()):
                 for etype in self.schema.entities():
-                    if etype.is_final():
+                    if etype.final:
                         continue
                     cls = self['etypes'].etype_class(etype)
                     for iface in cls.__implements__:

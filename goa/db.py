@@ -148,7 +148,7 @@ class Model(entities.AnyEntity):
     def __initialize__(cls):
         super(Model, cls).__initialize__()
         cls._attributes = frozenset(rschema for rschema in cls.e_schema.subject_relations()
-                                    if rschema.is_final())
+                                    if rschema.final)
 
     def __init__(self, *args, **kwargs):
         # db.Model prototype:
@@ -163,7 +163,7 @@ class Model(entities.AnyEntity):
             super(Model, self).__init__(None, None)
             # if Model instances are given in kwargs, turn them into db model
             for key, val in kwargs.iteritems():
-                if key in self.e_schema.subject_relations() and not self.e_schema.schema[key].is_final():
+                if key in self.e_schema.subject_relations() and not self.e_schema.schema[key].final:
                     if isinstance(kwargs, (list, tuple)):
                         val = [isinstance(x, Model) and x._dbmodel or x for x in val]
                     elif isinstance(val, Model):

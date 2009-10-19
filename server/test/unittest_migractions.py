@@ -154,7 +154,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          sorted(str(e) for e in self.schema.entities() if not e.is_final()))
+                          sorted(str(e) for e in self.schema.entities() if not e.final))
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.constraints('name'):
@@ -183,7 +183,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.schema.rebuild_infered_relations()
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          sorted(str(e) for e in self.schema.entities() if not e.is_final()))
+                          sorted(str(e) for e in self.schema.entities() if not e.final))
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         self.mh.cmd_drop_relation_type('filed_under2')
         self.failIf('filed_under2' in self.schema)

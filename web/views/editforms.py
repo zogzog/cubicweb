@@ -171,7 +171,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         rschema = schema.rschema(rtype)
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
-        if rschema.is_final():
+        if rschema.final:
             onsubmit = ("return inlineValidateAttributeForm('%(rtype)s', '%(eid)s', '%(divid)s', "
                         "%(reload)s, '%(default)s');")
             form = self._build_form(
@@ -398,7 +398,7 @@ class CopyFormView(EditionFormView):
             form.form_add_hidden(eid_param('__cloned_eid', entity.eid),
                                  self.copying.eid)
         for rschema, role in form.editable_attributes():
-            if not rschema.is_final():
+            if not rschema.final:
                 # ensure relation cache is filed
                 rset = self.copying.related(rschema, role)
                 self.newentity.set_related_cache(rschema, role, rset)

@@ -168,7 +168,7 @@ class AbstractSource(object):
             wsupport = self.support_relations[rtype]
         except KeyError:
             rschema = self.schema.rschema(rtype)
-            if not rschema.is_final() or rschema == 'has_text':
+            if not rschema.final or rschema == 'has_text':
                 return False
             for etype in rschema.subjects():
                 try:
@@ -225,7 +225,7 @@ class AbstractSource(object):
         # delete relations referencing one of those eids
         eidcolum = SQL_PREFIX + 'eid'
         for rschema in self.schema.relations():
-            if rschema.is_final() or rschema.type in VIRTUAL_RTYPES:
+            if rschema.final or rschema.type in VIRTUAL_RTYPES:
                 continue
             if rschema.inlined:
                 column = SQL_PREFIX + rschema.type

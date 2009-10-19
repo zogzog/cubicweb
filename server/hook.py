@@ -245,12 +245,12 @@ class PropagateSubjectRelationAddHook(Hook):
         eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
-            if eschema.has_subject_relation(rel):
+            if rel in eschema.subjrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R, NOT R %s P' % (self.rtype, rel, self.rtype),
                         {'x': self.eidfrom, 'p': self.eidto}, 'x')
         for rel in self.object_relations:
-            if eschema.has_object_relation(rel):
+            if rel in eschema.objrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X, NOT R %s P' % (self.rtype, rel, self.rtype),
                         {'x': self.eidfrom, 'p': self.eidto}, 'x')
@@ -269,12 +269,12 @@ class PropagateSubjectRelationDelHook(Hook):
         eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
-            if eschema.has_subject_relation(rel):
+            if rel in eschema.subjrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R' % (self.rtype, rel),
                         {'x': self.eidfrom, 'p': self.eidto}, 'x')
         for rel in self.object_relations:
-            if eschema.has_object_relation(rel):
+            if rel in eschema.objrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X' % (self.rtype, rel),
                         {'x': self.eidfrom, 'p': self.eidto}, 'x')
@@ -328,10 +328,15 @@ class Operation(object):
         """return the index of  the lastest instance which is not a
         LateOperation instance
         """
-        for i, op in enumerate(self.session.pending_operations):
+        # faster by inspecting operation in reverse order for heavy transactions
+        i = None
+        for i, op in enumerate(reversed(self.session.pending_operations)):
             if isinstance(op, (LateOperation, SingleLastOperation)):
-                return i
-        return None
+                continue
+            return -i or None
+        if i is None:
+            return None
+        return -(i + 1)
 
     def handle_event(self, event):
         """delegate event handling to the opertaion"""
@@ -395,10 +400,15 @@ class LateOperation(Operation):
         """return the index of  the lastest instance which is not a
         SingleLastOperation instance
         """
-        for i, op in enumerate(self.session.pending_operations):
+        # faster by inspecting operation in reverse order for heavy transactions
+        i = None
+        for i, op in enumerate(reversed(self.session.pending_operations)):
             if isinstance(op, SingleLastOperation):
-                return i
-        return None
+                continue
+            return -i or None
+        if i is None:
+            return None
+        return -(i + 1)
 
 
 class SingleOperation(Operation):
@@ -418,10 +428,9 @@ class SingleOperation(Operation):
 
     def equivalent_index(self, operations):
         """return the index of the equivalent operation if any"""
-        equivalents = [i for i, op in enumerate(operations)
-                       if op.__class__ is self.__class__]
-        if equivalents:
-            return equivalents[0]
+        for i, op in enumerate(reversed(operations)):
+            if op.__class__ is self.__class__:
+                return -(i+1)
         return None
 
 

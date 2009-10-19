@@ -156,7 +156,7 @@ class VariableSelection(Restriction):
         myvar = self.rhs.name
         ovar = self.var.name
         rtype = self.rtype
-        if self.schema.rschema(rtype).is_final():
+        if self.schema.rschema(rtype).final:
             # should be detected by rql.stcheck: "Any C WHERE NOT X attr C" doesn't make sense
             #if self._not:
             #    raise NotImplementedError()
@@ -595,7 +595,7 @@ class RQLInterpreter(object):
             # ok, we *may* process this Not node (not implemented error will be
             # raised later if we can't)
             extra[node.parent] = True
-        if rschema.is_final():
+        if rschema.final:
             self._visit_final_relation(rschema, node, constraints, extra)
         elif neged:
             self._visit_non_final_neged_relation(rschema, node, constraints)

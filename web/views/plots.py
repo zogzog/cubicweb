@@ -112,7 +112,8 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
         for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
             plotid = '%s_%s' % (figid, idx)
             plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
-            plotdata.append("{label: '%s', data: %s}" % (label, plotid))
+            # XXX ugly but required in order to not crash my demo
+            plotdata.append("{label: '%s', data: %s}" % (label.replace(u'&', u''), plotid))
         req.html_headers.add_onload(self.onload %
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
@@ -177,7 +178,7 @@ else:
 
         def _guess_vid(self, row):
             etype = self.cw_rset.description[row][0]
-            if self._cw.schema.eschema(etype).is_final():
+            if self._cw.schema.eschema(etype).final:
                 return 'final'
             return 'textincontext'
 
