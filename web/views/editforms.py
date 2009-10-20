@@ -114,8 +114,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
                  "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
     _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
-    _defaultlandingzone = (u'<img title="%(msg)s" '
-                           'src="data/accessories-text-editor.png" '
+    _defaultlandingzone = (u'<img title="%(msg)s" src="data/file.gif" '
                            'alt="%(msg)s"/>')
     _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
@@ -199,8 +198,10 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """
         w = self.w
         w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
-        w(u'<div id="%s" class="editableField" onclick="%s">%s' % (
-                form.event_args['divid'], xml_escape(self._onclick % form.event_args), lzone))
+        w(u'<div id="%s" class="editableField" onclick="%s" title="%s">' % (
+                form.event_args['divid'], xml_escape(self._onclick % form.event_args),
+                self.req._(self._landingzonemsg)))
+        w(lzone)
         w(value)
         w(u'</div>')
         w(form.form_render(renderer=renderer))
