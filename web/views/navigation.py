@@ -62,6 +62,8 @@ class SortedNavigation(NavigationComponent):
         req = self.req
         if attrname is not None:
             def index_display(row):
+                if not rset[row][col]: # outer join
+                    return u''
                 entity = rset.get_entity(row, col)
                 return entity.printable_value(attrname, format='text/plain')
         elif self.schema.eschema(rset.description[0][col]).final:
