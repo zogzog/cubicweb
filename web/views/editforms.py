@@ -122,44 +122,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _one_rvid = 'incontext'
     _many_rvid = 'csv'
 
-    def _compute_best_vid(self, eschema, rschema, role):
-        if eschema.cardinality(rschema, role) in '+*':
-            return self._many_rvid
-        return self._one_rvid
-
-    def _build_landing_zone(self, lzone):
-        return lzone or self._defaultlandingzone % {'msg' : xml_escape(self.req._(self._landingzonemsg))}
-
-    def _build_renderer(self, entity, rtype, role):
-        return self.vreg['formrenderers'].select(
-            'base', self.req, entity=entity, display_label=False,
-            display_help=False, display_fields=[(rtype, role)], table_class='',
-            button_bar_class='buttonbar', display_progress_div=False)
-
-    def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
-                    extradata=None):
-        divid = '%s-%s-%s' % (entity.eid, rtype, role)
-        event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
-                      'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
-                      'lzone' : lzone}
-        if extradata:
-            event_args.update(extradata)
-        return divid, event_args
-
-    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
-                  extradata=None, **formargs):
-        divid, event_args = self._build_args(entity, rtype, role, formid, default,
-                                      reload, lzone, extradata)
-        onsubmit = self._onsubmit % event_args
-        cancelclick = self._cancelclick % (entity.eid, rtype, divid)
-        form = self.vreg['forms'].select(
-            formid, self.req, entity=entity, domid='%s-form' % divid,
-            cssstyle='display: none', onsubmit=onsubmit, action='#',
-            form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
-                                                 onclick=cancelclick)],
-            **formargs)
-        form.event_args = event_args
-        return form
 
     def cell_call(self, row, col, rtype=None, role='subject',
                   reload=False,      # controls reloading the whole page after change
@@ -244,6 +206,44 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         w(form.form_render(renderer=renderer))
         w(u'</div>')
 
+    def _compute_best_vid(self, eschema, rschema, role):
+        if eschema.cardinality(rschema, role) in '+*':
+            return self._many_rvid
+        return self._one_rvid
+
+    def _build_landing_zone(self, lzone):
+        return lzone or self._defaultlandingzone % {'msg' : xml_escape(self.req._(self._landingzonemsg))}
+
+    def _build_renderer(self, entity, rtype, role):
+        return self.vreg['formrenderers'].select(
+            'base', self.req, entity=entity, display_label=False,
+            display_help=False, display_fields=[(rtype, role)], table_class='',
+            button_bar_class='buttonbar', display_progress_div=False)
+
+    def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
+                    extradata=None):
+        divid = '%s-%s-%s' % (entity.eid, rtype, role)
+        event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
+                      'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
+                      'lzone' : lzone}
+        if extradata:
+            event_args.update(extradata)
+        return divid, event_args
+
+    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
+                  extradata=None, **formargs):
+        divid, event_args = self._build_args(entity, rtype, role, formid, default,
+                                      reload, lzone, extradata)
+        onsubmit = self._onsubmit % event_args
+        cancelclick = self._cancelclick % (entity.eid, rtype, divid)
+        form = self.vreg['forms'].select(
+            formid, self.req, entity=entity, domid='%s-form' % divid,
+            cssstyle='display: none', onsubmit=onsubmit, action='#',
+            form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
+                                                 onclick=cancelclick)],
+            **formargs)
+        form.event_args = event_args
+        return form
 
 class DummyForm(object):
     __slots__ = ('event_args',)
