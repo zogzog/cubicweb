@@ -379,14 +379,15 @@ class RelationsQueriesGenerator(object):
                 subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
                 # process mandatory relations first
                 if subjcard in '1+' or objcard in '1+' or composite_relation(rschema):
-                    queries += self.make_relation_queries(sedict, oedict,
-                                                          rschema, subj, obj)
+                    for query, args in self.make_relation_queries(sedict, oedict,
+                                                          rschema, subj, obj):
+                        yield query, args
                 else:
                     delayed.append( (subj, obj) )
             for subj, obj in delayed:
-                queries += self.make_relation_queries(sedict, oedict, rschema,
-                                                      subj, obj)
-        return queries
+                for query, args in self.make_relation_queries(sedict, oedict, rschema,
+                                                              subj, obj):
+                    yield query, args
 
     def qargs(self, subjeids, objeids, subjcard, objcard, subjeid, objeid):
         if subjcard in '?1':
@@ -472,8 +473,9 @@ class RelationsQueriesGenerator(object):
 
 def check_card_satisfied(card, remaining, subj, rschema, obj):
     if card in '1+' and remaining:
-        print "can't satisfy cardinality %s for relation %s %s %s" % (card, subj, rschema, obj)
-        
+        raise Exception("can't satisfy cardinality %s for relation %s %s %s" %
+                        (card, subj, rschema, obj))
+
 
 def choose_eid(values, avoid):
     values = tuple(values)
