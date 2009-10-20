@@ -194,14 +194,15 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """xxx-reledit div (class=field)
               +-xxx div (class="editableField")
               |   +-landing zone
-              +-value
+              +   +-value
               +-form-xxx div
         """
         w = self.w
         w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
-        w(tags.div(lzone, klass='editableField', id=form.event_args['divid'],
-                   onclick=self._onclick % form.event_args))
+        w(u'<div id="%s" class="editableField" onclick="%s">%s' % (
+                form.event_args['divid'], xml_escape(self._onclick % form.event_args), lzone))
         w(value)
+        w(u'</div>')
         w(form.form_render(renderer=renderer))
         w(u'</div>')
 
@@ -256,7 +257,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
     by checking uicfg configuration and composite relation property.
     """
     id = 'reledit'
-    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', '%(eid)s', "
+    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', "
                 "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
 
     def should_edit_attribute(self, entity, rschema, role, _form):

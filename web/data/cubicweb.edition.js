@@ -493,7 +493,7 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
 
 
 /**** inline edition ****/
-function loadInlineEditionForm(eid, rtype, role, eid, divid, reload, vid,
+function loadInlineEditionForm(eid, rtype, role, divid, reload, vid,
                                default_value, lzone) {
   var args = {fname: 'reledit_form', rtype: rtype, role: role, eid: eid, divid: divid,
               reload: reload, vid: vid, default_value: default_value, landing_zone: lzone,
