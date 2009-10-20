@@ -46,9 +46,9 @@ class ValueGeneratorTC(TestCase):
         config = ApptestConfiguration('data')
         config.bootstrap_cubes()
         schema = config.load_schema()
-        e_schema = schema.entity_schema('Person')
+        e_schema = schema.eschema('Person')
         self.person_valgen = ValueGenerator(e_schema, self._choice_func)
-        e_schema = schema.entity_schema('Bug')
+        e_schema = schema.eschema('Bug')
         self.bug_valgen = MyValueGenerator(e_schema)
         self.config = config
 
