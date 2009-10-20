@@ -212,6 +212,7 @@ def fix_selection_and_group(rqlst, selectedidx, needwrap, selectsortterms,
     if selectsortterms and sorts:
         sort_term_selection(sorts, selectedidx, rqlst, not needwrap and groups)
     if sorts and groups:
+        # when a query is grouped, ensure sort terms are grouped as well
         for sortterm in sorts:
             term = sortterm.term
             if not isinstance(term, Constant):
