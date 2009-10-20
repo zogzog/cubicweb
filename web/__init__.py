@@ -50,8 +50,8 @@ def json_dumps(value):
 
 def jsonize(function):
     def newfunc(*args, **kwargs):
+        value = function(*args, **kwargs)
         try:
-            value = function(*args, **kwargs)
             return json_dumps(value)
         except TypeError:
             return json_dumps(repr(value))
