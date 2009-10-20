@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
+from logilab.common.compat import any
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.views.autoform import AutomaticEntityForm as AEF

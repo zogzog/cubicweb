@@ -24,6 +24,7 @@ from datetime import datetime
 from time import time, localtime, strftime
 
 from logilab.common.decorators import cached
+from logilab.common.compat import any
 
 from yams import BadSchemaDefinition
 from rql import RQLSyntaxError
