@@ -187,7 +187,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             or
             (role == 'object' and not rschema.has_perm(self.req, 'add',
                                                        toeid=entity.eid))):
-            self.wview(rvid, entity.related(str(rschema), role), 'null')
             return False
         return True
 
