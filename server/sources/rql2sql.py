@@ -207,9 +207,17 @@ def sort_term_selection(sorts, selectedidx, rqlst, groups):
                     if not vref in groups:
                         groups.append(vref)
 
-def fix_selection(rqlst, selectedidx, needwrap, sorts, groups, having):
-    if sorts:
+def fix_selection_and_group(rqlst, selectedidx, needwrap, selectsortterms,
+                            sorts, groups, having):
+    if selectsortterms and sorts:
         sort_term_selection(sorts, selectedidx, rqlst, not needwrap and groups)
+    if sorts and groups:
+        for sortterm in sorts:
+            term = sortterm.term
+            if not isinstance(term, Constant):
+                for vref in term.iget_nodes(VariableRef):
+                    if not vref in groups:
+                        groups.append(vref)
     if needwrap:
         if groups:
             for vref in groups:
@@ -410,8 +418,8 @@ class SQLGenerator(object):
                                         outerselection, groups)
             else:
                 outerselectidx = selectidx[:]
-        fix_selection(select, selectidx, needwrap,
-                      selectsortterms and sorts, groups, having)
+        fix_selection_and_group(select, selectidx, needwrap,
+                                selectsortterms, sorts, groups, having)
         if needwrap:
             fselectidx = outerselectidx
             fneedwrap = len(outerselection) != len(origselection)

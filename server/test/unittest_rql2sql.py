@@ -446,7 +446,7 @@ FROM cw_File AS X
 UNION ALL
 SELECT X.cw_data AS C0, X.cw_eid AS C1, X.cw_data_name AS C2, X.cw_data_format AS C3
 FROM cw_Image AS X) AS T1
-GROUP BY T1.C2
+GROUP BY T1.C2,T1.C3
 ORDER BY 1,2,T1.C3'''),
 
     ('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R',
@@ -524,7 +524,7 @@ FROM entities AS X'''),
      '''SELECT X.cw_eid
 FROM cw_CWUser AS X
 WHERE X.cw_eid=12
-GROUP BY X.cw_eid
+GROUP BY X.cw_eid,X.cw_login
 ORDER BY X.cw_login'''),
 
     ('Any U,COUNT(X) GROUPBY U WHERE U eid 12, X owned_by U HAVING COUNT(X) > 10',
@@ -574,7 +574,30 @@ ORDER BY 4 DESC'''),
     ("Any X WHERE X eid 0, X eid 0, X test TRUE",
      '''SELECT X.cw_eid
 FROM cw_Personne AS X
-WHERE X.cw_eid=0 AND X.cw_eid=0 AND X.cw_test='''),
+WHERE X.cw_eid=0 AND X.cw_eid=0 AND X.cw_test=TRUE'''),
+
+    ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN, X is CWGroup",
+     '''SELECT X.cw_eid, GROUP_CONCAT(T.cw_name)
+FROM cw_CWGroup AS X, cw_Tag AS T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid
+GROUP BY X.cw_eid,X.cw_name
+ORDER BY X.cw_name'''),
+
+    ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN",
+     '''SELECT T1.C0, GROUP_CONCAT(T1.C1) FROM (SELECT X.cw_eid AS C0, T.cw_name AS C1, X.cw_name AS C2
+FROM cw_CWGroup AS X, cw_Tag AS T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid
+UNION ALL
+SELECT X.cw_eid AS C0, T.cw_name AS C1, X.cw_name AS C2
+FROM cw_State AS X, cw_Tag AS T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid
+UNION ALL
+SELECT X.cw_eid AS C0, T.cw_name AS C1, X.cw_name AS C2
+FROM cw_Tag AS T, cw_Tag AS X, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid) AS T1
+GROUP BY T1.C0,T1.C2
+ORDER BY T1.C2'''),
+
     ]
 
 MULTIPLE_SEL = [
