@@ -19,10 +19,9 @@ from logilab.common.decorators import cached
 from cubicweb import neg_role
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
-from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, stdmsgs, eid_param
+from cubicweb.web import stdmsgs, eid_param
 from cubicweb.web import uicfg
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.formfields import guess_field
@@ -137,15 +136,21 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             display_help=False, display_fields=[(rtype, role)], table_class='',
             button_bar_class='buttonbar', display_progress_div=False)
 
-    def _build_form(self, entity, rtype, role, formid, default, reload,
-                  extradata=None, **formargs):
+    def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
+                    extradata=None):
         divid = '%s-%s-%s' % (entity.eid, rtype, role)
-        event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
+        event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
                       'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
-                      'lzone' : self._build_landing_zone(None)}
+                      'lzone' : lzone}
         if extradata:
-            event_data.update(extradata)
-        onsubmit = self._onsubmit % event_data
+            event_args.update(extradata)
+        return divid, event_args
+
+    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
+                  extradata=None, **formargs):
+        divid, event_args = self._build_args(entity, rtype, role, formid, default,
+                                      reload, lzone, extradata)
+        onsubmit = self._onsubmit % event_args
         cancelclick = self._cancelclick % (entity.eid, rtype, divid)
         form = self.vreg['forms'].select(
             formid, self.req, entity=entity, domid='%s-form' % divid,
@@ -153,7 +158,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
                                                  onclick=cancelclick)],
             **formargs)
-        form.event_data = event_data
+        form.event_args = event_args
         return form
 
     def cell_call(self, row, col, rtype=None, role='subject',
@@ -166,6 +171,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """display field to edit entity's `rtype` relation on click"""
         assert rtype
         assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
+        self.req.add_js('cubicweb.edition.js')
+        self.req.add_css('cubicweb.form.css')
         if default is None:
             default = xml_escape(self.req._('<no value>'))
         entity = self.entity(row, col)
@@ -173,7 +180,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
         if rschema.final:
-            form = self._build_form(entity, rtype, role, 'edition', default, reload,
+            form = self._build_form(entity, rtype, role, 'edition', default, reload, lzone,
                                     attrcategories=self.attrcategories)
             if not self.should_edit_attribute(entity, rschema, role, form):
                 self.w(entity.printable_value(rtype))
@@ -193,7 +200,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 if rset:
                     self.w(value)
                 return
-            form = self._build_form(entity, rtype, role, 'base', default, reload,
+            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone,
                                     dict(vid=rvid, lzone=lzone))
             field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
             form.append_field(field)
@@ -205,12 +212,10 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         ttype = rschema.targets(entity.id, role)[0]
         afs = uicfg.autoform_section.etype_get(entity.id, rtype, role, ttype)
         if not (afs in self.attrcategories and entity.has_perm('update')):
-            self.w(entity.printable_value(rtype))
             return False
         try:
-            field = form.field_by_name(rtype, role)
+            form.field_by_name(rtype, role)
         except FieldNotFound:
-            self.w(entity.printable_value(rtype))
             return False
         return True
 
@@ -232,19 +237,36 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
               +-form-xxx div
         """
         w = self.w
-        w(u'<div id="%s-reledit" class="field">' % form.event_data['divid'])
-        w(tags.div(lzone, klass='editableField', id=form.event_data['divid'],
-                   onclick=self._onclick % form.event_data))
+        w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
+        w(tags.div(lzone, klass='editableField', id=form.event_args['divid'],
+                   onclick=self._onclick % form.event_args))
         w(value)
         w(form.form_render(renderer=renderer))
         w(u'</div>')
 
+
+class DummyForm(object):
+    __slots__ = ('event_args',)
+    def form_render(self, **_args):
+        return u''
+    def append_field(self, *args):
+        pass
 
 class AutoClickAndEditFormView(ClickAndEditFormView):
     """same as ClickAndEditFormView but checking if the view *should* be applied
     by checking uicfg configuration and composite relation property.
     """
     id = 'reledit'
+    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', '%(eid)s', "
+                "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
+
+    def should_edit_attribute(self, entity, rschema, role, _form):
+        rtype = str(rschema)
+        ttype = rschema.targets(entity.id, role)[0]
+        afs = uicfg.autoform_section.etype_get(entity.id, rtype, role, ttype)
+        if not (afs in self.attrcategories and entity.has_perm('update')):
+            return False
+        return True
 
     def should_edit_relation(self, entity, rschema, role, rvid):
         eschema = entity.e_schema
@@ -261,6 +283,16 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)
 
+    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
+                  extradata=None, **formargs):
+        _divid, event_args = self._build_args(entity, rtype, role, formid, default,
+                                              reload, lzone, extradata)
+        form = DummyForm()
+        form.event_args = event_args
+        return form
+
+    def _build_renderer(self, entity, rtype, role):
+        pass
 
 class EditionFormView(FormViewMixIn, EntityView):
     """display primary entity edition form"""

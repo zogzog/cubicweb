@@ -465,7 +465,6 @@ function validateForm(formid, action, onsuccess, onfailure) {
  * @param default_value : value if the field is empty
  * @param lzone : html fragment (string) for a clic-zone triggering actual edition
  */
-
 function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
                                     default_value, lzone) {
     try {
@@ -484,7 +483,6 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
           } else {
               var args = {fname: 'reledit_form', rtype: rtype, role: role, eid: eid, divid: divid,
                           reload: reload, vid: vid, default_value: default_value, landing_zone: lzone};
-            log('DONE');
               jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
           }
 	}
@@ -495,6 +493,14 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
 
 
 /**** inline edition ****/
+function loadInlineEditionForm(eid, rtype, role, eid, divid, reload, vid,
+                               default_value, lzone) {
+  var args = {fname: 'reledit_form', rtype: rtype, role: role, eid: eid, divid: divid,
+              reload: reload, vid: vid, default_value: default_value, landing_zone: lzone,
+              callback: function () {showInlineEditionForm(eid, rtype, divid);}};
+  jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
+}
+
 function showInlineEditionForm(eid, rtype, divid) {
     jQuery('#' + divid).hide();
     jQuery('#' + divid+'-form').show();

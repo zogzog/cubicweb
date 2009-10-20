@@ -405,7 +405,7 @@ class JSonController(Controller):
         # note: default is reserved in js land
         args['default'] = self.req.form['default_value']
         args['reload'] = simplejson.loads(args['reload'])
-        return entity.view('reledit', **args)
+        return entity.view('doreledit', **args)
 
     @jsonize
     def js_i18n(self, msgids):
