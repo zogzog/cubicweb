@@ -367,7 +367,6 @@ class RelationsQueriesGenerator(object):
         #      b/ else insert N relations where N is the mininum
         #         of 20 and the number of existing targetable entities
         for rschema in rels:
-            print rschema
             sym = set()
             sedict = deepcopy(edict)
             oedict = deepcopy(edict)
