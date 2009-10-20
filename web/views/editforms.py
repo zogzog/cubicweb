@@ -222,7 +222,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
                     extradata=None):
-        divid = '%s-%s-%s' % (entity.eid, rtype, role)
+        divid = '%s-%s-%s' % (rtype, role, entity.eid)
         event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
                       'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
                       'lzone' : lzone}
