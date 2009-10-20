@@ -45,7 +45,7 @@ __docformat__ = "restructuredtext en"
 import logging
 from warnings import warn, filterwarnings
 
-from logilab.common.compat import all
+from logilab.common.compat import all, any
 from logilab.common.deprecation import deprecated
 from logilab.common.interface import implements as implements_iface
 
