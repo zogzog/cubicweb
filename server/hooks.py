@@ -13,7 +13,7 @@ from datetime import datetime
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 from cubicweb.schema import RQLVocabularyConstraint
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
-from cubicweb.server.hookhelper import (check_internal_entity, 
+from cubicweb.server.hookhelper import (check_internal_entity,
                                         get_user_sessions, rproperty)
 from cubicweb.server.repository import FTIndexEntityOp
 
@@ -519,8 +519,8 @@ def before_add_trinfo(session, entity):
             msg = session._('mandatory relation')
             raise ValidationError(entity.eid, {'by_transition': msg})
         deststate = wf.state_by_eid(deststateeid)
-        if not cowpowers and deststate is None:
-            msg = entity.req._("state doesn't belong to entity's workflow")
+        if deststate is None:
+            msg = entity.req._("state doesn't belong to entity's current workflow")
             raise ValidationError(entity.eid, {'to_state': msg})
     else:
         # check transition is valid and allowed, unless we're coming back from
