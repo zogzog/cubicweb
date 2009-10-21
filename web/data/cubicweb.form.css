@@ -184,6 +184,10 @@ div.editableField {
   display: inline;
 }
 
+div.editableFieldValue {
+  display: inline;
+}
+
 div.editableField:hover,
 div.editableField p:hover {
   background-color: #eeedd9;

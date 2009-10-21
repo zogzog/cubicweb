@@ -193,17 +193,18 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """xxx-reledit div (class=field)
               +-xxx div (class="editableField")
               |   +-landing zone
-              +   +-value
-              +-form-xxx div
+              +-xxx-value div
+              +-xxx-form div
         """
         w = self.w
+        divid = form.event_args['divid']
         w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
         w(u'<div id="%s" class="editableField" onclick="%s" title="%s">' % (
-                form.event_args['divid'], xml_escape(self._onclick % form.event_args),
+                divid, xml_escape(self._onclick % form.event_args),
                 self.req._(self._landingzonemsg)))
         w(lzone)
-        w(value)
         w(u'</div>')
+        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
         w(form.form_render(renderer=renderer))
         w(u'</div>')
 
