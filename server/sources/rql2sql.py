@@ -916,7 +916,7 @@ class SQLGenerator(object):
             elif not lhsvar.name in self._varmap:
                 # join on entities instead of etype's table to get result for
                 # external entities on multisources configurations
-                ealias = lhsvar._q_sqltable = lhsvar.name
+                ealias = lhsvar._q_sqltable = '_' + lhsvar.name
                 jointo = lhsvar._q_sql = '%s.eid' % ealias
                 self.add_table('entities AS %s' % ealias, ealias)
                 if not lhsvar._q_invariant or len(lhsvar.stinfo['possibletypes']) == 1:
@@ -1038,7 +1038,7 @@ class SQLGenerator(object):
             # since variable is invariant, we know we won't found final relation
             principal = variable.stinfo['principal']
             if principal is None:
-                vtablename = variable.name
+                vtablename = '_' + variable.name
                 self.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
                 if variable.stinfo['typerels']:
@@ -1098,20 +1098,20 @@ class SQLGenerator(object):
             scope = -1
         try:
             sql = self._varmap[var.name]
-            table = sql.split('.', 1)[0]
+            tablealias = sql.split('.', 1)[0]
             if scope < 0:
-                scope = self._varmap_table_scope(var.stmt, table)
-            self.add_table(table, scope=scope)
+                scope = self._varmap_table_scope(var.stmt, tablealias)
+            self.add_table(tablealias, scope=scope)
         except KeyError:
             etype = self._state.solution[var.name]
             # XXX this check should be moved in rql.stcheck
             if self.schema.eschema(etype).final:
                 raise BadRQLQuery(var.stmt.root)
-            table = var.name
-            sql = '%s.%seid' % (table, SQL_PREFIX)
-            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table,
-                           scope=scope)
-        return sql, table
+            tablealias = '_' + var.name
+            sql = '%s.%seid' % (tablealias, SQL_PREFIX)
+            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
+                           tablealias, scope=scope)
+        return sql, tablealias
 
     def _inlined_var_sql(self, var, rtype):
         try:
