@@ -20,8 +20,6 @@ from cubicweb.web.views import primary
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
     can also be used to lazy-load arbitrary views
-    caveat : lazyview is not recursive, i.e : you can't (successfully)
-    lazyload a view that in turns does the same
     """
 
     def _prepare_bindings(self, vid, reloadable):
