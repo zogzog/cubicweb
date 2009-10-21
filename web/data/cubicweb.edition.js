@@ -503,14 +503,16 @@ function loadInlineEditionForm(eid, rtype, role, divid, reload, vid,
 
 function showInlineEditionForm(eid, rtype, divid) {
     jQuery('#' + divid).hide();
-    jQuery('#' + divid+'-form').show();
+    jQuery('#' + divid + '-value' ).hide();
+    jQuery('#' + divid+ '-form').show();
 }
 
 function hideInlineEdit(eid, rtype, divid) {
     jQuery('#appMsg').hide();
     jQuery('div.errorMessage').remove();
     jQuery('#' + divid).show();
-    jQuery('#' + divid+'-form').hide();
+    jQuery('#' + divid + '-value').show();
+    jQuery('#' + divid +'-form').hide();
 }
 
 CubicWeb.provide('edition.js');
