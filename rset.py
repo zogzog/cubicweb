@@ -505,6 +505,9 @@ class ResultSet(object):
         # UNION query, find the subquery from which this entity has been found
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
         col = rqlst.subquery_selection_index(select, col)
+        if col is None:
+            # XXX unexpected, should fix subquery_selection_index ?
+            return None, None
         try:
             myvar = select.selection[col].variable
         except AttributeError:
