@@ -16,6 +16,7 @@ from yams.schema import BASE_TYPES
 from yams.buildobjs import EntityType, RelationType, RelationDefinition
 from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
+from logilab.common.decorators import clear_cache
 
 from cubicweb import ValidationError, RepositoryError
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS
@@ -134,9 +135,17 @@ class MemSchemaNotifyChanges(SingleLastOperation):
         self.repo = session.repo
         SingleLastOperation.__init__(self, session)
 
+    def precommit_event(self):
+        for eschema in self.repo.schema.entities():
+            if not eschema.final:
+                clear_cache(eschema, 'ordered_relations')
+
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
         self.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
+
+    def rollback_event(self):
+        self.precommit_event()
 
 
 class MemSchemaOperation(Operation):
