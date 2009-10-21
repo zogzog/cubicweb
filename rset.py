@@ -117,11 +117,10 @@ class ResultSet(object):
                          self.description +rset.description)
         return self.req.decorate_rset(rset)
 
-    def copy(self):
-        rset = ResultSet(self.rows[:], self.rql, self.args, self.description[:])
-        return self.req.decorate_rset(rset)
-
-    def _prepare_copy(self, rows, descr):
+    def copy(self, rows=None, descr=None):
+        if rows is None:
+            rows = self.rows[:]
+            descr = self.description[:]
         rset = ResultSet(rows, self.rql, self.args, descr)
         return self.req.decorate_rset(rset)
 
@@ -140,7 +139,7 @@ class ResultSet(object):
         :rtype: `ResultSet`
         """
         rows, descr = [], []
-        rset = self._prepare_copy(rows, descr)
+        rset = self.copy(rows, descr)
         for row, desc in zip(self.rows, self.description):
             nrow, ndesc = transformcb(row, desc)
             if ndesc: # transformcb returns None for ndesc to skip that row
@@ -163,7 +162,7 @@ class ResultSet(object):
         :rtype: `ResultSet`
         """
         rows, descr = [], []
-        rset = self._prepare_copy(rows, descr)
+        rset = self.copy(rows, descr)
         for i in xrange(len(self)):
             if not filtercb(self.get_entity(i, col)):
                 continue
@@ -190,7 +189,7 @@ class ResultSet(object):
         :rtype: `ResultSet`
         """
         rows, descr = [], []
-        rset = self._prepare_copy(rows, descr)
+        rset = self.copy(rows, descr)
         if col >= 0:
             entities = sorted(enumerate(self.entities(col)),
                               key=lambda (i, e): keyfunc(e), reverse=reverse)
@@ -237,7 +236,7 @@ class ResultSet(object):
 
             if key not in mapping:
                 rows, descr = [], []
-                rset = self._prepare_copy(rows, descr)
+                rset = self.copy(rows, descr)
                 mapping[key] = rset
                 result.append(rset)
             else:
@@ -289,7 +288,7 @@ class ResultSet(object):
                     else:
                         self.req.drop_entity_cache(entity.eid)
         else:
-            rset = self._prepare_copy(rows, descr)
+            rset = self.copy(rows, descr)
             if not offset:
                 # can copy built entity caches
                 copy_cache(rset, 'get_entity', self)

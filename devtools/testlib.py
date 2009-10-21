@@ -325,7 +325,7 @@ class WebTest(EnvBasedTC):
             if k.endswith('visible') and not v['default']:
                 propdefs[k]['default'] = True
         for view in self.list_views_for(rset):
-            backup_rset = rset._prepare_copy(rset.rows, rset.description)
+            backup_rset = rset.copy(rset.rows, rset.description)
             yield InnerTest(self._testname(rset, view.id, 'view'),
                             self.view, view.id, rset,
                             rset.req.reset_headers(), 'main-template')
