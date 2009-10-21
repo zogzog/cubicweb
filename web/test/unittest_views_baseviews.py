@@ -99,7 +99,7 @@ class TableViewTC(EnvBasedTC):
 
     def test_sortvalue(self):
         e, _, view = self._prepare_entity()
-        expected = ['<toto>', 'loo"ong blabla'[:10], e.creation_date.strftime('%Y-%m-%d %H:%M')]
+        expected = ['<toto>', 'loo"ong blabla'[:10], e.creation_date.strftime('%Y/%m/%d %H:%M:%S')]
         got = [loadjson(view.sortvalue(0, i)) for i in xrange(3)]
         self.assertListEqual(got, expected)
         # XXX sqlite does not handle Interval correctly
@@ -111,7 +111,7 @@ class TableViewTC(EnvBasedTC):
         labels = view.columns_labels()
         table = TableWidget(view)
         table.columns = view.get_columns(labels, [1, 2], None, None, None, None, 0)
-        expected = ['loo"ong blabla'[:10], e.creation_date.strftime('%Y-%m-%d %H:%M')]
+        expected = ['loo"ong blabla'[:10], e.creation_date.strftime('%Y/%m/%d %H:%M:%S')]
         got = [loadjson(value) for _, value in table.itercols(0)]
         self.assertListEqual(got, expected)
 

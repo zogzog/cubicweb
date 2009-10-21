@@ -203,7 +203,7 @@ class EntityTC(EnvBasedTC):
                           'X modification_date AA')
         self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
                           'Any X,AA,AB ORDERBY AA ASC '
-                          'WHERE E eid %(x)s, E tags X, E is IN (Personne), X nom AA, '
+                          'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
                           'X modification_date AB')
 
     def test_unrelated_rql_security_1(self):

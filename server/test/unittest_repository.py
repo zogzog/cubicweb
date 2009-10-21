@@ -109,14 +109,13 @@ class RepositoryTC(RepositoryBasedTC):
         self.assert_(repo.connect(u"barnabé", u"héhéhé".encode('UTF8')))
 
     def test_invalid_entity_rollback(self):
-        repo = self.repo
-        cnxid = repo.connect(*self.default_user_password())
+        cnxid = self.repo.connect(*self.default_user_password())
         # no group
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
-                     {'login': u"tutetute", 'passwd': 'tutetute'})
-        self.assertRaises(ValidationError, repo.commit, cnxid)
-        rset = repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"')
-        self.assertEquals(rset.rowcount, 0)
+        self.repo.execute(cnxid,
+                          'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
+                          {'login': u"tutetute", 'passwd': 'tutetute'})
+        self.assertRaises(ValidationError, self.repo.commit, cnxid)
+        self.failIf(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
 
     def test_close(self):
         repo = self.repo
@@ -225,7 +224,7 @@ class RepositoryTC(RepositoryBasedTC):
                                if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
                                                  'creation_date', 'modification_date', 'cwuri',
                                                  'owned_by', 'created_by')],
-                              ['relation_type', 'from_entity', 'in_basket', 'to_entity', 'constrained_by',
+                              ['relation_type', 'from_entity', 'to_entity', 'in_basket', 'constrained_by',
                                'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
                                'defaultval', 'description', 'description_format'])

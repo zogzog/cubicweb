@@ -44,10 +44,10 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ])
         self.assertListEquals(rbc(e, 'metadata'),
                               [('last_login_time', 'subject'),
+                               ('modification_date', 'subject'),
                                ('created_by', 'subject'),
                                ('creation_date', 'subject'),
                                ('cwuri', 'subject'),
-                               ('modification_date', 'subject'),
                                ('owned_by', 'subject'),
                                ('bookmarked_by', 'object'),
                                ])
@@ -61,10 +61,10 @@ class AutomaticEntityFormTC(EnvBasedTC):
         self.assertListEquals(rbc(e, 'generated'),
                               [('use_email', 'subject'),
                                ('in_state', 'subject'),
-                               ('has_text', 'subject'),
-                               ('identity', 'subject'),
                                ('is', 'subject'),
                                ('is_instance_of', 'subject'),
+                               ('has_text', 'subject'),
+                               ('identity', 'subject'),
                                ('tags', 'object'),
                                ('for_user', 'object'),
                                ('created_by', 'object'),
@@ -98,10 +98,10 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('salary', 'subject')
                                ])
         self.assertListEquals(rbc(e, 'metadata'),
-                              [('created_by', 'subject'),
-                               ('creation_date', 'subject'),
+                              [('creation_date', 'subject'),
                                ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
+                               ('created_by', 'subject'),
                                ('owned_by', 'subject'),
                                ])
         self.assertListEquals(rbc(e, 'generic'),
@@ -109,9 +109,9 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('connait', 'object')
                                ])
         self.assertListEquals(rbc(e, 'generated'),
-                              [('has_text', 'subject'),
+                              [('is', 'subject'),
+                               ('has_text', 'subject'),
                                ('identity', 'subject'),
-                               ('is', 'subject'),
                                ('is_instance_of', 'subject'),
                                ('identity', 'object'),
                                ])
