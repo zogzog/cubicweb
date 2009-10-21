@@ -563,23 +563,6 @@ class JSONControllerTC(EnvBasedTC):
         self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
                           [['javascript']])
 
-    def test_edit_field(self):
-        nbusers = len(self.execute('CWUser P'))
-        eid = self.john.eid
-        self.remote_call('edit_field', 'apply',
-                         ('eid', 'firstname:%s' % eid, '__maineid', '__type:%s'% eid, 'edits-firstname:%s' % eid ),
-                         (str(eid), u'Remi', str(eid), 'CWUser', self.john.firstname),
-                         'firstname',
-                         eid, 'default_value')
-        self.commit()
-        rset = self.execute('CWUser P')
-        # make sure we did not insert a new cwuser here
-        self.assertEquals(len(rset), nbusers)
-        john = self.execute('Any X WHERE X eid %(x)s', {'x': self.john.eid}, 'x').get_entity(0, 0)
-        self.assertEquals(john.eid, self.john.eid)
-        self.assertEquals(john.firstname, 'Remi')
-
-
     def test_pending_insertion(self):
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])
         deletes = req.get_pending_deletes()
