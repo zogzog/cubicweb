@@ -223,7 +223,7 @@ class RelatedView(EntityView):
                 self.w(u'</div>')
         # else show links to display related entities
         else:
-            rql = rset.printable_rql()
+            rql = self.rset.printable_rql()
             self.rset.limit(limit) # remove extra entity
             self.w(u'<div>')
             self.wview('simplelist', self.rset)
