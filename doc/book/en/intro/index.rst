@@ -13,6 +13,7 @@ overview of its features and lists its key concepts.
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    book-map
    history

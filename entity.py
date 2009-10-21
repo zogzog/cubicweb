@@ -782,6 +782,8 @@ class Entity(AppObject, dict):
                 restr = 'Y %s X' % attr[len('reverse_'):]
             else:
                 restr = 'X %s Y' % attr
+            if not isinstance(values, (tuple, list, set, frozenset)):
+                values = (values,)
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
                     {'x': self.eid}, 'x')

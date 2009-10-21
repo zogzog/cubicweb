@@ -11,6 +11,7 @@ instances based on that framework.
 
 .. toctree::
    :maxdepth: 1
+   :numbered:
 
    setup
    create-instance
@@ -19,8 +20,6 @@ instances based on that framework.
    multisources
    ldap
    gae
-
-
 
 RQL logs
 --------
@@ -33,3 +32,4 @@ variable ``query-log-file``::
 
   # web instance query log file
   query-log-file=/tmp/rql-myapp.log
+

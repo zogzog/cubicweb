@@ -2027,14 +2027,18 @@ msgctxt "BaseTransition"
 msgid "description_format"
 msgstr "format"
 
-msgid "destination state"
-msgstr "état de destination"
-
 msgid "destination state for this transition"
 msgstr "états accessibles par cette transition"
 
 msgid "destination state of a transition"
 msgstr "état d'arrivée d'une transition"
+
+msgid ""
+"destination state. No destination state means that transition should go back "
+"to the state from which we've entered the subworkflow."
+msgstr ""
+"état de destination de la transition. Si aucun état de destination n'est spécifié, la transition "
+"ira vers l'état depuis lequel l'entité est entrée dans le sous-workflow."
 
 msgid "destination_state"
 msgstr "état de destination"
@@ -4021,6 +4025,9 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid "destination state"
+#~ msgstr "état de destination"
 
 #~ msgctxt "inlined:CWRelation:from_entity:subject"
 #~ msgid "remove this CWEType"

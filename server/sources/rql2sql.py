@@ -107,8 +107,8 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
                 if rel.optional in ('right', 'both'):
                     var.stinfo['optrelations'].add(newrel)
         # extract subquery solutions
-        solutions = [sol.copy() for sol in solutions]
-        cleanup_solutions(newselect, solutions)
+        mysolutions = [sol.copy() for sol in solutions]
+        cleanup_solutions(newselect, mysolutions)
         newselect.set_possible_types(solutions)
         # full sub-query
         aliases = [VariableRef(select.get_variable(avar.name, i))
@@ -207,9 +207,18 @@ def sort_term_selection(sorts, selectedidx, rqlst, groups):
                     if not vref in groups:
                         groups.append(vref)
 
-def fix_selection(rqlst, selectedidx, needwrap, sorts, groups, having):
-    if sorts:
+def fix_selection_and_group(rqlst, selectedidx, needwrap, selectsortterms,
+                            sorts, groups, having):
+    if selectsortterms and sorts:
         sort_term_selection(sorts, selectedidx, rqlst, not needwrap and groups)
+    if sorts and groups:
+        # when a query is grouped, ensure sort terms are grouped as well
+        for sortterm in sorts:
+            term = sortterm.term
+            if not isinstance(term, Constant):
+                for vref in term.iget_nodes(VariableRef):
+                    if not vref in groups:
+                        groups.append(vref)
     if needwrap:
         if groups:
             for vref in groups:
@@ -410,8 +419,8 @@ class SQLGenerator(object):
                                         outerselection, groups)
             else:
                 outerselectidx = selectidx[:]
-        fix_selection(select, selectidx, needwrap,
-                      selectsortterms and sorts, groups, having)
+        fix_selection_and_group(select, selectidx, needwrap,
+                                selectsortterms, sorts, groups, having)
         if needwrap:
             fselectidx = outerselectidx
             fneedwrap = len(outerselection) != len(origselection)
@@ -907,7 +916,7 @@ class SQLGenerator(object):
             elif not lhsvar.name in self._varmap:
                 # join on entities instead of etype's table to get result for
                 # external entities on multisources configurations
-                ealias = lhsvar._q_sqltable = lhsvar.name
+                ealias = lhsvar._q_sqltable = '_' + lhsvar.name
                 jointo = lhsvar._q_sql = '%s.eid' % ealias
                 self.add_table('entities AS %s' % ealias, ealias)
                 if not lhsvar._q_invariant or len(lhsvar.stinfo['possibletypes']) == 1:
@@ -1029,7 +1038,7 @@ class SQLGenerator(object):
             # since variable is invariant, we know we won't found final relation
             principal = variable.stinfo['principal']
             if principal is None:
-                vtablename = variable.name
+                vtablename = '_' + variable.name
                 self.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
                 if variable.stinfo['typerels']:
@@ -1089,20 +1098,20 @@ class SQLGenerator(object):
             scope = -1
         try:
             sql = self._varmap[var.name]
-            table = sql.split('.', 1)[0]
+            tablealias = sql.split('.', 1)[0]
             if scope < 0:
-                scope = self._varmap_table_scope(var.stmt, table)
-            self.add_table(table, scope=scope)
+                scope = self._varmap_table_scope(var.stmt, tablealias)
+            self.add_table(tablealias, scope=scope)
         except KeyError:
             etype = self._state.solution[var.name]
             # XXX this check should be moved in rql.stcheck
             if self.schema.eschema(etype).final:
                 raise BadRQLQuery(var.stmt.root)
-            table = var.name
-            sql = '%s.%seid' % (table, SQL_PREFIX)
-            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table,
-                           scope=scope)
-        return sql, table
+            tablealias = '_' + var.name
+            sql = '%s.%seid' % (tablealias, SQL_PREFIX)
+            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
+                           tablealias, scope=scope)
+        return sql, tablealias
 
     def _inlined_var_sql(self, var, rtype):
         try:

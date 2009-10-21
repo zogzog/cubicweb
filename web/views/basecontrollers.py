@@ -397,26 +397,15 @@ class JSonController(Controller):
         self._cw.form = self._rebuild_posted_form(names, values, action)
         return _validate_form(self._cw, self._cw.vreg)
 
-    @jsonize
-    def js_edit_field(self, action, names, values, rtype, eid, default):
-        success, args, _ = self.validate_form(action, names, values)
-        if success:
-            # Any X,N where we don't seem to use N is an optimisation
-            # printable_value won't need to query N again
-            rset = self._cw.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
-                                    {'x': eid}, 'x')
-            entity = rset.get_entity(0, 0)
-            value = entity.printable_value(rtype) or default
-            return (success, args, value)
-        else:
-            return (success, args, None)
-
-    @jsonize
-    def js_reledit_form(self, eid, rtype, role, default, lzone):
-        """XXX we should get rid of this and use loadxhtml"""
-        entity = self._cw.entity_from_eid(eid)
-        return entity.view('reledit', rtype=rtype, role=role,
-                           default=default, landing_zone=lzone)
+    @xhtmlize
+    def js_reledit_form(self):
+        args = dict((x,self._cw.form[x])
+                    for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
+        entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
+        # note: default is reserved in js land
+        args['default'] = self._cw.form['default_value']
+        args['reload'] = simplejson.loads(args['reload'])
+        return entity.view('doreledit', **args)
 
     @jsonize
     def js_i18n(self, msgids):

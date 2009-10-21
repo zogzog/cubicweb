@@ -1954,13 +1954,15 @@ msgctxt "BaseTransition"
 msgid "description_format"
 msgstr "format"
 
-msgid "destination state"
-msgstr ""
-
 msgid "destination state for this transition"
 msgstr ""
 
 msgid "destination state of a transition"
+msgstr ""
+
+msgid ""
+"destination state. No destination state means that transition should go back "
+"to the state from which we've entered the subworkflow."
 msgstr ""
 
 msgid "destination_state"

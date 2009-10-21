@@ -308,13 +308,16 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
 
 
 
-def select(constraints, cursor, selectvar='O'):
+def select(constraints, cursor, selectvar='O', objtype=None):
     """returns list of eids matching <constraints>
 
     <selectvar> should be either 'O' or 'S' to match schema definitions
     """
     try:
-        rset = cursor.execute('Any %s WHERE %s' % (selectvar, constraints))
+        rql = 'Any %s WHERE %s' % (selectvar, constraints)
+        if objtype:
+            rql += ', %s is %s' % (selectvar, objtype)
+        rset = cursor.execute(rql)
     except:
         print "could restrict eid_list with given constraints (%r)" % constraints
         return []
@@ -335,6 +338,14 @@ def make_relations_queries(schema, edict, cursor, ignored_relations=(),
     gen = RelationsQueriesGenerator(schema, cursor, existingrels)
     return gen.compute_queries(edict, ignored_relations)
 
+def composite_relation(rschema):
+    for obj in rschema.objects():
+        if obj.objrproperty(rschema, 'composite') == 'subject':
+            return True
+    for obj in rschema.subjects():
+        if obj.subjrproperty(rschema, 'composite') == 'object':
+            return True
+    return False
 
 class RelationsQueriesGenerator(object):
     rql_tmpl = 'SET S %s O WHERE S eid %%(subjeid)s, O eid %%(objeid)s'
@@ -346,8 +357,9 @@ class RelationsQueriesGenerator(object):
     def compute_queries(self, edict, ignored_relations):
         queries = []
         #   1/ skip final relations and explictly ignored relations
-        rels = [rschema for rschema in self.schema.relations()
-                if not (rschema.final or rschema in ignored_relations)]
+        rels = sorted([rschema for rschema in self.schema.relations()
+                       if not (rschema.final or rschema in ignored_relations)],
+                      key=lambda x:not composite_relation(x))
         # for each relation
         #   2/ take each possible couple (subj, obj)
         #   3/ analyze cardinality of relation
@@ -366,15 +378,16 @@ class RelationsQueriesGenerator(object):
                     continue
                 subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
                 # process mandatory relations first
-                if subjcard in '1+' or objcard in '1+':
-                    queries += self.make_relation_queries(sedict, oedict,
-                                                          rschema, subj, obj)
+                if subjcard in '1+' or objcard in '1+' or composite_relation(rschema):
+                    for query, args in self.make_relation_queries(sedict, oedict,
+                                                          rschema, subj, obj):
+                        yield query, args
                 else:
                     delayed.append( (subj, obj) )
             for subj, obj in delayed:
-                queries += self.make_relation_queries(sedict, oedict, rschema,
-                                                      subj, obj)
-        return queries
+                for query, args in self.make_relation_queries(sedict, oedict, rschema,
+                                                              subj, obj):
+                    yield query, args
 
     def qargs(self, subjeids, objeids, subjcard, objcard, subjeid, objeid):
         if subjcard in '?1':
@@ -399,10 +412,9 @@ class RelationsQueriesGenerator(object):
             # restrict object eids if possible
             # XXX the attempt to restrict below in completely wrong
             # disabling it for now
-            objeids = select(restrictions, self.cursor)
+            objeids = select(restrictions, self.cursor, objtype=obj)
         else:
             objeids = oedict.get(obj, frozenset())
-##         objeids = oedict.get(obj, frozenset())
         if subjcard in '?1' or objcard in '?1':
             for subjeid, objeid in used:
                 if subjcard in '?1' and subjeid in subjeids:
@@ -461,8 +473,9 @@ class RelationsQueriesGenerator(object):
 
 def check_card_satisfied(card, remaining, subj, rschema, obj):
     if card in '1+' and remaining:
-        raise Exception("can't satisfy cardinality %s for relation %s %s %s"
-                        % (card, subj, rschema, obj))
+        raise Exception("can't satisfy cardinality %s for relation %s %s %s" %
+                        (card, subj, rschema, obj))
+
 
 def choose_eid(values, avoid):
     values = tuple(values)

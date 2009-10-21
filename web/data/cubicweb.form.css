@@ -180,14 +180,11 @@ div.inlinedform {
   margin-left: 2em;
 }
 
-/*FIXME inlineedit not used ?*/
-/*
-div.inlineedit {
-  display: none;
-}
-*/
-
 div.editableField {
+  display: inline;
+}
+
+div.editableFieldValue {
   display: inline;
 }
 

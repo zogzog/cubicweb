@@ -31,9 +31,11 @@ class SchemaViewer(object):
         data = [self.req._('access type'), self.req._('groups')]
         for access_type in access_types:
             data.append(self.req._(access_type))
-            acls = [self.req._(group) for group in schema.get_groups(access_type)]
-            acls += (rqlexp.expression for rqlexp in schema.get_rqlexprs(access_type))
-            data.append(', '.join(acls))
+            acls = [Link(self.req.build_url('cwgroup/%s' % group), self.req._(group))
+                    for group in schema.get_groups(access_type)]
+            acls += (Text(rqlexp.expression) for rqlexp in schema.get_rqlexprs(access_type))
+            acls = [n for _n in acls for n in (_n, Text(', '))][:-1]
+            data.append(Span(children=acls))
         return Section(children=(Table(cols=2, cheaders=1, rheaders=1, children=data),),
                        klass='acl')
 
@@ -107,7 +109,7 @@ class SchemaViewer(object):
         layout.append(Link(etype,'&#160;' , id=etype)) # anchor
         title = Link(self.eschema_link_url(eschema), etype)
         boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
-        table = Table(cols=4, rheaders=1,
+        table = Table(cols=4, rheaders=1, klass='listing',
                       children=self._entity_attributes_data(eschema))
         boxchild.append(Section(children=(table,), klass='body'))
         data = []
@@ -158,18 +160,21 @@ class SchemaViewer(object):
     def visit_relationschema(self, rschema, title=True):
         """get a layout for a relation schema"""
         _ = self.req._
-        title = Link(self.rschema_link_url(rschema), rschema.type)
-        stereotypes = []
-        if rschema.meta:
-            stereotypes.append('meta')
-        if rschema.symetric:
-            stereotypes.append('symetric')
-        if rschema.inlined:
-            stereotypes.append('inlined')
-        title = Section(children=(title, ' (%s)'%rschema.display_name(self.req)), klass='title')
-        if stereotypes:
-            title.append(self.stereotype(','.join(stereotypes)))
-        layout = Section(children=(title,), klass='schema')
+        if title:
+            title = Link(self.rschema_link_url(rschema), rschema.type)
+            stereotypes = []
+            if rschema.meta:
+                stereotypes.append('meta')
+            if rschema.symetric:
+                stereotypes.append('symetric')
+            if rschema.inlined:
+                stereotypes.append('inlined')
+            title = Section(children=(title, ' (%s)'%rschema.display_name(self.req)), klass='title')
+            if stereotypes:
+                title.append(self.stereotype(','.join(stereotypes)))
+            layout = Section(children=(title,), klass='schema')
+        else:
+            layout = Section(klass='schema')
         data = [_('from'), _('to')]
         schema = rschema.schema
         rschema_objects = rschema.objects()
@@ -202,7 +207,7 @@ class SchemaViewer(object):
                     else:
                         val = str(val)
                     data.append(Text(val))
-        table = Table(cols=cols, rheaders=1, children=data)
+        table = Table(cols=cols, rheaders=1, children=data, klass='listing')
         layout.append(Section(children=(table,), klass='relationDefinition'))
         if not self.req.cnx.anonymous_connection:
             layout.append(self.format_acls(rschema, ('read', 'add', 'delete')))

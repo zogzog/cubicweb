@@ -212,7 +212,7 @@ class FireTransitionHook(WorkflowHook):
                 msg = session._('mandatory relation')
                 raise ValidationError(entity.eid, {'by_transition': msg})
             deststate = wf.state_by_eid(deststateeid)
-            if not cowpowers and deststate is None:
+            if deststate is None:
                 msg = session._("state doesn't belong to entity's workflow")
                 raise ValidationError(entity.eid, {'to_state': msg})
         else:

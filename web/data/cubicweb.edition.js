@@ -465,45 +465,6 @@ function validateForm(formid, action, onsuccess, onfailure) {
  * @param default_value : value if the field is empty
  * @param lzone : html fragment (string) for a clic-zone triggering actual edition
  */
-function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
-    try {
-	var form = getNode(divid+'-form');
-	if (typeof FCKeditorAPI != "undefined") {
-	    for ( var name in FCKeditorAPI.__Instances ) {
-		var oEditor = FCKeditorAPI.__Instances[name] ;
-		if ( oEditor.GetParentForm() == form ) {
-		    oEditor.UpdateLinkedField();
-		}
-	    }
-	}
-	var zipped = formContents(form);
-	var d = asyncRemoteExec('edit_field', 'apply', zipped[0], zipped[1],
-                                rtype, eid, default_value);
-    } catch (ex) {
-	log('got exception', ex);
-	return false;
-    }
-    d.addCallback(function (result, req) {
-        if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
-          if (reload) {
-	    document.location.href = result[1].split('?')[0];
-	  } else {
-	    var fieldview = getNode('value-' + divid);
-	    // XXX using innerHTML is very fragile and won't work if
-	    // we mix XHTML and HTML
-	    fieldview.innerHTML = result[2];
-	    // switch inline form off only if no error
-	    if (result[0]) {
-		// hide global error messages
-		hideInlineEdit(eid, rtype, divid);
-	    }
-	  }
-        }
-	return false;
-    });
-    return false;
-}
-
 function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
                                     default_value, lzone) {
     try {
@@ -518,13 +479,11 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
     d.addCallback(function (result, req) {
 	if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
           if (reload) {
-            document.location.href = result[1].split('?')[0];
+            document.location.reload();
           } else {
-            var d = asyncRemoteExec('reledit_form', eid, rtype, role, default_value, lzone);
-            d.addCallback(function (result) {
-              // XXX brittle ... replace with loadxhtml
-              jQuery('#'+divid+'-reledit').replaceWith(result);
-            });
+              var args = {fname: 'reledit_form', rtype: rtype, role: role, eid: eid, divid: divid,
+                          reload: reload, vid: vid, default_value: default_value, landing_zone: lzone};
+              jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
           }
 	}
         return false;
@@ -534,16 +493,26 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
 
 
 /**** inline edition ****/
+function loadInlineEditionForm(eid, rtype, role, divid, reload, vid,
+                               default_value, lzone) {
+  var args = {fname: 'reledit_form', rtype: rtype, role: role, eid: eid, divid: divid,
+              reload: reload, vid: vid, default_value: default_value, landing_zone: lzone,
+              callback: function () {showInlineEditionForm(eid, rtype, divid);}};
+  jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
+}
+
 function showInlineEditionForm(eid, rtype, divid) {
     jQuery('#' + divid).hide();
-    jQuery('#' + divid+'-form').show();
+    jQuery('#' + divid + '-value' ).hide();
+    jQuery('#' + divid+ '-form').show();
 }
 
 function hideInlineEdit(eid, rtype, divid) {
     jQuery('#appMsg').hide();
     jQuery('div.errorMessage').remove();
     jQuery('#' + divid).show();
-    jQuery('#' + divid+'-form').hide();
+    jQuery('#' + divid + '-value').show();
+    jQuery('#' + divid +'-form').hide();
 }
 
 CubicWeb.provide('edition.js');

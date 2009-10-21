@@ -412,7 +412,10 @@ class WorkflowableMixIn(object):
 
     def latest_trinfo(self):
         """return the latest transition information for this entity"""
-        return self.reverse_wf_info_for[-1]
+        try:
+            return self.reverse_wf_info_for[-1]
+        except IndexError:
+            return None
 
     @cached
     def cwetype_workflow(self):

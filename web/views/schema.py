@@ -18,7 +18,7 @@ from cubicweb.schema import META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
-from cubicweb.web import action, facet
+from cubicweb.web import action, facet, uicfg
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import primary, baseviews, tabs, management
 
@@ -35,6 +35,11 @@ def skip_types(req):
     if int(req.form.get('skipmeta', True)):
         return SKIP_TYPES
     return ALWAYS_SKIP_TYPES
+
+_pvs = uicfg.primaryview_section
+for _action in ('read', 'add', 'update', 'delete'):
+    _pvs.tag_subject_of(('*', '%s_permission' % _action, '*'), 'hidden')
+    _pvs.tag_object_of(('*', '%s_permission' % _action, '*'), 'hidden')
 
 # global schema view ###########################################################
 
@@ -279,6 +284,7 @@ class CWETypeSPermView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
+        _ = self._cw._
         self.w(u'<h2>%s</h2>' % _('Add permissions'))
         rset = self._cw.execute('Any P WHERE X add_permission P, '
                                 'X eid %(x)s',
@@ -335,7 +341,7 @@ class CWRTypeSchemaView(primary.PrimaryView):
         super(CWRTypeSchemaView, self).render_entity_attributes(entity)
         rschema = self._cw.vreg.schema.rschema(entity.name)
         viewer = SchemaViewer(self._cw)
-        layout = viewer.visit_relationschema(rschema)
+        layout = viewer.visit_relationschema(rschema, title=False)
         self.w(uilib.ureport_as_html(layout))
         if not rschema.final:
             msg = self._cw._('graphical schema for %s') % entity.name
