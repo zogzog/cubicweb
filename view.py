@@ -35,35 +35,35 @@ CW_XHTML_EXTENSIONS = '''[
   style       CDATA         #IMPLIED
   title       CDATA         #IMPLIED
 
- cubicweb:sortvalue         CDATA   #IMPLIED
- cubicweb:target            CDATA   #IMPLIED
- cubicweb:limit             CDATA   #IMPLIED
- cubicweb:type              CDATA   #IMPLIED
- cubicweb:loadtype          CDATA   #IMPLIED
- cubicweb:wdgtype           CDATA   #IMPLIED
- cubicweb:initfunc          CDATA   #IMPLIED
- cubicweb:inputid           CDATA   #IMPLIED
- cubicweb:tindex            CDATA   #IMPLIED
- cubicweb:inputname         CDATA   #IMPLIED
- cubicweb:value             CDATA   #IMPLIED
- cubicweb:required          CDATA   #IMPLIED
  cubicweb:accesskey         CDATA   #IMPLIED
- cubicweb:maxlength         CDATA   #IMPLIED
- cubicweb:variables         CDATA   #IMPLIED
+ cubicweb:actualrql         CDATA   #IMPLIED
+ cubicweb:dataurl           CDATA   #IMPLIED
  cubicweb:displayactions    CDATA   #IMPLIED
+ cubicweb:facetName         CDATA   #IMPLIED
+ cubicweb:facetargs         CDATA   #IMPLIED
  cubicweb:fallbackvid       CDATA   #IMPLIED
  cubicweb:fname             CDATA   #IMPLIED
- cubicweb:vid               CDATA   #IMPLIED
- cubicweb:rql               CDATA   #IMPLIED
- cubicweb:actualrql         CDATA   #IMPLIED
- cubicweb:rooteid           CDATA   #IMPLIED
- cubicweb:dataurl           CDATA   #IMPLIED
- cubicweb:size              CDATA   #IMPLIED
- cubicweb:tlunit            CDATA   #IMPLIED
+ cubicweb:initfunc          CDATA   #IMPLIED
+ cubicweb:inputid           CDATA   #IMPLIED
+ cubicweb:inputname         CDATA   #IMPLIED
+ cubicweb:limit             CDATA   #IMPLIED
+ cubicweb:loadtype          CDATA   #IMPLIED
  cubicweb:loadurl           CDATA   #IMPLIED
+ cubicweb:maxlength         CDATA   #IMPLIED
+ cubicweb:required          CDATA   #IMPLIED
+ cubicweb:rooteid           CDATA   #IMPLIED
+ cubicweb:rql               CDATA   #IMPLIED
+ cubicweb:size              CDATA   #IMPLIED
+ cubicweb:sortvalue         CDATA   #IMPLIED
+ cubicweb:target            CDATA   #IMPLIED
+ cubicweb:tindex            CDATA   #IMPLIED
+ cubicweb:tlunit            CDATA   #IMPLIED
+ cubicweb:type              CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
- cubicweb:facetargs         CDATA   #IMPLIED
- cubicweb:facetName         CDATA   #IMPLIED
+ cubicweb:value             CDATA   #IMPLIED
+ cubicweb:variables         CDATA   #IMPLIED
+ cubicweb:vid               CDATA   #IMPLIED
+ cubicweb:wdgtype           CDATA   #IMPLIED
   "> ] '''
 
 TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n' % CW_XHTML_EXTENSIONS
