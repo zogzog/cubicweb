@@ -465,6 +465,12 @@ class StartRepositoryCommand(Command):
         from cubicweb.server.server import RepositoryServer
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
+        if sys.platform == 'win32':
+            if not self.config.debug:
+                from logging import getLogger
+                logger = getLogger('cubicweb.ctl')
+                logger.info('Forcing debug mode on win32 platform')
+                self.config.debug = True
         debug = self.config.debug
         # create the server
         server = RepositoryServer(config, debug)
