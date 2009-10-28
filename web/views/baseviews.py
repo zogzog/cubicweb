@@ -251,16 +251,17 @@ class ListView(EntityView):
             listid = u' id="%s"' % listid
         else:
             listid = u''
-        if title:
-            self.w(u'<div%s class="%s"><h4>%s</h4>\n' % (listid, klass or 'section', title))
-            self.w(u'<ul>\n')
-        else:
-            self.w(u'<ul%s class="%s">\n' % (listid, klass or 'section'))
-        for i in xrange(self.rset.rowcount):
-            self.cell_call(row=i, col=0, vid=subvid, **kwargs)
-        self.w(u'</ul>\n')
-        if title:
-            self.w(u'</div>\n')
+        if self.rset.rowcount:
+            if title:
+                self.w(u'<div%s class="%s"><h4>%s</h4>\n' % (listid, klass or 'section', title))
+                self.w(u'<ul>\n')
+            else:
+                self.w(u'<ul%s class="%s">\n' % (listid, klass or 'section'))
+            for i in xrange(self.rset.rowcount):
+                self.cell_call(row=i, col=0, vid=subvid, **kwargs)
+            self.w(u'</ul>\n')
+            if title:
+                self.w(u'</div>\n')
 
     def cell_call(self, row, col=0, vid=None, **kwargs):
         self.w(u'<li>')
