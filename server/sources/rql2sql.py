@@ -933,7 +933,7 @@ class SQLGenerator(object):
                                                     jointo, not_) + restriction
 
     def visit_comparison(self, cmp, contextrels=None):
-        """generate SQL for a comparaison"""
+        """generate SQL for a comparison"""
         if len(cmp.children) == 2:
             # XXX occurs ?
             lhs, rhs = cmp.children
