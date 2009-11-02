@@ -337,7 +337,7 @@ class HTMLStream(object):
 
 def can_do_pdf_conversion(__answer=[None]):
     """pdf conversion depends on
-    * pyxmltrf (python package)
+    * pysixt (python package)
     * fop 0.9x
     """
     if __answer[0] is not None:

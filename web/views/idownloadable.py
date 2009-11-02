@@ -113,7 +113,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
             except TransformError:
                 pass
             except Exception, ex:
-                msg = self.req._("can't display data, unexpected error: %s") % ex
+                msg = self.req._("can't display data, unexpected error: %s") % xml_escape(str(ex))
                 self.w('<div class="error">%s</div>' % msg)
         self.w(u'</div>')
 
