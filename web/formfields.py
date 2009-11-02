@@ -203,7 +203,10 @@ class Field(object):
         else:
             vocab = form.form_field_vocabulary(self)
         if self.internationalizable:
-            vocab = [(form.req._(label), value) for label, value in vocab]
+            # the short-cirtcuit 'and' boolean operator is used here to permit
+            # a valid empty string in vocabulary without attempting to translate
+            # it by gettext (which can lead to weird strings display)
+            vocab = [(label and form.req._(label), value) for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
         return vocab
