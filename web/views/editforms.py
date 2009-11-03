@@ -277,10 +277,8 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         dispctrl = uicfg.primaryview_display_ctrl.etype_get(eschema, rtype, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
-            self.wview(vid, entity.related(rtype, role), 'null')
             return False
         if eschema.role_rproperty(role, rschema, 'composite') == role:
-            self.wview(rvid, entity.related(rtype, role), 'null')
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)
