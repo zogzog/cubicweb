@@ -382,14 +382,13 @@ def run(config, debug):
     port = config['port'] or 8080
     reactor.listenTCP(port, channel.HTTPFactory(website))
     logger = getLogger('cubicweb.twisted')
-    logger.info('instance started on %s', root_resource.base_url)
     if not debug:
         print 'instance starting in the background'
         if daemonize():
             return # child process
         if config['pid-file']:
             # ensure the directory where the pid-file should be set exists (for
-            # instance /var/run/cubicweb may be deleted on computer restart) 
+            # instance /var/run/cubicweb may be deleted on computer restart)
             piddir = os.path.dirname(config['pid-file'])
             if not os.path.exists(piddir):
                 os.makedirs(piddir)
@@ -403,6 +402,7 @@ def run(config, debug):
             uid = getpwnam(config['uid']).pw_uid
         os.setuid(uid)
     root_resource.start_service()
+    logger.info('instance started on %s', root_resource.base_url)
     if config['profile']:
         prof = hotshot.Profile(config['profile'])
         prof.runcall(reactor.run)
