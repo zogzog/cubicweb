@@ -114,9 +114,11 @@ class CWUser(AnyEntity):
             kwargs['x'] = contexteid
             cachekey = 'x'
         try:
-            return self.req.execute(rql, kwargs, cachekey)
+            self.req.execute(rql, kwargs, cachekey)
         except Unauthorized:
             return False
+        else:
+            return True
 
     # presentation utilities ##################################################
 
