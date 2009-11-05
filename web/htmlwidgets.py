@@ -283,7 +283,14 @@ class SimpleTableModel(object):
 
 
 class TableWidget(HTMLWidget):
+    """
+    Display data in a Table with sortable column.
 
+    When using remember to include the required css and js with:
+
+    self.req.add_js('jquery.tablesorter.js')
+    self.req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+    """
     highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
                 "onmouseout=\"removeElementClass(this, 'highlighted');\""
 
