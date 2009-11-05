@@ -12,7 +12,8 @@ serialization time
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
-from cubicweb.common.uilib import toggle_action
+from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.web import jsonize
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,
 #     i18n strings, etc.)
@@ -249,6 +250,36 @@ class TableColumn(object):
 
     def add_attr(self, attr, value):
         self.cell_attrs[attr] = value
+
+class SimpleTableModel(object):
+    """
+    uses a list of lists as a storage backend
+
+    NB: the model expectes the cellvid passed to
+    TableColumn.append_renderer to be a callable accepting a single
+    argument and returning a unicode object
+    """
+    def __init__(self, rows):
+        self._rows = rows
+
+
+    def get_rows(self):
+        return self._rows
+
+    def render_cell(self, cellvid, rowindex, colindex, w):
+        value = self._rows[rowindex][colindex]
+        w(cellvid(value))
+
+    @htmlescape
+    @jsonize
+    def sortvalue(self, rowindex, colindex):
+        value =  self._rows[rowindex][colindex]
+        if value is None:
+            return u''
+        elif isinstance(value, int):
+            return u'%09d'%value
+        else:
+            return unicode(value)
 
 
 class TableWidget(HTMLWidget):
