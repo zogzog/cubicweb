@@ -335,20 +335,20 @@ class ProgressBarWidget(HTMLWidget):
 
     def _render(self):
         try:
-            pourcent = self.done*100./self.total
+            percent = self.done*100./self.total
         except ZeroDivisionError:
-            pourcent = 0
-        real_pourcent = pourcent
-        if pourcent > 100 :
+            percent = 0
+        real_percent = percent
+        if percent > 100 :
             color = 'done'
-            pourcent = 100
+            percent = 100
         elif self.todo + self.done > self.total :
             color = 'overpassed'
         else:
             color = 'inprogress'
-        if pourcent < 0:
-            pourcent = 0
-        self.w(u'<div class="progressbarback" title="%i %%">' % real_pourcent)
-        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, pourcent))
+        if percent < 0:
+            percent = 0
+        self.w(u'<div class="progressbarback" title="%i %%">' % real_percent)
+        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, percent))
         self.w(u'</div>')
 
