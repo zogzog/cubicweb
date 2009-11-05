@@ -418,7 +418,7 @@ class HTMLPageHeader(View):
 
 
 class HTMLPageFooter(View):
-    """default html page footer: include logo if any, and close the HTML body
+    """default html page footer: include footer actions
     """
     id = 'footer'
 
