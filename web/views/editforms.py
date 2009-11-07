@@ -114,7 +114,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
                  "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
     _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
-    _defaultlandingzone = (u'<img title="%(msg)s" src="data/file.gif" '
+    _defaultlandingzone = (u'<img title="%(msg)s" src="data/pen_icon.png" '
                            'alt="%(msg)s"/>')
     _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
@@ -198,14 +198,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """
         w = self.w
         divid = form.event_args['divid']
-        w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
-        w(u'<div id="%s" class="editableField" onclick="%s" title="%s">' % (
+        w(u'<div id="%s-reledit" class="field" '
+          u'onmouseout="addElementClass(jQuery(\'#%s\'), \'hidden\')" '
+          u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
+          % (divid, divid, divid))
+        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
+        w(form.form_render(renderer=renderer))
+        w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
                 divid, xml_escape(self._onclick % form.event_args),
                 self.req._(self._landingzonemsg)))
         w(lzone)
         w(u'</div>')
-        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
-        w(form.form_render(renderer=renderer))
         w(u'</div>')
 
     def _compute_best_vid(self, eschema, rschema, role):
