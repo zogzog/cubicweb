@@ -51,8 +51,8 @@ class DeleteConfForm(forms.CompositeForm):
 
     domid = 'deleteconf'
     copy_nav_params = True
-    form_buttons = [Button(stdmsgs.YES, cwaction='delete'),
-                    Button(stdmsgs.NO, cwaction='cancel')]
+    form_buttons = [Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
+                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     @property
     def action(self):
         return self.build_url('edit')

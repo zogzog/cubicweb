@@ -13,6 +13,7 @@ from warnings import warn
 from cubicweb.common import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE
 
+from logilab.mtconverter import xml_escape
 
 class FieldWidget(object):
     """abstract widget class"""
@@ -454,7 +455,12 @@ class Button(Input):
                  setdomid=None, settabindex=None,
                  name='', value='', onclick=None, cwaction=None):
         super(Button, self).__init__(attrs, setdomid, settabindex)
-        self.label = label
+        if isinstance(label, tuple):
+            self.label = label[0]
+            self.icon = label[1]
+        else:
+            self.label = label
+            self.icon = None
         self.name = name
         self.value = ''
         self.onclick = onclick
@@ -476,7 +482,12 @@ class Button(Input):
                 attrs['id'] = self.name
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form.req.next_tabindex()
-        return tags.input(value=label, type=self.type, **attrs)
+        if self.icon:
+            img = tags.img(src=form.req.external_resource(self.icon), alt=self.icon)
+        else:
+            img = u''
+        return tags.button(img + xml_escape(label), escapecontent=False,
+                           value=label, type=self.type, **attrs)
 
 
 class SubmitButton(Button):

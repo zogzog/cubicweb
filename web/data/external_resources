@@ -53,3 +53,8 @@ DOWNLOAD_ICON = DATADIR/download.gif
 UPLOAD_ICON = DATADIR/upload.gif
 GMARKER_ICON = DATADIR/gmap_blue_marker.png
 UP_ICON = DATADIR/up.gif
+
+OK_ICON = DATADIR/ok.png
+CANCEL_ICON = DATADIR/cancel.png
+APPLY_ICON = DATADIR/plus.png
+TRASH_ICON = DATADIR/trash_can_small.png

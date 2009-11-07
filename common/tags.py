@@ -18,6 +18,7 @@ class tag(object):
         attrs.setdefault('escapecontent', self.escapecontent)
         return simple_sgml_tag(self.name, __content, **attrs)
 
+button = tag('button')
 input = tag('input')
 textarea = tag('textarea')
 a = tag('a')
