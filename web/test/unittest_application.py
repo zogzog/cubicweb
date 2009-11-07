@@ -421,7 +421,6 @@ class ApplicationTC(EnvBasedTC):
         # expect a rset with None in [0][0]
         req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
         self.publish(req)
-        print 'yuea'
 
 if __name__ == '__main__':
     unittest_main()
