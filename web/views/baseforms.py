@@ -315,7 +315,6 @@ class EditionForm(FormMixIn, EntityView):
                                   % (rschema, entity.eid, js,
                                      self.req.__('add a %s' % targettype)))
                     result.append(u'</div>')
-                    result.append(u'<div class="trame_grise">&#160;</div>')
                 result.append(u'</div>')
         return '\n'.join(result)
 

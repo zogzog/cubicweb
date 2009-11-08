@@ -12,7 +12,6 @@ div.formTitle {
   color: #ff4500;
   padding-bottom : 0.4em;
   text-transform: capitalize;
-  background: url("bg_trame_grise.png") left bottom repeat-x;
   margin-bottom: 0.6em
 }
 
@@ -209,10 +208,6 @@ option.separator {
   text-align: center;
 }
 
-div.trame_grise {
-  background: url("bg_trame_grise.png") left top repeat-x;
-}
-
 div.notice {
   display: none;
   font-style: italic;
@@ -231,7 +226,7 @@ div.notice {
   cursor: default;
 }
 
-input.validateButton {  
+input.validateButton {
   margin: 1em 1em 0px 0px;
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;

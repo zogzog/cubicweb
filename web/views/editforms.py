@@ -587,4 +587,3 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
         self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
           % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
         self.w(u'</div>')
-        self.w(u'<div class="trame_grise">&#160;</div>')
