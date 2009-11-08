@@ -293,22 +293,28 @@ class View(AppObject):
         self.w('}\n-->\n</script>\n')
 
     def create_url(self, etype, **kwargs):
-        """ return the url of the entity creation form for a given entity type"""
-        return self.req.build_url('add/%s'%etype, **kwargs)
+        """return the url of the entity creation form for a given entity type"""
+        return self.req.build_url('add/%s' % etype, **kwargs)
 
-    def field(self, label, value, row=True, show_label=True, w=None, tr=True):
-        """ read-only field """
+    def field(self, label, value, row=True, show_label=True, w=None, tr=True, table=False):
+        """read-only field"""
         if w is None:
             w = self.w
-        if row:
-            w(u'<div class="row">')
+        if table:
+            w(u'<tr class="entityfield">')
+        else:
+            w(u'<div class="entityfield">')
         if show_label and label:
             if tr:
                 label = display_name(self.req, label)
-            w(u'<span class="label">%s</span>' % label)
-        w(u'<div class="field">%s</div>' % value)
-        if row:
-            w(u'</div>')
+            if table:
+                w(u'<th>%s</th>' % label)
+            else:
+                w(u'<span>%s</span>' % label)
+        if table:
+            w(u'<td>%s</td></tr>' % value)
+        else:
+            w(u'<span>%s</span></div>' % value)
 
 
 

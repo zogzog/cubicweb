@@ -595,20 +595,14 @@ div.section a:hover {
 
 /* basic entity view */
 
-div.row {
- clear: both;
- padding-bottom:0.4px
-}
-
-div.row span.label{
- padding-right:1em
+tr.entityfield th {
+  text-align: left;
+  padding-right: 0.5em;
 }
 
 div.field {
-  margin-left: 0.2em;
   display: inline;
 }
-
 
 /***************************************/
 /* messages                            */

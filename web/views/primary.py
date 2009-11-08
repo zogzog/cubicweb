@@ -102,7 +102,11 @@ class PrimaryView(EntityView):
         return u''
 
     def render_entity_attributes(self, entity, siderelations=None):
-        for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
+        entity_attributes = self._section_def(entity, 'attributes')
+        if not entity_attributes:
+            return
+        self.w(u'<table>')
+        for rschema, tschemas, role, dispctrl in entity_attributes:
             vid = dispctrl.get('vid', 'reledit')
             if rschema.final or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
@@ -114,7 +118,8 @@ class PrimaryView(EntityView):
                     value = None
             if self.skip_none and (value is None or value == ''):
                 continue
-            self._render_attribute(rschema, value)
+            self._render_attribute(rschema, value, role=role, table=True)
+        self.w(u'</table>')
 
     def render_entity_relations(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
@@ -191,13 +196,13 @@ class PrimaryView(EntityView):
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
-    def _render_attribute(self, rschema, value, role='subject'):
+    def _render_attribute(self, rschema, value, role='subject', table=False):
         if rschema.final:
             show_label = self.show_attr_label
         else:
             show_label = self.show_rel_label
         label = display_name(self.req, rschema.type, role)
-        self.field(label, value, show_label=show_label, tr=False)
+        self.field(label, value, show_label=show_label, tr=False, table=table)
 
 
 class RelatedView(EntityView):
