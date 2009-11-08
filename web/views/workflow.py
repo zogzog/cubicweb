@@ -50,8 +50,8 @@ class ChangeStateForm(forms.CompositeEntityForm):
     id = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
-    form_buttons = [fwdgs.SubmitButton(stdmsgs.YES),
-                    fwdgs.Button(stdmsgs.NO, cwaction='cancel')]
+    form_buttons = [fwdgs.SubmitButton(),
+                    fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
 
 
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
