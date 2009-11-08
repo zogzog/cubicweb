@@ -268,9 +268,16 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         in interactive mode,  display the migration script path, ask for
         confirmation and execute it if confirmed
         """
-        assert migrscript.endswith('.py'), migrscript
-        if self.execscript_confirm(migrscript):
-            scriptlocals = self._create_context().copy()
+        if migrscript.endswith('.py'):
+            script_mode = 'python'
+        elif migrscript.endswith('.txt') or migrscript.endswith('.rst'):
+            script_mode = 'doctest'
+        else:
+            raise Exception('This is not a valid cubicweb shell input')
+        if not self.execscript_confirm(migrscript):
+            return
+        scriptlocals = self._create_context().copy()
+        if script_mode == 'python':
             if funcname is None:
                 pyname = '__main__'
             else:
@@ -286,6 +293,10 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     self.critical('no %s in script %s', funcname, migrscript)
                     return None
                 return func(*args, **kwargs)
+        else: # script_mode == 'doctest'
+            import doctest
+            doctest.testfile(os.path.abspath(migrscript), module_relative=False,
+                             optionflags=doctest.ELLIPSIS, globs=scriptlocals)
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""
