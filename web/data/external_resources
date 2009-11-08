@@ -38,6 +38,7 @@ SEARCH_GO =  DATADIR/go.png
 
 #FCKEDITOR_PATH = /usr/share/fckeditor/
 
+PUCE_UP = DATADIR/puce_up.png
 
 # icons for entity types
 BOOKMARK_ICON = DATADIR/icon_bookmark.gif
