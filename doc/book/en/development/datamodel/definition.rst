@@ -223,7 +223,7 @@ It is possible to define RQL expression to provide update permission
 
 RQL expression for entity type permission :
 
-* you have to use the class `RQLExpression`
+* you have to use the class `ERQLExpression`
 
 * the used expression corresponds to the WHERE statement of an RQL query
 
@@ -240,16 +240,16 @@ RQL expression for entity type permission :
 For RQL expressions on a relation type, the principles are the same except
 for the following :
 
-* you have to use the class `RQLExpression` in the case of a non-final relation
+* you have to use the class `RRQLExpression` in the case of a non-final relation
 
 * in the expression, the variables S, O and U are pre-defined references
   to respectively the subject and the object of the current relation (on
   which the action is being verified) and the user who executed the query
 
-* we can also defined rights on attributes of an entity (non-final relation),
+* we can also define rights over attributes of an entity (non-final relation),
   knowing that :
 
-  - to define RQL expression, we have to use the class `RQLExpression`
+  - to define RQL expression, we have to use the class `ERQLExpression`
     in which X represents the entity the attribute belongs to
 
   - the permissions `add` and `delete` are equivalent. Only `add`/`read`
