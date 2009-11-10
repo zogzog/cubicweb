@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
-from cubicweb.utils import make_uid, UStringIO, can_do_pdf_conversion
+from cubicweb.utils import UStringIO, can_do_pdf_conversion
 from cubicweb.schema import display_name
 
 # main templates ##############################################################
@@ -316,7 +316,6 @@ class HTMLHeader(View):
         self.stylesheets()
         self.javascripts()
         self.alternates()
-        self.pageid()
 
     def favicon(self):
         favicon = self.req.external_resource('FAVICON', None)
@@ -343,12 +342,6 @@ class HTMLHeader(View):
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
                        %  xml_escape(urlgetter.feed_url()))
-
-    def pageid(self):
-        req = self.req
-        pid = make_uid(id(req))
-        req.pageid = pid
-        req.html_headers.define_var('pageid', pid)
 
 
 class HTMLPageHeader(View):

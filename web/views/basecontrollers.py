@@ -250,7 +250,6 @@ class JSonController(Controller):
         response content type
         """
         self.req.json_request = True
-        self.req.pageid = self.req.form.get('pageid')
         try:
             fname = self.req.form['fname']
             func = getattr(self, 'js_%s' % fname)
