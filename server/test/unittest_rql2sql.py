@@ -164,6 +164,9 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
 WHERE _X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers)))'''),
+
+
+
 ]
 
 ADVANCED= [
@@ -867,10 +870,21 @@ WHERE NOT EXISTS(SELECT 1 WHERE _S.cw_inline1=_O.cw_eid) AND _S.cw_eid=123''')
     ]
 
 VIRTUAL_VARS = [
-    ("Personne P WHERE P travaille S, S tel T, S fax T, S is Societe;",
+
+    ('Any X WHERE X is CWUser, X creation_date > D1, Y creation_date D1, Y login "SWEB09"',
+     '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X, cw_CWUser AS _Y
+WHERE _X.cw_creation_date>_Y.cw_creation_date AND _Y.cw_login=SWEB09'''),
+
+    ('Any X WHERE X is CWUser, Y creation_date D1, Y login "SWEB09", X creation_date > D1',
+     '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X, cw_CWUser AS _Y
+WHERE _Y.cw_login=SWEB09 AND _X.cw_creation_date>_Y.cw_creation_date'''),
+
+    ('Personne P WHERE P travaille S, S tel T, S fax T, S is Societe',
      '''SELECT rel_travaille0.eid_from
 FROM cw_Societe AS _S, travaille_relation AS rel_travaille0
-WHERE rel_travaille0.eid_to=_S.cw_eid AND _S.cw_fax=_S.cw_tel'''),
+WHERE rel_travaille0.eid_to=_S.cw_eid AND _S.cw_tel=_S.cw_fax'''),
 
     ("Personne P where X eid 0, X creation_date D, P datenaiss < D, X is Affaire",
      '''SELECT _P.cw_eid

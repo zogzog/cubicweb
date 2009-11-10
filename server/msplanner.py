@@ -1470,11 +1470,19 @@ class TermsFiltererVisitor(object):
     def visit_constant(self, node, newroot, terms):
         return copy_node(newroot, node), node
 
+    def visit_comparison(self, node, newroot, terms):
+        subparts, node = self._visit_children(node, newroot, terms)
+        copy = copy_node(newroot, node, subparts)
+        # ignore comparison operator when fetching non final query
+        if not self.final and isinstance(node.children[0], VariableRef):
+            copy.operator = '='
+        return copy, node
+
     def visit_default(self, node, newroot, terms):
         subparts, node = self._visit_children(node, newroot, terms)
         return copy_node(newroot, node, subparts), node
 
-    visit_comparison = visit_mathexpression = visit_constant = visit_function = visit_default
+    visit_mathexpression = visit_constant = visit_function = visit_default
     visit_sort = visit_sortterm = visit_default
 
     def _visit_children(self, node, newroot, terms):
