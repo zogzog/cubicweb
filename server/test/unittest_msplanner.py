@@ -706,7 +706,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         self._test('Any V, MAX(VR) WHERE V is Card, V creation_date VR, '
                    '(V creation_date TODAY OR (V creation_date < TODAY AND NOT EXISTS('
                    'X is Card, X creation_date < TODAY, X creation_date >= VR)))',
-                   [('FetchStep', [('Any VR WHERE X creation_date < TODAY, X creation_date >= VR, X is Card',
+                   [('FetchStep', [('Any VR WHERE X creation_date < TODAY, X creation_date VR, X is Card',
                                     [{'X': 'Card', 'VR': 'Datetime'}])],
                      [self.cards, self.system], None,
                      {'VR': 'table0.C0', 'X.creation_date': 'table0.C0'}, []),
@@ -1349,7 +1349,7 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_attr_unification_neq_1(self):
         self._test('Any X,Y WHERE X is Bookmark, Y is Card, X creation_date D, Y creation_date > D',
                    [('FetchStep',
-                     [('Any Y,D WHERE Y creation_date > D, Y is Card',
+                     [('Any Y,D WHERE Y creation_date D, Y is Card',
                        [{'D': 'Datetime', 'Y': 'Card'}])],
                      [self.cards,self.system], None,
                      {'D': 'table0.C1', 'Y': 'table0.C0', 'Y.creation_date': 'table0.C1'}, []),

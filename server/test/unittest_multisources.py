@@ -184,7 +184,9 @@ class TwoSourcesTC(RepositoryBasedTC):
     def test_attr_unification_1(self):
         n1 = self.execute('INSERT Note X: X type "AFFREF"')[0][0]
         n2 = self.execute('INSERT Note X: X type "AFFREU"')[0][0]
+        self.set_debug('DBG_SQL|DBG_MS')
         rset = self.execute('Any X,Y WHERE X is Note, Y is Affaire, X type T, Y ref T')
+        self.set_debug(None)
         self.assertEquals(len(rset), 1, rset.rows)
 
     def test_attr_unification_2(self):
