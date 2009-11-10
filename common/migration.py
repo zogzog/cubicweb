@@ -269,6 +269,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         confirmation and execute it if confirmed
         """
         assert migrscript.endswith('.py'), migrscript
+        migrscript = os.path.normpath(migrscript)
         if self.execscript_confirm(migrscript):
             scriptlocals = self._create_context().copy()
             if funcname is None:
