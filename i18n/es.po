@@ -364,6 +364,9 @@ msgstr "Números flotantes"
 msgid "From:"
 msgstr "De: "
 
+msgid "Help"
+msgstr ""
+
 msgid "Int"
 msgstr "Número entero"
 
@@ -808,6 +811,12 @@ msgid "actions_follow"
 msgstr "Seguir"
 
 msgid "actions_follow_description"
+msgstr ""
+
+msgid "actions_help"
+msgstr ""
+
+msgid "actions_help_description"
 msgstr ""
 
 msgid "actions_logout"

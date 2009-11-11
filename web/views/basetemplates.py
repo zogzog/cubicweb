@@ -381,11 +381,6 @@ class HTMLPageHeader(View):
             'loggeduserlink', self.req, rset=self.rset)
         if comp:
             comp.render(w=self.w)
-        self.w(u'</td><td>')
-        helpcomp = self.vreg['components'].select_vobject(
-            'help', self.req, rset=self.rset)
-        if helpcomp:
-            helpcomp.render(w=self.w)
         self.w(u'</td>')
         # lastcolumn
         self.w(u'<td id="lastcolumn">')

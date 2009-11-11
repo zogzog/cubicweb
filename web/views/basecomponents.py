@@ -68,17 +68,6 @@ class ApplLogo(component.Component):
         self.w(u'<a href="%s"><img class="logo" src="%s" alt="logo"/></a>'
                % (self.req.base_url(), self.req.external_resource('LOGO')))
 
-
-class ApplHelp(component.Component):
-    """build the help button, usually displayed in the header"""
-    id = 'help'
-    property_defs = VISIBLE_PROP_DEF
-    def call(self):
-        self.w(u'<a href="%s" class="help" title="%s">&#160;</a>'
-               % (self.build_url(_restpath='doc/main'),
-                  self.req._(u'help'),))
-
-
 class UserLink(component.Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link

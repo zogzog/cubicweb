@@ -363,6 +363,9 @@ msgstr "Nombres flottants"
 msgid "From:"
 msgstr "De :"
 
+msgid "Help"
+msgstr "Aide"
+
 msgid "Int"
 msgstr "Nombre entier"
 
@@ -813,6 +816,12 @@ msgid "actions_follow"
 msgstr "suivre"
 
 msgid "actions_follow_description"
+msgstr ""
+
+msgid "actions_help"
+msgstr ""
+
+msgid "actions_help_description"
 msgstr ""
 
 msgid "actions_logout"
@@ -3077,7 +3086,7 @@ msgid "possible views"
 msgstr "vues possibles"
 
 msgid "powered by CubicWeb"
-msgstr "utilise la technologie CubicWeb"
+msgstr "construit avec CubicWeb"
 
 msgid "prefered_form"
 msgstr "forme préférée"
