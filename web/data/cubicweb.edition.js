@@ -363,6 +363,9 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
 	}
       return true;
     }
+    if (onfailure && !onfailure(result, formid, cbargs)) {
+	return false;
+    }
     unfreezeFormButtons(formid);
     // Failures
     _clearPreviousErrors(formid);
@@ -376,9 +379,6 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     _displayValidationerrors(formid, descr[0], descr[1]);
     updateMessage(_('please correct errors below'));
     document.location.hash = '#header';
-    if (onfailure) {
-	onfailure(formid, cbargs);
-    }
     return false;
 }
 
