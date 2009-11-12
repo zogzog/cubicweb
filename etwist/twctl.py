@@ -10,9 +10,13 @@ import sys
 
 from cubicweb import underline_title
 from cubicweb.toolsutils import CommandHandler
+from cubicweb.web.webctl import WebCreateHandler
 
 # trigger configuration registration
 import cubicweb.etwist.twconfig # pylint: disable-msg=W0611
+
+class TWCreateHandler(WebCreateHandler):
+    cfgname = 'twisted'
 
 class TWStartHandler(CommandHandler):
     cmdname = 'start'
@@ -29,8 +33,10 @@ class TWStopHandler(CommandHandler):
 
 try:
     from cubicweb.server import serverctl
-
-    class AllInOneCreateHandler(serverctl.RepositoryCreateHandler):
+    from cubicweb.server import serverctl
+    WebCreateHandler
+    class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
+                                TWCreateHandler):
         """configuration to get an instance running in a twisted web server
         integrating a repository server in the same process
         """
@@ -39,6 +45,7 @@ try:
         def bootstrap(self, cubes, inputlevel=0):
             """bootstrap this configuration"""
             serverctl.RepositoryCreateHandler.bootstrap(self, cubes, inputlevel)
+            TWCreateHandler.bootstrap(self, cubes, inputlevel)
 
     class AllInOneStartHandler(TWStartHandler):
         cmdname = 'start'
