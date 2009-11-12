@@ -45,18 +45,6 @@ class MetadataTC(BaseEntityTC):
                           {'description_format': ('format', 'description')})
 
 
-class CWUserTC(BaseEntityTC):
-    def test_dc_title_and_name(self):
-        e = self.entity('CWUser U WHERE U login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), 'member')
-        self.execute(u'SET X firstname "bouah" WHERE X is CWUser, X login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), u'bouah')
-        self.execute(u'SET X surname "lôt" WHERE X is CWUser, X login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), u'bouah lôt')
-
 class EmailAddressTC(BaseEntityTC):
     def test_canonical_form(self):
         email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
@@ -93,6 +81,25 @@ class CWUserTC(BaseEntityTC):
         self.failIf(e.matching_groups('xyz'))
         self.failUnless(e.matching_groups(('xyz', 'managers')))
         self.failIf(e.matching_groups(('xyz', 'abcd')))
+
+    def test_dc_title_and_name(self):
+        e = self.entity('CWUser U WHERE U login "member"')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), 'member')
+        e.set_attributes(firstname=u'bouah')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), u'bouah')
+        e.set_attributes(surname=u'lôt')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), u'bouah lôt')
+
+    def test_allowed_massmail_keys(self):
+        e = self.entity('CWUser U WHERE U login "member"')
+        # Bytes/Password attributes should be omited
+        self.assertEquals(e.allowed_massmail_keys(),
+                          set(('surname', 'firstname', 'login', 'last_login_time',
+                               'creation_date', 'modification_date', 'cwuri', 'eid'))
+                          )
 
 
 class InterfaceTC(EnvBasedTC):
