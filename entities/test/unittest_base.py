@@ -50,21 +50,19 @@ class EmailAddressTC(BaseEntityTC):
         email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
         email2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com"').get_entity(0, 0)
         email3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"').get_entity(0, 0)
-        self.execute('SET X prefered_form Y WHERE X eid %s, Y eid %s' % (email1.eid, email2.eid))
+        email1.set_relations(prefered_form=email2)
         self.assertEquals(email1.prefered.eid, email2.eid)
         self.assertEquals(email2.prefered.eid, email2.eid)
         self.assertEquals(email3.prefered.eid, email3.eid)
 
     def test_mangling(self):
-        eid = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"')[0][0]
-        email = self.entity('Any X WHERE X eid %(x)s', {'x':eid}, 'x')
+        email = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
         self.assertEquals(email.display_address(), 'maarten.ter.huurne@philips.com')
         self.assertEquals(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
         self.vreg.config.global_set_option('mangle-emails', True)
         self.assertEquals(email.display_address(), 'maarten.ter.huurne at philips dot com')
         self.assertEquals(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
-        eid = self.execute('INSERT EmailAddress X: X address "syt"')[0][0]
-        email = self.entity('Any X WHERE X eid %(x)s', {'x':eid}, 'x')
+        email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
         self.assertEquals(email.display_address(), 'syt')
         self.assertEquals(email.printable_value('address'), 'syt')
 
