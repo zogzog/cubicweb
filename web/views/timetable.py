@@ -36,14 +36,13 @@ class TimeTableView(AnyRsetView):
         dates = {}
         users = []
         users_max = {}
-
         # XXX: try refactoring with calendar.py:OneMonthCal
         for row in xrange(self.rset.rowcount):
             task = self.rset.get_entity(row, 0)
-            if len(self.rset[row])>1:
+            if len(self.rset[row]) > 1:
                 user = self.rset.get_entity(row, 1)
             else:
-                user = u"*"
+                user = ALL_USERS
             the_dates = []
             if task.start and task.stop:
                 if task.start.toordinal() == task.stop.toordinal():
@@ -137,10 +136,10 @@ class TimeTableView(AnyRsetView):
         columns = []
         for user, width in zip(users, widths):
             self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
-            if user != u"*":
-                user.view('oneline', w=self.w)
+            if user is ALL_USERS:
+                self.w('*')
             else:
-                self.w(user)
+                user.view('oneline', w=self.w)
             self.w(u'</th>')
         self.w(u'</tr>\n')
         return columns
