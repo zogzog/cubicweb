@@ -812,6 +812,7 @@ class RRQLExpression(RQLExpression):
                 raise Exception('unable to guess selection variables')
             mainvars = ','.join(mainvars)
         RQLExpression.__init__(self, expression, mainvars, eid)
+        # graph of links between variable, used by rql rewriter
         self.vargraph = {}
         for relation in self.rqlst.get_nodes(nodes.Relation):
             try:
