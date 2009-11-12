@@ -806,6 +806,8 @@ class RRQLExpression(RQLExpression):
                 mainvars.append('S')
             if 'O' in defined:
                 mainvars.append('O')
+            if 'U' in defined:
+                mainvars.append('U')
             if not mainvars:
                 raise Exception('unable to guess selection variables')
             mainvars = ','.join(mainvars)
