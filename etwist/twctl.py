@@ -33,8 +33,6 @@ class TWStopHandler(CommandHandler):
 
 try:
     from cubicweb.server import serverctl
-    from cubicweb.server import serverctl
-    WebCreateHandler
     class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
                                 TWCreateHandler):
         """configuration to get an instance running in a twisted web server
