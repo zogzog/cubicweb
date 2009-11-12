@@ -646,7 +646,7 @@ class RQLExpression(object):
             if len(self.rqlst.defined_vars[mainvar].references()) <= 2:
                 _LOGGER.warn('You did not use the %s variable in your RQL '
                              'expression %s', mainvar, self)
-        # syntax tree used by read security (inserted in queries when necessary
+        # syntax tree used by read security (inserted in queries when necessary)
         self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
 
     def __str__(self):
