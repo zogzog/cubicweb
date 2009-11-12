@@ -778,9 +778,13 @@ class Entity(AppObject, dict):
             rqlexprs = rtype.get_rqlexprs('add')
             rewriter = RQLRewriter(self.req)
             rqlst = self.req.vreg.parse(self.req, rql, args)
+            if not self.has_eid():
+                existant = searchedvar
+            else:
+                existant = None # instead of 'SO', improve perfs
             for select in rqlst.children:
                 rewriter.rewrite(select, [((searchedvar, searchedvar), rqlexprs)],
-                                 select.solutions, args)
+                                 select.solutions, args, existant)
             rql = rqlst.as_string()
         return rql, args
 

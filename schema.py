@@ -812,6 +812,17 @@ class RRQLExpression(RQLExpression):
                 raise Exception('unable to guess selection variables')
             mainvars = ','.join(mainvars)
         RQLExpression.__init__(self, expression, mainvars, eid)
+        self.vargraph = {}
+        for relation in self.rqlst.get_nodes(nodes.Relation):
+            try:
+                rhsvarname = relation.children[1].children[0].variable.name
+                lhsvarname = relation.children[0].name
+            except AttributeError:
+                pass
+            else:
+                self.vargraph.setdefault(lhsvarname, []).append(rhsvarname)
+                self.vargraph.setdefault(rhsvarname, []).append(lhsvarname)
+                #self.vargraph[(lhsvarname, rhsvarname)] = relation.r_type
 
     @property
     def full_rql(self):

@@ -239,6 +239,14 @@ class EntityTC(EnvBasedTC):
         #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
 
+    def test_unrelated_rql_security_nonexistant(self):
+        self.login('anon')
+        email = self.vreg['etypes'].etype_class('EmailAddress')(self.request())
+        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+                          'WHERE S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                          'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+
     def test_unrelated_base(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = self.add_entity('Tag', name=u'x')
