@@ -103,11 +103,13 @@ class CubicWebRootResource(resource.PostableResource):
         assert self.base_url[-1] == '/'
         self.https_url = config['https-url']
         assert not self.https_url or self.https_url[-1] == '/'
+        # instantiate publisher here and not in init_publisher to get some
+        # checks done before daemonization (eg versions consistency)
+        self.appli = CubicWebPublisher(config, debug=self.debugmode)
+        self.versioned_datadir = 'data%s' % config.instance_md5_version()
 
     def init_publisher(self):
         config = self.config
-        self.appli = CubicWebPublisher(config, debug=self.debugmode)
-        self.versioned_datadir = 'data%s' % config.instance_md5_version()
         # when we have an in-memory repository, clean unused sessions every XX
         # seconds and properly shutdown the server
         if config.repo_method == 'inmemory':
