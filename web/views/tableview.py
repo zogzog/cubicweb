@@ -181,7 +181,7 @@ class TableView(AnyRsetView):
 
     def render_actions(self, divid, actions):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = tags.img(src=self.req.external_resource('PUCE_UP'),
+        label = tags.img(src=self.req.external_resource('PUCE_DOWN'),
                          alt=xml_escape(self.req._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)
