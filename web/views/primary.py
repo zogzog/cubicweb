@@ -86,8 +86,7 @@ class PrimaryView(EntityView):
         """default implementation return dc_title"""
         title = xml_escape(entity.dc_title())
         if title:
-            self.w(u'<h1><span class="etype">%s</span> %s</h1>'
-                   % (entity.dc_type().capitalize(), title))
+            self.w(u'<h1>%s</h1>' % title)
 
     def render_entity_metadata(self, entity):
         entity.view('metadata', w=self.w)

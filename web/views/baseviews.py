@@ -174,7 +174,7 @@ class MetaDataView(EntityView):
         entity = self.entity(row, col)
         self.w(u'<div class="metadata">')
         if self.show_eid:
-            self.w(u'#%s - ' % entity.eid)
+            self.w(u'%s #%s - ' % (entity.dc_type(), entity.eid))
         if entity.modification_date != entity.creation_date:
             self.w(u'<span>%s</span> ' % _('latest update on'))
             self.w(u'<span class="value">%s</span>, '
