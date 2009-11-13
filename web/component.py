@@ -42,14 +42,14 @@ class EntityVComponent(Component):
                             help=_('display the component or not')),
         _('order'):    dict(type='Int', default=99,
                             help=_('display order of the component')),
-        _('context'):  dict(type='String', default='header',
+        _('context'):  dict(type='String', default='navtop',
                             vocabulary=(_('navtop'), _('navbottom'),
-                                        _('navcontenttop'), _('navcontentbottom')),
-                            #vocabulary=(_('header'), _('incontext'), _('footer')),
+                                        _('navcontenttop'), _('navcontentbottom'),
+                                        _('ctxtoolbar')),
                             help=_('context where this component should be displayed')),
     }
 
-    context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
+    context = 'navcontentbottom'
 
     def call(self, view=None):
         return self.cell_call(0, 0, view=view)

@@ -592,6 +592,15 @@ div.field {
   display: inline;
 }
 
+div.ctxtoolbar {
+  float: right;
+  padding-left: 24px;
+  position: relative;
+}
+div.toolbarButton {
+  display: inline;
+}
+
 /***************************************/
 /* messages                            */
 /***************************************/

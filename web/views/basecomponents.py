@@ -204,21 +204,18 @@ class EtypeRestrictionComponent(component.Component):
         self.w(u'&#160;|&#160;'.join(html))
         self.w(u'</div>')
 
-class PdfViewComponent(component.Component):
-    id = 'pdfview'
-    __select__ = yes()
 
-    context = 'header'
-    property_defs = {
-        _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the pdf icon or not')),
-    }
+class PdfViewComponent(component.EntityVComponent):
+    id = 'view_page_as_pdf'
+    context = 'ctxtoolbar'
 
-    def call(self, vid):
-        entity = self.entity(0,0)
-        url = entity.absolute_url(vid=vid, __template='pdf-main-template')
-        self.w(u'<a href="%s" class="otherView"><img src="data/pdf_icon.gif" alt="%s"/></a>' %
-               (xml_escape(url), self.req._('download page as pdf')))
+    def cell_call(self, row, col, view):
+        entity = self.entity(row, col)
+        url = entity.absolute_url(vid=view.id, __template='pdf-main-template')
+        iconurl = self.req.build_url('data/pdf_icon.gif')
+        label = self.req._('Download page as pdf')
+        self.w(u'<a href="%s" title="%s" class="toolbarButton"><img src="%s" alt="%s"/></a>' %
+               (xml_escape(url), label, iconurl, label))
 
 
 
