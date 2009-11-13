@@ -133,6 +133,9 @@ class RepositoryCreateHandler(CommandHandler):
             config.input_config('pyro', inputlevel)
         print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
+        # XXX hack to make Method('default_instance_id') usable in db option
+        # defs (in native.py)
+        Configuration.default_instance_id = staticmethod(lambda: config.appid)
         sconfig = Configuration(options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
