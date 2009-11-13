@@ -526,10 +526,17 @@ class ServerMigrationHelper(MigrationHelper):
                 sourcescfg[cube] = ask_source_config(cube)
                 self.config.write_sources_file(sourcescfg)
                 clear_cache(self.config, 'read_sources_file')
+            # ensure added cube is in config cubes
+            # XXX worth restoring on error?
+            if not cube in self.config._cubes:
+                self.config._cubes += (cube,)
         if not update_database:
             self.commit()
             return
         newcubes_schema = self.config.load_schema(construction_mode='non-strict')
+        # XXX we have to replace fs_schema, used in cmd_add_relation_type
+        # etc. and fsschema of migration script contexts
+        self.fs_schema = self._create_context()['fsschema'] = newcubes_schema
         new = set()
         # execute pre-create files
         for pack in reversed(newcubes):
