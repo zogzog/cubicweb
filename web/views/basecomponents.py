@@ -219,6 +219,15 @@ class PdfViewComponent(component.EntityVComponent):
 
 
 
+class MetaDataComponent(component.EntityVComponent):
+    id = 'metadata'
+    context = 'navbottom'
+    order = 1
+
+    def cell_call(self, row, col, view=None):
+        print 'yhooo', self.rset
+        self.wview('metadata', self.rset, row=row, col=col)
+
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
     if 'see_also' in vreg.schema:

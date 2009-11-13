@@ -188,7 +188,6 @@ class TabedPrimaryView(TabsMixin, primary.PrimaryView):
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
         self.render_entity_title(entity)
-        self.render_entity_metadata(entity)
         self.render_tabs(self.tabs, self.default_tab, entity)
 
 
