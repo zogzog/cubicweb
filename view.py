@@ -310,7 +310,7 @@ class View(AppObject):
             if table:
                 w(u'<th>%s</th>' % label)
             else:
-                w(u'<span>%s</span>' % label)
+                w(u'<span>%s</span> ' % label)
         if table:
             w(u'<td>%s</td></tr>' % value)
         else:
