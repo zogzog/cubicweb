@@ -214,8 +214,16 @@ class HTMLHead(UStringIO):
     def add_raw(self, rawheader):
         self.write(rawheader)
 
-    def define_var(self, var, value):
-        self.jsvars.append( (var, value) )
+    def define_var(self, var, value, override=True):
+        """adds a javascript var declaration / assginment in the header
+
+        :param var: the variable name
+        :param value: the variable value (as a raw python value,
+                      it will be jsonized later)
+        :param override: if False, don't set the variable value if the variable
+                         is already defined. Default is True.
+        """
+        self.jsvars.append( (var, value, override) )
 
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
@@ -269,8 +277,12 @@ class HTMLHead(UStringIO):
         # 1/ variable declaration if any
         if self.jsvars:
             w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
-            for var, value in self.jsvars:
-                w(u'%s = %s;\n' % (var, dumps(value)))
+            for var, value, override in self.jsvars:
+                vardecl = u'%s = %s;' % (var, dumps(value))
+                if not override:
+                    vardecl = (u'if (typeof %s == "undefined") {%s}' %
+                               (var, vardecl))
+                w(vardecl + u'\n')
             w(u'//--><!]]></script>\n')
         # 2/ css files
         for cssfile, media in self.cssfiles:

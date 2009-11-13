@@ -96,7 +96,7 @@ class CubicWebRequestBase(DBAPIRequest):
         if pid is None:
             pid = make_uid(id(self))
         self.pageid = pid
-        self.html_headers.define_var('pageid', pid)
+        self.html_headers.define_var('pageid', pid, override=False)
 
     def set_connection(self, cnx, user=None):
         """method called by the session handler when the user is authenticated
