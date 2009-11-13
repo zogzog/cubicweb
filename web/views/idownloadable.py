@@ -25,7 +25,7 @@ def is_image(entity):
         return 0
     return 1
 
-def download_box(w, entity, title=None, label=None):
+def download_box(w, entity, title=None, label=None, footer=u''):
     req = entity.req
     w(u'<div class="sideBox">')
     if title is None:
@@ -37,8 +37,8 @@ def download_box(w, entity, title=None, label=None):
       % (xml_escape(entity.download_url()),
          req.external_resource('DOWNLOAD_ICON'),
          _('download icon'), xml_escape(label or entity.dc_title())))
-    w(u'</div>')
-    w(u'</div>\n</div>\n')
+    w(u'%s</div>' % footer)
+    w(u'</div></div>\n')
 
 
 class DownloadBox(EntityBoxTemplate):
