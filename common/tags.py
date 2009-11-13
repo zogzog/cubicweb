@@ -32,6 +32,9 @@ h2 = tag('h2')
 h3 = tag('h3')
 h4 = tag('h4')
 h5 = tag('h5')
+tr = tag('tr')
+th = tag('th')
+td = tag('td')
 
 def select(name, id=None, multiple=False, options=[], **attrs):
     if multiple:
