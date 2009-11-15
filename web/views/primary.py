@@ -45,7 +45,8 @@ class PrimaryView(EntityView):
 
     def render_entity(self, entity):
         self.render_entity_title(entity)
-        self.render_entity_toolbox(entity)
+        # XXX uncomment this in 3.6
+        #self.render_entity_toolbox(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
         boxes = self._prepare_side_boxes(entity)
