@@ -171,8 +171,11 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
             for invvar, vartype in invariants[id(sol)].iteritems():
                 sol[invvar] = vartype
         for sol in existssols:
-            for invvar, vartype in invariants[id(sol)].iteritems():
-                sol[invvar] = vartype
+            try:
+                for invvar, vartype in invariants[id(sol)].iteritems():
+                    sol[invvar] = vartype
+            except KeyError:
+                continue
     if len(newsols) > 1:
         if rewrite_unstable_outer_join(rqlst, newsols, unstable, schema):
             # remove variables extracted to subqueries from solutions
