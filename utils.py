@@ -52,6 +52,13 @@ ONEWEEK = timedelta(days=7)
 def days_in_month(date_):
     return monthrange(date_.year, date_.month)[1]
 
+def days_in_year(date_):
+    feb = pydatetime.date(date_.year, 2, 1)
+    if days_in_month(feb) == 29:
+        return 366
+    else:
+        return 365
+
 def previous_month(date_, nbmonth=1):
     while nbmonth:
         date_ = first_day(date_) - ONEDAY
