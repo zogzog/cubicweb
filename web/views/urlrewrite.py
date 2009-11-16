@@ -152,6 +152,7 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
     def do_build_rset(inputurl, uri, req, schema):
         if rql:
             kwargs = args and args.copy() or {}
+            cachekey = cachekey # necessary to avoid UnboundLocalError
             if argsgroups:
                 if cachekey is not None and isinstance(cachekey, basestring):
                     cachekey = (cachekey,)
