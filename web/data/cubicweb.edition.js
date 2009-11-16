@@ -416,8 +416,9 @@ function postForm(bname, bvalue, formid) {
  * NOTE3: there is a XHTML module allowing iframe elements but there
  *        is still the problem of the form's `target` attribute
  */
-function setFormsTarget() {
-    jQuery('form.entityForm').each(function () {
+function setFormsTarget(node) {
+    var $node = jQuery(node || document.body);
+    $node.find('form.entityForm').each(function () {
 	var form = jQuery(this);
 	var target = form.attr('cubicweb:target');
 	if (target) {
@@ -431,7 +432,7 @@ function setFormsTarget() {
     });
 }
 
-jQuery(document).ready(setFormsTarget);
+jQuery(document).ready(function() {setFormsTarget();});
 
 
 /*

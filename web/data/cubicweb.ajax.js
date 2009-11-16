@@ -62,6 +62,9 @@ function postAjaxLoad(node) {
     if (typeof roundedCorners != 'undefined') {
 	roundedCorners(node);
     }
+    if (typeof setFormsTarget != 'undefined') {
+       setFormsTarget(node);
+    }
     loadDynamicFragments(node);
     // XXX simulates document.ready, but the former
     // only runs once, this one potentially many times
