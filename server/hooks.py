@@ -531,7 +531,8 @@ def before_add_trinfo(session, entity):
                 msg = session._("transition doesn't belong to entity's workflow")
                 raise ValidationError(entity.eid, {'by_transition': msg})
             if not tr.has_input_state(fromstate):
-                msg = session._("transition isn't allowed")
+                _ = session._
+                msg = _("transition %s isn't allowed from %s") % (_(tr.name), _(fromstate.name))
                 raise ValidationError(entity.eid, {'by_transition': msg})
             if not tr.may_be_fired(foreid):
                 msg = session._("transition may not be fired")
