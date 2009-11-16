@@ -7,6 +7,7 @@
 """
 import re
 
+from cubicweb import typed_eid
 from cubicweb.appobject import AppObject
 
 
@@ -152,6 +153,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
         if rql:
             kwargs = args and args.copy() or {}
             if argsgroups:
+                if cachekey is not None and isinstance(cachekey, basestring):
+                    cachekey = (cachekey,)
                 match = inputurl.match(uri)
                 for key in argsgroups:
                     value = match.group(key)
@@ -159,6 +162,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
                         kwargs[key] = transforms[key](value)
                     except KeyError:
                         kwargs[key] = value
+                    if key in cachekey:
+                        kwargs[key] = typed_eid(value)
             if setuser:
                 kwargs['u'] = req.user.eid
             rset = req.execute(rql, kwargs, cachekey)
