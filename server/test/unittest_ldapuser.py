@@ -6,12 +6,22 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+import socket
+
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 from cubicweb.devtools import init_test_database, TestServerConfiguration
 from cubicweb.devtools.apptest import RepositoryBasedTC
 from cubicweb.devtools.repotest import RQLGeneratorTC
 
 from cubicweb.server.sources.ldapuser import *
+
+if socket.gethostbyname('ldap').startswith('172'):
+    SYT = 'syt'
+    ADIM = 'adim'
+else:
+    SYT = 'sthenault'
+    ADIM = 'adimascio'
+
 
 def nopwd_authenticate(self, session, login, upassword):
     """used to monkey patch the source to get successful authentication without
@@ -73,15 +83,15 @@ class LDAPUserSourceTC(RepositoryBasedTC):
 
     def test_base(self):
         # check a known one
-        e = self.execute('CWUser X WHERE X login "syt"').get_entity(0, 0)
-        self.assertEquals(e.login, 'syt')
+        e = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
+        self.assertEquals(e.login, SYT)
         e.complete()
         self.assertEquals(e.creation_date, None)
         self.assertEquals(e.modification_date, None)
         self.assertEquals(e.firstname, None)
         self.assertEquals(e.surname, None)
         self.assertEquals(e.in_group[0].name, 'users')
-        self.assertEquals(e.owned_by[0].login, 'syt')
+        self.assertEquals(e.owned_by[0].login, SYT)
         self.assertEquals(e.created_by, ())
         self.assertEquals(e.primary_email[0].address, 'Sylvain Thenault')
         # email content should be indexed on the user
@@ -89,31 +99,33 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.assertEquals(rset.rows, [[e.eid]])
 
     def test_not(self):
-        eid = self.execute('CWUser X WHERE X login "syt"')[0][0]
+        eid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.execute('CWUser X WHERE NOT X eid %s' % eid)
         self.assert_(rset)
         self.assert_(not eid in (r[0] for r in rset))
 
     def test_multiple(self):
-        seid = self.execute('CWUser X WHERE X login "syt"')[0][0]
-        aeid = self.execute('CWUser X WHERE X login "adim"')[0][0]
-        rset = self.execute('CWUser X, Y WHERE X login "syt", Y login "adim"')
+        seid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
+        aeid = self.execute('CWUser X WHERE X login %(login)s', {'login': ADIM})[0][0]
+        rset = self.execute('CWUser X, Y WHERE X login %(syt)s, Y login %(adim)s',
+                            {'syt': SYT, 'adim': ADIM})
         self.assertEquals(rset.rows, [[seid, aeid]])
-        rset = self.execute('Any X,Y,L WHERE X login L, X login "syt", Y login "adim"')
-        self.assertEquals(rset.rows, [[seid, aeid, 'syt']])
+        rset = self.execute('Any X,Y,L WHERE X login L, X login %(syt)s, Y login %(adim)s',
+                            {'syt': SYT, 'adim': ADIM})
+        self.assertEquals(rset.rows, [[seid, aeid, SYT]])
 
     def test_in(self):
-        seid = self.execute('CWUser X WHERE X login "syt"')[0][0]
-        aeid = self.execute('CWUser X WHERE X login "adim"')[0][0]
-        rset = self.execute('Any X,L ORDERBY L WHERE X login IN("syt", "adim"), X login L')
-        self.assertEquals(rset.rows, [[aeid, 'adim'], [seid, 'syt']])
+        seid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
+        aeid = self.execute('CWUser X WHERE X login %(login)s', {'login': ADIM})[0][0]
+        rset = self.execute('Any X,L ORDERBY L WHERE X login IN("%s", "%s"), X login L' % (SYT, ADIM))
+        self.assertEquals(rset.rows, [[aeid, ADIM], [seid, SYT]])
 
     def test_relations(self):
-        eid = self.execute('CWUser X WHERE X login "syt"')[0][0]
+        eid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.execute('Any X,E WHERE X is CWUser, X login L, X primary_email E')
         self.assert_(eid in (r[0] for r in rset))
         rset = self.execute('Any X,L,E WHERE X is CWUser, X login L, X primary_email E')
-        self.assert_('syt' in (r[1] for r in rset))
+        self.assert_(SYT in (r[1] for r in rset))
 
     def test_count(self):
         nbusers = self.execute('Any COUNT(X) WHERE X is CWUser')[0][0]
@@ -122,15 +134,15 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.assert_(nbusers < 30, nbusers)
 
     def test_upper(self):
-        eid = self.execute('CWUser X WHERE X login "syt"')[0][0]
+        eid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.execute('Any UPPER(L) WHERE X eid %s, X login L' % eid)
-        self.assertEquals(rset[0][0], 'SYT')
+        self.assertEquals(rset[0][0], SYT.upper())
 
     def test_unknown_attr(self):
-        eid = self.execute('CWUser X WHERE X login "syt"')[0][0]
+        eid = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.execute('Any L,C,M WHERE X eid %s, X login L, '
                             'X creation_date C, X modification_date M' % eid)
-        self.assertEquals(rset[0][0], 'syt')
+        self.assertEquals(rset[0][0], SYT)
         self.assertEquals(rset[0][1], None)
         self.assertEquals(rset[0][2], None)
 
@@ -143,54 +155,55 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.assertEquals(logins, sorted(logins))
 
     def test_or(self):
-        rset = self.execute('DISTINCT Any X WHERE X login "syt" OR (X in_group G, G name "managers")')
+        rset = self.execute('DISTINCT Any X WHERE X login %(login)s OR (X in_group G, G name "managers")',
+                            {'login': SYT})
         self.assertEquals(len(rset), 2, rset.rows) # syt + admin
 
     def test_nonregr_set_owned_by(self):
         # test that when a user coming from ldap is triggering a transition
         # the related TrInfo has correct owner information
-        self.execute('SET X in_group G WHERE X login "syt", G name "managers"')
+        self.execute('SET X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
         self.commit()
-        syt = self.execute('CWUser X WHERE X login "syt"').get_entity(0, 0)
+        syt = self.execute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
         self.assertEquals([g.name for g in syt.in_group], ['managers', 'users'])
         self.patch_authenticate()
-        cnx = self.login('syt', 'dummypassword')
+        cnx = self.login(SYT, 'dummypassword')
         cu = cnx.cursor()
-        alf = cu.execute('Any X WHERE X login "alf"').get_entity(0, 0)
-        alf.fire_transition('deactivate')
+        adim = cu.execute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
+        adim.fire_transition('deactivate')
         try:
             cnx.commit()
-            alf = self.execute('CWUser X WHERE X login "alf"').get_entity(0, 0)
-            self.assertEquals(alf.in_state[0].name, 'deactivated')
-            trinfo = alf.latest_trinfo()
-            self.assertEquals(trinfo.owned_by[0].login, 'syt')
+            adim.clear_all_caches()
+            self.assertEquals(adim.in_state[0].name, 'deactivated')
+            trinfo = adim.latest_trinfo()
+            self.assertEquals(trinfo.owned_by[0].login, SYT)
             # select from_state to skip the user's creation TrInfo
             rset = self.execute('Any U ORDERBY D DESC WHERE WF wf_info_for X,'
                                 'WF creation_date D, WF from_state FS,'
                                 'WF owned_by U?, X eid %(x)s',
-                                {'x': alf.eid}, 'x')
+                                {'x': adim.eid}, 'x')
             self.assertEquals(rset.rows, [[syt.eid]])
         finally:
             # restore db state
             self.restore_connection()
-            alf = self.execute('Any X WHERE X login "alf"').get_entity(0, 0)
-            alf.fire_transition('activate')
-            self.execute('DELETE X in_group G WHERE X login "syt", G name "managers"')
+            adim = self.execute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
+            adim.fire_transition('activate')
+            self.execute('DELETE X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
 
     def test_same_column_names(self):
         self.execute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"')
 
     def test_multiple_entities_from_different_sources(self):
         self.create_user('cochon')
-        self.failUnless(self.execute('Any X,Y WHERE X login "syt", Y login "cochon"'))
+        self.failUnless(self.execute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
         self.add_entity('CWGroup', name=u'bougloup1')
         self.add_entity('CWGroup', name=u'bougloup2')
         self.execute('SET U in_group G WHERE G name ~= "bougloup%", U login "admin"')
-        self.execute('SET U in_group G WHERE G name = "bougloup1", U login "syt"')
+        self.execute('SET U in_group G WHERE G name = "bougloup1", U login %(syt)s', {'syt': SYT})
         rset = self.execute('Any L,SN ORDERBY L WHERE X in_state S, S name SN, X login L, EXISTS(X in_group G, G name ~= "bougloup%")')
-        self.assertEquals(rset.rows, [['admin', 'activated'], ['syt', 'activated']])
+        self.assertEquals(rset.rows, [['admin', 'activated'], [SYT, 'activated']])
 
     def test_exists2(self):
         self.create_user('comme')
@@ -204,10 +217,10 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.create_user('cochon')
         self.execute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.failUnless(self.execute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"'))
-        self.execute('SET X copain Y WHERE X login "syt", Y login "cochon"')
-        self.failUnless(self.execute('Any X, Y WHERE X copain Y, X login "syt", Y login "cochon"'))
+        self.execute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
+        self.failUnless(self.execute('Any X, Y WHERE X copain Y, X login %(syt)s, Y login "cochon"', {'syt': SYT}))
         rset = self.execute('Any GN,L WHERE X in_group G, X login L, G name GN, G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon"))')
-        self.assertEquals(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', 'syt']])
+        self.assertEquals(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
 
     def test_exists4(self):
         self.create_user('comme')
@@ -216,7 +229,7 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.execute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.execute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.execute('SET X copain Y WHERE X login "comme", Y login "billy"')
-        self.execute('SET X copain Y WHERE X login "syt", Y login "billy"')
+        self.execute('SET X copain Y WHERE X login %(syt)s, Y login "billy"', {'syt': SYT})
         # search for group name, login where
         #   CWUser copain with "comme" or "cochon" AND same login as the copain
         # OR
@@ -228,7 +241,7 @@ class LDAPUserSourceTC(RepositoryBasedTC):
                            'EXISTS(X in_state S, S name "activated", NOT X copain T2, T2 login "billy")')
         all = self.execute('Any GN, L WHERE X in_group G, X login L, G name GN')
         all.rows.remove(['users', 'comme'])
-        all.rows.remove(['users', 'syt'])
+        all.rows.remove(['users', SYT])
         self.assertEquals(sorted(rset.rows), sorted(all.rows))
 
     def test_exists5(self):
@@ -238,17 +251,17 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.execute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.execute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.execute('SET X copain Y WHERE X login "comme", Y login "billy"')
-        self.execute('SET X copain Y WHERE X login "syt", Y login "cochon"')
+        self.execute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
         rset= self.execute('Any L WHERE X login L, '
                            'EXISTS(X copain T, T login in ("comme", "cochon")) AND '
                            'NOT EXISTS(X copain T2, T2 login "billy")')
-        self.assertEquals(sorted(rset.rows), [['cochon'], ['syt']])
+        self.assertEquals(sorted(rset.rows), [['cochon'], [SYT]])
         rset= self.execute('Any GN,L WHERE X in_group G, X login L, G name GN, '
                            'EXISTS(X copain T, T login in ("comme", "cochon")) AND '
                            'NOT EXISTS(X copain T2, T2 login "billy")')
         self.assertEquals(sorted(rset.rows), [['guests', 'cochon'],
                                               ['users', 'cochon'],
-                                              ['users', 'syt']])
+                                              ['users', SYT]])
 
     def test_cd_restriction(self):
         rset = self.execute('CWUser X WHERE X creation_date > "2009-02-01"')
@@ -268,21 +281,21 @@ class LDAPUserSourceTC(RepositoryBasedTC):
 
     def test_security1(self):
         cu = self._init_security_test()
-        rset = cu.execute('Any X WHERE X login "syt"')
+        rset = cu.execute('CWUser X WHERE X login %(login)s', {'login': SYT})
         self.assertEquals(rset.rows, [])
         rset = cu.execute('Any X WHERE X login "iaminguestsgrouponly"')
         self.assertEquals(len(rset.rows), 1)
 
     def test_security2(self):
         cu = self._init_security_test()
-        rset = cu.execute('Any X WHERE X has_text "syt"')
+        rset = cu.execute('Any X WHERE X has_text %(syt)s', {'syt': SYT})
         self.assertEquals(rset.rows, [])
         rset = cu.execute('Any X WHERE X has_text "iaminguestsgrouponly"')
         self.assertEquals(len(rset.rows), 1)
 
     def test_security3(self):
         cu = self._init_security_test()
-        rset = cu.execute('Any F WHERE X has_text "syt", X firstname F')
+        rset = cu.execute('Any F WHERE X has_text %(syt)s, X firstname F', {'syt': SYT})
         self.assertEquals(rset.rows, [])
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
         self.assertEquals(rset.rows, [[None]])
