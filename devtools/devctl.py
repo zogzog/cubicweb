@@ -178,6 +178,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                             tschema, tschema, rschema, eschema)
                     add_msg(w, label)
                     add_msg(w, label2)
+            # XXX also generate "creating ...' messages for actions in the
+            # addrelated submenu
     w('# subject and object forms for each relation type\n')
     w('# (no object form for final or symetric relation types)\n')
     w('\n')
