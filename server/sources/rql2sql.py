@@ -131,37 +131,53 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
     """cleanup solutions: remove solutions where invariant variables are taking
     different types
     """
-    newsolutions = _new_solutions(rqlst, solutions)
+    newsols = _new_solutions(rqlst, solutions)
     existssols = {}
     unstable = set()
+    invariants = {}
     for vname, var in rqlst.defined_vars.iteritems():
-        vtype = newsolutions[0][vname]
+        vtype = newsols[0][vname]
         if var._q_invariant or vname in varmap:
-            for i in xrange(len(newsolutions)-1, 0, -1):
-                if vtype != newsolutions[i][vname]:
-                    newsolutions.pop(i)
-        elif not var.scope is rqlst:
+            # remove invariant variable from solutions to remove duplicates
+            # later, then reinserting a type for the variable even later
+            for sol in newsols:
+                invariants.setdefault(id(sol), {})[vname] = sol.pop(vname)
+        elif var.scope is not rqlst:
             # move appart variables which are in a EXISTS scope and are variating
             try:
                 thisexistssols, thisexistsvars = existssols[var.scope]
             except KeyError:
-                thisexistssols = [newsolutions[0]]
+                thisexistssols = [newsols[0]]
                 thisexistsvars = set()
                 existssols[var.scope] = thisexistssols, thisexistsvars
-            for i in xrange(len(newsolutions)-1, 0, -1):
-                if vtype != newsolutions[i][vname]:
-                    thisexistssols.append(newsolutions.pop(i))
+            for i in xrange(len(newsols)-1, 0, -1):
+                if vtype != newsols[i][vname]:
+                    thisexistssols.append(newsols.pop(i))
                     thisexistsvars.add(vname)
         else:
             # remember unstable variables
-            for i in xrange(1, len(newsolutions)):
-                if vtype != newsolutions[i][vname]:
+            for i in xrange(1, len(newsols)):
+                if vtype != newsols[i][vname]:
                     unstable.add(vname)
-    if len(newsolutions) > 1:
-        if rewrite_unstable_outer_join(rqlst, newsolutions, unstable, schema):
+    if invariants:
+        # filter out duplicates
+        newsols_ = []
+        for sol in newsols:
+            if not sol in newsols_:
+                newsols_.append(sol)
+        newsols = newsols_
+        # reinsert solutions for invariants
+        for sol in newsols:
+            for invvar, vartype in invariants[id(sol)].iteritems():
+                sol[invvar] = vartype
+        for sol in existssols:
+            for invvar, vartype in invariants[id(sol)].iteritems():
+                sol[invvar] = vartype
+    if len(newsols) > 1:
+        if rewrite_unstable_outer_join(rqlst, newsols, unstable, schema):
             # remove variables extracted to subqueries from solutions
-            newsolutions = _new_solutions(rqlst, newsolutions)
-    return newsolutions, existssols, unstable
+            newsols = _new_solutions(rqlst, newsols)
+    return newsols, existssols, unstable
 
 def relation_info(relation):
     lhs, rhs = relation.get_variable_parts()

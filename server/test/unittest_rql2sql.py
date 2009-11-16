@@ -10,13 +10,13 @@
 
 import sys
 
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
 from indexer import get_indexer
 
 #from cubicweb.server.sources.native import remove_unused_solutions
-from cubicweb.server.sources.rql2sql import SQLGenerator
+from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
 from rql.utils import register_function, FunctionDescr
 # add a dumb registered procedure
@@ -1603,7 +1603,26 @@ FROM (SELECT 1) AS _T
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
 
+class removeUnsusedSolutionsTC(TestCase):
+    def test_invariant_not_varying(self):
+        rqlst = mock_object(defined_vars={})
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+                                                          {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
+                          ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+                            {'A': 'FootGroup', 'B': 'FootTeam'}],
+                           {}, set('B'))
+                          )
 
+    def test_invariant_varying(self):
+        rqlst = mock_object(defined_vars={})
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+                                                          {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
+                          ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
+                          )
 
 if __name__ == '__main__':
     unittest_main()
