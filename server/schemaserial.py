@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+import os
 import sys
 from itertools import chain
 
@@ -280,7 +281,7 @@ def serialize_schema(cursor, schema, verbose=False):
     print _title,
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
-    if not verbose:
+    if not verbose and not os.environ.get('APYCOT_ROOT'):
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
         pb = ProgressBar(pb_size, title=_title)
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
