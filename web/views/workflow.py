@@ -214,7 +214,7 @@ def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
 class TransitionEditionForm(autoform.AutomaticEntityForm):
     __select__ = entity_implements('Transition')
 
-    def workflow_transition_for_relation(self, targetrelation):
+    def workflow_states_for_relation(self, targetrelation):
         eids = self.edited_entity.linked_to('transition_of', 'subject')
         if eids:
             return workflow_items_for_relation(self.req, eids[0], 'state_of',
@@ -237,7 +237,7 @@ class StateEditionForm(autoform.AutomaticEntityForm):
 
     def subject_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():
-            eids = self.edited_entity.linked_to('transition_of', 'subject')
+            eids = self.edited_entity.linked_to('state_of', 'subject')
             if eids:
                 return workflow_items_for_relation(self.req, eids[0], 'transition_of',
                                                    'allowed_transition')
