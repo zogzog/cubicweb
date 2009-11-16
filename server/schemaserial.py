@@ -284,18 +284,21 @@ def serialize_schema(cursor, schema, verbose=False):
     if not verbose and not os.environ.get('APYCOT_ROOT'):
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
         pb = ProgressBar(pb_size, title=_title)
+    else:
+        pb = None
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
         if verbose:
             print rql
         cursor.execute(rql, {'ct': unicode(cstrtype)})
-        if not verbose:
+        if pb is not None:
             pb.update()
     groupmap = group_mapping(cursor, interactive=False)
     for ertype in aller:
         # skip eid and has_text relations
         if ertype in VIRTUAL_RTYPES:
-            pb.update()
+            if pb is not None:
+                pb.update()
             continue
         for rql, kwargs in erschema2rql(schema[ertype]):
             if verbose:
@@ -305,13 +308,13 @@ def serialize_schema(cursor, schema, verbose=False):
             if verbose:
                 print rql
             cursor.execute(rql, kwargs)
-        if not verbose:
+        if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
         if verbose:
             print rql % kwargs
         cursor.execute(rql, kwargs)
-        if not verbose:
+        if pb is not None:
             pb.update()
     print
 
