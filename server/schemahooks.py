@@ -142,6 +142,10 @@ class MemSchemaNotifyChanges(SingleLastOperation):
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
         self.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
+        # CWUser class might have changed, update current session users
+        cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
+        for session in self.repo._sessions.values():
+            session.user.__class__ = cwuser_cls
 
     def rollback_event(self):
         self.precommit_event()
