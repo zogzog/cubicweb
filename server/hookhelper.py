@@ -10,14 +10,18 @@ __docformat__ = "restructuredtext en"
 from cubicweb import RepositoryError
 from cubicweb.server.pool import SingleLastOperation
 
+def entity_oldnewvalue(entity, attr):
+    """returns the couple (old attr value, new attr value)
 
-def entity_name(session, eid):
-    """return the "name" attribute of the entity with the given eid"""
-    return entity_attr(session, eid, 'name')
-
-def entity_attr(session, eid, attr):
-    """return an arbitrary attribute of the entity with the given eid"""
-    return getattr(session.entity_from_eid(eid), attr)
+    NOTE: will only work in a before_update_entity hook
+    """
+    # get new value and remove from local dict to force a db query to
+    # fetch old value
+    newvalue = entity.pop(attr, None)
+    oldvalue = getattr(entity, attr)
+    if newvalue is not None:
+        entity[attr] = newvalue
+    return oldvalue, newvalue
 
 def rproperty(session, rtype, eidfrom, eidto, rprop):
     rschema = session.repo.schema[rtype]
@@ -29,7 +33,7 @@ def check_internal_entity(session, eid, internal_names):
     """check that the entity's name is not in the internal_names list.
     raise a RepositoryError if so, else return the entity's name
     """
-    name = entity_name(session, eid)
+    name = session.entity_from_eid(eid).name
     if name in internal_names:
         raise RepositoryError('%s entity can\'t be deleted' % name)
     return name

@@ -23,8 +23,7 @@ from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS
 from cubicweb.server import schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.pool import Operation, SingleLastOperation, PreCommitOperation
-from cubicweb.server.hookhelper import (entity_attr, entity_name,
-                                        check_internal_entity)
+from cubicweb.server.hookhelper import entity_oldnewvalue, check_internal_entity
 
 
 TYPE_CONVERTER = { # XXX
@@ -182,7 +181,7 @@ class MemSchemaPermissionOperation(MemSchemaOperation):
     def __init__(self, session, perm, etype_eid):
         self.perm = perm
         try:
-            self.name = entity_name(session, etype_eid)
+            self.name = session.entity_from_eid(etype_eid).name
         except IndexError:
             self.error('changing permission of a no more existant type #%s',
                 etype_eid)
@@ -665,7 +664,7 @@ class MemSchemaPermissionCWGroupAdd(MemSchemaPermissionOperation):
     """synchronize schema when a *_permission relation has been added on a group
     """
     def __init__(self, session, perm, etype_eid, group_eid):
-        self.group = entity_name(session, group_eid)
+        self.group = session.entity_from_eid(group_eid).name
         super(MemSchemaPermissionCWGroupAdd, self).__init__(
             session, perm, etype_eid)
 
@@ -959,10 +958,11 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
     for attr in ro_attrs:
-        origval = entity_attr(session, entity.eid, attr)
-        if entity.get(attr, origval) != origval:
-            errors[attr] = session._("can't change the %s attribute") % \
-                           display_name(session, attr)
+        if attr in entity.edited_attributes:
+            orival, newval = entity_oldnewvalue(entity, attr)
+            if newval != origval:
+                errors[attr] = session._("can't change the %s attribute") % \
+                               display_name(session, attr)
     if errors:
         raise ValidationError(entity.eid, errors)
 
@@ -970,8 +970,7 @@ def before_update_eetype(session, entity):
     """check name change, handle final"""
     check_valid_changes(session, entity, ro_attrs=('final',))
     # don't use getattr(entity, attr), we would get the modified value if any
-    oldname = entity_attr(session, entity.eid, 'name')
-    newname = entity.get('name', oldname)
+    oldname, newname = entity_oldnewvalue(entity, 'name')
     if newname.lower() != oldname.lower():
         SourceDbCWETypeRename(session, oldname=oldname, newname=newname)
         MemSchemaCWETypeRename(session, oldname=oldname, newname=newname)
