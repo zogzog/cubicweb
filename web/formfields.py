@@ -81,6 +81,8 @@ class Field(object):
        role of the entity in the relation (eg 'subject' or 'object')
     :fieldset:
        optional fieldset to which this field belongs to
+    :order:
+       key used by automatic forms to sort fields
 
     """
     # default widget associated to this class of fields. May be overriden per
@@ -94,7 +96,7 @@ class Field(object):
     def __init__(self, name=None, id=None, label=None, help=None,
                  widget=None, required=False, initial=None,
                  choices=None, sort=True, internationalizable=False,
-                 eidparam=False, role='subject', fieldset=None):
+                 eidparam=False, role='subject', fieldset=None, order=None):
         self.name = name
         self.id = id or name
         self.label = label or name
@@ -108,6 +110,7 @@ class Field(object):
         self.role = role
         self.fieldset = fieldset
         self.init_widget(widget)
+        self.order = order
         # ordering number for this field instance
         self.creation_rank = Field.__creation_rank
         Field.__creation_rank += 1
