@@ -178,12 +178,7 @@ class Field(object):
         renderer
         """
         widget = self.get_widget(form)
-        try:
-            return widget.render(form, self, renderer)
-        except TypeError:
-            warn('[3.3] %s: widget.render now take the renderer as third argument, '
-                 'please update implementation' % widget, DeprecationWarning)
-            return widget.render(form, self)
+        return widget.render(form, self, renderer)
 
     def vocabulary(self, form):
         """return vocabulary for this field. This method will be called by
