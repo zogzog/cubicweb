@@ -963,7 +963,7 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     # don't use getattr(entity, attr), we would get the modified value if any
     for attr in ro_attrs:
         if attr in entity.edited_attributes:
-            orival, newval = entity_oldnewvalue(entity, attr)
+            origval, newval = entity_oldnewvalue(entity, attr)
             if newval != origval:
                 errors[attr] = session._("can't change the %s attribute") % \
                                display_name(session, attr)
