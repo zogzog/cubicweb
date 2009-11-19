@@ -495,12 +495,21 @@ class WorkflowHooksTC(RepositoryBasedTC):
     #     self.commit()
 
     # test that the workflow is correctly enforced
+
+    def _cleanup_msg(self, msg):
+        """remove the variable part of one specific error message"""
+        lmsg = msg.split()
+        lmsg.pop(1)
+        lmsg.pop()
+        return ' '.join(lmsg)
+
     def test_transition_checking1(self):
         cnx = self.login('stduser')
         user = cnx.user(self.current_session())
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'activate')
-        self.assertEquals(ex.errors, {'by_transition': u"transition isn't allowed"})
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+                          u"transition isn't allowed from")
         cnx.close()
 
     def test_transition_checking2(self):
@@ -509,7 +518,8 @@ class WorkflowHooksTC(RepositoryBasedTC):
         assert user.state == 'activated'
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'dummy')
-        self.assertEquals(ex.errors, {'by_transition': u"transition isn't allowed"})
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+                          u"transition isn't allowed from")
         cnx.close()
 
     def test_transition_checking3(self):
@@ -521,7 +531,8 @@ class WorkflowHooksTC(RepositoryBasedTC):
         session.set_pool()
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'deactivate')
-        self.assertEquals(ex.errors, {'by_transition': u"transition isn't allowed"})
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+                                            u"transition isn't allowed from")
         # get back now
         user.fire_transition('activate')
         cnx.commit()
