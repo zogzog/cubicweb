@@ -436,6 +436,7 @@ class TableEditForm(forms.CompositeForm):
             form = self.vreg['forms'].select('edition', self.req,
                                              rset=self.rset, row=row,
                                              attrcategories=('primary',),
+                                             copy_nav_params=False,
                                              mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
@@ -452,7 +453,8 @@ class TableEditFormView(FormViewMixIn, EntityView):
         should be the eid
         """
         #self.form_title(entity)
-        form = self.vreg['forms'].select(self.id, self.req, rset=self.rset)
+        form = self.vreg['forms'].select(self.id, self.req, rset=self.rset,
+                                         copy_nav_params=True)
         self.w(form.form_render())
 
 

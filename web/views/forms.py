@@ -89,6 +89,7 @@ class FieldsForm(form.Form):
         if mainform:
             self.form_add_hidden('__errorurl', self.session_key())
             self.form_add_hidden('__domid', self.domid)
+        # XXX why do we need two different variables (mainform and copy_nav_params ?)
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
                 if not param in kwargs:

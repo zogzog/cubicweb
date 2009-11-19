@@ -148,6 +148,20 @@ def merge_dicts(dict1, dict2):
     return dict1
 
 
+# use networkX instead ?
+# http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
+def transitive_closure_of(entity, relname, _seen=None):
+    if _seen is None:
+        _seen = set()
+    _seen.add(entity.eid)
+    yield entity
+    for child in getattr(entity, relname):
+        if child.eid in _seen:
+            continue
+        for subchild in transitive_closure_of(child, relname, _seen):
+            yield subchild
+
+
 class SizeConstrainedList(list):
     """simple list that makes sure the list does not get bigger
     than a given size.
