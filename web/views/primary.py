@@ -242,18 +242,20 @@ class RelatedView(EntityView):
 
 ## default primary ui configuration ###########################################
 
+_pvs = uicfg.primaryview_section
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
               'is', 'is_instance_of', 'identity',
               'owned_by', 'created_by', 'in_state',
               'wf_info_for', 'by_transition', 'from_state', 'to_state',
               'require_permission', 'from_entity', 'to_entity',
               'see_also'):
-    uicfg.primaryview_section.tag_subject_of(('*', rtype, '*'), 'hidden')
-    uicfg.primaryview_section.tag_object_of(('*', rtype, '*'), 'hidden')
-uicfg.primaryview_section.tag_subject_of(('*', 'use_email', '*'), 'attributes')
-uicfg.primaryview_section.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
+    _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
+    _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+
+_pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
+_pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 for attr in ('name', 'final'):
-    uicfg.primaryview_section.tag_attribute(('CWEType', attr), 'hidden')
+    _pvs.tag_attribute(('CWEType', attr), 'hidden')
 for attr in ('name', 'final', 'symetric', 'inlined'):
-    uicfg.primaryview_section.tag_attribute(('CWRType', attr), 'hidden')
+    _pvs.tag_attribute(('CWRType', attr), 'hidden')

@@ -522,8 +522,8 @@ def erperms2rql(erschema, groupmapping):
     for action in erschema.ACTIONS:
         for group in sorted(erschema.get_groups(action)):
             try:
-                yield ('SET X %s_permission Y WHERE X is %s, X name "%s", Y eid %s'
-                       % (action, etype, erschema, groupmapping[group]), None)
+                yield ('SET X %s_permission Y WHERE X is %s, X name %%(name)s, Y eid %s'
+                       % (action, etype, groupmapping[group]), {'name': str(erschema)})
             except KeyError:
                 continue
         for rqlexpr in sorted(erschema.get_rqlexprs(action)):
