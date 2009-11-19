@@ -75,10 +75,18 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             # check category first, potentially lower cost than checking
             # permission which may imply rql queries
             if categories is not None:
-                targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.etype_get(eschema, rschema, role, tschema) in categories]
-                if not targetschemas:
+                _targetschemas = []
+                for tschema in targetschemas:
+                    if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
+                        continue
+                    rdef = rschema.role_rdef(eschema, tschema, role)
+                    if not ((not strict and rdef.has_local_role(permission)) or
+                            rdef.has_perm(entity.req, permission, fromeid=eid)):
+                        continue
+                    _targetschemas.append(tschema)
+                if not _targetschemas:
                     continue
+                targetschemas = _targetschemas
             if permission is not None:
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
@@ -87,28 +95,22 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.final:
-                    if not rschema.has_perm(entity.req, permission, eid):
+                    if not eschema.rdef(rschema).has_perm(entity.req, permission, eid=eid):
                         continue
                 elif role == 'subject':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity.req, permission, fromeid=eid)):
-                        continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
-                        and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
+                        and rschema.rdef(eschema, targetschemas[0]).role_cardinality(role) in '1?'
                         and eid and entity.related(rschema.type, role)
                         and not rschema.has_perm(entity.req, 'delete', fromeid=eid,
                                                  toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity.req, permission, toeid=eid)):
-                        continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
-                        and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
+                        and rschema.rdef(targetschemas[0], eschema).role_cardinality(role) in '1?'
                         and eid and entity.related(rschema.type, role)
                         and not rschema.has_perm(entity.req, 'delete', toeid=eid,
                                                  fromeid=entity.related(rschema.type, role)[0][0])):

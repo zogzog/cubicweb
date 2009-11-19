@@ -25,10 +25,10 @@ def check_entity_attributes(session, entity):
     for attr in editedattrs:
         if attr in defaults:
             continue
-        rschema = eschema.subjrels[attr]
-        if rschema.final: # non final relation are checked by other hooks
+        rdef = eschema.rdef(attr)
+        if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            rschema.check_perm(session, 'add', eid)
+            rdef.check_perm(session, 'add', eid=eid)
 
 
 class CheckEntityPermissionOp(LateOperation):
@@ -43,7 +43,10 @@ class CheckEntityPermissionOp(LateOperation):
 
 class CheckRelationPermissionOp(LateOperation):
     def precommit_event(self):
-        self.rschema.check_perm(self.session, self.action, self.fromeid, self.toeid)
+        rdef = self.rschema.rdef(self.session.describe(self.fromeid)[0],
+                                 self.session.describe(self.toeid)[0])
+        rdef.check_perm(self.session, self.action,
+                        fromeid=self.fromeid, toeid=self.toeid)
 
     def commit_event(self):
         pass
@@ -65,7 +68,7 @@ def after_update_entity(session, entity):
 def before_del_entity(session, eid):
     if not session.is_super_session:
         eschema = session.repo.schema[session.describe(eid)[0]]
-        eschema.check_perm(session, 'delete', eid)
+        eschema.check_perm(session, 'delete', eid=eid)
 
 
 def before_add_relation(session, fromeid, rtype, toeid):
@@ -74,26 +77,33 @@ def before_add_relation(session, fromeid, rtype, toeid):
         if (fromeid, rtype, toeid) in nocheck:
             return
         rschema = session.repo.schema[rtype]
-        rschema.check_perm(session, 'add', fromeid, toeid)
+        rdef = rschema.rdef(session.describe(fromeid)[0],
+                            session.describe(toeid)[0])
+        rdef.check_perm(session, 'add', fromeid=fromeid, toeid=toeid)
 
 def after_add_relation(session, fromeid, rtype, toeid):
     if not rtype in BEFORE_ADD_RELATIONS and not session.is_super_session:
         nocheck = session.transaction_data.get('skip-security', ())
         if (fromeid, rtype, toeid) in nocheck:
             return
-        rschema = session.repo.schema[rtype]
+        rschema = session.repo.schema.rschema(rtype)
         if rtype in ON_COMMIT_ADD_RELATIONS:
             CheckRelationPermissionOp(session, action='add', rschema=rschema,
                                       fromeid=fromeid, toeid=toeid)
         else:
-            rschema.check_perm(session, 'add', fromeid, toeid)
+            rdef = rschema.rdef(session.describe(fromeid)[0],
+                                session.describe(toeid)[0])
+            rdef.check_perm(session, 'add', fromeid=fromeid, toeid=toeid)
 
 def before_del_relation(session, fromeid, rtype, toeid):
     if not session.is_super_session:
         nocheck = session.transaction_data.get('skip-security', ())
         if (fromeid, rtype, toeid) in nocheck:
             return
-        session.repo.schema[rtype].check_perm(session, 'delete', fromeid, toeid)
+        rschema = session.vreg.schema.rschema(rtype)
+        rdef = rschema.rdef(session.describe(fromeid)[0],
+                            session.describe(toeid)[0])
+        rdef.check_perm(session, 'delete', fromeid=fromeid, toeid=toeid)
 
 def register_security_hooks(hm):
     """register meta-data related hooks on the hooks manager"""

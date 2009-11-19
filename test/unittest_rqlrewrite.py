@@ -18,7 +18,8 @@ from cubicweb.devtools import repotest, TestServerConfiguration
 config = TestServerConfiguration('data/rewrite')
 config.bootstrap_cubes()
 schema = config.load_schema()
-schema.add_relation_def(mock_object(subject='Card', name='in_state', object='State', cardinality='1*'))
+from yams.buildobjs import RelationDefinition
+schema.add_relation_def(RelationDefinition(subject='Card', name='in_state', object='State', cardinality='1*'))
 
 rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
                                                  'has_text': 'fti'})

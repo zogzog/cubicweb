@@ -260,7 +260,7 @@ def cstrcheck_after_update_attributes(session, entity):
     schema = session.vreg.schema
     for attr in entity.edited_attributes:
         if schema.rschema(attr).final:
-            constraints = [c for c in entity.e_schema.constraints(attr)
+            constraints = [c for c in entity.e_schema.rdef(attr).constraints
                            if isinstance(c, RQLVocabularyConstraint)]
             if constraints:
                 CheckConstraintsOperation(session, rdef=(entity.eid, attr, None),
@@ -317,22 +317,20 @@ def cardinalitycheck_after_add_entity(session, entity):
     if session.is_super_session:
         return
     eid = entity.eid
-    for rschema, targetschemas, x in entity.e_schema.relation_definitions():
+    for rschema, targetschemas, role in entity.e_schema.relation_definitions():
         # skip automatically handled relations
         if rschema.type in DONT_CHECK_RTYPES_ON_ADD:
             continue
-        if x == 'subject':
+        if role == 'subject':
             subjtype = entity.e_schema
             objtype = targetschemas[0].type
-            cardindex = 0
             opcls = CheckSRelationOp
         else:
             subjtype = targetschemas[0].type
             objtype = entity.e_schema
-            cardindex = 1
             opcls = CheckORelationOp
-        card = rschema.rproperty(subjtype, objtype, 'cardinality')
-        if card[cardindex] in '1+':
+        card = rschema.rdef(subjtype, objtype).role_cardinality(role)
+        if card in '1+':
             checkrel_if_necessary(session, opcls, rschema.type, eid)
 
 def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):

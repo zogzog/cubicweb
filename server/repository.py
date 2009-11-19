@@ -1087,7 +1087,7 @@ class Repository(object):
                 continue
             rschema = eschema.subjrels[attr]
             if rschema.final:
-                if eschema.rproperty(attr, 'fulltextindexed'):
+                if getattr(eschema.rdef(attr), 'fulltextindexed', False):
                     need_fti_update = True
                 only_inline_rels = False
             else:

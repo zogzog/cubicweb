@@ -13,7 +13,7 @@ from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(EntityType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', ERQLExpression('X concerne S, S owned_by U')),
         'update': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
@@ -27,7 +27,7 @@ class Affaire(EntityType):
     concerne = SubjectRelation('Societe')
 
 class concerne(RelationType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
@@ -42,7 +42,7 @@ class Para(EntityType):
 class Note(Para):
     __specializes_schema__ = True
 
-    permissions = {'read':   ('managers', 'users', 'guests',),
+    __permissions__ = {'read':   ('managers', 'users', 'guests',),
                    'update': ('managers', 'owners',),
                    'delete': ('managers', ),
                    'add':    ('managers',
@@ -63,7 +63,7 @@ class Text(Para):
     summary = String(maxsize=512)
 
 class ecrit_par(RelationType):
-    permissions = {'read':   ('managers', 'users', 'guests',),
+    __permissions__ = {'read':   ('managers', 'users', 'guests',),
                    'delete': ('managers', ),
                    'add':    ('managers',
                               RRQLExpression('O require_permission P, P name "add_note", '
@@ -105,7 +105,7 @@ class Personne(EntityType):
     connait = SubjectRelation('Personne', symetric=True)
 
 class Societe(WorkflowableEntityType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers', 'users', 'guests'),
         'update': ('managers', 'owners'),
         'delete': ('managers', 'owners'),

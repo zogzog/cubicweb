@@ -403,25 +403,22 @@ class ResultSet(object):
                 select = rqlst
             # take care, due to outer join support, we may find None
             # values for non final relation
-            for i, attr, x in attr_desc_iterator(select, col):
+            for i, attr, role in attr_desc_iterator(select, col):
                 outerselidx = rqlst.subquery_selection_index(select, i)
                 if outerselidx is None:
                     continue
-                if x == 'subject':
+                if role == 'subject':
                     rschema = eschema.subjrels[attr]
                     if rschema.final:
                         entity[attr] = rowvalues[outerselidx]
                         continue
-                    tetype = rschema.objects(etype)[0]
-                    card = rschema.rproperty(etype, tetype, 'cardinality')[0]
                 else:
                     rschema = eschema.objrels[attr]
-                    tetype = rschema.subjects(etype)[0]
-                    card = rschema.rproperty(tetype, etype, 'cardinality')[1]
+                rdef = eschema.rdef(attr, role)
                 # only keep value if it can't be multivalued
-                if card in '1?':
+                if rdef.role_cardinality(role) in '1?':
                     if rowvalues[outerselidx] is None:
-                        if x == 'subject':
+                        if role == 'subject':
                             rql = 'Any Y WHERE X %s Y, X eid %s'
                         else:
                             rql = 'Any Y WHERE Y %s X, X eid %s'
@@ -429,7 +426,7 @@ class ResultSet(object):
                         req.decorate_rset(rrset)
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
-                    entity.set_related_cache(attr, x, rrset)
+                    entity.set_related_cache(attr, role, rrset)
         return entity
 
     @cached

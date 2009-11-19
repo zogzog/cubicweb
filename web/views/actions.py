@@ -268,20 +268,21 @@ class AddRelatedActions(Action):
             for rschema in rschemas:
                 if rschema.final:
                     continue
-                # check the relation can be added as well
-                # XXX consider autoform_permissions_overrides?
-                if role == 'subject'and not rschema.has_perm(req, 'add',
-                                                             fromeid=entity.eid):
-                    continue
-                if role == 'object'and not rschema.has_perm(req, 'add',
-                                                            toeid=entity.eid):
-                    continue
-                # check the target types can be added as well
                 for teschema in rschema.targets(eschema, role):
                     if not appearsin_addmenu.etype_get(eschema, rschema,
                                                        role, teschema):
                         continue
-                    if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
+                    rdef = rschema.role_rdef(eschema, teschema, role)
+                    # check the relation can be added
+                    # XXX consider autoform_permissions_overrides?
+                    if role == 'subject'and not rdef.has_perm(
+                        req, 'add', fromeid=entity.eid):
+                        continue
+                    if role == 'object'and not rdef.has_perm(
+                        req, 'add', toeid=entity.eid):
+                        continue
+                    # check the target types can be added as well
+                    if teschema.may_have_permission('add', req):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target):

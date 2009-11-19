@@ -27,7 +27,7 @@ def rproperty(session, rtype, eidfrom, eidto, rprop):
     rschema = session.repo.schema[rtype]
     subjtype = session.describe(eidfrom)[0]
     objtype = session.describe(eidto)[0]
-    return rschema.rproperty(subjtype, objtype, rprop)
+    return getattr(rschema.rdef(subjtype, objtype), rprop)
 
 def check_internal_entity(session, eid, internal_names):
     """check that the entity's name is not in the internal_names list.

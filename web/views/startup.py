@@ -26,6 +26,8 @@ class ManageView(StartupView):
     @classmethod
     def vreg_initialization_completed(cls):
         for eschema in cls.schema.entities():
+            if eschema.final:
+                continue
             if eschema.schema_entity():
                 uicfg.indexview_etype_section.setdefault(eschema, 'schema')
             elif eschema.is_subobject(strict=True):
@@ -140,8 +142,7 @@ class ManageView(StartupView):
         """
         req = self.req
         for eschema in eschemas:
-            if eschema.final or (not eschema.has_perm(req, 'read') and
-                                      not eschema.has_local_role('read')):
+            if eschema.final or not eschema.may_have_permission('read', req):
                 continue
             etype = eschema.type
             label = display_name(req, etype, 'plural')

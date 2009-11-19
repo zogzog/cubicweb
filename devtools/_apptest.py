@@ -92,7 +92,7 @@ class TestEnvironment(object):
         schema = self.vreg.schema
         # else we may run into problems since email address are ususally share in app tests
         # XXX should not be necessary anymore
-        schema.rschema('primary_email').set_rproperty('CWUser', 'EmailAddress', 'composite', False)
+        schema.rschema('primary_email').rdef('CWUser', 'EmailAddress').composite = False
         self.deletable_entities = unprotected_entities(schema)
 
     def restore_database(self):

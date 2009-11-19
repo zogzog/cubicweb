@@ -305,35 +305,33 @@ class ServerMigrationHelper(MigrationHelper):
 
     # schema synchronization internals ########################################
 
-    def _synchronize_permissions(self, ertype):
+    def _synchronize_permissions(self, erschema, teid):
         """permission synchronization for an entity or relation type"""
-        if ertype in VIRTUAL_RTYPES:
+        if erschema in VIRTUAL_RTYPES:
             return
-        newrschema = self.fs_schema[ertype]
-        teid = self.repo.schema[ertype].eid
-        if 'update' in newrschema.ACTIONS or newrschema.final:
+        assert teid, erschema
+        if 'update' in erschema.ACTIONS or erschema.final:
             # entity type
             exprtype = u'ERQLExpression'
         else:
             # relation type
             exprtype = u'RRQLExpression'
-        assert teid, ertype
         gm = self.group_mapping()
         confirm = self.verbosity >= 2
         # * remove possibly deprecated permission (eg in the persistent schema
         #   but not in the new schema)
         # * synchronize existing expressions
         # * add new groups/expressions
-        for action in newrschema.ACTIONS:
+        for action in erschema.ACTIONS:
             perm = '%s_permission' % action
             # handle groups
-            newgroups = list(newrschema.get_groups(action))
+            newgroups = list(erschema.get_groups(action))
             for geid, gname in self.rqlexec('Any G, GN WHERE T %s G, G name GN, '
                                             'T eid %%(x)s' % perm, {'x': teid}, 'x',
                                             ask_confirm=False):
                 if not gname in newgroups:
                     if not confirm or self.confirm('remove %s permission of %s to %s?'
-                                                   % (action, ertype, gname)):
+                                                   % (action, erschema, gname)):
                         self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
                                      % (perm, teid),
                                      {'x': geid}, 'x', ask_confirm=False)
@@ -341,18 +339,18 @@ class ServerMigrationHelper(MigrationHelper):
                     newgroups.remove(gname)
             for gname in newgroups:
                 if not confirm or self.confirm('grant %s permission of %s to %s?'
-                                               % (action, ertype, gname)):
+                                               % (action, erschema, gname)):
                     self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
                                  % (perm, teid),
                                  {'x': gm[gname]}, 'x', ask_confirm=False)
             # handle rql expressions
-            newexprs = dict((expr.expression, expr) for expr in newrschema.get_rqlexprs(action))
+            newexprs = dict((expr.expression, expr) for expr in erschema.get_rqlexprs(action))
             for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
                                                     'T eid %s' % (perm, teid),
                                                     ask_confirm=False):
                 if not expression in newexprs:
                     if not confirm or self.confirm('remove %s expression for %s permission of %s?'
-                                                   % (expression, action, ertype)):
+                                                   % (expression, action, erschema)):
                         # deleting the relation will delete the expression entity
                         self.rqlexec('DELETE T %s E WHERE E eid %%(x)s, T eid %s'
                                      % (perm, teid),
@@ -362,7 +360,7 @@ class ServerMigrationHelper(MigrationHelper):
             for expression in newexprs.values():
                 expr = expression.expression
                 if not confirm or self.confirm('add %s expression for %s permission of %s?'
-                                               % (expr, action, ertype)):
+                                               % (expr, action, erschema)):
                     self.rqlexec('INSERT RQLExpression X: X exprtype %%(exprtype)s, '
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
                                  'WHERE T eid %%(x)s' % perm,
@@ -394,9 +392,7 @@ class ServerMigrationHelper(MigrationHelper):
             for subj, obj in rschema.iter_rdefs():
                 if not reporschema.has_rdef(subj, obj):
                     continue
-                self._synchronize_rdef_schema(subj, rschema, obj)
-        if syncperms:
-            self._synchronize_permissions(rtype)
+                self._synchronize_rdef_schema(subj, rschema, obj, syncperms=syncperms)
 
     def _synchronize_eschema(self, etype, syncperms=True):
         """synchronize properties of the persistent entity schema against
@@ -446,9 +442,9 @@ class ServerMigrationHelper(MigrationHelper):
                         continue
                     self._synchronize_rdef_schema(subj, rschema, obj)
         if syncperms:
-            self._synchronize_permissions(etype)
+            self._synchronize_permissions(eschema, repoeschema.eid)
 
-    def _synchronize_rdef_schema(self, subjtype, rtype, objtype):
+    def _synchronize_rdef_schema(self, subjtype, rtype, objtype, syncperms=True):
         """synchronize properties of the persistent relation definition schema
         against its current definition:
         * order and other properties
@@ -467,12 +463,14 @@ class ServerMigrationHelper(MigrationHelper):
         self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
                         ask_confirm=confirm)
         # constraints
-        newconstraints = list(rschema.rproperty(subjtype, objtype, 'constraints'))
+        rdef = rschema.rdef(subjtype, objtype)
+        repordef = reporschema.rdef(subjtype, objtype)
+        newconstraints = list(rdef.constraints)
         # 1. remove old constraints and update constraints of the same type
         # NOTE: don't use rschema.constraint_by_type because it may be
         #       out of sync with newconstraints when multiple
         #       constraints of the same type are used
-        for cstr in reporschema.rproperty(subjtype, objtype, 'constraints'):
+        for cstr in repordef.constraints:
             for newcstr in newconstraints:
                 if newcstr.type() == cstr.type():
                     break
@@ -496,6 +494,8 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
                                               newcstr),
                             ask_confirm=confirm)
+        if syncperms:
+            self._synchronize_permissions(rdef, repordef.eid)
 
     # base actions ############################################################
 
@@ -888,7 +888,8 @@ class ServerMigrationHelper(MigrationHelper):
             if isinstance(ertype, (tuple, list)):
                 assert len(ertype) == 3, 'not a relation definition'
                 assert syncprops, 'can\'t update permission for a relation definition'
-                self._synchronize_rdef_schema(*ertype)
+                self._synchronize_rdef_schema(ertype[0], ertype[1], ertype[2],
+                                              syncperms=syncperms)
             elif syncprops:
                 erschema = self.repo.schema[ertype]
                 if isinstance(erschema, CubicWebRelationSchema):
@@ -897,13 +898,14 @@ class ServerMigrationHelper(MigrationHelper):
                 else:
                     self._synchronize_eschema(erschema, syncperms=syncperms)
             else:
-                self._synchronize_permissions(ertype)
+                erschema = self.repo.schema[ertype]
+                self._synchronize_permissions(self.fs_schema[ertype], erschema.eid)
         else:
             for etype in self.repo.schema.entities():
                 if syncprops:
                     self._synchronize_eschema(etype, syncperms=syncperms)
                 else:
-                    self._synchronize_permissions(etype)
+                    self._synchronize_permissions(self.fs_schema[etype], erschema.eid)
         if commit:
             self.commit()
 

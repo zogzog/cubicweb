@@ -34,7 +34,7 @@ _marker = object()
 def greater_card(rschema, subjtypes, objtypes, index):
     for subjtype in subjtypes:
         for objtype in objtypes:
-            card = rschema.rproperty(subjtype, objtype, 'cardinality')[index]
+            card = rschema.rdef(subjtype, objtype).cardinality[index]
             if card in '+*':
                 return card
     return '1'
@@ -243,7 +243,8 @@ class Entity(AppObject, dict):
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
                             attr, cls.id)
                 continue
-            if not user.matching_groups(rschema.get_groups('read')):
+            rdef = eschema.rdef(attr)
+            if not user.matching_groups(rdef.get_groups('read')):
                 continue
             var = varmaker.next()
             selection.append(var)
@@ -252,7 +253,7 @@ class Entity(AppObject, dict):
             if not rschema.final:
                 # XXX this does not handle several destination types
                 desttype = rschema.objects(eschema.type)[0]
-                card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
+                card = rdef.cardinality[0]
                 if card not in '?1':
                     cls.warning('bad relation %s specified in fetch attrs for %s',
                                  attr, cls)
@@ -362,10 +363,10 @@ class Entity(AppObject, dict):
             self.req.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     def check_perm(self, action):
-        self.e_schema.check_perm(self.req, action, self.eid)
+        self.e_schema.check_perm(self.req, action, eid=self.eid)
 
     def has_perm(self, action):
-        return self.e_schema.has_perm(self.req, action, self.eid)
+        return self.e_schema.has_perm(self.req, action, eid=self.eid)
 
     def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
@@ -443,11 +444,11 @@ class Entity(AppObject, dict):
             return u''
         if attrtype is None:
             attrtype = self.e_schema.destination(attr)
-        props = self.e_schema.rproperties(attr)
+        props = self.e_schema.rdef(attr)
         if attrtype == 'String':
             # internalinalized *and* formatted string such as schema
             # description...
-            if props.get('internationalizable'):
+            if props.internationalizable:
                 value = self.req._(value)
             attrformat = self.attr_metadata(attr, 'format')
             if attrformat:
@@ -495,11 +496,12 @@ class Entity(AppObject, dict):
             if rschema.type in self.skip_copy_for:
                 continue
             # skip composite relation
-            if self.e_schema.subjrproperty(rschema, 'composite'):
+            rdef = self.e_schema.rdef(rschema)
+            if rdef.composite:
                 continue
             # skip relation with card in ?1 else we either change the copied
             # object (inlined relation) or inserting some inconsistency
-            if self.e_schema.subjrproperty(rschema, 'cardinality')[1] in '?1':
+            if rdef.cardinality[1] in '?1':
                 continue
             rql = 'SET X %s V WHERE X eid %%(x)s, Y eid %%(y)s, Y %s V' % (
                 rschema.type, rschema.type)
@@ -509,14 +511,15 @@ class Entity(AppObject, dict):
             if rschema.meta:
                 continue
             # skip already defined relations
-            if getattr(self, 'reverse_%s' % rschema.type):
+            if self.related(rschema.type, 'object'):
                 continue
+            rdef = self.e_schema.rdef(rschema, 'object')
             # skip composite relation
-            if self.e_schema.objrproperty(rschema, 'composite'):
+            if rdef.composite:
                 continue
             # skip relation with card in ?1 else we either change the copied
             # object (inlined relation) or inserting some inconsistency
-            if self.e_schema.objrproperty(rschema, 'cardinality')[0] in '?1':
+            if rdef.cardinality[0] in '?1':
                 continue
             rql = 'SET V %s X WHERE X eid %%(x)s, Y eid %%(y)s, V %s Y' % (
                 rschema.type, rschema.type)
@@ -537,15 +540,16 @@ class Entity(AppObject, dict):
         for rschema in self.e_schema.subject_relations():
             if rschema.final:
                 continue
-            if len(rschema.objects(self.e_schema)) > 1:
+            targets = rschema.objects(self.e_schema)
+            if len(targets) > 1:
                 # ambigous relations, the querier doesn't handle
                 # outer join correctly in this case
                 continue
             if rschema.inlined:
+                rdef = rschema.rdef(self.e_schema, targets[0])
                 matching_groups = self.req.user.matching_groups
-                if matching_groups(rschema.get_groups('read')) and \
-                   all(matching_groups(es.get_groups('read'))
-                       for es in rschema.objects(self.e_schema)):
+                if matching_groups(rdef.get_groups('read')) and \
+                   all(matching_groups(e.get_groups('read')) for e in targets):
                     yield rschema, 'subject'
 
     def to_complete_attributes(self, skip_bytes=True):
@@ -557,7 +561,8 @@ class Entity(AppObject, dict):
             if attr == 'eid':
                 continue
             # password retreival is blocked at the repository server level
-            if not self.req.user.matching_groups(rschema.get_groups('read')) \
+            rdef = rschema.rdef(self.e_schema, attrschema)
+            if not self.req.user.matching_groups(rdef.get_groups('read')) \
                    or attrschema.type == 'Password':
                 self[attr] = None
                 continue
@@ -593,24 +598,21 @@ class Entity(AppObject, dict):
                 if self.relation_cached(rtype, role):
                     continue
                 var = varmaker.next()
-                if role == 'subject':
-                    targettype = rschema.objects(self.e_schema)[0]
-                    card = rschema.rproperty(self.e_schema, targettype,
-                                             'cardinality')[0]
-                    if card == '1':
-                        rql.append('%s %s %s' % (V, rtype, var))
-                    else: # '?"
-                        rql.append('%s %s %s?' % (V, rtype, var))
-                else:
-                    targettype = rschema.subjects(self.e_schema)[1]
-                    card = rschema.rproperty(self.e_schema, targettype,
-                                             'cardinality')[1]
-                    if card == '1':
-                        rql.append('%s %s %s' % (var, rtype, V))
-                    else: # '?"
-                        rql.append('%s? %s %s' % (var, rtype, V))
+                targettype = rschema.targets(self.e_schema, role)[0]
+                rdef = rschema.role_rdef(self.e_schema, targettype, role)
+                card = rdef.role_cardinality(role)
                 assert card in '1?', '%s %s %s %s' % (self.e_schema, rtype,
                                                       role, card)
+                if role == 'subject':
+                    if card == '1':
+                        rql.append('%s %s %s' % (V, rtype, var))
+                    else:
+                        rql.append('%s %s %s?' % (V, rtype, var))
+                else:
+                    if card == '1':
+                        rql.append('%s %s %s' % (var, rtype, V))
+                    else:
+                        rql.append('%s? %s %s' % (var, rtype, V))
                 selected.append(((rtype, role), var))
         if selected:
             # select V, we need it as the left most selected variable
@@ -756,16 +758,16 @@ class Entity(AppObject, dict):
             restriction = []
             args = {}
             securitycheck_args = {}
-        insertsecurity = (rtype.has_local_role('add') and not
-                          rtype.has_perm(self.req, 'add', **securitycheck_args))
-        constraints = rtype.rproperty(subjtype, objtype, 'constraints')
+        rdef = rtype.role_rdef(self.e_schema, targettype, role)
+        insertsecurity = (rdef.has_local_role('add') and not
+                          rdef.has_perm(self.req, 'add', **securitycheck_args))
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well
-            restriction += [cstr.restriction for cstr in constraints
+            restriction += [cstr.restriction for cstr in rdef.constraints
                             if isinstance(cstr, RQLVocabularyConstraint)]
         else:
-            restriction += [cstr.restriction for cstr in constraints
+            restriction += [cstr.restriction for cstr in rdef.constraints
                             if isinstance(cstr, RQLConstraint)]
         etypecls = self.vreg['etypes'].etype_class(targettype)
         rql = etypecls.fetch_rql(self.req.user, restriction,
@@ -775,7 +777,7 @@ class Entity(AppObject, dict):
             before, after = rql.split(' WHERE ', 1)
             rql = '%s ORDERBY %s WHERE %s' % (before, searchedvar, after)
         if insertsecurity:
-            rqlexprs = rtype.get_rqlexprs('add')
+            rqlexprs = rdef.get_rqlexprs('add')
             rewriter = RQLRewriter(self.req)
             rqlst = self.req.vreg.parse(self.req, rql, args)
             if not self.has_eid():
@@ -827,12 +829,10 @@ class Entity(AppObject, dict):
             related = tuple(rset.entities(col))
             rschema = self.schema.rschema(rtype)
             if role == 'subject':
-                rcard = rschema.rproperty(self.e_schema, related[0].e_schema,
-                                          'cardinality')[1]
+                rcard = rschema.rdef(self.e_schema, related[0].e_schema).cardinality[1]
                 target = 'object'
             else:
-                rcard = rschema.rproperty(related[0].e_schema, self.e_schema,
-                                          'cardinality')[0]
+                rcard = rschema.rdef(related[0].e_schema, self.e_schema).cardinality[0]
                 target = 'subject'
             if rcard in '?1':
                 for rentity in related:

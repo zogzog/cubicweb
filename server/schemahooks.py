@@ -180,18 +180,6 @@ class MemSchemaEarlyOperation(MemSchemaOperation):
         return i + 1
 
 
-class MemSchemaPermissionOperation(MemSchemaOperation):
-    """base class to synchronize schema permission definitions"""
-    def __init__(self, session, perm, etype_eid):
-        self.perm = perm
-        try:
-            self.name = session.entity_from_eid(etype_eid).name
-        except IndexError:
-            self.error('changing permission of a no more existant type #%s',
-                etype_eid)
-        else:
-            Operation.__init__(self, session)
-
 
 # operations for high-level source database alteration  ########################
 
@@ -487,7 +475,7 @@ class SourceDbCWConstraintAdd(PreCommitOperation):
             return
         subjtype, rtype, objtype = session.schema.schema_by_eid(rdef.eid)
         cstrtype = self.entity.type
-        oldcstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
+        oldcstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         table = SQL_PREFIX + str(subjtype)
         column = SQL_PREFIX + str(rtype)
@@ -567,8 +555,7 @@ class MemSchemaCWRTypeAdd(MemSchemaEarlyOperation):
     """actually add the relation type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
-        rschema = self.schema.add_relation_type(self.kobj)
-        rschema.set_default_groups()
+        self.schema.add_relation_type(self.kobj)
 
 
 class MemSchemaCWRTypeUpdate(MemSchemaOperation):
@@ -606,7 +593,7 @@ class MemSchemaRDefUpdate(MemSchemaOperation):
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
         # at this point
-        self.rschema._rproperties[self.kobj].update(self.values)
+        self.rschema.rdef[self.kobj].update(self.values)
 
 
 class MemSchemaRDefDel(MemSchemaOperation):
@@ -638,7 +625,7 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         subjtype, rtype, objtype = self.session.schema.schema_by_eid(rdef.eid)
         self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
-        self.cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
+        self.cstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         self.newcstr.eid = self.entity.eid
 
@@ -664,33 +651,33 @@ class MemSchemaCWConstraintDel(MemSchemaOperation):
         self.constraints.remove(self.cstr)
 
 
-class MemSchemaPermissionCWGroupAdd(MemSchemaPermissionOperation):
+class MemSchemaPermissionAdd(MemSchemaOperation):
     """synchronize schema when a *_permission relation has been added on a group
     """
-    def __init__(self, session, perm, etype_eid, group_eid):
-        self.group = session.entity_from_eid(group_eid).name
-        super(MemSchemaPermissionCWGroupAdd, self).__init__(
-            session, perm, etype_eid)
 
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.schema[self.name]
+            erschema = self.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
             return
-        groups = list(erschema.get_groups(self.perm))
+        perms = list(erschema.action_permissions(self.action))
+        if hasattr(self, group_eid):
+            perm = self.session.entity_from_eid(self.group_eid).name
+        else:
+            perm = erschema.rql_expression(self.expr)
         try:
-            groups.index(self.group)
-            self.warning('group %s already have permission %s on %s',
-                         self.group, self.perm, erschema.type)
+            perms.index(perm)
+            self.warning('%s already in permissions for %s on %s',
+                         perm, self.action, erschema)
         except ValueError:
-            groups.append(self.group)
-            erschema.set_groups(self.perm, groups)
+            perms.append(perm)
+            erschema.set_action_permissions(self.action, perms)
 
 
-class MemSchemaPermissionCWGroupDel(MemSchemaPermissionCWGroupAdd):
+class MemSchemaPermissionDel(MemSchemaPermissionAdd):
     """synchronize schema when a *_permission relation has been deleted from a
     group
     """
@@ -703,60 +690,17 @@ class MemSchemaPermissionCWGroupDel(MemSchemaPermissionCWGroupAdd):
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
             return
-        groups = list(erschema.get_groups(self.perm))
-        try:
-            groups.remove(self.group)
-            erschema.set_groups(self.perm, groups)
-        except ValueError:
-            self.error('can\'t remove permission %s on %s to group %s',
-                self.perm, erschema.type, self.group)
-
-
-class MemSchemaPermissionRQLExpressionAdd(MemSchemaPermissionOperation):
-    """synchronize schema when a *_permission relation has been added on a rql
-    expression
-    """
-    def __init__(self, session, perm, etype_eid, expression):
-        self.expr = expression
-        super(MemSchemaPermissionRQLExpressionAdd, self).__init__(
-            session, perm, etype_eid)
-
-    def commit_event(self):
-        """the observed connections pool has been commited"""
-        try:
-            erschema = self.schema[self.name]
-        except KeyError:
-            # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
-            return
-        exprs = list(erschema.get_rqlexprs(self.perm))
-        exprs.append(erschema.rql_expression(self.expr))
-        erschema.set_rqlexprs(self.perm, exprs)
-
-
-class MemSchemaPermissionRQLExpressionDel(MemSchemaPermissionRQLExpressionAdd):
-    """synchronize schema when a *_permission relation has been deleted from an
-    rql expression
-    """
-
-    def commit_event(self):
-        """the observed connections pool has been commited"""
-        try:
-            erschema = self.schema[self.name]
-        except KeyError:
-            # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
-            return
-        rqlexprs = list(erschema.get_rqlexprs(self.perm))
-        for i, rqlexpr in enumerate(rqlexprs):
-            if rqlexpr.expression == self.expr:
-                rqlexprs.pop(i)
-                break
+        perms = list(erschema.action_permissions(self.action))
+        if hasattr(self, group_eid):
+            perm = self.session.entity_from_eid(self.group_eid).name
         else:
-            self.error('can\'t remove permission %s on %s for expression %s',
-                self.perm, erschema.type, self.expr)
-            return
-        erschema.set_rqlexprs(self.perm, rqlexprs)
+            perm = erschema.rql_expression(self.expr)
+        try:
+            perms.remove(self.group)
+            erschema.set_action_permissions(self.action, perms)
+        except ValueError:
+            self.error('can\'t remove permission %s for %s on %s',
+                       perm, self.action, erschema)
 
 
 class MemSchemaSpecializesAdd(MemSchemaOperation):
@@ -894,7 +838,6 @@ def after_add_eetype(session, entity):
     # but remove it before doing anything more dangerous...
     schema = session.schema
     eschema = schema.add_entity_type(etype)
-    eschema.set_default_groups()
     # generate table sql and rql to add metadata
     tablesql = eschema2sql(session.pool.source('system').dbhelper, eschema,
                            prefix=SQL_PREFIX)
@@ -1033,8 +976,8 @@ def before_delete_constrained_by(session, fromeid, rtype, toeid):
         entity = session.entity_from_eid(toeid)
         subjtype, rtype, objtype = schema.schema_by_eid(fromeid)
         try:
-            cstr = rtype.constraint_by_type(subjtype, objtype,
-                                            entity.cstrtype[0].name)
+            cstr = rtype.rdef(subjtype, objtype).constraint_by_type(
+                entity.cstrtype[0].name)
         except IndexError:
             session.critical('constraint type no more accessible')
         else:
@@ -1053,13 +996,14 @@ def after_add_constrained_by(session, fromeid, rtype, toeid):
 
 def after_add_permission(session, subject, rtype, object):
     """added entity/relation *_permission, need to update schema"""
-    perm = rtype.split('_', 1)[0]
+    action = rtype.split('_', 1)[0]
     if session.describe(object)[0] == 'CWGroup':
-        MemSchemaPermissionCWGroupAdd(session, perm, subject, object)
+        MemSchemaPermissionAdd(session, action=action, eid=subject,
+                               group_eid=object)
     else: # RQLExpression
-        expr = session.execute('Any EXPR WHERE X eid %(x)s, X expression EXPR',
-                               {'x': object}, 'x')[0][0]
-        MemSchemaPermissionRQLExpressionAdd(session, perm, subject, expr)
+        expr = session.entity_from_eid(object).expression
+        MemSchemaPermissionAdd(session, action=action, eid=subject,
+                               expr=expr)
 
 
 def before_del_permission(session, subject, rtype, object):
@@ -1069,13 +1013,12 @@ def before_del_permission(session, subject, rtype, object):
     """
     if subject in session.transaction_data.get('pendingeids', ()):
         return
-    perm = rtype.split('_', 1)[0]
+    action = rtype.split('_', 1)[0]
     if session.describe(object)[0] == 'CWGroup':
-        MemSchemaPermissionCWGroupDel(session, perm, subject, object)
+        MemSchemaPermissionDel(session, action=action, eid=subject, group_eid=object)
     else: # RQLExpression
-        expr = session.execute('Any EXPR WHERE X eid %(x)s, X expression EXPR',
-                               {'x': object}, 'x')[0][0]
-        MemSchemaPermissionRQLExpressionDel(session, perm, subject, expr)
+        expr = session.entity_from_eid(object).expression
+        MemSchemaPermissionDel(session, action=action, eid=subject, expr=expr)
 
 
 def after_add_specializes(session, subject, rtype, object):

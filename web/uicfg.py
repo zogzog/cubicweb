@@ -73,30 +73,24 @@ from cubicweb.rtags import (RelationTags, RelationTagsBool,
 from cubicweb.web import formwidgets
 
 
-def card_from_role(card, role):
-    if role == 'subject':
-        return card[0]
-    assert role in ('object', 'sobject'), repr(role)
-    return card[1]
-
 # primary view configuration ##################################################
 
 def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
-        composed = rschema.rproperty(sschema, oschema, 'composite') == neg_role(role)
+        rdef = rschema.rdef(sschema, oschema)
         if rschema.final:
             if rschema.meta or sschema.is_metadata(rschema) \
                     or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
             else:
                 section = 'attributes'
-        elif card in '1+':
-            section = 'attributes'
-        elif composed:
-            section = 'relations'
         else:
-            section = 'sideboxes'
+            if rdef.role_cardinality(role) in '1+':
+                section = 'attributes'
+            elif rdef.composite == neg_role(role):
+                section = 'relations'
+            else:
+                section = 'sideboxes'
         rtag.tag_relation((sschema, rschema, oschema, role), section)
 
 primaryview_section = RelationTags('primaryview_section',
@@ -177,13 +171,8 @@ def init_autoform_section(rtag, sschema, rschema, oschema, role):
         elif sschema.is_metadata(rschema):
             section = 'metadata'
         else:
-            if role == 'subject':
-                card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
-                composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
-            else:
-                card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
-                composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
-            if card in '1+':
+            rdef = rschema.rdef(sschema, oschema)
+            if rdef.role_cardinality(role) in '1+':
                 section = 'primary'
             elif rschema.final:
                 section = 'secondary'
@@ -217,9 +206,8 @@ autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
 def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[role == 'object']
-        if not card in '?1' and \
-               rschema.rproperty(sschema, oschema, 'composite') == role:
+        rdef = rschema.rdef(sschema, oschema)
+        if not rdef.role_cardinality(role) in '?1' and rdef.composite == role:
             rtag.tag_relation((sschema, rschema, oschema, role), True)
 
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
