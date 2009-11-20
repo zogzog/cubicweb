@@ -182,6 +182,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except form.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
+        fnum = len(self.fields)
+        self.fields.sort(key=lambda f: f.order is None and fnum or f.order)
         self.maxrelitems = self.req.property_value('navigation.related-limit')
         self.force_display = bool(self.req.form.get('__force_display'))
 

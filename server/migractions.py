@@ -104,9 +104,14 @@ class ServerMigrationHelper(MigrationHelper):
             if migrscript.endswith('.sql'):
                 if self.execscript_confirm(migrscript):
                     sqlexec(open(migrscript).read(), self.session.system_sql)
-            else:
+            elif migrscript.endswith('.py'):
                 return super(ServerMigrationHelper, self).cmd_process_script(
                     migrscript, funcname, *args, **kwargs)
+            else:
+                print
+                print ('-> ignoring %s, only .py and .sql scripts are considered' %
+                       migrscript)
+                print
             self.commit()
         except:
             self.rollback()
