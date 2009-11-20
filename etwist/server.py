@@ -103,11 +103,13 @@ class CubicWebRootResource(resource.PostableResource):
         assert self.base_url[-1] == '/'
         self.https_url = config['https-url']
         assert not self.https_url or self.https_url[-1] == '/'
+        # instantiate publisher here and not in init_publisher to get some
+        # checks done before daemonization (eg versions consistency)
+        self.appli = CubicWebPublisher(config, debug=self.debugmode)
+        self.versioned_datadir = 'data%s' % config.instance_md5_version()
 
     def init_publisher(self):
         config = self.config
-        self.appli = CubicWebPublisher(config, debug=self.debugmode)
-        self.versioned_datadir = 'data%s' % config.instance_md5_version()
         # when we have an in-memory repository, clean unused sessions every XX
         # seconds and properly shutdown the server
         if config.repo_method == 'inmemory':
@@ -382,14 +384,13 @@ def run(config, debug):
     port = config['port'] or 8080
     reactor.listenTCP(port, channel.HTTPFactory(website))
     logger = getLogger('cubicweb.twisted')
-    logger.info('instance started on %s', root_resource.base_url)
     if not debug:
         print 'instance starting in the background'
         if daemonize():
             return # child process
         if config['pid-file']:
             # ensure the directory where the pid-file should be set exists (for
-            # instance /var/run/cubicweb may be deleted on computer restart) 
+            # instance /var/run/cubicweb may be deleted on computer restart)
             piddir = os.path.dirname(config['pid-file'])
             if not os.path.exists(piddir):
                 os.makedirs(piddir)
@@ -403,6 +404,7 @@ def run(config, debug):
             uid = getpwnam(config['uid']).pw_uid
         os.setuid(uid)
     root_resource.start_service()
+    logger.info('instance started on %s', root_resource.base_url)
     if config['profile']:
         prof = hotshot.Profile(config['profile'])
         prof.runcall(reactor.run)

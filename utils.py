@@ -53,6 +53,13 @@ ONEWEEK = timedelta(days=7)
 def days_in_month(date_):
     return monthrange(date_.year, date_.month)[1]
 
+def days_in_year(date_):
+    feb = pydatetime.date(date_.year, 2, 1)
+    if days_in_month(feb) == 29:
+        return 366
+    else:
+        return 365
+
 def previous_month(date_, nbmonth=1):
     while nbmonth:
         date_ = first_day(date_) - ONEDAY
@@ -142,6 +149,20 @@ def merge_dicts(dict1, dict2):
     return dict1
 
 
+# use networkX instead ?
+# http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
+def transitive_closure_of(entity, relname, _seen=None):
+    if _seen is None:
+        _seen = set()
+    _seen.add(entity.eid)
+    yield entity
+    for child in getattr(entity, relname):
+        if child.eid in _seen:
+            continue
+        for subchild in transitive_closure_of(child, relname, _seen):
+            yield subchild
+
+
 class SizeConstrainedList(list):
     """simple list that makes sure the list does not get bigger
     than a given size.
@@ -215,8 +236,16 @@ class HTMLHead(UStringIO):
     def add_raw(self, rawheader):
         self.write(rawheader)
 
-    def define_var(self, var, value):
-        self.jsvars.append( (var, value) )
+    def define_var(self, var, value, override=True):
+        """adds a javascript var declaration / assginment in the header
+
+        :param var: the variable name
+        :param value: the variable value (as a raw python value,
+                      it will be jsonized later)
+        :param override: if False, don't set the variable value if the variable
+                         is already defined. Default is True.
+        """
+        self.jsvars.append( (var, value, override) )
 
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
@@ -270,8 +299,12 @@ class HTMLHead(UStringIO):
         # 1/ variable declaration if any
         if self.jsvars:
             w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
-            for var, value in self.jsvars:
-                w(u'%s = %s;\n' % (var, dumps(value)))
+            for var, value, override in self.jsvars:
+                vardecl = u'%s = %s;' % (var, dumps(value))
+                if not override:
+                    vardecl = (u'if (typeof %s == "undefined") {%s}' %
+                               (var, vardecl))
+                w(vardecl + u'\n')
             w(u'//--><!]]></script>\n')
         # 2/ css files
         for cssfile, media in self.cssfiles:
@@ -338,7 +371,7 @@ class HTMLStream(object):
 
 def can_do_pdf_conversion(__answer=[None]):
     """pdf conversion depends on
-    * pyxmltrf (python package)
+    * pysixt (python package)
     * fop 0.9x
     """
     if __answer[0] is not None:

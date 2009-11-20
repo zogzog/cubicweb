@@ -34,35 +34,35 @@ CW_XHTML_EXTENSIONS = '''[
   style       CDATA         #IMPLIED
   title       CDATA         #IMPLIED
 
- cubicweb:sortvalue         CDATA   #IMPLIED
- cubicweb:target            CDATA   #IMPLIED
- cubicweb:limit             CDATA   #IMPLIED
- cubicweb:type              CDATA   #IMPLIED
- cubicweb:loadtype          CDATA   #IMPLIED
- cubicweb:wdgtype           CDATA   #IMPLIED
- cubicweb:initfunc          CDATA   #IMPLIED
- cubicweb:inputid           CDATA   #IMPLIED
- cubicweb:tindex            CDATA   #IMPLIED
- cubicweb:inputname         CDATA   #IMPLIED
- cubicweb:value             CDATA   #IMPLIED
- cubicweb:required          CDATA   #IMPLIED
  cubicweb:accesskey         CDATA   #IMPLIED
- cubicweb:maxlength         CDATA   #IMPLIED
- cubicweb:variables         CDATA   #IMPLIED
+ cubicweb:actualrql         CDATA   #IMPLIED
+ cubicweb:dataurl           CDATA   #IMPLIED
  cubicweb:displayactions    CDATA   #IMPLIED
+ cubicweb:facetName         CDATA   #IMPLIED
+ cubicweb:facetargs         CDATA   #IMPLIED
  cubicweb:fallbackvid       CDATA   #IMPLIED
  cubicweb:fname             CDATA   #IMPLIED
- cubicweb:vid               CDATA   #IMPLIED
- cubicweb:rql               CDATA   #IMPLIED
- cubicweb:actualrql         CDATA   #IMPLIED
- cubicweb:rooteid           CDATA   #IMPLIED
- cubicweb:dataurl           CDATA   #IMPLIED
- cubicweb:size              CDATA   #IMPLIED
- cubicweb:tlunit            CDATA   #IMPLIED
+ cubicweb:initfunc          CDATA   #IMPLIED
+ cubicweb:inputid           CDATA   #IMPLIED
+ cubicweb:inputname         CDATA   #IMPLIED
+ cubicweb:limit             CDATA   #IMPLIED
+ cubicweb:loadtype          CDATA   #IMPLIED
  cubicweb:loadurl           CDATA   #IMPLIED
+ cubicweb:maxlength         CDATA   #IMPLIED
+ cubicweb:required          CDATA   #IMPLIED
+ cubicweb:rooteid           CDATA   #IMPLIED
+ cubicweb:rql               CDATA   #IMPLIED
+ cubicweb:size              CDATA   #IMPLIED
+ cubicweb:sortvalue         CDATA   #IMPLIED
+ cubicweb:target            CDATA   #IMPLIED
+ cubicweb:tindex            CDATA   #IMPLIED
+ cubicweb:tlunit            CDATA   #IMPLIED
+ cubicweb:type              CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
- cubicweb:facetargs         CDATA   #IMPLIED
- cubicweb:facetName         CDATA   #IMPLIED
+ cubicweb:value             CDATA   #IMPLIED
+ cubicweb:variables         CDATA   #IMPLIED
+ cubicweb:vid               CDATA   #IMPLIED
+ cubicweb:wdgtype           CDATA   #IMPLIED
   "> ] '''
 
 TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n' % CW_XHTML_EXTENSIONS
@@ -305,21 +305,27 @@ class View(AppObject):
 
     def create_url(self, etype, **kwargs):
         """ return the url of the entity creation form for a given entity type"""
-        return self._cw.build_url('add/%s'%etype, **kwargs)
+        return self._cw.build_url('add/%s' % etype, **kwargs)
 
-    def field(self, label, value, row=True, show_label=True, w=None, tr=True):
-        """ read-only field """
+    def field(self, label, value, row=True, show_label=True, w=None, tr=True, table=False):
+        """read-only field"""
         if w is None:
             w = self.w
-        if row:
-            w(u'<div class="row">')
+        if table:
+            w(u'<tr class="entityfield">')
+        else:
+            w(u'<div class="entityfield">')
         if show_label and label:
             if tr:
                 label = display_name(self._cw, label)
-            w(u'<span class="label">%s</span>' % label)
-        w(u'<div class="field">%s</div>' % value)
-        if row:
-            w(u'</div>')
+            if table:
+                w(u'<th>%s</th>' % label)
+            else:
+                w(u'<span>%s</span> ' % label)
+        if table:
+            w(u'<td>%s</td></tr>' % value)
+        else:
+            w(u'<span>%s</span></div>' % value)
 
 
 

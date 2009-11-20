@@ -12,7 +12,8 @@ serialization time
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
-from cubicweb.common.uilib import toggle_action
+from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.web import jsonize
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,
 #     i18n strings, etc.)
@@ -250,9 +251,46 @@ class TableColumn(object):
     def add_attr(self, attr, value):
         self.cell_attrs[attr] = value
 
+class SimpleTableModel(object):
+    """
+    uses a list of lists as a storage backend
+
+    NB: the model expectes the cellvid passed to
+    TableColumn.append_renderer to be a callable accepting a single
+    argument and returning a unicode object
+    """
+    def __init__(self, rows):
+        self._rows = rows
+
+
+    def get_rows(self):
+        return self._rows
+
+    def render_cell(self, cellvid, rowindex, colindex, w):
+        value = self._rows[rowindex][colindex]
+        w(cellvid(value))
+
+    @htmlescape
+    @jsonize
+    def sortvalue(self, rowindex, colindex):
+        value =  self._rows[rowindex][colindex]
+        if value is None:
+            return u''
+        elif isinstance(value, int):
+            return u'%09d'%value
+        else:
+            return unicode(value)
+
 
 class TableWidget(HTMLWidget):
+    """
+    Display data in a Table with sortable column.
 
+    When using remember to include the required css and js with:
+
+    self.req.add_js('jquery.tablesorter.js')
+    self.req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+    """
     highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
                 "onmouseout=\"removeElementClass(this, 'highlighted');\""
 
@@ -304,20 +342,20 @@ class ProgressBarWidget(HTMLWidget):
 
     def _render(self):
         try:
-            pourcent = self.done*100./self.total
+            percent = self.done*100./self.total
         except ZeroDivisionError:
-            pourcent = 0
-        real_pourcent = pourcent
-        if pourcent > 100 :
+            percent = 0
+        real_percent = percent
+        if percent > 100 :
             color = 'done'
-            pourcent = 100
+            percent = 100
         elif self.todo + self.done > self.total :
             color = 'overpassed'
         else:
             color = 'inprogress'
-        if pourcent < 0:
-            pourcent = 0
-        self.w(u'<div class="progressbarback" title="%i %%">' % real_pourcent)
-        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, pourcent))
+        if percent < 0:
+            percent = 0
+        self.w(u'<div class="progressbarback" title="%i %%">' % real_percent)
+        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, percent))
         self.w(u'</div>')
 

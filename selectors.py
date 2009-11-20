@@ -667,19 +667,6 @@ class relation_possible(EClassSelector):
         self.target_etype = target_etype
         self.action = action
 
-    @lltrace
-    def __call__(self, cls, req, *args, **kwargs):
-        rschema = req.vreg.schema.rschema(self.rtype)
-        if not (rschema.has_perm(req, self.action)
-                or rschema.has_local_role(self.action)):
-            return 0
-        if self.action != 'read':
-            if not (rschema.has_perm(req, 'read')
-                    or rschema.has_local_role('read')):
-                return 0
-        score = super(relation_possible, self).__call__(cls, req, *args, **kwargs)
-        return score
-
     def score_class(self, eclass, req):
         eschema = eclass.e_schema
         try:
@@ -691,12 +678,13 @@ class relation_possible(EClassSelector):
             return 0
         if self.target_etype is not None:
             try:
-                if self.role == 'subject':
-                    return int(self.target_etype in rschema.objects(eschema))
-                else:
-                    return int(self.target_etype in rschema.subjects(eschema))
+                rdef = rschema.role_rdef(eschema, self.target_etype, self.role)
+                if not rdef.may_have_permission(self.action, req):
+                    return 0
             except KeyError:
                 return 0
+        else:
+            return rschema.may_have_permission(self.action, req, eschema, self.role)
         return 1
 
 

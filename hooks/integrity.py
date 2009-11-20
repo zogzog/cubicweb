@@ -33,6 +33,8 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
         # recheck pending eids
         if self.session.deleted_in_transaction(self.eid):
             return
+        if self.rtype in self.session.transaction_data.get('pendingrtypes', ()):
+            return
         if self.session.unsafe_execute(*self._rql()).rowcount < 1:
             etype = self.session.describe(self.eid)[0]
             _ = self.session._
@@ -87,22 +89,16 @@ class CheckCardinalityHook(UserIntegrityHook):
     def after_add_entity(self):
         eid = self.entity.eid
         eschema = self.entity.e_schema
-        for rschema, targetschemas, x in eschema.relation_definitions():
+        for rschema, targetschemas, role in eschema.relation_definitions():
             # skip automatically handled relations
             if rschema.type in DONT_CHECK_RTYPES_ON_ADD:
                 continue
-            if x == 'subject':
-                subjtype = eschema
-                objtype = targetschemas[0].type
-                cardindex = 0
+            if role == 'subject':
                 opcls = _CheckSRelationOp
             else:
-                subjtype = targetschemas[0].type
-                objtype = eschema
-                cardindex = 1
                 opcls = _CheckORelationOp
-            card = rschema.rproperty(subjtype, objtype, 'cardinality')
-            if card[cardindex] in '1+':
+            rdef = rschema.role_rdef(eschema, targetschemas[0], role)
+            if rdef.role_cardinality(role) in '1+':
                 self.checkrel_if_necessary(opcls, rschema.type, eid)
 
     def before_delete_relation(self):
@@ -173,7 +169,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
         entity = self.entity
         for attr in entity.edited_attributes:
             if schema.rschema(attr).final:
-                constraints = [c for c in entity.e_schema.constraints(attr)
+                constraints = [c for c in entity.rdef(attr).constraints
                                if isinstance(c, RQLVocabularyConstraint)]
                 if constraints:
                     _CheckConstraintsOp(self._cw, constraints=constraints,

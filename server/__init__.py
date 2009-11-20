@@ -29,7 +29,7 @@ DBG_RQL = 1   # rql execution information
 DBG_SQL = 2   # executed sql
 DBG_REPO = 4  # repository events
 DBG_MS = 8    # multi-sources
-DBG_MORE = 16 # repository events
+DBG_MORE = 16 # more verbosity
 
 # current debug mode
 DEBUG = 0

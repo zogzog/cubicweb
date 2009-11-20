@@ -358,13 +358,11 @@ class RestrictedSchemaVisitorMixIn(object):
 
     def should_display_schema(self, rschema):
         return (super(RestrictedSchemaVisitorMixIn, self).should_display_schema(rschema)
-                and (rschema.has_local_role('read')
-                     or rschema.has_perm(self._cw, 'read')))
+                and rschema.may_have_permission('read', self._cw))
 
-    def should_display_attr(self, rschema):
+    def should_display_attr(self, eschema, rschema):
         return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(rschema)
-                and (rschema.has_local_role('read')
-                     or rschema.has_perm(self._cw, 'read')))
+                and eschema.rdef(rschema).may_have_permission('read', self._cw))
 
 
 class FullSchemaVisitor(RestrictedSchemaVisitorMixIn, s2d.FullSchemaVisitor):

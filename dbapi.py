@@ -499,6 +499,8 @@ class Connection(object):
         DBAPIRequest.relative_path = fake
         DBAPIRequest.url = fake
         DBAPIRequest.next_tabindex = fake
+        DBAPIRequest.get_page_data = fake
+        DBAPIRequest.set_page_data = fake
         DBAPIRequest.add_js = fake #cwrb.add_js.im_func
         DBAPIRequest.add_css = fake #cwrb.add_css.im_func
         # XXX could ask the repo for it's base-url configuration

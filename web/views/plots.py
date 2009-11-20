@@ -118,7 +118,8 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
                                      'plotdata': ','.join(plotdata),
-                                     'mode': self.timemode and "'time'" or 'null'})
+                                     'mode': self.timemode and "'time'" or 'null'},
+                                    jsoncall=req.form.get('jsoncall', False))
 
 
 class PlotView(baseviews.AnyRsetView):

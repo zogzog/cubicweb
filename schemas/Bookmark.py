@@ -13,7 +13,7 @@ from cubicweb.schema import RRQLExpression
 
 class Bookmark(EntityType):
     """bookmarks are used to have user's specific internal links"""
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners',),
@@ -29,7 +29,7 @@ class Bookmark(EntityType):
 
 
 class bookmarked_by(RelationType):
-    permissions = {'read':   ('managers', 'users', 'guests',),
+    __permissions__ = {'read':   ('managers', 'users', 'guests',),
                    # test user in users group to avoid granting permission to anonymous user
                    'add':    ('managers', RRQLExpression('O identity U, U in_group G, G name "users"')),
                    'delete': ('managers', RRQLExpression('O identity U, U in_group G, G name "users"')),

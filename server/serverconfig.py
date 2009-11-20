@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 import os
 from os.path import join, exists
 
-from logilab.common.configuration import REQUIRED, Method, Configuration, \
+from logilab.common.configuration import Method, Configuration, \
      ini_format_section
 from logilab.common.decorators import wproperty, cached, clear_cache
 
@@ -22,7 +22,7 @@ from cubicweb.server import SOURCE_TYPES
 
 USER_OPTIONS =  (
     ('login', {'type' : 'string',
-               'default': REQUIRED,
+               'default': 'admin',
                'help': "cubicweb manager account's login "
                '(this user will be created)',
                'inputlevel': 0,

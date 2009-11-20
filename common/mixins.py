@@ -180,7 +180,9 @@ class EmailableMixIn(object):
         For instance, the Person class might want to return a `companyname`
         key.
         """
-        return set(rs.type for rs, _ in cls.e_schema.attribute_definitions())
+        return set(rschema.type
+                   for rschema, attrtype in cls.e_schema.attribute_definitions()
+                   if attrtype.type not in ('Password', 'Bytes'))
 
     def as_email_context(self):
         """returns the dictionary as used by the sendmail controller to

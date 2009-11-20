@@ -15,6 +15,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import nonempty_rset, match_form_params
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, AnyRsetView
+from cubicweb.common import tags
 from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
@@ -179,9 +180,8 @@ class TableView(AnyRsetView):
 
     def render_actions(self, divid, actions):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = '<img src="%s" alt="%s"/>' % (
-            self._cw.datadir_url + 'liveclipboard-icon.png',
-            xml_escape(self._cw._('action(s) on this selection')))
+        label = tags.img(src=self._cw.external_resource('PUCE_DOWN'),
+                         alt=xml_escape(self._cw._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)
         box.append(menu)

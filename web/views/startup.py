@@ -130,8 +130,7 @@ class ManageView(StartupView):
         """
         req = self._cw
         for eschema in eschemas:
-            if eschema.final or (not eschema.has_perm(req, 'read') and
-                                      not eschema.has_local_role('read')):
+            if eschema.final or not eschema.may_have_permission('read', req):
                 continue
             etype = eschema.type
             label = display_name(req, etype, 'plural')

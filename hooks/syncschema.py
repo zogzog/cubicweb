@@ -153,8 +153,11 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
 
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
-        repo = self.session.repo
-        repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
+        self.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
+        # CWUser class might have changed, update current session users
+        cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
+        for session in self.repo._sessions.values():
+            session.user.__class__ = cwuser_cls
 
     def rollback_event(self):
         self.precommit_event()
@@ -186,19 +189,6 @@ class MemSchemaEarlyOperation(MemSchemaOperation):
             if not isinstance(op, MemSchemaEarlyOperation):
                 return i
         return i + 1
-
-
-class MemSchemaPermOperation(MemSchemaOperation):
-    """base class to synchronize schema permission definitions"""
-    def __init__(self, session, perm, etype_eid):
-        self.perm = perm
-        try:
-            self.name = session.entity_from_eid(etype_eid).name
-        except IndexError:
-            self.error('changing permission of a no more existant type #%s',
-                etype_eid)
-        else:
-            hook.Operation.__init__(self, session)
 
 
 # operations for high-level source database alteration  ########################
@@ -495,7 +485,7 @@ class SourceDbCWConstraintAdd(hook.Operation):
             return
         subjtype, rtype, objtype = session.vreg.schema.schema_by_eid(rdef.eid)
         cstrtype = self.entity.type
-        oldcstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
+        oldcstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         table = SQL_PREFIX + str(subjtype)
         column = SQL_PREFIX + str(rtype)
@@ -575,8 +565,7 @@ class MemSchemaCWRTypeAdd(MemSchemaEarlyOperation):
     """actually add the relation type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
-        rschema = self.session.vreg.schema.add_relation_type(self.kobj)
-        rschema.set_default_groups()
+        self.session.vreg.schema.add_relation_type(self.kobj)
 
 
 class MemSchemaCWRTypeUpdate(MemSchemaOperation):
@@ -614,7 +603,7 @@ class MemSchemaRDefUpdate(MemSchemaOperation):
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
         # at this point
-        self.rschema._rproperties[self.kobj].update(self.values)
+        self.rschema.rdef[self.kobj].update(self.values)
 
 
 class MemSchemaRDefDel(MemSchemaOperation):
@@ -646,7 +635,7 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         subjtype, rtype, objtype = self.session.vreg.schema.schema_by_eid(rdef.eid)
         self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
-        self.cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
+        self.cstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         self.newcstr.eid = self.entity.eid
 
@@ -672,13 +661,9 @@ class MemSchemaCWConstraintDel(MemSchemaOperation):
         self.constraints.remove(self.cstr)
 
 
-class MemSchemaPermCWGroupAdd(MemSchemaPermOperation):
+class MemSchemaPermissionAdd(MemSchemaOperation):
     """synchronize schema when a *_permission relation has been added on a group
     """
-    def __init__(self, session, perm, etype_eid, group_eid):
-        self.group = session.entity_from_eid(group_eid).name
-        super(MemSchemaPermCWGroupAdd, self).__init__(
-            session, perm, etype_eid)
 
     def commit_event(self):
         """the observed connections pool has been commited"""
@@ -688,17 +673,21 @@ class MemSchemaPermCWGroupAdd(MemSchemaPermOperation):
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
             return
-        groups = list(erschema.get_groups(self.perm))
+        perms = list(erschema.action_permissions(self.action))
+        if hasattr(self, group_eid):
+            perm = self.session.entity_from_eid(self.group_eid).name
+        else:
+            perm = erschema.rql_expression(self.expr)
         try:
-            groups.index(self.group)
-            self.warning('group %s already have permission %s on %s',
-                         self.group, self.perm, erschema.type)
+            perms.index(perm)
+            self.warning('%s already in permissions for %s on %s',
+                         perm, self.action, erschema)
         except ValueError:
-            groups.append(self.group)
-            erschema.set_groups(self.perm, groups)
+            perms.append(perm)
+            erschema.set_action_permissions(self.action, perms)
 
 
-class MemSchemaPermCWGroupDel(MemSchemaPermCWGroupAdd):
+class MemSchemaPermissionDel(MemSchemaPermissionAdd):
     """synchronize schema when a *_permission relation has been deleted from a
     group
     """
@@ -711,60 +700,17 @@ class MemSchemaPermCWGroupDel(MemSchemaPermCWGroupAdd):
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
             return
-        groups = list(erschema.get_groups(self.perm))
-        try:
-            groups.remove(self.group)
-            erschema.set_groups(self.perm, groups)
-        except ValueError:
-            self.error('can\'t remove permission %s on %s to group %s',
-                self.perm, erschema.type, self.group)
-
-
-class MemSchemaPermRQLExpressionAdd(MemSchemaPermOperation):
-    """synchronize schema when a *_permission relation has been added on a rql
-    expression
-    """
-    def __init__(self, session, perm, etype_eid, expression):
-        self.expr = expression
-        super(MemSchemaPermRQLExpressionAdd, self).__init__(
-            session, perm, etype_eid)
-
-    def commit_event(self):
-        """the observed connections pool has been commited"""
-        try:
-            erschema = self.session.vreg.schema[self.name]
-        except KeyError:
-            # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
-            return
-        exprs = list(erschema.get_rqlexprs(self.perm))
-        exprs.append(erschema.rql_expression(self.expr))
-        erschema.set_rqlexprs(self.perm, exprs)
-
-
-class MemSchemaPermRQLExpressionDel(MemSchemaPermRQLExpressionAdd):
-    """synchronize schema when a *_permission relation has been deleted from an
-    rql expression
-    """
-
-    def commit_event(self):
-        """the observed connections pool has been commited"""
-        try:
-            erschema = self.session.vreg.schema[self.name]
-        except KeyError:
-            # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
-            return
-        rqlexprs = list(erschema.get_rqlexprs(self.perm))
-        for i, rqlexpr in enumerate(rqlexprs):
-            if rqlexpr.expression == self.expr:
-                rqlexprs.pop(i)
-                break
+        perms = list(erschema.action_permissions(self.action))
+        if hasattr(self, group_eid):
+            perm = self.session.entity_from_eid(self.group_eid).name
         else:
-            self.error('can\'t remove permission %s on %s for expression %s',
-                self.perm, erschema.type, self.expr)
-            return
-        erschema.set_rqlexprs(self.perm, rqlexprs)
+            perm = erschema.rql_expression(self.expr)
+        try:
+            perms.remove(self.group)
+            erschema.set_action_permissions(self.action, perms)
+        except ValueError:
+            self.error('can\'t remove permission %s for %s on %s',
+                       perm, self.action, erschema)
 
 
 class MemSchemaSpecializesAdd(MemSchemaOperation):
@@ -835,6 +781,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
     * register an operation to add the entity type to the instance's
       schema on commit
     """
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/hooks/syncschema.py
     __regid__ = 'syncaddcwetype'
     events = ('after_add_entity',)
 
@@ -859,7 +806,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
             rschema = schema[rtype]
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
-            props = rschema.rproperties(sampletype, desttype)
+            props = rschema.rdef(sampletype, desttype)
             relrqls += list(ss.rdef2rql(rschema, name, desttype, props))
         # now remove it !
         schema.del_entity_type(name)
@@ -965,6 +912,17 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
             SourceDbCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues,
                                   entity=entity)
 
+def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
+    errors = {}
+    # don't use getattr(entity, attr), we would get the modified value if any
+    for attr in ro_attrs:
+        if attr in entity.edited_attributes:
+            origval, newval = entity_oldnewvalue(entity, attr)
+            if newval != origval:
+                errors[attr] = session._("can't change the %s attribute") % \
+                               display_name(session, attr)
+    if errors:
+        raise ValidationError(entity.eid, errors)
 
 # relation_type hooks ##########################################################
 
@@ -1102,8 +1060,8 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
         entity = self._cw.entity_from_eid(self.eidto)
         subjtype, rtype, objtype = schema.schema_by_eid(self.eidfrom)
         try:
-            cstr = rtype.constraint_by_type(subjtype, objtype,
-                                            entity.cstrtype[0].name)
+            cstr = rtype.rdef(subjtype, objtype).constraint_by_type(
+                entity.cstrtype[0].name)
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
@@ -1124,12 +1082,14 @@ class AfterAddPermissionHook(SyncSchemaHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        perm = self.rtype.split('_', 1)[0]
+        action = self.rtype.split('_', 1)[0]
         if self._cw.describe(self.eidto)[0] == 'CWGroup':
-            MemSchemaPermCWGroupAdd(self._cw, perm, self.eidfrom, self.eidto)
+            MemSchemaPermissionAdd(self._cw, action=action, eid=self.eidfrom,
+                                   group_eid=self.eidto)
         else: # RQLExpression
             expr = self._cw.entity_from_eid(self.eidto).expression
-            MemSchemaPermRQLExpressionAdd(self._cw, perm, self.eidfrom, expr)
+            MemSchemaPermissionAdd(session, action=action, eid=self.eidfrom,
+                                   expr=expr)
 
 
 class BeforeDelPermissionHook(AfterAddPermissionHook):
@@ -1143,12 +1103,14 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
     def __call__(self):
         if self._cw.deleted_in_transaction(self.eidfrom):
             return
-        perm = self.rtype.split('_', 1)[0]
+        action = self.rtype.split('_', 1)[0]
         if self._cw.describe(self.eidto)[0] == 'CWGroup':
-            MemSchemaPermCWGroupDel(self._cw, perm, self.eidfrom, self.eidto)
+            MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
+                                   group_eid=self.eidto)
         else: # RQLExpression
             expr = self._cw.entity_from_eid(self.eidto).expression
-            MemSchemaPermRQLExpressionDel(self._cw, perm, self.eidfrom, expr)
+            MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
+                                   expr=expr)
 
 
 # specializes synchronization hooks ############################################

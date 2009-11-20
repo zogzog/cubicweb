@@ -51,8 +51,8 @@ class DeleteConfForm(forms.CompositeForm):
 
     domid = 'deleteconf'
     copy_nav_params = True
-    form_buttons = [Button(stdmsgs.YES, cwaction='delete'),
-                    Button(stdmsgs.NO, cwaction='cancel')]
+    form_buttons = [Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
+                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     @property
     def action(self):
         return self._cw.build_url('edit')
@@ -113,7 +113,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
                  "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
     _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
-    _defaultlandingzone = (u'<img title="%(msg)s" src="data/file.gif" '
+    _defaultlandingzone = (u'<img title="%(msg)s" src="data/pen_icon.png" '
                            'alt="%(msg)s"/>')
     _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
@@ -197,14 +197,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """
         w = self.w
         divid = form.event_args['divid']
-        w(u'<div id="%s-reledit" class="field">' % form.event_args['divid'])
-        w(u'<div id="%s" class="editableField" onclick="%s" title="%s">' % (
+        w(u'<div id="%s-reledit" class="field" '
+          u'onmouseout="addElementClass(jQuery(\'#%s\'), \'hidden\')" '
+          u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
+          % (divid, divid, divid))
+        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
+        w(form.form_render(renderer=renderer))
+        w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
                 divid, xml_escape(self._onclick % form.event_args),
                 self.req._(self._landingzonemsg)))
         w(lzone)
         w(u'</div>')
-        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
-        w(form.form_render(renderer=renderer))
         w(u'</div>')
 
     def _compute_best_vid(self, eschema, rschema, role):
@@ -269,10 +272,8 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         dispctrl = uicfg.primaryview_display_ctrl.etype_get(eschema, rtype, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
-            self.wview(vid, entity.related(rtype, role), 'null')
             return False
         if eschema.role_rproperty(role, rschema, 'composite') == role:
-            self.wview(rvid, entity.related(rtype, role), 'null')
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)
@@ -426,6 +427,7 @@ class TableEditForm(forms.CompositeForm):
             form = self._cw.vreg['forms'].select('edition', self._cw,
                                                  rset=self.cw_rset, row=row,
                                                  formtype='muledit',
+                                                 copy_nav_params=False,
                                                  mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
@@ -442,7 +444,9 @@ class TableEditFormView(FormViewMixIn, EntityView):
         should be the eid
         """
         #self.form_title(entity)
-        form = self._cw.vreg['forms'].select(self.__regid__, self._cw, rset=self.cw_rset)
+        form = self._cw.vreg['forms'].select(self.__regid__, self._cw,
+                                             rset=self.cw_rset,
+                                             copy_nav_params=True)
         self.w(form.form_render())
 
 
@@ -577,4 +581,3 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
         self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
           % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
         self.w(u'</div>')
-        self.w(u'<div class="trame_grise">&#160;</div>')

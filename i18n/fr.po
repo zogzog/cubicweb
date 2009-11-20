@@ -363,6 +363,9 @@ msgstr "Nombres flottants"
 msgid "From:"
 msgstr "De :"
 
+msgid "Help"
+msgstr "Aide"
+
 msgid "Int"
 msgstr "Nombre entier"
 
@@ -813,6 +816,12 @@ msgid "actions_follow"
 msgstr "suivre"
 
 msgid "actions_follow_description"
+msgstr ""
+
+msgid "actions_help"
+msgstr ""
+
+msgid "actions_help_description"
 msgstr ""
 
 msgid "actions_logout"
@@ -2037,8 +2046,9 @@ msgid ""
 "destination state. No destination state means that transition should go back "
 "to the state from which we've entered the subworkflow."
 msgstr ""
-"état de destination de la transition. Si aucun état de destination n'est spécifié, la transition "
-"ira vers l'état depuis lequel l'entité est entrée dans le sous-workflow."
+"état de destination de la transition. Si aucun état de destination n'est "
+"spécifié, la transition ira vers l'état depuis lequel l'entité est entrée "
+"dans le sous-workflow."
 
 msgid "destination_state"
 msgstr "état de destination"
@@ -3076,7 +3086,7 @@ msgid "possible views"
 msgstr "vues possibles"
 
 msgid "powered by CubicWeb"
-msgstr "utilise la technologie CubicWeb"
+msgstr "construit avec CubicWeb"
 
 msgid "prefered_form"
 msgstr "forme préférée"
@@ -3229,10 +3239,10 @@ msgstr "restreinte au groupe"
 
 msgctxt "CWGroup"
 msgid "require_group_object"
-msgstr "dé"
+msgstr "de"
 
 msgid "require_group_object"
-msgstr "à les droits"
+msgstr "a les droits"
 
 msgid "require_permission"
 msgstr "require permission"
@@ -3815,7 +3825,7 @@ msgid "update_permission_object"
 msgstr "peut modifier"
 
 msgid "update_permission_object"
-msgstr "à la permission de modifier"
+msgstr "a la permission de modifier"
 
 msgid "updated"
 msgstr ""

@@ -11,6 +11,17 @@ from logilab.common.deprecation import deprecated, class_moved
 
 from cubicweb import RepositoryError
 
+def entity_oldnewvalue(entity, attr):
+    """returns the couple (old attr value, new attr value)
+    NOTE: will only work in a before_update_entity hook
+    """
+    # get new value and remove from local dict to force a db query to
+    # fetch old value
+    newvalue = entity.pop(attr, None)
+    oldvalue = getattr(entity, attr)
+    if newvalue is not None:
+        entity[attr] = newvalue
+    return oldvalue, newvalue
 
 @deprecated('[3.6] entity_name is deprecated, use entity.name')
 def entity_name(session, eid):

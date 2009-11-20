@@ -23,12 +23,12 @@ INTERNAL_FIELD_VALUE = '__cubicweb_internal_field__'
 
 class stdmsgs(object):
     """standard ui message (in a class for bw compat)"""
-    BUTTON_OK     = _('button_ok')
-    BUTTON_APPLY  = _('button_apply')
-    BUTTON_CANCEL = _('button_cancel')
-    BUTTON_DELETE = _('button_delete')
-    YES = _('yes')
-    NO  = _('no')
+    BUTTON_OK     = (_('button_ok'), 'OK_ICON')
+    BUTTON_APPLY  = (_('button_apply'), 'APPLY_ICON')
+    BUTTON_CANCEL = (_('button_cancel'), 'CANCEL_ICON')
+    BUTTON_DELETE = (_('button_delete'), 'TRASH_ICON')
+    YES = (_('yes'), None)
+    NO  = (_('no'), None)
 
 
 def eid_param(name, eid):

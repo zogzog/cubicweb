@@ -44,38 +44,24 @@ class MetadataTC(BaseEntityTC):
                           {'description_format': ('format', 'description')})
 
 
-class CWUserTC(BaseEntityTC):
-    def test_dc_title_and_name(self):
-        e = self.entity('CWUser U WHERE U login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), 'member')
-        self.execute(u'SET X firstname "bouah" WHERE X is CWUser, X login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), u'bouah')
-        self.execute(u'SET X surname "lôt" WHERE X is CWUser, X login "member"')
-        self.assertEquals(e.dc_title(), 'member')
-        self.assertEquals(e.name(), u'bouah lôt')
-
 class EmailAddressTC(BaseEntityTC):
     def test_canonical_form(self):
         email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
         email2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com"').get_entity(0, 0)
         email3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"').get_entity(0, 0)
-        self.execute('SET X prefered_form Y WHERE X eid %s, Y eid %s' % (email1.eid, email2.eid))
+        email1.set_relations(prefered_form=email2)
         self.assertEquals(email1.prefered.eid, email2.eid)
         self.assertEquals(email2.prefered.eid, email2.eid)
         self.assertEquals(email3.prefered.eid, email3.eid)
 
     def test_mangling(self):
-        eid = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"')[0][0]
-        email = self.entity('Any X WHERE X eid %(x)s', {'x':eid}, 'x')
+        email = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
         self.assertEquals(email.display_address(), 'maarten.ter.huurne@philips.com')
         self.assertEquals(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
         self.vreg.config.global_set_option('mangle-emails', True)
         self.assertEquals(email.display_address(), 'maarten.ter.huurne at philips dot com')
         self.assertEquals(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
-        eid = self.execute('INSERT EmailAddress X: X address "syt"')[0][0]
-        email = self.entity('Any X WHERE X eid %(x)s', {'x':eid}, 'x')
+        email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
         self.assertEquals(email.display_address(), 'syt')
         self.assertEquals(email.printable_value('address'), 'syt')
 
@@ -92,6 +78,25 @@ class CWUserTC(BaseEntityTC):
         self.failIf(e.matching_groups('xyz'))
         self.failUnless(e.matching_groups(('xyz', 'managers')))
         self.failIf(e.matching_groups(('xyz', 'abcd')))
+
+    def test_dc_title_and_name(self):
+        e = self.entity('CWUser U WHERE U login "member"')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), 'member')
+        e.set_attributes(firstname=u'bouah')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), u'bouah')
+        e.set_attributes(surname=u'lôt')
+        self.assertEquals(e.dc_title(), 'member')
+        self.assertEquals(e.name(), u'bouah lôt')
+
+    def test_allowed_massmail_keys(self):
+        e = self.entity('CWUser U WHERE U login "member"')
+        # Bytes/Password attributes should be omited
+        self.assertEquals(e.allowed_massmail_keys(),
+                          set(('surname', 'firstname', 'login', 'last_login_time',
+                               'creation_date', 'modification_date', 'cwuri', 'eid'))
+                          )
 
 
 class InterfaceTC(CubicWebTC):

@@ -42,11 +42,11 @@ function updateMessage(msg) {
 }
 
 /* builds an url from an object (used as a dictionnary)
- * Notable difference with MochiKit's queryString: asURL does not
- * *url_quote* each value found in the dictionnary
  *
  * >>> asURL({'rql' : "RQL", 'x': [1, 2], 'itemvid' : "oneline"})
  * rql=RQL&vid=list&itemvid=oneline&x=1&x=2
+ * >>> asURL({'rql' : "a&b", 'x': [1, 2], 'itemvid' : "oneline"})
+ * rql=a%26b&x=1&x=2&itemvid=oneline
  */
 function asURL(props) {
     var chunks = [];
@@ -55,10 +55,10 @@ function asURL(props) {
 	// generate a list of couple key=value if key is multivalued
 	if (isArrayLike(value)) {
 	    for (var i=0; i<value.length;i++) {
-		chunks.push(key + '=' + value[i]);
+		chunks.push(key + '=' + urlEncode(value[i]));
 	    }
 	} else {
-	    chunks.push(key + '=' + value);
+	    chunks.push(key + '=' + urlEncode(value));
 	}
     }
     return chunks.join('&');

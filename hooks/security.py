@@ -25,10 +25,10 @@ def check_entity_attributes(session, entity):
     for attr in editedattrs:
         if attr in defaults:
             continue
-        rschema = eschema.subjrels[attr]
-        if rschema.final: # non final relation are checked by other hooks
+        rdef = eschema.rdef(attr)
+        if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            rschema.check_perm(session, 'add', eid)
+            rdef.check_perm(session, 'add', eid=eid)
 
 
 class _CheckEntityPermissionOp(hook.LateOperation):
@@ -43,7 +43,10 @@ class _CheckEntityPermissionOp(hook.LateOperation):
 
 class _CheckRelationPermissionOp(hook.LateOperation):
     def precommit_event(self):
-        self.rschema.check_perm(self.session, self.action, self.eidfrom, self.eidto)
+        rdef = self.rschema.rdef(self.session.describe(self.eidfrom)[0],
+                                 self.session.describe(self.eidto)[0])
+        rdef.check_perm(self.session, self.action,
+                        fromeid=self.eidfrom, toeid=self.eidto)
 
     def commit_event(self):
         pass
@@ -95,7 +98,9 @@ class BeforeAddRelationSecurityHook(SecurityHook):
             if (self.eidfrom, self.rtype, self.eidto) in nocheck:
                 return
             rschema = self._cw.repo.schema[self.rtype]
-            rschema.check_perm(self._cw, 'add', self.eidfrom, self.eidto)
+            rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
+                                self._cw.describe(self.eidto)[0])
+            rdef.check_perm(session, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 
 
 class AfterAddRelationSecurityHook(SecurityHook):
@@ -114,17 +119,7 @@ class AfterAddRelationSecurityHook(SecurityHook):
                                            eidfrom=self.eidfrom,
                                            eidto=self.eidto)
             else:
-                rschema.check_perm(self._cw, 'add', self.eidfrom, self.eidto)
-
-
-class BeforeDelRelationSecurityHook(SecurityHook):
-    __regid__ = 'securitybeforedelrelation'
-    events = ('before_delete_relation',)
-
-    def __call__(self):
-        nocheck = self._cw.transaction_data.get('skip-security', ())
-        if (self.eidfrom, self.rtype, self.eidto) in nocheck:
-            return
-        self._cw.repo.schema[self.rtype].check_perm(self._cw, 'delete',
-                                                       self.eidfrom, self.eidto)
+                rdef = rschema.rdef(session.describe(self.eidfrom)[0],
+                                    session.describe(self.eidto)[0])
+                rdef.check_perm(session, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 

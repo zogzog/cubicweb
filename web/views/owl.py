@@ -71,10 +71,15 @@ class OWLView(StartupView):
         if writeprefix:
             self.w(OWL_CLOSING_ROOT)
 
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/owl.py
     def should_display_rschema(self, rschema):
         return not rschema in self.skiptypes and (
             rschema.has_local_role('read') or
             rschema.has_perm(self._cw, 'read'))
+=======
+    def should_display_rschema(self, eschema, rschema, tschemas, role):
+        return rschema.may_have_permissions('read', self.req, eschema, role)
+>>>>>>> /tmp/owl.py~other.-maWGS
 
     def visit_schema(self, skiptypes):
         """get a layout for a whole schema"""
@@ -94,7 +99,7 @@ class OWLView(StartupView):
         self.w(u'<owl:Class rdf:ID="%s">'% eschema)
         self.w(u'<!-- relations -->')
         for rschema, targetschemas, role in eschema.relation_definitions():
-            if not self.should_display_rschema(rschema):
+            if not self.should_display_rschema(eschema, rschema, targetschemas, role):
                 continue
             for oeschema in targetschemas:
                 if role == 'subject':
@@ -112,7 +117,7 @@ class OWLView(StartupView):
 
         self.w(u'<!-- attributes -->')
         for rschema, aschema in eschema.attribute_definitions():
-            if not self.should_display_rschema(rschema):
+            if not self.should_display_rschema(eschema, rschema, (aschema,), 'subject'):
                 continue
             self.w(u'''<rdfs:subClassOf>
   <owl:Restriction>
@@ -125,7 +130,7 @@ class OWLView(StartupView):
     def visit_property_schema(self, eschema):
         """get a layout for property entity OWL schema"""
         for rschema, targetschemas, role in eschema.relation_definitions():
-            if not self.should_display_rschema(rschema):
+            if not self.should_display_rschema(eschema, rschema, targetschemas, role):
                 continue
             for oeschema in targetschemas:
                 self.w(u'''<owl:ObjectProperty rdf:ID="%s">
@@ -135,7 +140,7 @@ class OWLView(StartupView):
 
     def visit_property_object_schema(self, eschema):
         for rschema, aschema in eschema.attribute_definitions():
-            if not self.should_display_rschema(rschema):
+            if not self.should_display_rschema(eschema, rschema, (aschema,), 'subject'):
                 continue
             self.w(u'''<owl:DatatypeProperty rdf:ID="%s">
   <rdfs:domain rdf:resource="#%s"/>
@@ -174,7 +179,8 @@ class OWLABOXItemView(EntityView):
         for rschema, aschema in eschema.attribute_definitions():
             if rschema.meta:
                 continue
-            if not (rschema.has_local_role('read') or rschema.has_perm(self._cw, 'read')):
+            rdef = rschema.rdef(eschema, aschema)
+            if not rdef.may_have_permission('read', self._cw):
                 continue
             aname = rschema.type
             if aname == 'eid':
@@ -189,7 +195,12 @@ class OWLABOXItemView(EntityView):
         for rschema, targetschemas, role in eschema.relation_definitions():
             if rschema.meta:
                 continue
-            if not (rschema.has_local_role('read') or rschema.has_perm(self._cw, 'read')):
+            for tschema in targetschemas:
+                rdef = rschema.role_rdef(eschema, tschema, role)
+                if rdef.may_have_permission('read', self.req):
+                    break
+            else:
+                # no read perms to any relation of this type. Skip.
                 continue
             if role == 'object':
                 attr = 'reverse_%s' % rschema.type

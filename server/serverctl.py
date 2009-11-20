@@ -133,6 +133,9 @@ class RepositoryCreateHandler(CommandHandler):
             config.input_config('pyro', inputlevel)
         print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
+        # XXX hack to make Method('default_instance_id') usable in db option
+        # defs (in native.py)
+        Configuration.default_instance_id = staticmethod(lambda: config.appid)
         sconfig = Configuration(options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
@@ -465,6 +468,12 @@ class StartRepositoryCommand(Command):
         from cubicweb.server.server import RepositoryServer
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
+        if sys.platform == 'win32':
+            if not self.config.debug:
+                from logging import getLogger
+                logger = getLogger('cubicweb.ctl')
+                logger.info('Forcing debug mode on win32 platform')
+                self.config.debug = True
         debug = self.config.debug
         # create the server
         server = RepositoryServer(config, debug)

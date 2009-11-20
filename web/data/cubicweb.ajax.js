@@ -62,6 +62,9 @@ function postAjaxLoad(node) {
     if (typeof roundedCorners != 'undefined') {
 	roundedCorners(node);
     }
+    if (typeof setFormsTarget != 'undefined') {
+       setFormsTarget(node);
+    }
     loadDynamicFragments(node);
     // XXX simulates document.ready, but the former
     // only runs once, this one potentially many times
@@ -139,14 +142,29 @@ function loadDynamicFragments(node) {
     for(var i=0; i<fragments.length; i++) {
 	var fragment = fragments[i];
 	fragment.innerHTML = '<h3>' + LOADING_MSG + ' ... <img src="data/loading.gif" /></h3>';
+	// if cubicweb:loadurl is set, just pick the url et send it to loadxhtml
+	var url = getNodeAttribute(fragment, 'cubicweb:loadurl');
+	if (url) {
+	    jQuery(fragment).loadxhtml(url);
+	    continue;
+	}
+	// else: rebuild full url by fetching cubicweb:rql, cubicweb:vid, etc.
 	var rql = getNodeAttribute(fragment, 'cubicweb:rql');
-	var vid = getNodeAttribute(fragment, 'cubicweb:vid');
+	var items = getNodeAttribute(fragment, 'cubicweb:vid').split('&');
+	var vid = items[0];
         var extraparams = {};
+	// case where vid='myvid&param1=val1&param2=val2': this is a deprecated abuse-case
+	if (items.length > 1) {
+	    console.log("[3.5] you're using extraargs in cubicweb:vid attribute, this is deprecated, consider using loadurl instead");
+	    for (var j=1; j<items.length; j++) {
+		var keyvalue = items[j].split('=');
+		extraparams[keyvalue[0]] = keyvalue[1];
+	    }
+	}
 	var actrql = getNodeAttribute(fragment, 'cubicweb:actualrql');
 	if (actrql) { extraparams['actualrql'] = actrql; }
 	var fbvid = getNodeAttribute(fragment, 'cubicweb:fallbackvid');
 	if (fbvid) { extraparams['fallbackvid'] = fbvid; }
-
 	replacePageChunk(fragment.id, rql, vid, extraparams);
     }
 }

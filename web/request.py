@@ -27,7 +27,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
-from cubicweb.utils import SizeConstrainedList, HTMLHead
+from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
@@ -87,7 +87,20 @@ class CubicWebRequestBase(DBAPIRequest):
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
+        self.varmaker = rqlvar_maker()
         self.datadir_url = self._datadir_url()
+        self._set_pageid()
+
+    def _set_pageid(self):
+        """initialize self.pageid
+        if req.form provides a specific pageid, use it, otherwise build a
+        new one.
+        """
+        pid = self.form.get('pageid')
+        if pid is None:
+            pid = make_uid(id(self))
+        self.pageid = pid
+        self.html_headers.define_var('pageid', pid, override=False)
 
     @property
     def varmaker(self):

@@ -149,14 +149,16 @@ url: %(url)s
         changes = self.req.transaction_data['changes'][self.rset[0][0]]
         _ = self.req._
         formatted_changes = []
+        entity = self.entity(self.row or 0, self.col or 0)
         for attr, oldvalue, newvalue in sorted(changes):
             # check current user has permission to see the attribute
             rschema = self.vreg.schema[attr]
             if rschema.final:
-                if not rschema.has_perm(self.req, 'read', eid=self.rset[0][0]):
+                rdef = entity.e_schema.rdef(rschema)
+                if not rdef.has_perm(self.req, 'read', eid=self.rset[0][0]):
                     continue
             # XXX suppose it's a subject relation...
-            elif not rschema.has_perm(self.req, 'read', fromeid=self.rset[0][0]):
+            elif not rschema.has_perm(self.req, 'read', fromeid=self.rset[0][0]): # XXX toeid
                 continue
             if attr in self.no_detailed_change_attrs:
                 msg = _('%s updated') % _(attr)

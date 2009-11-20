@@ -34,7 +34,10 @@ userwf.add_transition(_('activate'), (deactivated,), activated,
 # create anonymous user if all-in-one config and anonymous user has been specified
 if hasattr(config, 'anonymous_user'):
     anonlogin, anonpwd = config.anonymous_user()
-    if anonlogin:
+    if anonlogin == session.user.login:
+        print 'you are using a manager account as anonymous user.'
+        print 'Hopefully this is not a production instance...'
+    elif anonlogin:
         rql('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s,'
             'X in_group G WHERE G name "guests"',
             {'login': unicode(anonlogin), 'pwd': anonpwd})

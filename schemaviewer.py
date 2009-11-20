@@ -13,6 +13,7 @@ from yams.schema2dot import CARD_MAP
 
 I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
 
+
 class SchemaViewer(object):
     """return an ureport layout for some part of a schema"""
     def __init__(self, req=None, encoding=None):
@@ -68,7 +69,8 @@ class SchemaViewer(object):
         _ = self.req._
         data = [_('attribute'), _('type'), _('default'), _('constraints')]
         for rschema, aschema in eschema.attribute_definitions():
-            if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
+            rdef = eschema.rdef(rschema)
+            if not rdef.may_have_permission('read', self.req):
                 continue
             aname = rschema.type
             if aname == 'eid':
@@ -78,7 +80,7 @@ class SchemaViewer(object):
             defaultval = eschema.default(aname)
             if defaultval is not None:
                 default = self.to_string(defaultval)
-            elif eschema.rproperty(rschema, 'cardinality')[0] == '1':
+            elif rdef.cardinality[0] == '1':
                 default = _('required field')
             else:
                 default = ''
@@ -119,20 +121,23 @@ class SchemaViewer(object):
         t_vars = []
         rels = []
         first = True
-        for rschema, targetschemas, x in eschema.relation_definitions():
+        for rschema, targetschemas, role in eschema.relation_definitions():
             if rschema.type in skiptypes:
-                continue
-            if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue
             rschemaurl = self.rschema_link_url(rschema)
             for oeschema in targetschemas:
+                rdef = rschema.role_rdef(eschema, oeschema, role)
+                if not rdef.may_have_permission('read', self.req):
+                    continue
                 label = rschema.type
-                if x == 'subject':
+                if role == 'subject':
                     cards = rschema.rproperty(eschema, oeschema, 'cardinality')
                 else:
                     cards = rschema.rproperty(oeschema, eschema, 'cardinality')
                     cards = cards[::-1]
-                label = '%s %s (%s) %s' % (CARD_MAP[cards[1]], label, display_name(self.req, label, x), CARD_MAP[cards[0]])
+                label = '%s %s (%s) %s' % (CARD_MAP[cards[1]], label,
+                                           display_name(self.req, label, role),
+                                           CARD_MAP[cards[0]])
                 rlink = Link(rschemaurl, label)
                 elink = Link(self.eschema_link_url(oeschema), oeschema.type)
                 if first:

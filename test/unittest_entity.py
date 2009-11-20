@@ -56,7 +56,7 @@ class EntityTC(CubicWebTC):
     def test_copy_with_nonmeta_composite_inlined(self):
         p = self.add_entity('Personne', nom=u'toto')
         oe = self.add_entity('Note', type=u'x')
-        self.schema['ecrit_par'].set_rproperty('Note', 'Personne', 'composite', 'subject')
+        self.schema['ecrit_par'].rdef('Note', 'Personne').composite = 'subject'
         self.execute('SET T ecrit_par U WHERE T eid %(t)s, U eid %(u)s',
                      {'t': oe.eid, 'u': p.eid}, ('t','u'))
         e = self.add_entity('Note', type=u'z')
@@ -120,10 +120,10 @@ class EntityTC(CubicWebTC):
         Note = self.vreg['etypes'].etype_class('Note')
         peschema = Personne.e_schema
         seschema = Societe.e_schema
-        peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '1*')
-        peschema.subjrels['connait'].set_rproperty(peschema, peschema, 'cardinality', '11')
-        peschema.subjrels['evaluee'].set_rproperty(peschema, Note.e_schema, 'cardinality', '1*')
-        seschema.subjrels['evaluee'].set_rproperty(seschema, Note.e_schema, 'cardinality', '1*')
+        peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '1*'
+        peschema.subjrels['connait'].rdef(peschema, peschema).cardinality = '11'
+        peschema.subjrels['evaluee'].rdef(peschema, Note.e_schema).cardinality = '1*'
+        seschema.subjrels['evaluee'].rdef(seschema, Note.e_schema).cardinality = '1*'
         # testing basic fetch_attrs attribute
         self.assertEquals(Personne.fetch_rql(user),
                           'Any X,AA,AB,AC ORDERBY AA ASC '
@@ -158,13 +158,13 @@ class EntityTC(CubicWebTC):
             self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
                               'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
-            peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '?*')
+            peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '?*'
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom',)
             self.assertEquals(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing relation with cardinality > 1
-            peschema.subjrels['travaille'].set_rproperty(peschema, seschema, 'cardinality', '**')
+            peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '**'
             self.assertEquals(Personne.fetch_rql(user),
                               'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB')
             # XXX test unauthorized attribute
@@ -231,6 +231,14 @@ class EntityTC(CubicWebTC):
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
         #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
+
+    def test_unrelated_rql_security_nonexistant(self):
+        self.login('anon')
+        email = self.vreg['etypes'].etype_class('EmailAddress')(self.request())
+        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+                          'WHERE S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                          'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
     def test_unrelated_base(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')

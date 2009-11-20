@@ -30,22 +30,29 @@ class BreadCrumbEntityVComponent(Component):
     title = _('contentnavigation_breadcrumbs')
     help = _('contentnavigation_breadcrumbs_description')
     separator = u'&#160;&gt;&#160;'
+    link_template = u'<a href="%s">%s</a>'
 
     def call(self, view=None, first_separator=True):
         entity = self.cw_rset.get_entity(0, 0)
         path = entity.breadcrumbs(view)
         if path:
-            self.w(u'<span id="breadcrumbs" class="pathbar">')
+            self.open_breadcrumbs()
             if first_separator:
                 self.w(self.separator)
             self.render_breadcrumbs(entity, path)
-            self.w(u'</span>')
+            self.close_breadcrumbs()
+
+    def open_breadcrumbs(self):
+        self.w(u'<span id="breadcrumbs" class="pathbar">')
+
+    def close_breadcrumbs(self):
+        self.w(u'</span>')
 
     def render_breadcrumbs(self, contextentity, path):
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.__regid__),
-                                             root.dc_type('plural')))
+            self.w(self.link_template % (self._cw.build_url(root.__regid__),
+                                         root.dc_type('plural')))
             self.w(self.separator)
         self.wpath_part(root, contextentity, not path)
         for i, parent in enumerate(path):
@@ -62,7 +69,7 @@ class BreadCrumbEntityVComponent(Component):
         elif isinstance(part, tuple):
             url, title = part
             textsize = self._cw.property_value('navigation.short-line-size')
-            self.w(u'<a href="%s">%s</a>' % (
+            self.w(self.link_template % (
                 xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
             textsize = self._cw.property_value('navigation.short-line-size')

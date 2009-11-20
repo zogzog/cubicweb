@@ -18,6 +18,7 @@ class tag(object):
         attrs.setdefault('escapecontent', self.escapecontent)
         return simple_sgml_tag(self.name, __content, **attrs)
 
+button = tag('button')
 input = tag('input')
 textarea = tag('textarea')
 a = tag('a')
@@ -31,6 +32,9 @@ h2 = tag('h2')
 h3 = tag('h3')
 h4 = tag('h4')
 h5 = tag('h5')
+tr = tag('tr')
+th = tag('th')
+td = tag('td')
 
 def select(name, id=None, multiple=False, options=[], **attrs):
     if multiple:

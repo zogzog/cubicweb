@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+import os
 import sys
 import os
 from itertools import chain
@@ -256,7 +257,7 @@ def set_perms(erschema, permsdict):
                 actperms.append(erschema.rql_expression(*something))
             else: # group name
                 actperms.append(something)
-        erschema.set_permissions(action, actperms)
+        erschema.set_action_permissions(action, actperms)
 
 
 def deserialize_rdef_constraints(session):
@@ -516,25 +517,51 @@ def perms2rql(schema, groupmapping):
         yield erperms2rql(schema[rtype], groupmapping)
 
 def erperms2rql(erschema, groupmapping):
+    if hasattr(erschema, 'iter_rdefs'):
+        # relation schema
+        if erschema.final:
+            etype = 'CWAttribute'
+        else:
+            etype = 'CWRelation'
+        for subject, object in erschema.iter_rdefs():
+            permissions = erschema.rproperty(subject, object, 'permissions')
+            for rql, args in _erperms2rql(erschema.rproperties(subject, object),
+                                          groupmapping):
+                args['st'] = str(subject)
+                args['rt'] = str(erschema)
+                args['ot'] = str(object)
+                yield rql + 'X is %s, X from_entity ST, X to_entity OT, '\
+                      'X relation_type RT, RT name %%(rt)s, ST name %%(st)s, '\
+                      'OT name %%(ot)s' % etype, args
+    else:
+        # entity schema
+        for rql, args in _erperms2rql(erschema, groupmapping):
+            args['name'] = str(eschema)
+            yield rql + 'X is CWEType, X name %(name)s', args
+
+def _erperms2rql(erschema, groupmapping):
     """return rql insert statements to enter the entity or relation
     schema's permissions in the database as
     [read|add|delete|update]_permission relations between CWEType/CWRType
     and CWGroup entities
     """
-    etype = isinstance(erschema, schemamod.EntitySchema) and 'CWEType' or 'CWRType'
     for action in erschema.ACTIONS:
-        for group in sorted(erschema.get_groups(action)):
-            try:
-                yield ('SET X %s_permission Y WHERE X is %s, X name "%s", Y eid %s'
-                       % (action, etype, erschema, groupmapping[group]), None)
-            except KeyError:
-                continue
-        for rqlexpr in sorted(erschema.get_rqlexprs(action)):
-            yield ('INSERT RQLExpression E: E expression %%(e)s, E exprtype %%(t)s, '
-                   'E mainvars %%(v)s, X %s_permission E '
-                   'WHERE X is %s, X name "%s"' % (action, etype, erschema),
-                   {'e': unicode(rqlexpr.expression), 'v': unicode(rqlexpr.mainvars),
-                    't': unicode(rqlexpr.__class__.__name__)})
+        for group_or_rqlexpr in erschema.action_permissions(action):
+            if isinstance(group_or_rqlexpr, basestring):
+                # group
+                try:
+                    yield ('SET X %s_permission Y WHERE Y eid %%(g)s' % action,
+                           {'g': groupmapping[group_or_rqlexpr]})
+                except KeyError:
+                    continue
+            else:
+                # rqlexpr
+                rqlexpr = group_or_rqlexpr
+                yield ('INSERT RQLExpression E: E expression %%(e)s, E exprtype %%(t)s, '
+                       'E mainvars %%(v)s, X %s_permission E WHERE ' % action,
+                       {'e': unicode(rqlexpr.expression),
+                        'v': unicode(rqlexpr.mainvars),
+                        't': unicode(rqlexpr.__class__.__name__)})
 
 
 def updateeschema2rql(eschema):

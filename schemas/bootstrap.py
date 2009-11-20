@@ -17,7 +17,7 @@ from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
 # access to this
 class CWEType(EntityType):
     """define an entity type, used to build the instance schema"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
@@ -28,7 +28,7 @@ class CWEType(EntityType):
 
 class CWRType(EntityType):
     """define a relation type, used to build the instance schema"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
@@ -48,7 +48,7 @@ class CWAttribute(EntityType):
 
     used to build the instance schema
     """
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final TRUE')],
                                     composite='object')
@@ -85,7 +85,7 @@ class CWRelation(EntityType):
 
     used to build the instance schema
     """
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final FALSE')],
                                     composite='object')
@@ -115,8 +115,8 @@ class CWRelation(EntityType):
 
 # not restricted since it has to be read when checking allowed transitions
 class RQLExpression(EntityType):
-    """define a rql expression used to define permissions"""
-    permissions = META_ETYPE_PERMS
+    """define a rql expression used to define __permissions__"""
+    __permissions__ = META_ETYPE_PERMS
     exprtype = String(required=True, vocabulary=['ERQLExpression', 'RRQLExpression'])
     mainvars = String(maxsize=8,
                       description=_('name of the main variables which should be '
@@ -131,11 +131,11 @@ class RQLExpression(EntityType):
                                       'relation\'subject, object and to '
                                       'the request user. '))
 
-    read_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='+?', composite='subject',
+    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='+?', composite='subject',
                                       description=_('rql expression allowing to read entities/relations of this type'))
-    add_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='*?', composite='subject',
+    add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
                                      description=_('rql expression allowing to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='*?', composite='subject',
+    delete_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
                                         description=_('rql expression allowing to delete entities/relations of this type'))
     update_permission = ObjectRelation('CWEType', cardinality='*?', composite='subject',
                                         description=_('rql expression allowing to update entities of this type'))
@@ -143,14 +143,14 @@ class RQLExpression(EntityType):
 
 class CWConstraint(EntityType):
     """define a schema constraint"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     cstrtype = SubjectRelation('CWConstraintType', cardinality='1*')
     value = String(description=_('depends on the constraint type'))
 
 
 class CWConstraintType(EntityType):
     """define a schema constraint type"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
@@ -158,15 +158,15 @@ class CWConstraintType(EntityType):
 # not restricted since it has to be read when checking allowed transitions
 class CWGroup(EntityType):
     """define a CubicWeb users group"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
-    read_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='+*',
+    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='+*',
                                       description=_('groups allowed to read entities/relations of this type'))
-    add_permission = ObjectRelation(('CWEType', 'CWRType'),
+    add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'),
                                      description=_('groups allowed to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('CWEType', 'CWRType'),
+    delete_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'),
                                         description=_('groups allowed to delete entities/relations of this type'))
     update_permission = ObjectRelation('CWEType',
                                         description=_('groups allowed to update entities of this type'))
@@ -192,50 +192,50 @@ class CWProperty(EntityType):
 
 class relation_type(RelationType):
     """link a relation definition to its relation type"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class from_entity(RelationType):
     """link a relation definition to its subject entity type"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class to_entity(RelationType):
     """link a relation definition to its object entity type"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class constrained_by(RelationType):
     """constraints applying on this relation"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class cstrtype(RelationType):
     """constraint factory"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class read_permission(RelationType):
     """core relation giving to a group the permission to read an entity or
     relation type
     """
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class add_permission(RelationType):
     """core relation giving to a group the permission to add an entity or
     relation type
     """
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class delete_permission(RelationType):
     """core relation giving to a group the permission to delete an entity or
     relation type
     """
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class update_permission(RelationType):
     """core relation giving to a group the permission to update an entity type
     """
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 
 class is_(RelationType):
@@ -244,7 +244,7 @@ class is_(RelationType):
     name = 'is'
     # don't explicitly set composite here, this is handled anyway
     #composite = 'object'
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    (),
         'delete': (),
@@ -259,7 +259,7 @@ class is_instance_of(RelationType):
     """
     # don't explicitly set composite here, this is handled anyway
     #composite = 'object'
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    (),
         'delete': (),
@@ -270,7 +270,7 @@ class is_instance_of(RelationType):
 
 class specializes(RelationType):
     name = 'specializes'
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),
         'delete': ('managers',),

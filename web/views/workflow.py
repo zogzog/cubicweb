@@ -16,13 +16,14 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
-                                relation_possible, match_form_params)
+                                relation_possible, match_form_params,
+                                entity_implements)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
-from cubicweb.web.views import TmpFileViewMixin, forms, primary
+from cubicweb.web.views import TmpFileViewMixin, forms, primary, autoform
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
@@ -50,8 +51,8 @@ class ChangeStateForm(forms.CompositeEntityForm):
     __regid__ = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
-    form_buttons = [fwdgs.SubmitButton(stdmsgs.YES),
-                    fwdgs.Button(stdmsgs.NO, cwaction='cancel')]
+    form_buttons = [fwdgs.SubmitButton(),
+                    fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
 
 
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
@@ -169,6 +170,31 @@ class WorkflowActions(action.Action):
 
 # workflow entity types views ##################################################
 
+_pvs = uicfg.primaryview_section
+_pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
+_pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+
+_abaa = uicfg.actionbox_appearsin_addmenu
+_abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
+_abaa.tag_subject_of(('State', 'allowed_transition', 'BaseTransition'), False)
+_abaa.tag_object_of(('SubWorkflowExitPoint', 'destination_state', 'State'),
+                    False)
+_abaa.tag_object_of(('State', 'state_of', 'Workflow'), True)
+_abaa.tag_object_of(('BaseTransition', 'transition_of', 'Workflow'), False)
+_abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
+_abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
+
+class WorkflowPrimaryView(primary.PrimaryView):
+    __select__ = implements('Workflow')
+
+    def render_entity_attributes(self, entity):
+        self.w(entity.view('reledit', rtype='description'))
+        self.w(u'<img src="%s" alt="%s"/>' % (
+            xml_escape(entity.absolute_url(vid='wfgraph')),
+            xml_escape(self.req._('graphical workflow for %s') % entity.name)))
+
+
 class CellView(view.EntityView):
     __regid__ = 'cell'
     __select__ = implements('TrInfo')
@@ -187,14 +213,53 @@ class StateInContextView(view.EntityView):
                                         row=row, col=col)))
 
 
-class WorkflowPrimaryView(primary.PrimaryView):
-    __select__ = implements('Workflow')
+# workflow entity types edition ################################################
 
-    def render_entity_attributes(self, entity):
-        self.w(entity.view('reledit', rtype='description'))
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(entity.absolute_url(vid='wfgraph')),
-            xml_escape(self._cw._('graphical workflow for %s') % entity.name)))
+_afs = uicfg.autoform_section
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'generated')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'generated')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
+_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'primary')
+
+def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
+    wf = req.entity_from_eid(wfeid)
+    rschema = req.vreg.schema[targetrelation]
+    return sorted((e.view('combobox'), e.eid)
+                  for e in getattr(wf, 'reverse_%s' % wfrelation)
+                  if rschema.has_perm(req, 'add', toeid=e.eid))
+
+
+class TransitionEditionForm(autoform.AutomaticEntityForm):
+    __select__ = entity_implements('Transition')
+
+    def workflow_states_for_relation(self, targetrelation):
+        eids = self.edited_entity.linked_to('transition_of', 'subject')
+        if eids:
+            return workflow_items_for_relation(self.req, eids[0], 'state_of',
+                                               targetrelation)
+        return []
+
+    def subject_destination_state_vocabulary(self, rtype, limit=None):
+        if not self.edited_entity.has_eid():
+            return self.workflow_states_for_relation('destination_state')
+        return self.subject_relation_vocabulary(rtype, limit)
+
+    def object_allowed_transition_vocabulary(self, rtype, limit=None):
+        if not self.edited_entity.has_eid():
+            return self.workflow_states_for_relation('allowed_transition')
+        return self.subject_relation_vocabulary(rtype, limit)
+
+
+class StateEditionForm(autoform.AutomaticEntityForm):
+    __select__ = entity_implements('State')
+
+    def subject_allowed_transition_vocabulary(self, rtype, limit=None):
+        if not self.edited_entity.has_eid():
+            eids = self.edited_entity.linked_to('state_of', 'subject')
+            if eids:
+                return workflow_items_for_relation(self.req, eids[0], 'transition_of',
+                                                   'allowed_transition')
+        return []
 
 
 # workflow images ##############################################################

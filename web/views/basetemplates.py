@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
-from cubicweb.utils import make_uid, UStringIO, can_do_pdf_conversion
+from cubicweb.utils import UStringIO, can_do_pdf_conversion
 from cubicweb.schema import display_name
 
 # main templates ##############################################################
@@ -315,7 +315,6 @@ class HTMLHeader(View):
         self.stylesheets()
         self.javascripts()
         self.alternates()
-        self.pageid()
 
     def favicon(self):
         favicon = self._cw.external_resource('FAVICON', None)
@@ -342,12 +341,6 @@ class HTMLHeader(View):
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
                        %  xml_escape(urlgetter.feed_url()))
-
-    def pageid(self):
-        req = self._cw
-        pid = make_uid(id(req))
-        req.pageid = pid
-        req.html_headers.define_var('pageid', pid)
 
 
 class HTMLPageHeader(View):
@@ -387,11 +380,6 @@ class HTMLPageHeader(View):
             'loggeduserlink', self._cw, rset=self.cw_rset)
         if comp and comp.cw_propval('visible'):
             comp.render(w=self.w)
-        self.w(u'</td><td>')
-        helpcomp = self._cw.vreg['components'].select_or_none(
-            'help', self._cw, rset=self.cw_rset)
-        if helpcomp and helpcomp.cw_propval('visible'):
-            helpcomp.render(w=self.w)
         self.w(u'</td>')
         # lastcolumn
         self.w(u'<td id="lastcolumn">')
@@ -417,7 +405,7 @@ class HTMLPageHeader(View):
 
 
 class HTMLPageFooter(View):
-    """default html page footer: include logo if any, and close the HTML body
+    """default html page footer: include footer actions
     """
     __regid__ = 'footer'
 

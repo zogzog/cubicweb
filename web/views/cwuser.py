@@ -16,6 +16,14 @@ from cubicweb.web.views import primary
 
 uicfg.primaryview_section.tag_attribute(('CWUser', 'login'), 'hidden')
 
+uicfg.primaryview_section.tag_attribute(('CWGroup', 'name'), 'hidden')
+uicfg.primaryview_section.tag_subject_of(('CWGroup', 'read_permission', '*'), 'relations')
+uicfg.primaryview_section.tag_subject_of(('CWGroup', 'add_permission', '*'), 'relations')
+uicfg.primaryview_section.tag_subject_of(('CWGroup', 'delete_permission', '*'), 'relations')
+uicfg.primaryview_section.tag_subject_of(('CWGroup', 'update_permission', '*'), 'relations')
+uicfg.primaryview_section.tag_object_of(('*', 'in_group', 'CWGroup'), 'relations')
+uicfg.primaryview_section.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
+
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'
     __select__ = (one_line_rset() & implements('CWUser') &

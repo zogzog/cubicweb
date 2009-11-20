@@ -38,6 +38,8 @@ SEARCH_GO =  DATADIR/go.png
 
 #FCKEDITOR_PATH = /usr/share/fckeditor/
 
+PUCE_UP = DATADIR/puce_up.png
+PUCE_DOWN = DATADIR/puce_down.png
 
 # icons for entity types
 BOOKMARK_ICON = DATADIR/icon_bookmark.gif
@@ -53,3 +55,8 @@ DOWNLOAD_ICON = DATADIR/download.gif
 UPLOAD_ICON = DATADIR/upload.gif
 GMARKER_ICON = DATADIR/gmap_blue_marker.png
 UP_ICON = DATADIR/up.gif
+
+OK_ICON = DATADIR/ok.png
+CANCEL_ICON = DATADIR/cancel.png
+APPLY_ICON = DATADIR/plus.png
+TRASH_ICON = DATADIR/trash_can_small.png

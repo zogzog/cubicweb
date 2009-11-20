@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import any
 
+from rql import BadRQLQuery
 from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent
 
@@ -177,10 +178,20 @@ def _select_main_var(relations):
     """given a list of rqlst relations, select one which will be used as main
     relation for the rhs variable
     """
-    for rel in relations:
+    principal = None
+    # sort for test predictability
+    for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
+        # only equality relation with a variable as rhs may be principal
+        if rel.operator() not in ('=', 'IS') \
+               or not isinstance(rel.children[1].children[0], VariableRef):
+            continue
         if rel.sqlscope is rel.stmt:
             return rel
         principal = rel
+    if principal is None:
+        print iter(relations).next().root
+        raise BadRQLQuery('unable to find principal in %s' % ', '.join(
+            r.as_string() for r in relations))
     return principal
 
 

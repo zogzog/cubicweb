@@ -131,8 +131,8 @@ class ViewController(Controller):
                 req.set_message(req._("You have no access to this view or it can not "
                                       "be used to display the current data."))
             self.warning("the view %s can not be applied to this query", vid)
-            vid = vid_from_rset(req, rset, self._cw.vreg.schema)
-            view = self._cw.vreg['views'].select(vid, req, rset=rset)
+            vid = req.form.get('fallbackvid') or vid_from_rset(req, rset, req.vreg.schema)
+            view = req.vreg['views'].select(vid, req, rset=rset)
         return view, rset
 
     def add_to_breadcrumbs(self, view):
@@ -249,8 +249,12 @@ class JSonController(Controller):
         note: it's the responsability of js_* methods to set the correct
         response content type
         """
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/basecontrollers.py
         self._cw.json_request = True
         self._cw.pageid = self._cw.form.get('pageid')
+=======
+        self.req.json_request = True
+>>>>>>> /tmp/basecontrollers.py~other.K2YVFx
         try:
             fname = self._cw.form['fname']
             func = getattr(self, 'js_%s' % fname)

@@ -11,13 +11,15 @@ from logilab.common.testlib import mock_object
 from rql import parse, nodes, RQLHelper
 
 from cubicweb import Unauthorized
+from cubicweb.schema import RRQLExpression
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
 config = TestServerConfiguration('data/rewrite')
 config.bootstrap_cubes()
 schema = config.load_schema()
-schema.add_relation_def(mock_object(subject='Card', name='in_state', object='State', cardinality='1*'))
+from yams.buildobjs import RelationDefinition
+schema.add_relation_def(RelationDefinition(subject='Card', name='in_state', object='State', cardinality='1*'))
 
 rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
                                                  'has_text': 'fti'})
@@ -32,7 +34,7 @@ def eid_func_map(eid):
     return {1: 'CWUser',
             2: 'Card'}[eid]
 
-def rewrite(rqlst, snippets_map, kwargs):
+def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
     class FakeVReg:
         schema = schema
         @staticmethod
@@ -47,12 +49,15 @@ def rewrite(rqlst, snippets_map, kwargs):
                 rqlhelper.simplify(rqlst, needcopy)
     rewriter = RQLRewriter(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
     for v, snippets in snippets_map.items():
-        snippets_map[v] = [mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
-                                       expression='Any X WHERE '+snippet)
+        snippets_map[v] = [isinstance(snippet, basestring)
+                           and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
+                                           expression='Any X WHERE '+snippet)
+                           or snippet
                            for snippet in snippets]
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
     solutions = rqlst.children[0].solutions
-    rewriter.rewrite(rqlst.children[0], snippets_map.items(), solutions, kwargs)
+    rewriter.rewrite(rqlst.children[0], snippets_map.items(), solutions, kwargs,
+                     existingvars)
     test_vrefs(rqlst.children[0])
     return rewriter.rewritten
 
@@ -240,6 +245,61 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any X,C WHERE X? documented_by C, C is Card WITH X BEING (Any X WHERE X concerne A, X is Affaire)")
 
+
+    def test_rrqlexpr_nonexistant_subject_1(self):
+        constraint = RRQLExpression('S owned_by U')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u"Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)")
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u"Any C WHERE C is Card")
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SOU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u"Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)")
+
+    def test_rrqlexpr_nonexistant_subject_2(self):
+        constraint = RRQLExpression('S owned_by U, O owned_by U, O is Card')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             'Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             'Any C WHERE C is Card, B eid %(D)s, EXISTS(A owned_by B, A is Card)')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SOU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             'Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A, D owned_by A, D is Card)')
+
+    def test_rrqlexpr_nonexistant_subject_3(self):
+        constraint = RRQLExpression('U in_group G, G name "users"')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", D is CWGroup)')
+
+    def test_rrqlexpr_nonexistant_subject_4(self):
+        constraint = RRQLExpression('U in_group G, G name "users", S owned_by U')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", C owned_by A, D is CWGroup)')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", D is CWGroup)')
+
+    def test_rrqlexpr_nonexistant_subject_5(self):
+        constraint = RRQLExpression('S owned_by Z, O owned_by Z, O is Card')
+        rqlst = parse('Card C')
+        rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'S')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u"Any C WHERE C is Card, EXISTS(C owned_by A, A is CWUser)")
 
 
 if __name__ == '__main__':

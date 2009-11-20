@@ -46,7 +46,8 @@ class PrimaryView(EntityView):
 
     def render_entity(self, entity):
         self.render_entity_title(entity)
-        self.render_entity_metadata(entity)
+        # XXX uncomment this in 3.6
+        #self.render_entity_toolbox(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
         boxes = self._prepare_side_boxes(entity)
@@ -87,10 +88,13 @@ class PrimaryView(EntityView):
         """default implementation return dc_title"""
         title = xml_escape(entity.dc_title())
         if title:
-            self.w(u'<h1><span class="etype">%s</span> %s</h1>'
-                   % (entity.dc_type().capitalize(), title))
+            self.w(u'<h1>%s</h1>' % title)
+
+    def render_entity_toolbox(self, entity):
+        self.content_navigation_components('ctxtoolbar')
 
     def render_entity_metadata(self, entity):
+        # XXX deprecated
         entity.view('metadata', w=self.w)
 
     def render_entity_summary(self, entity):
@@ -103,7 +107,11 @@ class PrimaryView(EntityView):
         return u''
 
     def render_entity_attributes(self, entity, siderelations=None):
-        for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
+        entity_attributes = self._section_def(entity, 'attributes')
+        if not entity_attributes:
+            return
+        self.w(u'<table>')
+        for rschema, tschemas, role, dispctrl in entity_attributes:
             vid = dispctrl.get('vid', 'reledit')
             if rschema.final or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
@@ -115,7 +123,8 @@ class PrimaryView(EntityView):
                     value = None
             if self.skip_none and (value is None or value == ''):
                 continue
-            self._render_attribute(rschema, value)
+            self._render_attribute(rschema, value, role=role, table=True)
+        self.w(u'</table>')
 
     def render_entity_relations(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
@@ -191,13 +200,13 @@ class PrimaryView(EntityView):
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
-    def _render_attribute(self, rschema, value, role='subject'):
+    def _render_attribute(self, rschema, value, role='subject', table=False):
         if rschema.final:
             show_label = self.show_attr_label
         else:
             show_label = self.show_rel_label
         label = display_name(self._cw, rschema.type, role)
-        self.field(label, value, show_label=show_label, tr=False)
+        self.field(label, value, show_label=show_label, tr=False, table=table)
 
 
 class RelatedView(EntityView):
@@ -223,7 +232,7 @@ class RelatedView(EntityView):
         # else show links to display related entities
         else:
             rql = self.cw_rset.printable_rql()
-            self.cw_rset.limit(maxrelated) # remove extra entity
+            self.cw_rset.limit(limit) # remove extra entity
             self.w(u'<div>')
             self.wview('simplelist', self.cw_rset)
             self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
@@ -232,18 +241,20 @@ class RelatedView(EntityView):
 
 ## default primary ui configuration ###########################################
 
+_pvs = uicfg.primaryview_section
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
               'is', 'is_instance_of', 'identity',
               'owned_by', 'created_by', 'in_state',
               'wf_info_for', 'by_transition', 'from_state', 'to_state',
               'require_permission', 'from_entity', 'to_entity',
               'see_also'):
-    uicfg.primaryview_section.tag_subject_of(('*', rtype, '*'), 'hidden')
-    uicfg.primaryview_section.tag_object_of(('*', rtype, '*'), 'hidden')
-uicfg.primaryview_section.tag_subject_of(('*', 'use_email', '*'), 'attributes')
-uicfg.primaryview_section.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
+    _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
+    _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+
+_pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
+_pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 for attr in ('name', 'final'):
-    uicfg.primaryview_section.tag_attribute(('CWEType', attr), 'hidden')
+    _pvs.tag_attribute(('CWEType', attr), 'hidden')
 for attr in ('name', 'final', 'symetric', 'inlined'):
-    uicfg.primaryview_section.tag_attribute(('CWRType', attr), 'hidden')
+    _pvs.tag_attribute(('CWRType', attr), 'hidden')

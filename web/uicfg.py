@@ -113,30 +113,24 @@ from cubicweb.schema import META_RTYPES
 from cubicweb.web import formwidgets
 
 
-def card_from_role(card, role):
-    if role == 'subject':
-        return card[0]
-    assert role in ('object', 'sobject'), repr(role)
-    return card[1]
-
 # primary view configuration ##################################################
 
 def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
-        composed = rschema.rproperty(sschema, oschema, 'composite') == neg_role(role)
+        rdef = rschema.rdef(sschema, oschema)
         if rschema.final:
             if rschema.meta or sschema.is_metadata(rschema) \
                     or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
             else:
                 section = 'attributes'
-        elif card in '1+':
-            section = 'attributes'
-        elif composed:
-            section = 'relations'
         else:
-            section = 'sideboxes'
+            if rdef.role_cardinality(role) in '1+':
+                section = 'attributes'
+            elif rdef.composite == neg_role(role):
+                section = 'relations'
+            else:
+                section = 'sideboxes'
         rtag.tag_relation((sschema, rschema, oschema, role), section)
 
 primaryview_section = RelationTags('primaryview_section',
@@ -200,6 +194,8 @@ class InitializableDict(dict):
 
     def init(self, schema, check=True):
         for eschema in schema.entities():
+            if eschema.final:
+                continue
             if eschema.schema_entity():
                 self.setdefault(eschema, 'schema')
             elif eschema.is_subobject(strict=True):
@@ -357,12 +353,18 @@ class AutoformSectionRelationTags(RelationTagsSet):
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             # check category first, potentially lower cost than checking
             # permission which may imply rql queries
-            if tag is not None:
-                targetschemas = [tschema for tschema in targetschemas
-                                 if tag in self.etype_get(eschema, rschema,
-                                                          role, tschema)]
-            if not targetschemas:
+            _targetschemas = []
+            for tschema in targetschemas:
+                if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
+                        continue
+                    rdef = rschema.role_rdef(eschema, tschema, role)
+                    if not ((not strict and rdef.has_local_role(permission)) or
+                            rdef.has_perm(entity.req, permission, fromeid=eid)):
+                        continue
+                    _targetschemas.append(tschema)
+            if not _targetschemas:
                 continue
+            targetschemas = _targetschemas
             if permission is not None:
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
@@ -371,12 +373,9 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.final:
-                    if not rschema.has_perm(entity._cw, permission, eid):
+                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, eid):
                         continue
                 elif role == 'subject':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity._cw, permission, fromeid=eid)):
-                        continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
@@ -386,9 +385,6 @@ class AutoformSectionRelationTags(RelationTagsSet):
                                                  toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity._cw, permission, toeid=eid)):
-                        continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
@@ -421,9 +417,8 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
         if rschema in META_RTYPES:
             rtag.tag_relation((sschema, rschema, oschema, role), False)
             return
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[role == 'object']
-        if not card in '?1' and \
-               rschema.rproperty(sschema, oschema, 'composite') == role:
+        rdef = rschema.rdef(sschema, oschema)
+        if not rdef.role_cardinality(role) in '?1' and rdef.composite == role:
             rtag.tag_relation((sschema, rschema, oschema, role), True)
 
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',

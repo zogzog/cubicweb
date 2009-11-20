@@ -18,12 +18,14 @@ from datetime import datetime
 from base64 import b64decode, b64encode
 
 from logilab.common.cache import Cache
-from logilab.common.configuration import REQUIRED
+from logilab.common.configuration import Method
 from logilab.common.adbh import get_adv_func_helper
+from logilab.common.shellutils import getlogin
 
 from indexer import get_indexer
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
+from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
@@ -115,13 +117,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           }),
         ('db-name',
          {'type' : 'string',
-          'default': REQUIRED,
+          'default': Method('default_instance_id'),
           'help': 'database name',
           'group': 'native-source', 'inputlevel': 0,
           }),
         ('db-user',
          {'type' : 'string',
-          'default': 'cubicweb',
+          'default': CubicWebNoAppConfiguration.mode == 'user' and getlogin() or 'cubicweb',
           'help': 'database user',
           'group': 'native-source', 'inputlevel': 0,
           }),

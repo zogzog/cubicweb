@@ -28,6 +28,17 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
     session.set_shared_data('do-not-insert-cwuri', False)
 
 if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
+    # check that migration is not doomed
+    rset = rql('Any X,Y WHERE X transition_of E, Y transition_of E, '
+               'X name N, Y name N, NOT X identity Y',
+               ask_confirm=False)
+    if rset:
+        from logilab.common.shellutils import ASK
+        if not ASK.confirm('Migration will fail because of transitions with the same name. '
+                           'Continue anyway ?'):
+            import sys
+            sys.exit(1)
+    # proceed with migration
     add_entity_type('Workflow')
     add_entity_type('BaseTransition')
     add_entity_type('WorkflowTransition')

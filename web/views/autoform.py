@@ -50,6 +50,94 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     # class methods mapping schema relations to fields in the form ############
 
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/autoform.py
+=======
+    @classmethod
+    def erelations_by_category(cls, entity, categories=None, permission=None,
+                               rtags=None, strict=False):
+        """return a list of (relation schema, target schemas, role) matching
+        categories and permission
+
+        `strict`:
+          bool telling if having local role is enough (strict = False) or not
+        """
+        if categories is not None:
+            if not isinstance(categories, (list, tuple, set, frozenset)):
+                categories = (categories,)
+            if not isinstance(categories, (set, frozenset)):
+                categories = frozenset(categories)
+        eschema  = entity.e_schema
+        if rtags is None:
+            rtags = cls.rcategories
+        permsoverrides = cls.rpermissions_overrides
+        if entity.has_eid():
+            eid = entity.eid
+        else:
+            eid = None
+            strict = False
+        for rschema, targetschemas, role in eschema.relation_definitions(True):
+            # check category first, potentially lower cost than checking
+            # permission which may imply rql queries
+            if categories is not None:
+                _targetschemas = []
+                for tschema in targetschemas:
+                    if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
+                        continue
+                    rdef = rschema.role_rdef(eschema, tschema, role)
+                    if not ((not strict and rdef.has_local_role(permission)) or
+                            rdef.has_perm(entity.req, permission, fromeid=eid)):
+                        continue
+                    _targetschemas.append(tschema)
+                if not _targetschemas:
+                    continue
+                targetschemas = _targetschemas
+            if permission is not None:
+                # tag allowing to hijack the permission machinery when
+                # permission is not verifiable until the entity is actually
+                # created...
+                if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
+                    yield (rschema, targetschemas, role)
+                    continue
+                if rschema.final:
+                    if not eschema.rdef(rschema).has_perm(entity.req, permission, eid=eid):
+                        continue
+                elif role == 'subject':
+                    # on relation with cardinality 1 or ?, we need delete perm as well
+                    # if the relation is already set
+                    if (permission == 'add'
+                        and rschema.rdef(eschema, targetschemas[0]).role_cardinality(role) in '1?'
+                        and eid and entity.related(rschema.type, role)
+                        and not rschema.has_perm(entity.req, 'delete', fromeid=eid,
+                                                 toeid=entity.related(rschema.type, role)[0][0])):
+                        continue
+                elif role == 'object':
+                    # on relation with cardinality 1 or ?, we need delete perm as well
+                    # if the relation is already set
+                    if (permission == 'add'
+                        and rschema.rdef(targetschemas[0], eschema).role_cardinality(role) in '1?'
+                        and eid and entity.related(rschema.type, role)
+                        and not rschema.has_perm(entity.req, 'delete', toeid=eid,
+                                                 fromeid=entity.related(rschema.type, role)[0][0])):
+                        continue
+            yield (rschema, targetschemas, role)
+
+    @classmethod
+    def esrelations_by_category(cls, entity, categories=None, permission=None,
+                                strict=False):
+        """filter out result of relations_by_category(categories, permission) by
+        removing final relations
+
+        return a sorted list of (relation's label, relation'schema, role)
+        """
+        result = []
+        for rschema, ttypes, role in cls.erelations_by_category(
+            entity, categories, permission, strict=strict):
+            if rschema.final:
+                continue
+            result.append((rschema.display_name(entity.req, role), rschema, role))
+        return sorted(result)
+
+>>>>>>> /tmp/autoform.py~other.rHDQ-C
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject', eschema=None):
         """return field with the given name and role. If field is not explicitly
@@ -101,6 +189,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     continue
         self.maxrelitems = self._cw.property_value('navigation.related-limit')
         self.force_display = bool(self._cw.form.get('__force_display'))
+        fnum = len(self.fields)
+        self.fields.sort(key=lambda f: f.order is None and fnum or f.order)
 
     @property
     def related_limit(self):

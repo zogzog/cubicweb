@@ -237,19 +237,6 @@ table#header td#headtext {
   width: 100%;
 }
 
-a.help{
-  display: block;
-  margin: 0px 5px 0px 8px;
-  height: 17px;
-  width: 17px;
-  background: url('help.png') 0% 0% no-repeat;
-}
-
-a.help:hover {
-  background-position: 0px -16px;
-  text-decoration: none;
-}
-
 /* FIXME appear with 4px width in IE6 */
 div#stateheader{
   min-width: 66%;
@@ -508,6 +495,7 @@ div#userActionsBox {
 div#userActionsBox a.popupMenu {
   color: black;
   text-decoration: underline;
+  padding-right: 2em;
 }
 
 /* download box XXX move to its own file? */
@@ -595,20 +583,23 @@ div.section a:hover {
 
 /* basic entity view */
 
-div.row {
- clear: both;
- padding-bottom:0.4px
-}
-
-div.row span.label{
- padding-right:1em
+tr.entityfield th {
+  text-align: left;
+  padding-right: 0.5em;
 }
 
 div.field {
-  margin-left: 0.2em;
   display: inline;
 }
 
+div.ctxtoolbar {
+  float: right;
+  padding-left: 24px;
+  position: relative;
+}
+div.toolbarButton {
+  display: inline;
+}
 
 /***************************************/
 /* messages                            */

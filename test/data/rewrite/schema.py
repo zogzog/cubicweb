@@ -2,7 +2,7 @@ from yams.buildobjs import EntityType, RelationDefinition, String, SubjectRelati
 from cubicweb.schema import ERQLExpression
 
 class Affaire(EntityType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers',
                    ERQLExpression('X owned_by U'), ERQLExpression('X concerne S?, S owned_by U')),
         'add':    ('managers', ERQLExpression('X concerne S, S owned_by U')),
@@ -15,7 +15,7 @@ class Affaire(EntityType):
 
 
 class Societe(EntityType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers', 'users', 'guests'),
         'update': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
         'delete': ('managers', 'owners', ERQLExpression('U login L, X nom L')),

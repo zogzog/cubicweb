@@ -237,6 +237,17 @@ class ChangeLogView(StartupView):
         self.w(rest_publish(self, '\n'.join(restdata)))
 
 
+class HelpAction(action.Action):
+    id = 'help'
+    __select__ = yes()
+
+    category = 'footer'
+    order = 0
+    title = _('Help')
+
+    def url(self):
+        return self.req.build_url('doc/main')
+
 class ChangeLogAction(action.Action):
     __regid__ = 'changelog'
     __select__ = yes()

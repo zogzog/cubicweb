@@ -13,6 +13,7 @@ __docformat__ = "restructuredtext en"
 from rql import nodes as n, stmts, TypeResolverException
 
 from logilab.common.compat import any
+from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
 
@@ -134,7 +135,7 @@ class RQLRewriter(object):
         if len(self.select.solutions) < len(self.solutions):
             raise Unsupported()
 
-    def rewrite(self, select, snippets, solutions, kwargs):
+    def rewrite(self, select, snippets, solutions, kwargs, existingvars=None):
         """
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
@@ -146,6 +147,7 @@ class RQLRewriter(object):
         self.removing_ambiguity = False
         self.exists_snippet = {}
         self.pending_keys = []
+        self.existingvars = existingvars
         # we have to annotate the rqlst before inserting snippets, even though
         # we'll have to redo it latter
         self.annotate(select)
@@ -213,6 +215,14 @@ class RQLRewriter(object):
 
     def insert_snippet(self, varmap, snippetrqlst, parent=None):
         new = snippetrqlst.where.accept(self)
+        existing = self.existingvars
+        self.existingvars = None
+        try:
+            return self._insert_snippet(varmap, parent, new)
+        finally:
+            self.existingvars = existing
+
+    def _insert_snippet(self, varmap, parent, new):
         if new is not None:
             if self.varinfo.get('stinfo', {}).get('optrelations'):
                 assert parent is None
@@ -392,12 +402,12 @@ class RQLRewriter(object):
                 orel = self.varinfo['lhs_rels'][sniprel.r_type]
                 cardindex = 0
                 ttypes_func = rschema.objects
-                rprop = rschema.rproperty
+                rdef = rschema.rdef
             else: # target == 'subject':
                 orel = self.varinfo['rhs_rels'][sniprel.r_type]
                 cardindex = 1
                 ttypes_func = rschema.subjects
-                rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+                rdef = lambda x, y: rschema.rdef(y, x)
         except KeyError, ex:
             # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
             return None
@@ -409,7 +419,7 @@ class RQLRewriter(object):
         # variable from the original query
         for etype in self.varinfo['stinfo']['possibletypes']:
             for ttype in ttypes_func(etype):
-                if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':
+                if rdef(etype, ttype).cardinality[cardindex] in '+*':
                     return None
         return orel
 
@@ -478,8 +488,26 @@ class RQLRewriter(object):
     def visit_exists(self, node):
         return self._visit_unary(node, n.Exists)
 
+    def keep_var(self, varname):
+        if varname in 'SO':
+            return varname in self.existingvars
+        if varname == 'U':
+            return True
+        vargraph = self.current_expr.vargraph
+        for existingvar in self.existingvars:
+            #path = has_path(vargraph, varname, existingvar)
+            if has_path(vargraph, varname, existingvar):
+                return True
+        # no path from this variable to an existing variable
+        return False
+
     def visit_relation(self, node):
         lhs, rhs = node.get_variable_parts()
+        # remove relations where an unexistant variable and or a variable linked
+        # to an unexistant variable is used.
+        if self.existingvars:
+            if not self.keep_var(lhs.name):
+                return
         if node.r_type in ('has_add_permission', 'has_update_permission',
                            'has_delete_permission', 'has_read_permission'):
             assert lhs.name == 'U'
@@ -488,6 +516,8 @@ class RQLRewriter(object):
             self.pending_keys.append( (key, action) )
             return
         if isinstance(rhs, n.VariableRef):
+            if self.existingvars and not self.keep_var(rhs.name):
+                return
             if lhs.name in self.revvarmap and rhs.name != 'U':
                 orel = self._may_be_shared_with(node, 'object', lhs.name)
                 if orel is not None:
