@@ -180,7 +180,7 @@ class TreeViewItemView(EntityView):
         # the local node info
         self.wview(vid, self.rset, row=row, col=col, **morekwargs)
         if is_open and not is_leaf: #  => rql is defined
-            self.wview(parentvid, self.req.execute(rql), subvid=vid, treeid=treeid,
-                       initial_load=False, **morekwargs)
+            self.wview(parentvid, entity.children(entities=False), subvid=vid,
+                       treeid=treeid, initial_load=False, **morekwargs)
         w(u'</li>')
 
