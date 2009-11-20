@@ -277,6 +277,8 @@ class CheckRequiredRelationOperation(LateOperation):
         # recheck pending eids
         if self.eid in self.session.transaction_data.get('pendingeids', ()):
             return
+        if self.rtype in self.session.transaction_data.get('pendingrtypes', ()):
+            return
         if self.session.unsafe_execute(*self._rql()).rowcount < 1:
             etype = self.session.describe(self.eid)[0]
             _ = self.session._
