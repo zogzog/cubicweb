@@ -329,7 +329,7 @@ class CreateInstanceDBCommand(Command):
             cmd_run('db-init', config.appid)
         else:
             print ('-> nevermind, you can do it later with '
-                   '"cubicweb-ctl db-init %s".' % self.config.appid)
+                   '"cubicweb-ctl db-init %s".' % config.appid)
 
 
 class InitInstanceCommand(Command):
