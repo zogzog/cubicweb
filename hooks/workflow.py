@@ -202,8 +202,8 @@ class FireTransitionHook(WorkflowHook):
         try:
             treid = entity['by_transition']
         except KeyError:
-            # no transition set, check user is a manager and destination state is
-            # specified (and valid)
+            # no transition set, check user is a manager and destination state
+            # is specified (and valid)
             if not cowpowers:
                 msg = session._('mandatory relation')
                 raise ValidationError(entity.eid, {'by_transition': msg})
@@ -216,8 +216,8 @@ class FireTransitionHook(WorkflowHook):
                 msg = session._("state doesn't belong to entity's workflow")
                 raise ValidationError(entity.eid, {'to_state': msg})
         else:
-            # check transition is valid and allowed, unless we're coming back from
-            # subworkflow
+            # check transition is valid and allowed, unless we're coming back
+            # from subworkflow
             tr = session.entity_from_eid(treid)
             if swtr is None:
                 if tr is None:

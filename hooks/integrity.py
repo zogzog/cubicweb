@@ -93,10 +93,7 @@ class CheckCardinalityHook(UserIntegrityHook):
             # skip automatically handled relations
             if rschema.type in DONT_CHECK_RTYPES_ON_ADD:
                 continue
-            if role == 'subject':
-                opcls = _CheckSRelationOp
-            else:
-                opcls = _CheckORelationOp
+            opcls = role == 'subject' and _CheckSRelationOp or _CheckORelationOp
             rdef = rschema.role_rdef(eschema, targetschemas[0], role)
             if rdef.role_cardinality(role) in '1+':
                 self.checkrel_if_necessary(opcls, rschema.type, eid)
