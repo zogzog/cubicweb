@@ -34,7 +34,16 @@ USER_OPTIONS =  (
                   }),
     )
 
-def generate_sources_file(sourcesfile, sourcescfg, keys=None):
+class SourceConfiguration(Configuration):
+    def __init__(self, appid, options):
+        super(SourceConfiguration, self).__init__(options=options)
+        self.appid = appid
+
+    # make Method('default_instance_id') usable in db option defs (in native.py)
+    def default_instance_id
+        return self.appid
+
+def generate_sources_file(appid, sourcesfile, sourcescfg, keys=None):
     """serialize repository'sources configuration into a INI like file
 
     the `keys` parameter may be used to sort sections
@@ -54,7 +63,7 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
                 options = USER_OPTIONS
             else:
                 options = SOURCE_TYPES[sconfig['adapter']].options
-            _sconfig = Configuration(options=options)
+            _sconfig = SourceConfiguration(appid, options=options)
             for attr, val in sconfig.items():
                 if attr == 'uri':
                     continue
@@ -242,7 +251,8 @@ and if not set, it will be choosen randomly',
         if exists(sourcesfile):
             import shutil
             shutil.copy(sourcesfile, sourcesfile + '.bak')
-        generate_sources_file(sourcesfile, sourcescfg, ['admin', 'system'])
+        generate_sources_file(self.appid, sourcesfile, sourcescfg,
+                              ['admin', 'system'])
         restrict_perms_to_user(sourcesfile)
 
     def pyro_enabled(self):
