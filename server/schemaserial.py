@@ -522,16 +522,20 @@ def erperms2rql(erschema, groupmapping):
     for action in erschema.ACTIONS:
         for group in sorted(erschema.get_groups(action)):
             try:
-                yield ('SET X %s_permission Y WHERE X is %s, X name %%(name)s, Y eid %s'
-                       % (action, etype, groupmapping[group]), {'name': str(erschema)})
+                yield ('SET X %s_permission Y WHERE X is %s, X name %%(name)s, Y eid %%(g)s'
+                       % (action, etype), {'name': str(erschema),
+                                           'g': groupmapping[group]})
             except KeyError:
                 continue
         for rqlexpr in sorted(erschema.get_rqlexprs(action)):
             yield ('INSERT RQLExpression E: E expression %%(e)s, E exprtype %%(t)s, '
                    'E mainvars %%(v)s, X %s_permission E '
-                   'WHERE X is %s, X name "%s"' % (action, etype, erschema),
-                   {'e': unicode(rqlexpr.expression), 'v': unicode(rqlexpr.mainvars),
-                    't': unicode(rqlexpr.__class__.__name__)})
+                   'WHERE X is %s, X name %%(name)s' % (action, etype),
+                   {'e': unicode(rqlexpr.expression),
+                    'v': unicode(rqlexpr.mainvars),
+                    't': unicode(rqlexpr.__class__.__name__),
+                    'name': unicode(erschema)
+                    })
 
 
 def updateeschema2rql(eschema):
