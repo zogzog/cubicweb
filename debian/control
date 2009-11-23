@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Logilab S.A. <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Julien Jehannet <julien.jehannet@logilab.fr>,
+           Adrien Di Mascio <Adrien.DiMascio@logilab.fr>,
            Aurélien Campéas <aurelien.campeas@logilab.fr>,
            Nicolas Chauvat <nicolas.chauvat@logilab.fr>
 Build-Depends: debhelper (>= 5), python-dev (>=2.4), python-central (>= 0.5)
@@ -76,7 +77,7 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.44.0), python-yams (>= 0.25.0), python-rql (>= 0.22.3), python-lxml
+Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.45.2), python-yams (>= 0.25.0), python-rql (>= 0.22.3), python-lxml
 Recommends: python-simpletal (>= 4.0)
 Conflicts: cubicweb-core
 Replaces: cubicweb-core
