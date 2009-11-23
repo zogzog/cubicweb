@@ -40,7 +40,7 @@ class SourceConfiguration(Configuration):
         self.appid = appid
 
     # make Method('default_instance_id') usable in db option defs (in native.py)
-    def default_instance_id
+    def default_instance_id(self):
         return self.appid
 
 def generate_sources_file(appid, sourcesfile, sourcescfg, keys=None):
