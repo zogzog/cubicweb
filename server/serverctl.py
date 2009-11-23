@@ -14,11 +14,13 @@ from logilab.common.configuration import Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 from logilab.common.shellutils import ASK
 
-from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, underline_title
+from cubicweb import (AuthenticationError, ExecutionError, ConfigurationError,
+                      underline_title)
 from cubicweb.toolsutils import Command, CommandHandler
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
-from cubicweb.server.serverconfig import USER_OPTIONS, ServerConfiguration
+from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
+                                          SourceConfiguration)
 
 # utility functions ###########################################################
 
@@ -113,6 +115,7 @@ def repo_cnx(config):
             config._cubes = None
         login, pwd = manager_userpasswd()
 
+
 # repository specific command handlers ########################################
 
 class RepositoryCreateHandler(CommandHandler):
@@ -135,8 +138,8 @@ class RepositoryCreateHandler(CommandHandler):
         sourcesfile = config.sources_file()
         # XXX hack to make Method('default_instance_id') usable in db option
         # defs (in native.py)
-        Configuration.default_instance_id = staticmethod(lambda: config.appid)
-        sconfig = Configuration(options=SOURCE_TYPES['native'].options)
+        sconfig = SourceConfiguration(config.appid,
+                                      options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg = {'system': sconfig}

@@ -74,7 +74,7 @@ def play_migration(applhome, applhost='', sudo=False):
     sources['system']['db-host'] = None
     sources['system']['db-user'] = tmpdbuser
     sources['system']['db-password'] = None
-    generate_sources_file(join(testapplhome, 'sources'), sources)
+    generate_sources_file(applid, join(testapplhome, 'sources'), sources)
 ##     # create postgres password file so we won't need anymore passwords
 ##     # XXX may exist!
 ##     pgpassfile = expanduser('~/.pgpass')
