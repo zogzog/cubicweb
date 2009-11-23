@@ -27,7 +27,8 @@ SITEACTIONS = [('siteconfig', actions.SiteConfigurationAction),
                ('schema', schema.ViewSchemaAction),
                ('siteinfo', actions.SiteInfoAction),
                ]
-FOOTERACTIONS = [('changelog', wdoc.ChangeLogAction),
+FOOTERACTIONS = [('help', wdoc.HelpAction),
+                 ('changelog', wdoc.ChangeLogAction),
                  ('about', wdoc.AboutAction),
                  ('poweredby', actions.PoweredByAction)]
 
