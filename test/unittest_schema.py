@@ -113,7 +113,7 @@ class CubicWebSchemaTC(TestCase):
         rconcerne.set_groups('read', ('managers',))
         self.assertEqual(rconcerne.get_groups('read'), set(('managers',)))
         self.assertEqual([str(e) for e in rconcerne.get_rqlexprs('add')],
-                         ['Any S WHERE U has_update_permission S, S eid %(s)s, U eid %(u)s'])
+                         ['Any S,U WHERE U has_update_permission S, S eid %(s)s, U eid %(u)s'])
 
     def test_erqlexpression(self):
         self.assertRaises(RQLSyntaxError, ERQLExpression, '1')
@@ -124,7 +124,7 @@ class CubicWebSchemaTC(TestCase):
         self.assertRaises(Exception, RRQLExpression, '1')
         self.assertRaises(RQLSyntaxError, RRQLExpression, 'O X Y')
         expr = RRQLExpression('U has_update_permission O')
-        self.assertEquals(str(expr), 'Any O WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
+        self.assertEquals(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
 loader = CubicWebSchemaLoader()
 config = TestConfiguration('data')
