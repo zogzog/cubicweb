@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 import os
 from os.path import join, exists
 
-from logilab.common.configuration import Method, Configuration, \
+from logilab.common.configuration import REQUIRED, Method, Configuration, \
      ini_format_section
 from logilab.common.decorators import wproperty, cached, clear_cache
 
@@ -28,6 +28,7 @@ USER_OPTIONS =  (
                'inputlevel': 0,
                }),
     ('password', {'type' : 'password',
+                  'default': REQUIRED,
                   'help': "cubicweb manager account's password",
                   'inputlevel': 0,
                   }),
