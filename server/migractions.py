@@ -24,6 +24,8 @@ import tempfile
 import shutil
 import os.path as osp
 from datetime import datetime
+from glob import glob
+from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
@@ -308,6 +310,21 @@ class ServerMigrationHelper(MigrationHelper):
                                                'after_add_entity', '')
                     self.reactivate_verification_hooks()
 
+    def install_custom_sql_scripts(self, directory, driver):
+        self.session.set_pool() # ensure pool is set
+        for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
+            newname = osp.basename(fpath).replace('.sql.%s' % driver,
+                                                  '.%s.sql' % driver)
+            warn('[3.5.6] rename %s into %s' % (fpath, newname),
+                 DeprecationWarning)
+            print '-> installing', fpath
+            sqlexec(open(fpath).read(), self.session.system_sql, False,
+                    delimiter=';;')
+        for fpath in glob(osp.join(directory, '*.%s.sql' % driver)):
+            print '-> installing', fpath
+            sqlexec(open(fpath).read(), self.session.system_sql, False,
+                    delimiter=';;')
+
     # schema synchronization internals ########################################
 
     def _synchronize_permissions(self, ertype):
@@ -544,8 +561,11 @@ class ServerMigrationHelper(MigrationHelper):
         self.fs_schema = self._create_context()['fsschema'] = newcubes_schema
         new = set()
         # execute pre-create files
+        driver = self.repo.system_source.dbdriver
         for pack in reversed(newcubes):
-            self.exec_event_script('precreate', self.config.cube_dir(pack))
+            cubedir = self.config.cube_dir(pack)
+            self.install_custom_sql_scripts(osp.join(cubedir, 'schema'), driver)
+            self.exec_event_script('precreate', cubedir)
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
             if not rschema in self.repo.schema:
