@@ -338,6 +338,7 @@ def init_test_database_sqlite(config, source, vreg=None):
     import shutil
     # remove database file if it exists (actually I know driver == 'sqlite' :)
     dbfile = source['system']['db-name']
+    source['system']['db-name'] = os.path.abspath(dbfile)
     cleanup_sqlite(dbfile)
     template = '%s-template' % dbfile
     if exists(template):
