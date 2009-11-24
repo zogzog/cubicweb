@@ -10,7 +10,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.selectors import implements
-from cubicweb.utils import date_range
+from cubicweb.utils import date_range, todatetime
 from cubicweb.view import AnyRsetView
 
 
@@ -55,6 +55,7 @@ class TimeTableView(AnyRsetView):
             elif task.stop:
                 the_dates.append(task.stop)
             for d in the_dates:
+                d = todatetime(d)
                 d_users = dates.setdefault(d, {})
                 u_tasks = d_users.setdefault(user, set())
                 u_tasks.add( task )
