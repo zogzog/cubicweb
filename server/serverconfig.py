@@ -36,8 +36,8 @@ USER_OPTIONS =  (
 
 class SourceConfiguration(Configuration):
     def __init__(self, appid, options):
+        self.appid = appid # has to be done before super call
         super(SourceConfiguration, self).__init__(options=options)
-        self.appid = appid
 
     # make Method('default_instance_id') usable in db option defs (in native.py)
     def default_instance_id(self):
