@@ -14,6 +14,7 @@ from logilab.common.debugger import Debugger
 from logilab.common.testlib import InnerTest
 from logilab.common.pytest import nocoverage
 
+from cubicweb import ValidationError
 from cubicweb.devtools import VIEW_VALIDATORS
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.devtools._apptest import unprotected_entities, SYSTEM_RELATIONS
@@ -150,7 +151,11 @@ class WebTest(EnvBasedTC):
         q = make_relations_queries(self.schema, edict, cu, ignored_relations,
                                    existingrels=existingrels)
         for rql, args in q:
-            cu.execute(rql, args)
+            try:
+                cu.execute(rql, args)
+            except ValidationError, ex:
+                # failed to satisfy some constraint
+                print 'error in automatic db population', ex
         self.post_populate(cu)
         self.commit()
 
