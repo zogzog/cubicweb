@@ -22,6 +22,7 @@ class _TaskEntry(object):
         self.lines = 1
 
 MIN_COLS = 3  # minimum number of task columns for a single user
+ALL_USERS = object()
 
 class TimeTableView(AnyRsetView):
     id = 'timetable'
@@ -137,7 +138,7 @@ class TimeTableView(AnyRsetView):
         for user, width in zip(users, widths):
             self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
             if user is ALL_USERS:
-                self.w('*')
+                self.w(u'*')
             else:
                 user.view('oneline', w=self.w)
             self.w(u'</th>')
