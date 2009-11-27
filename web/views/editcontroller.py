@@ -45,8 +45,7 @@ class EditController(ViewController):
         form = req.form
         # so we're able to know the main entity from the repository side
         if '__maineid' in form:
-            req.set_shared_data('__maineid', typed_eid(form['__maineid']),
-                                querydata=True)
+            req.set_shared_data('__maineid', form['__maineid'], querydata=True)
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         self._pending_relations = []
