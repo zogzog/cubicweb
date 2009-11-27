@@ -199,8 +199,18 @@ class Entity(AppObject, dict):
                 attr = 'reverse_%s' % rschema.type
                 setattr(cls, attr, ObjectRelation(rschema))
         if mixins:
-            cls.__bases__ = tuple(mixins + [p for p in cls.__bases__ if not p is object])
-            cls.debug('plugged %s mixins on %s', mixins, etype)
+            # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
+            # due to class dumping, cls is the generated top level class with actual
+            # user class as (only) parent. Since we want to be able to override mixins
+            # method from this user class, we have to take care to insert mixins after that
+            # class
+            #
+            # note that we don't plug mixins as user class parent since it causes pb
+            # with some cases of entity classes inheritance.
+            mixins.insert(0, cls.__bases__[0])
+            mixins += cls.__bases__[1:]
+            cls.__bases__ = tuple(mixins)
+            cls.info('plugged %s mixins on %s', mixins, cls)
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
