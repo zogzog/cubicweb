@@ -512,7 +512,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         entity = self._entity()
         divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        title = self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
+        title = self.form_title(entity, i18nctx=i18nctx, **kwargs)
         removejs = self.removejs % (self.peid, self.rtype, entity.eid)
         countkey = '%s_count' % self.rtype
         try:
@@ -522,6 +522,9 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         self.w(self.form.form_render(
             divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
             counter=self.req.data[countkey], **kwargs))
+
+    def form_title(self, entity, i18nctx, **kwargs):
+        return self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
