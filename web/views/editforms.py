@@ -512,8 +512,9 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         entity = self._entity()
         divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        title = self.form_title(entity, i18nctx=i18nctx, **kwargs)
-        removejs = self.removejs % (self.peid, self.rtype, entity.eid)
+        title = self.form_title(entity, i18nctx)
+        removejs = self.removejs and self.removejs % (
+            self.peid, self.rtype, entity.eid)
         countkey = '%s_count' % self.rtype
         try:
             self.req.data[countkey] += 1
@@ -523,7 +524,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
             counter=self.req.data[countkey], **kwargs))
 
-    def form_title(self, entity, i18nctx, **kwargs):
+    def form_title(self, entity, i18nctx):
         return self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
 
     def add_hiddens(self, form, entity):
