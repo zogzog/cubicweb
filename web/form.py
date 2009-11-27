@@ -48,10 +48,9 @@ class FormMixIn(object):
         """return the key that may be used to store / retreive data about a
         previous post which failed because of a validation error
         """
-        try:
-            return self.force_session_key
-        except AttributeError:
+        if self.force_session_key is None:
             return '%s#%s' % (self.req.url(), self.domid)
+        return self.force_session_key
 
     def restore_previous_post(self, sessionkey):
         # get validation session data which may have been previously set.
