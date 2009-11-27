@@ -120,7 +120,7 @@ class TreeViewItemView(EntityView):
     """
     id = 'treeitemview'
     default_branch_state_is_open = False
-    __select__ = EntityView.__select__ & implements(ITree)
+    __select__ = implements(ITree)
 
     def open_state(self, eeid, treeid):
         cookies = self.req.get_cookie()
