@@ -491,8 +491,9 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
                                          entity=entity,
                                          form_renderer_id='inline',
                                          mainform=False, copy_nav_params=False,
+                                         parent_form=self.pform,
                                          **self.extra_kwargs)
-        form.parent_form = self.pform
+        #assert form.parent_form
         self.add_hiddens(form, entity)
         return form
 
