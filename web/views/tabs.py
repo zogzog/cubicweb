@@ -179,7 +179,7 @@ class EntityRelationView(EntityView):
         self.w(u'</div>')
 
 
-class TabedPrimaryView(TabsMixin, primary.PrimaryView):
+class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
     __abstract__ = True # don't register
 
     tabs = ['main_tab']
@@ -191,7 +191,7 @@ class TabedPrimaryView(TabsMixin, primary.PrimaryView):
         # XXX uncomment this in 3.6
         #self.render_entity_toolbox(entity)
         self.render_tabs(self.tabs, self.default_tab, entity)
-
+TabedPrimaryView = TabbedPrimaryView # XXX deprecate that typo!
 
 class PrimaryTab(primary.PrimaryView):
     id = 'main_tab'
