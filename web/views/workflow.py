@@ -45,21 +45,26 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
         transition = self.req.entity_from_eid(self.req.form['treid'])
-        dest = transition.destination()
-        _ = self.req._
-        # specify both rset/row/col and entity in case implements selector (and
-        # not entity_implements) is used on custom form
-        form = self.vreg['forms'].select(
-            'changestate', self.req, rset=self.rset, row=row, col=col,
-            entity=entity, transition=transition,
-            redirect_path=self.redirectpath(entity))
+        form = self.get_form(entity, transition)
         self.w(form.error_message())
-        self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
+        self.w(u'<h4>%s %s</h4>\n' % (self.req._(transition.name),
                                       entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
-            'st1': _(entity.current_state.name),
-            'st2': _(dest.name)}
+            'st1': entity.printable_state,
+            'st2': self.req._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)
+        self.w(form.form_render(wf_info_for=entity.eid,
+                                by_transition=transition.eid))
+
+    def redirectpath(self, entity):
+        return entity.rest_path()
+
+    def get_form(self, entity, transition, **kwargs):
+        # XXX used to specify both rset/row/col and entity in case implements
+        # selector (and not entity_implements) is used on custom form
+        form = self.vreg['forms'].select(
+            'changestate', self.req, entity=entity, transition=transition,
+            redirect_path=self.redirectpath(entity), **kwargs)
         trinfo = self.vreg['etypes'].etype_class('TrInfo')(self.req)
         self.initialize_varmaker()
         trinfo.eid = self.varmaker.next()
@@ -67,11 +72,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
                                             mainform=False)
         subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
         form.add_subform(subform)
-        self.w(form.form_render(wf_info_for=entity.eid,
-                                by_transition=transition.eid))
-
-    def redirectpath(self, entity):
-        return entity.rest_path()
+        return form
 
 
 class WFHistoryView(EntityView):
