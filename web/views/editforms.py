@@ -28,6 +28,7 @@ from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.views import forms
 
+_pvdc = uicfg.primaryview_display_ctrl
 
 def relation_id(eid, rtype, role, reid):
     """return an identifier for a relation between two entities"""
@@ -150,8 +151,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             self.relation_form(lzone, value, form,
                                self._build_renderer(entity, rtype, role))
         else:
-            if rvid is None:
-                rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+            rvid = self._compute_best_vid(entity.e_schema, rschema, role)
             rset = entity.related(rtype, role)
             if rset:
                 value = self.view(rvid, rset)
@@ -212,6 +212,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         w(u'</div>')
 
     def _compute_best_vid(self, eschema, rschema, role):
+        dispctrl = _pvdc.etype_get(eschema, rschema, role)
+        if dispctrl.get('rvid'):
+            return dispctrl['rvid']
         if eschema.cardinality(rschema, role) in '+*':
             return self._many_rvid
         return self._one_rvid
@@ -277,7 +280,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         eschema = entity.e_schema
         rtype = str(rschema)
         # XXX check autoform_section. what if 'generic'?
-        dispctrl = uicfg.primaryview_display_ctrl.etype_get(eschema, rtype, role)
+        dispctrl = _pvdc.etype_get(eschema, rtype, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
             return False
