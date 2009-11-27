@@ -48,10 +48,6 @@ class FormMixIn(object):
         """return the key that may be used to store / retreive data about a
         previous post which failed because of a validation error
         """
-
-    def __init__(self, req, rset, **kwargs):
-        super(FormMixIn, self).__init__(req, rset, **kwargs)
-        self.restore_previous_post(self.session_key())
         try:
             return self.force_session_key
         except AttributeError:
@@ -65,8 +61,8 @@ class FormMixIn(object):
         forminfo = self.req.get_session_data(sessionkey, pop=True)
         if forminfo:
             # XXX remove req.data assigment once cw.web.widget is killed
-            self.req.data['formvalues'] = self.form_previous_values = forminfo['values']
-            self.req.data['formerrors'] = self.form_valerror = forminfo['errors']
+            self.req.data['formvalues'] = self._form_previous_values = forminfo['values']
+            self.req.data['formerrors'] = self._form_valerror = forminfo['errors']
             self.req.data['displayederrors'] = self.form_displayed_errors = set()
             # if some validation error occured on entity creation, we have to
             # get the original variable name from its attributed eid
@@ -78,8 +74,20 @@ class FormMixIn(object):
             else:
                 self.form_valerror.eid = foreid
         else:
-            self.form_previous_values = {}
-            self.form_valerror = None
+            self._form_previous_values = {}
+            self._form_valerror = None
+
+    @property
+    def form_previous_values(self):
+        if self.parent_form is None:
+            return self._form_previous_values
+        return self.parent_form.form_previous_values
+
+    @property
+    def form_valerror(self):
+        if self.parent_form is None:
+            return self._form_valerror
+        return self.parent_form.form_valerror
 
     # XXX deprecated with new form system. Should disappear
 
