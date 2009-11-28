@@ -1,3 +1,9 @@
+cubicweb (3.5.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Sat, 28 Nov 2009 11:50:08 +0100
+
 cubicweb (3.5.6-1) unstable; urgency=low
 
   * new upstream release
