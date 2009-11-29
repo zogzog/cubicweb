@@ -495,7 +495,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
                                          parent_form=self.pform,
                                          **self.extra_kwargs)
         if self.pform is None:
-            form.restore_previous_post(self.session_key())
+            form.restore_previous_post(form.session_key())
         #assert form.parent_form
         self.add_hiddens(form, entity)
         return form
