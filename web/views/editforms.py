@@ -490,7 +490,8 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         form = self.vreg['forms'].select('edition', self.req,
                                          entity=entity,
                                          form_renderer_id='inline',
-                                         mainform=False, copy_nav_params=False,
+                                         copy_nav_params=False,
+                                         mainform=not self.pform,
                                          parent_form=self.pform,
                                          **self.extra_kwargs)
         #assert form.parent_form
