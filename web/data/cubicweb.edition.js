@@ -270,11 +270,14 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
 /*
  * removes the part of the form used to edit an inlined entity
  */
-function removeInlineForm(peid, rtype, eid) {
+function removeInlineForm(peid, rtype, eid, showaddnewlink) {
     jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
 	$(this).remove();
 	updateInlinedEntitiesCounters(rtype);
     });
+    if (showaddnewlink) {
+	toggleVisibility(showaddnewlink);
+    }
 }
 
 /*

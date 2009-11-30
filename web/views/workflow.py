@@ -17,7 +17,7 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                entity_implements)
+                                entity_implements, score_entity)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -77,7 +77,8 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
 
 class WFHistoryView(EntityView):
     id = 'wfhistory'
-    __select__ = relation_possible('wf_info_for', role='object')
+    __select__ = relation_possible('wf_info_for', role='object') & \
+                 score_entity(lambda x: x.workflow_history)
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):
