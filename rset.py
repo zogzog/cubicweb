@@ -452,7 +452,6 @@ class ResultSet(object):
     @cached
     def column_types(self, col):
         """return the list of different types in the column with the given col
-        index default to 0 (ie the first column)
 
         :type col: int
         :param col: the index of the desired column
