@@ -559,7 +559,20 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     __select__ = (match_kwargs('peid', 'rtype')
                   & specified_etype_implements('Any'))
     _select_attrs = InlineEntityEditionFormView._select_attrs + ('etype',)
-    removejs = "removeInlineForm('%s', '%s', '%s')"
+
+    @property
+    def removejs(self):
+        entity = self._entity()
+        card = entity.e_schema.role_rproperty(neg_role(self.role), self.rtype, 'cardinality')
+        card = card[self.role == 'object']
+        # when one is adding an inline entity for a relation of a single card,
+        # the 'add a new xxx' link disappears. If the user then cancel the addition,
+        # we have to make this link appears back. This is done by giving add new link
+        # id to removeInlineForm.
+        if card not in '?1':
+            return "removeInlineForm('%s', '%s', '%s')"
+        divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
+        return "removeInlineForm('%%s', '%%s', '%%s', '%s')" % divid
 
     @cached
     def _entity(self):
