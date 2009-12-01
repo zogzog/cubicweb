@@ -95,7 +95,7 @@ class EntityFieldsFormTC(WebTest):
         self.req.form['__linkto'] = 'in_group:%s:subject' % geid
         form = self.vreg['forms'].select('edition', self.req, entity=e)
         form.content_type = 'text/html'
-        pageinfo = self._check_html(form.form_render(), form, template=None)
+        pageinfo = self._check_html(form.render(), form, template=None)
         inputs = pageinfo.find_tag('select', False)
         self.failUnless(any(attrs for t, attrs in inputs if attrs.get('name') == 'in_group:A'))
         inputs = pageinfo.find_tag('input', False)
@@ -126,14 +126,14 @@ class EntityFieldsFormTC(WebTest):
             creation_date = DateTimeField(widget=DateTimePicker)
         form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
                                      entity=self.entity)
-        form.form_render(state=123, trcomment=u'',
-                         trcomment_format=u'text/plain')
+        form.render(formvalues=dict(state=123, trcomment=u'',
+                                    trcomment_format=u'text/plain'))
 
     def test_change_state_form(self):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
-        form.form_render(state=123, trcomment=u'',
-                         trcomment_format=u'text/plain')
+        form.render(formvalues=dict(state=123, trcomment=u'',
+                                    trcomment_format=u'text/plain'))
 
     # fields tests ############################################################
 

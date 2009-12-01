@@ -115,7 +115,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                          __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
         form.append_field(field)
-        self.w(form.form_render(display_progress_div=False))
+        self.w(form.render(rendervalues=dict(display_progress_div=False)))
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
@@ -185,7 +185,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         form.append_field(field)
         renderer = self.vreg['formrenderers'].select(
             'htable', self.req, rset=None, display_progress_div=False)
-        self.w(form.form_render(renderer=renderer))
+        self.w(form.render(renderer=renderer))
 
 
 class ErrorView(AnyRsetView):
@@ -248,7 +248,7 @@ class ErrorView(AnyRsetView):
             form.form_add_hidden('__bugreporting', '1')
             form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
             form.action = req.build_url('reportbug')
-            w(form.form_render())
+            w(form.render())
 
 
 def exc_message(ex, encoding):

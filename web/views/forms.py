@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common.compat import any
+from logilab.common.deprecation import deprecated
 
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
@@ -127,15 +128,14 @@ class FieldsForm(form.Form):
         if self.needs_css:
             self.req.add_css(self.needs_css)
 
-    def form_render(self, **values):
+    def render(self, formvalues=None, rendervalues=None, renderer=None):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        self.build_context(values)
-        renderer = values.pop('renderer', None)
+        self.build_context(formvalues or {})
         if renderer is None:
             renderer = self.form_default_renderer()
-        return renderer.render(self, values)
+        return renderer.render(self, rendervalues or {})
 
     def form_default_renderer(self):
         return self.vreg['formrenderers'].select(self.form_renderer_id,
@@ -148,8 +148,8 @@ class FieldsForm(form.Form):
         containing field 'name' (qualified), 'id', 'value' (for display, always
         a string).
 
-        rendervalues is an optional dictionary containing extra kwargs given to
-        form_render()
+        rendervalues is an optional dictionary containing extra form values
+        given to render()
         """
         if self.context is not None:
             return # already built
@@ -247,6 +247,17 @@ class FieldsForm(form.Form):
         """return true if the field has some error in given validation exception
         """
         return self.form_valerror and field.name in self.form_valerror.errors
+
+    @deprecated('use .render(formvalues, rendervalues)')
+    def form_render(self, **values):
+        """render this form, using the renderer given in args or the default
+        FormRenderer()
+        """
+        self.build_context(values)
+        renderer = values.pop('renderer', None)
+        if renderer is None:
+            renderer = self.form_default_renderer()
+        return renderer.render(self, values)
 
 
 class EntityFieldsForm(FieldsForm):
@@ -442,6 +453,8 @@ class EntityFieldsForm(FieldsForm):
             return eid_param(field.id, self.edited_entity.eid)
         return field.id
 
+    # XXX all this vocabulary handling should be on the field, no?
+
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field"""
         role, rtype = field.role, field.name
@@ -464,7 +477,6 @@ class EntityFieldsForm(FieldsForm):
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
 
-    # XXX should be on the field, no?
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for
         relation's object entities (i.e. self is the subject)

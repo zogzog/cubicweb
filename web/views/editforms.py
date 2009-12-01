@@ -94,7 +94,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
                                       href=entity.absolute_url()))
         w(u'</ul>\n')
-        w(form.form_render())
+        w(form.render())
 
 
 class ClickAndEditFormView(FormViewMixIn, EntityView):
@@ -203,7 +203,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
           u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
           % (divid, divid, divid))
         w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
-        w(form.form_render(renderer=renderer))
+        w(form.render(renderer=renderer))
         w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
                 divid, xml_escape(self._onclick % form.event_args),
                 self.req._(self._landingzonemsg)))
@@ -256,6 +256,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 class DummyForm(object):
     __slots__ = ('event_args',)
     def form_render(self, **_args):
+        return u''
+    def render(self, **_args):
         return u''
     def append_field(self, *args):
         pass
@@ -320,7 +322,7 @@ class EditionFormView(FormViewMixIn, EntityView):
                                          row=entity.row, col=entity.col, entity=entity,
                                          submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.form_render(formvid=u'edition'))
+        self.w(form.render(rendervalues=dict(formvid=u'edition')))
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -458,7 +460,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         #self.form_title(entity)
         form = self.vreg['forms'].select(self.id, self.req, rset=self.rset,
                                          copy_nav_params=True)
-        self.w(form.form_render())
+        self.w(form.render())
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
@@ -523,9 +525,11 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             self.req.data[countkey] += 1
         except KeyError:
             self.req.data[countkey] = 1
-        self.w(self.form.form_render(
-            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
-            counter=self.req.data[countkey], **kwargs))
+        # XXX split kwargs into additional rendervalues / formvalues
+        self.w(self.form.render(
+            rendervalues=dict(divid=divid, title=title, removejs=removejs,
+                              i18nctx=i18nctx, counter=self.req.data[countkey]),
+            formvalues=kwargs))
 
     def form_title(self, entity, i18nctx):
         return self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
