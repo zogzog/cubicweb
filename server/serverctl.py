@@ -241,6 +241,7 @@ class RepositoryStopHandler(CommandHandler):
 
 
 # repository specific commands ################################################
+
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
 
@@ -359,8 +360,20 @@ tables, indexes... (no by default)'}),
     def run(self, args):
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
+        from logilab.common.db import get_connection
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
+        try:
+            system = config.sources()['system']
+            get_connection(
+                system['db-driver'], database=system['db-name'],
+                host=system.get('db-host'), port=system.get('db-port'),
+                user=system.get('db-user'), password=system.get('db-password'))
+        except Exception, ex:
+            raise ConfigurationError(
+                'You seem to have provided wrong connection information in '\
+                'the %s file. Resolve this first (error: %s).'
+                % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
 
 
@@ -404,6 +417,7 @@ class GrantUserOnInstanceCommand(Command):
         else:
             cnx.commit()
             print '-> rights granted to %s on instance %s.' % (appid, user)
+
 
 class ResetAdminPasswordCommand(Command):
     """Reset the administrator password.
