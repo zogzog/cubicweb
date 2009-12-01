@@ -231,7 +231,7 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
     def object_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():
             return self.workflow_states_for_relation('allowed_transition')
-        return self.subject_relation_vocabulary(rtype, limit)
+        return self.object_relation_vocabulary(rtype, limit)
 
 
 class StateEditionForm(autoform.AutomaticEntityForm):
@@ -290,7 +290,6 @@ class WorkflowVisitor:
         for state in self.entity.reverse_state_of:
             state.complete()
             yield state.eid, state
-
         for transition in self.entity.reverse_transition_of:
             transition.complete()
             yield transition.eid, transition
