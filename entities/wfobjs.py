@@ -101,7 +101,7 @@ class Workflow(AnyEntity):
         self.req.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
                          {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
         if initial:
-            assert not self.initial
+            assert not self.initial, "Initial state already defined as %s" % self.initial
             self.req.execute('SET WF initial_state S '
                              'WHERE S eid %(s)s, WF eid %(wf)s',
                              {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
