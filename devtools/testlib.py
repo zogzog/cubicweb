@@ -165,10 +165,13 @@ class WebTest(EnvBasedTC):
         try:
             validatorclass = self.vid_validators[view.id]
         except KeyError:
-            if template is None:
-                default_validator = HTMLValidator
+            if view.content_type in ('text/html', 'application/xhtml+xml'):
+                if template is None:
+                    default_validator = HTMLValidator
+                else:
+                    default_validator = DTDValidator
             else:
-                default_validator = DTDValidator
+                default_validator = None
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
