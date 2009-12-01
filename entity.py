@@ -891,15 +891,26 @@ class Entity(AppObject, dict):
                              kwargs, 'x')
 
     def set_relations(self, _cw_unsafe=False, **kwargs):
+        """add relations to the given object. To set a relation where this entity
+        is the object of the relation, use 'reverse_'<relation> as argument name.
+
+        Values may be an entity, a list of entity, or None (meaning that all
+        relations of the given type from or to this object should be deleted).
+        """
         if _cw_unsafe:
             execute = self.req.unsafe_execute
         else:
             execute = self.req.execute
+        # XXX update cache
         for attr, values in kwargs.iteritems():
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
             else:
                 restr = 'X %s Y' % attr
+            if values is None:
+                execute('DELETE %s WHERE X eid %%(x)s' % restr,
+                        {'x': self.eid}, 'x')
+                continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
