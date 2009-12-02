@@ -608,6 +608,24 @@ class RQLConstraint(RQLVocabularyConstraint):
     """
     distinct_query = False
 
+    def __init__(self, restriction, mainvars=None, msg=None):
+        super(RQLConstraint, self).__init__(restriction, mainvars)
+        self.msg = msg
+
+    def serialize(self):
+        # start with a comma for bw compat, see below
+        return ';%s;%s\n%s' % (self.mainvars + ';' + self.restriction,
+                               self.msg or '')
+
+    def deserialize(cls, value):
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
+        value, msg = value.split('\n', 1)
+        _, mainvars, restriction = value.split(';', 2)
+        return cls(restriction, mainvars, msg)
+    deserialize = classmethod(deserialize)
+
     def exec_query(self, session, eidfrom, eidto):
         if eidto is None:
             # checking constraint for an attribute relation
@@ -621,16 +639,24 @@ class RQLConstraint(RQLVocabularyConstraint):
             rql = 'DISTINCT ' + rql
         return session.unsafe_execute(rql, args, ck, build_descr=False)
 
-    def error(self, eid, rtype, msg):
-        raise ValidationError(eid, {rtype: msg})
-
     def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
         if not self.exec_query(session, eidfrom, eidto):
-            # XXX at this point dunno if the validation error `occured` on
-            #     eidfrom or eidto (from user interface point of view)
-            self.error(eidfrom, rtype, 'constraint %s failed' % self)
+            # XXX at this point if both or neither of S and O are in mainvar we
+            # dunno if the validation error `occured` on eidfrom or eidto (from
+            # user interface point of view)
+            if eidto is None or 'S' in self.mainvars or not 'O' in self.mainvars:
+                maineid = eidfrom
+            else:
+                maineid = eidto
+            if self.msg:
+                msg = session._(self.msg)
+            else:
+                msg = '%(constraint)s %(restriction)s failed' % {
+                    'constraint':  session._(self.type()),
+                    'restriction': self.restriction}
+            raise ValidationError(maineid, {rtype: msg})
 
 
 class RQLUniqueConstraint(RQLConstraint):
@@ -639,13 +665,9 @@ class RQLUniqueConstraint(RQLConstraint):
     """
     distinct_query = True
 
-    def repo_check(self, session, eidfrom, rtype, eidto=None):
-        """raise ValidationError if the relation doesn't satisfy the constraint
-        """
-        if len(self.exec_query(session, eidfrom, eidto)) > 1:
-            # XXX at this point dunno if the validation error `occured` on
-            #     eidfrom or eidto (from user interface point of view)
-            self.error(eidfrom, rtype, 'unique constraint %s failed' % self)
+    def exec_query(self, session, eidfrom, eidto):
+        rset = super(RQLUniqueConstraint, self).exec_query(session, eidfrom, eidto)
+        return len(rset) <= 1
 
 
 def split_expression(rqlstring):
