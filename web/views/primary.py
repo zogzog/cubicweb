@@ -13,6 +13,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg
@@ -254,6 +255,21 @@ class RelatedView(EntityView):
             self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
                                                self.req._('see them all')))
             self.w(u'</div>')
+
+
+class URLAttributeView(EntityView):
+    """use this view for attributes whose value is an url and that you want
+    to display as clickable link
+    """
+    id = 'urlattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def cell_call(self, row, col, rtype, **kwargs):
+        entity = self.rset.get_entity(row, col)
+        url = entity.printable_value(rtype)
+        if url:
+            self.w(u'<a href="%s">%s</a>' % (url, url))
+
 
 ## default primary ui configuration ###########################################
 
