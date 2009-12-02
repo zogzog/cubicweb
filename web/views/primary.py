@@ -158,7 +158,13 @@ class PrimaryView(EntityView):
         """
         for box in boxes:
             if isinstance(box, tuple):
-                label, rset, vid  = box
+                try:
+                    label, rset, vid, dispctrl  = box
+                except ValueError:
+                    warn('box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
+                         'please update %s' % self.__class__.__name__,
+                         DeprecationWarning)
+                    label, rset, vid  = box
                 self.w(u'<div class="sideBox">')
                 self.wview(vid, rset, title=label)
                 self.w(u'</div>')
@@ -178,11 +184,19 @@ class PrimaryView(EntityView):
                 continue
             label = display_name(self.req, rschema.type, role)
             vid = dispctrl.get('vid', 'sidebox')
-            sideboxes.append( (label, rset, vid) )
+            sideboxes.append( (label, rset, vid, dispctrl) )
         sideboxes += self.vreg['boxes'].possible_vobjects(
             self.req, rset=self.rset, row=self.row, view=self,
             context='incontext')
-        return sideboxes
+        # XXX since we've two sorted list, it may be worth using bisect
+        def get_order(x):
+            if isinstance(x, tuple):
+                # x is a view box (label, rset, vid, dispctrl)
+                # default to 1000 so view boxes occurs after component boxes
+                return x[-1].get('order', 1000)
+            # x is a component box
+            return x.propval('order')
+        return sorted(sideboxes, key=get_order)
 
     def _section_def(self, entity, where):
         rdefs = []
