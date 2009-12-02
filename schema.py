@@ -633,7 +633,7 @@ class RQLConstraint(RQLVocabularyConstraint):
             restriction = 'S eid %(s)s, ' + self.restriction
             args, ck = {'s': eidfrom}, 's'
         else:
-            restriction =rql = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
+            restriction = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
             args, ck = {'s': eidfrom, 'o': eidto}, ('s', 'o')
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
