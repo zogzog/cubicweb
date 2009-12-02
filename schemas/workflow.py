@@ -59,7 +59,7 @@ class State(EntityType):
                                          description=_('allowed transitions from this state'))
     state_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                description=_('workflow to which this state belongs'),
-                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N')])
+                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N', 'Y')])
 
 
 class BaseTransition(EntityType):
@@ -83,7 +83,7 @@ class BaseTransition(EntityType):
                                                   'allowed to pass this transition'))
     transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
-                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N')])
+                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y')])
 
 
 class Transition(BaseTransition):

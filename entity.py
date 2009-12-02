@@ -769,6 +769,7 @@ class Entity(AppObject, dict):
         insertsecurity = (rtype.has_local_role('add') and not
                           rtype.has_perm(self.req, 'add', **securitycheck_args))
         constraints = rtype.rproperty(subjtype, objtype, 'constraints')
+        # XXX consider constraint.mainvars to check if constraint apply
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well

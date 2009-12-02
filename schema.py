@@ -552,16 +552,29 @@ class RQLVocabularyConstraint(BaseConstraint):
      restriction is additional rql restriction that will be added to
      a predefined query, where the S and O variables respectivly represent
      the subject and the object of the relation
+
+     mainvars is a string that should be used as selection variable (eg
+     `'Any %s WHERE ...' % mainvars`). If not specified, an attempt will be
+     done to guess it according to variable used in the expression.
     """
 
-    def __init__(self, restriction):
+    def __init__(self, restriction, mainvars=None):
         self.restriction = restriction
+        if mainvars is None:
+            mainvars = guess_rrqlexpr_mainvars(restriction)
+        self.mainvars = mainvars
+        assert not ';' in mainvars # XXX check mainvars as for RQLExpression?
 
     def serialize(self):
-        return self.restriction
+        # start with a comma for bw compat, see below
+        return ';' + self.mainvars + ';' + self.restriction
 
     def deserialize(cls, value):
-        return cls(value)
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
+        _, mainvars, restriction = value.split(';', 2)
+        return cls(restriction, mainvars)
     deserialize = classmethod(deserialize)
 
     def check(self, entity, rtype, value):
@@ -585,14 +598,21 @@ class RQLConstraint(RQLVocabularyConstraint):
     """the rql constraint is similar to the RQLVocabularyConstraint but
     are also enforced at the repository level
     """
+    distinct_query = False
+
     def exec_query(self, session, eidfrom, eidto):
         if eidto is None:
-            rql = 'Any S WHERE S eid %(s)s, ' + self.restriction
-            return session.unsafe_execute(rql, {'s': eidfrom}, 's',
-                                          build_descr=False)
-        rql = 'Any S,O WHERE S eid %(s)s, O eid %(o)s, ' + self.restriction
-        return session.unsafe_execute(rql, {'s': eidfrom, 'o': eidto},
-                                      ('s', 'o'), build_descr=False)
+            # checking constraint for an attribute relation
+            restriction = 'S eid %(s)s, ' + self.restriction
+            args, ck = {'s': eidfrom}, 's'
+        else:
+            restriction =rql = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
+            args, ck = {'s': eidfrom, 'o': eidto}, ('s', 'o')
+        rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
+        if self.distinct_query:
+            rql = 'DISTINCT ' + rql
+        return session.unsafe_execute(rql, args, ck, build_descr=False)
+
     def error(self, eid, rtype, msg):
         raise ValidationError(eid, {rtype: msg})
 
@@ -609,6 +629,8 @@ class RQLUniqueConstraint(RQLConstraint):
     """the unique rql constraint check that the result of the query isn't
     greater than one
     """
+    distinct_query = True
+
     def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
@@ -797,20 +819,23 @@ class ERQLExpression(RQLExpression):
 
 PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
 
+def guess_rrqlexpr_mainvars(expression):
+    defined = set(split_expression(expression))
+    mainvars = []
+    if 'S' in defined:
+        mainvars.append('S')
+    if 'O' in defined:
+        mainvars.append('O')
+    if 'U' in defined:
+        mainvars.append('U')
+    if not mainvars:
+        raise Exception('unable to guess selection variables')
+    return ','.join(mainvars)
+
 class RRQLExpression(RQLExpression):
     def __init__(self, expression, mainvars=None, eid=None):
         if mainvars is None:
-            defined = set(split_expression(expression))
-            mainvars = []
-            if 'S' in defined:
-                mainvars.append('S')
-            if 'O' in defined:
-                mainvars.append('O')
-            if 'U' in defined:
-                mainvars.append('U')
-            if not mainvars:
-                raise Exception('unable to guess selection variables')
-            mainvars = ','.join(mainvars)
+            mainvars = guess_rrqlexpr_mainvars(expression)
         RQLExpression.__init__(self, expression, mainvars, eid)
         # graph of links between variable, used by rql rewriter
         self.vargraph = {}
