@@ -198,6 +198,11 @@ class NotificationView(EntityView):
                 subject = self.subject()
             except SkipEmail:
                 continue
+            except Exception, ex:
+                # shouldn't make the whole transaction fail because of rendering
+                # error (unauthorized or such)
+                self.exception(str(ex))
+                continue
             msg = format_mail(self.user_data, [emailaddr], content, subject,
                               config=self.config, msgid=msgid, references=refs)
             yield [emailaddr], msg
