@@ -122,15 +122,26 @@ class PrimaryView(EntityView):
                     value = None
             if self.skip_none and (value is None or value == ''):
                 continue
-            self._render_attribute(rschema, value, role=role, table=True)
+            try:
+                self._render_attribute(dispctrl, rschema, value,
+                                       role=role, table=True)
+            except TypeError:
+                warn('[3.6] _render_attribute prototype has changed, '
+                     'please update %s' % self.__class___, DeprecationWarning)
+                self._render_attribute(rschema, value, role=role, table=True)
         self.w(u'</table>')
 
     def render_entity_relations(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
-                self._render_relation(rset, dispctrl, 'autolimited',
-                                      self.show_rel_label)
+                try:
+                    self._render_relation(dispctrl, rset, 'autolimited')
+                except TypeError:
+                    warn('[3.6] _render_relation prototype has changed, '
+                         'please update %s' % self.__class___, DeprecationWarning)
+                    self._render_relation(rset, dispctrl, 'autolimited',
+                                          self.show_rel_label)
 
     def render_side_boxes(self, boxes):
         """display side related relations:
@@ -192,21 +203,25 @@ class PrimaryView(EntityView):
             rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, rset, dispctrl, defaultvid, showlabel):
+    def _render_relation(self, dispctrl, rset, defaultvid, showlabel):
         self.w(u'<div class="section">')
-        if showlabel:
+        if dispctrl.get('showlabel', self.show_rel_label):
             self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
         self.wview(dispctrl.get('vid', defaultvid), rset,
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
-    def _render_attribute(self, rschema, value, role='subject', table=False):
+    def _render_attribute(self, dispctrl, rschema, value,
+                          role='subject', table=False):
         if rschema.final:
-            show_label = self.show_attr_label
+            showlabel = dispctrl.get('showlabel', self.show_attr_label)
         else:
-            show_label = self.show_rel_label
-        label = display_name(self.req, rschema.type, role)
-        self.field(label, value, show_label=show_label, tr=False, table=table)
+            showlabel = dispctrl.get('showlabel', self.show_rel_label)
+        if dispctrl.get('label'):
+            label = self.req._(dispctrl.get('label'))
+        else:
+            label = display_name(self.req, rschema.type, role)
+        self.field(label, value, show_label=showlabel, tr=False, table=table)
 
 
 class RelatedView(EntityView):
