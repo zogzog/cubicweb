@@ -226,7 +226,7 @@ class PrimaryView(EntityView):
             rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, dispctrl, rset, defaultvid, showlabel):
+    def _render_relation(self, dispctrl, rset, defaultvid):
         self.w(u'<div class="section">')
         if dispctrl.get('showlabel', self.show_rel_label):
             self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
