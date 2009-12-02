@@ -50,7 +50,10 @@ class PrimaryView(EntityView):
         #self.render_entity_toolbox(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        boxes = self._prepare_side_boxes(entity)
+        if self.is_primary():
+            boxes = self._prepare_side_boxes(entity)
+        else:
+            boxes = None
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
         self.render_entity_summary(entity)
@@ -88,7 +91,12 @@ class PrimaryView(EntityView):
         """default implementation return dc_title"""
         title = xml_escape(entity.dc_title())
         if title:
-            self.w(u'<h1>%s</h1>' % title)
+            if self.is_primary():
+                self.w(u'<h1>%s</h1>' % title)
+            else:
+                atitle = self.req._('follow this link for more information on this %s') % entity.dc_type()
+                self.w(u'<h4><a href="%s" title="%s">%s</a></h4>'
+                       % (entity.absolute_url(), atitle, title))
 
     def render_entity_toolbox(self, entity):
         self.content_navigation_components('ctxtoolbar')
