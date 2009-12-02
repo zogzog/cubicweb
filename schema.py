@@ -559,11 +559,19 @@ class RQLVocabularyConstraint(BaseConstraint):
     """
 
     def __init__(self, restriction, mainvars=None):
-        self.restriction = restriction
+        self.restriction = normalize_expression(restriction)
         if mainvars is None:
             mainvars = guess_rrqlexpr_mainvars(restriction)
+        else:
+            normmainvars = []
+            for mainvar in mainvars.split(','):
+                mainvar = mainvar.strip()
+                if not mainvar.isalpha():
+                    raise Exception('bad mainvars %s' % mainvars)
+                normmainvars.append(mainvar)
+            assert mainvars, 'bad mainvars %s' % mainvars
+            mainvars = ','.join(sorted(normmainvars))
         self.mainvars = mainvars
-        assert not ';' in mainvars # XXX check mainvars as for RQLExpression?
 
     def serialize(self):
         # start with a comma for bw compat, see below
