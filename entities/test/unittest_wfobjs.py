@@ -37,12 +37,17 @@ class WorkflowBuildingTC(EnvBasedTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        # XXX enhance message
-        self.assertEquals(ex.errors, {'state_of': 'unique constraint S name N, Y state_of O, Y name N failed'})
+        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
         self.commit()
+        # gnark gnark
+        bar = wf.add_state(u'bar')
+        self.commit()
+        bar.set_attributes(name=u'foo')
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')
@@ -51,8 +56,19 @@ class WorkflowBuildingTC(EnvBasedTC):
         wf.add_transition(u'baz', (foo,), bar, ('managers',))
         wf.add_transition(u'baz', (bar,), foo)
         ex = self.assertRaises(ValidationError, self.commit)
-        # XXX enhance message
-        self.assertEquals(ex.errors, {'transition_of': 'unique constraint S name N, Y transition_of O, Y name N failed'})
+        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
+        # no pb if not in the same workflow
+        wf2 = add_wf(self, 'Company')
+        foo = wf.add_state(u'foo', initial=True)
+        bar = wf.add_state(u'bar')
+        wf.add_transition(u'baz', (foo,), bar, ('managers',))
+        self.commit()
+        # gnark gnark
+        biz = wf.add_transition(u'biz', (bar,), foo)
+        self.commit()
+        biz.set_attributes(name=u'baz')
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
 
 
 class WorkflowTC(EnvBasedTC):

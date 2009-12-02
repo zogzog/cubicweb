@@ -48,7 +48,9 @@ class State(EntityType):
     permissions = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256)
+                  maxsize=256,
+                  constraints=[RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N', 'Y',
+                                                   _('workflow already have a state of that name'))])
     description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
 
@@ -59,7 +61,8 @@ class State(EntityType):
                                          description=_('allowed transitions from this state'))
     state_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                description=_('workflow to which this state belongs'),
-                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N', 'Y')])
+                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N', 'Y',
+                                                                _('workflow already have a state of that name'))])
 
 
 class BaseTransition(EntityType):
@@ -67,7 +70,9 @@ class BaseTransition(EntityType):
     permissions = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256)
+                  maxsize=256,
+                  constraints=[RQLUniqueConstraint('S name N, S transition_of WF, Y transition_of WF, Y name N', 'Y',
+                                                   _('workflow already have a transition of that name'))])
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(fulltextindexed=True,
                          description=_('semantic description of this transition'))
@@ -83,7 +88,8 @@ class BaseTransition(EntityType):
                                                   'allowed to pass this transition'))
     transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
-                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y')])
+                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y',
+                                                                     _('workflow already have a state of that name'))])
 
 
 class Transition(BaseTransition):
