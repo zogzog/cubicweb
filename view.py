@@ -312,7 +312,10 @@ class View(AppObject):
             else:
                 w(u'<span>%s</span> ' % label)
         if table:
-            w(u'<td>%s</td></tr>' % value)
+            if not (show_label and label):
+                w(u'<td colspan="2">%s</td></tr>' % value)
+            else:
+                w(u'<td>%s</td></tr>' % value)
         else:
             w(u'<span>%s</span></div>' % value)
 
