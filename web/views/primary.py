@@ -140,7 +140,7 @@ class PrimaryView(EntityView):
                     self._render_relation(dispctrl, rset, 'autolimited')
                 except TypeError:
                     warn('[3.6] _render_relation prototype has changed, '
-                         'please update %s' % self.__class___, DeprecationWarning)
+                         'please update %s' % self.__class__, DeprecationWarning)
                     self._render_relation(rset, dispctrl, 'autolimited',
                                           self.show_rel_label)
 
