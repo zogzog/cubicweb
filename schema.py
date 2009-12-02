@@ -614,8 +614,8 @@ class RQLConstraint(RQLVocabularyConstraint):
         self.msg = msg
 
     def serialize(self):
-        # start with a comma for bw compat, see below
-        return ';%s;%s\n%s' % (self.mainvars + ';' + self.restriction,
+        # start with a semicolon for bw compat, see below
+        return ';%s;%s\n%s' % (self.mainvars, self.restriction,
                                self.msg or '')
 
     def deserialize(cls, value):
