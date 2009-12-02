@@ -596,10 +596,11 @@ class RQLVocabularyConstraint(BaseConstraint):
         pass # this is a vocabulary constraint, not enforce XXX why?
 
     def __str__(self):
-        return self.restriction
+        return '%s(Any %s WHERE %s)' % (self.__class__.__name__, self.mainvars,
+                                        self.restriction)
 
     def __repr__(self):
-        return '<%s : %s>' % (self.__class__.__name__, repr(self.restriction))
+        return '<%s @%#x>' % (self.__str__(), id(self))
 
 
 class RQLConstraint(RQLVocabularyConstraint):
