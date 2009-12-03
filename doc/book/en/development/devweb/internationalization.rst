@@ -20,6 +20,9 @@ Cubicweb' internalization involves two steps:
 String internationalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+User defined string
+```````````````````
+
 In the Python code and cubicweb-tal templates translatable strings can be
 marked in one of the following ways :
 
@@ -63,14 +66,39 @@ messages catalogs.
 Translations in cubicweb-tal template can also be done with TAL tags
 `i18n:content` and `i18n:replace`.
 
-.. note::
-
-   We dont need to mark the translation strings of entities/relations
-   used by a particular instance's schema as they are generated
-   automatically.
 
 If you need to add messages on top of those that can be found in the source,
 you can create a file named `i18n/static-messages.pot`.
+
+Generated string
+````````````````
+
+We do not need to mark the translation strings of entities/relations used by a
+particular instance's schema as they are generated automatically. String for
+various actions are also generated.
+
+For exemple the following schema ::
+
+  Class EntityA(EntityType):
+      relationa2b = SubjectRelation('EntityB')
+
+  class EntityB(EntityType):
+      pass
+
+May generate the following message ::
+
+  creating EntityB (EntityA %(linkto)s relation_a2b EntityB)
+
+This message will be used in views of ``EntityA`` for creation of a new
+``EntityB`` with a preset relation ``relation_a2b`` between the current
+``EntityA`` and the new ``EntityB``. The opposite message ::
+
+  creating EntityA (EntityA relation_a2b %(linkto)s EntityA)
+
+Is used for similar creation of an ``EntityA`` from a view of ``EntityB``.
+
+In the translated string you can use ``%(linkto)s`` for reference to the source
+``entity``.
 
 Handle the translation catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
