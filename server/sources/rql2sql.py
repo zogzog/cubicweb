@@ -693,7 +693,7 @@ class SQLGenerator(object):
         lhsvar, _, rhsvar, rhsconst = relation_info(relation)
         # we are sure here to have a lhsvar
         assert lhsvar is not None
-        if isinstance(relation.parent, Not):
+        if isinstance(relation.parent, Not) and len(lhsvar.stinfo['relations']) > 1:
             self._state.done.add(relation.parent)
             if rhsvar is not None and not rhsvar._q_invariant:
                 # if the lhs variable is only linked to this relation, this mean we
