@@ -8,3 +8,4 @@
 \~$
 \#.*?\#$
 \.swp$
+^doc/book/en/apidoc$
