@@ -191,7 +191,7 @@ class Operation(object):
         return -(i + 1)
 
     def handle_event(self, event):
-        """delegate event handling to the opertaion"""
+        """delegate event handling to the operation"""
         getattr(self, event)()
 
     def precommit_event(self):
@@ -221,6 +221,9 @@ class Operation(object):
         do nothing by default, the operation will just be removed from the pool
         operation list
         """
+
+    def postcommit_event(self):
+        """the observed connections pool has committed"""
 
 
 class PreCommitOperation(Operation):

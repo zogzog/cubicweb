@@ -426,6 +426,7 @@ class WorkflowableMixIn(object):
     def possible_transitions(self, type='normal'):
         """generates transition that MAY be fired for the given entity,
         expected to be in this state
+        used only by the UI
         """
         if self.current_state is None or self.current_workflow is None:
             return

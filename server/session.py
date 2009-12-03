@@ -467,6 +467,15 @@ class Session(RequestSessionMixIn):
                     self.rollback(reset_pool)
                     raise
             self.pool.commit()
+            self.commit_state = trstate = 'postcommit'
+            while self.pending_operations:
+                operation = self.pending_operations.pop(0)
+                operation.processed = trstate
+                try:
+                    operation.handle_event('%s_event' % trstate)
+                except:
+                    self.exception('error while %sing', trstate)
+            self.debug('%s session %s done', trstate, self.id)
         finally:
             self._touch()
             self.commit_state = None
