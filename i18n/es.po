@@ -234,6 +234,9 @@ msgstr "Booleano"
 msgid "Boolean_plural"
 msgstr "Booleanos"
 
+msgid "BoundConstraint"
+msgstr ""
+
 msgid "Browse by category"
 msgstr "Busca por categoría"
 
@@ -337,6 +340,9 @@ msgstr "Autorización de suprimir"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
 
+msgid "Download page as pdf"
+msgstr ""
+
 msgid "EmailAddress"
 msgstr "Correo Electrónico"
 
@@ -361,6 +367,12 @@ msgstr "Número flotante"
 msgid "Float_plural"
 msgstr "Números flotantes"
 
+# schema pot file, generated on 2009-12-03 09:22:35
+#
+# singular and plural forms for each entity type
+msgid "FormatConstraint"
+msgstr ""
+
 msgid "From:"
 msgstr "De: "
 
@@ -375,6 +387,9 @@ msgstr "Números enteros"
 
 msgid "Interval"
 msgstr "Duración"
+
+msgid "IntervalBoundConstraint"
+msgstr ""
 
 msgid "Interval_plural"
 msgstr "Duraciones"
@@ -463,17 +478,29 @@ msgstr "Contraseñas"
 msgid "Please note that this is only a shallow copy"
 msgstr "Recuerde que no es más que una copia superficial"
 
+msgid "RQLConstraint"
+msgstr ""
+
 msgid "RQLExpression"
 msgstr "Expresión RQL"
 
 msgid "RQLExpression_plural"
 msgstr "Expresiones RQL"
 
+msgid "RQLUniqueConstraint"
+msgstr ""
+
+msgid "RQLVocabularyConstraint"
+msgstr ""
+
 msgid "Read permissions"
 msgstr "Autorización de leer"
 
 msgid "Recipients:"
 msgstr "Destinatarios"
+
+msgid "RegexpConstraint"
+msgstr ""
 
 msgid "Registry's content"
 msgstr ""
@@ -497,6 +524,9 @@ msgstr "Buscar"
 msgid "Server"
 msgstr "Servidor"
 
+msgid "SizeConstraint"
+msgstr ""
+
 msgid "Startup views"
 msgstr "Vistas de Inicio"
 
@@ -505,6 +535,9 @@ msgstr "Estado"
 
 msgid "State_plural"
 msgstr "Estados"
+
+msgid "StaticVocabularyConstraint"
+msgstr ""
 
 msgid "String"
 msgstr "Cadena de caracteres"
@@ -641,6 +674,9 @@ msgstr "Transiciones"
 #, python-format
 msgid "Unable to find anything named \"%s\" in the schema !"
 msgstr "No encontramos el nombre \"%s\" en el esquema"
+
+msgid "UniqueConstraint"
+msgstr ""
 
 msgid "Update permissions"
 msgstr "Autorización de modificar"
@@ -917,9 +953,6 @@ msgstr "Activado"
 
 msgid "add"
 msgstr "Agregar"
-
-msgid "add BaseTransition transition_of Workflow object"
-msgstr ""
 
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Agregar a los favoritos "
@@ -1420,12 +1453,6 @@ msgstr "Filtro por tipo"
 msgid "components_etypenavigation_description"
 msgstr "Permite filtrar por tipo de entidad los resultados de búsqueda"
 
-msgid "components_help"
-msgstr "Botón de ayuda"
-
-msgid "components_help_description"
-msgstr "El botón de ayuda, en el encabezado de página"
-
 msgid "components_loggeduserlink"
 msgstr "Liga usuario"
 
@@ -1447,12 +1474,6 @@ msgid "components_navigation_description"
 msgstr ""
 "Componente que permite distribuir sobre varias páginas las búsquedas que "
 "arrojan mayores resultados que un número previamente elegido"
-
-msgid "components_pdfview"
-msgstr ""
-
-msgid "components_pdfview_description"
-msgstr ""
 
 msgid "components_rqlinput"
 msgstr "Barra rql"
@@ -1531,6 +1552,12 @@ msgstr "Ruta de Navegación"
 msgid "contentnavigation_breadcrumbs_description"
 msgstr "Muestra un camino que permite localizar la página actual en el sitio"
 
+msgid "contentnavigation_metadata"
+msgstr ""
+
+msgid "contentnavigation_metadata_description"
+msgstr ""
+
 msgid "contentnavigation_prevnext"
 msgstr "Elemento anterior / siguiente"
 
@@ -1546,6 +1573,12 @@ msgid "contentnavigation_seealso_description"
 msgstr ""
 "sección que muestra las entidades ligadas por la relación \"vea también\" , "
 "si la entidad soporta esta relación."
+
+msgid "contentnavigation_view_page_as_pdf"
+msgstr ""
+
+msgid "contentnavigation_view_page_as_pdf_description"
+msgstr ""
 
 msgid "contentnavigation_wfhistory"
 msgstr "Histórico del workflow."
@@ -1643,10 +1676,6 @@ msgstr "creado por"
 
 msgid "created_by_object"
 msgstr "ha creado"
-
-msgid ""
-"creating BaseTransition (BaseTransition transition_of Workflow %(linkto)s)"
-msgstr ""
 
 msgid "creating Bookmark (Bookmark bookmarked_by CWUser %(linkto)s)"
 msgstr "Creando Favorito"
@@ -1779,6 +1808,9 @@ msgstr "Exportar entidades en csv"
 
 msgid "csv export"
 msgstr "Exportar CSV"
+
+msgid "ctxtoolbar"
+msgstr ""
 
 #, python-format
 msgid "currently attached file: %s"
@@ -2027,6 +2059,9 @@ msgstr ""
 msgid "destination state for this transition"
 msgstr "Estado destino para esta transición"
 
+msgid "destination state must be in the same workflow as our parent transition"
+msgstr ""
+
 msgid "destination state of a transition"
 msgstr "Estado destino de una transición"
 
@@ -2078,9 +2113,6 @@ msgstr "Mostrar la caja o no"
 msgid "display the component or not"
 msgstr "Mostrar el componente o no"
 
-msgid "display the pdf icon or not"
-msgstr ""
-
 msgid ""
 "distinct label to distinguate between other permission entity of the same "
 "name"
@@ -2097,9 +2129,6 @@ msgstr ""
 
 msgid "download icon"
 msgstr "ícono de descarga"
-
-msgid "download page as pdf"
-msgstr ""
 
 msgid "download schema as owl"
 msgstr "Descargar esquema en OWL"
@@ -2196,6 +2225,9 @@ msgstr ""
 
 msgid "eta_date"
 msgstr "fecha de fin"
+
+msgid "exit state must a subworkflow state"
+msgstr ""
 
 msgid "exit_point"
 msgstr ""
@@ -2295,6 +2327,10 @@ msgstr "Amigo de un Amigo, FOAF"
 
 msgid "follow"
 msgstr "Seguir la liga"
+
+#, python-format
+msgid "follow this link for more information on this %s"
+msgstr ""
 
 msgid "for_user"
 msgstr "Para el usuario"
@@ -3437,6 +3473,12 @@ msgstr "vistas de inicio"
 msgid "state"
 msgstr "estado"
 
+msgid "state and transition don't belong the the same workflow"
+msgstr ""
+
+msgid "state doesn't apply to this entity's type"
+msgstr ""
+
 msgid "state doesn't belong to entity's current workflow"
 msgstr ""
 
@@ -3446,6 +3488,9 @@ msgstr ""
 msgid ""
 "state doesn't belong to entity's workflow. You may want to set a custom "
 "workflow for this entity first."
+msgstr ""
+
+msgid "state doesn't belong to this workflow"
 msgstr ""
 
 msgid "state_of"
@@ -3486,6 +3531,10 @@ msgstr ""
 
 msgctxt "WorkflowTransition"
 msgid "subworkflow"
+msgstr ""
+
+msgid ""
+"subworkflow isn't a workflow for the same types as the transition's workflow"
 msgstr ""
 
 msgid "subworkflow state"
@@ -3665,6 +3714,10 @@ msgstr "a hacer por"
 
 msgid "toggle check boxes"
 msgstr "cambiar valor"
+
+#, python-format
+msgid "transition %s isn't allowed from %s"
+msgstr ""
 
 msgid "transition doesn't belong to entity's workflow"
 msgstr ""
@@ -3965,6 +4018,12 @@ msgstr ""
 msgid "workflow"
 msgstr ""
 
+msgid "workflow already have a state of that name"
+msgstr ""
+
+msgid "workflow already have a transition of that name"
+msgstr ""
+
 #, python-format
 msgid "workflow changed to \"%s\""
 msgstr ""
@@ -3973,6 +4032,12 @@ msgid "workflow has no initial state"
 msgstr ""
 
 msgid "workflow history item"
+msgstr ""
+
+msgid "workflow isn't a workflow for this type"
+msgstr ""
+
+msgid "workflow isn't a workflow of this type"
 msgstr ""
 
 msgid "workflow to which this state belongs"
@@ -4088,6 +4153,12 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "comment:"
 #~ msgstr "Comentario:"
+
+#~ msgid "components_help"
+#~ msgstr "Botón de ayuda"
+
+#~ msgid "components_help_description"
+#~ msgstr "El botón de ayuda, en el encabezado de página"
 
 #~ msgid "creating State (State state_of CWEType %(linkto)s)"
 #~ msgstr "Creación de un estado por el tipo %(linkto)s"

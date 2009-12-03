@@ -233,6 +233,9 @@ msgstr "Booléen"
 msgid "Boolean_plural"
 msgstr "Booléen"
 
+msgid "BoundConstraint"
+msgstr "contrainte de bornes"
+
 msgid "Browse by category"
 msgstr "Naviguer par catégorie"
 
@@ -336,6 +339,9 @@ msgstr "Permissions de supprimer"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez vous supprimer le(s) élément(s) suivant(s)"
 
+msgid "Download page as pdf"
+msgstr "télécharger la page au format PDF"
+
 msgid "EmailAddress"
 msgstr "Adresse électronique"
 
@@ -360,6 +366,12 @@ msgstr "Nombre flottant"
 msgid "Float_plural"
 msgstr "Nombres flottants"
 
+# schema pot file, generated on 2009-12-03 09:22:35
+#
+# singular and plural forms for each entity type
+msgid "FormatConstraint"
+msgstr "contrainte de format"
+
 msgid "From:"
 msgstr "De :"
 
@@ -374,6 +386,9 @@ msgstr "Nombres entiers"
 
 msgid "Interval"
 msgstr "Durée"
+
+msgid "IntervalBoundConstraint"
+msgstr "contrainte d'interval"
 
 msgid "Interval_plural"
 msgstr "Durées"
@@ -462,17 +477,29 @@ msgstr "Mots de passe"
 msgid "Please note that this is only a shallow copy"
 msgstr "Attention, cela n'effectue qu'une copie de surface"
 
+msgid "RQLConstraint"
+msgstr "contrainte rql"
+
 msgid "RQLExpression"
 msgstr "Expression RQL"
 
 msgid "RQLExpression_plural"
 msgstr "Expressions RQL"
 
+msgid "RQLUniqueConstraint"
+msgstr "contrainte rql d'unicité"
+
+msgid "RQLVocabularyConstraint"
+msgstr "contrainte rql de vocabulaire"
+
 msgid "Read permissions"
 msgstr "Permissions de lire"
 
 msgid "Recipients:"
 msgstr "Destinataires :"
+
+msgid "RegexpConstraint"
+msgstr "contrainte expression régulière"
 
 msgid "Registry's content"
 msgstr "Contenu du registre"
@@ -496,6 +523,9 @@ msgstr "Rechercher"
 msgid "Server"
 msgstr "Serveur"
 
+msgid "SizeConstraint"
+msgstr "contrainte de taille"
+
 msgid "Startup views"
 msgstr "Vues de départ"
 
@@ -504,6 +534,9 @@ msgstr "État"
 
 msgid "State_plural"
 msgstr "États"
+
+msgid "StaticVocabularyConstraint"
+msgstr "contrainte de vocabulaire"
 
 msgid "String"
 msgstr "Chaîne de caractères"
@@ -641,6 +674,9 @@ msgstr "Transitions"
 msgid "Unable to find anything named \"%s\" in the schema !"
 msgstr "Rien de nommé \"%s\" dans le schéma"
 
+msgid "UniqueConstraint"
+msgstr "contrainte d'unicité"
+
 msgid "Update permissions"
 msgstr "Permissions de modifier"
 
@@ -753,7 +789,7 @@ msgid "actions"
 msgstr "actions"
 
 msgid "actions_about"
-msgstr ""
+msgstr "à propos"
 
 msgid "actions_about_description"
 msgstr ""
@@ -777,7 +813,7 @@ msgid "actions_cancel_description"
 msgstr ""
 
 msgid "actions_changelog"
-msgstr ""
+msgstr "changements récents"
 
 msgid "actions_changelog_description"
 msgstr ""
@@ -819,7 +855,7 @@ msgid "actions_follow_description"
 msgstr ""
 
 msgid "actions_help"
-msgstr ""
+msgstr "aide"
 
 msgid "actions_help_description"
 msgstr ""
@@ -861,7 +897,7 @@ msgid "actions_myprefs_description"
 msgstr ""
 
 msgid "actions_poweredby"
-msgstr ""
+msgstr "powered by"
 
 msgid "actions_poweredby_description"
 msgstr ""
@@ -922,9 +958,6 @@ msgstr "activé"
 
 msgid "add"
 msgstr "ajouter"
-
-msgid "add BaseTransition transition_of Workflow object"
-msgstr ""
 
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
@@ -1425,12 +1458,6 @@ msgstr "filtrage par type"
 msgid "components_etypenavigation_description"
 msgstr "permet de filtrer par type d'entité les résultats d'une recherche"
 
-msgid "components_help"
-msgstr "bouton aide"
-
-msgid "components_help_description"
-msgstr "le bouton d'aide, dans l'en-tête de page"
-
 msgid "components_loggeduserlink"
 msgstr "lien utilisateur"
 
@@ -1453,12 +1480,6 @@ msgid "components_navigation_description"
 msgstr ""
 "composant permettant de présenter sur plusieurs pages les requêtes renvoyant "
 "plus d'un certain nombre de résultat"
-
-msgid "components_pdfview"
-msgstr "icône pdf"
-
-msgid "components_pdfview_description"
-msgstr "l'icône pdf pour obtenir la page courant au format PDF"
 
 msgid "components_rqlinput"
 msgstr "barre rql"
@@ -1538,6 +1559,12 @@ msgid "contentnavigation_breadcrumbs_description"
 msgstr ""
 "affiche un chemin permettant de localiser la page courante dans le site"
 
+msgid "contentnavigation_metadata"
+msgstr "méta-données de l'entité"
+
+msgid "contentnavigation_metadata_description"
+msgstr ""
+
 msgid "contentnavigation_prevnext"
 msgstr "élément précedent / suivant"
 
@@ -1553,6 +1580,12 @@ msgid "contentnavigation_seealso_description"
 msgstr ""
 "section affichant les entités liées par la relation \"voir aussi\" si "
 "l'entité supporte cette relation."
+
+msgid "contentnavigation_view_page_as_pdf"
+msgstr "icône pdf"
+
+msgid "contentnavigation_view_page_as_pdf_description"
+msgstr "l'icône pdf pour obtenir la page courant au format PDF"
 
 msgid "contentnavigation_wfhistory"
 msgstr "historique du workflow."
@@ -1650,10 +1683,6 @@ msgstr "créé par"
 
 msgid "created_by_object"
 msgstr "a créé"
-
-msgid ""
-"creating BaseTransition (BaseTransition transition_of Workflow %(linkto)s)"
-msgstr ""
 
 msgid "creating Bookmark (Bookmark bookmarked_by CWUser %(linkto)s)"
 msgstr "création d'un signet pour %(linkto)s"
@@ -1786,6 +1815,9 @@ msgstr "export d'entités en CSV"
 
 msgid "csv export"
 msgstr "export CSV"
+
+msgid "ctxtoolbar"
+msgstr "barre d'outils"
 
 #, python-format
 msgid "currently attached file: %s"
@@ -2039,6 +2071,11 @@ msgstr "format"
 msgid "destination state for this transition"
 msgstr "états accessibles par cette transition"
 
+msgid "destination state must be in the same workflow as our parent transition"
+msgstr ""
+"l'état de destination doit être dans le même workflow que la transition "
+"parente"
+
 msgid "destination state of a transition"
 msgstr "état d'arrivée d'une transition"
 
@@ -2093,9 +2130,6 @@ msgstr "afficher la boîte ou non"
 msgid "display the component or not"
 msgstr "afficher le composant ou non"
 
-msgid "display the pdf icon or not"
-msgstr "afficher l'icône pdf ou non"
-
 msgid ""
 "distinct label to distinguate between other permission entity of the same "
 "name"
@@ -2112,9 +2146,6 @@ msgstr "télécharger %s"
 
 msgid "download icon"
 msgstr "icône de téléchargement"
-
-msgid "download page as pdf"
-msgstr "télécharger la page au format PDF"
 
 msgid "download schema as owl"
 msgstr "télécharger le schéma OWL"
@@ -2210,6 +2241,9 @@ msgstr ""
 
 msgid "eta_date"
 msgstr "date de fin"
+
+msgid "exit state must a subworkflow state"
+msgstr "l'état de sortie doit être un état du sous-workflow"
 
 msgid "exit_point"
 msgstr "état de sortie"
@@ -2309,6 +2343,10 @@ msgstr "foaf"
 
 msgid "follow"
 msgstr "suivre le lien"
+
+#, python-format
+msgid "follow this link for more information on this %s"
+msgstr "suivez ce lien pour plus d'information sur ce %s"
 
 msgid "for_user"
 msgstr "pour l'utilisateur"
@@ -3455,6 +3493,12 @@ msgstr "vues de départ"
 msgid "state"
 msgstr "état"
 
+msgid "state and transition don't belong the the same workflow"
+msgstr "l'état et la transition n'appartiennent pas au même workflow"
+
+msgid "state doesn't apply to this entity's type"
+msgstr "cet état ne s'applique pas à ce type d'entité"
+
 msgid "state doesn't belong to entity's current workflow"
 msgstr "l'état n'appartient pas au workflow courant de l'entité"
 
@@ -3467,6 +3511,9 @@ msgid ""
 msgstr ""
 "l'état n'appartient pas au workflow courant de l'entité. Vous désirez peut-"
 "être spécifier que cette entité doit utiliser ce workflow."
+
+msgid "state doesn't belong to this workflow"
+msgstr "l'état n'appartient pas à ce workflow"
 
 msgid "state_of"
 msgstr "état de"
@@ -3507,6 +3554,12 @@ msgstr "sous-workflow"
 msgctxt "WorkflowTransition"
 msgid "subworkflow"
 msgstr "sous-workflow"
+
+msgid ""
+"subworkflow isn't a workflow for the same types as the transition's workflow"
+msgstr ""
+"le sous-workflow ne s'applique pas aux mêmes types que le workflow de cette "
+"transition"
 
 msgid "subworkflow state"
 msgstr "état de sous-workflow"
@@ -3687,6 +3740,10 @@ msgstr "à faire par"
 msgid "toggle check boxes"
 msgstr "inverser les cases à cocher"
 
+#, python-format
+msgid "transition %s isn't allowed from %s"
+msgstr "la transition %s n'est pas autorisée depuis l'état %s"
+
 msgid "transition doesn't belong to entity's workflow"
 msgstr "la transition n'appartient pas au workflow de l'entité"
 
@@ -3828,7 +3885,7 @@ msgid "update_permission_object"
 msgstr "a la permission de modifier"
 
 msgid "updated"
-msgstr ""
+msgstr "mis à jour"
 
 #, python-format
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
@@ -3988,6 +4045,12 @@ msgstr ""
 msgid "workflow"
 msgstr "workflow"
 
+msgid "workflow already have a state of that name"
+msgstr "le workflow a déja un état du même nom"
+
+msgid "workflow already have a transition of that name"
+msgstr "le workflow a déja une transition du même nom"
+
 #, python-format
 msgid "workflow changed to \"%s\""
 msgstr "workflow changé à \"%s\""
@@ -3997,6 +4060,12 @@ msgstr "le workflow n'a pas d'état initial"
 
 msgid "workflow history item"
 msgstr "entrée de l'historique de workflow"
+
+msgid "workflow isn't a workflow for this type"
+msgstr "le workflow ne s'applique pas à ce type d'entité"
+
+msgid "workflow isn't a workflow of this type"
+msgstr ""
 
 msgid "workflow to which this state belongs"
 msgstr "workflow auquel cet état appartient"
@@ -4036,8 +4105,17 @@ msgstr "vous avez été déconnecté"
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
 
+#~ msgid "components_help"
+#~ msgstr "bouton aide"
+
+#~ msgid "components_help_description"
+#~ msgstr "le bouton d'aide, dans l'en-tête de page"
+
 #~ msgid "destination state"
 #~ msgstr "état de destination"
+
+#~ msgid "display the pdf icon or not"
+#~ msgstr "afficher l'icône pdf ou non"
 
 #~ msgctxt "inlined:CWRelation:from_entity:subject"
 #~ msgid "remove this CWEType"
