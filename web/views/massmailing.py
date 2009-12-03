@@ -127,4 +127,4 @@ class MassMailingFormView(form.FormViewMixIn, EntityView):
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
         form = self._cw.vreg['forms'].select('massmailing', self._cw, rset=self.cw_rset,
                                 action='sendmail', domid='sendmail')
-        self.w(form.form_render(sender=from_addr))
+        self.w(form.render(formvalues=dict(sender=from_addr)))

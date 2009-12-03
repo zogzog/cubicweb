@@ -28,6 +28,7 @@ from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.views import forms
 
+_pvdc = uicfg.primaryview_display_ctrl
 
 def relation_id(eid, rtype, role, reid):
     """return an identifier for a relation between two entities"""
@@ -96,7 +97,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
                                       href=entity.absolute_url()))
         w(u'</ul>\n')
-        w(form.form_render())
+        w(form.render())
 
 
 class ClickAndEditFormView(FormViewMixIn, EntityView):
@@ -149,8 +150,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             self.relation_form(lzone, value, form,
                                self._build_renderer(entity, rtype, role))
         else:
-            if rvid is None:
-                rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+            rvid = self._compute_best_vid(entity.e_schema, rschema, role)
             rset = entity.related(rtype, role)
             if rset:
                 value = self._cw.view(rvid, rset)
@@ -202,7 +202,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
           u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
           % (divid, divid, divid))
         w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
-        w(form.form_render(renderer=renderer))
+        w(form.render(renderer=renderer))
         w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
                 divid, xml_escape(self._onclick % form.event_args),
                 self.req._(self._landingzonemsg)))
@@ -211,6 +211,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         w(u'</div>')
 
     def _compute_best_vid(self, eschema, rschema, role):
+        dispctrl = _pvdc.etype_get(eschema, rschema, role)
+        if dispctrl.get('rvid'):
+            return dispctrl['rvid']
         if eschema.cardinality(rschema, role) in '+*':
             return self._many_rvid
         return self._one_rvid
@@ -254,6 +257,8 @@ class DummyForm(object):
     __slots__ = ('event_args',)
     def form_render(self, **_args):
         return u''
+    def render(self, **_args):
+        return u''
     def append_field(self, *args):
         pass
 
@@ -269,7 +274,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         eschema = entity.e_schema
         rtype = str(rschema)
         # XXX check autoform_section. what if 'generic'?
-        dispctrl = uicfg.primaryview_display_ctrl.etype_get(eschema, rtype, role)
+        dispctrl = _pvdc.etype_get(eschema, rtype, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
             return False
@@ -310,7 +315,7 @@ class EditionFormView(FormViewMixIn, EntityView):
                                              entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.form_render(formvid=u'edition'))
+        self.w(form.render(rendervalues=dict(formvid=u'edition')))
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -447,7 +452,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select(self.__regid__, self._cw,
                                              rset=self.cw_rset,
                                              copy_nav_params=True)
-        self.w(form.form_render())
+        self.w(form.render())
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
@@ -479,9 +484,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         form = self.vreg['forms'].select('edition', self._cw,
                                          entity=entity,
                                          form_renderer_id='inline',
-                                         mainform=False, copy_nav_params=False,
+                                         copy_nav_params=False,
+                                         mainform=False,
+                                         parent_form=self.pform,
                                          **self.extra_kwargs)
-        form.parent_form = self.pform
+        if self.pform is None:
+            form.restore_previous_post(form.session_key())
+        #assert form.parent_form
         self.add_hiddens(form, entity)
         return form
 
@@ -500,16 +509,24 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         entity = self._entity()
         divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        title = self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
-        removejs = self.removejs % (self.peid, self.rtype, entity.eid)
+        title = self.form_title(entity, i18nctx)
+        removejs = self.removejs and self.removejs % (
+            self.peid, self.rtype, entity.eid)
         countkey = '%s_count' % self.rtype
         try:
             self._cw.data[countkey] += 1
-        except:
+        except KeyError:
             self._cw.data[countkey] = 1
-        self.w(self.form.form_render(
+        self.w(self.form.form.render(
             divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
             counter=self.req.data[countkey], **kwargs))
+        self.w(self.form.render(
+            rendervalues=dict(divid=divid, title=title, removejs=removejs,
+                              i18nctx=i18nctx, counter=self._cw.data[countkey]),
+            formvalues=kwargs))
+
+    def form_title(self, entity, i18nctx):
+        return self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
@@ -540,7 +557,20 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     __select__ = (match_kwargs('peid', 'rtype')
                   & specified_etype_implements('Any'))
     _select_attrs = InlineEntityEditionFormView._select_attrs + ('etype',)
-    removejs = "removeInlineForm('%s', '%s', '%s')"
+
+    @property
+    def removejs(self):
+        entity = self._entity()
+        card = entity.e_schema.role_rproperty(neg_role(self.role), self.rtype, 'cardinality')
+        card = card[self.role == 'object']
+        # when one is adding an inline entity for a relation of a single card,
+        # the 'add a new xxx' link disappears. If the user then cancel the addition,
+        # we have to make this link appears back. This is done by giving add new link
+        # id to removeInlineForm.
+        if card not in '?1':
+            return "removeInlineForm('%s', '%s', '%s')"
+        divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
+        return "removeInlineForm('%%s', '%%s', '%%s', '%s')" % divid
 
     @cached
     def _entity(self):

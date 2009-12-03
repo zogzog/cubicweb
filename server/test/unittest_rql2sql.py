@@ -1044,7 +1044,12 @@ WHERE _S.cw_eid=0 AND _S.cw_in_state IS NOT NULL
 UNION ALL
 SELECT _S.cw_in_state
 FROM cw_Note AS _S
-WHERE _S.cw_eid=0 AND _S.cw_in_state IS NOT NULL''')
+WHERE _S.cw_eid=0 AND _S.cw_in_state IS NOT NULL'''),
+
+    ('Any X WHERE NOT Y for_user X, X eid 123',
+     '''SELECT 123
+WHERE NOT EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123)
+'''),
 
     ]
 
@@ -1553,7 +1558,16 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
         self.o = SQLGenerator(schema, dbms_helper)
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        sql = sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        newsql = []
+        latest = None
+        for line in sql.splitlines(False):
+            firstword = line.split(None, 1)[0]
+            if firstword == 'WHERE' and latest == 'SELECT':
+                newsql.append('FROM (SELECT 1) AS _T')
+            newsql.append(line)
+            latest = firstword
+        return '\n'.join(newsql)
 
     def test_from_clause_needed(self):
         queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",

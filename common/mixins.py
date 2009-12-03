@@ -194,7 +194,12 @@ class EmailableMixIn(object):
         return dict( (attr, getattr(self, attr)) for attr in self.allowed_massmail_keys() )
 
 
+"""pluggable mixins system: plug classes registered in MI_REL_TRIGGERS on entity
+classes which have the relation described by the dict's key.
 
+NOTE: pluggable mixins can't override any method of the 'explicit' user classes tree
+(eg without plugged classes). This includes bases Entity and AnyEntity classes.
+"""
 MI_REL_TRIGGERS = {
     ('primary_email',   'subject'): EmailableMixIn,
     ('use_email',   'subject'): EmailableMixIn,

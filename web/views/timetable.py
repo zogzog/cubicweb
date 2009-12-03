@@ -10,7 +10,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.selectors import implements
-from cubicweb.utils import date_range
+from cubicweb.utils import date_range, todatetime
 from cubicweb.view import AnyRsetView
 
 
@@ -22,6 +22,7 @@ class _TaskEntry(object):
         self.lines = 1
 
 MIN_COLS = 3  # minimum number of task columns for a single user
+ALL_USERS = object()
 
 class TimeTableView(AnyRsetView):
     __regid__ = 'timetable'
@@ -54,6 +55,7 @@ class TimeTableView(AnyRsetView):
             elif task.stop:
                 the_dates.append(task.stop)
             for d in the_dates:
+                d = todatetime(d)
                 d_users = dates.setdefault(d, {})
                 u_tasks = d_users.setdefault(user, set())
                 u_tasks.add( task )
@@ -137,7 +139,7 @@ class TimeTableView(AnyRsetView):
         for user, width in zip(users, widths):
             self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
             if user is ALL_USERS:
-                self.w('*')
+                self.w(u'*')
             else:
                 user.view('oneline', w=self.w)
             self.w(u'</th>')

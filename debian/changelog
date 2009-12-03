@@ -1,3 +1,33 @@
+cubicweb (3.5.10-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 03 Dec 2009 15:48:38 +0100
+
+cubicweb (3.5.9-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Sun, 29 Nov 2009 23:28:47 +0100
+
+cubicweb (3.5.8-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Sun, 29 Nov 2009 22:43:11 +0100
+
+cubicweb (3.5.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Sat, 28 Nov 2009 11:50:08 +0100
+
+cubicweb (3.5.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Adrien Di Mascio <Adrien.DiMascio@logilab.fr>  Mon, 23 Nov 2009 18:55:01 +0100
+
 cubicweb (3.5.5-1) unstable; urgency=low
 
   * new upstream release

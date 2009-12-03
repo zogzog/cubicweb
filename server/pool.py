@@ -123,6 +123,7 @@ class ConnectionsPool(object):
         self.source_cnxs[source.uri] = (source, cnx)
         self._cursors.pop(source.uri, None)
 
+
 from cubicweb.server.hook import (Operation, LateOperation, SingleOperation,
                                   SingleLastOperation)
 from logilab.common.deprecation import class_moved, class_renamed

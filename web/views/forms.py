@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common.compat import any
+from logilab.common.deprecation import deprecated
 
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
@@ -89,6 +90,8 @@ class FieldsForm(form.Form):
         if mainform:
             self.form_add_hidden('__errorurl', self.session_key())
             self.form_add_hidden('__domid', self.domid)
+            self.restore_previous_post(self.session_key())
+
         # XXX why do we need two different variables (mainform and copy_nav_params ?)
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
@@ -125,15 +128,14 @@ class FieldsForm(form.Form):
         if self.needs_css:
             self._cw.add_css(self.needs_css)
 
-    def form_render(self, **values):
+    def render(self, formvalues=None, rendervalues=None, renderer=None):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        self.build_context(values)
-        renderer = values.pop('renderer', None)
+        self.build_context(formvalues or {})
         if renderer is None:
             renderer = self.form_default_renderer()
-        return renderer.render(self, values)
+        return renderer.render(self, rendervalues or {})
 
     def form_default_renderer(self):
         return self._cw.vreg['formrenderers'].select(self.form_renderer_id,
@@ -146,8 +148,8 @@ class FieldsForm(form.Form):
         containing field 'name' (qualified), 'id', 'value' (for display, always
         a string).
 
-        rendervalues is an optional dictionary containing extra kwargs given to
-        form_render()
+        rendervalues is an optional dictionary containing extra form values
+        given to render()
         """
         if self.context is not None:
             return # already built
@@ -249,6 +251,17 @@ class FieldsForm(form.Form):
         """
         return self.form_valerror and field.name in self.form_valerror.errors
 
+    @deprecated('use .render(formvalues, rendervalues)')
+    def form_render(self, **values):
+        """render this form, using the renderer given in args or the default
+        FormRenderer()
+        """
+        self.build_context(values)
+        renderer = values.pop('renderer', None)
+        if renderer is None:
+            renderer = self.form_default_renderer()
+        return renderer.render(self, values)
+
 
 class EntityFieldsForm(FieldsForm):
     __regid__ = 'base'
@@ -278,6 +291,19 @@ class EntityFieldsForm(FieldsForm):
                     msg = self._cw._('entity linked')
         if msg:
             self.form_add_hidden('__message', msg)
+
+    def session_key(self):
+        """return the key that may be used to store / retreive data about a
+        previous post which failed because of a validation error
+        """
+        try:
+            return self.force_session_key
+        except AttributeError:
+            # XXX if this is a json request, suppose we should redirect to the
+            # entity primary view
+            if self.req.json_request:
+                return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
+            return '%s#%s' % (self.req.url(), self.domid)
 
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
@@ -400,6 +426,8 @@ class EntityFieldsForm(FieldsForm):
         if field.eidparam:
             return eid_param(field.id, self.edited_entity.eid)
         return field.id
+
+    # XXX all this vocabulary handling should be on the field, no?
 
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field"""

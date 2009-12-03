@@ -119,7 +119,7 @@ class TreeViewItemView(EntityView):
     (each item should be expandable if it's not a tree leaf)
     """
     __regid__ = 'treeitemview'
-    __select__ = EntityView.__select__ & implements(ITree)
+    __select__ = implements(ITree)
     default_branch_state_is_open = False
 
     def open_state(self, eeid, treeid):

@@ -9,7 +9,7 @@ validity
 __docformat__ = "restructuredtext en"
 
 from cubicweb import ValidationError
-from cubicweb.schema import RQLVocabularyConstraint
+from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.selectors import entity_implements
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.server import hook
@@ -146,6 +146,7 @@ class CheckConstraintHook(UserIntegrityHook):
     events = ('after_add_relation',)
 
     def __call__(self):
+        # XXX get only RQL[Unique]Constraints?
         constraints = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
                                                 'constraints')
         if constraints:
@@ -167,7 +168,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
         for attr in entity.edited_attributes:
             if schema.rschema(attr).final:
                 constraints = [c for c in entity.rdef(attr).constraints
-                               if isinstance(c, RQLVocabularyConstraint)]
+                               if isinstance(c, (RQLUniqueConstraint, RQLConstraint))]
                 if constraints:
                     _CheckConstraintsOp(self._cw, constraints=constraints,
                                         rdef=(entity.eid, attr, None))

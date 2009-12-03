@@ -37,12 +37,18 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        # XXX enhance message
-        self.assertEquals(ex.errors, {'state_of': 'unique constraint S name N, Y state_of O, Y name N failed'})
+        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
         self.commit()
+        # gnark gnark
+        bar = wf.add_state(u'bar')
+        self.commit()
+        print '*'*80
+        bar.set_attributes(name=u'foo')
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')
@@ -51,8 +57,19 @@ class WorkflowBuildingTC(CubicWebTC):
         wf.add_transition(u'baz', (foo,), bar, ('managers',))
         wf.add_transition(u'baz', (bar,), foo)
         ex = self.assertRaises(ValidationError, self.commit)
-        # XXX enhance message
-        self.assertEquals(ex.errors, {'transition_of': 'unique constraint S name N, Y transition_of O, Y name N failed'})
+        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
+        # no pb if not in the same workflow
+        wf2 = add_wf(self, 'Company')
+        foo = wf.add_state(u'foo', initial=True)
+        bar = wf.add_state(u'bar')
+        wf.add_transition(u'baz', (foo,), bar, ('managers',))
+        self.commit()
+        # gnark gnark
+        biz = wf.add_transition(u'biz', (bar,), foo)
+        self.commit()
+        biz.set_attributes(name=u'baz')
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
 
 
 class WorkflowTC(CubicWebTC):
@@ -375,7 +392,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow': 'constraint S is ET, O workflow_of ET failed'})
+        self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be

@@ -18,9 +18,11 @@ from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
 from yams.reader import PyFileReader
 
-from cubicweb.schema import CubicWebSchema, CubicWebEntitySchema, \
-     RQLConstraint, CubicWebSchemaLoader, RQLExpression, ERQLExpression, RRQLExpression, \
-     normalize_expression, order_eschemas
+from cubicweb.schema import (
+    CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
+    RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
+    RQLExpression, ERQLExpression, RRQLExpression,
+    normalize_expression, order_eschemas)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 
 DATADIR = join(dirname(__file__), 'data')
@@ -82,6 +84,18 @@ for rel in RELS:
         schema.add_relation_def(RelationDefinition(_from, _type, _to))
 
 class CubicWebSchemaTC(TestCase):
+
+    def test_rql_constraints_inheritance(self):
+        # isinstance(cstr, RQLVocabularyConstraint)
+        # -> expected to return RQLVocabularyConstraint and RQLConstraint
+        #   instances but not RQLUniqueConstraint
+        #
+        # isinstance(cstr, RQLConstraint)
+        # -> expected to return RQLConstraint instances but not
+        #    RRQLVocabularyConstraint and QLUniqueConstraint
+        self.failIf(issubclass(RQLUniqueConstraint, RQLVocabularyConstraint))
+        self.failIf(issubclass(RQLUniqueConstraint, RQLConstraint))
+        self.failUnless(issubclass(RQLConstraint, RQLVocabularyConstraint))
 
     def test_normalize(self):
         """test that entities, relations and attributes name are normalized

@@ -268,6 +268,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         in interactive mode,  display the migration script path, ask for
         confirmation and execute it if confirmed
         """
+        migrscript = os.path.normpath(migrscript)
         if migrscript.endswith('.py'):
             script_mode = 'python'
         elif migrscript.endswith('.txt') or migrscript.endswith('.rst'):
@@ -295,7 +296,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 return func(*args, **kwargs)
         else: # script_mode == 'doctest'
             import doctest
-            doctest.testfile(os.path.abspath(migrscript), module_relative=False,
+            doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
 
     def cmd_option_renamed(self, oldname, newname):

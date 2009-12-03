@@ -18,7 +18,8 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
-from cubicweb.server.serverconfig import USER_OPTIONS, ServerConfiguration
+from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
+                                          SourceConfiguration)
 
 # utility functions ###########################################################
 
@@ -113,6 +114,7 @@ def repo_cnx(config):
             config._cubes = None
         login, pwd = manager_userpasswd()
 
+
 # repository specific command handlers ########################################
 
 class RepositoryCreateHandler(CommandHandler):
@@ -135,8 +137,8 @@ class RepositoryCreateHandler(CommandHandler):
         sourcesfile = config.sources_file()
         # XXX hack to make Method('default_instance_id') usable in db option
         # defs (in native.py)
-        Configuration.default_instance_id = staticmethod(lambda: config.appid)
-        sconfig = Configuration(options=SOURCE_TYPES['native'].options)
+        sconfig = SourceConfiguration(config.appid,
+                                      options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg = {'system': sconfig}
@@ -238,6 +240,7 @@ class RepositoryStopHandler(CommandHandler):
 
 
 # repository specific commands ################################################
+
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
 
@@ -329,7 +332,7 @@ class CreateInstanceDBCommand(Command):
             cmd_run('db-init', config.appid)
         else:
             print ('-> nevermind, you can do it later with '
-                   '"cubicweb-ctl db-init %s".' % self.config.appid)
+                   '"cubicweb-ctl db-init %s".' % config.appid)
 
 
 class InitInstanceCommand(Command):
@@ -356,8 +359,20 @@ tables, indexes... (no by default)'}),
     def run(self, args):
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
+        from logilab.common.db import get_connection
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
+        try:
+            system = config.sources()['system']
+            get_connection(
+                system['db-driver'], database=system['db-name'],
+                host=system.get('db-host'), port=system.get('db-port'),
+                user=system.get('db-user'), password=system.get('db-password'))
+        except Exception, ex:
+            raise ConfigurationError(
+                'You seem to have provided wrong connection information in '\
+                'the %s file. Resolve this first (error: %s).'
+                % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
 
 
@@ -401,6 +416,7 @@ class GrantUserOnInstanceCommand(Command):
         else:
             cnx.commit()
             print '-> rights granted to %s on instance %s.' % (appid, user)
+
 
 class ResetAdminPasswordCommand(Command):
     """Reset the administrator password.

@@ -120,6 +120,37 @@ def display_name(req, key, form='', context=None):
 
 __builtins__['display_name'] = deprecated('[3.4] display_name should be imported from cubicweb.schema')(display_name)
 
+
+# rql expression utilities function ############################################
+
+def guess_rrqlexpr_mainvars(expression):
+    defined = set(split_expression(expression))
+    mainvars = []
+    if 'S' in defined:
+        mainvars.append('S')
+    if 'O' in defined:
+        mainvars.append('O')
+    if 'U' in defined:
+        mainvars.append('U')
+    if not mainvars:
+        raise Exception('unable to guess selection variables')
+    return ','.join(mainvars)
+
+def split_expression(rqlstring):
+    for expr in rqlstring.split(','):
+        for word in expr.split():
+            yield word
+
+def normalize_expression(rqlstring):
+    """normalize an rql expression to ease schema synchronization (avoid
+    suppressing and reinserting an expression if only a space has been added/removed
+    for instance)
+    """
+    return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
+
+
+# Schema objects definition ###################################################
+
 def ERSchema_display_name(self, req, form='', context=None):
     """return a internationalized string for the entity/relation type name in
     a given form
@@ -270,16 +301,6 @@ def check_permission_definitions(self):
                 raise BadSchemaDefinition(msg % self)
 RelationDefinitionSchema.check_permission_definitions = check_permission_definitions
 
-
-def system_etypes(schema):
-    """return system entity types only: skip final, schema and application entities
-    """
-    for eschema in schema.entities():
-        if eschema.final or eschema.schema_entity():
-            continue
-        yield eschema.type
-
-# Schema objects definition ###################################################
 
 class CubicWebEntitySchema(EntitySchema):
     """a entity has a type, a set of subject and or object relations
@@ -536,25 +557,35 @@ class CubicWebSchema(Schema):
 
 # Possible constraints ########################################################
 
-class RQLVocabularyConstraint(BaseConstraint):
-    """the rql vocabulary constraint :
-
-    limit the proposed values to a set of entities returned by a rql query,
-    but this is not enforced at the repository level
-
-     restriction is additional rql restriction that will be added to
-     a predefined query, where the S and O variables respectivly represent
-     the subject and the object of the relation
+class BaseRQLConstraint(BaseConstraint):
+    """base class for rql constraints
     """
 
-    def __init__(self, restriction):
-        self.restriction = restriction
+    def __init__(self, restriction, mainvars=None):
+        self.restriction = normalize_expression(restriction)
+        if mainvars is None:
+            mainvars = guess_rrqlexpr_mainvars(restriction)
+        else:
+            normmainvars = []
+            for mainvar in mainvars.split(','):
+                mainvar = mainvar.strip()
+                if not mainvar.isalpha():
+                    raise Exception('bad mainvars %s' % mainvars)
+                normmainvars.append(mainvar)
+            assert mainvars, 'bad mainvars %s' % mainvars
+            mainvars = ','.join(sorted(normmainvars))
+        self.mainvars = mainvars
 
     def serialize(self):
-        return self.restriction
+        # start with a comma for bw compat, see below
+        return ';' + self.mainvars + ';' + self.restriction
 
     def deserialize(cls, value):
-        return cls(value)
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
+        _, mainvars, restriction = value.split(';', 2)
+        return cls(restriction, mainvars)
     deserialize = classmethod(deserialize)
 
     def check(self, entity, rtype, value):
@@ -568,60 +599,104 @@ class RQLVocabularyConstraint(BaseConstraint):
         pass # this is a vocabulary constraint, not enforce XXX why?
 
     def __str__(self):
-        return self.restriction
+        return '%s(Any %s WHERE %s)' % (self.__class__.__name__, self.mainvars,
+                                        self.restriction)
 
     def __repr__(self):
-        return '<%s : %s>' % (self.__class__.__name__, repr(self.restriction))
+        return '<%s @%#x>' % (self.__str__(), id(self))
 
 
-class RQLConstraint(RQLVocabularyConstraint):
+class RQLVocabularyConstraint(BaseRQLConstraint):
+    """the rql vocabulary constraint :
+
+    limit the proposed values to a set of entities returned by a rql query,
+    but this is not enforced at the repository level
+
+     restriction is additional rql restriction that will be added to
+     a predefined query, where the S and O variables respectivly represent
+     the subject and the object of the relation
+
+     mainvars is a string that should be used as selection variable (eg
+     `'Any %s WHERE ...' % mainvars`). If not specified, an attempt will be
+     done to guess it according to variable used in the expression.
+    """
+
+
+class RepoEnforcedRQLConstraintMixIn(object):
+
+    def __init__(self, restriction, mainvars=None, msg=None):
+        super(RepoEnforcedRQLConstraintMixIn, self).__init__(restriction, mainvars)
+        self.msg = msg
+
+    def serialize(self):
+        # start with a semicolon for bw compat, see below
+        return ';%s;%s\n%s' % (self.mainvars, self.restriction,
+                               self.msg or '')
+
+    def deserialize(cls, value):
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
+        value, msg = value.split('\n', 1)
+        _, mainvars, restriction = value.split(';', 2)
+        return cls(restriction, mainvars, msg)
+    deserialize = classmethod(deserialize)
+
+    def repo_check(self, session, eidfrom, rtype, eidto=None):
+        """raise ValidationError if the relation doesn't satisfy the constraint
+        """
+        if not self.match_condition(session, eidfrom, eidto):
+            # XXX at this point if both or neither of S and O are in mainvar we
+            # dunno if the validation error `occured` on eidfrom or eidto (from
+            # user interface point of view)
+            if eidto is None or 'S' in self.mainvars or not 'O' in self.mainvars:
+                maineid = eidfrom
+            else:
+                maineid = eidto
+            if self.msg:
+                msg = session._(self.msg)
+            else:
+                msg = '%(constraint)s %(restriction)s failed' % {
+                    'constraint':  session._(self.type()),
+                    'restriction': self.restriction}
+            raise ValidationError(maineid, {rtype: msg})
+
+    def exec_query(self, session, eidfrom, eidto):
+        if eidto is None:
+            # checking constraint for an attribute relation
+            restriction = 'S eid %(s)s, ' + self.restriction
+            args, ck = {'s': eidfrom}, 's'
+        else:
+            restriction = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
+            args, ck = {'s': eidfrom, 'o': eidto}, ('s', 'o')
+        rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
+        if self.distinct_query:
+            rql = 'DISTINCT ' + rql
+        return session.unsafe_execute(rql, args, ck, build_descr=False)
+
+
+class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
     """the rql constraint is similar to the RQLVocabularyConstraint but
     are also enforced at the repository level
     """
-    def exec_query(self, session, eidfrom, eidto):
-        if eidto is None:
-            rql = 'Any S WHERE S eid %(s)s, ' + self.restriction
-            return session.unsafe_execute(rql, {'s': eidfrom}, 's',
-                                          build_descr=False)
-        rql = 'Any S,O WHERE S eid %(s)s, O eid %(o)s, ' + self.restriction
-        return session.unsafe_execute(rql, {'s': eidfrom, 'o': eidto},
-                                      ('s', 'o'), build_descr=False)
-    def error(self, eid, rtype, msg):
-        raise ValidationError(eid, {rtype: msg})
+    distinct_query = False
 
-    def repo_check(self, session, eidfrom, rtype, eidto=None):
-        """raise ValidationError if the relation doesn't satisfy the constraint
-        """
-        if not self.exec_query(session, eidfrom, eidto):
-            # XXX at this point dunno if the validation error `occured` on
-            #     eidfrom or eidto (from user interface point of view)
-            self.error(eidfrom, rtype, 'constraint %s failed' % self)
+    def match_condition(self, session, eidfrom, eidto):
+        return self.exec_query(session, eidfrom, eidto)
 
 
-class RQLUniqueConstraint(RQLConstraint):
+class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """the unique rql constraint check that the result of the query isn't
     greater than one
     """
-    def repo_check(self, session, eidfrom, rtype, eidto=None):
-        """raise ValidationError if the relation doesn't satisfy the constraint
-        """
-        if len(self.exec_query(session, eidfrom, eidto)) > 1:
-            # XXX at this point dunno if the validation error `occured` on
-            #     eidfrom or eidto (from user interface point of view)
-            self.error(eidfrom, rtype, 'unique constraint %s failed' % self)
+    distinct_query = True
 
+    # XXX turns mainvars into a required argument in __init__, since we've no
+    #     way to guess it correctly (eg if using S,O or U the constraint will
+    #     always be satisfied since we've to use a DISTINCT query)
 
-def split_expression(rqlstring):
-    for expr in rqlstring.split(','):
-        for word in expr.split():
-            yield word
-
-def normalize_expression(rqlstring):
-    """normalize an rql expression to ease schema synchronization (avoid
-    suppressing and reinserting an expression if only a space has been added/removed
-    for instance)
-    """
-    return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
+    def match_condition(self, session, eidfrom, eidto):
+        return len(self.exec_query(session, eidfrom, eidto)) <= 1
 
 
 class RQLExpression(object):
@@ -793,22 +868,11 @@ class ERQLExpression(RQLExpression):
             return self._check(session, x=eid)
         return self._check(session)
 
-PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
 
 class RRQLExpression(RQLExpression):
     def __init__(self, expression, mainvars=None, eid=None):
         if mainvars is None:
-            defined = set(split_expression(expression))
-            mainvars = []
-            if 'S' in defined:
-                mainvars.append('S')
-            if 'O' in defined:
-                mainvars.append('O')
-            if 'U' in defined:
-                mainvars.append('U')
-            if not mainvars:
-                raise Exception('unable to guess selection variables')
-            mainvars = ','.join(mainvars)
+            mainvars = guess_rrqlexpr_mainvars(expression)
         RQLExpression.__init__(self, expression, mainvars, eid)
         # graph of links between variable, used by rql rewriter
         self.vargraph = {}
@@ -851,7 +915,6 @@ class RRQLExpression(RQLExpression):
             kwargs['o'] = toeid
         return self._check(session, **kwargs)
 
-PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 
 # workflow extensions #########################################################
 
@@ -888,13 +951,13 @@ class WorkflowableEntityType(ybo.EntityType):
     __metaclass__ = workflowable_definition
     __abstract__ = True
 
-PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 
 # schema loading ##############################################################
 
 CONSTRAINTS['RQLConstraint'] = RQLConstraint
 CONSTRAINTS['RQLUniqueConstraint'] = RQLUniqueConstraint
 CONSTRAINTS['RQLVocabularyConstraint'] = RQLVocabularyConstraint
+CONSTRAINTS.pop('MultipleStaticVocabularyConstraint', None) # don't want this in cw yams schema
 PyFileReader.context.update(CONSTRAINTS)
 
 
@@ -1009,7 +1072,12 @@ def bw_set_statement_type(self, etype):
 stmts.Select.set_statement_type = bw_set_statement_type
 
 # XXX deprecated
+
 from yams.constraints import format_constraint
 format_constraint = deprecated('[3.4] use RichString instead of format_constraint')(format_constraint)
 from yams.buildobjs import RichString
+
+PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
+PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
+PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 PyFileReader.context['format_constraint'] = format_constraint

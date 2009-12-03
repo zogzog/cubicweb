@@ -17,7 +17,7 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                entity_implements)
+                                entity_implements, score_entity)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -64,37 +64,40 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         transition = self._cw.entity_from_eid(self._cw.form['treid'])
-        dest = transition.destination()
-        _ = self._cw._
-        # specify both rset/row/col and entity in case implements selector (and
-        # not entity_implements) is used on custom form
-        form = self._cw.vreg['forms'].select(
-            'changestate', self._cw, rset=self.cw_rset, row=row, col=col,
-            entity=entity, transition=transition,
-            redirect_path=self.redirectpath(entity))
+        form = self.get_form(entity, transition)
         self.w(form.error_message())
-        self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
+        self.w(u'<h4>%s %s</h4>\n' % (self._cw._(transition.name),
                                       entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
-            'st1': _(entity.current_state.name),
-            'st2': _(dest.name)}
+            'st1': entity.printable_state,
+            'st2': self._cw._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)
+        self.w(form.render(formvalues=dict(wf_info_for=entity.eid,
+                                           by_transition=transition.eid)))
+
+    def redirectpath(self, entity):
+        return entity.rest_path()
+
+    def get_form(self, entity, transition, **kwargs):
+        # XXX used to specify both rset/row/col and entity in case implements
+        # selector (and not entity_implements) is used on custom form
+        form = self._cw.vreg['forms'].select(
+            'changestate', self._cw, entity=entity, transition=transition,
+            redirect_path=self.redirectpath(entity), **kwargs)
         trinfo = self._cw.vreg['etypes'].etype_class('TrInfo')(self._cw)
         trinfo.eid = self._cw.varmaker.next()
         subform = self._cw.vreg['forms'].select('edition', self._cw, entity=trinfo,
                                             mainform=False)
         subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
         form.add_subform(subform)
-        self.w(form.form_render(wf_info_for=entity.eid,
-                                by_transition=transition.eid))
-
-    def redirectpath(self, entity):
-        return entity.rest_path()
+        return form
 
 
 class WFHistoryView(EntityView):
     __regid__ = 'wfhistory'
-    __select__ = relation_possible('wf_info_for', role='object')
+    __select__ = relation_possible('wf_info_for', role='object') & \
+                 score_entity(lambda x: x.workflow_history)
+
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):
@@ -247,7 +250,7 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
     def object_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():
             return self.workflow_states_for_relation('allowed_transition')
-        return self.subject_relation_vocabulary(rtype, limit)
+        return self.object_relation_vocabulary(rtype, limit)
 
 
 class StateEditionForm(autoform.AutomaticEntityForm):
@@ -306,7 +309,6 @@ class WorkflowVisitor:
         for state in self.entity.reverse_state_of:
             state.complete()
             yield state.eid, state
-
         for transition in self.entity.reverse_transition_of:
             transition.complete()
             yield transition.eid, transition

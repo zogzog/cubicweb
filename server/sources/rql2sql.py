@@ -693,26 +693,11 @@ class SQLGenerator(object):
         lhsvar, _, rhsvar, rhsconst = relation_info(relation)
         # we are sure here to have a lhsvar
         assert lhsvar is not None
-        if isinstance(relation.parent, Not):
+        if isinstance(relation.parent, Not) \
+               and len(lhsvar.stinfo['relations']) > 1 \
+               and (rhsvar is None or rhsvar._q_invariant):
             self._state.done.add(relation.parent)
-            if rhsvar is not None and not rhsvar._q_invariant:
-                # if the lhs variable is only linked to this relation, this mean we
-                # only want the relation to NOT exists
-                self._state.push_scope()
-                lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
-                rhssql = rhsvar.accept(self)
-                restrictions, tables = self._state.pop_scope()
-                restrictions.append('%s=%s' % (lhssql, rhssql))
-                if not tables:
-                    sql = 'NOT EXISTS(SELECT 1 WHERE %s)' % (
-                        ' AND '.join(restrictions))
-                else:
-                    sql = 'NOT EXISTS(SELECT 1 FROM %s WHERE %s)' % (
-                        ', '.join(tables), ' AND '.join(restrictions))
-            else:
-                lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
-                sql = '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
-            return sql
+            return '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
         if rhsconst is not None:
             return '%s=%s' % (lhssql, rhsconst.accept(self))

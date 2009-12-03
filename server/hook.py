@@ -369,6 +369,9 @@ class Operation(object):
         operation list
         """
 
+    def postcommit_event(self):
+        """the observed connections pool has committed"""
+
     @property
     @deprecated('[3.6] use self.session.user')
     def user(self):

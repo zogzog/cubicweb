@@ -143,14 +143,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         #skip_entities=[str(e) for e in schema.entities()
         #               if not repo.system_source.support_entity(str(e))])
     sqlexec(schemasql, execute, pbtitle=_title)
-    # install additional driver specific sql files
-    for fpath in glob(join(CW_SOFTWARE_ROOT, 'schemas', '*.sql.%s' % driver)):
-        print '-> installing', fpath
-        sqlexec(open(fpath).read(), execute, False, delimiter=';;')
-    for directory in reversed(config.cubes_path()):
-        for fpath in glob(join(directory, 'schema', '*.sql.%s' % driver)):
-            print '-> installing', fpath
-            sqlexec(open(fpath).read(), execute, False, delimiter=';;')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()
@@ -183,6 +175,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     assert len(repo.sources) == 1, repo.sources
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)
+    # install additional driver specific sql files
+    handler.install_custom_sql_scripts(join(CW_SOFTWARE_ROOT, 'schemas'), driver)
+    for directory in reversed(config.cubes_path()):
+        handler.install_custom_sql_scripts(join(directory, 'schema'), driver)
     initialize_schema(config, schema, handler)
     # yoo !
     cnx.commit()

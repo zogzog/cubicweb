@@ -100,8 +100,18 @@ class Entity(AppObject, dict):
                 attr = 'reverse_%s' % rschema.type
                 setattr(cls, attr, ObjectRelation(rschema))
         if mixins:
-            cls.__bases__ = tuple(mixins + [p for p in cls.__bases__ if not p is object])
-            cls.debug('plugged %s mixins on %s', mixins, etype)
+            # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
+            # due to class dumping, cls is the generated top level class with actual
+            # user class as (only) parent. Since we want to be able to override mixins
+            # method from this user class, we have to take care to insert mixins after that
+            # class
+            #
+            # note that we don't plug mixins as user class parent since it causes pb
+            # with some cases of entity classes inheritance.
+            mixins.insert(0, cls.__bases__[0])
+            mixins += cls.__bases__[1:]
+            cls.__bases__ = tuple(mixins)
+            cls.info('plugged %s mixins on %s', mixins, cls)
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
@@ -657,6 +667,7 @@ class Entity(AppObject, dict):
         rdef = rtype.role_rdef(self.e_schema, targettype, role)
         insertsecurity = (rdef.has_local_role('add') and not
                           rdef.has_perm(self._cw, 'add', **securitycheck_args))
+        # XXX consider constraint.mainvars to check if constraint apply
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well
@@ -777,15 +788,26 @@ class Entity(AppObject, dict):
                              kwargs, 'x')
 
     def set_relations(self, _cw_unsafe=False, **kwargs):
+        """add relations to the given object. To set a relation where this entity
+        is the object of the relation, use 'reverse_'<relation> as argument name.
+
+        Values may be an entity, a list of entity, or None (meaning that all
+        relations of the given type from or to this object should be deleted).
+        """
         if _cw_unsafe:
             execute = self.req.unsafe_execute
         else:
             execute = self.req.execute
+        # XXX update cache
         for attr, values in kwargs.iteritems():
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
             else:
                 restr = 'X %s Y' % attr
+            if values is None:
+                execute('DELETE %s WHERE X eid %%(x)s' % restr,
+                        {'x': self.eid}, 'x')
+                continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (

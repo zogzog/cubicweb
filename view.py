@@ -179,6 +179,7 @@ class View(AppObject):
         if rset is None:
             raise NotImplementedError, self
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
+        # XXX propagate self.extra_kwars?
         for i in xrange(len(rset)):
             if wrap:
                 self.w(u'<div class="section">')
@@ -200,7 +201,7 @@ class View(AppObject):
         return True
 
     def is_primary(self):
-        return self.__regid__ == 'primary'
+        return self.extra_kwargs.get('is_primary', self.__regid__ == 'primary')
 
     def url(self):
         """return the url associated with this view. Should not be
@@ -323,7 +324,10 @@ class View(AppObject):
             else:
                 w(u'<span>%s</span> ' % label)
         if table:
-            w(u'<td>%s</td></tr>' % value)
+            if not (show_label and label):
+                w(u'<td colspan="2">%s</td></tr>' % value)
+            else:
+                w(u'<td>%s</td></tr>' % value)
         else:
             w(u'<span>%s</span></div>' % value)
 

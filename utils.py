@@ -410,6 +410,8 @@ else:
                 return obj.strftime('%Y/%m/%d')
             elif isinstance(obj, pydatetime.time):
                 return obj.strftime('%H:%M:%S')
+            elif isinstance(obj, pydatetime.timedelta):
+                return '%10d.%s' % (obj.days, obj.seconds)
             elif isinstance(obj, decimal.Decimal):
                 return float(obj)
             try:

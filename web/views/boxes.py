@@ -69,7 +69,8 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
                 else:
                     menu = defaultmenu
                 action.fill_menu(self, menu)
-        if box.is_empty() and not other_menu.is_empty():
+        # if we've nothing but actions in the other_menu, add them directly into the box
+        if box.is_empty() and len(self._menus_by_id) == 1 and not other_menu.is_empty():
             box.items = other_menu.items
             other_menu.items = []
         else: # ensure 'more actions' menu appears last

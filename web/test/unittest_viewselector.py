@@ -25,9 +25,9 @@ USERACTIONS = [actions.UserPreferencesAction,
 SITEACTIONS = [actions.SiteConfigurationAction,
                actions.ManageAction,
                schema.ViewSchemaAction,
-               actions.SiteInfoAction,
-               ]
-FOOTERACTIONS = [wdoc.ChangeLogAction,
+               actions.SiteInfoAction]
+FOOTERACTIONS = [wdoc.HelpAction,
+                 wdoc.ChangeLogAction,
                  wdoc.AboutAction,
                  actions.PoweredByAction]
 
@@ -218,7 +218,6 @@ class VRegistryTC(ViewSelectorTC):
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('vcard', vcard.VCardCWUserView),
-                              ('wfhistory', workflow.WFHistoryView),
                               ('xbel', xbel.XbelView),
                               ('xml', xmlrss.XMLView),
                               ])

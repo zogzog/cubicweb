@@ -24,7 +24,7 @@ from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache
 from logilab.common.deprecation import deprecated
 
-from cubicweb import NoSelectableObject, AuthenticationError
+from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, devtools, web, server
 from cubicweb.dbapi import repo_connect, ConnectionProperties, ProgrammingError
 from cubicweb.sobjects import notification
@@ -673,10 +673,13 @@ class CubicWebTC(TestCase):
         try:
             validatorclass = self.vid_validators[view.__regid__]
         except KeyError:
-            if template is None:
-                default_validator = htmlparser.HTMLValidator
+            if view.content_type in ('text/html', 'application/xhtml+xml'):
+                if template is None:
+                    default_validator = htmlparser.HTMLValidator
+                else:
+                    default_validator = htmlparser.DTDValidator
             else:
-                default_validator = htmlparser.DTDValidator
+                default_validator = None
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
@@ -779,7 +782,7 @@ class AutoPopulateTest(CubicWebTC):
             rset = cu.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
-        ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
+        ignored_relations = SYSTEM_RELATIONS + self.ignored_relations
         for rschema in self.schema.relations():
             if rschema.final or rschema in ignored_relations:
                 continue
@@ -788,7 +791,11 @@ class AutoPopulateTest(CubicWebTC):
         q = make_relations_queries(self.schema, edict, cu, ignored_relations,
                                    existingrels=existingrels)
         for rql, args in q:
-            cu.execute(rql, args)
+            try:
+                cu.execute(rql, args)
+            except ValidationError, ex:
+                # failed to satisfy some constraint
+                print 'error in automatic db population', ex
         self.post_populate(cu)
         self.commit()
 

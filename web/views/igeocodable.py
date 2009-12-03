@@ -76,7 +76,7 @@ class GoogleMapsView(EntityView):
         self._cw.demote_to_html()
         # remove entities that don't define latitude and longitude
         self.cw_rset = self.cw_rset.filtered_rset(lambda e: e.latitude and e.longitude)
-        self._cw.add_js('http://maps.google.com/maps?sensor=false&file=api&amp;v=2&amp;key=%s' % gmap_key,
+        self._cw.add_js('http://maps.google.com/maps?sensor=false&file=api&v=2&key=%s' % gmap_key,
                         localfile=False)
         self._cw.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
         rql = self.cw_rset.printable_rql()

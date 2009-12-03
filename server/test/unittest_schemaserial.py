@@ -55,13 +55,13 @@ class Schema2RQLTC(TestCase):
              {'rt': 'relation_type', 'description': u'', 'composite': u'object', 'oe': 'CWRType',
               'ordernum': 1, 'cardinality': u'1*', 'se': 'CWRelation'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT name %(ctname)s, EDEF relation_type ER, EDEF from_entity SE, EDEF to_entity OE, ER name %(rt)s, SE name %(se)s, OE name %(oe)s, EDEF is CWRelation',
-             {'rt': 'relation_type', 'oe': 'CWRType', 'ctname': u'RQLConstraint', 'se': 'CWRelation', 'value': u'O final FALSE'}),
+             {'rt': 'relation_type', 'oe': 'CWRType', 'ctname': u'RQLConstraint', 'se': 'CWRelation', 'value': u';O;O final FALSE\n'}),
 
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
              {'rt': 'relation_type', 'description': u'', 'composite': u'object', 'oe': 'CWRType',
               'ordernum': 1, 'cardinality': u'1*', 'se': 'CWAttribute'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT name %(ctname)s, EDEF relation_type ER, EDEF from_entity SE, EDEF to_entity OE, ER name %(rt)s, SE name %(se)s, OE name %(oe)s, EDEF is CWRelation',
-             {'rt': 'relation_type', 'oe': 'CWRType', 'ctname': u'RQLConstraint', 'se': 'CWAttribute', 'value': u'O final TRUE'}),
+             {'rt': 'relation_type', 'oe': 'CWRType', 'ctname': u'RQLConstraint', 'se': 'CWAttribute', 'value': u';O;O final TRUE\n'}),
             ])
 
     def test_rschema2rql2(self):
@@ -143,35 +143,35 @@ class Perms2RQLTC(TestCase):
 
     def test_eperms2rql1(self):
         self.assertListEquals([rql for rql, kwargs in erperms2rql(schema.eschema('CWEType'), self.GROUP_MAPPING)],
-                              ['SET X read_permission Y WHERE X is CWEType, X name "CWEType", Y eid 2',
-                               'SET X read_permission Y WHERE X is CWEType, X name "CWEType", Y eid 0',
-                               'SET X read_permission Y WHERE X is CWEType, X name "CWEType", Y eid 1',
-                               'SET X add_permission Y WHERE X is CWEType, X name "CWEType", Y eid 0',
-                               'SET X update_permission Y WHERE X is CWEType, X name "CWEType", Y eid 0',
-                               'SET X update_permission Y WHERE X is CWEType, X name "CWEType", Y eid 3',
-                               'SET X delete_permission Y WHERE X is CWEType, X name "CWEType", Y eid 0',
+                              ['SET X read_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X add_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X update_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X update_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
+                               'SET X delete_permission Y WHERE X is CWEType, X name %(name)s, Y eid %(g)s',
                                ])
 
     def test_rperms2rql2(self):
         self.assertListEquals([rql for rql, kwargs in erperms2rql(schema.rschema('read_permission'), self.GROUP_MAPPING)],
-                              ['SET X read_permission Y WHERE X is CWRType, X name "read_permission", Y eid 2',
-                               'SET X read_permission Y WHERE X is CWRType, X name "read_permission", Y eid 0',
-                               'SET X read_permission Y WHERE X is CWRType, X name "read_permission", Y eid 1',
-                               'SET X add_permission Y WHERE X is CWRType, X name "read_permission", Y eid 0',
-                               'SET X delete_permission Y WHERE X is CWRType, X name "read_permission", Y eid 0',
+                              ['SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X add_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X delete_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
                                ])
 
     def test_rperms2rql3(self):
         self.assertListEquals([rql for rql, kwargs in erperms2rql(schema.rschema('name'), self.GROUP_MAPPING)],
-                              ['SET X read_permission Y WHERE X is CWRType, X name "name", Y eid 2',
-                               'SET X read_permission Y WHERE X is CWRType, X name "name", Y eid 0',
-                               'SET X read_permission Y WHERE X is CWRType, X name "name", Y eid 1',
-                               'SET X add_permission Y WHERE X is CWRType, X name "name", Y eid 2',
-                               'SET X add_permission Y WHERE X is CWRType, X name "name", Y eid 0',
-                               'SET X add_permission Y WHERE X is CWRType, X name "name", Y eid 1',
-                               'SET X delete_permission Y WHERE X is CWRType, X name "name", Y eid 2',
-                               'SET X delete_permission Y WHERE X is CWRType, X name "name", Y eid 0',
-                               'SET X delete_permission Y WHERE X is CWRType, X name "name", Y eid 1',
+                              ['SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X read_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X add_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X add_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X add_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X delete_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X delete_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
+                               'SET X delete_permission Y WHERE X is CWRType, X name %(name)s, Y eid %(g)s',
                                ])
 
     #def test_perms2rql(self):

@@ -216,9 +216,12 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
 
     if os.environ.get('APYCOT_ROOT'):
         mode = 'test'
-        CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
-        # create __init__ file
-        file(join(CUBES_DIR, '__init__.py'), 'w').close()
+        if CWDEV:
+            CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
+            # create __init__ file
+            file(join(CUBES_DIR, '__init__.py'), 'w').close()
+        else:
+            CUBES_DIR = '/usr/share/cubicweb/cubes/'
     elif (CWDEV and _forced_mode != 'system'):
         mode = 'user'
         CUBES_DIR = abspath(normpath(join(CW_SOFTWARE_ROOT, '../cubes')))
@@ -612,7 +615,10 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
         RUNTIME_DIR = tempfile.gettempdir()
-        MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
+        if CWDEV:
+            MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
+        else:
+            MIGRATION_DIR = '/usr/share/cubicweb/migration/'
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
     else:

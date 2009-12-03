@@ -13,6 +13,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg
@@ -50,7 +51,10 @@ class PrimaryView(EntityView):
         #self.render_entity_toolbox(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        boxes = self._prepare_side_boxes(entity)
+        if self.is_primary():
+            boxes = self._prepare_side_boxes(entity)
+        else:
+            boxes = None
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
         self.render_entity_summary(entity)
@@ -88,7 +92,12 @@ class PrimaryView(EntityView):
         """default implementation return dc_title"""
         title = xml_escape(entity.dc_title())
         if title:
-            self.w(u'<h1>%s</h1>' % title)
+            if self.is_primary():
+                self.w(u'<h1>%s</h1>' % title)
+            else:
+                atitle = self.req._('follow this link for more information on this %s') % entity.dc_type()
+                self.w(u'<h4><a href="%s" title="%s">%s</a></h4>'
+                       % (entity.absolute_url(), atitle, title))
 
     def render_entity_toolbox(self, entity):
         self.content_navigation_components('ctxtoolbar')
@@ -123,15 +132,26 @@ class PrimaryView(EntityView):
                     value = None
             if self.skip_none and (value is None or value == ''):
                 continue
-            self._render_attribute(rschema, value, role=role, table=True)
+            try:
+                self._render_attribute(dispctrl, rschema, value,
+                                       role=role, table=True)
+            except TypeError:
+                warn('[3.6] _render_attribute prototype has changed, '
+                     'please update %s' % self.__class___, DeprecationWarning)
+                self._render_attribute(rschema, value, role=role, table=True)
         self.w(u'</table>')
 
     def render_entity_relations(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
-                self._render_relation(rset, dispctrl, 'autolimited',
-                                      self.show_rel_label)
+                try:
+                    self._render_relation(dispctrl, rset, 'autolimited')
+                except TypeError:
+                    warn('[3.6] _render_relation prototype has changed, '
+                         'please update %s' % self.__class__, DeprecationWarning)
+                    self._render_relation(rset, dispctrl, 'autolimited',
+                                          self.show_rel_label)
 
     def render_side_boxes(self, boxes):
         """display side related relations:
@@ -139,7 +159,13 @@ class PrimaryView(EntityView):
         """
         for box in boxes:
             if isinstance(box, tuple):
-                label, rset, vid  = box
+                try:
+                    label, rset, vid, dispctrl  = box
+                except ValueError:
+                    warn('box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
+                         'please update %s' % self.__class__.__name__,
+                         DeprecationWarning)
+                    label, rset, vid  = box
                 self.w(u'<div class="sideBox">')
                 self.wview(vid, rset, title=label)
                 self.w(u'</div>')
@@ -159,11 +185,19 @@ class PrimaryView(EntityView):
                 continue
             label = display_name(self._cw, rschema.type, role)
             vid = dispctrl.get('vid', 'sidebox')
-            sideboxes.append( (label, rset, vid) )
+            sideboxes.append( (label, rset, vid, dispctrl) )
         sideboxes += self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
             context='incontext')
-        return sideboxes
+        # XXX since we've two sorted list, it may be worth using bisect
+        def get_order(x):
+            if isinstance(x, tuple):
+                # x is a view box (label, rset, vid, dispctrl)
+                # default to 1000 so view boxes occurs after component boxes
+                return x[-1].get('order', 1000)
+            # x is a component box
+            return x.propval('order')
+        return sorted(sideboxes, key=get_order)
 
     def _section_def(self, entity, where):
         rdefs = []
@@ -193,20 +227,25 @@ class PrimaryView(EntityView):
             rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, rset, dispctrl, defaultvid, showlabel):
+    def _render_relation(self, dispctrl, rset, defaultvid):
         self.w(u'<div class="section">')
-        if showlabel:
-            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']),
+        if dispctrl.get('showlabel', self.show_rel_label):
+            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
+        self.wview(dispctrl.get('vid', defaultvid), rset,
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
-    def _render_attribute(self, rschema, value, role='subject', table=False):
+    def _render_attribute(self, dispctrl, rschema, value,
+                          role='subject', table=False):
         if rschema.final:
-            show_label = self.show_attr_label
+            showlabel = dispctrl.get('showlabel', self.show_attr_label)
         else:
-            show_label = self.show_rel_label
-        label = display_name(self._cw, rschema.type, role)
-        self.field(label, value, show_label=show_label, tr=False, table=table)
+            showlabel = dispctrl.get('showlabel', self.show_rel_label)
+        if dispctrl.get('label'):
+            label = self._cw._(dispctrl.get('label'))
+        else:
+            label = display_name(self.req, rschema.type, role)
+        self.field(label, value, show_label=showlabel, tr=False, table=table)
 
 
 class RelatedView(EntityView):
@@ -238,6 +277,21 @@ class RelatedView(EntityView):
             self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
                                                self._cw._('see them all')))
             self.w(u'</div>')
+
+
+class URLAttributeView(EntityView):
+    """use this view for attributes whose value is an url and that you want
+    to display as clickable link
+    """
+    id = 'urlattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def cell_call(self, row, col, rtype, **kwargs):
+        entity = self.rset.get_entity(row, col)
+        url = entity.printable_value(rtype)
+        if url:
+            self.w(u'<a href="%s">%s</a>' % (url, url))
+
 
 ## default primary ui configuration ###########################################
 

@@ -39,7 +39,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
     __regid__ = 'sparql'
     def call(self):
         form = self._cw.vreg.select('forms', 'sparql', self._cw)
-        self.w(form.form_render())
+        self.w(form.render())
         sparql = self._cw.form.get('sparql')
         vid = self._cw.form.get('resultvid', 'table')
         if sparql:

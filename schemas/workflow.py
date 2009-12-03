@@ -27,7 +27,8 @@ class Workflow(EntityType):
                                   constraints=[RQLConstraint('O final FALSE')])
 
     initial_state = SubjectRelation('State', cardinality='?*',
-                                   constraints=[RQLConstraint('O state_of S')],
+                                   constraints=[RQLConstraint('O state_of S',
+                                                              msg=_('state doesn\'t belong to this workflow'))],
                                    description=_('initial state for this workflow'))
 
 
@@ -38,7 +39,8 @@ class default_workflow(RelationType):
     subject = 'CWEType'
     object = 'Workflow'
     cardinality = '?*'
-    constraints = [RQLConstraint('S final FALSE, O workflow_of S')]
+    constraints = [RQLConstraint('S final FALSE, O workflow_of S',
+                                 msg=_('workflow isn\'t a workflow of this type'))]
 
 
 class State(EntityType):
@@ -48,18 +50,22 @@ class State(EntityType):
     __permissions__ = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256)
+                  maxsize=256,
+                  constraints=[RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N', 'Y',
+                                                   _('workflow already have a state of that name'))])
     description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
 
     # XXX should be on BaseTransition w/ AND/OR selectors when we will
     # implements #345274
     allowed_transition = SubjectRelation('BaseTransition', cardinality='**',
-                                         constraints=[RQLConstraint('S state_of WF, O transition_of WF')],
+                                         constraints=[RQLConstraint('S state_of WF, O transition_of WF',
+                                                                    msg=_('state and transition don\'t belong the the same workflow'))],
                                          description=_('allowed transitions from this state'))
     state_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                description=_('workflow to which this state belongs'),
-                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N')])
+                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N', 'Y',
+                                                                _('workflow already have a state of that name'))])
 
 
 class BaseTransition(EntityType):
@@ -67,7 +73,9 @@ class BaseTransition(EntityType):
     __permissions__ = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256)
+                  maxsize=256,
+                  constraints=[RQLUniqueConstraint('S name N, S transition_of WF, Y transition_of WF, Y name N', 'Y',
+                                                   _('workflow already have a transition of that name'))])
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(fulltextindexed=True,
                          description=_('semantic description of this transition'))
@@ -83,7 +91,8 @@ class BaseTransition(EntityType):
                                                   'allowed to pass this transition'))
     transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
-                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N')])
+                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y',
+                                                                     _('workflow already have a transition of that name'))])
 
 
 class Transition(BaseTransition):
@@ -94,7 +103,8 @@ class Transition(BaseTransition):
 
     destination_state = SubjectRelation(
         'State', cardinality='1*',
-        constraints=[RQLConstraint('S transition_of WF, O state_of WF')],
+        constraints=[RQLConstraint('S transition_of WF, O state_of WF',
+                                   msg=_('state and transition don\'t belong the the same workflow'))],
         description=_('destination state for this transition'))
 
 
@@ -103,7 +113,9 @@ class WorkflowTransition(BaseTransition):
     __specializes_schema__ = True
 
     subworkflow = SubjectRelation('Workflow', cardinality='1*',
-                                  constraints=[RQLConstraint('S transition_of WF, WF workflow_of ET, O workflow_of ET')])
+                                  constraints=[RQLConstraint('S transition_of WF, WF workflow_of ET, O workflow_of ET',
+                                                             msg=_('subworkflow isn\'t a workflow for the same types as the transition\'s workflow'))]
+                                  )
     # XXX use exit_of and inline it
     subworkflow_exit = SubjectRelation('SubWorkflowExitPoint', cardinality='*1',
                                        composite='subject')
@@ -113,11 +125,13 @@ class SubWorkflowExitPoint(EntityType):
     """define how we get out from a sub-workflow"""
     subworkflow_state = SubjectRelation(
         'State', cardinality='1*',
-        constraints=[RQLConstraint('T subworkflow_exit S, T subworkflow WF, O state_of WF')],
+        constraints=[RQLConstraint('T subworkflow_exit S, T subworkflow WF, O state_of WF',
+                                   msg=_('exit state must a subworkflow state'))],
         description=_('subworkflow state'))
     destination_state = SubjectRelation(
         'State', cardinality='?*',
-        constraints=[RQLConstraint('T subworkflow_exit S, T transition_of WF, O state_of WF')],
+        constraints=[RQLConstraint('T subworkflow_exit S, T transition_of WF, O state_of WF',
+                                   msg=_('destination state must be in the same workflow as our parent transition'))],
         description=_('destination state. No destination state means that transition '
                       'should go back to the state from which we\'ve entered the '
                       'subworkflow.'))
@@ -214,7 +228,8 @@ class custom_workflow(RelationType):
     __permissions__ = META_RTYPE_PERMS
 
     cardinality = '?*'
-    constraints = [RQLConstraint('S is ET, O workflow_of ET')]
+    constraints = [RQLConstraint('S is ET, O workflow_of ET',
+                                 msg=_('workflow isn\'t a workflow for this type'))]
     object = 'Workflow'
 
 
@@ -243,5 +258,6 @@ class in_state(RelationType):
     inlined = False
 
     cardinality = '1*'
-    constraints = [RQLConstraint('S is ET, O state_of WF, WF workflow_of ET')]
+    constraints = [RQLConstraint('S is ET, O state_of WF, WF workflow_of ET',
+                                 msg=_('state doesn\'t apply to this entity\'s type'))]
     object = 'State'

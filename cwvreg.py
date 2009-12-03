@@ -499,7 +499,7 @@ class CubicWebVRegistry(VRegistry):
         for key, val in propvalues:
             try:
                 values[key] = self.typed_value(key, val)
-            except ValueError:
+            except ValueError, ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
             except UnknownProperty, ex:

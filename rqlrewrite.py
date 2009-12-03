@@ -285,7 +285,7 @@ class RQLRewriter(object):
             if not eschema.has_perm(self.session, action):
                 rqlexprs = eschema.get_rqlexprs(action)
                 if not rqlexprs:
-                    raise Unauthorised()
+                    raise Unauthorized()
                 self.insert_snippets([((varname, 'X'), rqlexprs)])
 
     def snippet_subquery(self, varmap, transformedsnippet):

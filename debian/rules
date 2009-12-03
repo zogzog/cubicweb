@@ -8,7 +8,7 @@
 PY_VERSION:=$(shell pyversions -d)
 
 build: build-stamp
-build-stamp: 
+build-stamp:
 	dh_testdir
 	# XXX doesn't work if logilab-doctools, logilab-xml are not in build depends
 	# and I can't get pbuilder find them in its chroot :(
@@ -17,7 +17,7 @@ build-stamp:
 	python setup.py build
 	touch build-stamp
 
-clean: 
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
@@ -82,6 +82,6 @@ binary-indep: build install
 
 binary-arch:
 
-binary: binary-indep 
+binary: binary-indep
 .PHONY: build clean binary binary-indep binary-arch
 

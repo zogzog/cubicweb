@@ -24,6 +24,8 @@ import tempfile
 import shutil
 import os.path as osp
 from datetime import datetime
+from glob import glob
+from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
@@ -104,12 +106,12 @@ class ServerMigrationHelper(MigrationHelper):
             if migrscript.endswith('.sql'):
                 if self.execscript_confirm(migrscript):
                     sqlexec(open(migrscript).read(), self.session.system_sql)
-            elif migrscript.endswith('.py'):
+            elif migrscript.endswith('.py') or migrscript.endswith('.txt'):
                 return super(ServerMigrationHelper, self).cmd_process_script(
                     migrscript, funcname, *args, **kwargs)
             else:
                 print
-                print ('-> ignoring %s, only .py and .sql scripts are considered' %
+                print ('-> ignoring %s, only .py .sql and .txt scripts are considered' %
                        migrscript)
                 print
             self.commit()
@@ -307,6 +309,21 @@ class ServerMigrationHelper(MigrationHelper):
                     self.repo.hm.register_hook(setowner_after_add_entity,
                                                'after_add_entity', '')
                     self.cmd_reactivate_verification_hooks()
+
+    def install_custom_sql_scripts(self, directory, driver):
+        self.session.set_pool() # ensure pool is set
+        for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
+            newname = osp.basename(fpath).replace('.sql.%s' % driver,
+                                                  '.%s.sql' % driver)
+            warn('[3.5.6] rename %s into %s' % (fpath, newname),
+                 DeprecationWarning)
+            print '-> installing', fpath
+            sqlexec(open(fpath).read(), self.session.system_sql, False,
+                    delimiter=';;')
+        for fpath in glob(osp.join(directory, '*.%s.sql' % driver)):
+            print '-> installing', fpath
+            sqlexec(open(fpath).read(), self.session.system_sql, False,
+                    delimiter=';;')
 
     # schema synchronization internals ########################################
 
@@ -544,8 +561,11 @@ class ServerMigrationHelper(MigrationHelper):
         self.fs_schema = self._create_context()['fsschema'] = newcubes_schema
         new = set()
         # execute pre-create files
+        driver = self.repo.system_source.dbdriver
         for pack in reversed(newcubes):
-            self.exec_event_script('precreate', self.config.cube_dir(pack))
+            cubedir = self.config.cube_dir(pack)
+            self.install_custom_sql_scripts(osp.join(cubedir, 'schema'), driver)
+            self.exec_event_script('precreate', cubedir)
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
             if not rschema in self.repo.schema:
