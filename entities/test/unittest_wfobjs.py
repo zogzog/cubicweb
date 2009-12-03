@@ -45,6 +45,7 @@ class WorkflowBuildingTC(EnvBasedTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
+        print '*'*80
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
@@ -395,7 +396,7 @@ class CustomWorkflowTC(EnvBasedTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow': 'constraint S is ET, O workflow_of ET failed'})
+        self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be
