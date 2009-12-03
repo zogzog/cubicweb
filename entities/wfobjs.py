@@ -34,6 +34,7 @@ class Workflow(AnyEntity):
         return any(et for et in self.reverse_default_workflow
                    if et.name == etype)
 
+    # XXX define parent() instead? what if workflow of multiple types?
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -244,6 +245,9 @@ class Transition(BaseTransition):
     def destination(self):
         return self.destination_state[0]
 
+    def parent(self):
+        return self.workflow
+
 
 class WorkflowTransition(BaseTransition):
     """customized class for WorkflowTransition entities"""
@@ -309,6 +313,9 @@ class SubWorkflowExitPoint(AnyEntity):
     def destination(self):
         return self.destination_state and self.destination_state[0] or None
 
+    def parent(self):
+        return self.reverse_subworkflow_exit[0]
+
 
 class State(AnyEntity):
     """customized class for State entities"""
@@ -321,13 +328,8 @@ class State(AnyEntity):
         # take care, may be missing in multi-sources configuration
         return self.state_of and self.state_of[0]
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.state_of:
-            return self.state_of[0].rest_path(), {}
-        return super(State, self).after_deletion_path()
+    def parent(self):
+        return self.workflow
 
 
 class TrInfo(AnyEntity):
@@ -352,13 +354,8 @@ class TrInfo(AnyEntity):
     def transition(self):
         return self.by_transition and self.by_transition[0] or None
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.for_entity:
-            return self.for_entity.rest_path(), {}
-        return 'view', {}
+    def parent(self):
+        return self.for_entity
 
 
 class WorkflowableMixIn(object):
