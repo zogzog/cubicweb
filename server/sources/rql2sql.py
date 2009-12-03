@@ -710,7 +710,6 @@ class SQLGenerator(object):
                     sql = 'NOT EXISTS(SELECT 1 FROM %s WHERE %s)' % (
                         ', '.join(tables), ' AND '.join(restrictions))
             else:
-                lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
                 sql = '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
             return sql
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
