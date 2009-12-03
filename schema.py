@@ -955,6 +955,7 @@ class WorkflowableEntityType(ybo.EntityType):
 CONSTRAINTS['RQLConstraint'] = RQLConstraint
 CONSTRAINTS['RQLUniqueConstraint'] = RQLUniqueConstraint
 CONSTRAINTS['RQLVocabularyConstraint'] = RQLVocabularyConstraint
+CONSTRAINTS.pop('MultipleStaticVocabularyConstraint', None) # don't want this in cw yams schema
 PyFileReader.context.update(CONSTRAINTS)
 
 
