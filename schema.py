@@ -698,6 +698,10 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """
     distinct_query = True
 
+    # XXX turns mainvars into a required argument in __init__, since we've no
+    #     way to guess it correctly (eg if using S,O or U the constraint will
+    #     always be satisfied since we've to use a DISTINCT query)
+
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1
 
