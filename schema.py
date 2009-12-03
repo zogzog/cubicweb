@@ -266,16 +266,6 @@ def ERSchema_has_local_role(self, action):
 ERSchema.has_local_role = ERSchema_has_local_role
 
 
-def system_etypes(schema):
-    """return system entity types only: skip final, schema and application entities
-    """
-    for eschema in schema.entities():
-        if eschema.final or eschema.schema_entity():
-            continue
-        yield eschema.type
-
-# Schema objects definition ###################################################
-
 class CubicWebEntitySchema(EntitySchema):
     """a entity has a type, a set of subject and or object relations
     the entity schema defines the possible relations for a given type and some
