@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from datetime import datetime
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-from cubicweb.schema import RQLVocabularyConstraint
+from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (check_internal_entity,
                                         get_user_sessions, rproperty)
@@ -236,6 +236,7 @@ def cstrcheck_after_add_relation(session, eidfrom, rtype, eidto):
         return
     constraints = rproperty(session, rtype, eidfrom, eidto, 'constraints')
     if constraints:
+        # XXX get only RQL[Unique]Constraints?
         CheckConstraintsOperation(session, constraints=constraints,
                                   rdef=(eidfrom, rtype, eidto))
 
@@ -254,6 +255,7 @@ def uniquecstrcheck_before_modification(session, entity):
                 msg = session._('the value "%s" is already used, use another one')
                 raise ValidationError(entity.eid, {attr: msg % val})
 
+
 def cstrcheck_after_update_attributes(session, entity):
     if session.is_super_session:
         return
@@ -261,7 +263,7 @@ def cstrcheck_after_update_attributes(session, entity):
     for attr in entity.edited_attributes:
         if schema.rschema(attr).final:
             constraints = [c for c in entity.e_schema.constraints(attr)
-                           if isinstance(c, RQLVocabularyConstraint)]
+                           if isinstance(c, (RQLConstraint, RQLUniqueConstraint))]
             if constraints:
                 CheckConstraintsOperation(session, rdef=(entity.eid, attr, None),
                                           constraints=constraints)

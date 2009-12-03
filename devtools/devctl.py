@@ -21,9 +21,10 @@ from logilab.common.textutils import splitstrip
 from logilab.common.shellutils import ASK
 from logilab.common.clcommands import register_commands
 
+from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import (CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage,
                       underline_title)
-from cubicweb.__pkginfo__ import version as cubicwebversion
+from cubicweb.schema import CONSTRAINTS
 from cubicweb.toolsutils import Command, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
@@ -138,6 +139,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         libschema = {}
         rinlined = uicfg.autoform_is_inlined
         appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        for cstrtype in CONSTRAINTS:
+            add_msg(w, cstrtype)
     done = set()
     for eschema in sorted(schema.entities()):
         etype = eschema.type
