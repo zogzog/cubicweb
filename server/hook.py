@@ -82,7 +82,7 @@ class HooksRegistry(CWRegistry):
             if hook.enabled:
                 hook()
             else:
-                warn('[3.6] %s: enabled is deprecated' % cls)
+                warn('[3.6] %s: enabled is deprecated' % self.__class__)
 
 VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
 
