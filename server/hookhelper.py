@@ -10,18 +10,12 @@ __docformat__ = "restructuredtext en"
 from logilab.common.deprecation import deprecated, class_moved
 
 from cubicweb import RepositoryError
+from cubicweb.server import hook
 
+@deprecated('[3.6] entity_oldnewvalue should be imported from cw.server.hook')
 def entity_oldnewvalue(entity, attr):
-    """returns the couple (old attr value, new attr value)
-    NOTE: will only work in a before_update_entity hook
-    """
-    # get new value and remove from local dict to force a db query to
-    # fetch old value
-    newvalue = entity.pop(attr, None)
-    oldvalue = getattr(entity, attr)
-    if newvalue is not None:
-        entity[attr] = newvalue
-    return oldvalue, newvalue
+    """return the "name" attribute of the entity with the given eid"""
+    return hook.entity_oldnewvalue(entity, attr)
 
 @deprecated('[3.6] entity_name is deprecated, use entity.name')
 def entity_name(session, eid):
@@ -32,5 +26,4 @@ def entity_name(session, eid):
 def rproperty(session, rtype, eidfrom, eidto, rprop):
     return session.rproperty(rtype, eidfrom, eidto, rprop)
 
-from cubicweb.server.hook import SendMailOp
-SendMailOp = class_moved(SendMailOp)
+SendMailOp = class_moved(hook.SendMailOp)

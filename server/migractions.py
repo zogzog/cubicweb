@@ -521,9 +521,9 @@ class ServerMigrationHelper(MigrationHelper):
 
     # base actions ############################################################
 
-    def checkpoint(self):
+    def checkpoint(self, ask_confirm=True):
         """checkpoint action"""
-        if self.confirm('commit now ?', shell=False):
+        if not ask_confirm or self.confirm('commit now ?', shell=False):
             self.commit()
 
     def cmd_add_cube(self, cube, update_database=True):
@@ -686,12 +686,9 @@ class ServerMigrationHelper(MigrationHelper):
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
         # register the entity into CWEType
-        self.rqlexecall(ss.eschema2rql(eschema), ask_confirm=confirm)
+        self.rqlexecall(ss.eschema2rql(eschema, self.group_mapping()), ask_confirm=confirm)
         # add specializes relation if needed
         self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
-        # register groups / permissions for the entity
-        self.rqlexecall(ss.erperms2rql(eschema, self.group_mapping()),
-                        ask_confirm=confirm)
         # register entity's attributes
         for rschema, attrschema in eschema.attribute_definitions():
             # ignore those meta relations, they will be automatically added
@@ -828,12 +825,9 @@ class ServerMigrationHelper(MigrationHelper):
         # definitions
         self.rqlexecall(ss.rschema2rql(rschema, addrdef=False),
                         ask_confirm=self.verbosity>=2)
-        # register groups / permissions for the relation
-        self.rqlexecall(ss.erperms2rql(rschema, self.group_mapping()),
-                        ask_confirm=self.verbosity>=2)
         if addrdef:
             self.commit()
-            self.rqlexecall(ss.rdef2rql(rschema),
+            self.rqlexecall(ss.rdef2rql(rschema, groupmap=self.group_mapping()),
                             ask_confirm=self.verbosity>=2)
             if rtype in META_RTYPES:
                 # if the relation is in META_RTYPES, ensure we're adding it for
@@ -880,7 +874,7 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
-        self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype),
+        self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype, groupmap=self.group_mapping()),
                         ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()

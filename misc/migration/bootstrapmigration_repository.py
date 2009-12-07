@@ -10,6 +10,45 @@ it should only include low level schema changes
 
 applcubicwebversion, cubicwebversion = versions_map['cubicweb']
 
+if applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
+    from cubicweb.server import schemaserial as ss
+    session.set_pool()
+    session.execute = session.unsafe_execute
+    permsdict = ss.deserialize_ertype_permissions(session)
+    def _add_relation_definition_no_perms(subjtype, rtype, objtype):
+        rschema = fsschema.rschema(rtype)
+        for query, args in ss.rdef2rql(rschema, subjtype, objtype, groupmap=None):
+            rql(query, args, ask_confirm=False)
+        checkpoint(ask_confirm=False)
+
+    config.disabled_hooks_categories.add('integrity')
+    for rschema in repo.schema.relations():
+        rpermsdict = permsdict.get(rschema.eid, {})
+        for rdef in rschema.rdefs.values():
+            for action in ('read', 'add', 'delete'):
+                actperms = []
+                for something in rpermsdict.get(action, ()):
+                    if isinstance(something, tuple):
+                        actperms.append(rdef.rql_expression(*something))
+                    else: # group name
+                        actperms.append(something)
+                rdef.set_action_permissions(action, actperms)
+    for action in ('read', 'add', 'delete'):
+        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'CWGroup')
+        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'RQLExpression')
+        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'CWGroup')
+        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'RQLExpression')
+    for action in ('read', 'add', 'delete'):
+        rql('SET X %s_permission Y WHERE X is IN (CWAttribute, CWRelation), '
+            'RT %s_permission Y, X relation_type RT, Y is CWGroup' % (action, action))
+        rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
+            'X %s_permission Y WHERE X is IN (CWAttribute, CWRelation), '
+            'X relation_type RT, RT %s_permission Y2, Y2 exprtype YET, '
+            'Y2 mainvars YMV, Y2 expression YEX' % (action, action))
+        drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
+        drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
+    config.disabled_hooks_categories.add('integrity')
+
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 
     session.set_shared_data('do-not-insert-cwuri', True)

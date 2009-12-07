@@ -12,7 +12,7 @@ checking for schema consistency is done in hooks.py
 """
 __docformat__ = "restructuredtext en"
 
-from yams.schema import BASE_TYPES
+from yams.schema import BASE_TYPES, RelationSchema
 from yams.buildobjs import EntityType, RelationType, RelationDefinition
 from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
@@ -483,7 +483,8 @@ class SourceDbCWConstraintAdd(hook.Operation):
         # so there is nothing to do here
         if session.added_in_transaction(rdef.eid):
             return
-        subjtype, rtype, objtype = session.vreg.schema.schema_by_eid(rdef.eid)
+        rdefschema = session.vreg.schema.schema_by_eid(rdef.eid)
+        subjtype, rtype, objtype = rdefschema.as_triple()
         cstrtype = self.entity.type
         oldcstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
@@ -603,7 +604,7 @@ class MemSchemaRDefUpdate(MemSchemaOperation):
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
         # at this point
-        self.rschema.rdef[self.kobj].update(self.values)
+        self.rschema.rdefs[self.kobj].update(self.values)
 
 
 class MemSchemaRDefDel(MemSchemaOperation):
@@ -632,7 +633,8 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         if self.session.added_in_transaction(rdef.eid):
             self.cancelled = True
             return
-        subjtype, rtype, objtype = self.session.vreg.schema.schema_by_eid(rdef.eid)
+        rdef = self.session.vreg.schema.schema_by_eid(rdef.eid)
+        subjtype, rtype, objtype = rdef.as_triple()
         self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
         self.cstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
@@ -668,13 +670,13 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.session.vreg.schema[self.name]
+            erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
+            self.error('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, group_eid):
+        if hasattr(self, 'group_eid'):
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -695,18 +697,20 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.session.vreg.schema[self.name]
+            erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.name)
+            self.error('no schema for %s', self.eid)
+            return
+        if isinstance(erschema, RelationSchema): # XXX 3.6 migration
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, group_eid):
+        if hasattr(self, 'group_eid'):
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
         try:
-            perms.remove(self.group)
+            perms.remove(perm)
             erschema.set_action_permissions(self.action, perms)
         except ValueError:
             self.error('can\'t remove permission %s for %s on %s',
@@ -916,7 +920,7 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     # don't use getattr(entity, attr), we would get the modified value if any
     for attr in ro_attrs:
         if attr in entity.edited_attributes:
-            origval, newval = entity_oldnewvalue(entity, attr)
+            origval, newval = hook.entity_oldnewvalue(entity, attr)
             if newval != origval:
                 errors[attr] = session._("can't change the %s attribute") % \
                                display_name(session, attr)
@@ -940,8 +944,8 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
 
     def __call__(self):
         session = self._cw
-        subjschema, rschema, objschema = session.vreg.schema.schema_by_eid(self.eidfrom)
-        subjschema, rschema, objschema = session.schema.schema_by_eid(rdefeid)
+        rdef = session.vreg.schema.schema_by_eid(self.eidfrom)
+        subjschema, rschema, objschema = rdef.as_triple()
         pendings = session.transaction_data.get('pendingeids', ())
         pendingrdefs = session.transaction_data.setdefault('pendingrdefs', set())
         # first delete existing relation if necessary
@@ -956,7 +960,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
                                 % (rschema, subjschema, objschema))
         execute = session.unsafe_execute
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
-                       'R eid %%(x)s' % rdeftype, {'x': rteid})
+                       'R eid %%(x)s' % rdeftype, {'x': self.eidto})
         lastrel = rset[0][0] == 0
         # we have to update physical schema systematically for final and inlined
         # relations, but only if it's the last instance for this relation type
@@ -965,17 +969,17 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         if (rschema.final or rschema.inlined):
             rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R, '
                            'R eid %%(x)s, X from_entity E, E name %%(name)s'
-                           % rdeftype, {'x': rteid, 'name': str(subjschema)})
+                           % rdeftype, {'x': self.eidto, 'name': str(subjschema)})
             if rset[0][0] == 0 and not subjschema.eid in pendings:
                 ptypes = session.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
                 DropColumn(session, table=SQL_PREFIX + subjschema.type,
-                             column=SQL_PREFIX + rschema.type)
+                           column=SQL_PREFIX + rschema.type)
         elif lastrel:
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
         if lastrel and not rteid in pendings:
-            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': rteid}, 'x')
+            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto}, 'x')
         MemSchemaRDefDel(session, (subjschema, rschema, objschema))
 
 
@@ -1087,7 +1091,7 @@ class AfterAddPermissionHook(SyncSchemaHook):
                                    group_eid=self.eidto)
         else: # RQLExpression
             expr = self._cw.entity_from_eid(self.eidto).expression
-            MemSchemaPermissionAdd(session, action=action, eid=self.eidfrom,
+            MemSchemaPermissionAdd(self._cw, action=action, eid=self.eidfrom,
                                    expr=expr)
 
 
