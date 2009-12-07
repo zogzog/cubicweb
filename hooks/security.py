@@ -119,7 +119,7 @@ class AfterAddRelationSecurityHook(SecurityHook):
                                            eidfrom=self.eidfrom,
                                            eidto=self.eidto)
             else:
-                rdef = rschema.rdef(session.describe(self.eidfrom)[0],
-                                    session.describe(self.eidto)[0])
-                rdef.check_perm(session, 'add', fromeid=self.eidfrom, toeid=self.eidto)
+                rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
+                                    self._cw.describe(self.eidto)[0])
+                rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 

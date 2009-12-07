@@ -233,12 +233,13 @@ def _formsections_as_dict(formsections):
     return result
 
 def _card_and_comp(sschema, rschema, oschema, role):
+    rdef = rschema.rdef(sschema, oschema)
     if role == 'subject':
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
-        composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
+        card = rdef.cardinality[0]
+        composed = not rschema.final and rdef.composite == 'object'
     else:
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
-        composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
+        card = rdef.cardinality[1]
+        composed = not rschema.final and rdef.composite == 'subject'
     return card, composed
 
 class AutoformSectionRelationTags(RelationTagsSet):
@@ -355,13 +356,13 @@ class AutoformSectionRelationTags(RelationTagsSet):
             # permission which may imply rql queries
             _targetschemas = []
             for tschema in targetschemas:
-                if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
-                        continue
-                    rdef = rschema.role_rdef(eschema, tschema, role)
-                    if not ((not strict and rdef.has_local_role(permission)) or
-                            rdef.has_perm(entity.req, permission, fromeid=eid)):
-                        continue
-                    _targetschemas.append(tschema)
+                if not tag in self.etype_get(eschema, rschema, role, tschema):
+                    continue
+                rdef = rschema.role_rdef(eschema, tschema, role)
+                if not ((not strict and rdef.has_local_role(permission)) or
+                        rdef.has_perm(entity.req, permission, fromeid=eid)):
+                    continue
+                _targetschemas.append(tschema)
             if not _targetschemas:
                 continue
             targetschemas = _targetschemas
@@ -373,7 +374,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.final:
-                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, eid):
+                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, fromeid=eid):
                         continue
                 elif role == 'subject':
                     # on relation with cardinality 1 or ?, we need delete perm as well

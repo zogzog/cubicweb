@@ -177,7 +177,7 @@ class CWProperty(EntityType):
     """used for cubicweb configuration. Once a property has been created you
     can't change the key.
     """
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', 'users',),
         'update': ('managers', 'owners',),

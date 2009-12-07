@@ -242,7 +242,8 @@ class Session(RequestSessionBase):
         rschema = self.repo.schema[rtype]
         subjtype = self.describe(eidfrom)[0]
         objtype = self.describe(eidto)[0]
-        return rschema.rproperty(subjtype, objtype, rprop)
+        rdef = rschema.rdef(subjtype, objtype)
+        return rdef.get(rprop)
 
     # connection management ###################################################
 

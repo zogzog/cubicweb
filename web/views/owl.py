@@ -71,15 +71,9 @@ class OWLView(StartupView):
         if writeprefix:
             self.w(OWL_CLOSING_ROOT)
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/owl.py
-    def should_display_rschema(self, rschema):
-        return not rschema in self.skiptypes and (
-            rschema.has_local_role('read') or
-            rschema.has_perm(self._cw, 'read'))
-=======
     def should_display_rschema(self, eschema, rschema, tschemas, role):
-        return rschema.may_have_permissions('read', self.req, eschema, role)
->>>>>>> /tmp/owl.py~other.-maWGS
+        return not rschema in self.skiptypes and ( 
+            rschema.may_have_permissions('read', self._cw, eschema, role))
 
     def visit_schema(self, skiptypes):
         """get a layout for a whole schema"""

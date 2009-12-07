@@ -425,28 +425,28 @@ class CubicWebRelationSchema(RelationSchema):
     def has_perm(self, session, action, **kwargs):
         """return true if the action is granted globaly or localy"""
         if 'fromeid' in kwargs:
-            subjtype = session.describe(kwargs['fromeid'])
+            subjtype = session.describe(kwargs['fromeid'])[0]
         else:
             subjtype = None
         if 'toeid' in kwargs:
-            objtype = session.describe(kwargs['toeid'])
+            objtype = session.describe(kwargs['toeid'])[0]
         else:
             objtype = Nono
         if objtype and subjtype:
             return self.rdef(subjtype, objtype).has_perm(session, action, **kwargs)
         elif subjtype:
-            for tschema in rschema.targets(subjtype, 'subject'):
-                rdef = rschema.rdef(subjtype, tschema)
+            for tschema in self.targets(subjtype, 'subject'):
+                rdef = self.rdef(subjtype, tschema)
                 if not rdef.has_perm(action, req, **kwargs):
                     return False
         elif objtype:
-            for tschema in rschema.targets(objtype, 'object'):
-                rdef = rschema.rdef(tschema, objtype)
-                if not rdef.has_perm(action, req, **kwargs):
+            for tschema in self.targets(objtype, 'object'):
+                rdef = self.rdef(tschema, objtype)
+                if not rdef.has_perm(session, action, **kwargs):
                     return False
         else:
             for rdef in self.rdefs.itervalues():
-                if not rdef.has_perm(action, req, **kwargs):
+                if not rdef.has_perm(session, action, **kwargs):
                     return False
 
     @deprecated('use .rdef(subjtype, objtype).role_cardinality(role)')
@@ -527,6 +527,7 @@ class CubicWebSchema(Schema):
                 self._eid_index[rdef.eid] = rdefs
             except AttributeError:
                 pass # not a serialized schema
+        return rdefs
 
     def del_relation_type(self, rtype):
         rschema = self.rschema(rtype)

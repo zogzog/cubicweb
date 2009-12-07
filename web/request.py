@@ -87,7 +87,6 @@ class CubicWebRequestBase(DBAPIRequest):
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
-        self.varmaker = rqlvar_maker()
         self.datadir_url = self._datadir_url()
         self._set_pageid()
 
