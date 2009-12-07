@@ -781,7 +781,6 @@ class AfterAddCWETypeHook(DelCWETypeHook):
     * register an operation to add the entity type to the instance's
       schema on commit
     """
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/hooks/syncschema.py
     __regid__ = 'syncaddcwetype'
     events = ('after_add_entity',)
 

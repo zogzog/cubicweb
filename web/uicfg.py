@@ -233,12 +233,13 @@ def _formsections_as_dict(formsections):
     return result
 
 def _card_and_comp(sschema, rschema, oschema, role):
+    rdef = rschema.rdef(sschema, oschema)
     if role == 'subject':
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
-        composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
+        card = rdef.cardinality[0]
+        composed = not rschema.final and rdef.composite == 'object'
     else:
-        card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
-        composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
+        card = rdef.cardinality[1]
+        composed = not rschema.final and rdef.composite == 'subject'
     return card, composed
 
 class AutoformSectionRelationTags(RelationTagsSet):
@@ -356,12 +357,12 @@ class AutoformSectionRelationTags(RelationTagsSet):
             _targetschemas = []
             for tschema in targetschemas:
                 if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
-                        continue
-                    rdef = rschema.role_rdef(eschema, tschema, role)
-                    if not ((not strict and rdef.has_local_role(permission)) or
-                            rdef.has_perm(entity.req, permission, fromeid=eid)):
-                        continue
-                    _targetschemas.append(tschema)
+                    continue
+                rdef = rschema.role_rdef(eschema, tschema, role)
+                if not ((not strict and rdef.has_local_role(permission)) or
+                        rdef.has_perm(entity.req, permission, fromeid=eid)):
+                    continue
+                _targetschemas.append(tschema)
             if not _targetschemas:
                 continue
             targetschemas = _targetschemas

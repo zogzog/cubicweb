@@ -167,7 +167,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
         entity = self.entity
         for attr in entity.edited_attributes:
             if schema.rschema(attr).final:
-                constraints = [c for c in entity.rdef(attr).constraints
+                constraints = [c for c in entity.e_schema.rdef(attr).constraints
                                if isinstance(c, (RQLUniqueConstraint, RQLConstraint))]
                 if constraints:
                     _CheckConstraintsOp(self._cw, constraints=constraints,

@@ -183,7 +183,6 @@ def deserialize_schema(schema, session):
                                  fulltext_container=ft_container, eid=eid)
         rschema = schema.add_relation_type(rtype)
         index[eid] = rschema
-        set_perms(rschema, permsdict.get(eid, {}))
     cstrsdict = deserialize_rdef_constraints(session)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
@@ -202,7 +201,8 @@ def deserialize_schema(schema, session):
                                   indexed=idx, fulltextindexed=ftidx,
                                   internationalizable=i18n,
                                   default=default, eid=rdefeid)
-        schema.add_relation_def(rdef)
+        rdefs = schema.add_relation_def(rdef)
+        set_perms(rdefs, permsdict.get(rdefeid, {}))
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
@@ -216,7 +216,8 @@ def deserialize_schema(schema, session):
                                   order=ord, description=desc,
                                   composite=c, constraints=constraints,
                                   eid=rdefeid)
-        schema.add_relation_def(rdef)
+        rdefs = schema.add_relation_def(rdef)
+        set_perms(rdefs, permsdict.get(rdefeid, {}))
     schema.infer_specialization_rules()
     if _3_2_migration:
         _update_database(schema, sqlcu)
@@ -363,7 +364,7 @@ def _rdef_values(rschema, objtype, props):
     amap = {'order': 'ordernum'}
     values = {}
     for prop, default in rschema.rproperty_defs(objtype).iteritems():
-        if prop in ('eid', 'constraints', 'uid', 'infered'):
+        if prop in ('eid', 'constraints', 'uid', 'infered', 'permissions'):
             continue
         value = props.get(prop, default)
         if prop in ('indexed', 'fulltextindexed', 'internationalizable'):
@@ -536,7 +537,7 @@ def erperms2rql(erschema, groupmapping):
     else:
         # entity schema
         for rql, args in _erperms2rql(erschema, groupmapping):
-            args['name'] = str(eschema)
+            args['name'] = str(erschema)
             yield rql + 'X is CWEType, X name %(name)s', args
 
 def _erperms2rql(erschema, groupmapping):
@@ -550,7 +551,7 @@ def _erperms2rql(erschema, groupmapping):
             if isinstance(group_or_rqlexpr, basestring):
                 # group
                 try:
-                    yield ('SET X %s_permission Y WHERE Y eid %%(g)s' % action,
+                    yield ('SET X %s_permission Y WHERE Y eid %%(g)s, ' % action,
                            {'g': groupmapping[group_or_rqlexpr]})
                 except KeyError:
                     continue

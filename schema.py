@@ -527,6 +527,7 @@ class CubicWebSchema(Schema):
                 self._eid_index[rdef.eid] = rdefs
             except AttributeError:
                 pass # not a serialized schema
+        return rdefs
 
     def del_relation_type(self, rtype):
         rschema = self.rschema(rtype)

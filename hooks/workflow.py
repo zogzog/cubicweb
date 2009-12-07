@@ -227,7 +227,7 @@ class FireTransitionHook(WorkflowHook):
                     msg = session._("transition %s isn't allowed from %s") % (
                         _(tr.name), _(fromstate.name))
                     raise ValidationError(entity.eid, {'by_transition': msg})
-                 if not tr.may_be_fired(foreid):
+                if not tr.may_be_fired(foreid):
                     msg = session._("transition may not be fired")
                     raise ValidationError(entity.eid, {'by_transition': msg})
             if entity.get('to_state'):

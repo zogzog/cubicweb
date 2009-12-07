@@ -36,8 +36,6 @@ class FormViewMixIn(object):
         return False
 
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/form.py
-=======
 # XXX should disappear
 class FormMixIn(object):
     """abstract form mix-in
@@ -192,7 +190,6 @@ class FormMixIn(object):
 
 ###############################################################################
 
->>>>>>> /tmp/form.py~other.xdns1y
 class metafieldsform(type):
     """metaclass for FieldsForm to retrieve fields defined as class attributes
     and put them into a single ordered list: '_fields_'.

@@ -249,12 +249,7 @@ class JSonController(Controller):
         note: it's the responsability of js_* methods to set the correct
         response content type
         """
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/basecontrollers.py
         self._cw.json_request = True
-        self._cw.pageid = self._cw.form.get('pageid')
-=======
-        self.req.json_request = True
->>>>>>> /tmp/basecontrollers.py~other.K2YVFx
         try:
             fname = self._cw.form['fname']
             func = getattr(self, 'js_%s' % fname)
