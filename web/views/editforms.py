@@ -169,8 +169,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     def should_edit_attribute(self, entity, rschema, role, form):
         rtype = str(rschema)
-        ttype = rschema.targets(entity.id, role)[0]
-        afs = uicfg.autoform_section.etype_get(entity.id, rtype, role, ttype)
+        ttype = rschema.targets(entity.__regid__, role)[0]
+        afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
         if 'main_hidden' in afs or not entity.has_perm('update'):
             return False
         try:

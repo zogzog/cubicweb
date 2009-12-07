@@ -70,6 +70,7 @@ class EditController(ViewController):
         req = self._cw
         self.errors = []
         self.relations_rql = []
+        form = req.form
         # so we're able to know the main entity from the repository side
         if '__maineid' in form:
             req.set_shared_data('__maineid', form['__maineid'], querydata=True)

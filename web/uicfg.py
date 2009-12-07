@@ -356,7 +356,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             # permission which may imply rql queries
             _targetschemas = []
             for tschema in targetschemas:
-                if not rtags.etype_get(eschema, rschema, role, tschema) in categories:
+                if not tag in self.etype_get(eschema, rschema, role, tschema):
                     continue
                 rdef = rschema.role_rdef(eschema, tschema, role)
                 if not ((not strict and rdef.has_local_role(permission)) or
@@ -374,7 +374,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.final:
-                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, eid):
+                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, fromeid=eid):
                         continue
                 elif role == 'subject':
                     # on relation with cardinality 1 or ?, we need delete perm as well
