@@ -202,7 +202,9 @@ def deserialize_schema(schema, session):
                                   internationalizable=i18n,
                                   default=default, eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
-        set_perms(rdefs, permsdict.get(rdefeid, {}))
+        # rdefs can be None on duplicated relation definitions (e.g. symetrics)
+        if rdefs:
+            set_perms(rdefs, permsdict.get(rdefeid, {}))
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
@@ -217,7 +219,9 @@ def deserialize_schema(schema, session):
                                   composite=c, constraints=constraints,
                                   eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
-        set_perms(rdefs, permsdict.get(rdefeid, {}))
+        # rdefs can be None on duplicated relation definitions (e.g. symetrics)
+        if rdefs:
+            set_perms(rdefs, permsdict.get(rdefeid, {}))
     schema.infer_specialization_rules()
     if _3_2_migration:
         _update_database(schema, sqlcu)
