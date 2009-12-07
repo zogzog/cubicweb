@@ -21,7 +21,7 @@ class TextAnalyzer(Component):
     """analyze and extract information from plain text by calling registered
     text parsers
     """
-    id = 'textanalyzer'
+    __regid__ = 'textanalyzer'
 
     def parse(self, caller, text):
         for parsercls in self.req.vreg['components'].get('textparser', ()):
@@ -36,7 +36,7 @@ class TextParser(Component):
 
     method on the caller.
     """
-    id = 'textparser'
+    __regid__ = 'textparser'
     __abstract__ = True
 
     def parse(self, caller, text):

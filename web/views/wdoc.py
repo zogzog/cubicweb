@@ -238,7 +238,7 @@ class ChangeLogView(StartupView):
 
 
 class HelpAction(action.Action):
-    id = 'help'
+    __regid__ = 'help'
     __select__ = yes()
 
     category = 'footer'

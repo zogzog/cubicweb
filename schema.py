@@ -435,18 +435,18 @@ class CubicWebRelationSchema(RelationSchema):
         if objtype and subjtype:
             return self.rdef(subjtype, objtype).has_perm(session, action, **kwargs)
         elif subjtype:
-            for tschema in rschema.targets(subjtype, 'subject'):
-                rdef = rschema.rdef(subjtype, tschema)
+            for tschema in self.targets(subjtype, 'subject'):
+                rdef = self.rdef(subjtype, tschema)
                 if not rdef.has_perm(action, req, **kwargs):
                     return False
         elif objtype:
-            for tschema in rschema.targets(objtype, 'object'):
-                rdef = rschema.rdef(tschema, objtype)
-                if not rdef.has_perm(action, req, **kwargs):
+            for tschema in self.targets(objtype, 'object'):
+                rdef = self.rdef(tschema, objtype)
+                if not rdef.has_perm(session, action, **kwargs):
                     return False
         else:
             for rdef in self.rdefs.itervalues():
-                if not rdef.has_perm(action, req, **kwargs):
+                if not rdef.has_perm(session, action, **kwargs):
                     return False
 
     @deprecated('use .rdef(subjtype, objtype).role_cardinality(role)')

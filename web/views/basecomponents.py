@@ -218,12 +218,11 @@ class EtypeRestrictionComponent(component.Component):
 
 class PdfViewComponent(component.EntityVComponent):
     __regid__ = 'pdfview'
-    __select__ = yes()
 
     context = 'ctxtoolbar'
 
     def cell_call(self, row, col, view):
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         url = entity.absolute_url(vid=view.id, __template='pdf-main-template')
         iconurl = self.req.build_url('data/pdf_icon.gif')
         label = self.req._('Download page as pdf')
@@ -232,7 +231,7 @@ class PdfViewComponent(component.EntityVComponent):
 
 
 class MetaDataComponent(component.EntityVComponent):
-    id = 'metadata'
+    __regid__ = 'metadata'
     context = 'navbottom'
     order = 1
 

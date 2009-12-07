@@ -219,10 +219,10 @@ class StateInContextView(view.EntityView):
 # workflow entity types edition ################################################
 
 _afs = uicfg.autoform_section
-_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'generated')
-_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'generated')
-_afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
-_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'primary')
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
+_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 
 def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
     wf = req.entity_from_eid(wfeid)

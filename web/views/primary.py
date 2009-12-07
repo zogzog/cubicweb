@@ -283,7 +283,7 @@ class URLAttributeView(EntityView):
     """use this view for attributes whose value is an url and that you want
     to display as clickable link
     """
-    id = 'urlattr'
+    __regid__ = 'urlattr'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
     def cell_call(self, row, col, rtype, **kwargs):
