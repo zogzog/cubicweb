@@ -378,12 +378,15 @@ class SourceDbCWAttributeAdd(hook.Operation):
                       'description': rdef.description,
                       'cardinality': rdef.cardinality,
                       'constraints': rdef.constraints,
+                      'permissions': rdef.get_permissions(),
                       'order': rdef.order})
+        groupmap = group_mapping(session)
         for specialization in eschema.specialized_by(False):
-            if rschema.has_rdef(specialization, rdef.object):
+            if (specialization, rdef.object) in rschema.rdefs:
                 continue
-            for rql, args in ss.frdef2rql(rschema, str(specialization),
-                                          rdef.object, props):
+            sperdef = RelationDefinitionSchema(specialization, rschema, rdef.object, props)
+            for rql, args in ss.rdef2rql(rschema, str(specialization),
+                                         rdef.object, sperdef, groupmap=groupmap):
                 session.execute(rql, args)
         # set default value, using sql for performance and to avoid
         # modification_date update
