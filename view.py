@@ -462,7 +462,7 @@ class ReloadableMixIn(object):
         return self.build_js(cbname, xml_escape(msg or ''))
 
     def build_update_js_call(self, cbname, msg):
-        rql = xml_escape(self.rset.printable_rql())
+        rql = self.rset.printable_rql()
         return "javascript:userCallbackThenUpdateUI('%s', '%s', %s, %s, '%s', '%s')" % (
             cbname, self.__regid__, dumps(rql), dumps(msg),
             self.__registry__, self.div_id())
