@@ -45,7 +45,6 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
-        print '*'*80
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
@@ -76,8 +75,8 @@ class WorkflowTC(CubicWebTC):
 
     def setup_database(self):
         rschema = self.schema['in_state']
-        for x, y in rschema.iter_rdefs():
-            self.assertEquals(rschema.rproperty(x, y, 'cardinality'), '1*')
+        for rdef in rschema.rdefs.values():
+            self.assertEquals(rdef.cardinality, '1*')
         self.member = self.create_user('member')
 
     def test_workflow_base(self):
@@ -210,7 +209,7 @@ class WorkflowTC(CubicWebTC):
                                       [(swfstate2, state2), (swfstate3, state3)])
         self.assertEquals(swftr1.destination().eid, swfstate1.eid)
         # workflows built, begin test
-        self.group = self.add_entity('CWGroup', name=u'grp1')
+        self.group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         self.assertEquals(self.group.current_state.eid, state1.eid)
         self.assertEquals(self.group.current_workflow.eid, mwf.eid)
@@ -234,7 +233,7 @@ class WorkflowTC(CubicWebTC):
         # subworkflow input transition
         ex = self.assertRaises(ValidationError,
                                self.group.change_state, swfstate1, u'gadget')
-        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's current workflow"})
+        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's workflow"})
         self.rollback()
         # force back to state1
         self.group.change_state('state1', u'gadget')
@@ -295,7 +294,7 @@ class WorkflowTC(CubicWebTC):
         twf.add_wftransition(_('close'), subwf, (released,),
                              [(xsigned, closed), (xaborted, released)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans in ('identify', 'release', 'close'):
             group.fire_transition(trans)
@@ -320,7 +319,7 @@ class WorkflowTC(CubicWebTC):
         twf.add_wftransition(_('release'), subwf, identified,
                              [(xaborted, None)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans, nextstate in (('identify', 'xsigning'),
                                  ('xabort', 'created'),
@@ -390,7 +389,7 @@ class CustomWorkflowTC(CubicWebTC):
         wf = add_wf(self, 'Company')
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': self.member.eid})
+                     {'wf': wf.eid, 'x': self.member.eid}, 'x')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
 

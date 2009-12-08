@@ -29,7 +29,7 @@ class MetadataTC(BaseEntityTC):
 
     def test_creator(self):
         self.login(u'member')
-        entity = self.add_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
+        entity = self.request().create_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
         self.commit()
         self.assertEquals(entity.creator.eid, self.member.eid)
         self.assertEquals(entity.dc_creator(), u'member')

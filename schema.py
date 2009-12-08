@@ -431,7 +431,7 @@ class CubicWebRelationSchema(RelationSchema):
         if 'toeid' in kwargs:
             objtype = session.describe(kwargs['toeid'])[0]
         else:
-            objtype = Nono
+            objtype = None
         if objtype and subjtype:
             return self.rdef(subjtype, objtype).has_perm(session, action, **kwargs)
         elif subjtype:

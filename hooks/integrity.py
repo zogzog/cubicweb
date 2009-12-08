@@ -67,7 +67,7 @@ class IntegrityHook(hook.Hook):
 
 class UserIntegrityHook(IntegrityHook):
     __abstract__ = True
-    __select__ = IntegrityHook.__select__ & ~hook.regular_session()
+    __select__ = IntegrityHook.__select__ & hook.regular_session()
 
 
 class CheckCardinalityHook(UserIntegrityHook):
@@ -153,6 +153,7 @@ class CheckConstraintHook(UserIntegrityHook):
             _CheckConstraintsOp(self._cw, constraints=constraints,
                                rdef=(self.eidfrom, self.rtype, self.eidto))
 
+
 class CheckAttributeConstraintHook(UserIntegrityHook):
     """check the attribute relation satisfy its constraints
 
@@ -182,8 +183,7 @@ class CheckUniqueHook(UserIntegrityHook):
         entity = self.entity
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
-            if eschema.subject_relation(attr).final and \
-                   eschema.has_unique_values(attr):
+            if eschema.subjrels[attr].final and eschema.has_unique_values(attr):
                 val = entity[attr]
                 if val is None:
                     continue

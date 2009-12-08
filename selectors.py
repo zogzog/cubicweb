@@ -79,7 +79,7 @@ def lltrace(selector):
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
             #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-            print '%s -> %s for %s' % (selname, ret, vobj)
+            print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
         return ret
     traced.__name__ = selector.__name__
     return traced

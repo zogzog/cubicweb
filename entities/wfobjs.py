@@ -146,8 +146,8 @@ class Workflow(AnyEntity):
                                   requiredgroups, conditions, **kwargs)
         if hasattr(subworkflow, 'eid'):
             subworkflow = subworkflow.eid
-        assert _cw.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
-                               {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
+        assert self._cw.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
+                                {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
         for fromstate, tostate in exitpoints:
             tr.add_exit_point(fromstate, tostate)
         return tr
@@ -247,9 +247,8 @@ class BaseTransition(AnyEntity):
             kwargs['x'] = self.eid
             kwargs.setdefault('mainvars', u'X')
             self._cw.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
-                             'X expression %(expr)s, T condition X '
-                             'WHERE T eid %(x)s',
-                             'T condition X WHERE T eid %(x)s', kwargs, 'x')
+                             'X expression %(expr)s, X mainvars %(mainvars)s, '
+                             'T condition X WHERE T eid %(x)s',kwargs, 'x')
         # XXX clear caches?
 
 
@@ -464,9 +463,9 @@ class WorkflowableMixIn(object):
                 kwargs['comment_format'] = commentformat
         kwargs['wf_info_for'] = self
         if treid is not None:
-            kwargs['by_transition'] = self.req.entity_from_eid(treid)
+            kwargs['by_transition'] = self._cw.entity_from_eid(treid)
         if tseid is not None:
-            kwargs['to_state'] = self.req.entity_from_eid(tseid)
+            kwargs['to_state'] = self._cw.entity_from_eid(tseid)
         return self._cw.create_entity('TrInfo', **kwargs)
 
     def fire_transition(self, tr, comment=None, commentformat=None):
