@@ -67,7 +67,7 @@ class IntegrityHook(hook.Hook):
 
 class UserIntegrityHook(IntegrityHook):
     __abstract__ = True
-    __select__ = IntegrityHook.__select__ & ~hook.regular_session()
+    __select__ = IntegrityHook.__select__ & hook.regular_session()
 
 
 class CheckCardinalityHook(UserIntegrityHook):
@@ -152,6 +152,7 @@ class CheckConstraintHook(UserIntegrityHook):
         if constraints:
             _CheckConstraintsOp(self._cw, constraints=constraints,
                                rdef=(self.eidfrom, self.rtype, self.eidto))
+
 
 class CheckAttributeConstraintHook(UserIntegrityHook):
     """check the attribute relation satisfy its constraints
