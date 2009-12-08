@@ -310,6 +310,11 @@ class AppObject(object):
     # deprecated ###############################################################
 
     @property
+    @deprecated('[3.6] use self.__regid__')
+    def id(self):
+        return self.__regid__
+
+    @property
     @deprecated('[3.6] use self._cw.vreg')
     def vreg(self):
         return self._cw.vreg

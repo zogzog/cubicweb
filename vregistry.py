@@ -64,7 +64,7 @@ def class_regid(cls):
         warn('[3.6] %s.%s: id is deprecated, use __regid__'
              % (cls.__module__, cls.__name__), DeprecationWarning)
         cls.__regid__ = cls.id
-    if hasattr(cls, 'id'):
+    if hasattr(cls, 'id') and not isinstance(cls.id, property):
         return cls.id
     return cls.__regid__
 
