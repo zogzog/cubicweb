@@ -395,7 +395,8 @@ def frdef_relations_values(rschema, objtype, props):
     return relations, values
 
 
-def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None, groupmap=None):
+def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None,
+               groupmap=None):
     if subjtype is None:
         assert objtype is None
         assert props is None
@@ -445,8 +446,8 @@ def schema2rql(schema, skip=None, allow=None):
 
 def erschema2rql(erschema, groupmap):
     if isinstance(erschema, schemamod.EntitySchema):
-        return eschema2rql(erschema, groupmap)
-    return rschema2rql(erschema)
+        return eschema2rql(erschema, groupmap=groupmap)
+    return rschema2rql(erschema, groupmap=groupmap)
 
 def eschema2rql(eschema, groupmap):
     """return a list of rql insert statements to enter an entity schema
