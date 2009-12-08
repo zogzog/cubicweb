@@ -236,7 +236,7 @@ class MetaDataComponent(component.EntityVComponent):
     order = 1
 
     def cell_call(self, row, col, view=None):
-        self.wview('metadata', self.rset, row=row, col=col)
+        self.wview('metadata', self.cw_rset, row=row, col=col)
 
 
 def registration_callback(vreg):

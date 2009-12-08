@@ -184,7 +184,7 @@ class FieldsForm(form.Form):
         if value is None:
             if field.name in rendervalues:
                 value = rendervalues[field.name]
-            elif field.name in self.extra_kwargs:
+            elif field.name in self.cw_extra_kwargs:
                 value = self.extra_kwargs[field.name]
             else:
                 value = self.form_field_value(field, load_bytes)
@@ -376,7 +376,7 @@ class EntityFieldsForm(FieldsForm):
             return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
         if attr == '__type':
             return entity.__regid__
-        if self.schema.rschema(attr).final:
+        if self._cw.vreg.schema.rschema(attr).final:
             attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
                 return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
