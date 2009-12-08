@@ -1070,13 +1070,13 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
             return
         schema = self._cw.vreg.schema
         entity = self._cw.entity_from_eid(self.eidto)
-        subjtype, rtype, objtype = schema.schema_by_eid(self.eidfrom)
+        rdef = schema.schema_by_eid(self.eidfrom)
         try:
-            cstr = rtype.rdef(subjtype, objtype).constraint_by_type(
-                entity.cstrtype[0].name)
+            cstr = rdef.constraint_by_type(entity.type)
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
+            subjtype, rtype, objtype = rdef.as_triple()
             SourceDbCWConstraintDel(self._cw, subjtype=subjtype, rtype=rtype,
                                     objtype=objtype, cstr=cstr)
             MemSchemaCWConstraintDel(self._cw, subjtype=subjtype, rtype=rtype,
