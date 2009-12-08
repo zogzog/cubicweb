@@ -12,7 +12,7 @@ checking for schema consistency is done in hooks.py
 """
 __docformat__ = "restructuredtext en"
 
-from yams.schema import BASE_TYPES, RelationSchema
+from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
 from yams.buildobjs import EntityType, RelationType, RelationDefinition
 from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
@@ -147,16 +147,17 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
         hook.SingleLastOperation.__init__(self, session)
 
     def precommit_event(self):
-        for eschema in self.repo.schema.entities():
+        for eschema in self.session.repo.schema.entities():
             if not eschema.final:
                 clear_cache(eschema, 'ordered_relations')
 
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
-        self.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
+        repo = self.session.repo
+        repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
         # CWUser class might have changed, update current session users
         cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
-        for session in self.repo._sessions.values():
+        for session in repo._sessions.values():
             session.user.__class__ = cwuser_cls
 
     def rollback_event(self):
@@ -174,9 +175,10 @@ class MemSchemaOperation(hook.Operation):
         MemSchemaNotifyChanges(session)
 
     def prepare_constraints(self, subjtype, rtype, objtype):
-        constraints = rtype.rproperty(subjtype, objtype, 'constraints')
+        rdef = rtype.rdef(subjtype, objtype)
+        constraints = rdef.constraints
         self.constraints = list(constraints)
-        rtype.set_rproperty(subjtype, objtype, 'constraints', self.constraints)
+        rdef.constraints = self.constraints
 
 
 class MemSchemaEarlyOperation(MemSchemaOperation):
@@ -356,11 +358,11 @@ class SourceDbCWAttributeAdd(hook.Operation):
                            table, column, ex)
         # final relations are not infered, propagate
         try:
-            eschema = self._cw.vreg.schema.eschema(rdef.subject)
+            eschema = session.vreg.schema.eschema(rdef.subject)
         except KeyError:
             return # entity type currently being added
         # propagate attribute to children classes
-        rschema = self._cw.vreg.schema.rschema(rdef.name)
+        rschema = session.vreg.schema.rschema(rdef.name)
         # if relation type has been inserted in the same transaction, its final
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
@@ -461,7 +463,7 @@ class SourceDbRDefUpdate(hook.Operation):
                 # no worry)
                 return
             atype = self.rschema.objects(etype)[0]
-            constraints = self.rschema.rproperty(etype, atype, 'constraints')
+            constraints = self.rschema.rdef(etype, atype).constraints
             coltype = type_from_constraints(adbh, atype, constraints,
                                             creating=False)
             # XXX check self.values['cardinality'][0] actually changed?
@@ -494,7 +496,7 @@ class SourceDbCWConstraintAdd(hook.Operation):
         if newcstr.type() == 'SizeConstraint' and (
             oldcstr is None or oldcstr.max != newcstr.max):
             adbh = self.session.pool.source('system').dbhelper
-            card = rtype.rproperty(subjtype, objtype, 'cardinality')
+            card = rtype.rdef(subjtype, objtype).cardinality
             coltype = type_from_constraints(adbh, objtype, [newcstr],
                                             creating=False)
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
@@ -800,7 +802,6 @@ class AfterAddCWETypeHook(DelCWETypeHook):
         # but remove it before doing anything more dangerous...
         schema = self._cw.vreg.schema
         eschema = schema.add_entity_type(etype)
-        eschema.set_default_groups()
         # generate table sql and rql to add metadata
         tablesql = eschema2sql(self._cw.pool.source('system').dbhelper, eschema,
                                prefix=SQL_PREFIX)
@@ -978,7 +979,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         elif lastrel:
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
-        if lastrel and not rteid in pendings:
+        if lastrel and not self.eidto in pendings:
             execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto}, 'x')
         MemSchemaRDefDel(session, (subjschema, rschema, objschema))
 
@@ -1015,7 +1016,7 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
         desttype = entity.otype.name
         rschema = self._cw.vreg.schema[entity.rtype.name]
         newvalues = {}
-        for prop in rschema.rproperty_defs(desttype):
+        for prop in RelationDefinitionSchema.rproperty_defs(desttype):
             if prop == 'constraints':
                 continue
             if prop == 'order':

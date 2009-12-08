@@ -464,7 +464,7 @@ class ServerMigrationHelper(MigrationHelper):
             reporschema = self.repo.schema.rschema(rschema)
             for subj in subjtypes:
                 for obj in objtypes:
-                    if not reporschema.has_rdef(subj, obj):
+                    if (subj, obj) not in reporschema.rdefs:
                         continue
                     self._synchronize_rdef_schema(subj, rschema, obj)
         if syncperms:

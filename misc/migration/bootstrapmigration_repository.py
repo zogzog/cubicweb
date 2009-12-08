@@ -118,7 +118,7 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     rql('DELETE TrInfo TI WHERE NOT TI from_state S')
     rql('SET TI by_transition T WHERE TI from_state FS, TI to_state TS, '
         'FS allowed_transition T, T destination_state TS')
-    checkpoint()
+    commit()
 
     drop_relation_definition('State', 'state_of', 'CWEType')
     drop_relation_definition('Transition', 'transition_of', 'CWEType')
@@ -133,7 +133,7 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
                               % table, ask_confirm=False):
             sql('UPDATE %s SET extid=%%(extid)s WHERE eid=%%(eid)s' % table,
                 {'extid': b64encode(extid), 'eid': eid}, ask_confirm=False)
-    checkpoint()
+    commit()
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)
