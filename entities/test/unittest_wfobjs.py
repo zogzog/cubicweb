@@ -45,7 +45,6 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
-        print '*'*80
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
@@ -234,7 +233,7 @@ class WorkflowTC(CubicWebTC):
         # subworkflow input transition
         ex = self.assertRaises(ValidationError,
                                self.group.change_state, swfstate1, u'gadget')
-        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's current workflow"})
+        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's workflow"})
         self.rollback()
         # force back to state1
         self.group.change_state('state1', u'gadget')
