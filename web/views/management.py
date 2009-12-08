@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView
-from cubicweb.common.uilib import html_traceback, rest_traceback
+from cubicweb.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
 

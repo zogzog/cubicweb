@@ -12,7 +12,7 @@ from cubicweb import UnknownEid
 from cubicweb.selectors import none_rset
 from cubicweb.schema import display_name
 from cubicweb.view import Component
-from cubicweb.common.mail import format_mail
+from cubicweb.mail import format_mail
 from cubicweb.server.hook import SendMailOp
 
 

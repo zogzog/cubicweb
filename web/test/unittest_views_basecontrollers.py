@@ -12,7 +12,7 @@ from logilab.common.testlib import unittest_main, mock_object
 from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.common.uilib import rql_for_eid
+from cubicweb.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
 from cubicweb.entities.authobjs import CWUser
 

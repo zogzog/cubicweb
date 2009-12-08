@@ -11,7 +11,7 @@ from datetime import datetime
 
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.common.mttransforms import HAS_TAL
+from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entities import fetch_config
 
 class EntityTC(CubicWebTC):
@@ -327,7 +327,7 @@ du :eid:`1:*ReST*`'''
     def test_printable_value_bytes(self):
         e = self.add_entity('File', data=Binary('lambda x: 1'), data_format=u'text/x-python',
                             data_encoding=u'ascii', data_name=u'toto.py')
-        from cubicweb.common import mttransforms
+        from cubicweb import mttransforms
         if mttransforms.HAS_PYGMENTS_TRANSFORMS:
             self.assertEquals(e.printable_value('data'),
                               '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>

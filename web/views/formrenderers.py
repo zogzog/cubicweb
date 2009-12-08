@@ -14,7 +14,7 @@ from logilab.mtconverter import xml_escape
 
 from simplejson import dumps
 
-from cubicweb.common import tags
+from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param, formwidgets as fwdgs

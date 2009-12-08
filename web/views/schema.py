@@ -17,7 +17,7 @@ from cubicweb.selectors import (implements, yes, match_user_groups,
 from cubicweb.schema import META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
-from cubicweb.common import tags, uilib
+from cubicweb import tags, uilib
 from cubicweb.web import action, facet, uicfg
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import primary, baseviews, tabs, management

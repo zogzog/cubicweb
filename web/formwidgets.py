@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 from warnings import warn
 
-from cubicweb.common import tags, uilib
+from cubicweb import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 from logilab.mtconverter import xml_escape
@@ -334,7 +334,7 @@ class DateTimePicker(TextInput):
     @classmethod
     def add_localized_infos(cls, req):
         """inserts JS variables defining localized months and days"""
-        # import here to avoid dependancy from cubicweb-common to simplejson
+        # import here to avoid dependancy from cubicweb to simplejson
         _ = req._
         monthnames = [_(mname) for mname in cls.monthnames]
         daynames = [_(dname) for dname in cls.daynames]

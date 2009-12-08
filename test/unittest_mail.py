@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""unit tests for module cubicweb.common.mail
+"""unit tests for module cubicweb.mail
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -14,7 +14,7 @@ from logilab.common.testlib import unittest_main
 from logilab.common.umessage import message_from_string
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.common.mail import format_mail
+from cubicweb.mail import format_mail
 
 
 def getlogin():

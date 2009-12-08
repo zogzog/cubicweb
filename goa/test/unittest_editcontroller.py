@@ -9,8 +9,8 @@ from cubicweb.goa.testlib import *
 
 from urllib import unquote
 
-from cubicweb.common import ValidationError
-from cubicweb.common.uilib import rql_for_eid
+from cubicweb import ValidationError
+from cubicweb.uilib import rql_for_eid
 
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect
 

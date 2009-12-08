@@ -20,7 +20,7 @@ def encode_output(self, output):
 
 template.VariableNode.encode_output = encode_output
 
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 
 INDEX_TEMPLATE = template.Template(u'''
  <h1>hellô {{ user.login }}</h1>

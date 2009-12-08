@@ -25,8 +25,8 @@ from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
-from cubicweb.common.mail import header
-from cubicweb.common.uilib import remove_html_tags
+from cubicweb.mail import header
+from cubicweb.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,

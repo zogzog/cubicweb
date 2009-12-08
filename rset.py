@@ -257,7 +257,7 @@ class ResultSet(object):
         """
         # try to get page boundaries from the navigation component
         # XXX we should probably not have a ref to this component here (eg in
-        #     cubicweb.common)
+        #     cubicweb)
         nav = self.vreg['components'].select_or_none('navigation', self.req,
                                                      rset=self)
         if nav:

@@ -15,8 +15,8 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import nonempty_rset, match_form_params
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, AnyRsetView
-from cubicweb.common import tags
-from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb import tags
+from cubicweb.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                       PopupBoxMenu, BoxLink)

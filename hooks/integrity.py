@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.selectors import entity_implements
-from cubicweb.common.uilib import soup2xhtml
+from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 
 # special relations that don't have to be checked for integrity, usually

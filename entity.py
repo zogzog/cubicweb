@@ -25,9 +25,9 @@ from cubicweb.appobject import AppObject
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
 from cubicweb.rqlrewrite import RQLRewriter
 
-from cubicweb.common.uilib import printable_value, soup2xhtml
-from cubicweb.common.mixins import MI_REL_TRIGGERS
-from cubicweb.common.mttransforms import ENGINE
+from cubicweb.uilib import printable_value, soup2xhtml
+from cubicweb.mixins import MI_REL_TRIGGERS
+from cubicweb.mttransforms import ENGINE
 
 _marker = object()
 

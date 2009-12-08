@@ -60,20 +60,19 @@ COPY_CW_FILES = (
     'entity.py',
     'interfaces.py',
     'i18n.py',
+    'mail.py',
     'migration.py',
+    'mixins.py',
+    'mttransforms.py',
     'rqlrewrite.py',
     'rset.py',
     'schema.py',
     'schemaviewer.py',
     'selectors.py',
+    'uilib.py',
     'utils.py',
     'vregistry.py',
     'view.py',
-
-    'common/mail.py',
-    'common/mixins.py',
-    'common/mttransforms.py',
-    'common/uilib.py',
 
     'ext/html4zope.py',
     'ext/rest.py',
@@ -166,7 +165,7 @@ COPY_CW_FILES = (
 
 OVERRIDEN_FILES = (
     ('toolsutils.py', 'toolsutils.py'),
-    ('mttransforms.py', 'common/mttransforms.py'),
+    ('mttransforms.py', 'mttransforms.py'),
     ('server__init__.py', 'server/__init__.py'),
     ('rqlannotation.py', 'server/rqlannotation.py'),
     )
@@ -210,7 +209,6 @@ class NewGoogleAppCommand(Command):
                 create_dir(split(target)[0])
             create_symlink(join(CW_SOFTWARE_ROOT, fpath), target)
         # overriden files
-        create_init_file(join(appldir, 'cubicweb/common'), 'cubicweb.common')
         for fpath, subfpath in OVERRIDEN_FILES:
             create_symlink(join(CW_SOFTWARE_ROOT, 'goa', 'overrides', fpath),
                            join(appldir, 'cubicweb', subfpath))

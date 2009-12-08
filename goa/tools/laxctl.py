@@ -18,7 +18,7 @@ from Cookie import SimpleCookie
 
 from logilab.common.clcommands import Command, register_commands, main_run
 
-from cubicweb.common.uilib import remove_html_tags
+from cubicweb.uilib import remove_html_tags
 from cubicweb.web.views.schema import SKIP_TYPES
 
 APPLROOT = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '..'))

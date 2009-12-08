@@ -1,6 +1,6 @@
 """html widgets
 
-those are in cubicweb.common since we need to know available widgets at schema
+those are in cubicweb since we need to know available widgets at schema
 serialization time
 
 :organization: Logilab
@@ -12,7 +12,7 @@ serialization time
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
-from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,

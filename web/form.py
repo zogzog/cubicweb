@@ -11,7 +11,7 @@ from logilab.common.decorators import iclassmethod
 
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
-from cubicweb.common import tags
+from cubicweb import tags
 from cubicweb.web import stdmsgs, httpcache, formfields
 
 

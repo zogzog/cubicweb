@@ -11,7 +11,7 @@ from logilab import mtconverter
 
 from logilab.mtconverter.engine import TransformEngine
 from logilab.mtconverter.transform import Transform
-from cubicweb.common.uilib import rest_publish, html_publish, remove_html_tags
+from cubicweb.uilib import rest_publish, html_publish, remove_html_tags
 
 HTML_MIMETYPES = ('text/html', 'text/xhtml', 'application/xhtml+xml')
 # CubicWeb specific transformations

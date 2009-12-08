@@ -22,7 +22,7 @@ from indexer import get_indexer
 
 from cubicweb import Binary, ConfigurationError
 from cubicweb.utils import todate, todatetime
-from cubicweb.common.uilib import remove_html_tags
+from cubicweb.uilib import remove_html_tags
 from cubicweb.toolsutils import restrict_perms_to_user
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server import SQL_CONNECT_HOOKS

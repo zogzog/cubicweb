@@ -16,7 +16,7 @@ from cubicweb.selectors import (one_line_rset, implements, one_etype_rset,
 from cubicweb.view import EntityView, Component
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.entity import Entity
-from cubicweb.common import tags, uilib
+from cubicweb import tags, uilib
 
 
 class BreadCrumbEntityVComponent(Component):

@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb.schema import display_name
-from cubicweb.common.uilib import UnicodeCSVWriter
+from cubicweb.uilib import UnicodeCSVWriter
 from cubicweb.view import EntityView, AnyRsetView
 
 class CSVMixIn(object):

@@ -556,6 +556,7 @@ this option is set to yes",
         return vregpath
 
     def __init__(self):
+        register_stored_procedures()
         ConfigurationMixIn.__init__(self)
         self.adjust_sys_path()
         self.load_defaults()
@@ -967,3 +968,53 @@ set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration
 # alias to get a configuration instance from an instance id
 instance_configuration = CubicWebConfiguration.config_for
 application_configuration = deprecated('use instance_configuration')(instance_configuration)
+
+
+_EXT_REGISTERED = False
+def register_stored_procedures():
+    from logilab.common.adbh import FunctionDescr
+    from rql.utils import register_function, iter_funcnode_variables
+
+    global _EXT_REGISTERED
+    if _EXT_REGISTERED:
+        return
+    _EXT_REGISTERED = True
+
+    class COMMA_JOIN(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'String'
+
+        @classmethod
+        def st_description(cls, funcnode, mainindex, tr):
+            return ', '.join(sorted(term.get_description(mainindex, tr)
+                                    for term in iter_funcnode_variables(funcnode)))
+
+    register_function(COMMA_JOIN)  # XXX do not expose?
+
+
+    class CONCAT_STRINGS(COMMA_JOIN):
+        aggregat = True
+
+    register_function(CONCAT_STRINGS) # XXX bw compat
+
+    class GROUP_CONCAT(CONCAT_STRINGS):
+        supported_backends = ('mysql', 'postgres', 'sqlite',)
+
+    register_function(GROUP_CONCAT)
+
+
+    class LIMIT_SIZE(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'String'
+
+        @classmethod
+        def st_description(cls, funcnode, mainindex, tr):
+            return funcnode.children[0].get_description(mainindex, tr)
+
+    register_function(LIMIT_SIZE)
+
+
+    class TEXT_LIMIT_SIZE(LIMIT_SIZE):
+        supported_backends = ('mysql', 'postgres', 'sqlite',)
+
+    register_function(TEXT_LIMIT_SIZE)

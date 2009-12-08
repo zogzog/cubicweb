@@ -11,7 +11,7 @@ from socket import gethostname
 from logilab.common.testlib import unittest_main, TestCase
 from cubicweb.devtools.testlib import CubicWebTC, MAILBOX
 
-from cubicweb.common.mail import construct_message_id, parse_message_id
+from cubicweb.mail import construct_message_id, parse_message_id
 
 class MessageIdTC(TestCase):
     def test_base(self):

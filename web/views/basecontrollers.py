@@ -19,7 +19,7 @@ from logilab.common.decorators import cached
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime, CubicWebJsonEncoder
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.common.mail import format_mail
+from cubicweb.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset

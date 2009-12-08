@@ -20,7 +20,7 @@ from cubicweb.selectors import (one_line_rset, score_entity,
                                 match_search_state, implements)
 from cubicweb.interfaces import IEmbedable
 from cubicweb.view import NOINDEX, NOFOLLOW
-from cubicweb.common.uilib import soup2xhtml
+from cubicweb.uilib import soup2xhtml
 from cubicweb.web.controller import Controller
 from cubicweb.web.action import Action
 from cubicweb.web.views import basetemplates

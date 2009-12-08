@@ -1,4 +1,4 @@
-"""unit tests for module cubicweb.common.utils
+"""unit tests for module cubicweb.utils
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

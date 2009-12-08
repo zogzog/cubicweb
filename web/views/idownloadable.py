@@ -14,7 +14,7 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, score_entity,
                                 implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
-from cubicweb.common.mttransforms import ENGINE
+from cubicweb.mttransforms import ENGINE
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import primary, baseviews
 

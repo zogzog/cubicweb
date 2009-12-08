@@ -17,7 +17,7 @@ from cubicweb.interfaces import IPrevNext
 from cubicweb.selectors import (paginated_rset, sorted_rset,
                                 primary_view, match_context_prop,
                                 one_line_rset, implements)
-from cubicweb.common.uilib import cut
+from cubicweb.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
 

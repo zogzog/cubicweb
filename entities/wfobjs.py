@@ -15,7 +15,7 @@ from logilab.common.compat import any
 
 from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.interfaces import IWorkflowable
-from cubicweb.common.mixins import MI_REL_TRIGGERS
+from cubicweb.mixins import MI_REL_TRIGGERS
 
 class WorkflowException(Exception): pass
 

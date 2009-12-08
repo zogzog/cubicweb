@@ -15,7 +15,7 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb.utils import ustrftime
-from cubicweb.common import tags, uilib
+from cubicweb import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.formwidgets import (
     HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,

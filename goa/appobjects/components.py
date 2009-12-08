@@ -12,7 +12,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import typed_eid
 from cubicweb.selectors import one_line_rset, match_search_state, accept
 from cubicweb.schema import display_name
-from cubicweb.common.view import StartupView, EntityView
+from cubicweb.view import StartupView, EntityView
 from cubicweb.web import Redirect
 from cubicweb.web.views import vid_from_rset
 

@@ -15,7 +15,7 @@ from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb.selectors import yes
 from cubicweb.view import Component
-from cubicweb.common.mail import NotificationView, SkipEmail
+from cubicweb.mail import NotificationView, SkipEmail
 from cubicweb.server.hook import SendMailOp
 
 
@@ -185,9 +185,9 @@ url: %(url)s
 
 from logilab.common.deprecation import class_renamed, class_moved, deprecated
 from cubicweb.hooks.notification import RenderAndSendNotificationView
-from cubicweb.common.mail import parse_message_id
+from cubicweb.mail import parse_message_id
 
 NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
 RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.mail')(parse_message_id)
 

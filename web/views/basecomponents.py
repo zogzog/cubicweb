@@ -17,7 +17,7 @@ from rql import parse
 
 from cubicweb.selectors import yes, two_etypes_rset, match_form_params
 from cubicweb.schema import display_name
-from cubicweb.common.uilib import toggle_action
+from cubicweb.uilib import toggle_action
 from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)

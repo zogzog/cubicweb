@@ -251,7 +251,7 @@ from cubicweb import set_log_methods
 set_log_methods(ConnectionProxy, logging.getLogger('cubicweb.web.goa.session'))
 
 
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 from cubicweb.web import application
 
 class SessionsCleaner(StartupView):

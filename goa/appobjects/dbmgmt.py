@@ -15,7 +15,7 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import none_rset, match_user_groups
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 from cubicweb.web import Redirect
 from cubicweb.goa.dbinit import fix_entities, init_persistent_schema, insert_versions
 

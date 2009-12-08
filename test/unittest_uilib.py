@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""unittests for cubicweb.common.uilib
+"""unittests for cubicweb.uilib
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -12,7 +12,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.tree import Node
 
-from cubicweb.common import uilib
+from cubicweb import uilib
 
 class UILIBTC(TestCase):
 

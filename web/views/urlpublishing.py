@@ -75,7 +75,7 @@ class URLPublisherComponent(component.Component):
         :type path: str
         :param path: the path of the resource to publish
 
-        :rtype: tuple(str, `cubicweb.common.utils.ResultSet` or None)
+        :rtype: tuple(str, `cubicweb.utils.ResultSet` or None)
         :return: the publishing method identifier and an optional result set
 
         :raise NotFound: if no handler is able to decode the given path

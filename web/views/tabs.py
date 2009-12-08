@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.view import EntityView
-from cubicweb.common import tags, uilib
+from cubicweb import tags, uilib
 from cubicweb.utils import make_uid
 from cubicweb.web.views import primary
 

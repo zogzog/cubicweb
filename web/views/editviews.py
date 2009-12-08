@@ -17,7 +17,7 @@ from cubicweb import typed_eid
 from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, non_final_entity,
                                 match_search_state, match_form_params)
-from cubicweb.common.uilib import cut
+from cubicweb.uilib import cut
 from cubicweb.web.views import linksearch_select_url
 from cubicweb.web.views.editforms import relation_id
 from cubicweb.web.views.baseviews import FinalView

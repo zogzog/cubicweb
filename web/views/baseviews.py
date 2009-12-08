@@ -25,7 +25,7 @@ from cubicweb import NoSelectableObject
 from cubicweb.selectors import yes, empty_rset, one_etype_rset
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
-from cubicweb.common.uilib import cut, printable_value
+from cubicweb.uilib import cut, printable_value
 
 
 class NullView(AnyRsetView):
