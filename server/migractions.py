@@ -263,7 +263,8 @@ class ServerMigrationHelper(MigrationHelper):
     def _create_context(self):
         """return a dictionary to use as migration script execution context"""
         context = super(ServerMigrationHelper, self)._create_context()
-        context.update({'checkpoint': self.checkpoint,
+        context.update({'commit': self.checkpoint,
+                        'checkpoint': deprecated('[3.6] use commit')(self.checkpoint),
                         'sql': self.sqlexec,
                         'rql': self.rqlexec,
                         'rqliter': self.rqliter,
