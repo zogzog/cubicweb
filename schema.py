@@ -412,8 +412,8 @@ class CubicWebRelationSchema(RelationSchema):
 
     def may_have_permission(self, action, req, eschema=None, role=None):
         if eschema is not None:
-            for tschema in rschema.targets(eschema, role):
-                rdef = rschema.role_rdef(eschema, tschema, role)
+            for tschema in self.targets(eschema, role):
+                rdef = self.role_rdef(eschema, tschema, role)
                 if rdef.may_have_permission(action, req):
                     return True
         else:
