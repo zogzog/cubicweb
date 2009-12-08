@@ -756,7 +756,7 @@ class AutoPopulateTest(CubicWebTC):
             rset = cu.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
-        ignored_relations = SYSTEM_RELATIONS + self.ignored_relations
+        ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
         for rschema in self.schema.relations():
             if rschema.final or rschema in ignored_relations:
                 continue
