@@ -691,8 +691,9 @@ class ServerMigrationHelper(MigrationHelper):
         else:
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
+        groupmap = self.group_mapping()
         # register the entity into CWEType
-        self.rqlexecall(ss.eschema2rql(eschema, self.group_mapping()), ask_confirm=confirm)
+        self.rqlexecall(ss.eschema2rql(eschema, groupmap), ask_confirm=confirm)
         # add specializes relation if needed
         self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
         # register entity's attributes
@@ -705,7 +706,8 @@ class ServerMigrationHelper(MigrationHelper):
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
             # register relation definition
-            self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type),
+            self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type,
+                                        groupmap=groupmap),
                             ask_confirm=confirm)
         # take care to newly introduced base class
         # XXX some part of this should probably be under the "if auto" block
@@ -766,7 +768,8 @@ class ServerMigrationHelper(MigrationHelper):
                     # remember this two avoid adding twice non symetric relation
                     # such as "Emailthread forked_from Emailthread"
                     added.append((etype, rschema.type, targettype))
-                    self.rqlexecall(ss.rdef2rql(rschema, etype, targettype),
+                    self.rqlexecall(ss.rdef2rql(rschema, etype, targettype,
+                                                groupmap=groupmap),
                                     ask_confirm=confirm)
             for rschema in eschema.object_relations():
                 rtypeadded = rschema.type in instschema or rschema.type in added
@@ -786,7 +789,8 @@ class ServerMigrationHelper(MigrationHelper):
                     elif (targettype, rschema.type, etype) in added:
                         continue
                     # register relation definition
-                    self.rqlexecall(ss.rdef2rql(rschema, targettype, etype),
+                    self.rqlexecall(ss.rdef2rql(rschema, targettype, etype,
+                                                groupmap=groupmap),
                                     ask_confirm=confirm)
         if commit:
             self.commit()
@@ -848,7 +852,8 @@ class ServerMigrationHelper(MigrationHelper):
                         props = rschema.rproperties(
                             rschema.subjects(objtype)[0], objtype)
                         assert props
-                        self.rqlexecall(ss.rdef2rql(rschema, etype, objtype, props),
+                        self.rqlexecall(ss.rdef2rql(rschema, etype, objtype, props,
+                                                    groupmap=self.group_mapping()),
                                         ask_confirm=self.verbosity>=2)
 
         if commit:
@@ -880,7 +885,8 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
-        self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype, groupmap=self.group_mapping()),
+        self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype,
+                                    groupmap=self.group_mapping()),
                         ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()

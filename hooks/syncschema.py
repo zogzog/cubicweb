@@ -57,6 +57,13 @@ def get_constraints(session, entity):
         constraints.append(cstr)
     return constraints
 
+def group_mapping(cw):
+    try:
+        return cw.transaction_data['groupmap']
+    except KeyError:
+        cw.transaction_data['groupmap'] = gmap = ss.group_mapping(cw)
+        return gmap
+
 def add_inline_relation_column(session, etype, rtype):
     """add necessary column and index for an inlined relation"""
     table = SQL_PREFIX + etype
@@ -811,7 +818,8 @@ class AfterAddCWETypeHook(DelCWETypeHook):
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             props = rschema.rdef(sampletype, desttype)
-            relrqls += list(ss.rdef2rql(rschema, name, desttype, props))
+            relrqls += list(ss.rdef2rql(rschema, name, desttype, props,
+                                        groupmap=group_mapping(self._cw)))
         # now remove it !
         schema.del_entity_type(name)
         # create the necessary table
