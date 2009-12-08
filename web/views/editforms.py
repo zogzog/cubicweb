@@ -261,6 +261,8 @@ class DummyForm(object):
         return u''
     def append_field(self, *args):
         pass
+    def field_by_name(self, rtype, role):
+        return None
 
 class AutoClickAndEditFormView(ClickAndEditFormView):
     """same as ClickAndEditFormView but checking if the view *should* be applied
