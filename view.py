@@ -474,8 +474,8 @@ class ReloadableMixIn(object):
             cbname, self.__regid__, dumps(rql), dumps(msg),
             self.__registry__, self.div_id())
 
-     def build_reload_js_call(self, cbname, msg):
-         return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, dumps(msg))
+    def build_reload_js_call(self, cbname, msg):
+        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, dumps(msg))
 
     build_js = build_update_js_call # expect updatable component by default
 
