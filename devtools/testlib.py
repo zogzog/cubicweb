@@ -693,8 +693,8 @@ def how_many_dict(schema, cursor, how_many, skip):
     for rschema in schema.relations():
         if rschema.final:
             continue
-        for subj, obj in rschema.iter_rdefs():
-            card = rschema.rproperty(subj, obj, 'cardinality')
+        for subj, obj in rschema.rdefs:
+            card = rschema.rdef(subj, obj).cardinality
             if card[0] in '1?' and len(rschema.subjects(obj)) == 1:
                 relmap.setdefault((rschema, subj), []).append(str(obj))
             if card[1] in '1?' and len(rschema.objects(subj)) == 1:

@@ -205,7 +205,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         w(form.render(renderer=renderer))
         w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
                 divid, xml_escape(self._onclick % form.event_args),
-                self.req._(self._landingzonemsg)))
+                self._cw._(self._landingzonemsg)))
         w(lzone)
         w(u'</div>')
         w(u'</div>')

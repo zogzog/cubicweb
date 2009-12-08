@@ -174,12 +174,12 @@ class EditController(ViewController):
         try:
             for attr, value in field.process_posted(form):
                 if not (
-                    (field.role == 'subject' and eschema.has_subject_relation(field.name))
+                    (field.role == 'subject' and field.name in eschema.subjrels)
                     or
-                    (field.role == 'object' and eschema.has_object_relation(field.name))):
+                    (field.role == 'object' and field.name in eschema.objrels)):
                     continue
                 rschema = self._cw.vreg.schema.rschema(field.name)
-                if rschema.is_final():
+                if rschema.final:
                     rqlquery.kwargs[attr] = value
                     rqlquery.edited.append('X %s %%(%s)s' % (attr, attr))
                 elif rschema.inlined:

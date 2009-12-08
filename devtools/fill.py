@@ -30,7 +30,7 @@ def get_choices(eschema, attrname):
     """returns possible choices for 'attrname'
     if attrname doesn't have ChoiceConstraint, return None
     """
-    for cst in eschema.constraints(attrname):
+    for cst in eschema.rdef(attrname).constraints:
         if isinstance(cst, StaticVocabularyConstraint):
             return cst.vocabulary()
     return None
@@ -38,14 +38,14 @@ def get_choices(eschema, attrname):
 
 def get_max_length(eschema, attrname):
     """returns the maximum length allowed for 'attrname'"""
-    for cst in eschema.constraints(attrname):
+    for cst in eschema.rdef(attrname).constraints:
         if isinstance(cst, SizeConstraint) and cst.max:
             return cst.max
     return 300
     #raise AttributeError('No Size constraint on attribute "%s"' % attrname)
 
 def get_bounds(eschema, attrname):
-    for cst in eschema.constraints(attrname):
+    for cst in eschema.rdef(attrname).constraints:
         if isinstance(cst, IntervalBoundConstraint):
             return cst.minvalue, cst.maxvalue
     return None, None
@@ -340,10 +340,10 @@ def make_relations_queries(schema, edict, cursor, ignored_relations=(),
 
 def composite_relation(rschema):
     for obj in rschema.objects():
-        if obj.objrproperty(rschema, 'composite') == 'subject':
+        if obj.rdef(rschema, 'object').composite == 'subject':
             return True
     for obj in rschema.subjects():
-        if obj.subjrproperty(rschema, 'composite') == 'object':
+        if obj.rdef(rschema, 'subject').composite == 'object':
             return True
     return False
 
@@ -372,11 +372,11 @@ class RelationsQueriesGenerator(object):
             oedict = deepcopy(edict)
             delayed = []
             # for each couple (subjschema, objschema), insert relations
-            for subj, obj in rschema.iter_rdefs():
+            for subj, obj in rschema.rdefs:
                 sym.add( (subj, obj) )
                 if rschema.symetric and (obj, subj) in sym:
                     continue
-                subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
+                subjcard, objcard = rschema.rdef(subj, obj).cardinality
                 # process mandatory relations first
                 if subjcard in '1+' or objcard in '1+' or composite_relation(rschema):
                     for query, args in self.make_relation_queries(sedict, oedict,
@@ -397,14 +397,15 @@ class RelationsQueriesGenerator(object):
         return {'subjeid' : subjeid, 'objeid' : objeid}
 
     def make_relation_queries(self, sedict, oedict, rschema, subj, obj):
-        subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
+        rdef = rschema.rdef(subj, obj)
+        subjcard, objcard = rdef.cardinality
         subjeids = sedict.get(subj, frozenset())
         used = self.existingrels[rschema.type]
         preexisting_subjrels = set(subj for subj, obj in used)
         preexisting_objrels = set(obj for subj, obj in used)
         # if there are constraints, only select appropriate objeids
         q = self.rql_tmpl % rschema.type
-        constraints = [c for c in rschema.rproperty(subj, obj, 'constraints')
+        constraints = [c for c in rdef.constraints
                        if isinstance(c, RQLConstraint)]
         if constraints:
             restrictions = ', '.join(c.restriction for c in constraints)
