@@ -587,7 +587,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     if role == 'subject':
         targetschema = rdef.object
         if rschema.final:
-            if rdef.internationalizable:
+            if rdef.get('internationalizable'):
                 kwargs.setdefault('internationalizable', True)
             def get_default(form, es=eschema, rs=rschema):
                 return es.default(rs)
