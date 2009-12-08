@@ -152,6 +152,20 @@ class Workflow(AnyEntity):
             tr.add_exit_point(fromstate, tostate)
         return tr
 
+    def replace_state(self, todelstate, replacement):
+        """migration convenience method"""
+        if not hasattr(todelstate, 'eid'):
+            todelstate = self.state_by_name(todelstate)
+        if not hasattr(replacement, 'eid'):
+            replacement = self.state_by_name(replacement)
+        execute = self._cw.unsafe_execute
+        execute('SET X in_state S WHERE S eid %(s)s', {'s': todelstate.eid}, 's')
+        execute('SET X from_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
+                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+        execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
+                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+        todelstate.delete()
+
 
 class BaseTransition(AnyEntity):
     """customized class for abstract transition

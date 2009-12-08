@@ -331,6 +331,10 @@ this option is set to yes",
     def available_cubes(cls):
         cubes = set()
         for directory in cls.cubes_search_path():
+            if not os.path.exists(directory):
+                self.error('unexistant directory in cubes search path: %s'
+                           % directory)
+                continue
             for cube in os.listdir(directory):
                 if isdir(join(directory, cube)) and not cube == 'shared':
                     cubes.add(cube)
