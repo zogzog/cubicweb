@@ -131,7 +131,11 @@ Properties defined below are accessible through the following api:
 
 Constraints
 ```````````
+
 By default, the available constraint types are :
+
+General Constraints
+......................
 
 * `SizeConstraint` : allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
@@ -143,8 +147,20 @@ By default, the available constraint types are :
 
 * `StaticVocabularyConstraint` : identical to "vocabulary=(...)"
 
+RQL Based Constraints
+......................
+
+RQL based constraints may take three arguments. The first one is the ``WHERE``
+clause of a RQL query used by the constraint. The second argument ``mainvars``
+is the ``Any`` clause of the query. By default this include `S` reserved for the
+subject of the relation and `O` for the object. Additional variables could be
+specified using ``mainvars``. The argument expects a single string with all
+variable's name separated by spaces. The last one, ``msg``, is the error message
+displayed when the constraint fails. As RQLVocabularyConstraint never fails the
+third argument is not available.
+
 * `RQLConstraint` : allows to specify a RQL query that has to be satisfied
-  by the subject and/or the object of the relation. In this query the variables
+  by the subject and/or the object of relation. In this query the variables
   `S` and `O` are reserved for the entities subject and object of the
   relation.
 
@@ -152,6 +168,25 @@ By default, the available constraint types are :
   that it does not express a "strong" constraint, which means it is only used to
   restrict the values listed in the drop-down menu of editing form, but it does
   not prevent another entity to be selected.
+
+* `RQLUniqueConstraint` : allows to the specify a RQL query that ensure that an
+  attribute is unique in a specific context. The Query must **never** return more
+  than a single result to be satisfied. In this query the variables `S` is
+  reserved for the entity subject of the relation. The other variable should be
+  specified with the second constructor argument (mainvars). This constraints
+  should be used when UniqueConstraint doesn't fit. Here is a simple example ::
+
+    # Check that in the same Workflow each state's name is unique.  Using
+    # UniqueConstraint (or unique=True) here would prevent states in different
+    # workflows to have the same name.
+
+    # With: State S, Workflow W, String N ; S state_of W, S name N
+
+    RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N',
+                        mainvars='Y',
+                        msg=_('workflow already have a state of that name'))
+
+
 
 XXX note about how to add new constraint
 
