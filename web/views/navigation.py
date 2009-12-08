@@ -66,7 +66,7 @@ class SortedNavigation(NavigationComponent):
                     return u''
                 entity = rset.get_entity(row, col)
                 return entity.printable_value(attrname, format='text/plain')
-        elif self._cw.schema.eschema(rset.description[0][col]).final:
+        elif self._cw.vreg.schema.eschema(rset.description[0][col]).final:
             def index_display(row):
                 return unicode(rset[row][col])
         else:
@@ -84,7 +84,7 @@ class SortedNavigation(NavigationComponent):
         w = self.w
         rset = self.cw_rset
         page_size = self.page_size
-        rschema = self._cw.schema.rschema
+        rschema = self._cw.vreg.schema.rschema
         # attrname = the name of attribute according to which the sort
         # is done if any
         for sorterm in rset.syntax_tree().children[0].orderby:

@@ -32,7 +32,7 @@ class AddRelationView(EditRelationBoxTemplate):
         self.target = target or self._cw.form['target']
         self.etype = etype or self._cw.form.get('etype')
         entity = self.cw_rset.get_entity(row, col)
-        rschema = self._cw.schema.rschema(self.rtype)
+        rschema = self._cw.vreg.schema.rschema(self.rtype)
         if not self.etype:
             if self.target == 'object':
                 etypes = rschema.objects(entity.e_schema)

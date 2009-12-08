@@ -201,7 +201,7 @@ class View(AppObject):
         return True
 
     def is_primary(self):
-        return self.extra_kwargs.get('is_primary', self.__regid__ == 'primary')
+        return self.cw_extra_kwargs.get('is_primary', self.__regid__ == 'primary')
 
     def url(self):
         """return the url associated with this view. Should not be
@@ -214,7 +214,7 @@ class View(AppObject):
         coltypes = rset.column_types(0)
         if len(coltypes) == 1:
             etype = iter(coltypes).next()
-            if not self._cw.schema.eschema(etype).final:
+            if not self._cw.vreg.schema.eschema(etype).final:
                 if len(rset) == 1:
                     entity = rset.get_entity(0, 0)
                     return entity.absolute_url(vid=self.__regid__)

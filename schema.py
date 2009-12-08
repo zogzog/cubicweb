@@ -437,7 +437,7 @@ class CubicWebRelationSchema(RelationSchema):
         elif subjtype:
             for tschema in self.targets(subjtype, 'subject'):
                 rdef = self.rdef(subjtype, tschema)
-                if not rdef.has_perm(action, req, **kwargs):
+                if not rdef.has_perm(session, action, **kwargs):
                     return False
         elif objtype:
             for tschema in self.targets(objtype, 'object'):

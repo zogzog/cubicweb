@@ -132,8 +132,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         """display field to edit entity's `rtype` relation on click"""
         assert rtype
         assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
-        self.req.add_js('cubicweb.edition.js')
-        self.req.add_css('cubicweb.form.css')
+        self._cw.add_js('cubicweb.edition.js')
+        self._cw.add_css('cubicweb.form.css')
         if default is None:
             default = xml_escape(self._cw._('<no value>'))
         schema = self._cw.vreg.schema

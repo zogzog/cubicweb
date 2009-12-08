@@ -91,7 +91,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
         # ownership information
-        if self._cw.schema.rschema('owned_by').has_perm(self._cw, 'add',
+        if self._cw.vreg.schema.rschema('owned_by').has_perm(self._cw, 'add',
                                                     fromeid=entity.eid):
             self.owned_by_edit_form(entity)
         else:
@@ -99,7 +99,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         # cwpermissions
         if 'require_permission' in entity.e_schema.subject_relations():
             w('<h3>%s</h3>' % _('permissions for this entity'))
-            reqpermschema = self._cw.schema.rschema('require_permission')
+            reqpermschema = self._cw.vreg.schema.rschema('require_permission')
             self.require_permission_information(entity, reqpermschema)
             if reqpermschema.has_perm(self._cw, 'add', fromeid=entity.eid):
                 self.require_permission_edit_form(entity)
@@ -113,7 +113,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                          domid='ownership%s' % entity.eid,
                                          __redirectvid='security',
                                          __redirectpath=entity.rest_path())
-        field = guess_field(entity.e_schema, self._cw.schema.rschema('owned_by'))
+        field = guess_field(entity.e_schema, self._cw.vreg.schema.rschema('owned_by'))
         form.append_field(field)
         self.w(form.render(rendervalues=dict(display_progress_div=False)))
 
@@ -173,15 +173,15 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         permnames = getattr(entity, '__permissions__', None)
         cwpermschema = newperm.e_schema
         if permnames is not None:
-            field = guess_field(cwpermschema, self._cw.schema.rschema('name'),
+            field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('name'),
                                 widget=wdgs.Select({'size': 1}),
                                 choices=permnames)
         else:
-            field = guess_field(cwpermschema, self._cw.schema.rschema('name'))
+            field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('name'))
         form.append_field(field)
-        field = guess_field(cwpermschema, self._cw.schema.rschema('label'))
+        field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('label'))
         form.append_field(field)
-        field = guess_field(cwpermschema, self._cw.schema.rschema('require_group'))
+        field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('require_group'))
         form.append_field(field)
         renderer = self._cw.vreg['formrenderers'].select(
             'htable', self._cw, rset=None, display_progress_div=False)

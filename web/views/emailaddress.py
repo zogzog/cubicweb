@@ -38,7 +38,7 @@ class EmailAddressPrimaryView(primary.PrimaryView):
         else:
             pemaileid = None
         try:
-            emailof = 'use_email' in self._cw.schema and entity.reverse_use_email or ()
+            emailof = 'use_email' in self._cw.vreg.schema and entity.reverse_use_email or ()
             emailof = [e for e in emailof if not e.eid == pemaileid]
         except Unauthorized:
             emailof = []

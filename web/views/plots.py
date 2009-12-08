@@ -179,7 +179,7 @@ else:
 
         def _guess_vid(self, row):
             etype = self.cw_rset.description[row][0]
-            if self._cw.schema.eschema(etype).final:
+            if self._cw.vreg.schema.eschema(etype).final:
                 return 'final'
             return 'textincontext'
 

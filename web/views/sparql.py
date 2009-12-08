@@ -44,7 +44,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
         vid = self._cw.form.get('resultvid', 'table')
         if sparql:
             try:
-                qinfo = Sparql2rqlTranslator(self._cw.schema).translate(sparql)
+                qinfo = Sparql2rqlTranslator(self._cw.vreg.schema).translate(sparql)
             except rql.TypeResolverException, ex:
                 self.w(self._cw._('can not resolve entity types:') + u' ' + unicode('ex'))
             except UnsupportedQuery:
@@ -102,7 +102,7 @@ class SparqlResultXmlView(AnyRsetView):
 
     def cell_binding(self, row, col, varname):
         celltype = self.cw_rset.description[row][col]
-        if self._cw.schema.eschema(celltype).final:
+        if self._cw.vreg.schema.eschema(celltype).final:
             cellcontent = self.view('cell', self.cw_rset, row=row, col=col)
             return E.binding(E.literal(cellcontent,
                                        datatype=xmlschema(celltype)),

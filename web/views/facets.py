@@ -102,7 +102,7 @@ class FilterBox(BoxTemplate):
             rqlst.recover()
 
     def display_bookmark_link(self, rset):
-        eschema = self._cw.schema.eschema('Bookmark')
+        eschema = self._cw.vreg.schema.eschema('Bookmark')
         if eschema.has_perm(self._cw, 'add'):
             bk_path = 'view?rql=%s' % rset.printable_rql()
             bk_title = self._cw._('my custom search')

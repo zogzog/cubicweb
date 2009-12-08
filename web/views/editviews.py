@@ -80,7 +80,7 @@ class UnrelatedDivs(EntityView):
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         relname, target = self._cw.form.get('relation').rsplit('_', 1)
-        rschema = self._cw.schema.rschema(relname)
+        rschema = self._cw.vreg.schema.rschema(relname)
         hidden = 'hidden' in self._cw.form
         is_cell = 'is_cell' in self._cw.form
         self.w(self.build_unrelated_select_div(entity, rschema, target,
@@ -101,7 +101,7 @@ class UnrelatedDivs(EntityView):
         options.append('<option>%s %s</option>' % (self._cw._('select a'), etypes))
         options += self._get_select_options(entity, rschema, target)
         options += self._get_search_options(entity, rschema, target, targettypes)
-        if 'Basket' in self._cw.schema: # XXX
+        if 'Basket' in self._cw.vreg.schema: # XXX
             options += self._get_basket_options(entity, rschema, target, targettypes)
         relname, target = self._cw.form.get('relation').rsplit('_', 1)
         return u"""\

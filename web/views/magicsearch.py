@@ -172,7 +172,7 @@ class QueryTranslator(BaseQueryProcessor):
     priority = 2
     def preprocess_query(self, uquery):
         rqlst = parse(uquery, print_errors=False)
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         # rql syntax tree will be modified in place if necessary
         translate_rql_tree(rqlst, trmap(self._cw.config, schema, self._cw.lang),
                            schema)
@@ -250,9 +250,9 @@ class QSPreProcessor(BaseQueryProcessor):
         searchop = ''
         if '%' in searchstr:
             if rtype:
-                possible_etypes = self._cw.schema.rschema(rtype).objects(etype)
+                possible_etypes = self._cw.vreg.schema.rschema(rtype).objects(etype)
             else:
-                possible_etypes = [self._cw.schema.eschema(etype)]
+                possible_etypes = [self._cw.vreg.schema.eschema(etype)]
             if searchattr or len(possible_etypes) == 1:
                 searchattr = searchattr or possible_etypes[0].main_attribute()
                 searchop = 'LIKE '
@@ -276,10 +276,10 @@ class QSPreProcessor(BaseQueryProcessor):
         """Specific process for three words query (case (3) of preprocess_rql)
         """
         etype = self._get_entity_type(word1)
-        eschema = self._cw.schema.eschema(etype)
+        eschema = self._cw.vreg.schema.eschema(etype)
         rtype = self._get_attribute_name(word2, eschema)
         # expand shortcut if rtype is a non final relation
-        if not self._cw.schema.rschema(rtype).final:
+        if not self._cw.vreg.schema.rschema(rtype).final:
             return self._expand_shortcut(etype, rtype, word3)
         if '%' in word3:
             searchop = 'LIKE '

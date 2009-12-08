@@ -45,7 +45,7 @@ class ManageView(StartupView):
     def _main_index(self):
         req = self._cw
         manager = req.user.matching_groups('managers')
-        if not manager and 'Card' in self._cw.schema:
+        if not manager and 'Card' in self._cw.vreg.schema:
             rset = self._cw.execute('Card X WHERE X wikiid "index"')
         else:
             rset = None
@@ -55,7 +55,7 @@ class ManageView(StartupView):
             self.entities()
             self.w(u'<div class="hr">&#160;</div>')
             self.startup_views()
-        if manager and 'Card' in self._cw.schema:
+        if manager and 'Card' in self._cw.vreg.schema:
             self.w(u'<div class="hr">&#160;</div>')
             if rset:
                 href = rset.get_entity(0, 0).absolute_url(vid='edition')
@@ -91,7 +91,7 @@ class ManageView(StartupView):
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
 
     def entities(self):
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         self.w(u'<h4>%s</h4>\n' % self._cw._('The repository holds the following entities'))
         manager = self._cw.user.matching_groups('managers')
         self.w(u'<table class="startup">')
@@ -154,5 +154,5 @@ class IndexView(ManageView):
     title = _('view_index')
 
     def display_folders(self):
-        return 'Folder' in self._cw.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]
+        return 'Folder' in self._cw.vreg.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]
 

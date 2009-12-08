@@ -90,7 +90,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
         formparams['sec'] = self.__regid__
         if not skiptypes:
             formparams['skipmeta'] = u'0'
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         # compute entities
         entities = sorted(eschema for eschema in schema.entities()
                           if not (eschema.final or eschema in skiptypes))
@@ -139,7 +139,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
                 url,  self._cw.external_resource('UP_ICON'), _('up')))
             self.w(u'</h3>')
             self.w(u'<div style="margin: 0px 1.5em">')
-            self._cw.schema_definition(eschema, link=False)
+            self._cw.vreg.schema_definition(eschema, link=False)
             # display entity attributes only if they have some permissions modified
             modified_attrs = []
             for attr, etype in  eschema.attribute_definitions():
@@ -151,7 +151,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
                 self.w(u'<div style="margin: 0px 6em">')
                 for attr in  modified_attrs:
                     self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attr.type, _(attr.type)))
-                    self._cw.schema_definition(attr, link=False)
+                    self._cw.vreg.schema_definition(attr, link=False)
             self.w(u'</div>')
 
     def display_relations(self, relations, formparams):
@@ -175,7 +175,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
                 _('object_plural:'),
                 ', '.join(str(obj) for obj in rschema.objects()),
                 ', '.join(_(str(obj)) for obj in rschema.objects())))
-            self._cw.schema_definition(rschema, link=False)
+            self._cw.vreg.schema_definition(rschema, link=False)
             self.w(u'</div>')
 
 
@@ -184,7 +184,7 @@ class SchemaUreportsView(StartupView):
 
     def call(self):
         viewer = SchemaViewer(self._cw)
-        layout = viewer.visit_schema(self._cw.schema, display_relations=True,
+        layout = viewer.visit_schema(self._cw.vreg.schema, display_relations=True,
                                      skiptypes=skip_types(self._cw))
         self.w(uilib.ureport_as_html(layout))
 
@@ -384,7 +384,7 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
     def _generate(self, tmpfile):
         """display global schema information"""
         print 'skipedtypes', skip_types(self._cw)
-        visitor = FullSchemaVisitor(self._cw, self._cw.schema,
+        visitor = FullSchemaVisitor(self._cw, self._cw.vreg.schema,
                                     skiptypes=skip_types(self._cw))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
 

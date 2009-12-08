@@ -262,7 +262,7 @@ class CellView(EntityView):
         :param cellvid: cell view (defaults to 'outofcontext')
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
-        if val is not None and not self._cw.schema.eschema(etype).final:
+        if val is not None and not self._cw.vreg.schema.eschema(etype).final:
             e = self.cw_rset.get_entity(row, col)
             e.view(cellvid or 'outofcontext', w=self.w)
         elif val is None:

@@ -207,9 +207,9 @@ class SchemaBasedRewriter(URLRewriter):
                 continue
             if isinstance(inputurl, basestring):
                 if inputurl == uri:
-                    return callback(inputurl, uri, req, self._cw.schema)
+                    return callback(inputurl, uri, req, self._cw.vreg.schema)
             elif inputurl.match(uri): # it's a regexp
-                return callback(inputurl, uri, req, self._cw.schema)
+                return callback(inputurl, uri, req, self._cw.vreg.schema)
         else:
             self.debug("no schemabased rewrite rule found for %s", uri)
             raise KeyError(uri)

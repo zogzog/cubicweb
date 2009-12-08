@@ -246,7 +246,7 @@ class HelpAction(action.Action):
     title = _('Help')
 
     def url(self):
-        return self.req.build_url('doc/main')
+        return self._cw.build_url('doc/main')
 
 class ChangeLogAction(action.Action):
     __regid__ = 'changelog'

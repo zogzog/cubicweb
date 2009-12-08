@@ -70,8 +70,8 @@ class BookmarksBox(box.UserRQLBoxTemplate):
             return
         box = BoxWidget(req._(self.title), self.__regid__)
         box.listing_class = 'sideBox'
-        rschema = self._cw.schema.rschema(self.rtype)
-        eschema = self._cw.schema.eschema(self.etype)
+        rschema = self._cw.vreg.schema.rschema(self.rtype)
+        eschema = self._cw.vreg.schema.eschema(self.etype)
         candelete = rschema.has_perm(req, 'delete', toeid=ueid)
         if candelete:
             req.add_js( ('cubicweb.ajax.js', 'cubicweb.bookmarks.js') )

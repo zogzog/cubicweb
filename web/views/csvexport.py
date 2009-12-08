@@ -40,7 +40,7 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
         writer = self.csvwriter()
         writer.writerow(self.columns_labels())
         rset, descr = self.cw_rset, self.cw_rset.description
-        eschema = self._cw.schema.eschema
+        eschema = self._cw.vreg.schema.eschema
         for rowindex, row in enumerate(rset):
             csvrow = []
             for colindex, val in enumerate(row):

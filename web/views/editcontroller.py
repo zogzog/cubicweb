@@ -178,7 +178,7 @@ class EditController(ViewController):
                     or
                     (field.role == 'object' and eschema.has_object_relation(field.name))):
                     continue
-                rschema = self._cw.schema.rschema(field.name)
+                rschema = self._cw.vreg.schema.rschema(field.name)
                 if rschema.is_final():
                     rqlquery.kwargs[attr] = value
                     rqlquery.edited.append('X %s %%(%s)s' % (attr, attr))
@@ -246,7 +246,7 @@ class EditController(ViewController):
         if values is None or values == origvalues:
             return # not edited / not modified / to do later
         etype = entity.e_schema
-        rschema = self._cw.schema.rschema(field.name)
+        rschema = self._cw.vreg.schema.rschema(field.name)
         if field.role == 'subject':
             desttype = rschema.objects(etype)[0]
             card = rschema.rproperty(etype, desttype, 'cardinality')[0]
