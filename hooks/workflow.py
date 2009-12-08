@@ -125,13 +125,13 @@ class _SubWorkflowExitOp(hook.Operation):
             msg %= session._(forentity.current_workflow.name)
             session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
             # XXX iirk
-            req = forentity.req
-            forentity.req = session.super_session
+            req = forentity._cw
+            forentity._cw = session.super_session
             try:
                 trinfo = forentity.change_state(tostate, msg, u'text/plain',
                                                 tr=wftr)
             finally:
-                forentity.req = req
+                forentity._cw = req
 
 
 # hooks ########################################################################

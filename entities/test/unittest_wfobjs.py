@@ -76,8 +76,8 @@ class WorkflowTC(CubicWebTC):
 
     def setup_database(self):
         rschema = self.schema['in_state']
-        for x, y in rschema.iter_rdefs():
-            self.assertEquals(rschema.rproperty(x, y, 'cardinality'), '1*')
+        for rdef in rschema.rdefs.values():
+            self.assertEquals(rdef.cardinality, '1*')
         self.member = self.create_user('member')
 
     def test_workflow_base(self):
@@ -210,7 +210,7 @@ class WorkflowTC(CubicWebTC):
                                       [(swfstate2, state2), (swfstate3, state3)])
         self.assertEquals(swftr1.destination().eid, swfstate1.eid)
         # workflows built, begin test
-        self.group = self.add_entity('CWGroup', name=u'grp1')
+        self.group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         self.assertEquals(self.group.current_state.eid, state1.eid)
         self.assertEquals(self.group.current_workflow.eid, mwf.eid)
@@ -295,7 +295,7 @@ class WorkflowTC(CubicWebTC):
         twf.add_wftransition(_('close'), subwf, (released,),
                              [(xsigned, closed), (xaborted, released)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans in ('identify', 'release', 'close'):
             group.fire_transition(trans)
@@ -320,7 +320,7 @@ class WorkflowTC(CubicWebTC):
         twf.add_wftransition(_('release'), subwf, identified,
                              [(xaborted, None)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans, nextstate in (('identify', 'xsigning'),
                                  ('xabort', 'created'),

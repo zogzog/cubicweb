@@ -182,8 +182,7 @@ class CheckUniqueHook(UserIntegrityHook):
         entity = self.entity
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
-            if eschema.subject_relation(attr).final and \
-                   eschema.has_unique_values(attr):
+            if eschema.subjrels[attr].final and eschema.has_unique_values(attr):
                 val = entity[attr]
                 if val is None:
                     continue

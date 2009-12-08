@@ -363,7 +363,7 @@ def rschema_relations_values(rschema):
 def _rdef_values(rschema, objtype, props):
     amap = {'order': 'ordernum'}
     values = {}
-    for prop, default in rschema.rproperty_defs(objtype).iteritems():
+    for prop, default in schemamod.RelationDefinitionSchema.rproperty_defs(objtype).iteritems():
         if prop in ('eid', 'constraints', 'uid', 'infered', 'permissions'):
             continue
         value = props.get(prop, default)
