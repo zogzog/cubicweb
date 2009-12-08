@@ -123,3 +123,17 @@ class AfterAddRelationSecurityHook(SecurityHook):
                                     self._cw.describe(self.eidto)[0])
                 rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 
+
+class BeforeDeleteRelationSecurityHook(SecurityHook):
+    __regid__ = 'securitybeforedelrelation'
+    events = ('before_delete_relation',)
+
+    def __call__(self):
+        nocheck = self._cw.transaction_data.get('skip-security', ())
+        if (self.eidfrom, self.rtype, self.eidto) in nocheck:
+            return
+        rschema = self._cw.repo.schema[self.rtype]
+        rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
+                            self._cw.describe(self.eidto)[0])
+        rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
+
