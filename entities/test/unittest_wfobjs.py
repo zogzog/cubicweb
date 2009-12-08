@@ -390,7 +390,7 @@ class CustomWorkflowTC(CubicWebTC):
         wf = add_wf(self, 'Company')
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': self.member.eid})
+                     {'wf': wf.eid, 'x': self.member.eid}, 'x')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
 
