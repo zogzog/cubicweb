@@ -172,8 +172,10 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
 from cubicweb.view import View
 View.pagination = deprecated('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
 
-def paginate(view, show_all_option=True, w=None, page_size=None):
-    limit_rset_using_paged_nav(view, view.req, view.rset, w or view.w,
+def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
+    if rset is None:
+        rset = view.rset
+    limit_rset_using_paged_nav(view, view.req, rset, w or view.w,
                                not view.need_navigation, show_all_option,
                                page_size=page_size)
 View.paginate = paginate
