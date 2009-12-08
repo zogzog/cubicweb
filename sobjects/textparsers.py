@@ -24,8 +24,8 @@ class TextAnalyzer(Component):
     __regid__ = 'textanalyzer'
 
     def parse(self, caller, text):
-        for parsercls in self.req.vreg['components'].get('textparser', ()):
-            parsercls(self.req).parse(caller, text)
+        for parsercls in self._cw.vreg['components'].get('textparser', ()):
+            parsercls(self._cw).parse(caller, text)
 
 
 class TextParser(Component):
@@ -53,7 +53,7 @@ class ChangeStateTextParser(TextParser):
     def parse(self, caller, text):
         for trname, eid in self.instr_rgx.findall(text):
             try:
-                entity = self.req.entity_from_eid(typed_eid(eid))
+                entity = self._cw.entity_from_eid(typed_eid(eid))
             except UnknownEid:
                 self.error("can't get entity with eid %s", eid)
                 continue
