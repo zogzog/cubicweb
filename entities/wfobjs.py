@@ -247,9 +247,8 @@ class BaseTransition(AnyEntity):
             kwargs['x'] = self.eid
             kwargs.setdefault('mainvars', u'X')
             self._cw.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
-                             'X expression %(expr)s, T condition X '
-                             'WHERE T eid %(x)s',
-                             'T condition X WHERE T eid %(x)s', kwargs, 'x')
+                             'X expression %(expr)s, X mainvars %(mainvars)s, '
+                             'T condition X WHERE T eid %(x)s',kwargs, 'x')
         # XXX clear caches?
 
 
