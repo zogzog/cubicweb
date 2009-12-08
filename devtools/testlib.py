@@ -353,38 +353,6 @@ class CubicWebTC(TestCase):
     def entity(self, rql, args=None, eidkey=None, req=None):
         return self.execute(rql, args, eidkey, req=req).get_entity(0, 0)
 
-    def add_entity(self, etype, req=None, **kwargs):
-        rql = ['INSERT %s X' % etype]
-        # dict for replacement in RQL Request
-        args = {}
-        if kwargs:
-            rql.append(':')
-            # dict to define new entities variables
-            entities = {}
-            # assignement part of the request
-            sub_rql = []
-            for key, value in kwargs.iteritems():
-                # entities
-                if hasattr(value, 'eid'):
-                    new_value = "%s__" % key.upper()
-                    entities[new_value] = value.eid
-                    args[new_value] = value.eid
-
-                    sub_rql.append("X %s %s" % (key, new_value))
-                # final attributes
-                else:
-                    sub_rql.append('X %s %%(%s)s' % (key, key))
-                    args[key] = value
-            rql.append(', '.join(sub_rql))
-            if entities:
-                rql.append('WHERE')
-                # WHERE part of the request (to link entity to they eid)
-                sub_rql = []
-                for key, value in entities.iteritems():
-                    sub_rql.append("%s eid %%(%s)s" % (key, key))
-                rql.append(', '.join(sub_rql))
-        return self.execute(' '.join(rql), args, req=req).get_entity(0, 0)
-
     # vregistry inspection utilities ###########################################
 
     def pviews(self, req, rset):
@@ -688,6 +656,12 @@ class CubicWebTC(TestCase):
         return validator.parse_string(output.strip())
 
     # deprecated ###############################################################
+
+    @deprecated('[3.6] use self.request().create_entity(...)')
+    def add_entity(self, etype, req=None, **kwargs):
+        if req is None:
+            req = self.request()
+        return req.create_entity(etype, **kwargs)
 
     @deprecated('[3.4] use self.vreg["etypes"].etype_class(etype)(self.request())')
     def etype_instance(self, etype, req=None):
