@@ -405,7 +405,7 @@ du :eid:`1:*ReST*`'''
         e['data_name'] = 'an html file'
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
-        e.req.transaction_data = {} # XXX req should be a session
+        e._cw.transaction_data = {} # XXX req should be a session
         self.assertEquals(set(e.get_words()),
                           set(['an', 'html', 'file', 'du', 'html', 'some', 'data']))
 

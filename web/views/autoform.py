@@ -59,9 +59,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except form.FieldNotFound:
-            if eschema is None or not name in cls_or_self._cw.schema:
+            if eschema is None or not name in cls_or_self._cw.vreg.schema:
                 raise
-            rschema = cls_or_self._cw.schema.rschema(name)
+            rschema = cls_or_self._cw.vreg.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
             fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role,
