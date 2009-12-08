@@ -583,27 +583,25 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     'subjschema rschema objschema' according to information found in the schema
     """
     fieldclass = None
-    card = eschema.cardinality(rschema, role)
+    rdef = eschema.rdef(rschema, role)
     if role == 'subject':
-        targetschema = rschema.objects(eschema)[0]
-        help = rschema.rproperty(eschema, targetschema, 'description')
+        targetschema = rdef.object
         if rschema.final:
-            if rschema.rproperty(eschema, targetschema, 'internationalizable'):
+            if rdef.internationalizable:
                 kwargs.setdefault('internationalizable', True)
             def get_default(form, es=eschema, rs=rschema):
                 return es.default(rs)
             kwargs.setdefault('initial', get_default)
     else:
-        targetschema = rschema.subjects(eschema)[0]
-        help = rschema.rproperty(targetschema, eschema, 'description')
-    kwargs['required'] = card in '1+'
+        targetschema = rdef.subject
+    kwargs['required'] = rdef.role_cardinality(role) in '1+'
     kwargs['name'] = rschema.type
     if role == 'object':
         kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
         kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs['eidparam'] = True
-    kwargs.setdefault('help', help)
+    kwargs.setdefault('help', rdef.description)
     if rschema.final:
         if skip_meta_attr and rschema in eschema.meta_attributes():
             return None
@@ -617,18 +615,16 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 # use RichTextField instead of StringField if the attribute has
                 # a "format" metadata. But getting information from constraints
                 # may be useful anyway...
-                constraints = rschema.rproperty(eschema, targetschema, 'constraints')
-                for cstr in constraints:
+                for cstr in rdef.constraints:
                     if isinstance(cstr, StaticVocabularyConstraint):
                         raise Exception('rich text field with static vocabulary')
                 return RichTextField(**kwargs)
-            constraints = rschema.rproperty(eschema, targetschema, 'constraints')
             # init StringField parameters according to constraints
-            for cstr in constraints:
+            for cstr in rdef.constraints:
                 if isinstance(cstr, StaticVocabularyConstraint):
                     kwargs.setdefault('choices', cstr.vocabulary)
                     break
-            for cstr in constraints:
+            for cstr in rdef.constraints:
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
                     kwargs['max_length'] = cstr.max
             return StringField(**kwargs)

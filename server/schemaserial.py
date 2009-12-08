@@ -399,7 +399,7 @@ def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None, groupma
     if subjtype is None:
         assert objtype is None
         assert props is None
-        targets = rschema.iter_rdefs()
+        targets = rschema.rdefs
     else:
         assert not objtype is None
         targets = [(subjtype, objtype)]
