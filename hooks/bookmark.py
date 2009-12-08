@@ -7,7 +7,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.selectors import entity_implements
 from cubicweb.server import hook
 
 
@@ -22,7 +21,7 @@ class AutoDeleteBookmarkOp(hook.Operation):
 class DelBookmarkedByHook(hook.Hook):
     """ensure user logins are stripped"""
     __regid__ = 'autodelbookmark'
-    __select__ = hook.Hook.__select__ & entity_implements('bookmarked_by',)
+    __select__ = hook.Hook.__select__ & hook.match_rtype('bookmarked_by',)
     category = 'bookmark'
     events = ('after_delete_relation',)
 
