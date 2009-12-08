@@ -391,7 +391,7 @@ class ServerMigrationHelper(MigrationHelper):
                                   'vars': expression.mainvars, 'x': teid}, 'x',
                                  ask_confirm=False)
 
-    def _synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True):
+    def _synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True, syncprops=True):
         """synchronize properties of the persistent relation schema against its
         current definition:
 
@@ -408,14 +408,17 @@ class ServerMigrationHelper(MigrationHelper):
             return
         self._synchronized.add(rtype)
         rschema = self.fs_schema.rschema(rtype)
-        self.rqlexecall(ss.updaterschema2rql(rschema),
-                        ask_confirm=self.verbosity>=2)
-        reporschema = self.repo.schema.rschema(rtype)
+        if syncprops:
+            self.rqlexecall(ss.updaterschema2rql(rschema),
+                            ask_confirm=self.verbosity>=2)
         if syncrdefs:
-            for subj, obj in rschema.iter_rdefs():
-                if not reporschema.has_rdef(subj, obj):
+            reporschema = self.repo.schema.rschema(rtype)
+            for subj, obj in rschema.rdefs:
+                if (subj, obj) not in reporschema.rdefs:
                     continue
-                self._synchronize_rdef_schema(subj, rschema, obj, syncperms=syncperms)
+                self._synchronize_rdef_schema(subj, rschema, obj,
+                                              syncprops=syncprops,
+                                              syncperms=syncperms)
 
     def _synchronize_eschema(self, etype, syncperms=True):
         """synchronize properties of the persistent entity schema against
@@ -467,7 +470,8 @@ class ServerMigrationHelper(MigrationHelper):
         if syncperms:
             self._synchronize_permissions(eschema, repoeschema.eid)
 
-    def _synchronize_rdef_schema(self, subjtype, rtype, objtype, syncperms=True):
+    def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
+                                 syncperms=True, syncprops=True):
         """synchronize properties of the persistent relation definition schema
         against its current definition:
         * order and other properties
@@ -482,41 +486,42 @@ class ServerMigrationHelper(MigrationHelper):
         if rschema.symetric:
             self._synchronized.add((objtype, rschema, subjtype))
         confirm = self.verbosity >= 2
-        # properties
-        self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
-                        ask_confirm=confirm)
-        # constraints
-        rdef = rschema.rdef(subjtype, objtype)
-        repordef = reporschema.rdef(subjtype, objtype)
-        newconstraints = list(rdef.constraints)
-        # 1. remove old constraints and update constraints of the same type
-        # NOTE: don't use rschema.constraint_by_type because it may be
-        #       out of sync with newconstraints when multiple
-        #       constraints of the same type are used
-        for cstr in repordef.constraints:
-            for newcstr in newconstraints:
-                if newcstr.type() == cstr.type():
-                    break
-            else:
-                newcstr = None
-            if newcstr is None:
-                self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
-                             {'x': cstr.eid}, 'x',
-                             ask_confirm=confirm)
-                self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
-                             {'x': cstr.eid}, 'x',
-                             ask_confirm=confirm)
-            else:
-                newconstraints.remove(newcstr)
-                values = {'x': cstr.eid,
-                          'v': unicode(newcstr.serialize())}
-                self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
-                             values, 'x', ask_confirm=confirm)
-        # 2. add new constraints
-        for newcstr in newconstraints:
-            self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
-                                              newcstr),
+        if syncprops:
+            # properties
+            self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
                             ask_confirm=confirm)
+            # constraints
+            rdef = rschema.rdef(subjtype, objtype)
+            repordef = reporschema.rdef(subjtype, objtype)
+            newconstraints = list(rdef.constraints)
+            # 1. remove old constraints and update constraints of the same type
+            # NOTE: don't use rschema.constraint_by_type because it may be
+            #       out of sync with newconstraints when multiple
+            #       constraints of the same type are used
+            for cstr in repordef.constraints:
+                for newcstr in newconstraints:
+                    if newcstr.type() == cstr.type():
+                        break
+                else:
+                    newcstr = None
+                if newcstr is None:
+                    self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
+                                 {'x': cstr.eid}, 'x',
+                                 ask_confirm=confirm)
+                    self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
+                                 {'x': cstr.eid}, 'x',
+                                 ask_confirm=confirm)
+                else:
+                    newconstraints.remove(newcstr)
+                    values = {'x': cstr.eid,
+                              'v': unicode(newcstr.serialize())}
+                    self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
+                                 values, 'x', ask_confirm=confirm)
+            # 2. add new constraints
+            for newcstr in newconstraints:
+                self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
+                                                  newcstr),
+                                ask_confirm=confirm)
         if syncperms:
             self._synchronize_permissions(rdef, repordef.eid)
 
@@ -909,17 +914,18 @@ class ServerMigrationHelper(MigrationHelper):
                 assert len(ertype) == 3, 'not a relation definition'
                 assert syncprops, 'can\'t update permission for a relation definition'
                 self._synchronize_rdef_schema(ertype[0], ertype[1], ertype[2],
-                                              syncperms=syncperms)
-            elif syncprops:
+                                              syncperms=syncperms,
+                                              syncprops=syncprops)
+            else:
                 erschema = self.repo.schema[ertype]
                 if isinstance(erschema, CubicWebRelationSchema):
                     self._synchronize_rschema(erschema, syncperms=syncperms,
+                                              syncprops=syncprops,
                                               syncrdefs=syncrdefs)
-                else:
+                elif syncprops:
                     self._synchronize_eschema(erschema, syncperms=syncperms)
-            else:
-                erschema = self.repo.schema[ertype]
-                self._synchronize_permissions(self.fs_schema[ertype], erschema.eid)
+                else:
+                    self._synchronize_permissions(self.fs_schema[ertype], erschema.eid)
         else:
             for etype in self.repo.schema.entities():
                 if syncprops:
