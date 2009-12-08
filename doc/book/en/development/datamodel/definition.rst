@@ -188,6 +188,25 @@ third argument is not available.
 
 
 
+* `RQLUniqueConstraint` : allows to the specify a RQL query that ensure that an
+  attribute is unique in a specific context. The Query must **never** return more
+  than a single result to be satisfied. In this query the variables `S` is
+  reserved for the entity subject of the relation. The other variable should be
+  specified with the second constructor argument (mainvars). This constraints
+  should be used when UniqueConstraint doesn't fit. Here is a simple example ::
+
+    # Check that in the same Workflow each state's name is unique.  Using
+    # UniqueConstraint (or unique=True) here would prevent states in different
+    # workflows to have the same name.
+
+    # With: State S, Workflow W, String N ; S state_of W, S name N
+
+    RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N',
+                        mainvars='Y',
+                        msg=_('workflow already have a state of that name'))
+
+
+
 XXX note about how to add new constraint
 
 
