@@ -167,6 +167,16 @@ class CoreHooksTC(CubicWebTC):
         self.assertEquals(len(entity.owned_by), 1) # make sure we have only one owner
         self.assertEquals(entity.owned_by[0].eid, self.session.user.eid)
 
+    def test_user_login_stripped(self):
+        u = self.create_user('  joe  ')
+        tname = self.execute('Any L WHERE E login L, E eid %(e)s',
+                             {'e': u.eid})[0][0]
+        self.assertEquals(tname, 'joe')
+        self.execute('SET X login " jijoe " WHERE X eid %(x)s', {'x': u.eid})
+        tname = self.execute('Any L WHERE E login L, E eid %(e)s',
+                             {'e': u.eid})[0][0]
+        self.assertEquals(tname, 'jijoe')
+
 
 
 class UserGroupHooksTC(CubicWebTC):
