@@ -926,11 +926,11 @@ the repository',
 
     def migration_handler(self):
         """return a migration handler instance"""
-        from cubicweb.common.migration import MigrationHelper
+        from cubicweb.migration import MigrationHelper
         return MigrationHelper(self, verbosity=self.verbosity)
 
     def i18ncompile(self, langs=None):
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         if langs is None:
             langs = self.available_languages()
         i18ndir = join(self.apphome, 'i18n')

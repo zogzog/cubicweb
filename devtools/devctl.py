@@ -113,7 +113,7 @@ def generate_schema_pot(w, cubedir=None):
 
 
 def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
-    from cubicweb.common.i18n import add_msg
+    from cubicweb.i18n import add_msg
     from cubicweb.web import uicfg
     from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES
     no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
@@ -286,7 +286,7 @@ class UpdateCubicWebCatalogCommand(Command):
         import yams
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
-        from cubicweb.common.i18n import extract_from_tal, execute
+        from cubicweb.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
         potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
@@ -379,7 +379,7 @@ def update_cube_catalogs(cubedir):
     import tempfile
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
-    from cubicweb.common.i18n import extract_from_tal, execute
+    from cubicweb.i18n import extract_from_tal, execute
     toedit = []
     cube = basename(normpath(cubedir))
     tempdir = tempfile.mkdtemp()

@@ -311,7 +311,7 @@ repository and the web server.',
         # handle i18n files structure
         # in the first cube given
         print '-> preparing i18n catalogs'
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
         errors = config.i18ncompile(langs)
         if errors:
@@ -666,7 +666,7 @@ given, appropriate sources for migration will be automatically selected \
         # * install new languages
         # * recompile catalogs
         # in the first componant given
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
         errors = config.i18ncompile(langs)

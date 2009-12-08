@@ -38,7 +38,7 @@ from cubicweb import AuthenticationError, ETYPE_NAME_MAP
 from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
-from cubicweb.common.migration import MigrationHelper, yes
+from cubicweb.migration import MigrationHelper, yes
 
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss

@@ -59,6 +59,8 @@ COPY_CW_FILES = (
     'cwconfig.py',
     'entity.py',
     'interfaces.py',
+    'i18n.py',
+    'migration.py',
     'rqlrewrite.py',
     'rset.py',
     'schema.py',
@@ -69,7 +71,6 @@ COPY_CW_FILES = (
     'view.py',
 
     'common/mail.py',
-    'common/migration.py',
     'common/mixins.py',
     'common/mttransforms.py',
     'common/uilib.py',
@@ -224,7 +225,7 @@ class NewGoogleAppCommand(Command):
                            join(packagesdir, include))
         # generate sample config
         from cubicweb.goa.goaconfig import GAEConfiguration
-        from cubicweb.common.migration import MigrationHelper
+        from cubicweb.migration import MigrationHelper
         config = GAEConfiguration(appid, appldir)
         if exists(config.main_config_file()):
             mih = MigrationHelper(config)

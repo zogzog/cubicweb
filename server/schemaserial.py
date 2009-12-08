@@ -510,7 +510,7 @@ def nfrdef2rql(rschema, subjtype, objtype, props):
 
 def rdefrelations2rql(rschema, subjtype, objtype, props):
     iterators = []
-    for constraint in props['constraints']:
+    for constraint in props.constraints:
         iterators.append(constraint2rql(rschema, subjtype, objtype, constraint))
     return chain(*iterators)
 

@@ -11,7 +11,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.common.migration import MigrationHelper, filter_scripts
+from cubicweb.migration import MigrationHelper, filter_scripts
 from cubicweb.server.migractions import ServerMigrationHelper
 
 
