@@ -176,7 +176,7 @@ class Entity(AppObject, dict):
                 # that case the relation may still be missing. As we miss this
                 # later information here, systematically add it.
                 restrictions[-1] += '?'
-                # XXX user.req.vreg iiiirk
+                # XXX user._cw.vreg iiiirk
                 destcls = user._cw.vreg['etypes'].etype_class(desttype)
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
@@ -795,9 +795,9 @@ class Entity(AppObject, dict):
         relations of the given type from or to this object should be deleted).
         """
         if _cw_unsafe:
-            execute = self.req.unsafe_execute
+            execute = self._cw.unsafe_execute
         else:
-            execute = self.req.execute
+            execute = self._cw.execute
         # XXX update cache
         for attr, values in kwargs.iteritems():
             if attr.startswith('reverse_'):

@@ -17,10 +17,11 @@ from cubicweb.sobjects.supervising import SendMailOp, SupervisionMailOp
 class SupervisingTC(CubicWebTC):
 
     def setup_database(self):
-        self.add_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
-        self.add_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
-        self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-        self.add_entity('Comment', content=u"Yo !")
+        req = self.request()
+        req.create_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
+        req.create_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
+        req.create_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
+        req.create_entity('Comment', content=u"Yo !")
         self.execute('SET C comments B WHERE B title "une autre news !", C content "Yo !"')
         self.vreg.config.global_set_option('supervising-addrs', 'test@logilab.fr')
 
