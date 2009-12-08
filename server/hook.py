@@ -145,12 +145,12 @@ class match_rtype(match_search_state):
     """
     def __init__(self, *expected):
         self.expected = expected
-        if len(expected) == 1:
-            try:
-                iter(expected[0])
-                self.expected = expected[0]
-            except TypeError:
-                pass
+        # if len(expected) == 1:
+        #     try:
+        #         iter(expected[0])
+        #         self.expected = expected[0]
+        #     except TypeError:
+        #         pass
 
     @lltrace
     def __call__(self, cls, req, *args, **kwargs):
