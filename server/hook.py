@@ -156,6 +156,20 @@ class match_rtype(match_search_state):
     def __call__(self, cls, req, *args, **kwargs):
         return kwargs.get('rtype') in self.expected
 
+class match_rtype_sets(match_search_state):
+    """accept if parameters specified as initializer arguments are specified
+    in named arguments given to the selector
+    """
+
+    def __init__(self, *expected):
+        self.expected = expected
+
+    @lltrace
+    def __call__(self, cls, req, *args, **kwargs):
+        for rel_set in self.expected:
+            if kwargs.get('rtype') in rel_set:
+                return 1
+        return 0
 
 # base class for hook ##########################################################
 
