@@ -34,10 +34,11 @@ FOOTERACTIONS = [wdoc.HelpAction,
 class ViewSelectorTC(CubicWebTC):
 
     def setup_database(self):
-        self.add_entity('BlogEntry', title=u"une news !", content=u"cubicweb c'est beau")
-        self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-        self.add_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
-        self.add_entity('Tag', name=u'x')
+        req = self.request()
+        req.create_entity('BlogEntry', title=u"une news !", content=u"cubicweb c'est beau")
+        req.create_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
+        req.create_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
+        req.create_entity('Tag', name=u'x')
 
 class VRegistryTC(ViewSelectorTC):
     """test the view selector"""
@@ -390,7 +391,7 @@ class VRegistryTC(ViewSelectorTC):
                               tableview.TableView)
 
     def test_interface_selector(self):
-        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
         rset = req.execute('Image X WHERE X data_name "bim.png"')
@@ -399,13 +400,13 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_score_entity_selector(self):
-        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
         rset = req.execute('Image X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
-        fileobj = self.add_entity('File', data_name=u'bim.txt', data=Binary('bim'))
+        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('bim'))
         # image primary view priority
         req = self.request()
         rset = req.execute('File X WHERE X data_name "bim.txt"')

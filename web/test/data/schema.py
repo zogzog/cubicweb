@@ -24,7 +24,7 @@ class checked_by(RelationType):
     subject = 'BlogEntry'
     object = 'CWUser'
     cardinality = '?*'
-    permissions = {
+    __permissions__ = {
         'add': ('managers',),
         'read': ('managers', 'users'),
         'delete': ('managers',),
