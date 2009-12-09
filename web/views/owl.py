@@ -71,10 +71,9 @@ class OWLView(StartupView):
         if writeprefix:
             self.w(OWL_CLOSING_ROOT)
 
-    def should_display_rschema(self, eschema, rschema, tschemas, role):
-        # XXX only consider tschemas[0]
+    def should_display_rschema(self, eschema, rschema, role):
         return not rschema in self.skiptypes and (
-            eschema.rdef(rschema, role, tschemas[0]).may_have_permission('read', self._cw))
+            rschema.may_have_permission('read', self._cw, eschema, role))
 
     def visit_schema(self, skiptypes):
         """get a layout for a whole schema"""
@@ -94,7 +93,7 @@ class OWLView(StartupView):
         self.w(u'<owl:Class rdf:ID="%s">'% eschema)
         self.w(u'<!-- relations -->')
         for rschema, targetschemas, role in eschema.relation_definitions():
-            if not self.should_display_rschema(eschema, rschema, targetschemas, role):
+            if not self.should_display_rschema(eschema, rschema, role):
                 continue
             for oeschema in targetschemas:
                 if role == 'subject':
@@ -112,7 +111,7 @@ class OWLView(StartupView):
 
         self.w(u'<!-- attributes -->')
         for rschema, aschema in eschema.attribute_definitions():
-            if not self.should_display_rschema(eschema, rschema, (aschema,), 'subject'):
+            if not self.should_display_rschema(eschema, rschema, 'subject'):
                 continue
             self.w(u'''<rdfs:subClassOf>
   <owl:Restriction>
@@ -125,7 +124,7 @@ class OWLView(StartupView):
     def visit_property_schema(self, eschema):
         """get a layout for property entity OWL schema"""
         for rschema, targetschemas, role in eschema.relation_definitions():
-            if not self.should_display_rschema(eschema, rschema, targetschemas, role):
+            if not self.should_display_rschema(eschema, rschema, role):
                 continue
             for oeschema in targetschemas:
                 self.w(u'''<owl:ObjectProperty rdf:ID="%s">
@@ -135,7 +134,7 @@ class OWLView(StartupView):
 
     def visit_property_object_schema(self, eschema):
         for rschema, aschema in eschema.attribute_definitions():
-            if not self.should_display_rschema(eschema, rschema, (aschema,), 'subject'):
+            if not self.should_display_rschema(eschema, rschema, 'subject'):
                 continue
             self.w(u'''<owl:DatatypeProperty rdf:ID="%s">
   <rdfs:domain rdf:resource="#%s"/>
