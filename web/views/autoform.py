@@ -286,7 +286,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 # to add new related entities
                 if self.should_display_add_new_relation_link(rschema, formviews, card):
                     addnewlink = self.vreg['views'].select(
-                        'inline-addnew-link', self.req,
+                        'inline-addnew-link', self._cw,
                         etype=ttype, rtype=rschema, role=role,
                         peid=self.edited_entity.eid, pform=self, card=card)
                     formviews.append(addnewlink)

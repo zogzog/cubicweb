@@ -84,7 +84,7 @@ class FieldsForm(form.Form):
             elif hasattr(self.__class__, key) and not key[0] == '_':
                 setattr(self, key, val)
             else:
-                self.extra_kwargs[key] = val
+                self.cw_extra_kwargs[key] = val
             # skip other parameters, usually given for selection
             # (else write a custom class to handle them)
         if mainform:
@@ -185,7 +185,7 @@ class FieldsForm(form.Form):
             if field.name in rendervalues:
                 value = rendervalues[field.name]
             elif field.name in self.cw_extra_kwargs:
-                value = self.extra_kwargs[field.name]
+                value = self.cw_extra_kwargs[field.name]
             else:
                 value = self.form_field_value(field, load_bytes)
                 if callable(value):

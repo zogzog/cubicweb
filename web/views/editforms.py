@@ -483,13 +483,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     @cached
     def form(self):
         entity = self._entity()
-        form = self.vreg['forms'].select('edition', self._cw,
-                                         entity=entity,
-                                         form_renderer_id='inline',
-                                         copy_nav_params=False,
-                                         mainform=False,
-                                         parent_form=self.pform,
-                                         **self.extra_kwargs)
+        form = self._cw.vreg['forms'].select('edition', self._cw,
+                                             entity=entity,
+                                             form_renderer_id='inline',
+                                             copy_nav_params=False,
+                                             mainform=False,
+                                             parent_form=self.pform,
+                                             **self.cw_extra_kwargs)
         if self.pform is None:
             form.restore_previous_post(form.session_key())
         #assert form.parent_form
@@ -519,16 +519,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             self._cw.data[countkey] += 1
         except KeyError:
             self._cw.data[countkey] = 1
-        self.w(self.form.form.render(
-            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
-            counter=self.req.data[countkey], **kwargs))
         self.w(self.form.render(
             rendervalues=dict(divid=divid, title=title, removejs=removejs,
                               i18nctx=i18nctx, counter=self._cw.data[countkey]),
             formvalues=kwargs))
 
     def form_title(self, entity, i18nctx):
-        return self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
+        return self._cw.pgettext(i18nctx, 'This %s' % entity.e_schema)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
@@ -581,9 +578,8 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         except:
             self.w(self._cw._('no such entity type %s') % etype)
             return
-        self.initialize_varmaker()
-        entity = cls(self.req)
-        entity.eid = self.varmaker.next()
+        entity = cls(self._cw)
+        entity.eid = self._cw.varmaker.next()
         return entity
 
     def call(self, i18nctx, **kwargs):
@@ -609,7 +605,7 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
             self.peid, self.etype, self.rtype, self.role, i18nctx)
         if self.pform.should_hide_add_new_relation_link(self.rtype, self.card):
             js = "toggleVisibility('%s'); %s" % (divid, js)
-        __ = self.req.pgettext
+        __ = self._cw.pgettext
         self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
           % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
         self.w(u'</div>')
