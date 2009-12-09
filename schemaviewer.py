@@ -217,8 +217,8 @@ class SchemaViewer(object):
                     data.append(Text(val))
         table = Table(cols=cols, rheaders=1, children=data, klass='listing')
         layout.append(Section(children=(table,), klass='relationDefinition'))
-        if not self.req.cnx.anonymous_connection:
-            layout.append(self.format_acls(rschema, ('read', 'add', 'delete')))
+        #if self.req.user.matching_groups('managers'):
+        #    layout.append(self.format_acls(rschema, ('read', 'add', 'delete')))
         layout.append(Section(children='', klass='clear'))
         return layout
 
