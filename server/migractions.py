@@ -585,8 +585,8 @@ class ServerMigrationHelper(MigrationHelper):
         # check if attributes has been added to existing entities
         for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
-            for (fromtype, totype) in rschema.iter_rdefs():
-                if existingschema.has_rdef(fromtype, totype):
+            for (fromtype, totype) in rschema.rdefs:
+                if (fromtype, totype) in existingschema.rdefs:
                     continue
                 # check we should actually add the relation definition
                 if not (fromtype in new or totype in new or rschema in new):
@@ -622,9 +622,9 @@ class ServerMigrationHelper(MigrationHelper):
             if rschema in removedcubes_schema and rschema in reposchema:
                 # check if attributes/relations has been added to entities from
                 # other cubes
-                for fromtype, totype in rschema.iter_rdefs():
-                    if not removedcubes_schema[rschema.type].has_rdef(fromtype, totype) and \
-                           reposchema[rschema.type].has_rdef(fromtype, totype):
+                for fromtype, totype in rschema.rdefs:
+                    if (fromtype, totype) not in removedcubes_schema[rschema.type].rdefs and \
+                           (fromtype, totype) in reposchema[rschema.type].rdefs:
                         self.cmd_drop_relation_definition(
                             str(fromtype), rschema.type, str(totype))
         # execute post-remove files
