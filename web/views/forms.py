@@ -455,7 +455,7 @@ class EntityFieldsForm(FieldsForm):
         if field.is_visible():
             # fields not corresponding to an entity attribute / relations
             # are considered modified
-            if not field.eidparam:
+            if not field.eidparam or not self.edited_entity.has_eid():
                 return True # XXX
             try:
                 if field.role == 'subject':

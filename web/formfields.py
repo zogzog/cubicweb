@@ -506,7 +506,7 @@ class DateTimeField(DateField):
         # but for some widgets, it might be simpler to return date objects
         # directly, so handle that case :
         if isinstance(date, basestring):
-            date = form.parse_datetime(wdgdate, 'Datetime')
+            date = form.parse_datetime(date, 'Datetime')
         return date
 
 class TimeField(DateField):
