@@ -104,7 +104,7 @@ class GuessFieldTC(TestCase):
         self.assertEquals(field.required, False)
         self.assertEquals(field.initial(None), None)
         self.assertIsInstance(field.widget, Radio)
-        self.assertEquals(field.vocabulary(mock(req=mock(_=unicode))),
+        self.assertEquals(field.vocabulary(mock(_cw=mock(_=unicode))),
                           [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):

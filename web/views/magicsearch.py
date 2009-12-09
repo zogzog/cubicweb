@@ -174,7 +174,7 @@ class QueryTranslator(BaseQueryProcessor):
         rqlst = parse(uquery, print_errors=False)
         schema = self._cw.vreg.schema
         # rql syntax tree will be modified in place if necessary
-        translate_rql_tree(rqlst, trmap(self._cw.config, schema, self._cw.lang),
+        translate_rql_tree(rqlst, trmap(self._cw.vreg.config, schema, self._cw.lang),
                            schema)
         return rqlst.as_string(),
 
@@ -211,7 +211,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         etype = word.capitalize()
         try:
-            return trmap(self._cw.config, self._cw.vreg.schema, self._cw.lang)[etype]
+            return trmap(self._cw.vreg.config, self._cw.vreg.schema, self._cw.lang)[etype]
         except KeyError:
             raise BadRQLQuery('%s is not a valid entity name' % etype)
 
@@ -223,7 +223,7 @@ class QSPreProcessor(BaseQueryProcessor):
         # Need to convert from unicode to string (could be whatever)
         rtype = word.lower()
         # Find the entity name as stored in the DB
-        translations = trmap(self._cw.config, self._cw.vreg.schema, self._cw.lang)
+        translations = trmap(self._cw.vreg.config, self._cw.vreg.schema, self._cw.lang)
         try:
             translations = translations[rtype]
         except KeyError:

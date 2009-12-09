@@ -49,7 +49,7 @@ class MassMailingForm(forms.FieldsForm):
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",
                               stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
-    form_renderer_id = id
+    form_renderer_id = __regid__
 
     def form_field_vocabulary(self, field):
         if field.name == 'recipient':
