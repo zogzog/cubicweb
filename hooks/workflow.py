@@ -276,7 +276,7 @@ class CheckInStateChangeAllowed(WorkflowHook):
 
     def __call__(self):
         session = self._cw
-        nocheck = session.transaction_data.setdefault('skip-security', ())
+        nocheck = session.transaction_data.get('skip-security', ())
         if (self.eidfrom, 'in_state', self.eidto) in nocheck:
             # state changed through TrInfo insertion, so we already know it's ok
             return
