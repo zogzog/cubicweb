@@ -360,8 +360,9 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 if not tag in self.etype_get(eschema, rschema, role, tschema):
                     continue
                 rdef = rschema.role_rdef(eschema, tschema, role)
-                if not ((not strict and rdef.has_local_role(permission)) or
-                        rdef.has_perm(cw, permission, fromeid=eid)):
+                if permission is not None and \
+                       not ((not strict and rdef.has_local_role(permission)) or
+                            rdef.has_perm(cw, permission, fromeid=eid)):
                     continue
                 _targetschemas.append(tschema)
             if not _targetschemas:
