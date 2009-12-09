@@ -294,8 +294,7 @@ class EntityCompositeFormRenderer(FormRenderer):
         if form.parent_form is None:
             w(u'<table class="listing">')
             subfields = [field for field in form.forms[0].fields
-                         if self.display_field(form, field)
-                         and field.is_visible()]
+                         if field.is_visible()]
             if subfields:
                 # main form, display table headers
                 w(u'<tr class="header">')
