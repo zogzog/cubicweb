@@ -68,7 +68,7 @@ class LoginController(Controller):
 
     def publish(self, rset=None):
         """log in the instance"""
-        if self._cw.config['auth-mode'] == 'http':
+        if self._cw.vreg.config['auth-mode'] == 'http':
             # HTTP authentication
             raise ExplicitLogin()
         else:

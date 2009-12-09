@@ -255,8 +255,8 @@ class RelatedView(EntityView):
         # nb: rset retreived using entity.related with limit + 1 if any
         # because of that, we known that rset.printable_rql() will return
         # rql with no limit set anyway (since it's handled manually)
-        if 'dispctrl' in self.extra_kwargs:
-            limit = self.extra_kwargs['dispctrl'].get('limit')
+        if 'dispctrl' in self.cw_extra_kwargs:
+            limit = self.cw_extra_kwargs['dispctrl'].get('limit')
         else:
             limit = None
         if limit is None or self.cw_rset.rowcount <= limit:
