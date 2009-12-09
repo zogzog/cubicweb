@@ -11,7 +11,7 @@ from datetime import datetime
 
 from cubicweb import RepositoryError, ValidationError
 from cubicweb.interfaces import IWorkflowable
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.server import hook
 from cubicweb.entities.wfobjs import WorkflowTransition
 
@@ -143,7 +143,7 @@ class WorkflowHook(hook.Hook):
 
 class SetInitialStateHook(WorkflowHook):
     __regid__ = 'wfsetinitial'
-    __select__ = WorkflowHook.__select__ & entity_implements(IWorkflowable)
+    __select__ = WorkflowHook.__select__ & implements(IWorkflowable)
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -167,7 +167,7 @@ class FireTransitionHook(WorkflowHook):
     * by_transition or to_state (managers only) inlined relation is set
     """
     __regid__ = 'wffiretransition'
-    __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
+    __select__ = WorkflowHook.__select__ & implements('TrInfo')
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -254,7 +254,7 @@ class FireTransitionHook(WorkflowHook):
 class FiredTransitionHook(WorkflowHook):
     """change related entity state"""
     __regid__ = 'wffiretransition'
-    __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
+    __select__ = WorkflowHook.__select__ & implements('TrInfo')
     events = ('after_add_entity',)
 
     def __call__(self):

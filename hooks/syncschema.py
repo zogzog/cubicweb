@@ -19,7 +19,7 @@ from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 from logilab.common.decorators import clear_cache
 
 from cubicweb import ValidationError, RepositoryError
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -765,7 +765,7 @@ class DelCWETypeHook(SyncSchemaHook):
     * instantiate an operation to delete the entity type on commit
     """
     __regid__ = 'syncdelcwetype'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWEType')
+    __select__ = SyncSchemaHook.__select__ & implements('CWEType')
     events = ('before_delete_entity',)
 
     def __call__(self):
@@ -866,7 +866,7 @@ class DelCWRTypeHook(SyncSchemaHook):
     * instantiate an operation to delete the relation type on commit
     """
     __regid__ = 'syncdelcwrtype'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWRType')
+    __select__ = SyncSchemaHook.__select__ & implements('CWRType')
     events = ('before_delete_entity',)
 
     def __call__(self):
@@ -999,7 +999,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
 
 class AfterAddCWAttributeHook(SyncSchemaHook):
     __regid__ = 'syncaddcwattribute'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWAttribute')
+    __select__ = SyncSchemaHook.__select__ & implements('CWAttribute')
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -1008,7 +1008,7 @@ class AfterAddCWAttributeHook(SyncSchemaHook):
 
 class AfterAddCWRelationHook(AfterAddCWAttributeHook):
     __regid__ = 'syncaddcwrelation'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWRelation')
+    __select__ = SyncSchemaHook.__select__ & implements('CWRelation')
 
     def __call__(self):
         SourceDbCWRelationAdd(self._cw, entity=self.entity)
@@ -1016,7 +1016,7 @@ class AfterAddCWRelationHook(AfterAddCWAttributeHook):
 
 class AfterUpdateCWRDefHook(SyncSchemaHook):
     __regid__ = 'syncaddcwattribute'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWAttribute',
+    __select__ = SyncSchemaHook.__select__ & implements('CWAttribute',
                                                                'CWRelation')
     events = ('after_update_entity',)
 
@@ -1046,7 +1046,7 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
 
 class AfterAddCWConstraintHook(SyncSchemaHook):
     __regid__ = 'syncaddcwconstraint'
-    __select__ = SyncSchemaHook.__select__ & entity_implements('CWConstraint')
+    __select__ = SyncSchemaHook.__select__ & implements('CWConstraint')
     events = ('after_add_entity', 'after_update_entity')
 
     def __call__(self):

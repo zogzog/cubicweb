@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.textutils import normalize_text
 
 from cubicweb import RegistryException
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 
@@ -37,7 +37,7 @@ class NotificationHook(hook.Hook):
 class StatusChangeHook(NotificationHook):
     """notify when a workflowable entity has its state modified"""
     __regid__ = 'notifystatuschange'
-    __select__ = NotificationHook.__select__ & entity_implements('TrInfo')
+    __select__ = NotificationHook.__select__ & implements('TrInfo')
     events = ('after_add_entity',)
 
     def __call__(self):

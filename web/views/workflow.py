@@ -17,7 +17,7 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                entity_implements, score_entity)
+                                implements, score_entity)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -80,7 +80,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
 
     def get_form(self, entity, transition, **kwargs):
         # XXX used to specify both rset/row/col and entity in case implements
-        # selector (and not entity_implements) is used on custom form
+        # selector (and not implements) is used on custom form
         form = self._cw.vreg['forms'].select(
             'changestate', self._cw, entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity), **kwargs)
@@ -233,7 +233,7 @@ def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
 
 
 class TransitionEditionForm(autoform.AutomaticEntityForm):
-    __select__ = entity_implements('Transition')
+    __select__ = implements('Transition')
 
     def workflow_states_for_relation(self, targetrelation):
         eids = self.edited_entity.linked_to('transition_of', 'subject')
@@ -254,7 +254,7 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
 
 
 class StateEditionForm(autoform.AutomaticEntityForm):
-    __select__ = entity_implements('State')
+    __select__ = implements('State')
 
     def subject_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():

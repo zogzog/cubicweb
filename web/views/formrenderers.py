@@ -16,7 +16,7 @@ from simplejson import dumps
 
 from cubicweb import tags
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import entity_implements, yes
+from cubicweb.selectors import implements, yes
 from cubicweb.web import eid_param, formwidgets as fwdgs
 
 
@@ -348,7 +348,7 @@ class EntityFormRenderer(BaseFormRenderer):
     """specific renderer for entity edition form (edition)"""
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
-    __select__ = entity_implements('Any') & yes()
+    __select__ = implements('Any') & yes()
 
     _options = FormRenderer._options + ('display_relations_form', 'main_form_title')
     display_relations_form = True

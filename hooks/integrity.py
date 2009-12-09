@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 
@@ -237,7 +237,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
     __regid__ = 'checkownersgroup'
-    __select__ = IntegrityHook.__select__ & entity_implements('CWGroup')
+    __select__ = IntegrityHook.__select__ & implements('CWGroup')
     events = ('before_delete_entity', 'before_update_entity')
 
     def __call__(self):
@@ -273,7 +273,7 @@ class TidyHtmlFields(UserIntegrityHook):
 class StripCWUserLoginHook(IntegrityHook):
     """ensure user logins are stripped"""
     __regid__ = 'stripuserlogin'
-    __select__ = IntegrityHook.__select__ & entity_implements('CWUser')
+    __select__ = IntegrityHook.__select__ & implements('CWUser')
     events = ('before_add_entity', 'before_update_entity',)
 
     def __call__(self):

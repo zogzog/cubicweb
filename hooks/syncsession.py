@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.server import hook
 
 
@@ -94,7 +94,7 @@ class _DelUserOp(hook.Operation):
 
 class CloseDeletedUserSessionsHook(SyncSessionHook):
     __regid__ = 'closession'
-    __select__ = SyncSessionHook.__select__ & entity_implements('CWUser')
+    __select__ = SyncSessionHook.__select__ & implements('CWUser')
     events = ('after_delete_entity',)
 
     def __call__(self):
@@ -138,7 +138,7 @@ class _AddCWPropertyOp(hook.Operation):
 
 class AddCWPropertyHook(SyncSessionHook):
     __regid__ = 'addcwprop'
-    __select__ = SyncSessionHook.__select__ & entity_implements('CWProperty')
+    __select__ = SyncSessionHook.__select__ & implements('CWProperty')
     events = ('after_add_entity',)
 
     def __call__(self):

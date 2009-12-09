@@ -45,7 +45,7 @@ from logilab.common.logging_ext import set_log_methods
 
 from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, match_search_state,
-                                entity_implements)
+                                implements)
 from cubicweb.appobject import AppObject
 
 
@@ -186,7 +186,7 @@ class Hook(AppObject):
                 if ertype.islower():
                     rtypes.append(ertype)
                 else:
-                    cls.__select__ = cls.__select__ & entity_implements(ertype)
+                    cls.__select__ = cls.__select__ & implements(ertype)
             if rtypes:
                 cls.__select__ = cls.__select__ & match_rtype(*rtypes)
         return cls

@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from cubicweb.selectors import entity_implements
+from cubicweb.selectors import implements
 from cubicweb.server import hook
 from cubicweb.server.repository import FTIndexEntityOp
 
@@ -136,7 +136,7 @@ class SyncCompositeOwner(MetaDataHook):
 class FixUserOwnershipHook(MetaDataHook):
     """when a user has been created, add owned_by relation on itself"""
     __regid__ = 'fixuserowner'
-    __select__ = MetaDataHook.__select__ & entity_implements('CWUser')
+    __select__ = MetaDataHook.__select__ & implements('CWUser')
     events = ('after_add_entity',)
 
     def __call__(self):
