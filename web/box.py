@@ -186,7 +186,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         args = {role[0] : entity.eid, target[0] : etarget.eid}
         url = self.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
-        label = u'[<a href="%s">%s</a>] %s' % (url, label,
+        label = u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
                                                etarget.view('incontext'))
         return RawBoxItem(label, liclass=u'invisible')
 
