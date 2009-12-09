@@ -378,13 +378,13 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users',)))
 
     def test_perms_synchronization_2(self):
-        schema = self.repo.schema['in_group']
+        schema = self.repo.schema['in_group'].rdefs[('CWUser', 'CWGroup')]
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
-        self.execute('DELETE X read_permission Y WHERE X is CWRType, X name "in_group", Y name "guests"')
+        self.execute('DELETE X read_permission Y WHERE X relation_type RT, RT name "in_group", Y name "guests"')
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
         self.commit()
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
-        self.execute('SET X read_permission Y WHERE X is CWRType, X name "in_group", Y name "guests"')
+        self.execute('SET X read_permission Y WHERE X relation_type RT, RT name "in_group", Y name "guests"')
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
         self.commit()
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
