@@ -368,7 +368,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 continue
             targetschemas = _targetschemas
             if permission is not None:
-                rdef = eschema.rdef(rschema, targettype=targetschemas[0])
+                rdef = eschema.rdef(rschema, role=role, targettype=targetschemas[0])
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
                 # created...
