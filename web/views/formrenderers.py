@@ -362,7 +362,7 @@ class EntityFormRenderer(BaseFormRenderer):
         attrs_fs_label = ''
         if self.main_form_title:
             attrs_fs_label += ('<div class="iformTitle"><span>%s</span></div>'
-                               % self.req._(self.main_form_title))
+                               % self._cw._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 

@@ -166,7 +166,7 @@ class EditController(ViewController):
             toinsert = self._cw.list_form_param('__insert', formparams, pop=True)
             self.insert_relations(parse_relations_descr(toinsert))
         if is_main_entity: # only execute linkto for the main entity
-            self.execute_linkto(eid)
+            self.execute_linkto(entity.eid)
         return eid
 
     def handle_formfield(self, form, field, entity, rqlquery):

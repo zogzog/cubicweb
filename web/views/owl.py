@@ -191,7 +191,7 @@ class OWLABOXItemView(EntityView):
                 continue
             for tschema in targetschemas:
                 rdef = rschema.role_rdef(eschema, tschema, role)
-                if rdef.may_have_permission('read', self.req):
+                if rdef.may_have_permission('read', self._cw):
                     break
             else:
                 # no read perms to any relation of this type. Skip.

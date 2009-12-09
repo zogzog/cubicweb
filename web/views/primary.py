@@ -196,7 +196,7 @@ class PrimaryView(EntityView):
                 # default to 1000 so view boxes occurs after component boxes
                 return x[-1].get('order', 1000)
             # x is a component box
-            return x.propval('order')
+            return x.cw_propval('order')
         return sorted(sideboxes, key=get_order)
 
     def _section_def(self, entity, where):
@@ -255,7 +255,7 @@ class RelatedView(EntityView):
         # nb: rset retreived using entity.related with limit + 1 if any
         # because of that, we known that rset.printable_rql() will return
         # rql with no limit set anyway (since it's handled manually)
-        if 'dispctrl' in self.extra_kwargs:
+        if 'dispctrl' in self.cw_extra_kwargs:
             limit = self.extra_kwargs['dispctrl'].get('limit')
         else:
             limit = None
