@@ -726,7 +726,7 @@ class RQLExpression(object):
     def __cmp__(self, other):
         if hasattr(other, 'expression'):
             return cmp(other.expression, self.expression)
-        return False
+        return -1
 
     def __deepcopy__(self, memo):
         return self.__class__(self.expression, self.mainvars)
