@@ -283,13 +283,26 @@ class RequestSessionBase(object):
     # formating methods #######################################################
 
     def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
-             **kwargs):
-        """shortcut to self.vreg.view method avoiding to pass the request"""
+             initargs=None, **kwargs):
+        """Select object with the given id (`__oid`) then render it.  If the
+        object isn't selectable, try to select fallback object if
+        `__fallback_oid` is specified.
+
+        If specified `initargs` is expected to be a dictionnary containing
+        arguments that should be given to selection (hence to object's __init__
+        as well), but not to render(). Other arbitrary keyword arguments will be
+        given to selection *and* to render(), and so should be handled by
+        object's call or cell_call method..
+        """
+        if initargs is None:
+            initargs = kwargs
+        else:
+            initargs.update(kwargs)
         try:
-            view =  self.vreg[__registry].select(__vid, self, rset=rset, **kwargs)
+            view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
         except RegistryException:
             view =  self.vreg[__registry].select(__fallback_oid, self,
-                                                 rset=rset, **kwargs)
+                                                 rset=rset, **initargs)
         return view.render(**kwargs)
 
     def format_date(self, date, date_format=None, time=False):
