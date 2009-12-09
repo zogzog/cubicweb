@@ -503,7 +503,7 @@ class CubicWebTC(TestCase):
         """call the publish method of the application publisher, expecting to
         get a Redirect exception
         """
-        return self.expect_redirect(lambda x: self.publish(x, path), req)
+        return self.expect_redirect(lambda x: self.app_publish(x, path), req)
 
     def init_authentication(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)

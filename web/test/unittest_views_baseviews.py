@@ -87,10 +87,10 @@ class VidFromRsetTC(CubicWebTC):
 class TableViewTC(CubicWebTC):
 
     def _prepare_entity(self):
-        e = self.add_entity("State", name=u'<toto>', description=u'loo"ong blabla')
-        rset = self.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
-                            {'x': e.eid}, 'x')
         req = self.request()
+        e = req.create_entity("State", name=u'<toto>', description=u'loo"ong blabla')
+        rset = req.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
+                            {'x': e.eid}, 'x')
         view = self.vreg['views'].select('table', req, rset=rset)
         return e, rset, view
 

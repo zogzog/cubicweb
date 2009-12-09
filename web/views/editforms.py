@@ -214,7 +214,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         dispctrl = _pvdc.etype_get(eschema, rschema, role)
         if dispctrl.get('rvid'):
             return dispctrl['rvid']
-        if eschema.cardinality(rschema, role) in '+*':
+        if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
             return self._many_rvid
         return self._one_rvid
 
@@ -280,7 +280,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
             return False
-        if eschema.role_rproperty(role, rschema, 'composite') == role:
+        if eschema.rdef(rschema, role).composite == role:
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)
@@ -560,8 +560,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     @property
     def removejs(self):
         entity = self._entity()
-        card = entity.e_schema.role_rproperty(neg_role(self.role), self.rtype, 'cardinality')
-        card = card[self.role == 'object']
+        card = entity.e_schema.rdef(self.rtype, neg_role(self.role)).role_cardinality(self.role)
         # when one is adding an inline entity for a relation of a single card,
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link

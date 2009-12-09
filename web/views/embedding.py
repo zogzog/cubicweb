@@ -52,7 +52,7 @@ class EmbedController(Controller):
         if 'custom_css' in req.form:
             req.add_css(req.form['custom_css'])
         embedded_url = req.form['url']
-        allowed = self._cw.config['embed-allowed']
+        allowed = self._cw.vreg.config['embed-allowed']
         _ = req._
         if allowed is None or not allowed.match(embedded_url):
             body = '<h2>%s</h2><h3>%s</h3>' % (
@@ -82,7 +82,7 @@ def entity_has_embedable_url(entity):
     url = entity.embeded_url()
     if not url or not url.strip():
         return 0
-    allowed = entity.config['embed-allowed']
+    allowed = entity._cw.vreg.config['embed-allowed']
     if allowed is None or not allowed.match(url):
         return 0
     return 1

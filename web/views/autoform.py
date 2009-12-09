@@ -274,10 +274,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             ttype = ttypes[0].type
             if self.should_inline_relation_form(rschema, ttype, role):
                 formviews = list(self.inline_edition_form_view(rschema, ttype, role))
-                if role == 'subject':
-                    card = rschema.rproperty(entity.e_schema, ttype, 'cardinality')[0]
-                else:
-                    card = rschema.rproperty(ttype, entity.e_schema, 'cardinality')[1]
+                card = rschema.rdef(entity.e_schema, ttype).role_cardinality(role)
                 # there is no related entity and we need at least one: we need to
                 # display one explicit inline-creation view
                 if self.should_display_inline_creation_form(rschema, formviews, card):
@@ -285,7 +282,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 # we can create more than one related entity, we thus display a link
                 # to add new related entities
                 if self.should_display_add_new_relation_link(rschema, formviews, card):
-                    addnewlink = self.vreg['views'].select(
+                    addnewlink = self._cw.vreg['views'].select(
                         'inline-addnew-link', self._cw,
                         etype=ttype, rtype=rschema, role=role,
                         peid=self.edited_entity.eid, pform=self, card=card)

@@ -477,7 +477,7 @@ class EntityFormRenderer(BaseFormRenderer):
                                         formviews[0].rtype, formviews[0].role)
         w(u'<div id="inline%sslot">' % formviews[0].rtype)
         for formview in formviews:
-            w(formview.render(i18nctx=i18nctx, row=formview.row, col=formview.col))
+            w(formview.render(i18nctx=i18nctx, row=formview.cw_row, col=formview.cw_col))
         w(u'</div>')
 
 

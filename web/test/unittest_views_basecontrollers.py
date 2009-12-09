@@ -236,7 +236,7 @@ class EditControllerTC(CubicWebTC):
 
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
-        tmpgroup = self.add_entity('CWGroup', name=u"test")
+        tmpgroup = self.request().create_entity('CWGroup', name=u"test")
         user = self.user()
         req = self.request()
         req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
@@ -330,25 +330,25 @@ class EditControllerTC(CubicWebTC):
         self.assertEquals(params['toto'], 'tutu')
 
     def test_redirect_delete_button(self):
-        eid = self.add_entity('BlogEntry', title=u'hop', content=u'hop').eid
         req = self.request()
+        eid = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         req.form = {'eid': str(eid), '__type:%s'%eid: 'BlogEntry',
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req)
         self.assertEquals(path, 'blogentry')
         self.assertEquals(params, {u'__message': u'entity deleted'})
-        eid = self.add_entity('EmailAddress', address=u'hop@logilab.fr').eid
+        eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         self.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
                      {'x': self.session.user.eid, 'e': eid}, 'x')
         self.commit()
-        req = self.request()
+        req = req
         req.form = {'eid': str(eid), '__type:%s'%eid: 'EmailAddress',
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req)
         self.assertEquals(path, 'cwuser/admin')
         self.assertEquals(params, {u'__message': u'entity deleted'})
-        eid1 = self.add_entity('BlogEntry', title=u'hop', content=u'hop').eid
-        eid2 = self.add_entity('EmailAddress', address=u'hop@logilab.fr').eid
+        eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
+        eid2 = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         req = self.request()
         req.form = {'eid': [str(eid1), str(eid2)],
                     '__type:%s'%eid1: 'BlogEntry',
@@ -482,7 +482,7 @@ class EditControllerTC(CubicWebTC):
         old_skips = p.__class__.skip_copy_for
         p.__class__.skip_copy_for = ()
         try:
-            e = self.add_entity('EmailAddress', address=u'doe@doe.com')
+            e = self.request().create_entity('EmailAddress', address=u'doe@doe.com')
             self.execute('SET P use_email E, P primary_email E WHERE P eid %(p)s, E eid %(e)s',
                          {'p' : p.eid, 'e' : e.eid})
             req = self.request()
@@ -543,8 +543,9 @@ class JSONControllerTC(CubicWebTC):
         return self.vreg['controllers'].select('json', req)
 
     def setup_database(self):
-        self.pytag = self.add_entity('Tag', name=u'python')
-        self.cubicwebtag = self.add_entity('Tag', name=u'cubicweb')
+        req = self.request()
+        self.pytag = req.create_entity('Tag', name=u'python')
+        self.cubicwebtag = req.create_entity('Tag', name=u'cubicweb')
         self.john = self.create_user(u'John')
 
 
