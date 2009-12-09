@@ -65,7 +65,7 @@ class TabsMixin(LazyViewMixin):
 
     @property
     def cookie_name(self):
-        return str('%s_active_tab' % self._cw.config.appid)
+        return str('%s_active_tab' % self._cw.vreg.config.appid)
 
     def active_tab(self, default):
         if 'tab' in self._cw.form:
