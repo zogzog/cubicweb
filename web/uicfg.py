@@ -351,6 +351,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
         else:
             eid = None
             strict = False
+        cw = entity._cw
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             # check category first, potentially lower cost than checking
             # permission which may imply rql queries
@@ -360,13 +361,14 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     continue
                 rdef = rschema.role_rdef(eschema, tschema, role)
                 if not ((not strict and rdef.has_local_role(permission)) or
-                        rdef.has_perm(entity._cw, permission, fromeid=eid)):
+                        rdef.has_perm(cw, permission, fromeid=eid)):
                     continue
                 _targetschemas.append(tschema)
             if not _targetschemas:
                 continue
             targetschemas = _targetschemas
             if permission is not None:
+                rdef = eschema.rdef(rschema, targettype=targetschemas[0])
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
                 # created...
@@ -374,25 +376,25 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.final:
-                    if not eschema.rdef(rschema).has_perm(entity._cw, permission, fromeid=eid):
+                    if not rdef.has_perm(cw, permission, fromeid=eid):
                         continue
                 elif role == 'subject':
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
-                        and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
+                        and rdef.role_cardinality(role) in '1?'
                         and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity._cw, 'delete', fromeid=eid,
-                                                 toeid=entity.related(rschema.type, role)[0][0])):
+                        and not rdef.has_perm(cw, 'delete', fromeid=eid,
+                                              toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
-                        and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
+                        and rdef.role_cardinality(role) in '1?'
                         and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity._cw, 'delete', toeid=eid,
-                                                 fromeid=entity.related(rschema.type, role)[0][0])):
+                        and not rdef.has_perm(cw, 'delete', toeid=eid,
+                                              fromeid=entity.related(rschema.type, role)[0][0])):
                         continue
             yield (rschema, targetschemas, role)
 

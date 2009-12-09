@@ -112,7 +112,7 @@ class _ValueGenerator(object):
         attrlength = get_max_length(self.e_schema, attrname)
         num_len = numlen(index)
         if num_len >= attrlength:
-            ascii = self.e_schema.rproperty(attrname, 'internationalizable')
+            ascii = self.e_schema.rdef(attrname).internationalizable
             return ('&'+decompose_b26(index, ascii))[:attrlength]
         # always use plain text when no format is specified
         attrprefix = attrname[:max(attrlength-num_len-1, 0)]
