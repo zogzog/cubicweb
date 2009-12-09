@@ -187,9 +187,9 @@ class UserGroupHooksTC(CubicWebTC):
     def test_user_synchronization(self):
         self.create_user('toto', password='hop', commit=False)
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, u'toto', 'hop')
+                          self.repo.connect, u'toto', password='hop')
         self.commit()
-        cnxid = self.repo.connect(u'toto', 'hop')
+        cnxid = self.repo.connect(u'toto', password='hop')
         self.failIfEqual(cnxid, self.session.id)
         self.execute('DELETE CWUser X WHERE X login "toto"')
         self.repo.execute(cnxid, 'State X')
