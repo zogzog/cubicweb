@@ -420,7 +420,7 @@ class RelationFacet(VocabularyFacet):
                         continue
                 elif not rdef.object in possibletypes:
                     continue
-            if rdef.role_cardinality(role) in '+*':
+            if rdef.role_cardinality(self.role) in '+*':
                 return True
         return False
 

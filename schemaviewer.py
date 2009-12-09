@@ -203,7 +203,7 @@ class SchemaViewer(object):
                     done.add((objtype, subjtype))
                 data.append(Link(self.eschema_link_url(schema[subjtype]), subjtype))
                 data.append(Link(self.eschema_link_url(schema[objtype]), objtype))
-                rdef = rschema.rdef(subjtype, objtypep)
+                rdef = rschema.rdef(subjtype, objtype)
                 for prop in properties:
                     val = getattr(rdef, prop)
                     if val is None:

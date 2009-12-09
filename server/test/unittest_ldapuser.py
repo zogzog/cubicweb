@@ -23,7 +23,7 @@ else:
     ADIM = 'adimascio'
 
 
-def nopwd_authenticate(self, session, login, upassword):
+def nopwd_authenticate(self, session, login, password):
     """used to monkey patch the source to get successful authentication without
     upassword checking
     """
@@ -162,7 +162,7 @@ class LDAPUserSourceTC(CubicWebTC):
         syt = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
         self.assertEquals([g.name for g in syt.in_group], ['managers', 'users'])
         self.patch_authenticate()
-        cnx = self.login(SYT, 'dummypassword')
+        cnx = self.login(SYT, password='dummypassword')
         cu = cnx.cursor()
         adim = cu.execute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
         adim.fire_transition('deactivate')
@@ -183,7 +183,7 @@ class LDAPUserSourceTC(CubicWebTC):
             self.restore_connection()
             adim = self.sexecute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
             adim.fire_transition('activate')
-            self.execute('DELETE X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
+            self.sexecute('DELETE X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
 
     def test_same_column_names(self):
         self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"')
@@ -193,8 +193,9 @@ class LDAPUserSourceTC(CubicWebTC):
         self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
-        self.add_entity('CWGroup', name=u'bougloup1', req=self.session)
-        self.add_entity('CWGroup', name=u'bougloup2', req=self.session)
+        self.session.set_pool()
+        self.session.create_entity('CWGroup', name=u'bougloup1')
+        self.session.create_entity('CWGroup', name=u'bougloup2')
         self.sexecute('SET U in_group G WHERE G name ~= "bougloup%", U login "admin"')
         self.sexecute('SET U in_group G WHERE G name = "bougloup1", U login %(syt)s', {'syt': SYT})
         rset = self.sexecute('Any L,SN ORDERBY L WHERE X in_state S, S name SN, X login L, EXISTS(X in_group G, G name ~= "bougloup%")')

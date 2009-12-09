@@ -194,7 +194,7 @@ class ChangeLogView(StartupView):
         restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
         w = restdata.append
         today = date.today()
-        for fpath in self._cw.config.locate_all_files(rid):
+        for fpath in self._cw.vreg.config.locate_all_files(rid):
             cl = ChangeLog(fpath)
             encoding = 'utf-8'
             # additional content may be found in title

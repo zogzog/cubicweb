@@ -542,11 +542,12 @@ class Repository(object):
         # use an internal connection
         session = self.internal_session()
         # try to get a user object
+        cnxprops = kwargs.pop('cnxprops', None)
         try:
             user = self.authenticate_user(session, login, **kwargs)
         finally:
             session.close()
-        session = Session(user, self, kwargs.get('cnxprops'))
+        session = Session(user, self, cnxprops)
         user._cw = user.cw_rset.req = session
         user.clear_related_cache()
         self._sessions[session.id] = session

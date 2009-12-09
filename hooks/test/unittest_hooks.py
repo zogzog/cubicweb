@@ -441,7 +441,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.failIf(self.index_exists('Workflow', 'name'))
         finally:
             self.execute('SET X indexed TRUE WHERE X relation_type R, R name "name"')
-            self.failIf(self.schema['name'].rproperty('Workflow', 'String').indexed)
+            self.failIf(self.schema['name'].rdef('Workflow', 'String').indexed)
             self.failIf(self.index_exists('Workflow', 'name'))
             self.commit()
             self.failUnless(self.schema['name'].rdef('Workflow', 'String').indexed)
