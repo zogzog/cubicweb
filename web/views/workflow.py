@@ -65,7 +65,6 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         entity = self.cw_rset.get_entity(row, col)
         transition = self._cw.entity_from_eid(self._cw.form['treid'])
         form = self.get_form(entity, transition)
-        self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (self._cw._(transition.name),
                                       entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
