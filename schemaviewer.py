@@ -9,7 +9,9 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.ureports import Section, Title, Table, Link, Span, Text
+
 from yams.schema2dot import CARD_MAP
+from yams.schema import RelationDefinitionSchema
 
 I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
 
@@ -185,7 +187,7 @@ class SchemaViewer(object):
         rschema_objects = rschema.objects()
         if rschema_objects:
             # might be empty
-            properties = [p for p in rschema.rproperty_defs(rschema_objects[0])
+            properties = [p for p in RelationDefinitionSchema.rproperty_defs(rschema_objects[0])
                           if not p in ('cardinality', 'composite', 'eid')]
         else:
             properties = []
@@ -201,8 +203,9 @@ class SchemaViewer(object):
                     done.add((objtype, subjtype))
                 data.append(Link(self.eschema_link_url(schema[subjtype]), subjtype))
                 data.append(Link(self.eschema_link_url(schema[objtype]), objtype))
+                rdef = rschema.rdef(subjtype, objtypep)
                 for prop in properties:
-                    val = rschema.rproperty(subjtype, objtype, prop)
+                    val = getattr(rdef, prop)
                     if val is None:
                         val = ''
                     elif isinstance(val, (list, tuple)):

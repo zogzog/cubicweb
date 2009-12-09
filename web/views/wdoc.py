@@ -172,9 +172,9 @@ class InlineHelpImageView(StartupView):
     def call(self):
         fid = self._cw.form['fid']
         for lang in chain((self._cw.lang, self._cw.vreg.property_value('ui.language')),
-                          self._cw.config.available_languages()):
+                          self._cw.vreg.config.available_languages()):
             rid = join('images', '%s_%s.png' % (fid, lang))
-            resourcedir = self._cw.config.locate_doc_file(rid)
+            resourcedir = self._cw.vreg.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:

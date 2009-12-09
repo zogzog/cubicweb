@@ -63,7 +63,7 @@ class ExplicitViewsTest(CubicWebTC):
 
     def test_unrelateddivs(self):
         rset = self.execute('Any X WHERE X is CWUser, X login "admin"')
-        group = self.add_entity('CWGroup', name=u'R&D')
+        group = self.request().create_entity('CWGroup', name=u'R&D')
         req = self.request(relation='in_group_subject')
         self.view('unrelateddivs', rset, req)
 

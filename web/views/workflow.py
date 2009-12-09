@@ -195,7 +195,7 @@ class WorkflowPrimaryView(primary.PrimaryView):
         self.w(entity.view('reledit', rtype='description'))
         self.w(u'<img src="%s" alt="%s"/>' % (
             xml_escape(entity.absolute_url(vid='wfgraph')),
-            xml_escape(self.req._('graphical workflow for %s') % entity.name)))
+            xml_escape(self._cw._('graphical workflow for %s') % entity.name)))
 
 
 class CellView(view.EntityView):
@@ -238,7 +238,7 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
     def workflow_states_for_relation(self, targetrelation):
         eids = self.edited_entity.linked_to('transition_of', 'subject')
         if eids:
-            return workflow_items_for_relation(self.req, eids[0], 'state_of',
+            return workflow_items_for_relation(self._cw, eids[0], 'state_of',
                                                targetrelation)
         return []
 
@@ -260,7 +260,7 @@ class StateEditionForm(autoform.AutomaticEntityForm):
         if not self.edited_entity.has_eid():
             eids = self.edited_entity.linked_to('state_of', 'subject')
             if eids:
-                return workflow_items_for_relation(self.req, eids[0], 'transition_of',
+                return workflow_items_for_relation(self._cw, eids[0], 'transition_of',
                                                    'allowed_transition')
         return []
 

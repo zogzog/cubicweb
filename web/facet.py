@@ -411,20 +411,16 @@ class RelationFacet(VocabularyFacet):
     @cached
     def support_and(self):
         rschema = self._cw.vreg.schema.rschema(self.rtype)
-        if self.role == 'subject':
-            cardidx = 0
-        else:
-            cardidx = 1
         # XXX when called via ajax, no rset to compute possible types
         possibletypes = self.cw_rset and self.cw_rset.column_types(0)
-        for subjtype, objtype in rschema.iter_rdefs():
+        for rdef in rschema.rdefs.itervalues():
             if possibletypes is not None:
                 if self.role == 'subject':
-                    if not subjtype in possibletypes:
+                    if not rdef.subject in possibletypes:
                         continue
-                elif not objtype in possibletypes:
+                elif not rdef.object in possibletypes:
                     continue
-            if rschema.rproperty(subjtype, objtype, 'cardinality')[cardidx] in '+*':
+            if rdef.role_cardinality(role) in '+*':
                 return True
         return False
 
