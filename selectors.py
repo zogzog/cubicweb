@@ -938,7 +938,7 @@ class score_entity(EntitySelector):
 
 entity_implements = class_renamed('entity_implements', implements)
 
-class but_etype(EntitySelector):
+class _but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.
 
     See `EntitySelector` documentation for behaviour when row is not specified.
@@ -954,6 +954,4 @@ class but_etype(EntitySelector):
             return 0
         return 1
 
-but_etype = class_renamed('but_etype', but_etype, 'use ~implements(*etypes) instead')
-
-
+but_etype = class_renamed('but_etype', _but_etype, 'use ~implements(*etypes) instead')
