@@ -45,6 +45,7 @@ __docformat__ = "restructuredtext en"
 import logging
 from warnings import warn, filterwarnings
 
+from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 
@@ -177,7 +178,9 @@ class EClassSelector(Selector):
     """abstract class for selectors working on the entity classes of the result
     set. Its __call__ method has the following behaviour:
 
-    * if row is specified, return the score returned by the score_class method
+    * if 'entity' find in kwargs, return the score returned by the score_class
+      method for this entity's class
+    * elif row is specified, return the score returned by the score_class method
       called with the entity class found in the specified cell
     * else return the sum of score returned by the score_class method for each
       entity type found in the specified column, unless:
@@ -192,6 +195,8 @@ class EClassSelector(Selector):
 
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        if kwargs.get('entity'):
+            return self.score_class(kwargs['entity'].__class__, req)
         if not rset:
             return 0
         score = 0
@@ -626,25 +631,6 @@ class specified_etype_implements(implements):
         return self.score_class(req.vreg['etypes'].etype_class(etype), req)
 
 
-class entity_implements(ImplementsMixIn, EntitySelector):
-    """accept if entity instances found in the result set implements at least one
-    of the interfaces given as argument. Returned score is the number of
-    implemented interfaces.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-
-    :param *expected_ifaces: expected interfaces. An interface may be a class
-                             or an entity type (e.g. `basestring`) in which case
-                             the associated class will be searched in the
-                             registry (at selection time)
-
-    note: when interface is an entity class, the score will reflect class
-          proximity so the most specific object'll be selected
-    """
-    def score_entity(self, entity):
-        return self.score_interfaces(entity._cw, entity, entity.__class__)
-
-
 class relation_possible(EClassSelector):
     """accept if entity class found in the result set support the relation.
 
@@ -928,23 +914,6 @@ class rql_condition(EntitySelector):
         return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
 
 
-class but_etype(EntitySelector):
-    """accept if the given entity types are not found in the result set.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-
-    :param *etypes: entity types (`basestring`) which should be refused
-    """
-    def __init__(self, *etypes):
-        super(but_etype, self).__init__()
-        self.but_etypes = etypes
-
-    def score(self, req, rset, row, col):
-        if rset.description[row][col] in self.but_etypes:
-            return 0
-        return 1
-
-
 class score_entity(EntitySelector):
     """accept if some arbitrary function return a positive score for an entity
     found in the result set.
@@ -964,3 +933,27 @@ class score_entity(EntitySelector):
                 return score
             return 1
         self.score_entity = intscore
+
+## deprecated stuff ############################################################
+
+entity_implements = class_renamed('entity_implements', implements)
+
+class but_etype(EntitySelector):
+    """accept if the given entity types are not found in the result set.
+
+    See `EntitySelector` documentation for behaviour when row is not specified.
+
+    :param *etypes: entity types (`basestring`) which should be refused
+    """
+    def __init__(self, *etypes):
+        super(but_etype, self).__init__()
+        self.but_etypes = etypes
+
+    def score(self, req, rset, row, col):
+        if rset.description[row][col] in self.but_etypes:
+            return 0
+        return 1
+
+but_etype = class_renamed('but_etype', but_etype, 'use ~implements(*etypes) instead')
+
+
