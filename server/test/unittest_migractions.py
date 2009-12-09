@@ -55,7 +55,7 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
-        self.add_entity('Note')
+        self.request().create_entity('Note')
         self.commit()
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
@@ -68,7 +68,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(note.whatever, 2)
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
-        whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')
+        whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
         for k, v in orderdict.iteritems():
             if v >= whateverorder:
                 orderdict[k] = v+1
@@ -194,7 +194,7 @@ class MigrationCommandsTC(CubicWebTC):
                           ('Personne',))
         self.assertEquals(self.schema['concerne2'].objects(),
                           ('Affaire', ))
-        self.assertEquals(self.schema['concerne2'].rproperty('Personne', 'Affaire', 'cardinality'),
+        self.assertEquals(self.schema['concerne2'].rdef('Personne', 'Affaire').cardinality,
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
         self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
@@ -254,12 +254,12 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_change_relation_props_non_final(self):
         rschema = self.schema['concerne']
-        card = rschema.rproperty('Affaire', 'Societe', 'cardinality')
+        card = rschema.rdef('Affaire', 'Societe').cardinality
         self.assertEquals(card, '**')
         try:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
                                               cardinality='?*')
-            card = rschema.rproperty('Affaire', 'Societe', 'cardinality')
+            card = rschema.rdef('Affaire', 'Societe').cardinality
             self.assertEquals(card, '?*')
         finally:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
@@ -267,12 +267,12 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_change_relation_props_final(self):
         rschema = self.schema['adel']
-        card = rschema.rproperty('Personne', 'String', 'fulltextindexed')
+        card = rschema.rdef('Personne', 'String').fulltextindexed
         self.assertEquals(card, False)
         try:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=True)
-            card = rschema.rproperty('Personne', 'String', 'fulltextindexed')
+            card = rschema.rdef('Personne', 'String').fulltextindexed
             self.assertEquals(card, True)
         finally:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
@@ -280,13 +280,14 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
+        cursor.set_pool()
         nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
-        migrschema['titre']._rproperties[('Personne', 'String')]['order'] = 7
-        migrschema['adel']._rproperties[('Personne', 'String')]['order'] = 6
-        migrschema['ass']._rproperties[('Personne', 'String')]['order'] = 5
+        migrschema['titre'].rdefs[('Personne', 'String')].order = 7
+        migrschema['adel'].rdefs[('Personne', 'String')].order = 6
+        migrschema['ass'].rdefs[('Personne', 'String')].order = 5
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title'
-        migrschema['titre']._rproperties[('Personne', 'String')]['description'] = 'title for this person'
+        migrschema['titre'].rdefs[('Personne', 'String')]['description'] = 'title for this person'
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -386,7 +387,7 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
-        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also']._rproperties.keys()),
+        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.keys()),
                           sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                   ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))
@@ -401,7 +402,7 @@ class MigrationCommandsTC(CubicWebTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
-                self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+                self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
                                           ('Bookmark', 'Note'),
@@ -424,7 +425,7 @@ class MigrationCommandsTC(CubicWebTC):
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
-            self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+            self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
                               sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                       ('Bookmark', 'Bookmark'),
                                       ('Bookmark', 'Note'),
