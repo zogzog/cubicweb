@@ -287,7 +287,7 @@ class MigrationCommandsTC(CubicWebTC):
         migrschema['ass'].rdefs[('Personne', 'String')].order = 5
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title'
-        migrschema['titre'].rdefs[('Personne', 'String')]['description'] = 'title for this person'
+        migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
