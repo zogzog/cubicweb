@@ -361,7 +361,7 @@ class RestrictedSchemaVisitorMixIn(object):
                 and rschema.may_have_permission('read', self._cw))
 
     def should_display_attr(self, eschema, rschema):
-        return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(rschema)
+        return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(eschema, rschema)
                 and eschema.rdef(rschema).may_have_permission('read', self._cw))
 
 
