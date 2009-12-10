@@ -246,7 +246,7 @@ class PropagateSubjectRelationHook(Hook):
     def __call__(self):
         for eid in (self.eidfrom, self.eidto):
             etype = self._cw.describe(eid)[0]
-            if not self.schema.eschema(etype).has_subject_relation(self.main_rtype):
+            if not self._cw.vreg.schema.eschema(etype).has_subject_relation(self.main_rtype):
                 return
         if self.rtype in self.subject_relations:
             meid, seid = self.eidfrom, self.eidto
@@ -269,7 +269,7 @@ class PropagateSubjectRelationAddHook(Hook):
     object_relations = None
 
     def __call__(self):
-        eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels:
@@ -293,7 +293,7 @@ class PropagateSubjectRelationDelHook(Hook):
     object_relations = None
 
     def __call__(self):
-        eschema = self.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.unsafe_execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels:

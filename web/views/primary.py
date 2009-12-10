@@ -95,7 +95,7 @@ class PrimaryView(EntityView):
             if self.is_primary():
                 self.w(u'<h1>%s</h1>' % title)
             else:
-                atitle = self.req._('follow this link for more information on this %s') % entity.dc_type()
+                atitle = self._cw._('follow this link for more information on this %s') % entity.dc_type()
                 self.w(u'<h4><a href="%s" title="%s">%s</a></h4>'
                        % (entity.absolute_url(), atitle, title))
 
@@ -244,7 +244,7 @@ class PrimaryView(EntityView):
         if dispctrl.get('label'):
             label = self._cw._(dispctrl.get('label'))
         else:
-            label = display_name(self.req, rschema.type, role)
+            label = display_name(self._cw, rschema.type, role)
         self.field(label, value, show_label=showlabel, tr=False, table=table)
 
 
