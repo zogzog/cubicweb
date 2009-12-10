@@ -59,9 +59,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except form.FieldNotFound:
-            if eschema is None or not name in cls_or_self._cw.vreg.schema:
+            if eschema is None or not name in eschema.schema:
                 raise
-            rschema = cls_or_self._cw.vreg.schema.rschema(name)
+            rschema = eschema.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
             fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role,
@@ -352,11 +352,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                                             peid=self.edited_entity.eid, pform=self)
 
 
-def etype_relation_field(etype, rtype, role='subject'):
-    eschema = AutomaticEntityForm.schema.eschema(etype)
-    return AutomaticEntityForm.field_by_name(rtype, role, eschema)
-
-
 ## default form ui configuration ##############################################
 
 _afs = uicfg.autoform_section
@@ -406,3 +401,10 @@ uicfg.autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
                                           {'widget': fwdgs.TextInput})
 uicfg.autoform_field_kwargs.tag_subject_of(('TrInfo', 'wf_info_for', '*'),
                                            {'widget': fwdgs.HiddenInput})
+
+def registration_callback(vreg):
+    global etype_relation_field
+
+    def etype_relation_field(etype, rtype, role='subject'):
+        eschema = vreg.schema.eschema(etype)
+        return AutomaticEntityForm.field_by_name(rtype, role, eschema)
