@@ -946,7 +946,7 @@ class _but_etype(EntitySelector):
     :param *etypes: entity types (`basestring`) which should be refused
     """
     def __init__(self, *etypes):
-        super(but_etype, self).__init__()
+        super(_but_etype, self).__init__()
         self.but_etypes = etypes
 
     def score(self, req, rset, row, col):
