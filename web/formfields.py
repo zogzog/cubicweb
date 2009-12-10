@@ -565,6 +565,15 @@ class RelationField(Field):
     def format_single_value(self, req, value):
         return value
 
+    def process_form_value(self, form):
+        """process posted form and return correctly typed value"""
+        widget = self.get_widget(form)
+        value = widget.process_field_data(form, self)
+        if value is None:
+            return ()
+        elif not isinstance(value, list):
+            return (value,)
+        return value
 
 class CompoundField(Field):
     def __init__(self, fields, *args, **kwargs):

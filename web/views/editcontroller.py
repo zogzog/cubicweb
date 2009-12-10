@@ -226,14 +226,17 @@ class EditController(ViewController):
     def handle_inlined_relation(self, form, field, entity, rqlquery):
         """handle edition for the (rschema, x) relation of the given entity
         """
-        origvalues = set(row[0] for row in entity.related(field.name, field.role))
+        if entity.has_eid():
+            origvalues = set(row[0] for row in entity.related(field.name, field.role))
+        else:
+            origvalues = set()
         values  = self._relation_values(form, field, entity)
         if values is None or values == origvalues:
             return # not edited / not modified / to do later
         attr = field.name
         if values:
             rqlquery.kwargs[attr] = iter(values).next()
-            rqlquery.edition.append('X %s %s' % (attr, attr.upper()))
+            rqlquery.edited.append('X %s %s' % (attr, attr.upper()))
             rqlquery.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
         elif entity.has_eid():
             self.relations_rql += self.handle_relation(form, field, entity)
@@ -241,7 +244,10 @@ class EditController(ViewController):
     def handle_relation(self, form, field, entity, late=False):
         """handle edition for the (rschema, x) relation of the given entity
         """
-        origvalues = set(row[0] for row in entity.related(field.name, field.role))
+        if entity.has_eid():
+            origvalues = set(row[0] for row in entity.related(field.name, field.role))
+        else:
+            origvalues = set()
         values  = self._relation_values(form, field, entity, late)
         if values is None or values == origvalues:
             return # not edited / not modified / to do later

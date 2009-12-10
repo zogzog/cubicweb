@@ -408,3 +408,5 @@ def registration_callback(vreg):
     def etype_relation_field(etype, rtype, role='subject'):
         eschema = vreg.schema.eschema(etype)
         return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+
+    vreg.register_all(globals().values(), __name__)
