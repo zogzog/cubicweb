@@ -19,7 +19,7 @@ if applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
         rschema = fsschema.rschema(rtype)
         for query, args in ss.rdef2rql(rschema, subjtype, objtype, groupmap=None):
             rql(query, args, ask_confirm=False)
-        checkpoint(ask_confirm=False)
+        commit(ask_confirm=False)
 
     config.disabled_hooks_categories.add('integrity')
     for rschema in repo.schema.relations():
