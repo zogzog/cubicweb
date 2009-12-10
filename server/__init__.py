@@ -203,6 +203,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
+    # deactivate every hooks but those responsible to set metadata
+    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
+    oldmode = config.set_hooks_mode(config.DENY_ALL)
+    changes = config.enable_hook_category('metadata')
     paths = [p for p in config.cubes_path() + [config.apphome]
              if exists(join(p, 'migration'))]
     # execute cubicweb's pre<event> script
@@ -212,14 +216,16 @@ def initialize_schema(config, schema, mhandler, event='create'):
         mhandler.exec_event_script('pre%s' % event, path)
     # enter instance'schema into the database
     mhandler.session.set_pool()
-    config.disabled_hooks_categories.add('syncschema')
     serialize_schema(mhandler.session, schema)
-    config.disabled_hooks_categories.remove('syncschema')
     # execute cubicweb's post<event> script
     mhandler.exec_event_script('post%s' % event)
     # execute cubes'post<event> script if any
     for path in reversed(paths):
         mhandler.exec_event_script('post%s' % event, path)
+    # restore hooks config
+    if changes:
+        config.disable_hook_category(changes)
+    config.set_hooks_mode(oldmode)
 
 
 # sqlite'stored procedures have to be registered at connexion opening time
