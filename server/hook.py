@@ -117,9 +117,7 @@ def enabled_category(cls, req, **kwargs):
         config = kwargs['repo'].config
     else:
         config = req.vreg.config
-    if cls.category in config.disabled_hooks_categories:
-        return 0
-    return 1
+    return config.is_hook_activated(cls)
 
 @objectify_selector
 @lltrace

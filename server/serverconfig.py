@@ -190,6 +190,53 @@ and if not set, it will be choosen randomly',
     # hooks activation configuration
     # all hooks should be activated during normal execution
     disabled_hooks_categories = set()
+    enabled_hooks_categories = set()
+    ALLOW_ALL = object()
+    DENY_ALL = object()
+    hooks_mode = ALLOW_ALL
+
+    @classmethod
+    def set_hooks_mode(cls, mode):
+        assert mode is cls.ALLOW_ALL or mode is cls.DENY_ALL
+        oldmode = cls.hooks_mode
+        cls.hooks_mode = mode
+        return oldmode
+
+    @classmethod
+    def disable_hook_category(cls, *categories):
+        changes = set()
+        if cls.hooks_mode is cls.DENY_ALL:
+            for category in categories:
+                if category in cls.enabled_hooks_categories:
+                    cls.enabled_hooks_categories.remove(category)
+                    changes.add(category)
+        else:
+            for category in categories:
+                if category not in cls.disabled_hooks_categories:
+                    cls.disabled_hooks_categories.add(category)
+                    changes.add(category)
+        return changes
+
+    @classmethod
+    def enable_hook_category(cls, *categories):
+        changes = set()
+        if cls.hooks_mode is cls.DENY_ALL:
+            for category in categories:
+                if category not in cls.enabled_hooks_categories:
+                    cls.enabled_hooks_categories.add(category)
+                    changes.add(category)
+        else:
+            for category in categories:
+                if category in cls.disabled_hooks_categories:
+                    cls.disabled_hooks_categories.remove(category)
+                    changes.add(category)
+        return changes
+
+    @classmethod
+    def is_hook_activated(cls, hook):
+        if cls.hooks_mode is cls.DENY_ALL:
+            return hook.category in cls.enabled_hooks_categories
+        return hook.category not in cls.disabled_hooks_categories
 
     # should some hooks be deactivated during [pre|post]create script execution
     free_wheel = False
