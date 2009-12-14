@@ -593,6 +593,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 def sql_schema(driver):
     helper = get_adv_func_helper(driver)
+    tstamp_col_type = helper.TYPE_MAPPING.get('TIMESTAMP', 'TIMESTAMP')
     schema = """
 /* Create the repository's system database */
 
@@ -602,7 +603,7 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   source VARCHAR(64) NOT NULL,
-  mtime TIMESTAMP NOT NULL,
+  mtime %s NOT NULL,
   extid VARCHAR(256)
 );
 CREATE INDEX entities_type_idx ON entities(type);
@@ -613,13 +614,13 @@ CREATE TABLE deleted_entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   source VARCHAR(64) NOT NULL,
-  dtime TIMESTAMP NOT NULL,
+  dtime %s NOT NULL,
   extid VARCHAR(256)
 );
 CREATE INDEX deleted_entities_type_idx ON deleted_entities(type);
 CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime);
 CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid);
-""" % helper.sql_create_sequence('entities_id_seq')
+""" % (helper.sql_create_sequence('entities_id_seq'), tstamp_col_type, tstamp_col_type)
     return schema
 
 
