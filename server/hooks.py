@@ -244,7 +244,8 @@ def uniquecstrcheck_before_modification(session, entity):
     if session.is_super_session:
         return
     eschema = entity.e_schema
-    for attr, val in entity.items():
+    for attr in entity.edited_attributes:
+        val = entity[attr]:
         if val is None:
             continue
         if eschema.subjrels[attr].final and \
@@ -261,7 +262,7 @@ def cstrcheck_after_update_attributes(session, entity):
         return
     schema = session.vreg.schema
     for attr in entity.edited_attributes:
-        if schema.rschema(attr).final:
+        if eschema.subjrels[attr].final:
             constraints = [c for c in entity.e_schema.constraints(attr)
                            if isinstance(c, (RQLConstraint, RQLUniqueConstraint))]
             if constraints:
