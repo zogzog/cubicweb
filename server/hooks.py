@@ -260,7 +260,7 @@ def uniquecstrcheck_before_modification(session, entity):
 def cstrcheck_after_update_attributes(session, entity):
     if session.is_super_session:
         return
-    schema = session.vreg.schema
+    eschema = entity.e_schema
     for attr in entity.edited_attributes:
         if eschema.subjrels[attr].final:
             constraints = [c for c in entity.e_schema.constraints(attr)
