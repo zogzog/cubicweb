@@ -560,6 +560,15 @@ this option is set to yes",
         self.adjust_sys_path()
         self.load_defaults()
         self.translations = {}
+        # don't register ReStructured Text directives by simple import, avoid pb
+        # with eg sphinx.
+        # XXX should be done properly with a function from cw.uicfg
+        try:
+            from cubicweb.ext.rest import cw_rest_init
+        except ImportError:
+            pass
+        else:
+            cw_rest_init()
 
     def adjust_sys_path(self):
         self.cls_adjust_sys_path()
