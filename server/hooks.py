@@ -245,7 +245,7 @@ def uniquecstrcheck_before_modification(session, entity):
         return
     eschema = entity.e_schema
     for attr in entity.edited_attributes:
-        val = entity[attr]:
+        val = entity[attr]
         if val is None:
             continue
         if eschema.subjrels[attr].final and \
