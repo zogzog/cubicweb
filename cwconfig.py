@@ -865,12 +865,12 @@ the repository',
                     self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
-        context = {'__file__': sitefile}
-        execfile(sitefile, context, context)
+        from logilab.common.modutils import load_module_from_file
+        module = load_module_from_file(sitefile)
         self.info('%s loaded', sitefile)
         # cube specific options
-        if context.get('options'):
-            self.register_options(context['options'])
+        if getattr(module, 'options', None):
+            self.register_options(module.options)
             self.load_defaults()
 
     def load_configuration(self):
