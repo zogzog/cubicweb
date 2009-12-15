@@ -41,7 +41,7 @@ class CWService(object, win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
         logger = getLogger('cubicweb.twisted')
-        logger.info('starting %s service' % instance)
+        logger.info('starting %s service' % self.instance)
         try:
             # create the site
             config = cwcfg.config_for(self.instance)
