@@ -995,6 +995,7 @@ class SQLGenerator(object):
             return self.keyword_map[value]()
         if constant.type == 'Boolean':
             value = self.dbms_helper.boolean_value(value)
+        if constant.type == 'Substitute':
             _id = constant.value
             if isinstance(_id, unicode):
                 _id = _id.encode()
