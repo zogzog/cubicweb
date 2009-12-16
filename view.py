@@ -180,7 +180,7 @@ class View(AppObject):
         """
         rset = self.cw_rset
         if rset is None:
-            raise NotImplementedError, self
+            raise NotImplementedError, (self, "an rset is required")
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
         # XXX propagate self.extra_kwars?
         for i in xrange(len(rset)):
