@@ -414,7 +414,7 @@ class BooleanField(Field):
 
     def vocabulary(self, form):
         if self.choices:
-            return self.choices
+            return super(BooleanField, self).vocabulary(form)
         return [(form.req._('yes'), '1'), (form.req._('no'), '')]
 
 
