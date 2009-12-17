@@ -974,10 +974,11 @@ def before_update_eetype(session, entity):
     """check name change, handle final"""
     check_valid_changes(session, entity, ro_attrs=('final',))
     # don't use getattr(entity, attr), we would get the modified value if any
-    oldname, newname = entity_oldnewvalue(entity, 'name')
-    if newname.lower() != oldname.lower():
-        SourceDbCWETypeRename(session, oldname=oldname, newname=newname)
-        MemSchemaCWETypeRename(session, oldname=oldname, newname=newname)
+    if 'name' in entity.edited_attributes:
+        oldname, newname = entity_oldnewvalue(entity, 'name')
+        if newname.lower() != oldname.lower():
+            SourceDbCWETypeRename(session, oldname=oldname, newname=newname)
+            MemSchemaCWETypeRename(session, oldname=oldname, newname=newname)
 
 def before_update_ertype(session, entity):
     """check name change, handle final"""
