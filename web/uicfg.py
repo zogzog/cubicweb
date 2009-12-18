@@ -308,7 +308,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             tag = formtype
             for formtype, section in self.bw_tag_map[tag].iteritems():
                 warn('[3.6] add tag to autoform section by specifying form '
-                     'type and tag. Replace %s by formtype=%s, section=%s'
+                     'type and tag. Replace %s by formtype="%s", section="%s"'
                      % (tag, formtype, section), DeprecationWarning,
                      stacklevel=3)
                 self.tag_relation(key, formtype, section)
