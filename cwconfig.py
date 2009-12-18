@@ -78,10 +78,11 @@ _ = unicode
 import sys
 import os
 import logging
+import tempfile
 from smtplib import SMTP
 from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
-import tempfile
+from warnings import warn
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -480,14 +481,23 @@ this option is set to yes",
                                 (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
-            pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
+            oldpluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
+            pluginfile = join(cls.cube_dir(cube), 'ccplugin.py')
             initfile = join(cls.cube_dir(cube), '__init__.py')
             if exists(pluginfile):
+                try:
+                    __import__('cubes.%s.ccplugin' % cube)
+                    cls.info('loaded cubicweb-ctl plugin from %s', cube)
+                except:
+                    cls.exception('while loading plugin %s', pluginfile)
+            elif exists(oldpluginfile):
+                warn('[3.6] %s: ecplugin module should be renamed to ccplugin' % cube,
+                     DeprecationWarning)
                 try:
                     __import__('cubes.%s.ecplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
                 except:
-                    cls.exception('while loading plugin %s', pluginfile)
+                    cls.exception('while loading plugin %s', oldpluginfile)
             elif exists(initfile):
                 try:
                     __import__('cubes.%s' % cube)
