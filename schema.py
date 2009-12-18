@@ -137,8 +137,9 @@ def guess_rrqlexpr_mainvars(expression):
 
 def split_expression(rqlstring):
     for expr in rqlstring.split(','):
-        for word in expr.split():
-            yield word
+        for noparen in expr.split('('):
+            for word in noparen.split():
+                yield word
 
 def normalize_expression(rqlstring):
     """normalize an rql expression to ease schema synchronization (avoid

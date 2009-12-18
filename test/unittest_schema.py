@@ -22,7 +22,7 @@ from cubicweb.schema import (
     CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
     RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
     ERQLExpression, RRQLExpression,
-    normalize_expression, order_eschemas)
+    normalize_expression, order_eschemas, guess_rrqlexpr_mainvars)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 
 DATADIR = join(dirname(__file__), 'data')
@@ -274,6 +274,11 @@ class NormalizeExpressionTC(TestCase):
     def test(self):
         self.assertEquals(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
                                                'X bla Y, Y blur Z, Z zigoulou X')
+
+class GuessRrqlExprMainVarsTC(TestCase):
+    def test_exists(self):
+        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
+        self.assertEquals(mainvars, 'O')
 
 if __name__ == '__main__':
     unittest_main()
