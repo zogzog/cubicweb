@@ -37,7 +37,7 @@ class CWUser(WorkflowableEntityType):
 
     in_group = SubjectRelation('CWGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
-                               description=_('groups grant __permissions__ to the user'))
+                               description=_('groups grant permissions to the user'))
 
 
 class EmailAddress(EntityType):
