@@ -621,7 +621,12 @@ class specified_etype_implements(implements):
                     req.form['etype'] = etype
                 except KeyError:
                     return 0
-        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        score = self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        if score:
+            eschema = req.vreg.schema.eschema(etype)
+            if eschema.has_local_role('add') or eschema.has_perm(req, 'add'):
+                return score
+        return 0
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):
