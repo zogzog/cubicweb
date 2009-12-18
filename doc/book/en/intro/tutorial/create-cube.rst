@@ -28,6 +28,8 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
 ::
 
+  from yams.buildobjs import EntityType, String, SubjectRelation, Date
+
   class Blog(EntityType):
     title = String(maxsize=50, required=True)
     description = String()
@@ -38,6 +40,8 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
     content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*')
 
+The first step is the import of the EntityType (generic class for entityà and 
+attributes that will be used in both Blog and BlogEntry entities. 
 
 A Blog has a title and a description. The title is a string that is
 required and must be less than 50 characters.  The
@@ -64,8 +68,8 @@ To use this cube as an instance and create a new instance named ``blogdemo``, do
 
   cubicweb-ctl create blog blogdemo
 
-
 This command will create the corresponding database and initialize it.
+
 
 Welcome to your web instance
 -------------------------------
