@@ -448,7 +448,11 @@ class CubicWebTC(TestCase):
     @cached
     def app(self):
         """return a cubicweb publisher"""
-        return application.CubicWebPublisher(self.config, vreg=self.vreg)
+        publisher = application.CubicWebPublisher(self.config, vreg=self.vreg)
+        def raise_error_handler(*args, **kwargs):
+            raise
+        publisher.error_handler = raise_error_handler
+        return publisher
 
     requestcls = fake.FakeRequest
     def request(self, *args, **kwargs):
