@@ -293,14 +293,13 @@ class EntityFieldsForm(FieldsForm):
         """return the key that may be used to store / retreive data about a
         previous post which failed because of a validation error
         """
-        try:
+        if self.force_session_key is not None:
             return self.force_session_key
-        except AttributeError:
-            # XXX if this is a json request, suppose we should redirect to the
-            # entity primary view
-            if self.req.json_request:
-                return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
-            return '%s#%s' % (self.req.url(), self.domid)
+        # XXX if this is a json request, suppose we should redirect to the
+        # entity primary view
+        if self.req.json_request:
+            return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
+        return '%s#%s' % (self.req.url(), self.domid)
 
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
