@@ -133,7 +133,11 @@ class ManageView(StartupView):
             if eschema.final or not eschema.may_have_permission('read', req):
                 continue
             etype = eschema.type
-            label = display_name(req, etype, 'plural')
+            nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
+            if nb > 1:
+                label = display_name(req, etype, 'plural')
+            else:
+                label = display_name(req, etype)
             nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
             url = self._cw.build_url(etype)
             etypelink = u'&#160;<a href="%s">%s</a> (%d)' % (
