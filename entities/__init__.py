@@ -93,8 +93,7 @@ class AnyEntity(Entity):
         # check if entities has internationalizable attributes
         # XXX one is enough or check if all String attributes are internationalizable?
         for rschema, attrschema in self.e_schema.attribute_definitions():
-            if rschema.rproperty(self.e_schema, attrschema,
-                                 'internationalizable'):
+            if rschema.rdef(self.e_schema, attrschema).internationalizable:
                 return self._cw._(self._cw.user.property_value('ui.language'))
         return self._cw._(self._cw.vreg.property_value('ui.language'))
 
