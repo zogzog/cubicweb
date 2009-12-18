@@ -63,7 +63,7 @@ def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
     if skipfirst:
         rowcount -= 1
     if withpb:
-        pb = shellutils.ProgressBar(rowcount)
+        pb = shellutils.ProgressBar(rowcount, 50)
     for urow in ucsvreader(file(filepath), encoding, separator, quote, skipfirst):
         yield urow
         if withpb:
@@ -308,7 +308,7 @@ class CWImportController(object):
                     if err:
                         self.errors[title] = (help, err)
             self.store.checkpoint()
-        self.tell('Import completed: %i entities (%i types), %i relations'
+        self.tell('\nImport completed: %i entities (%i types), %i relations'
                   % (len(self.store.eids), len(self.store.types),
                      len(self.store.relations)))
         nberrors = sum(len(err[1]) for err in self.errors.values())
