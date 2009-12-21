@@ -229,14 +229,6 @@ class FieldsForm(form.Form):
         """return encoding used for the given (text) field"""
         return self._cw.encoding
 
-    def form_field_name(self, field):
-        """return qualified name for the given field"""
-        return field.name
-
-    def form_field_id(self, field):
-        """return dom id for the given field"""
-        return field.id
-
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field. Should be overriden in
         specific forms using fields which requires some vocabulary

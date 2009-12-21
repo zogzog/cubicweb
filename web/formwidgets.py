@@ -59,7 +59,7 @@ class FieldWidget(object):
             values = (values,)
         attrs = dict(self.attrs)
         if self.setdomid:
-            attrs['id'] = form.context[field]['id']
+            attrs['id'] = field.dom_id(form)
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
         return name, values, attrs
@@ -83,7 +83,8 @@ class Input(FieldWidget):
         # ensure something is rendered
         if not values:
             values = (INTERNAL_FIELD_VALUE,)
-        inputs = [tags.input(name=name, value=value, type=self.type, **attrs)
+        inputs = [tags.input(name=field.input_name(form), type=self.type,
+                             value=value, **attrs)
                   for value in values]
         return u'\n'.join(inputs)
 
@@ -106,23 +107,18 @@ class PasswordInput(Input):
         name, values, attrs = self._render_attrs(form, field)
         assert len(values) == 1
         id = attrs.pop('id')
-        try:
-            confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
-        except TypeError:
-            confirmname = '%s-confirm' % name
-        inputs = [tags.input(name=name, value=values[0], type=self.type, id=id,
-                             **attrs),
+        inputs = [tags.input(name=field.input_name(form),
+                             value=values[0], type=self.type, id=id, **attrs),
                   '<br/>',
-                  tags.input(name=confirmname, value=values[0], type=self.type,
-                             **attrs),
+                  tags.input(name=field.input_name(form, '-confirm'),
+                             value=values[0], type=self.type, **attrs),
                   '&#160;', tags.span(form._cw._('confirm password'),
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
 
     def process_field_data(self, form, field):
         passwd1 = super(PasswordInput, self).process_field_data(form, field)
-        fieldname = form.form_field_name(field)
-        passwd2 = form._cw.form[fieldname+'-confirm']
+        passwd2 = form._cw.form.get(field.input_name(form, '-confirm'))
         if passwd1 == passwd2:
             if passwd1 is None:
                 return None
@@ -183,7 +179,7 @@ class TextArea(FieldWidget):
             linecount += len(line) / 80
         attrs.setdefault('cols', 80)
         attrs.setdefault('rows', min(15, linecount + 2))
-        return tags.textarea(value, name=name, **attrs)
+        return tags.textarea(value, name=field.input_name(form), **attrs)
 
 
 class FCKEditor(TextArea):
@@ -231,7 +227,7 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, **oattrs))
         if optgroup_opened:
             options.append(u'</optgroup>')
-        return tags.select(name=name, multiple=self._multiple,
+        return tags.select(name=field.input_name(form), multiple=self._multiple,
                            options=options, **attrs)
 
 
@@ -259,7 +255,8 @@ class CheckBox(Input):
                 iattrs.setdefault('id', domid)
             if value in curvalues:
                 iattrs['checked'] = u'checked'
-            tag = tags.input(name=name, type=self.type, value=value, **iattrs)
+            tag = tags.input(name=field.input_name(form), type=self.type,
+                             value=value, **iattrs)
             options.append(tag + label)
         return sep.join(options)
 
@@ -351,7 +348,7 @@ class DateTimePicker(TextInput):
         value = form.form_field_value(field)
         if not value:
             value = date.today()
-        inputid = form.context[field]['id']
+        inputid = field.dom_id(form)
         helperid = '%shelper' % inputid
         year, month = value.year, value.month
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">

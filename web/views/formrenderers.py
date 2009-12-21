@@ -97,7 +97,7 @@ class FormRenderer(AppObject):
             label = self._cw.pgettext(*field.label)
         else:
             label = self._cw._(field.label)
-        attrs = {'for': form.context[field]['id']}
+        attrs = {'for': field.dom_id(form)}
         if field.required:
             attrs['class'] = 'required'
         return tags.label(label, **attrs)

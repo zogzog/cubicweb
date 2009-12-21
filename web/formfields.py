@@ -170,6 +170,34 @@ class Field(object):
         """return the widget instance associated to this field"""
         return self.widget
 
+    # cached is necessary else we get some pb on entity creation : entity.eid is
+    # modified from creation mark (eg 'X') to its actual eid (eg 123), and then
+    # `field.input_name()` won't return the right key anymore if not cached
+    # (first call to input_name done *before* eventual eid affectation).
+    @cached
+    def input_name(self, form, suffix=None):
+        """return 'qualified name' for this field"""
+        if self.eidparam:
+            if suffix is None:
+                return eid_param(self.role_name(), form.edited_entity.eid)
+            return eid_param(self.role_name() + suffix, form.edited_entity.eid)
+        if suffix is None:
+            return self.name
+        return self.name + suffix
+
+    def role_name(self):
+        """return <field.name>-<field.role> if role is specified, else field.name"""
+        if self.role is not None:
+            return '%s-%s' % (self.name, self.role)
+        return self.name
+
+    def dom_id(self, form):
+        """return an html dom identifier for this field"""
+        id = self.id or self.role_name()
+        if self.eidparam:
+            return eid_param(id, form.edited_entity.eid)
+        return id
+
     def example_format(self, req):
         """return a sample string describing what can be given as input for this
         field
@@ -356,7 +384,7 @@ class FileField(StringField):
     def render(self, form, renderer):
         wdgs = [self.get_widget(form).render(form, self, renderer)]
         if self.format_field or self.encoding_field:
-            divid = '%s-advanced' % form.context[self]['name']
+            divid = '%s-advanced' % self.input_name(form)
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
                         (xml_escape(uilib.toggle_action(divid)),
                          form._cw._('show advanced fields'),
@@ -373,7 +401,7 @@ class FileField(StringField):
         if not self.required and form.context[self]['value']:
             # trick to be able to delete an uploaded file
             wdgs.append(u'<br/>')
-            wdgs.append(tags.input(name=u'%s__detach' % form.context[self]['name'],
+            wdgs.append(tags.input(name=self.input_name(form, u'__detach'),
                                    type=u'checkbox'))
             wdgs.append(form._cw._('detach attached file'))
         return u'\n'.join(wdgs)
@@ -386,11 +414,11 @@ class FileField(StringField):
 
     def process_form_value(self, form):
         posted = form._cw.form
-        value = posted.get(form.form_field_name(self))
-        formkey = form.form_field_name(self)
-        if ('%s__detach' % form.context[self]['name']) in posted:
+        if self.input_name(form, u'__detach') in posted:
             # drop current file value
             value = None
+        else:
+            value = posted.get(self.input_name(form))
         # no need to check value when nor explicit detach nor new file
         # submitted, since it will think the attribute is not modified
         elif value:
@@ -434,7 +462,7 @@ class EditableFileField(FileField):
         return '\n'.join(wdgs)
 
     def process_form_value(self, form):
-        value = form._cw.form.get(form.form_field_name(self))
+        value = form._cw.form.get(self.input_name(form))
         if isinstance(value, unicode):
             # file modified using a text widget
             encoding = form.form_field_encoding(self)
