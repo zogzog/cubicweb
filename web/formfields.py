@@ -11,12 +11,14 @@ from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import xml_escape
+from logilab.common.decorators import cached
+
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb.utils import ustrftime
 from cubicweb import tags, uilib
-from cubicweb.web import INTERNAL_FIELD_VALUE
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.formwidgets import (
     HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
     Radio, Select, DateTimePicker)
