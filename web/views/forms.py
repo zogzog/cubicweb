@@ -12,6 +12,7 @@ from warnings import warn
 from logilab.common.compat import any
 from logilab.common.deprecation import deprecated
 
+from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import form, formwidgets as fwdgs
@@ -113,7 +114,7 @@ class FieldsForm(form.Form):
     def form_add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
         kwargs.setdefault('widget', fwdgs.HiddenInput)
-        field = StringField(name=name, initial=value, **kwargs)
+        field = StringField(name=name, value=value, **kwargs)
         if 'id' in kwargs:
             # by default, hidden input don't set id attribute. If one is
             # explicitly specified, ensure it will be set
@@ -142,77 +143,21 @@ class FieldsForm(form.Form):
                                                      self._cw, rset=self.cw_rset,
                                                      row=self.cw_row, col=self.cw_col)
 
-    def build_context(self, rendervalues=None):
+    formvalues = None
+    def build_context(self, formvalues=None):
         """build form context values (the .context attribute which is a
         dictionary with field instance as key associated to a dictionary
         containing field 'name' (qualified), 'id', 'value' (for display, always
         a string).
-
-        rendervalues is an optional dictionary containing extra form values
-        given to render()
         """
-        if self.context is not None:
+        if self.formvalues is not None:
             return # already built
-        self.context = context = {}
-        # ensure rendervalues is a dict
-        if rendervalues is None:
-            rendervalues = {}
+        self.formvalues = formvalues or {}
         # use a copy in case fields are modified while context is build (eg
         # __linkto handling for instance)
         for field in self.fields[:]:
             for field in field.actual_fields(self):
                 field.form_init(self)
-                value = self.form_field_display_value(field, rendervalues)
-                context[field] = {'value': value,
-                                  'name': self.form_field_name(field),
-                                  'id': self.form_field_id(field),
-                                  }
-
-    def form_field_display_value(self, field, rendervalues, load_bytes=False):
-        """return field's *string* value to use for display
-
-        looks in
-        1. previously submitted form values if any (eg on validation error)
-        2. req.form
-        3. extra kw args given to render_form
-        4. field's typed value
-
-        values found in 1. and 2. are expected te be already some 'display'
-        value while those found in 3. and 4. are expected to be correctly typed.
-        """
-        value = self._req_display_value(field)
-        if value is None:
-            if field.name in rendervalues:
-                value = rendervalues[field.name]
-            elif field.name in self.cw_extra_kwargs:
-                value = self.cw_extra_kwargs[field.name]
-            else:
-                value = self.form_field_value(field, load_bytes)
-                if callable(value):
-                    value = value(self)
-            if value != INTERNAL_FIELD_VALUE:
-                value = field.format_value(self._cw, value)
-        return value
-
-    def _req_display_value(self, field):
-        qname = self.form_field_name(field)
-        if qname in self.form_previous_values:
-            return self.form_previous_values[qname]
-        if qname in self._cw.form:
-            return self._cw.form[qname]
-        if field.name in self._cw.form:
-            return self._cw.form[field.name]
-        return None
-
-    def form_field_value(self, field, load_bytes=False):
-        """return field's *typed* value"""
-        myattr = '%s_%s_default' % (field.role, field.name)
-        if hasattr(self, myattr):
-            return getattr(self, myattr)()
-        value = field.initial
-        if callable(value):
-            value = value(self)
-        return value
 
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
@@ -297,6 +242,15 @@ class EntityFieldsForm(FieldsForm):
                 return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
             return '%s#%s' % (self.req.url(), self.domid)
 
+    def build_context(self, formvalues=None):
+        super(EntityFieldsForm, self).build_context(formvalues)
+        edited = set()
+        for field in self.fields:
+            if field.eidparam:
+                edited.add(field.role_name())
+        self.add_hidden('_cw_edited_fields', u','.join(edited),
+                        eidparam=True)
+
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
@@ -353,43 +307,7 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)
 
-    def form_field_value(self, field, load_bytes=False):
-        """return field's *typed* value
 
-        overriden to deal with
-        * special eid / __type
-        * lookup for values on edited entities
-        """
-        attr = field.name
-        entity = self.edited_entity
-        if attr == 'eid':
-            return entity.eid
-        if not field.eidparam:
-            return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
-        if attr == '__type':
-            return entity.__regid__
-        if self._cw.vreg.schema.rschema(attr).final:
-            attrtype = entity.e_schema.destination(attr)
-            if attrtype == 'Password':
-                return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
-            if attrtype == 'Bytes':
-                if entity.has_eid():
-                    if load_bytes:
-                        return getattr(entity, attr)
-                    # XXX value should reflect if some file is already attached
-                    return True
-                return False
-            if entity.has_eid() or attr in entity:
-                value = getattr(entity, attr)
-            else:
-                value = self._form_field_default_value(field, load_bytes)
-            return value
-        # non final relation field
-        if entity.has_eid() or entity.relation_cached(attr, field.role):
-            value = [r[0] for r in entity.related(attr, field.role)]
-        else:
-            value = self._form_field_default_value(field, load_bytes)
-        return value
 
     def form_field_format(self, field):
         """return MIME type used for the given (text or bytes) field"""
@@ -406,28 +324,21 @@ class EntityFieldsForm(FieldsForm):
             entity.has_eid() or '%s_encoding' % field.name in entity):
             return self.edited_entity.attr_metadata(field.name, 'encoding')
         return super(EntityFieldsForm, self).form_field_encoding(field)
-
-    def form_field_name(self, field):
-        """return qualified name for the given field"""
-        if field.eidparam:
-            return eid_param(field.name, self.edited_entity.eid)
-        return field.name
-
-    def form_field_id(self, field):
-        """return dom id for the given field"""
-        if field.eidparam:
-            return eid_param(field.id, self.edited_entity.eid)
-        return field.id
-
     # XXX all this vocabulary handling should be on the field, no?
 
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field"""
         role, rtype = field.role, field.name
         method = '%s_%s_vocabulary' % (role, rtype)
+    def actual_eid(self, eid):
+        # should be either an int (existant entity) or a variable (to be
+        # created entity)
+        assert eid or eid == 0, repr(eid) # 0 is a valid eid
         try:
             vocabfunc = getattr(self, method)
         except AttributeError:
+            return typed_eid(eid)
+        except ValueError:
             try:
                 # XXX bw compat, <role>_<rtype>_vocabulary on the entity
                 vocabfunc = getattr(self.edited_entity, method)
@@ -511,6 +422,10 @@ class EntityFieldsForm(FieldsForm):
             if limit is not None and len(result) >= limit:
                 break
         return result
+                return self._cw.data['eidmap'][eid]
+            except KeyError:
+                self._cw.data['eidmap'][eid] = None
+                return None
 
     def editable_relations(self):
         return ()
@@ -533,10 +448,10 @@ class CompositeFormMixIn(object):
         subform.parent_form = self
         self.forms.append(subform)
 
-    def build_context(self, rendervalues=None):
-        super(CompositeFormMixIn, self).build_context(rendervalues)
+    def build_context(self, formvalues=None):
+        super(CompositeFormMixIn, self).build_context(formvalues)
         for form in self.forms:
-            form.build_context(rendervalues)
+            form.build_context(formvalues)
 
 
 class CompositeForm(CompositeFormMixIn, FieldsForm):

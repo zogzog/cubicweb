@@ -335,7 +335,7 @@ class PropertyValueField(StringField):
             self.widget = NotEditableWidget(entity.printable_value('value'), msg)
         # XXX race condition when used from CWPropertyForm, should not rely on
         # instance attributes
-        self.initial = pdef['default']
+        self.value = pdef['default']
         self.help = pdef['help']
         vocab = pdef['vocabulary']
         if vocab is not None:

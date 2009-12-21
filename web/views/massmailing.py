@@ -39,8 +39,11 @@ class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
 
     sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
-                            label=_('From:'))
-    recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'))
+                            label=_('From:'),
+                            value=lambda f: '%s <%s>' % (f._cw.user.dc_title(), f._cw.user.get_email()))
+    recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'),
+                               choices=recipient_vocabulary,
+                               value= lambda f: [entity.eid for entity in f.cw_rset.entities() if entity.get_email()])
     subject = ff.StringField(label=_('Subject:'), max_length=256)
     mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                                 inputid='mailbody'))
@@ -57,12 +60,10 @@ class MassMailingForm(forms.FieldsForm):
             return [(label, value) for label, value in vocab if label]
         return super(MassMailingForm, self).form_field_vocabulary(field)
 
-    def form_field_value(self, field, values):
-        if field.name == 'recipient':
-            return [entity.eid for entity in self.cw_rset.entities() if entity.get_email()]
-        elif field.name == 'mailbody':
-            field.widget.attrs['cubicweb:variables'] = ','.join(self.get_allowed_substitutions())
-        return super(MassMailingForm, self).form_field_value(field, values)
+    def __init__(self, *args, **kwargs):
+        super(MassMailingForm, self).__init__(*args, **kwargs)
+        field = self.field_by_name('mailbody')
+        field.widget.attrs['cubicweb:variables'] = ','.join(self.get_allowed_substitutions())
 
     def get_allowed_substitutions(self):
         attrs = []
@@ -126,5 +127,5 @@ class MassMailingFormView(form.FormViewMixIn, EntityView):
         req.add_css('cubicweb.mailform.css')
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
         form = self._cw.vreg['forms'].select('massmailing', self._cw, rset=self.cw_rset,
-                                action='sendmail', domid='sendmail')
-        self.w(form.render(formvalues=dict(sender=from_addr)))
+                                             action='sendmail', domid='sendmail')
+        self.w(form.render())

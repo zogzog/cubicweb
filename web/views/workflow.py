@@ -86,8 +86,11 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         trinfo = self._cw.vreg['etypes'].etype_class('TrInfo')(self._cw)
         trinfo.eid = self._cw.varmaker.next()
         subform = self._cw.vreg['forms'].select('edition', self._cw, entity=trinfo,
-                                            mainform=False)
-        subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
+                                                mainform=False)
+        subform.field_by_name('wf_info_for', 'subject').value = entity.eid
+        trfield = subform.field_by_name('by_transition', 'subject')
+        trfield.widget = fwdgs.HiddenInput()
+        trfield.value = transition.eid
         form.add_subform(subform)
         return form
 

@@ -28,7 +28,7 @@ class SparqlForm(forms.FieldsForm):
     resultvid = formfields.StringField(choices=((_('table'), 'table'),
                                                 (_('sparql xml'), 'sparqlxml')),
                                        widget=fwdgs.Radio,
-                                       initial='table')
+                                       value='table')
     form_buttons = [fwdgs.SubmitButton()]
     @property
     def action(self):

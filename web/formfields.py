@@ -39,6 +39,7 @@ def vocab_sort(vocab):
     result += sorted(partresult)
     return result
 
+_MARKER = object()
 
 class Field(object):
     """field class is introduced to control what's displayed in forms. It makes
@@ -64,8 +65,8 @@ class Field(object):
        class which may be overriden per instance.
     :required:
        bool flag telling if the field is required or not.
-    :initial:
-       initial value, used when no value specified by other means.
+    :value:
+       field's value, used when no value specified by other means. XXX explain
     :choices:
        static vocabulary for this field. May be a list of values or a list of
        (label, value) tuples if specified.
@@ -95,32 +96,38 @@ class Field(object):
     # class attribute used for ordering of fields in a form
     __creation_rank = 0
 
-    def __init__(self, name=None, id=None, label=None, help=None,
-                 widget=None, required=False, initial=None,
-                 choices=None, sort=True, internationalizable=False,
-                 eidparam=False, role='subject', fieldset=None, order=None):
+    eidparam = False
+    role = None
+    id = None
+    help = None
+    required = False
+    choices = None
+    sort = True
+    internationalizable = False
+    fieldset = None
+    order = None
+    value = _MARKER
+
+    def __init__(self, name=None, label=None, widget=None, **kwargs):
+        for key, val in kwargs.items():
+            if key == 'initial':
+                warn('[3.6] use value instead of initial', DeprecationWarning,
+                     stacklevel=3)
+                key = 'value'
+            assert hasattr(self.__class__, key) and not key[0] == '_', key
+            setattr(self, key, val)
         self.name = name
-        self.id = id or name
         self.label = label or name
-        self.help = help
-        self.required = required
-        self.initial = initial
-        self.choices = choices
-        self.sort = sort
-        self.internationalizable = internationalizable
-        self.eidparam = eidparam
-        self.role = role
-        self.fieldset = fieldset
+        # has to be done after other attributes initialization
         self.init_widget(widget)
-        self.order = order
         # ordering number for this field instance
         self.creation_rank = Field.__creation_rank
         Field.__creation_rank += 1
 
     def __unicode__(self):
-        return u'<%s name=%r label=%r id=%r initial=%r visible=%r @%x>' % (
-            self.__class__.__name__, self.name, self.label,
-            self.id, self.initial, self.is_visible(), id(self))
+        return u'<%s name=%r eidparam=%s role=%r id=%r value=%r visible=%r @%x>' % (
+            self.__class__.__name__, self.name, self.eidparam, self.role,
+            self.id, self.value, self.is_visible(), id(self))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -134,11 +141,9 @@ class Field(object):
             self.widget = self.widget()
 
     def set_name(self, name):
-        """automatically set .id and .label when name is set"""
+        """automatically set .label when name is set"""
         assert name
         self.name = name
-        if not self.id:
-            self.id = name
         if not self.label:
             self.label = name
 
@@ -199,6 +204,62 @@ class Field(object):
         if self.eidparam:
             return eid_param(id, form.edited_entity.eid)
         return id
+
+    def display_value(self, form):
+        """return field's *string* value to use for display
+
+        looks in
+        1. previously submitted form values if any (eg on validation error)
+        2. req.form
+        3. extra form args given to render_form
+        4. field's typed value
+
+        values found in 1. and 2. are expected te be already some 'display'
+        value while those found in 3. and 4. are expected to be correctly typed.
+        """
+        qname = self.input_name(form)
+        if qname in form.form_previous_values:
+            return form.form_previous_values[qname]
+        if qname in form._cw.form:
+            return form._cw.form[qname]
+        if self.name != qname and self.name in form._cw.form:
+            return form._cw.form[self.name]
+        for key in (self, qname):
+            try:
+                value = form.formvalues[key]
+                break
+            except:
+                continue
+        else:
+            if self.name != qname and self.name in form.formvalues:
+                value = form.formvalues[self.name]
+            else:
+                value = self.typed_value(form)
+        if value != INTERNAL_FIELD_VALUE:
+            value = self.format_value(form._cw, value)
+        return value
+
+    def typed_value(self, form, load_bytes=False):
+        if self.value is not _MARKER:
+            if callable(self.value):
+                return self.value(form)
+            return self.value
+        return self._typed_value(form, load_bytes)
+
+    def _typed_value(self, form, load_bytes=False):
+        if self.eidparam:
+            assert form._cw.vreg.schema.rschema(self.name).final
+            entity = form.edited_entity
+            if entity.has_eid() or self.name in entity:
+                return getattr(entity, self.name)
+        formattr = '%s_%s_default' % (self.role, self.name)
+        if hasattr(form, formattr):
+            warn('[3.6] %s.%s deprecated, use field.value' % (
+                form.__class__.__name__, formattr), DeprecationWarning)
+            return getattr(form, formattr)()
+        if self.eidparam:
+            return entity.e_schema.default(self.name)
+        return None
 
     def example_format(self, req):
         """return a sample string describing what can be given as input for this
@@ -292,6 +353,18 @@ class StringField(Field):
             widget.attrs.setdefault('rows', 5)
 
 
+class PasswordField(StringField):
+    widget = PasswordInput
+
+    def _typed_value(self, form, load_bytes=False):
+        if self.eidparam:
+            # no way to fetch actual password value with cw
+            if form.edited_entity.has_eid():
+                return INTERNAL_FIELD_VALUE
+            return form.edited_entity.e_schema.default(self.name)
+        return super(PasswordField, self)._typed_value(form, load_bytes)
+
+
 class RichTextField(StringField):
     widget = None
     def __init__(self, format_field=None, **kwargs):
@@ -324,14 +397,14 @@ class RichTextField(StringField):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
                 fkwargs['widget'] = HiddenInput()
-                fkwargs['initial'] = 'text/html'
+                fkwargs['value'] = 'text/html'
             else:
                 # else we want a format selector
                 fkwargs['widget'] = Select()
                 fcstr = FormatConstraint()
                 fkwargs['choices'] = fcstr.vocabulary(form=form)
                 fkwargs['internationalizable'] = True
-                fkwargs['initial'] = lambda f: f.form_field_format(self)
+                fkwargs['value'] = self.format
             fkwargs['eidparam'] = self.eidparam
             field = StringField(name=self.name + '_format', **fkwargs)
             req.data[self] = field
@@ -383,6 +456,19 @@ class FileField(StringField):
         if self.name_field:
             yield self.name_field
 
+    def _typed_value(self, form, load_bytes=False):
+        if self.eidparam:
+            if form.edited_entity.has_eid():
+                if load_bytes:
+                    return getattr(form.edited_entity, self.name)
+                # don't actually load data
+                # XXX value should reflect if some file is already attached
+                # * try to display name metadata
+                # * check length(data) / data != null
+                return True
+            return False
+        return super(FileField, self)._typed_value(form, load_bytes)
+
     def render(self, form, renderer):
         wdgs = [self.get_widget(form).render(form, self, renderer)]
         if self.format_field or self.encoding_field:
@@ -400,7 +486,7 @@ class FileField(StringField):
             if self.encoding_field:
                 wdgs.append(self.render_subfield(form, self.encoding_field, renderer))
             wdgs.append(u'</div>')
-        if not self.required and form.context[self]['value']:
+        if not self.required and self.display_value(form):
             # trick to be able to delete an uploaded file
             wdgs.append(u'<br/>')
             wdgs.append(tags.input(name=self.input_name(form, u'__detach'),
@@ -439,12 +525,12 @@ class EditableFileField(FileField):
 
     def render(self, form, renderer):
         wdgs = [super(EditableFileField, self).render(form, renderer)]
-        if form.form_field_format(self) in self.editable_formats:
-            data = form.form_field_value(self, load_bytes=True)
+        if self.format(form) in self.editable_formats:
+            data = self.typed_value(form, load_bytes=True)
             if data:
                 encoding = form.form_field_encoding(self)
                 try:
-                    form.context[self]['value'] = unicode(data.getvalue(), encoding)
+                    form.formvalues[self] = unicode(data.getvalue(), encoding)
                 except UnicodeError:
                     pass
                 else:
@@ -592,6 +678,25 @@ class RelationField(Field):
             vocab = vocab_sort(vocab)
         return vocab
 
+    def form_init(self, form):
+        if not self.display_value(form):
+            value = form.edited_entity.linked_to(self.name, self.role)
+            if value:
+                searchedvalues = ['%s:%s:%s' % (self.name, eid, self.role)
+                                  for eid in value]
+                # remove associated __linkto hidden fields
+                for field in form.root_form.fields_by_name('__linkto'):
+                    if field.value in searchedvalues:
+                        form.root_form.remove_field(field)
+                form.formvalues[self] = value
+
+    def _typed_value(self, form, load_bytes=False):
+        entity = form.edited_entity
+        # non final relation field
+        if entity.has_eid() or entity.relation_cached(self.name, self.role):
+            return [r[0] for r in entity.related(self.name, self.role)]
+        return ()
+
     def format_single_value(self, req, value):
         return value
 
@@ -628,9 +733,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         if rschema.final:
             if rdef.get('internationalizable'):
                 kwargs.setdefault('internationalizable', True)
-            def get_default(form, es=eschema, rs=rschema):
-                return es.default(rs)
-            kwargs.setdefault('initial', get_default)
     else:
         targetschema = rdef.subject
     card = rdef.role_cardinality(role)
@@ -647,10 +749,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             return None
         fieldclass = FIELDS[targetschema]
         if fieldclass is StringField:
-            if targetschema == 'Password':
-                # special case for Password field: specific PasswordInput widget
-                kwargs.setdefault('widget', PasswordInput())
-                return StringField(**kwargs)
             if eschema.has_metadata(rschema, 'format'):
                 # use RichTextField instead of StringField if the attribute has
                 # a "format" metadata. But getting information from constraints
@@ -687,7 +785,7 @@ FIELDS = {
     'Int':      IntField,
     'Float':    FloatField,
     'Decimal':  StringField,
-    'Password': StringField,
+    'Password': PasswordField,
     'String' :  StringField,
     'Time':     TimeField,
     }

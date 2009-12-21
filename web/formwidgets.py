@@ -345,7 +345,7 @@ class DateTimePicker(TextInput):
         return txtwidget + cal_button
 
     def _render_calendar_popup(self, form, field):
-        value = form.form_field_value(field)
+        value = field.typed_value(form)
         if not value:
             value = date.today()
         inputid = field.dom_id(form)
