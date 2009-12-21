@@ -790,12 +790,22 @@ class RelationField(Field):
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
         widget = self.get_widget(form)
-        value = widget.process_field_data(form, self)
-        if value is None:
-            return ()
-        elif not isinstance(value, list):
-            return (value,)
-        return value
+        values = widget.process_field_data(form, self)
+        if values is None:
+            values = ()
+        elif not isinstance(values, list):
+            values = (values,)
+        eids = set()
+        for eid in values:
+            if not eid: # AutoCompletionWidget XXX deal with this in the widget
+                continue
+            typed_eid = form.actual_eid(eid)
+            if typed_eid is None:
+                form._cw.data['pendingfields'].append( (form, self) )
+                return None
+            eids.add(typed_eid)
+        return eids
+
 
 class CompoundField(Field):
     def __init__(self, fields, *args, **kwargs):
