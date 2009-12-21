@@ -277,19 +277,16 @@ class Field(object):
 
     def vocabulary(self, form):
         """return vocabulary for this field. This method will be called by
-        widgets which desire it."""
-        if self.choices is not None:
-            if callable(self.choices):
-                try:
-                    vocab = self.choices(form=form)
-                except TypeError:
-                    warn('[3.3] vocabulary method (eg field.choices) should now take '
-                         'the form instance as argument', DeprecationWarning)
-                    vocab = self.choices(req=form._cw)
-            else:
-                vocab = self.choices
-            if vocab and not isinstance(vocab[0], (list, tuple)):
-                vocab = [(x, x) for x in vocab]
+        widgets which requires a vocabulary.
+        """
+        assert self.choices is not None
+        if callable(self.choices):
+            try:
+                vocab = self.choices(form=form)
+            except TypeError:
+                warn('[3.3] vocabulary method (eg field.choices) should now take '
+                     'the form instance as argument', DeprecationWarning)
+                vocab = self.choices(req=form._cw)
         else:
             vocab = form.form_field_vocabulary(self)
         if self.internationalizable:
@@ -644,6 +641,60 @@ class TimeField(DateField):
             time = form.parse_time(wdgdate, 'Time')
         return time
 
+
+# relation vocabulary helper functions #########################################
+
+def relvoc_linkedto(entity, rtype, role):
+    # first see if its specified by __linkto form parameters
+    linkedto = entity.linked_to(rtype, role)
+    if linkedto:
+        buildent = entity._cw.entity_from_eid
+        return [(buildent(eid).view('combobox'), eid) for eid in linkedto]
+    return []
+
+def relvoc_init(entity, rtype, role, required=False):
+    # it isn't, check if the entity provides a method to get correct values
+    vocab = []
+    if not required:
+        vocab.append(('', INTERNAL_FIELD_VALUE))
+    # vocabulary doesn't include current values, add them
+    if entity.has_eid():
+        rset = entity.related(rtype, role)
+        vocab += [(e.view('combobox'), e.eid) for e in rset.entities()]
+    return vocab
+
+def relvoc_unrelated(entity, rtype, role, limit=None):
+    if isinstance(rtype, basestring):
+        rtype = entity._cw.vreg.schema.rschema(rtype)
+    if entity.has_eid():
+        done = set(row[0] for row in entity.related(rtype, role))
+    else:
+        done = None
+    result = []
+    rsetsize = None
+    for objtype in rtype.targets(entity.e_schema, role):
+        if limit is not None:
+            rsetsize = limit - len(result)
+        result += _relvoc_unrelated(entity, rtype, objtype, role, rsetsize, done)
+        if limit is not None and len(result) >= limit:
+            break
+    return result
+
+def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
+    """return unrelated entities for a given relation and target entity type
+    for use in vocabulary
+    """
+    if done is None:
+        done = set()
+    res = []
+    for entity in entity.unrelated(rtype, targettype, role, limit).entities():
+        if entity.eid in done:
+            continue
+        done.add(entity.eid)
+        res.append((entity.view('combobox'), entity.eid))
+    return res
+
+
 class RelationField(Field):
 
     @staticmethod
@@ -651,24 +702,21 @@ class RelationField(Field):
         kwargs.setdefault('widget', Select(multiple=card in '*+'))
         return RelationField(**kwargs)
 
-    def vocabulary(self, form):
+    def choices(self, form, limit=None):
         entity = form.edited_entity
         # first see if its specified by __linkto form parameters
-        linkedto = entity.linked_to(self.name, self.role)
+        linkedto = relvoc_linkedto(entity, self.name, self.role)
         if linkedto:
-            entities = (req.entity_from_eid(eid) for eid in linkedto)
-            return [(entity.view('combobox'), entity.eid) for entity in entities]
+            return linkedto
         # it isn't, check if the entity provides a method to get correct values
-        res = []
-        if not self.required:
-            res.append(('', INTERNAL_FIELD_VALUE))
-        # vocabulary doesn't include current values, add them
-        if entity.has_eid():
-            rset = entity.related(self.name, self.role)
-            relatedvocab = [(e.view('combobox'), e.eid) for e in rset.entities()]
-        else:
-            relatedvocab = []
-        vocab = res + form.form_field_vocabulary(self) + relatedvocab
+        vocab = relvoc_init(entity, self.name, self.role, self.required)
+        method = '%s_%s_vocabulary' % (self.role, self.name)
+        try:
+            vocab += getattr(form, method)(rtype, limit)
+            warn('[3.6] found %s on %s, should override field.choices instead (need tweaks)'
+                 % (method, form), DeprecationWarning)
+        except AttributeError:
+            vocab += relvoc_unrelated(entity, self.name, self.role, limit)
         if self.sort:
             vocab = vocab_sort(vocab)
         return vocab

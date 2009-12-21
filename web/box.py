@@ -221,7 +221,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         form = self.vreg['forms'].select('edition', self._cw, rset=self.cw_rset,
                                          row=self.cw_row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
-        for _, eid in form.form_field_vocabulary(field):
+        for _, eid in field.choices(form):
             if eid is not None:
                 rset = self._cw.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))

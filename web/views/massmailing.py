@@ -35,6 +35,10 @@ class SendEmailAction(action.Action):
                                   **params)
 
 
+def recipient_vocabulary(form):
+    vocab = [(entity.get_email(), entity.eid) for entity in form.cw_rset.entities()]
+    return [(label, value) for label, value in vocab if label]
+
 class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
 
@@ -53,12 +57,6 @@ class MassMailingForm(forms.FieldsForm):
                     ImgButton('cancelbutton', "javascript: history.back()",
                               stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
     form_renderer_id = __regid__
-
-    def form_field_vocabulary(self, field):
-        if field.name == 'recipient':
-            vocab = [(entity.get_email(), entity.eid) for entity in self.cw_rset.entities()]
-            return [(label, value) for label, value in vocab if label]
-        return super(MassMailingForm, self).form_field_vocabulary(field)
 
     def __init__(self, *args, **kwargs):
         super(MassMailingForm, self).__init__(*args, **kwargs)

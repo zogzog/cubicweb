@@ -117,18 +117,17 @@ class UnrelatedDivs(EntityView):
     def _get_select_options(self, entity, rschema, target):
         """add options to search among all entities of each possible type"""
         options = []
-        eid = entity.eid
-        pending_inserts = self._cw.get_pending_inserts(eid)
+        pending_inserts = self._cw.get_pending_inserts(entity.eid)
         rtype = rschema.type
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
         field = form.field_by_name(rschema, target, entity.e_schema)
         limit = self._cw.property_value('navigation.combobox-limit')
-        for eview, reid in form.form_field_vocabulary(field, limit):
+        for eview, reid in field.choices(form, limit): # XXX expect 'limit' arg on choices
             if reid is None:
                 options.append('<option class="separator">-- %s --</option>'
                                % xml_escape(eview))
             else:
-                optionid = relation_id(eid, rtype, target, reid)
+                optionid = relation_id(entity.eid, rtype, target, reid)
                 if optionid not in pending_inserts:
                     # prefix option's id with letters to make valid XHTML wise
                     options.append('<option id="id%s" value="%s">%s</option>' %

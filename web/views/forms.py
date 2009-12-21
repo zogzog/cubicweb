@@ -17,7 +17,7 @@ from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import form, formwidgets as fwdgs
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
-from cubicweb.web.formfields import StringField
+from cubicweb.web.formfields import StringField, relvoc_unrelated
 
 
 class FieldsForm(form.Form):
@@ -174,12 +174,6 @@ class FieldsForm(form.Form):
         """return encoding used for the given (text) field"""
         return self._cw.encoding
 
-    def form_field_vocabulary(self, field, limit=None):
-        """return vocabulary for the given field. Should be overriden in
-        specific forms using fields which requires some vocabulary
-        """
-        raise NotImplementedError
-
     def form_field_modified(self, field):
         return field.is_visible()
 
@@ -257,52 +251,6 @@ class EntityFieldsForm(FieldsForm):
         return super(EntityFieldsForm, self)._field_has_error(field) \
                and self.form_valerror.eid == self.edited_entity.eid
 
-    def _relation_vocabulary(self, rtype, targettype, role,
-                            limit=None, done=None):
-        """return unrelated entities for a given relation and target entity type
-        for use in vocabulary
-        """
-        if done is None:
-            done = set()
-        rset = self.edited_entity.unrelated(rtype, targettype, role, limit)
-        res = []
-        for entity in rset.entities():
-            if entity.eid in done:
-                continue
-            done.add(entity.eid)
-            res.append((entity.view('combobox'), entity.eid))
-        return res
-
-    def _req_display_value(self, field):
-        value = super(EntityFieldsForm, self)._req_display_value(field)
-        if value is None:
-            value = self.edited_entity.linked_to(field.name, field.role)
-            if value:
-                searchedvalues = ['%s:%s:%s' % (field.name, eid, field.role)
-                                  for eid in value]
-                # remove associated __linkto hidden fields
-                for field in self.root_form.fields_by_name('__linkto'):
-                    if field.initial in searchedvalues:
-                        self.root_form.remove_field(field)
-            else:
-                value = None
-        return value
-
-    def _form_field_default_value(self, field, load_bytes):
-        defaultattr = 'default_%s' % field.name
-        if hasattr(self.edited_entity, defaultattr):
-            # XXX bw compat, default_<field name> on the entity
-            warn('found %s on %s, should be set on a specific form'
-                 % (defaultattr, self.edited_entity.__regid__), DeprecationWarning)
-            value = getattr(self.edited_entity, defaultattr)
-            if callable(value):
-                value = value()
-        else:
-            value = super(EntityFieldsForm, self).form_field_value(field,
-                                                                   load_bytes)
-        return value
-
-    def form_default_renderer(self):
         return self._cw.vreg['formrenderers'].select(
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)
@@ -325,34 +273,14 @@ class EntityFieldsForm(FieldsForm):
             return self.edited_entity.attr_metadata(field.name, 'encoding')
         return super(EntityFieldsForm, self).form_field_encoding(field)
     # XXX all this vocabulary handling should be on the field, no?
-
-    def form_field_vocabulary(self, field, limit=None):
-        """return vocabulary for the given field"""
-        role, rtype = field.role, field.name
-        method = '%s_%s_vocabulary' % (role, rtype)
     def actual_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be
         # created entity)
         assert eid or eid == 0, repr(eid) # 0 is a valid eid
         try:
-            vocabfunc = getattr(self, method)
-        except AttributeError:
             return typed_eid(eid)
         except ValueError:
             try:
-                # XXX bw compat, <role>_<rtype>_vocabulary on the entity
-                vocabfunc = getattr(self.edited_entity, method)
-            except AttributeError:
-                vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
-            else:
-                warn('found %s on %s, should be set on a specific form'
-                     % (method, self.edited_entity.__regid__), DeprecationWarning)
-        # NOTE: it is the responsibility of `vocabfunc` to sort the result
-        #       (direclty through RQL or via a python sort). This is also
-        #       important because `vocabfunc` might return a list with
-        #       couples (label, None) which act as separators. In these
-        #       cases, it doesn't make sense to sort results afterwards.
-        return vocabfunc(rtype, limit)
 
     def form_field_modified(self, field):
         if field.is_visible():
@@ -379,49 +307,6 @@ class EntityFieldsForm(FieldsForm):
                 return False # not modified
             return True
         return False
-
-    def subject_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's object entities (i.e. self is the subject)
-        """
-        entity = self.edited_entity
-        if isinstance(rtype, basestring):
-            rtype = self._cw.vreg.schema.rschema(rtype)
-        done = None
-        assert not rtype.final, rtype
-        if entity.has_eid():
-            done = set(e.eid for e in getattr(entity, str(rtype)))
-        result = []
-        rsetsize = None
-        for objtype in rtype.objects(entity.e_schema):
-            if limit is not None:
-                rsetsize = limit - len(result)
-            result += self._relation_vocabulary(rtype, objtype, 'subject',
-                                                rsetsize, done)
-            if limit is not None and len(result) >= limit:
-                break
-        return result
-
-    def object_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's subject entities (i.e. self is the object)
-        """
-        entity = self.edited_entity
-        if isinstance(rtype, basestring):
-            rtype = self._cw.vreg.schema.rschema(rtype)
-        done = None
-        if entity.has_eid():
-            done = set(e.eid for e in getattr(entity, 'reverse_%s' % rtype))
-        result = []
-        rsetsize = None
-        for subjtype in rtype.subjects(entity.e_schema):
-            if limit is not None:
-                rsetsize = limit - len(result)
-            result += self._relation_vocabulary(rtype, subjtype, 'object',
-                                                rsetsize, done)
-            if limit is not None and len(result) >= limit:
-                break
-        return result
                 return self._cw.data['eidmap'][eid]
             except KeyError:
                 self._cw.data['eidmap'][eid] = None
@@ -432,6 +317,17 @@ class EntityFieldsForm(FieldsForm):
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
         return False
+
+    @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated function')
+    def subject_relation_vocabulary(self, rtype, limit=None):
+        """defaut vocabulary method for the given relation, looking for
+        relation's object entities (i.e. self is the subject)
+        """
+        return relvoc_unrelated(self.edited_entity, rtype, 'subject', limit=None)
+
+    @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated function')
+    def object_relation_vocabulary(self, rtype, limit=None):
+        return relvoc_unrelated(self.edited_entity, rtype, 'object', limit=None)
 
 
 class CompositeFormMixIn(object):
