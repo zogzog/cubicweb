@@ -288,7 +288,9 @@ class Field(object):
                      'the form instance as argument', DeprecationWarning)
                 vocab = self.choices(req=form._cw)
         else:
-            vocab = form.form_field_vocabulary(self)
+            vocab = self.choices
+        if vocab and not isinstance(vocab[0], (list, tuple)):
+            vocab = [(x, x) for x in vocab]
         if self.internationalizable:
             # the short-cirtcuit 'and' boolean operator is used here to permit
             # a valid empty string in vocabulary without attempting to translate
@@ -550,7 +552,7 @@ class FileField(StringField):
             value = posted.get(self.input_name(form))
         # no need to check value when nor explicit detach nor new file
         # submitted, since it will think the attribute is not modified
-        elif value:
+        if value:
             filename, _, stream = value
             # value is a  3-uple (filename, mimetype, stream)
             value = Binary(stream.read())
