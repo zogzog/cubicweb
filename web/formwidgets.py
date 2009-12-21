@@ -65,6 +65,8 @@ class FieldWidget(object):
     def process_field_data(self, form, field):
         posted = form._cw.form
         val = posted.get(field.input_name(form))
+        if isinstance(val, basestring):
+            val = val.strip() or None
         return val
 
     @deprecated('[3.6] use values_and_attributes')
