@@ -128,11 +128,15 @@ class FieldsForm(form.Form):
         if self.needs_css:
             self._cw.add_css(self.needs_css)
 
-    def render(self, formvalues=None, rendervalues=None, renderer=None):
+    def render(self, formvalues=None, rendervalues=None, renderer=None, **kwargs):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        self.build_context(formvalues or {})
+        if rendervalues is not None:
+            warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
+                 DeprecationWarning, stacklevel=1)
+            kwargs = rendervalues
+        self.build_context(formvalues)
         if renderer is None:
             renderer = self.default_renderer()
         return renderer.render(self, kwargs)
@@ -248,6 +252,7 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)
 
+    # controller side method (eg POST reception handling)
 
     def actual_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be

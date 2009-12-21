@@ -320,7 +320,7 @@ class EditionFormView(FormViewMixIn, EntityView):
                                              entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.render(rendervalues=dict(formvid=u'edition')))
+        self.w(form.render(formvid=u'edition'))
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -523,9 +523,8 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         except KeyError:
             self._cw.data[countkey] = 1
         self.w(self.form.render(
-            rendervalues=dict(divid=divid, title=title, removejs=removejs,
-                              i18nctx=i18nctx, counter=self._cw.data[countkey]),
-            formvalues=kwargs))
+            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
+            counter=self._cw.data[countkey] , **kwargs))
 
     def form_title(self, entity, i18nctx):
         return self._cw.pgettext(i18nctx, 'This %s' % entity.e_schema)

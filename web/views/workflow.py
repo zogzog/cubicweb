@@ -71,8 +71,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
             'st1': entity.printable_state,
             'st2': self._cw._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.render(formvalues=dict(wf_info_for=entity.eid,
-                                           by_transition=transition.eid)))
+        self.w(form.render())
 
     def redirectpath(self, entity):
         return entity.rest_path()
