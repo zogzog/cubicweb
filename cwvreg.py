@@ -145,7 +145,9 @@ class ETypeRegistry(CWRegistry):
         """
         etype = str(etype)
         if etype == 'Any':
-            return self.select('Any', 'Any')
+            objects = self['Any']
+            assert len(objects) == 1, objects
+            return objects[0]
         eschema = self.schema.eschema(etype)
         baseschemas = [eschema] + eschema.ancestors()
         # browse ancestors from most specific to most generic and try to find an
