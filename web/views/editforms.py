@@ -253,6 +253,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         form.event_args = event_args
         return form
 
+
 class DummyForm(object):
     __slots__ = ('event_args',)
     def form_render(self, **_args):
@@ -263,6 +264,7 @@ class DummyForm(object):
         pass
     def field_by_name(self, rtype, role):
         return None
+
 
 class AutoClickAndEditFormView(ClickAndEditFormView):
     """same as ClickAndEditFormView but checking if the view *should* be applied
@@ -295,6 +297,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
 
     def _build_renderer(self, entity, rtype, role):
         pass
+
 
 class EditionFormView(FormViewMixIn, EntityView):
     """display primary entity edition form"""

@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -318,7 +319,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         by default true if there is no related entity or if the relation has
         multiple cardinality
         """
-        return not existant or card in '+*'
+        return not existant or card in '+*' # XXX add target type permisssions
 
     def should_hide_add_new_relation_link(self, rschema, card):
         """return true if once an inlined creation form is added, the 'add new'

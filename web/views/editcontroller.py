@@ -7,20 +7,15 @@
 """
 __docformat__ = "restructuredtext en"
 
-from decimal import Decimal
-
 from rql.utils import rqlvar_maker
+
+from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
 from cubicweb.web.controller import parse_relations_descr
 from cubicweb.web.views.basecontrollers import ViewController
 
-
-class ToDoLater(Exception):
-    """exception used in the edit controller to indicate that a relation
-    can't be handled right now and have to be handled later
-    """
 
 class RqlQuery(object):
     def __init__(self):
@@ -47,6 +42,7 @@ class RqlQuery(object):
             rql += ', %s' % ','.join(self.restrictions)
         self.kwargs[var] = eid
         return rql
+
 
 class EditController(ViewController):
     __regid__ = 'edit'

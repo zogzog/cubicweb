@@ -10,10 +10,11 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 from warnings import warn
 
+from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import deprecated
+
 from cubicweb import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
-
-from logilab.mtconverter import xml_escape
 
 class FieldWidget(object):
     """abstract widget class"""
@@ -125,6 +126,7 @@ class PasswordInput(Input):
             return passwd1.encode('utf-8')
         raise ProcessFormError(form._cw._("password and confirmation don't match"))
 
+
 class PasswordSingleInput(Input):
     """<input type='password'> without a confirmation field"""
     type = 'password'
@@ -134,6 +136,7 @@ class PasswordSingleInput(Input):
         if value is not None:
             return value.encode('utf-8')
         return value
+
 
 class FileInput(Input):
     """<input type='file'>"""

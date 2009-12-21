@@ -13,6 +13,7 @@ from datetime import datetime
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
+from yams.schema import KNOWN_METAATTRIBUTES
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
@@ -570,6 +571,7 @@ class IntField(Field):
     def process_form_value(self, form):
         return int(Field.process_form_value(self, form))
 
+
 class BooleanField(Field):
     widget = Radio
 
@@ -580,6 +582,7 @@ class BooleanField(Field):
 
     def process_form_value(self, form):
         return bool(Field.process_form_value(self, form))
+
 
 class FloatField(IntField):
     def format_single_value(self, req, value):
@@ -593,6 +596,7 @@ class FloatField(IntField):
 
     def process_form_value(self, form):
         return float(Field.process_form_value(self, form))
+
 
 class DateField(StringField):
     format_prop = 'ui.date-format'
@@ -613,6 +617,7 @@ class DateField(StringField):
             date = form.parse_date(wdgdate, 'Date')
         return date
 
+
 class DateTimeField(DateField):
     format_prop = 'ui.datetime-format'
 
@@ -624,6 +629,7 @@ class DateTimeField(DateField):
         if isinstance(date, basestring):
             date = form.parse_datetime(date, 'Datetime')
         return date
+
 
 class TimeField(DateField):
     format_prop = 'ui.time-format'
@@ -639,16 +645,6 @@ class TimeField(DateField):
         return time
 
 class RelationField(Field):
-    # XXX (syt): iirc, we originaly don't sort relation vocabulary since we want
-    # to let entity.unrelated_rql control this, usually to get most recently
-    # modified entities in the select box instead of by alphabetical order. Now,
-    # we first use unrelated_rql to get the vocabulary, which may be limited
-    # (hence we get the latest modified entities) and we can sort here for
-    # better readability
-    #
-    # def __init__(self, **kwargs):
-    #     kwargs.setdefault('sort', False)
-    #     super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
     def fromcardinality(card, **kwargs):
@@ -657,7 +653,6 @@ class RelationField(Field):
 
     def vocabulary(self, form):
         entity = form.edited_entity
-        req = entity._cw
         # first see if its specified by __linkto form parameters
         linkedto = entity.linked_to(self.name, self.role)
         if linkedto:
@@ -767,7 +762,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                     kwargs['max_length'] = cstr.max
             return StringField(**kwargs)
         if fieldclass is FileField:
-            for metadata in ('format', 'encoding', 'name'):
+            for metadata in KNOWN_METAATTRIBUTES:
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
