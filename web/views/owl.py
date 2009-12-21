@@ -96,10 +96,7 @@ class OWLView(StartupView):
             if not self.should_display_rschema(eschema, rschema, role):
                 continue
             for oeschema in targetschemas:
-                if role == 'subject':
-                    card = rschema.rproperty(eschema, oeschema, 'cardinality')[0]
-                else:
-                    card = rschema.rproperty(oeschema, eschema, 'cardinality')[1]
+                card = rschema.role_rdef(eschema, oeschema, role).role_cardinality(role)
                 cardtag = OWL_CARD_MAP[card]
                 if cardtag:
                     self.w(u'''<rdfs:subClassOf>
