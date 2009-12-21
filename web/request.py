@@ -349,7 +349,7 @@ class CubicWebRequestBase(DBAPIRequest):
         try:
             eids = form['eid']
         except KeyError:
-            raise NothingToEdit(None, {None: self._('no selected entities')})
+            raise NothingToEdit(self._('no selected entities'))
         if isinstance(eids, basestring):
             eids = (eids,)
         for peid in eids:
@@ -361,7 +361,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 yield peid
             yielded = True
         if not yielded:
-            raise NothingToEdit(None, {None: self._('no selected entities')})
+            raise NothingToEdit(self._('no selected entities'))
 
     # minparams=3 by default: at least eid, __type, and some params to change
     def extract_entity_params(self, eid, minparams=3):
