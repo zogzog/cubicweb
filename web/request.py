@@ -133,6 +133,15 @@ class CubicWebRequestBase(DBAPIRequest):
                     return
         # 3. default language
         self.set_default_language(vreg)
+        # XXX code smell
+        # have to be done here because language is not yet set in setup_params
+        #
+        # special key for created entity, added in controller's reset method
+        # if no message set, we don't want this neither
+        if '__createdpath' in self.form and self.message:
+            self.message += ' (<a href="%s">%s</a>)' % (
+                self.build_url(self.form.pop('__createdpath')),
+                self._('click here to see created entity'))
 
     def set_language(self, lang):
         gettext, self.pgettext = self.translations[lang]
@@ -175,12 +184,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 del self.form[k]
             else:
                 self.form[k] = v
-        # special key for created entity, added in controller's reset method
-        # if no message set, we don't want this neither
-        if '__createdpath' in params and self.message:
-            self.message += ' (<a href="%s">%s</a>)' % (
-                self.build_url(params.pop('__createdpath')),
-                self._('click here to see created entity'))
 
     def no_script_form_param(self, param, default=None, value=None):
         """ensure there is no script in a user form param
