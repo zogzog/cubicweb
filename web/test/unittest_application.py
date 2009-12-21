@@ -169,11 +169,11 @@ class ApplicationTC(CubicWebTC):
     def test_publish_validation_error(self):
         req = self.request()
         user = self.user()
+        eid = unicode(user.eid)
         req.form = {
-            'eid':       `user.eid`,
-            '__type:'+`user.eid`:    'CWUser',
-            'login:'+`user.eid`:     '', # ERROR: no login specified
-            'edits-login:'+`user.eid`: unicode(user.login),
+            'eid':       eid,
+            '__type:'+eid:    'CWUser', '_cw_edited_fields:'+eid: 'login-subject',
+            'login-subject:'+eid:     '', # ERROR: no login specified
              # just a sample, missing some necessary information for real life
             '__errorurl': 'view?vid=edition...'
             }
@@ -182,9 +182,8 @@ class ApplicationTC(CubicWebTC):
         eidmap = forminfo['eidmap']
         self.assertEquals(eidmap, {})
         values = forminfo['values']
-        self.assertEquals(values['login:'+`user.eid`], '')
-        self.assertEquals(values['edits-login:'+`user.eid`], user.login)
-        self.assertEquals(values['eid'], `user.eid`)
+        self.assertEquals(values['login-subject:'+eid], '')
+        self.assertEquals(values['eid'], eid)
         errors = forminfo['errors']
         self.assertEquals(errors.entity, user.eid)
         self.assertEquals(errors.errors['login'], 'required attribute')
@@ -194,16 +193,16 @@ class ApplicationTC(CubicWebTC):
         """test creation of two linked entities
         """
         req = self.request()
-        form = {'eid': ['X', 'Y'],
-                '__type:X': 'CWUser',
+        form = {'eid': ['X', 'Y'], '__maineid': 'X',
+                '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject,surname-subject',
                 # missing required field
-                'login:X': u'', 'edits-login:X': '',
-                'surname:X': u'Mr Ouaoua', 'edits-surname:X': '',
-                '__type:Y': 'EmailAddress',
+                'login-subject:X': u'',
+                'surname-subject:X': u'Mr Ouaoua',
                 # but email address is set
-                'address:Y': u'bougloup@logilab.fr', 'edits-address:Y': '',
-                'alias:Y': u'', 'edits-alias:Y': '',
-                'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE,
+                '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject,alias-subject,use_email-object',
+                'address-subject:Y': u'bougloup@logilab.fr',
+                'alias-subject:Y': u'',
+                'use_email-object:Y': 'X',
                 # necessary to get validation error handling
                 '__errorurl': 'view?vid=edition...',
                 }
@@ -212,7 +211,7 @@ class ApplicationTC(CubicWebTC):
         req.edited_eids = lambda : ('Y', 'X')
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
         forminfo = req.get_session_data('view?vid=edition...')
-        self.assertUnorderedIterableEquals(forminfo['eidmap'].keys(), ['X', 'Y'])
+        self.assertEquals(set(forminfo['eidmap']), set('XY'))
         self.assertEquals(forminfo['errors'].entity, forminfo['eidmap']['X'])
         self.assertEquals(forminfo['errors'].errors, {'login': 'required attribute',
                                                       'upassword': 'required attribute'})

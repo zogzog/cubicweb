@@ -46,7 +46,6 @@ class GuessFieldTC(TestCase):
         description_format_field = guess_field(schema['State'], schema['description_format'], skip_meta_attr=False)
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
-        self.assertEquals(description_format_field.initial(None), 'text/rest')
 
 #         wikiid_field = guess_field(schema['State'], schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)
@@ -92,9 +91,10 @@ class GuessFieldTC(TestCase):
 
     def test_constraints_priority(self):
         salesterm_field = guess_field(schema['Salesterm'], schema['reason'])
-        constraints = schema['reason'].rproperty('Salesterm', 'String', 'constraints')
+        constraints = schema['reason'].rdef('Salesterm', 'String').constraints
         self.assertEquals([c.__class__ for c in constraints],
                           [SizeConstraint, StaticVocabularyConstraint])
+        self.assertIsInstance(salesterm_field, StringField)
         self.assertIsInstance(salesterm_field.widget, Select)
 
 
@@ -102,7 +102,6 @@ class GuessFieldTC(TestCase):
         field = guess_field(schema['CWAttribute'], schema['indexed'])
         self.assertIsInstance(field, BooleanField)
         self.assertEquals(field.required, False)
-        self.assertEquals(field.initial(None), None)
         self.assertIsInstance(field.widget, Radio)
         self.assertEquals(field.vocabulary(mock(_cw=mock(_=unicode))),
                           [(u'yes', '1'), (u'no', '')])
@@ -126,10 +125,10 @@ class MoreFieldsTC(CubicWebTC):
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
         # unlike below, initial is bound to form.form_field_format
-        self.assertEquals(description_format_field.initial(form), 'text/html')
+        self.assertEquals(description_format_field.value(form), 'text/html')
         self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
-        self.assertEquals(description_format_field.initial(form), 'text/rest')
+        self.assertEquals(description_format_field.value(form), 'text/rest')
 
 
 class UtilsTC(TestCase):
