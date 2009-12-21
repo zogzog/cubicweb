@@ -298,11 +298,54 @@ class Field(object):
             vocab = vocab_sort(vocab)
         return vocab
 
+    def format(self, form):
+        """return MIME type used for the given (text or bytes) field"""
+        if self.eidparam and self.role == 'subject':
+            entity = form.edited_entity
+            if entity.e_schema.has_metadata(self.name, 'format') and (
+                entity.has_eid() or '%s_format' % self.name in entity):
+                return form.edited_entity.attr_metadata(self.name, 'format')
+        return form._cw.property_value('ui.default-text-format')
+
+    def encoding(self, form):
+        """return encoding used for the given (text) field"""
+        if self.eidparam:
+            entity = form.edited_entity
+            if entity.e_schema.has_metadata(self.name, 'encoding') and (
+                entity.has_eid() or '%s_encoding' % self.name in entity):
+                return form.edited_entity.attr_metadata(self.name, 'encoding')
+        return form._cw.encoding
+
     def form_init(self, form):
         """method called before by build_context to trigger potential field
         initialization requiring the form instance
         """
         pass
+
+    def has_been_modified(self, form):
+        if self.is_visible():
+            # fields not corresponding to an entity attribute / relations
+            # are considered modified
+            if not self.eidparam or not self.role or not form.edited_entity.has_eid():
+                return True # XXX
+            try:
+                if self.role == 'subject':
+                    previous_value = getattr(form.edited_entity, self.name)
+                else:
+                    previous_value = getattr(form.edited_entity,
+                                             'reverse_%s' % self.name)
+            except AttributeError:
+                # fields with eidparam=True but not corresponding to an actual
+                # attribute or relation
+                return True
+            # if it's a non final relation, we need the eids
+            if isinstance(previous_value, list):
+                # widget should return untyped eids
+                previous_value = set(unicode(e.eid) for e in previous_value)
+            if form.edited_entity.has_eid() and (previous_value == self.process_form_value(form)):
+                return False # not modified
+            return True
+        return False
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
@@ -419,7 +462,7 @@ class RichTextField(StringField):
         `attr`, according to user preferences
         """
         if form._cw.use_fckeditor():
-            return form.form_field_format(self) == 'text/html'
+            return self.format(form) == 'text/html'
         return False
 
     def render(self, form, renderer):
@@ -526,7 +569,7 @@ class EditableFileField(FileField):
         if self.format(form) in self.editable_formats:
             data = self.typed_value(form, load_bytes=True)
             if data:
-                encoding = form.form_field_encoding(self)
+                encoding = self.encoding(form)
                 try:
                     form.formvalues[self] = unicode(data.getvalue(), encoding)
                 except UnicodeError:
@@ -551,8 +594,7 @@ class EditableFileField(FileField):
         value = form._cw.form.get(self.input_name(form))
         if isinstance(value, unicode):
             # file modified using a text widget
-            encoding = form.form_field_encoding(self)
-            return Binary(value.encode(encoding))
+            return Binary(value.encode(self.encoding(form)))
         return super(EditableFileField, self).process_form_value(form)
 
 

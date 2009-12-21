@@ -166,17 +166,6 @@ class FieldsForm(form.Form):
             return u'<span class="error">%s</span>' % self.form_valerror.errors[field.name]
         return u''
 
-    def form_field_format(self, field):
-        """return MIME type used for the given (text or bytes) field"""
-        return self._cw.property_value('ui.default-text-format')
-
-    def form_field_encoding(self, field):
-        """return encoding used for the given (text) field"""
-        return self._cw.encoding
-
-    def form_field_modified(self, field):
-        return field.is_visible()
-
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
@@ -256,23 +245,6 @@ class EntityFieldsForm(FieldsForm):
             col=self.cw_col, entity=self.edited_entity)
 
 
-
-    def form_field_format(self, field):
-        """return MIME type used for the given (text or bytes) field"""
-        entity = self.edited_entity
-        if field.eidparam and entity.e_schema.has_metadata(field.name, 'format') and (
-            entity.has_eid() or '%s_format' % field.name in entity):
-            return self.edited_entity.attr_metadata(field.name, 'format')
-        return self._cw.property_value('ui.default-text-format')
-
-    def form_field_encoding(self, field):
-        """return encoding used for the given (text) field"""
-        entity = self.edited_entity
-        if field.eidparam and entity.e_schema.has_metadata(field.name, 'encoding') and (
-            entity.has_eid() or '%s_encoding' % field.name in entity):
-            return self.edited_entity.attr_metadata(field.name, 'encoding')
-        return super(EntityFieldsForm, self).form_field_encoding(field)
-    # XXX all this vocabulary handling should be on the field, no?
     def actual_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be
         # created entity)
@@ -281,32 +253,6 @@ class EntityFieldsForm(FieldsForm):
             return typed_eid(eid)
         except ValueError:
             try:
-
-    def form_field_modified(self, field):
-        if field.is_visible():
-            # fields not corresponding to an entity attribute / relations
-            # are considered modified
-            if not field.eidparam or not self.edited_entity.has_eid():
-                return True # XXX
-            try:
-                if field.role == 'subject':
-                    previous_value = getattr(self.edited_entity, field.name)
-                else:
-                    previous_value = getattr(self.edited_entity,
-                                             'reverse_%s' % field.name)
-            except AttributeError:
-                # fields with eidparam=True but not corresponding to an actual
-                # attribute or relation
-                return True
-            # if it's a non final relation, we need the eids
-            if isinstance(previous_value, list):
-                # widget should return untyped eids
-                previous_value = set(unicode(e.eid) for e in previous_value)
-            new_value = field.process_form_value(self)
-            if self.edited_entity.has_eid() and (previous_value == new_value):
-                return False # not modified
-            return True
-        return False
                 return self._cw.data['eidmap'][eid]
             except KeyError:
                 self._cw.data['eidmap'][eid] = None
