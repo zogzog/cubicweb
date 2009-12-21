@@ -1173,7 +1173,7 @@ msgid "an error occured, the request cannot be fulfilled"
 msgstr "une erreur est survenue, la requête ne peut être complétée"
 
 msgid "and linked"
-msgstr "et lié"
+msgstr "et liée"
 
 msgid "and/or between different values"
 msgstr "et/ou entre les différentes valeurs"
