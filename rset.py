@@ -326,8 +326,8 @@ class ResultSet(object):
             # which get a wrong rset reference by this limit call
             for entity in self.req.cached_entities():
                 if entity.cw_rset is self:
-                    if offset <= entity.row < stop:
-                        entity.row = entity.row - offset
+                    if offset <= entity.cw_row < stop:
+                        entity.cw_row = entity.cw_row - offset
                     else:
                         self.req.drop_entity_cache(entity.eid)
         else:
