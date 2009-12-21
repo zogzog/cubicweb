@@ -366,9 +366,9 @@ class Field(object):
 class StringField(Field):
     widget = TextArea
 
-    def __init__(self, max_length=None, **kwargs):
+    def __init__(self, name=None, max_length=None, **kwargs):
         self.max_length = max_length # must be set before super call
-        super(StringField, self).__init__(**kwargs)
+        super(StringField, self).__init__(name=name, **kwargs)
 
     def init_widget(self, widget):
         if widget is None:
