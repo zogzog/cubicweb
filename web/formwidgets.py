@@ -51,11 +51,8 @@ class FieldWidget(object):
         """
         raise NotImplementedError
 
-    def _render_attrs(self, form, field):
-        """return html tag name, attributes and a list of values for the field
-        """
-        name = form.context[field]['name']
-        values = form.context[field]['value']
+    def values_and_attributes(self, form, field):
+        values = field.display_value(form)
         if not isinstance(values, (tuple, list)):
             values = (values,)
         attrs = dict(self.attrs)
@@ -63,12 +60,20 @@ class FieldWidget(object):
             attrs['id'] = field.dom_id(form)
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
-        return name, values, attrs
+        return values, attrs
 
     def process_field_data(self, form, field):
-        formkey = form.form_field_name(field)
         posted = form._cw.form
-        return posted.get(formkey)
+        val = posted.get(field.input_name(form))
+        return val
+
+    @deprecated('[3.6] use values_and_attributes')
+    def _render_attrs(self, form, field):
+        """return html tag name, attributes and a list of values for the field
+        """
+        values, attrs = self.values_and_attributes(form, field)
+        return field.input_name(form), values, attrs
+
 
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
@@ -80,7 +85,7 @@ class Input(FieldWidget):
         Generate one <input> tag for each field's value
         """
         self.add_media(form)
-        name, values, attrs = self._render_attrs(form, field)
+        values, attrs = self.values_and_attributes(form, field)
         # ensure something is rendered
         if not values:
             values = (INTERNAL_FIELD_VALUE,)
@@ -105,7 +110,7 @@ class PasswordInput(Input):
 
     def render(self, form, field, renderer):
         self.add_media(form)
-        name, values, attrs = self._render_attrs(form, field)
+        values, attrs = self.values_and_attributes(form, field)
         assert len(values) == 1
         id = attrs.pop('id')
         inputs = [tags.input(name=field.input_name(form),
@@ -142,10 +147,10 @@ class FileInput(Input):
     """<input type='file'>"""
     type = 'file'
 
-    def _render_attrs(self, form, field):
+    def values_and_attributes(self, form, field):
         # ignore value which makes no sense here (XXX even on form validation error?)
-        name, values, attrs = super(FileInput, self)._render_attrs(form, field)
-        return name, ('',), attrs
+        values, attrs = super(FileInput, self).values_and_attributes(form, field)
+        return ('',), attrs
 
 
 class HiddenInput(Input):
@@ -168,7 +173,7 @@ class TextArea(FieldWidget):
     """<textarea>"""
 
     def render(self, form, field, renderer):
-        name, values, attrs = self._render_attrs(form, field)
+        values, attrs = self.values_and_attributes(form, field)
         attrs.setdefault('onkeyup', 'autogrow(this)')
         if not values:
             value = u''
@@ -205,7 +210,7 @@ class Select(FieldWidget):
         self._multiple = multiple
 
     def render(self, form, field, renderer):
-        name, curvalues, attrs = self._render_attrs(form, field)
+        curvalues, attrs = self.values_and_attributes(form, field)
         if not 'size' in attrs:
             attrs['size'] = self._multiple and '5' or '1'
         options = []
@@ -242,7 +247,7 @@ class CheckBox(Input):
     vocabulary_widget = True
 
     def render(self, form, field, renderer):
-        name, curvalues, attrs = self._render_attrs(form, field)
+        curvalues, attrs = self.values_and_attributes(form, field)
         domid = attrs.pop('id', None)
         sep = attrs.pop('separator', u'<br/>\n')
         options = []
@@ -383,7 +388,7 @@ class AjaxWidget(FieldWidget):
 
     def render(self, form, field, renderer):
         self.add_media(form)
-        attrs = self._render_attrs(form, field)[-1]
+        attrs = self.values_and_attributes(form, field)[-1]
         return tags.div(**attrs)
 
 
@@ -407,14 +412,14 @@ class AutoCompletionWidget(TextInput):
             self.autocomplete_initfunc = None
         super(AutoCompletionWidget, self).__init__(*args, **kwargs)
 
-    def _render_attrs(self, form, field):
-        name, values, attrs = super(AutoCompletionWidget, self)._render_attrs(form, field)
+    def values_and_attributes(self, form, field):
+        values, attrs = super(AutoCompletionWidget, self).values_and_attributes(form, field)
         init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
         attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
         if not values:
             values = ('',)
-        return name, values, attrs
+        return values, attrs
 
     def _get_url(self, entity, field):
         if self.autocomplete_initfunc is None:
@@ -445,15 +450,15 @@ class RestrictedAutoCompletionWidget(AutoCompletionWidget):
 
 
 class AddComboBoxWidget(Select):
-    def _render_attrs(self, form, field):
-        name, values, attrs = super(AddComboBoxWidget, self)._render_attrs(form, field)
+    def values_and_attributes(self, form, field):
+        values, attrs = super(AddComboBoxWidget, self).values_and_attributes(form, field)
         init_ajax_attributes(self.attrs, 'AddComboBox')
         # XXX entity form specific
         entity = form.edited_entity
         attrs['cubicweb:etype_to'] = entity.e_schema
         etype_from = entity.e_schema.subjrels[field.name].objects(entity.e_schema)[0]
         attrs['cubicweb:etype_from'] = etype_from
-        return name, values, attrs
+        return values, attrs
 
     def render(self, form, field, renderer):
         return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''
