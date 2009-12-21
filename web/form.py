@@ -101,7 +101,7 @@ class Form(AppObject):
         return fields
 
     @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject'):
+    def field_by_name(cls_or_self, name, role=None):
         """return field with the given name and role.
         Raise FieldNotFound if the field can't be found.
         """
@@ -111,7 +111,7 @@ class Form(AppObject):
         raise FieldNotFound(name)
 
     @iclassmethod
-    def fields_by_name(cls_or_self, name, role='subject'):
+    def fields_by_name(cls_or_self, name, role=None):
         """return a list of fields with the given name and role"""
         return [field for field in cls_or_self._fieldsattr()
                 if field.name == name and field.role == role]

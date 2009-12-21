@@ -433,7 +433,7 @@ class RichTextField(StringField):
         try:
             return req.data[self]
         except KeyError:
-            fkwargs = {'eidparam': self.eidparam}
+            fkwargs = {'eidparam': self.eidparam, 'role': self.role}
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
@@ -823,6 +823,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     card = rdef.role_cardinality(role)
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
+    kwargs['role'] = role
     if role == 'object':
         kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
@@ -858,7 +859,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
                                                                 skip_meta_attr=False)
         return fieldclass(**kwargs)
-    kwargs['role'] = role
     return RelationField.fromcardinality(card, **kwargs)
 
 

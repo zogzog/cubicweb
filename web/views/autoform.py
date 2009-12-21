@@ -52,7 +52,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # class methods mapping schema relations to fields in the form ############
 
     @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject', eschema=None):
+    def field_by_name(cls_or_self, name, role=None, eschema=None):
         """return field with the given name and role. If field is not explicitly
         defined for the form but `eclass` is specified, guess_field will be
         called.
@@ -60,7 +60,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except form.FieldNotFound:
-            if eschema is None or not name in eschema.schema:
+            if eschema is None or role is None or not name in eschema.schema:
                 raise
             rschema = eschema.schema.rschema(name)
             # XXX use a sample target type. Document this.
