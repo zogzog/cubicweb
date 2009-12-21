@@ -410,8 +410,8 @@ class CopyFormView(EditionFormView):
         """customize your form before rendering here"""
         super(CopyFormView, self).init_form(form, entity)
         if entity.eid == self.newentity.eid:
-            form.form_add_hidden(eid_param('__cloned_eid', entity.eid),
-                                 self.copying.eid)
+            form.add_hidden(eid_param('__cloned_eid', entity.eid),
+                            self.copying.eid)
         for rschema, role in form.editable_attributes():
             if not rschema.final:
                 # ensure relation cache is filed
@@ -536,8 +536,8 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         #  * str(self.rtype) in case it's a schema object
         #  * neged_role() since role is the for parent entity, we want the role
         #    of the inlined entity
-        form.form_add_hidden(name=str(self.rtype), value=self.peid,
-                             role=neg_role(self.role), eidparam=True, id=iid)
+        form.add_hidden(name=str(self.rtype), value=self.peid,
+                        role=neg_role(self.role), eidparam=True, id=iid)
 
     def keep_entity(self, form, entity):
         if not entity.has_eid():

@@ -81,7 +81,7 @@ class FieldsForm(form.Form):
         self.fields = list(self.__class__._fields_)
         for key, val in kwargs.items():
             if key in NAV_FORM_PARAMETERS:
-                self.form_add_hidden(key, val)
+                self.add_hidden(key, val)
             elif hasattr(self.__class__, key) and not key[0] == '_':
                 setattr(self, key, val)
             else:
@@ -89,8 +89,8 @@ class FieldsForm(form.Form):
             # skip other parameters, usually given for selection
             # (else write a custom class to handle them)
         if mainform:
-            self.form_add_hidden('__errorurl', self.session_key())
-            self.form_add_hidden('__domid', self.domid)
+            self.add_hidden('__errorurl', self.session_key())
+            self.add_hidden('__domid', self.domid)
             self.restore_previous_post(self.session_key())
 
         # XXX why do we need two different variables (mainform and copy_nav_params ?)
@@ -99,19 +99,18 @@ class FieldsForm(form.Form):
                 if not param in kwargs:
                     value = req.form.get(param)
                     if value:
-                        self.form_add_hidden(param, value)
+                        self.add_hidden(param, value)
         if submitmsg is not None:
-            self.form_add_hidden('__message', submitmsg)
-        self.context = None
+            self.add_hidden('__message', submitmsg)
         if 'domid' in kwargs:# session key changed
             self.restore_previous_post(self.session_key())
 
     @property
-    def form_needs_multipart(self):
+    def needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
         return any(field.needs_multipart for field in self.fields)
 
-    def form_add_hidden(self, name, value=None, **kwargs):
+    def add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
         kwargs.setdefault('widget', fwdgs.HiddenInput)
         field = StringField(name=name, value=value, **kwargs)
@@ -135,13 +134,13 @@ class FieldsForm(form.Form):
         """
         self.build_context(formvalues or {})
         if renderer is None:
-            renderer = self.form_default_renderer()
-        return renderer.render(self, rendervalues or {})
+            renderer = self.default_renderer()
+        return renderer.render(self, kwargs)
 
-    def form_default_renderer(self):
-        return self._cw.vreg['formrenderers'].select(self.form_renderer_id,
-                                                     self._cw, rset=self.cw_rset,
-                                                     row=self.cw_row, col=self.cw_col)
+    def default_renderer(self):
+        return self._cw.vreg['formrenderers'].select(
+            self.form_renderer_id, self._cw,
+            rset=self.cw_rset, row=self.cw_row, col=self.cw_col)
 
     formvalues = None
     def build_context(self, formvalues=None):
@@ -171,7 +170,11 @@ class FieldsForm(form.Form):
         """
         return self.form_valerror and field.name in self.form_valerror.errors
 
-    @deprecated('use .render(formvalues, rendervalues)')
+    @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
+    def form_add_hidden(self, name, value=None, **kwargs):
+        return self.add_hidden(name, value, **kwargs)
+
+    @deprecated('[3.6] use .render(formvalues, **rendervalues)')
     def form_render(self, **values):
         """render this form, using the renderer given in args or the default
         FormRenderer()
@@ -197,20 +200,20 @@ class EntityFieldsForm(FieldsForm):
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
         if self.edited_entity is None:
             self.edited_entity = self.cw_rset.complete_entity(self.cw_row or 0, self.cw_col or 0)
-        self.form_add_hidden('__type', eidparam=True)
-        self.form_add_hidden('eid')
+        self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
+        self.add_hidden('eid', self.edited_entity.eid)
         if kwargs.get('mainform', True): # mainform default to true in parent
-            self.form_add_hidden(u'__maineid', self.edited_entity.eid)
+            self.add_hidden(u'__maineid', self.edited_entity.eid)
             # If we need to directly attach the new object to another one
             if self._cw.list_form_param('__linkto'):
                 for linkto in self._cw.list_form_param('__linkto'):
-                    self.form_add_hidden('__linkto', linkto)
+                    self.add_hidden('__linkto', linkto)
                 if msg:
                     msg = '%s %s' % (msg, self._cw._('and linked'))
                 else:
                     msg = self._cw._('entity linked')
         if msg:
-            self.form_add_hidden('__message', msg)
+            self.add_hidden('__message', msg)
 
     def session_key(self):
         """return the key that may be used to store / retreive data about a
@@ -240,6 +243,7 @@ class EntityFieldsForm(FieldsForm):
         return super(EntityFieldsForm, self)._field_has_error(field) \
                and self.form_valerror.eid == self.edited_entity.eid
 
+    def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)

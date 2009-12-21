@@ -112,7 +112,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         return self.maxrelitems + 1
 
     @property
-    def form_needs_multipart(self):
+    def needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
         return self._subform_needs_multipart()
 
@@ -124,7 +124,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def _subform_needs_multipart(self, _tested=None):
         if _tested is None:
             _tested = set()
-        if super(AutomaticEntityForm, self).form_needs_multipart:
+        if super(AutomaticEntityForm, self).needs_multipart:
             return True
         # take a look at inlined forms to check (recursively) if they
         # need multipart handling.
@@ -142,7 +142,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 if hasattr(formview.form, '_subform_needs_multipart'):
                     needs_multipart = formview.form._subform_needs_multipart(_tested)
                 else:
-                    needs_multipart = formview.form.form_needs_multipart
+                    needs_multipart = formview.form.needs_multipart
                 if needs_multipart:
                     return True
         return False

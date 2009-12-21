@@ -146,7 +146,7 @@ class FormRenderer(AppObject):
         return u''
 
     def open_form(self, form, values):
-        if form.form_needs_multipart:
+        if form.needs_multipart:
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'

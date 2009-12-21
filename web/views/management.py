@@ -168,8 +168,8 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                          domid='reqperm%s' % entity.eid,
                                          __redirectvid='security',
                                          __redirectpath=entity.rest_path())
-        form.form_add_hidden('require_permission', entity.eid, role='object',
-                             eidparam=True)
+        form.add_hidden('require_permission', entity.eid, role='object',
+                        eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
         cwpermschema = newperm.e_schema
         if permnames is not None:
@@ -242,10 +242,10 @@ class ErrorView(AnyRsetView):
             form = self._cw.vreg['forms'].select('base', self._cw, rset=None,
                                              mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
-            form.form_add_hidden('description', binfo,
-                                 # we must use a text area to keep line breaks
-                                 widget=wdgs.TextArea({'class': 'hidden'}))
-            form.form_add_hidden('__bugreporting', '1')
+            form.add_hidden('description', binfo,
+                            # we must use a text area to keep line breaks
+                            widget=wdgs.TextArea({'class': 'hidden'}))
+            form.add_hidden('__bugreporting', '1')
             form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
             form.action = req.build_url('reportbug')
             w(form.render())

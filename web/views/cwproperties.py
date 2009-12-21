@@ -196,8 +196,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         path = self._cw.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
-            form.form_add_hidden('__redirectparams', params)
-        form.form_add_hidden('__redirectpath', path)
+            form.add_hidden('__redirectparams', params)
+        form.add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
         renderer = self._cw.vreg['formrenderers'].select('cwproperties', self._cw,
@@ -215,7 +215,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         #subform.vreg = self._cw.vreg
-        subform.form_add_hidden('pkey', key, eidparam=True)
+        subform.add_hidden('pkey', key, eidparam=True)
         form.add_subform(subform)
         return subform
 
@@ -253,7 +253,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
         # if user is in the managers group and the property is being created,
         # we have to set for_user explicitly
         if not subform.edited_entity.has_eid() and self.user.matching_groups('managers'):
-            subform.form_add_hidden('for_user', self.user.eid, eidparam=True)
+            subform.add_hidden('for_user', self.user.eid, eidparam=True)
 
 
 # cwproperty form objects ######################################################
