@@ -1074,11 +1074,8 @@ stmts.Select.set_statement_type = bw_set_statement_type
 
 # XXX deprecated
 
-from yams.constraints import format_constraint
-format_constraint = deprecated('[3.4] use RichString instead of format_constraint')(format_constraint)
 from yams.buildobjs import RichString
 
 PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
 PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
-PyFileReader.context['format_constraint'] = format_constraint
