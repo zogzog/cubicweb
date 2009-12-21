@@ -355,12 +355,12 @@ class Field(object):
     def process_posted(self, form):
         for field in self.actual_fields(form):
             if field is self:
-                yield field.name, field.process_form_value(form)
+                yield field, field.process_form_value(form)
             else:
                 # recursive function: we might have compound fields
                 # of compound fields (of compound fields of ...)
-                for fieldname, value in field.process_posted(form):
-                    yield fieldname, value
+                for field, value in field.process_posted(form):
+                    yield field, value
 
 
 class StringField(Field):
