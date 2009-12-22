@@ -104,7 +104,7 @@ class AbstractSource(object):
         """method called to create a backup of source's data"""
         pass
 
-    def restore(self, backupfile):
+    def restore(self, backupfile, confirm, drop):
         """method called to restore a backup of source's data"""
         pass
 

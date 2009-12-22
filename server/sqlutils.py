@@ -183,7 +183,9 @@ class SQLAdapterMixIn(object):
                                                   keepownership=False,
                                                   drop=drop):
             if os.system(cmd):
-                raise Exception('Failed command: %s' % cmd)
+                print '-> Failed command: %s' % cmd
+                if not confirm('Continue anyway?', default='n'):
+                    raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
         if args is not None:

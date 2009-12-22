@@ -101,11 +101,11 @@ repository.',
         finally:
             self.open_pool_connections()
 
-    def restore(self, backupfile, drop):
+    def restore(self, backupfile, confirm, drop):
         """method called to restore a backup of source's data"""
         self.close_pool_connections()
         try:
-            self.sqladapter.restore_from_file(backupfile, drop)
+            self.sqladapter.restore_from_file(backupfile, confirm, drop)
         finally:
             self.open_pool_connections()
 
