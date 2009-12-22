@@ -100,9 +100,11 @@ class CubicWebRootResource(resource.PostableResource):
         self.debugmode = debug
         self.config = config
         self.base_url = config['base-url'] or config.default_base_url()
-        assert self.base_url[-1] == '/'
+        if self.base_url[-1] != '/':
+            self.base_url += '/'
         self.https_url = config['https-url']
-        assert not self.https_url or self.https_url[-1] == '/'
+        if self.https_url and self.https_url[-1] != '/'
+            self.https_url += '/'
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
         self.appli = CubicWebPublisher(config, debug=self.debugmode)
