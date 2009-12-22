@@ -103,7 +103,7 @@ class CubicWebRootResource(resource.PostableResource):
         if self.base_url[-1] != '/':
             self.base_url += '/'
         self.https_url = config['https-url']
-        if self.https_url and self.https_url[-1] != '/'
+        if self.https_url and self.https_url[-1] != '/':
             self.https_url += '/'
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
