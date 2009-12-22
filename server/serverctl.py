@@ -56,9 +56,11 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             password = source['db-password']
         else:
             password = getpass('password: ')
+    extra_args = source.get('db-extra-arguments')
+    extra = extra_args and {'extra_args': extra_args} or {}
     return get_connection(driver, dbhost, dbname, user, password=password,
                           port=source.get('db-port'),
-                          extra_args=source.get('db-extra-arguments'))
+                          **extra)
 
 def system_source_cnx(source, dbms_system_base=False,
                       special_privs='CREATE/DROP DATABASE', verbose=True):
@@ -366,11 +368,13 @@ tables, indexes... (no by default)'}),
         config = ServerConfiguration.config_for(appid)
         try:
             system = config.sources()['system']
+            extra_args=system.get('db-extra-arguments')
+            extra = extra_args and {'extra_args': extra_args} or {}
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
                 user=system.get('db-user'), password=system.get('db-password'), 
-                extra_args=system.get('db-extra-arguments'))
+                **extra)
         except Exception, ex:
             raise ConfigurationError(
                 'You seem to have provided wrong connection information in '\
