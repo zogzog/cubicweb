@@ -157,11 +157,14 @@ class SQLAdapterMixIn(object):
         else:
             self.info('connecting to %s@%s', self.dbname,
                       self.dbhost or 'localhost')
+        extra = {}
+        if self.dbdriver_extra_args:
+            extra = {'extra_args': self.dbdriver_extra_args}
         cnx = self.dbapi_module.connect(self.dbhost, self.dbname,
                                         user or self.dbuser,
                                         password or self.dbpasswd,
                                         port=self.dbport,
-                                        extra_args=self.dbdriver_extra_args)
+                                        **extra)
         init_cnx(self.dbdriver, cnx)
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
