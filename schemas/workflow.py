@@ -160,11 +160,7 @@ class from_state(RelationType):
     inlined = True
 
 class to_state(RelationType):
-    __permissions__ = {
-        'read':   ('managers', 'users', 'guests',),
-        'add':    ('managers',),
-        'delete': (),
-    }
+    __permissions__ = HOOKS_RTYPE_PERMS.copy()
     inlined = True
 
 class by_transition(RelationType):
