@@ -28,20 +28,46 @@ function _loadAjaxHtmlHead(node, head, tag, srcattr) {
 }
 
 /*
- * inspect dom response, search for a <div class="ajaxHtmlHead"> node and
- * put its content into the real document's head.
+ * inspect dom response (as returned by getDomFromResponse), search for
+ * a <div class="ajaxHtmlHead"> node and put its content into the real
+ * document's head.
  * This enables dynamic css and js loading and is used by replacePageChunk
  */
-function loadAjaxHtmlHead(node) {
-    var head = jQuery('head');
-    node = jQuery(node).find('div.ajaxHtmlHead');
-    _loadAjaxHtmlHead(node, head, 'script', 'src');
-    _loadAjaxHtmlHead(node, head, 'link', 'href');
-    node.find('*').appendTo(head);
+function loadAjaxHtmlHead(response) {
+    var $head = jQuery('head');
+    var $responseHead = jQuery(response).find('div.ajaxHtmlHead');
+    // no ajaxHtmlHead found, no processing required
+    if (!$responseHead.length) {
+        return response;
+    }
+    _loadAjaxHtmlHead($responseHead, $head, 'script', 'src');
+    _loadAjaxHtmlHead($responseHead, $head, 'link', 'href');
+    // add any remaining children (e.g. meta)
+    $responseHead.children().appendTo($head);
+    // remove original container, which is now empty
+    $responseHead.remove();
+    // if there was only one actual node in the reponse besides
+    // the ajaxHtmlHead, then remove the wrapper created by
+    // getDomFromResponse() and return this single element
+    // For instance :
+    // 1/ CW returned the following content :
+    //    <div>the-actual-content</div><div class="ajaxHtmlHead">...</div>
+    // 2/ getDomFromReponse() wrapped this into a single DIV to hold everything
+    //    in one, unique, dom element
+    // 3/ now that we've removed the ajaxHtmlHead div, the only
+    //    node left in the wrapper if the 'real' node built by the view,
+    //    we can safely return this node. Otherwise, the view itself
+    //    returned several 'root' nodes and we need to keep the wrapper
+    //    created by getDomFromResponse()
+    if (response.childNodes.length == 1 &&
+	response.getAttribute('cubicweb:type') == 'cwResponseWrapper') {
+        return response.firstChild;
+    }
+    return response;
 }
 
 function preprocessAjaxLoad(node, newdomnode) {
-    loadAjaxHtmlHead(newdomnode);
+    return loadAjaxHtmlHead(newdomnode);
 }
 
 function postAjaxLoad(node) {
@@ -102,23 +128,23 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 	delete data.callback;
     }
     ajax(url, data, function(response) {
-	var domnode = getDomFromResponse(response);
-	preprocessAjaxLoad(node, domnode);
-	if (mode == 'swap') {
-	    var origId = node.id;
-	    node = swapDOM(node, domnode);
-	    if (!node.id) {
-		node.id = origId;
-	    }
-	} else if (mode == 'replace') {
-	    jQuery(node).empty().append(domnode);
-	} else if (mode == 'append') {
-	    jQuery(node).append(domnode);
-	}
-	postAjaxLoad(node);
-	while (jQuery.isFunction(callback)) {
-	    callback = callback.apply(this, [domnode]);
-	}
+        var domnode = getDomFromResponse(response);
+        domnode = preprocessAjaxLoad(node, domnode);
+        if (mode == 'swap') {
+            var origId = node.id;
+            node = swapDOM(node, domnode);
+            if (!node.id) {
+                node.id = origId;
+            }
+        } else if (mode == 'replace') {
+            jQuery(node).empty().append(domnode);
+        } else if (mode == 'append') {
+            jQuery(node).append(domnode);
+        }
+        postAjaxLoad(node);
+        while (jQuery.isFunction(callback)) {
+            callback = callback.apply(this, [domnode]);
+        }
     });
 };
 
@@ -430,10 +456,10 @@ function getDomFromResponse(response) {
 	return jQuery(children[0]).clone().context;
     }
     // several children => wrap them in a single node and return the wrap
-    return DIV(null, map(function(node) {
-                           return jQuery(node).clone().context;
-                         },
-                         children));
+    return DIV({'cubicweb:type': "cwResponseWrapper"},
+               map(function(node) {
+                    return jQuery(node).clone().context;
+            }, children));
 }
 
 function postJSON(url, data, callback) {
