@@ -146,7 +146,7 @@ class catch_error(object):
             if issubclass(type, (KeyboardInterrupt, SystemExit)):
                 return # re-raise
             if self.ctl.catcherrors:
-                self.ctl.record_error(self.key, msg)
+                self.ctl.record_error(self.key, None, type, value, traceback)
                 return True # silent
 
 
