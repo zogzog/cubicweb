@@ -144,6 +144,7 @@ class SQLAdapterMixIn(object):
         self.dbpasswd = source_config.get('db-password')
         self.encoding = source_config.get('db-encoding', 'UTF-8')
         self.dbapi_module = db.get_dbapi_compliant_module(self.dbdriver)
+        self.dbdriver_extra_args = source_config.get('db-extra-arguments')
         self.binary = self.dbapi_module.Binary
         self.dbhelper = self.dbapi_module.adv_func_helper
         self.sqlgen = SQLGenerator()
@@ -159,7 +160,8 @@ class SQLAdapterMixIn(object):
         cnx = self.dbapi_module.connect(self.dbhost, self.dbname,
                                         user or self.dbuser,
                                         password or self.dbpasswd,
-                                        port=self.dbport)
+                                        port=self.dbport,
+                                        extra_args=self.dbdriver_extra_args)
         init_cnx(self.dbdriver, cnx)
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
