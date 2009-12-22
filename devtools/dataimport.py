@@ -51,7 +51,11 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 """
 __docformat__ = "restructuredtext en"
 
-import sys, csv, traceback
+import sys
+import csv
+import traceback
+import os.path as osp
+from StringIO import StringIO
 
 from logilab.common import shellutils
 from logilab.common.deprecation import deprecated
@@ -59,6 +63,8 @@ from logilab.common.deprecation import deprecated
 def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
     """same as ucsvreader but a progress bar is displayed as we iter on rows"""
+    if not osp.exists(filepath):
+        raise Exception("file doesn't exists: %s" % filepath)
     rowcount = int(shellutils.Execute('wc -l "%s"' % filepath).out.strip().split()[0])
     if skipfirst:
         rowcount -= 1
@@ -326,8 +332,7 @@ class CWImportController(object):
             entity[key] = default
 
     def record_error(self, key, msg=None, type=None, value=None, tb=None):
-        import StringIO
-        tmp = StringIO.StringIO()
+        tmp = StringIO()
         if type is None:
             traceback.print_exc(file=tmp)
         else:
