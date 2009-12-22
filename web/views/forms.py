@@ -227,9 +227,9 @@ class EntityFieldsForm(FieldsForm):
             return self.force_session_key
         # XXX if this is a json request, suppose we should redirect to the
         # entity primary view
-        if self.req.json_request and self.edited_entity.has_eid():
+        if self._cw.json_request and self.edited_entity.has_eid():
             return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
-        return '%s#%s' % (self.req.url(), self.domid)
+        return '%s#%s' % (self._cw.url(), self.domid)
 
     def build_context(self, formvalues=None):
         super(EntityFieldsForm, self).build_context(formvalues)

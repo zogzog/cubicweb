@@ -73,10 +73,10 @@ class ManageView(StartupView):
         self.w(u'<ul class="createLink">')
         for etype in self.add_etype_links:
             eschema = self.schema.eschema(etype)
-            if eschema.has_perm(self.req, 'add'):
+            if eschema.has_perm(self._cw, 'add'):
                 self.w(u'<li><a href="%s">%s</a></li>' % (
-                        self.req.build_url('add/%s' % eschema),
-                        self.req.__('add a %s' % eschema).capitalize()))
+                        self._cw.build_url('add/%s' % eschema),
+                        self._cw.__('add a %s' % eschema).capitalize()))
         self.w(u'</ul>')
 
     def startup_views(self):

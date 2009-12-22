@@ -288,8 +288,8 @@ class TableWidget(HTMLWidget):
 
     When using remember to include the required css and js with:
 
-    self.req.add_js('jquery.tablesorter.js')
-    self.req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+    self._cw.add_js('jquery.tablesorter.js')
+    self._cw.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
     """
     highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
                 "onmouseout=\"removeElementClass(this, 'highlighted');\""
