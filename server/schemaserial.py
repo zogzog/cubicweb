@@ -400,7 +400,7 @@ def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None,
     if subjtype is None:
         assert objtype is None
         assert props is None
-        targets = rschema.rdefs
+        targets = sorted(rschema.rdefs)
     else:
         assert not objtype is None
         targets = [(subjtype, objtype)]
@@ -449,7 +449,7 @@ def erschema2rql(erschema, groupmap):
         return eschema2rql(erschema, groupmap=groupmap)
     return rschema2rql(erschema, groupmap=groupmap)
 
-def eschema2rql(eschema, groupmap):
+def eschema2rql(eschema, groupmap=None):
     """return a list of rql insert statements to enter an entity schema
     in the database as an CWEType entity
     """
@@ -457,10 +457,11 @@ def eschema2rql(eschema, groupmap):
     # NOTE: 'specializes' relation can't be inserted here since there's no
     # way to make sure the parent type is inserted before the child type
     yield 'INSERT CWEType X: %s' % ','.join(relations) , values
-        # entity schema
-    for rql, args in _erperms2rql(eschema, groupmap):
-        args['name'] = str(eschema)
-        yield rql + 'X is CWEType, X name %(name)s', args
+    # entity permissions
+    if groupmap is not None:
+        for rql, args in _erperms2rql(eschema, groupmap):
+            args['name'] = str(eschema)
+            yield rql + 'X is CWEType, X name %(name)s', args
 
 def specialize2rql(schema):
     for eschema in schema.entities():
