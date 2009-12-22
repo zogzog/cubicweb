@@ -164,7 +164,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
     events = ('after_add_entity', 'after_update_entity')
 
     def __call__(self):
-        eschema = entity.eschema
+        eschema = self.entity.e_schema
         for attr in self.entity.edited_attributes:
             if eschema.subjrels[attr].final:
                 constraints = [c for c in eschema.rdef(attr).constraints

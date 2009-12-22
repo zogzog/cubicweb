@@ -100,7 +100,7 @@ class BeforeAddRelationSecurityHook(SecurityHook):
             rschema = self._cw.repo.schema[self.rtype]
             rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
                                 self._cw.describe(self.eidto)[0])
-            rdef.check_perm(session, 'add', fromeid=self.eidfrom, toeid=self.eidto)
+            rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 
 
 class AfterAddRelationSecurityHook(SecurityHook):
@@ -135,5 +135,5 @@ class BeforeDeleteRelationSecurityHook(SecurityHook):
         rschema = self._cw.repo.schema[self.rtype]
         rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
                             self._cw.describe(self.eidto)[0])
-        rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
+        rdef.check_perm(self._cw, 'delete', fromeid=self.eidfrom, toeid=self.eidto)
 
