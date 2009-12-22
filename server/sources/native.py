@@ -289,8 +289,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 raise AuthenticationError('bad login')
             # passwords are stored using the Bytes type, so we get a StringIO
             if pwd is not None:
-                args['pwd'] = crypt_password(password, pwd.getvalue()[:2])
+                args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
         # get eid from login and (crypted) password
+        # XXX why not simply compare password?
         rset = self.syntax_tree_search(session, self._auth_rqlst, args)
         try:
             return rset[0][0]
