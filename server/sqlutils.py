@@ -241,6 +241,7 @@ class SQLAdapterMixIn(object):
                         value = value.getvalue()
                     else:
                         value = crypt_password(value)
+                    value = self.binary(value)
                 # XXX needed for sqlite but I don't think it is for other backends
                 elif atype == 'Datetime' and isinstance(value, date):
                     value = todatetime(value)
