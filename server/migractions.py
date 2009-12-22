@@ -330,8 +330,6 @@ class ServerMigrationHelper(MigrationHelper):
 
     def _synchronize_permissions(self, erschema, teid):
         """permission synchronization for an entity or relation type"""
-        if erschema in VIRTUAL_RTYPES:
-            return
         assert teid, erschema
         if 'update' in erschema.ACTIONS or erschema.final:
             # entity type
@@ -522,7 +520,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
                                                   newcstr),
                                 ask_confirm=confirm)
-        if syncperms:
+        if syncperms and not rschema in VIRTUAL_RTYPES:
             self._synchronize_permissions(rdef, repordef.eid)
 
     # base actions ############################################################
