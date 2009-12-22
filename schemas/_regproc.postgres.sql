@@ -5,10 +5,12 @@
 
 */
 
+DROP FUNCTION IF EXISTS comma_join (anyarray) CASCADE;
 CREATE FUNCTION comma_join (anyarray) RETURNS text AS $$
     SELECT array_to_string($1, ', ')
 $$ LANGUAGE SQL;;
 
+DROP AGGREGATE IF EXISTS group_concat (anyelement) CASCADE;
 CREATE AGGREGATE group_concat (
   basetype = anyelement,
   sfunc = array_append,
@@ -19,6 +21,7 @@ CREATE AGGREGATE group_concat (
 
 
 
+DROP FUNCTION IF EXISTS limit_size (fulltext text, format text, maxsize integer);
 CREATE FUNCTION limit_size (fulltext text, format text, maxsize integer) RETURNS text AS $$
 DECLARE
     plaintext text;
@@ -39,7 +42,7 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;;
 
-
+DROP FUNCTION IF EXISTS text_limit_size (fulltext text, maxsize integer);
 CREATE FUNCTION text_limit_size (fulltext text, maxsize integer) RETURNS text AS $$
 BEGIN
     RETURN limit_size(fulltext, 'text/plain', maxsize);

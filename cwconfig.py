@@ -477,7 +477,7 @@ this option is set to yes",
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
                 except ImportError, err:
-                    cls.critical('could not import the command provider %s (cause : %s)' %
+                    cls.info('could not import the command provider %s (cause : %s)' %
                                 (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
@@ -571,6 +571,15 @@ this option is set to yes",
         self.adjust_sys_path()
         self.load_defaults()
         self.translations = {}
+        # don't register ReStructured Text directives by simple import, avoid pb
+        # with eg sphinx.
+        # XXX should be done properly with a function from cw.uicfg
+        try:
+            from cubicweb.ext.rest import cw_rest_init
+        except ImportError:
+            pass
+        else:
+            cw_rest_init()
 
     def adjust_sys_path(self):
         self.cls_adjust_sys_path()
@@ -867,12 +876,12 @@ the repository',
                     self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
-        context = {'__file__': sitefile}
-        execfile(sitefile, context, context)
+        from logilab.common.modutils import load_module_from_file
+        module = load_module_from_file(sitefile)
         self.info('%s loaded', sitefile)
         # cube specific options
-        if context.get('options'):
-            self.register_options(context['options'])
+        if getattr(module, 'options', None):
+            self.register_options(module.options)
             self.load_defaults()
 
     def load_configuration(self):

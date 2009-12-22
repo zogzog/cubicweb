@@ -618,7 +618,7 @@ class BooleanField(Field):
 
     def vocabulary(self, form):
         if self.choices:
-            return self.choices
+            return super(BooleanField, self).vocabulary(form)
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
     def process_form_value(self, form):

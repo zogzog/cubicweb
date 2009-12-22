@@ -939,7 +939,6 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     if errors:
         raise ValidationError(entity.eid, errors)
 
-# relation_type hooks ##########################################################
 
 class AfterDelRelationTypeHook(SyncSchemaHook):
     """before deleting a CWAttribute or CWRelation entity:

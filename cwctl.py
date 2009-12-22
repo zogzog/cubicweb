@@ -12,7 +12,7 @@ except ImportError:
     def kill(*args): pass
     def getpgid(): pass
 
-from os.path import exists, join, isfile, isdir
+from os.path import exists, join, isfile, isdir, dirname, abspath
 
 from logilab.common.clcommands import register_commands, pop_arg
 from logilab.common.shellutils import ASK
@@ -307,6 +307,7 @@ repository and the web server.',
         helper.bootstrap(cubes, self.config.config_level)
         # write down configuration
         config.save()
+        self._handle_win32(config, appid)
         print '-> generated %s' % config.main_config_file()
         # handle i18n files structure
         # in the first cube given
@@ -331,6 +332,29 @@ repository and the web server.',
             chown(config.appdatahome, config['uid'])
         print '\n-> creation done for %r.\n' % config.apphome
         helper.postcreate()
+
+    def _handle_win32(self, config, appid):
+        if sys.platform != 'win32':
+            return
+        service_template = """
+import sys
+import win32serviceutil
+sys.path.insert(0, r"%(CWPATH)s")
+
+from cubicweb.etwist.service import CWService
+
+classdict = {'_svc_name_': 'cubicweb-%(APPID)s',
+             '_svc_display_name_': 'CubicWeb ' + '%(CNAME)s',
+             'instance': '%(APPID)s'}
+%(CNAME)sService = type('%(CNAME)sService', (CWService,), classdict)
+
+if __name__ == '__main__':
+    win32serviceutil.HandleCommandLine(%(CNAME)sService)
+"""
+        open(join(config.apphome, 'win32svc.py'), 'wb').write(
+            service_template % {'APPID': appid,
+                                'CNAME': appid.capitalize(),
+                                'CWPATH': abspath(join(dirname(__file__), '..'))})
 
 
 class DeleteInstanceCommand(Command):

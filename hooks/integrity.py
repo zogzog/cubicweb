@@ -164,15 +164,14 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
     events = ('after_add_entity', 'after_update_entity')
 
     def __call__(self):
-        schema = self._cw.vreg.schema
-        entity = self.entity
-        for attr in entity.edited_attributes:
-            if schema.rschema(attr).final:
-                constraints = [c for c in entity.e_schema.rdef(attr).constraints
+        eschema = entity.eschema
+        for attr in self.entity.edited_attributes:
+            if eschema.subjrels[attr].final:
+                constraints = [c for c in eschema.rdef(attr).constraints
                                if isinstance(c, (RQLUniqueConstraint, RQLConstraint))]
                 if constraints:
                     _CheckConstraintsOp(self._cw, constraints=constraints,
-                                        rdef=(entity.eid, attr, None))
+                                        rdef=(self.entity.eid, attr, None))
 
 
 class CheckUniqueHook(UserIntegrityHook):

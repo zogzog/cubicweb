@@ -80,8 +80,6 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     return [nodes.reference(rawtext, utils.unescape(rest), refuri=ref,
                             **options)], []
 
-register_canonical_role('eid', eid_reference_role)
-
 
 def winclude_directive(name, arguments, options, content, lineno,
                        content_offset, block_text, state, state_machine):
@@ -146,14 +144,13 @@ def winclude_directive(name, arguments, options, content, lineno,
 winclude_directive.arguments = (1, 0, 1)
 winclude_directive.options = {'literal': directives.flag,
                               'encoding': directives.encoding}
-directives.register_directive('winclude', winclude_directive)
 
 try:
     from pygments import highlight
     from pygments.lexers import get_lexer_by_name, LEXERS
     from pygments.formatters import HtmlFormatter
 except ImportError:
-    pass
+    pygments_directive = None
 else:
     _PYGMENTS_FORMATTER = HtmlFormatter()
 
@@ -174,7 +171,6 @@ else:
 
     pygments_directive.arguments = (1, 0, 1)
     pygments_directive.content = 1
-    directives.register_directive('sourcecode', pygments_directive)
 
 
 class CubicWebReSTParser(Parser):
@@ -244,3 +240,15 @@ def rest_publish(context, data):
             data = unicode(data, encoding, 'replace')
         return xml_escape(req._('error while publishing ReST text')
                            + '\n\n' + data)
+
+
+_INITIALIZED = False
+def cw_rest_init():
+    global _INITIALIZED
+    if _INITIALIZED:
+        return
+    _INITIALIZED = True
+    register_canonical_role('eid', eid_reference_role)
+    directives.register_directive('winclude', winclude_directive)
+    if pygments_directive is not None:
+        directives.register_directive('sourcecode', pygments_directive)
