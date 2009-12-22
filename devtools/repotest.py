@@ -174,17 +174,18 @@ class BaseQuerierTC(TestCase):
         rqlhelper._analyser.uid_func_mapping = {}
         return rqlhelper
 
-    def _prepare_plan(self, rql, kwargs=None):
+    def _prepare_plan(self, rql, kwargs=None, simplify=True):
         rqlhelper = self._rqlhelper()
         rqlst = rqlhelper.parse(rql)
         rqlhelper.compute_solutions(rqlst, kwargs=kwargs)
-        rqlhelper.simplify(rqlst)
+        if simplify:
+            rqlhelper.simplify(rqlst)
         for select in rqlst.children:
             select.solutions.sort()
         return self.o.plan_factory(rqlst, kwargs, self.session)
 
     def _prepare(self, rql, kwargs=None):
-        plan = self._prepare_plan(rql, kwargs)
+        plan = self._prepare_plan(rql, kwargs, simplify=False)
         plan.preprocess(plan.rqlst)
         rqlst = plan.rqlst.children[0]
         rqlst.solutions = remove_unused_solutions(rqlst, rqlst.solutions, {}, self.repo.schema)[0]
