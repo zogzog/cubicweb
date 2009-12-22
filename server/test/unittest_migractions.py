@@ -288,6 +288,8 @@ class MigrationCommandsTC(CubicWebTC):
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title'
         migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
+        delete_concerne_rqlexpr = self._rrqlexpr_rset('delete', 'concerne')
+        add_concerne_rqlexpr = self._rrqlexpr_rset('add', 'concerne')
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -325,7 +327,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(rexpr.expression,
                           'O require_permission P, P name "add_note", '
                           'U in_group G, P require_group G')
-        self.assertEquals([rt.name for rt in rexpr.reverse_add_permission], ['ecrit_par'])
+        self.assertEquals([rdef.rtype.name for rdef in rexpr.reverse_add_permission], ['ecrit_par'])
         self.assertEquals(rexpr.reverse_read_permission, ())
         self.assertEquals(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
@@ -343,8 +345,10 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
         self.assertEquals(len(self._erqlexpr_rset('add', 'Affaire')), 1)
         # no change for rqlexpr to add and delete concerne relation
-        self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), 1)
-        self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), 1)
+        for rdef in self.schema['concerne'].rdefs.values():
+            print rdef, rdef.permissions
+        self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
+        self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:
         #   * 8 deletion (2 in Affaire read + Societe + travaille + para rqlexprs)
         #   * 1 update (Affaire update)
@@ -365,7 +369,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
-        rql = 'RQLExpression X WHERE ET is CWRType, ET %s_permission X, ET name %%(name)s' % action
+        rql = 'RQLExpression X WHERE RT is CWRType, RDEF %s_permission X, RT name %%(name)s, RDEF relation_type RT' % action
         return self.mh.session.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)

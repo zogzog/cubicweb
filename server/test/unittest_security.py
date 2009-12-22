@@ -217,7 +217,7 @@ class SecurityTC(BaseSecurityTC):
                    {'x': ueid, 'passwd': 'newpwd'}, 'x')
         cnx.commit()
         cnx.close()
-        cnx = self.login('user', 'newpwd')
+        cnx = self.login('user', password='newpwd')
 
     def test_user_cant_change_other_upassword(self):
         ueid = self.create_user('otheruser').eid
