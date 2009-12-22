@@ -422,7 +422,7 @@ class VRegistryTC(ViewSelectorTC):
             req = self.request()
             rset = req.execute(rql)
         try:
-            obj = self['views'].select(vid, req, rset=rset, **args)
+            obj = self.vreg['views'].select(vid, req, rset=rset, **args)
             return obj.render(**args)
         except:
             print vid, rset, args
