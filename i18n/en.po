@@ -3617,7 +3617,7 @@ msgid "toggle check boxes"
 msgstr ""
 
 #, python-format
-msgid "transition %s isn't allowed from %s"
+msgid "transition %(tr)s isn't allowed from %(st)s"
 msgstr ""
 
 msgid "transition doesn't belong to entity's workflow"
