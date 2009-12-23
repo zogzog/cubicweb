@@ -1079,7 +1079,8 @@ class QuerierTC(BaseQuerierTC):
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('toto', passwd[:2]))
-        rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
+        rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
+                            {'pwd': Binary(passwd)})
         self.assertEquals(len(rset.rows), 1)
         self.assertEquals(rset.description, [('CWUser',)])
 
@@ -1093,7 +1094,8 @@ class QuerierTC(BaseQuerierTC):
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('tutu', passwd[:2]))
-        rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
+        rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
+                            {'pwd': Binary(passwd)})
         self.assertEquals(len(rset.rows), 1)
         self.assertEquals(rset.description, [('CWUser',)])
 
