@@ -285,11 +285,16 @@ class CreateInstanceDBCommand(Command):
         automatic = self.get('automatic')
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
-        create_db = self.config.create_db
         source = config.sources()['system']
+        dbname = source['db-name']
         driver = source['db-driver']
+        create_db = self.config.create_db
         helper = get_adv_func_helper(driver)
-        if create_db:
+        if driver == 'sqlite':
+            if os.path.exists(dbname) and automatic or \
+                   ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
+                os.unlink(dbname)
+        elif create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
@@ -301,7 +306,6 @@ class CreateInstanceDBCommand(Command):
                            ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
                         helper.create_user(source['db-user'], source['db-password'])
                         print '-> user %s created.' % user
-                dbname = source['db-name']
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE %s' % dbname)
@@ -314,7 +318,7 @@ class CreateInstanceDBCommand(Command):
                     helper.create_database(cursor, dbname,
                                            encoding=source['db-encoding'])
                 dbcnx.commit()
-                print '-> database %s created.' % source['db-name']
+                print '-> database %s created.' % dbname
             except:
                 dbcnx.rollback()
                 raise
