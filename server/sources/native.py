@@ -215,12 +215,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         finally:
             self.open_pool_connections()
 
-    def restore(self, backupfile, drop):
+    def restore(self, backupfile, confirm, drop):
         """method called to restore a backup of source's data"""
         if self.repo.config.open_connections_pools:
             self.close_pool_connections()
         try:
-            self.restore_from_file(backupfile, drop)
+            self.restore_from_file(backupfile, confirm, drop=drop)
         finally:
             if self.repo.config.open_connections_pools:
                 self.open_pool_connections()
@@ -579,7 +579,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 def sql_schema(driver):
     helper = get_adv_func_helper(driver)
-    tstamp_col_type = helper.TYPE_MAPPING.get('TIMESTAMP', 'TIMESTAMP')
+    tstamp_col_type = helper.TYPE_MAPPING['Datetime']
     schema = """
 /* Create the repository's system database */
 
@@ -668,7 +668,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
                 raise AuthenticationError('bad login')
             # passwords are stored using the Bytes type, so we get a StringIO
             if pwd is not None:
-                args['pwd'] = crypt_password(password, pwd.getvalue()[:2])
+                args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
         # get eid from login and (crypted) password
         rset = self.source.syntax_tree_search(session, self._auth_rqlst, args)
         try:

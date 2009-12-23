@@ -196,7 +196,7 @@ class ServerMigrationHelper(MigrationHelper):
             if systemonly and source.uri != 'system':
                 continue
             try:
-                source.restore(osp.join(tmpdir, source.uri), drop=drop)
+                source.restore(osp.join(tmpdir, source.uri), self.confirm, drop)
             except Exception, exc:
                 print '-> error trying to restore [%s]' % exc
                 if not self.confirm('Continue anyway?', default='n'):

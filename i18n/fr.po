@@ -3741,8 +3741,8 @@ msgid "toggle check boxes"
 msgstr "inverser les cases à cocher"
 
 #, python-format
-msgid "transition %s isn't allowed from %s"
-msgstr "la transition %s n'est pas autorisée depuis l'état %s"
+msgid "transition %(tr)s isn't allowed from %(st)s"
+msgstr "la transition %(tr)s n'est pas autorisée depuis l'état %(st)s"
 
 msgid "transition doesn't belong to entity's workflow"
 msgstr "la transition n'appartient pas au workflow de l'entité"

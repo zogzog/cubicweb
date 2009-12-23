@@ -144,6 +144,7 @@ class SQLAdapterMixIn(object):
         self.dbpasswd = source_config.get('db-password')
         self.encoding = source_config.get('db-encoding', 'UTF-8')
         self.dbapi_module = db.get_dbapi_compliant_module(self.dbdriver)
+        self.dbdriver_extra_args = source_config.get('db-extra-arguments')
         self.binary = self.dbapi_module.Binary
         self.dbhelper = self.dbapi_module.adv_func_helper
         self.sqlgen = SQLGenerator()
@@ -156,10 +157,14 @@ class SQLAdapterMixIn(object):
         else:
             self.info('connecting to %s@%s', self.dbname,
                       self.dbhost or 'localhost')
+        extra = {}
+        if self.dbdriver_extra_args:
+            extra = {'extra_args': self.dbdriver_extra_args}
         cnx = self.dbapi_module.connect(self.dbhost, self.dbname,
                                         user or self.dbuser,
                                         password or self.dbpasswd,
-                                        port=self.dbport)
+                                        port=self.dbport,
+                                        **extra)
         init_cnx(self.dbdriver, cnx)
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
@@ -178,7 +183,9 @@ class SQLAdapterMixIn(object):
                                                   keepownership=False,
                                                   drop=drop):
             if os.system(cmd):
-                raise Exception('Failed command: %s' % cmd)
+                print '-> Failed command: %s' % cmd
+                if not confirm('Continue anyway?', default='n'):
+                    raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
         if args is not None:
@@ -241,6 +248,7 @@ class SQLAdapterMixIn(object):
                         value = value.getvalue()
                     else:
                         value = crypt_password(value)
+                    value = self.binary(value)
                 # XXX needed for sqlite but I don't think it is for other backends
                 elif atype == 'Datetime' and isinstance(value, date):
                     value = todatetime(value)
