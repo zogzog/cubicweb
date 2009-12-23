@@ -594,7 +594,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 def sql_schema(driver):
     helper = get_adv_func_helper(driver)
-    tstamp_col_type = helper.TYPE_MAPPING.get('TIMESTAMP', 'TIMESTAMP')
+    tstamp_col_type = helper.TYPE_MAPPING['Datetime']
     schema = """
 /* Create the repository's system database */
 
