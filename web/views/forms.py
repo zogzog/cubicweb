@@ -268,15 +268,15 @@ class EntityFieldsForm(FieldsForm):
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
-    def __init__(self, req, rset=None, *args, **kwargs):
+    def __init__(self, req, rset=None, row=None, col=None, *args, **kwargs):
         # entity was either explicitly specified or we have a one line rset
         if 'entity' in kwargs:
             self.edited_entity = kwargs.pop('entity')
         else:
-            self.edited_entity = rset.get_entity(0, 0)
+            self.edited_entity = rset.get_entity(row or 0, col or 0)
             self.edited_entity.complete()
         msg = kwargs.pop('submitmsg', None)
-        super(EntityFieldsForm, self).__init__(req, rset, *args, **kwargs)
+        super(EntityFieldsForm, self).__init__(req, rset, row, col, *args, **kwargs)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
         if kwargs.get('mainform', True): # mainform default to true in parent
