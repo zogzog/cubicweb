@@ -78,15 +78,19 @@ class PlotWidget(object):
 
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
-    onload = u'''
-%(plotdefs)s
-jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
-    {points: {show: true},
-     lines: {show: true},
-     grid: {hoverable: true},
-     xaxis: {mode: %(mode)s}});
-jQuery("#%(figid)s").bind("plothover", onPlotHover);
-'''
+    onload = u"""
+var fig = jQuery("#%(figid)s");
+if (fig.attr('cubicweb:type') != 'prepared-plot') {
+    %(plotdefs)s
+    jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
+        {points: {show: true},
+         lines: {show: true},
+         grid: {hoverable: true},
+         xaxis: {mode: %(mode)s}});
+    jQuery("#%(figid)s").bind("plothover", onPlotHover);
+    fig.attr('cubicweb:type','prepared-plot');
+}
+"""
 
     def __init__(self, labels, plots, timemode=False):
         self.labels = labels
@@ -102,8 +106,9 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
         return dumps(plot)
 
     def _render(self, req, width=500, height=400):
-        # XXX IE requires excanvas.js
-        req.add_js( ('jquery.flot.js', 'cubicweb.flot.js', 'excanvas.js') )
+        if req.ie_browser():
+            req.add_js('excanvas.js')
+        req.add_js(('jquery.flot.js', 'cubicweb.flot.js'))
         figid = u'figure%s' % req.varmaker.next()
         plotdefs = []
         plotdata = []
