@@ -424,11 +424,16 @@ jQuery(document).ready(buildWysiwygEditors);
  * takes a list of DOM nodes and removes all empty text nodes
  */
 function stripEmptyTextNodes(nodelist) {
+    /* this DROPS empty text nodes */
     var stripped = [];
     for (var i=0; i < nodelist.length; i++) {
         var node = nodelist[i];
-        if (isTextNode(node) && !node.textContent.strip()) {
-            continue;
+        if (isTextNode(node)) {
+             /* all browsers but FF -> innerText, FF -> textContent  */
+             var text = node.innerText || node.textContent;
+             if (text && !text.strip()) {
+               continue;
+             }
         } else {
             stripped.push(node);
         }
