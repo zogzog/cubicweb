@@ -15,9 +15,8 @@
 .overpassed{ background: yellow}
 
 
-.progressbar {
- height: 10px;
- background: #008000;
+canvas.progressbar {
+  border:1px solid black;
 }
 
 .progressbarback {

@@ -9,6 +9,9 @@ serialization time
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from math import floor
+import random
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
@@ -335,27 +338,90 @@ class TableWidget(HTMLWidget):
 
 class ProgressBarWidget(HTMLWidget):
     """display a progress bar widget"""
+    precision = 0.1
+    red_threshold = 1.1
+    orange_threshold = 1.05
+    yellow_threshold = 1
+
     def __init__(self, done, todo, total):
         self.done = done
         self.todo = todo
-        self.total = total
+        self.budget = total
+
+    @property
+    def overrun(self):
+        """overrun = done + todo - """
+        if self.done + self.todo > self.budget:
+            overrun = self.done + self.todo - self.budget
+        else:
+            overrun = 0
+        if overrun < self.precision:
+            overrun = 0
+        return overrun
+
+    @property
+    def overrun_percentage(self):
+        """pourcentage overrun = overrun / budget"""
+        if self.budget == 0:
+            return 0
+        else:
+            return self.overrun * 100. / self.budget
 
     def _render(self):
-        try:
-            percent = self.done*100./self.total
-        except ZeroDivisionError:
-            percent = 0
-        real_percent = percent
-        if percent > 100 :
-            color = 'done'
-            percent = 100
-        elif self.todo + self.done > self.total :
-            color = 'overpassed'
+        done = self.done
+        todo = self.todo
+        budget = self.budget
+        if budget == 0:
+            pourcent = 100
+            todo_pourcent = 0
         else:
-            color = 'inprogress'
-        if percent < 0:
-            percent = 0
-        self.w(u'<div class="progressbarback" title="%i %%">' % real_percent)
-        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, percent))
-        self.w(u'</div>')
+            pourcent = done*100./budget
+            todo_pourcent = min(todo*100./budget, 100-pourcent)
+        bar_pourcent = pourcent
+        if pourcent > 100.1:
+            color = 'red'
+            bar_pourcent = 100
+        elif todo+done > self.red_threshold*budget:
+            color = 'red'
+        elif todo+done > self.orange_threshold*budget:
+            color = 'orange'
+        elif todo+done > self.yellow_threshold*budget:
+            color = 'yellow'
+        else:
+            color = 'green'
+        if pourcent < 0:
+            pourcent = 0
 
+        if floor(done) == done or done>100:
+            done_str = '%i' % done
+        else:
+            done_str = '%.1f' % done
+        if floor(budget) == budget or budget>100:
+            budget_str = '%i' % budget
+        else:
+            budget_str = '%.1f' % budget
+
+        title = u'%s/%s = %i%%' % (done_str, budget_str, pourcent)
+        short_title = title
+        if self.overrun_percentage:
+            title += u' overrun +%sj (+%i%%)' % (self.overrun,
+                                                 self.overrun_percentage)
+            overrun = self.overrun
+            if floor(overrun) == overrun or overrun>100:
+                overrun_str = '%i' % overrun
+            else:
+                overrun_str = '%.1f' % overrun
+            short_title += u' +%s' % overrun_str
+        # write bars
+        maxi = max(done+todo, budget)
+        if maxi == 0:
+            maxi = 1
+
+        cid = random.randint(0, 100000)
+        self.w(u'%s<br/>'
+               u'<canvas class="progressbar" id="canvas%i" width="100" height="10"></canvas>'
+               u'<script type="application/x-javascript">'
+               u'draw_progressbar("canvas%i", %i, %i, %i, "%s");</script>'
+               % (short_title.replace(' ','&nbsp;'), cid, cid,
+                  int(100.*done/maxi), int(100.*(done+todo)/maxi),
+                  int(100.*budget/maxi), color))

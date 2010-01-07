@@ -156,9 +156,7 @@ class ProgressTableView(EntityView):
 
     def build_progress_cell(self, entity):
         """``progress`` column cell renderer"""
-        progress =  u'<div class="progress_data">%s (%.2f%%)</div>' % (
-            entity.done, entity.progress())
-        return progress + entity.view('progressbar')
+        return entity.view('progressbar')
 
 
 class InContextProgressTableView(ProgressTableView):
@@ -186,6 +184,7 @@ class ProgressBarView(EntityView):
 
     def cell_call(self, row, col):
         self._cw.add_css('cubicweb.iprogress.css')
+        self.req.add_js('cubicweb.iprogress.js')
         entity = self.cw_rset.get_entity(row, col)
         widget = ProgressBarWidget(entity.done, entity.todo,
                                    entity.revised_cost)
