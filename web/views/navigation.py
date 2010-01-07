@@ -175,9 +175,10 @@ View.pagination = deprecated('.pagination is deprecated, use paginate')(limit_rs
 def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
     if rset is None:
         rset = view.rset
-    limit_rset_using_paged_nav(view, view.req, rset, w or view.w,
-                               not view.need_navigation, show_all_option,
-                               page_size=page_size)
+    if getattr(view, 'paginable', True):
+        limit_rset_using_paged_nav(view, view.req, rset, w or view.w,
+                                   not view.need_navigation, show_all_option,
+                                   page_size=page_size)
 View.paginate = paginate
 
 class NextPrevNavigationComponent(EntityVComponent):
