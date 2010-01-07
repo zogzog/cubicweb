@@ -1,7 +1,7 @@
 """basic plot views
 
 :organization: Logilab
-:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL.
+:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """

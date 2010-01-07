@@ -3,7 +3,7 @@
 this source is for now limited to a read-only CWUser source
 
 :organization: Logilab
-:copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 

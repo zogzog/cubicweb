@@ -2,7 +2,7 @@
 """cubicweb-file packaging information
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -14,7 +14,7 @@ numversion = (1, 4, 3)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
-copyright = '''Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE).
+copyright = '''Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE).
 http://www.logilab.fr/ -- mailto:contact@logilab.fr'''
 
 author = "Logilab"
