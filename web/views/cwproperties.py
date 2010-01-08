@@ -67,6 +67,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
     """site-wide properties edition form"""
     id = 'systempropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
+    form_buttons = [SubmitButton()]
 
     title = _('site configuration')
     category = 'startupview'
@@ -187,10 +188,9 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return entity
 
     def form(self, formid, keys, splitlabel=False):
-        buttons = [SubmitButton()]
         form = self.vreg['forms'].select(
             'composite', self.req, domid=formid, action=self.build_url(),
-            form_buttons=buttons,
+            form_buttons=self.form_buttons,
             onsubmit="return validatePrefsForm('%s')" % formid,
             submitmsg=self.req._('changes applied'))
         path = self.req.relative_path()
