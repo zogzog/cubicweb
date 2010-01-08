@@ -21,7 +21,7 @@ web = 'http://www.cubicweb.org/project/%%s' %% distname
 
 
 from os import listdir as _listdir
-from os.path import join, isdir, exists, dirname
+from os.path import join, isdir, exists
 from glob import glob
 
 THIS_CUBE_DIR = join('share', 'cubicweb', 'cubes', modname)
@@ -37,9 +37,9 @@ data_files = [
     [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
     ]
 # check for possible extended cube layout
-for dirname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n', 'migration'):
-    if isdir(dirname):
-        data_files.append([join(THIS_CUBE_DIR, dirname), listdir(dirname)])
+for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n', 'migration'):
+    if isdir(dname):
+        data_files.append([join(THIS_CUBE_DIR, dname), listdir(dname)])
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
