@@ -1,7 +1,7 @@
 """field classes for form construction
 
 :organization: Logilab
-:copyright: 2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -218,6 +218,7 @@ class Field(object):
 
 class StringField(Field):
     widget = TextArea
+    size = 45
 
     def __init__(self, max_length=None, **kwargs):
         self.max_length = max_length # must be set before super call
@@ -238,7 +239,7 @@ class StringField(Field):
 
     def init_text_input(self, widget):
         if self.max_length:
-            widget.attrs.setdefault('size', min(45, self.max_length))
+            widget.attrs.setdefault('size', min(self.size, self.max_length))
             widget.attrs.setdefault('maxlength', self.max_length)
 
     def init_text_area(self, widget):
