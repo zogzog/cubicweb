@@ -30,11 +30,15 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     """
     from getpass import getpass
     from logilab.common.db import get_connection
-    dbhost = source['db-host']
+    dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
-    print '-> connecting to %s database %s@%s' % (driver, dbname, dbhost or 'localhost'),
+    print '-> connecting to %s database' % driver,
+    if dbhost:
+        print '%s@%s' % (dbname, dbhost),
+    else:
+        print dbname,
     if not verbose or (not special_privs and source.get('db-user')):
         user = source['db-user']
         print 'as', user
