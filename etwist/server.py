@@ -387,6 +387,9 @@ def run(config, debug):
     reactor.listenTCP(port, channel.HTTPFactory(website))
     logger = getLogger('cubicweb.twisted')
     if not debug:
+        if sys.platform == 'win32':
+            print "Under windows, you must use the service management commands (e.g : 'net start my_instance)'"
+            sys.exit(0)
         print 'instance starting in the background'
         if daemonize():
             return # child process
