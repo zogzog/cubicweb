@@ -72,7 +72,7 @@ class EditController(ViewController):
             req.set_shared_data('__maineid', form['__maineid'], querydata=True)
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
-        self._pending_fields = req.data['pendingfields'] = []
+        self._pending_fields = req.data['pendingfields'] = set()
         todelete = self._cw.get_pending_deletes()
         toinsert = self._cw.get_pending_inserts()
         try:
@@ -207,7 +207,7 @@ class EditController(ViewController):
                     elif form.edited_entity.has_eid():
                         self.handle_relation(form, field, value, origvalues)
                     else:
-                        self._pending_fields.append( (form, field) )
+                        self._pending_fields.add( (form, field) )
 
         except ProcessFormError, exc:
             self.errors.append((field, exc))

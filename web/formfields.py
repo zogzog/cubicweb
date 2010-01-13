@@ -822,7 +822,7 @@ class RelationField(Field):
                 continue
             typed_eid = form.actual_eid(eid)
             if typed_eid is None:
-                form._cw.data['pendingfields'].append( (form, self) )
+                form._cw.data['pendingfields'].add( (form, self) )
                 return None
             eids.add(typed_eid)
         return eids
