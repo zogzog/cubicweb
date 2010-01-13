@@ -113,7 +113,7 @@ class Form(AppObject):
         for field in cls_or_self._fieldsattr():
             if field.name == name and field.role == role:
                 return field
-        raise FieldNotFound(name)
+        raise FieldNotFound(name, role)
 
     @iclassmethod
     def fields_by_name(cls_or_self, name, role=None):
