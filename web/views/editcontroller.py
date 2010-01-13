@@ -155,7 +155,7 @@ class EditController(ViewController):
             except:
                 name = editedfield
                 role = None
-            if form.field_by_name.im_func.func_code.co_argcount == 4:
+            if form.field_by_name.im_func.func_code.co_argcount == 4: # XXX
                 field = form.field_by_name(name, role, eschema=entity.e_schema)
             else:
                 field = form.field_by_name(name, role)
