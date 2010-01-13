@@ -353,7 +353,8 @@ class RequestSessionBase(object):
                 date = strptime(value, format) # this returns a DateTime
                 return time(date.hour, date.minute, date.second)
             except ValueError:
-                raise ValueError('can\'t parse %r (expected %s)' % (value, format))
+                raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
+                                 % {'value': value, 'format': format})
         try:
             format = self.property_value('ui.date-format')
             dt = strptime(value, format)
@@ -361,7 +362,8 @@ class RequestSessionBase(object):
                 return todatetime(dt)
             return todate(dt)
         except ValueError:
-            raise ValueError('can\'t parse %r (expected %s)' % (value, format))
+            raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
+                             % {'value': value, 'format': format})
 
     # abstract methods to override according to the web front-end #############
 
