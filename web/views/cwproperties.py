@@ -371,7 +371,9 @@ class CWPropertiesFormRenderer(formrenderers.FormRenderer):
             w(u'<div class="preffield">\n')
             if self.display_label:
                 w(u'%s' % self.render_label(form, field))
-            error = form.form_field_error(field)
+            error = form.field_error(field)
+            if error:
+                w(u'<span class="error">%s</span>' % err)
             w(u'%s' % self.render_help(form, field))
             w(u'<div class="prefinput">')
             w(field.render(form, self))

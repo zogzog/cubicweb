@@ -162,7 +162,7 @@ class EditController(ViewController):
             if field.has_been_modified(form):
                 self.handle_formfield(form, field, rqlquery)
         if self.errors:
-            errors = dict((f.name, unicode(ex)) for f, ex in self.errors)
+            errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(entity.eid, errors)
         if eid is None: # creation or copy
             entity.eid = self._insert_entity(etype, formparams['eid'], rqlquery)

@@ -127,9 +127,7 @@ class FormRenderer(AppObject):
         # get extra errors
         if errex is not None:
             errormsg = req._('please correct the following errors:')
-            displayed = form.form_displayed_errors
-            errors = sorted((field, err) for field, err in errex.errors.items()
-                            if not field in displayed)
+            errors = form.remaining_errors()
             if errors:
                 if len(errors) > 1:
                     templstr = '<li>%s</li>\n'
@@ -209,10 +207,10 @@ class FormRenderer(AppObject):
                 w(u'<tr class="%s_%s_row">' % (field.name, field.role))
                 if self.display_label:
                     w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
-                error = form.form_field_error(field)
+                error = form.field_error(field)
                 if error:
                     w(u'<td class="error">')
-                    w(error)
+                    self.render_error(w, error)
                 else:
                     w(u'<td>')
                 w(field.render(form, self))
@@ -230,6 +228,11 @@ class FormRenderer(AppObject):
         for button in form.form_buttons:
             w(u'<td>%s</td>\n' % button.render(form))
         w(u'</tr></table>')
+
+    def render_error(self, w, err):
+        """return validation error for widget's field, if any"""
+        w(u'<span class="error">%s</span>' % err)
+
 
 
 class BaseFormRenderer(FormRenderer):
@@ -265,10 +268,10 @@ class HTableFormRenderer(FormRenderer):
         w(u'</tr>')
         w(u'<tr>')
         for field in fields:
-            error = form.form_field_error(field)
+            error = form.field_error(field)
             if error:
                 w(u'<td class="error">')
-                w(error)
+                self.render_error(w, error)
             else:
                 w(u'<td>')
             w(field.render(form, self))
@@ -324,10 +327,10 @@ class EntityCompositeFormRenderer(FormRenderer):
             w(u'<td>%s</td>' % checkbox('eid', entity.eid,
                                         checked=qeid in values))
             for field in fields:
-                error = form.form_field_error(field)
+                error = form.field_error(field)
                 if error:
                     w(u'<td class="error">')
-                    w(error)
+                    self.render_error(w, error)
                 else:
                     w(u'<td>')
                 if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox,

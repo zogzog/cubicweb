@@ -375,7 +375,7 @@ class CubicWebPublisher(object):
     def validation_error_handler(self, req, ex):
         ex.errors = dict((k, v) for k, v in ex.errors.items())
         if '__errorurl' in req.form:
-            forminfo = {'errors': ex,
+            forminfo = {'error': ex,
                         'values': req.form,
                         'eidmap': req.data.get('eidmap', {})
                         }

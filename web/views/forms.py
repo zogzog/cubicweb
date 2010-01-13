@@ -162,18 +162,6 @@ class FieldsForm(form.Form):
             for field in field.actual_fields(self):
                 field.form_init(self)
 
-    def form_field_error(self, field):
-        """return validation error for widget's field, if any"""
-        if self._field_has_error(field):
-            self.form_displayed_errors.add(field.name)
-            return u'<span class="error">%s</span>' % self.form_valerror.errors[field.name]
-        return u''
-
-    def _field_has_error(self, field):
-        """return true if the field has some error in given validation exception
-        """
-        return self.form_valerror and field.name in self.form_valerror.errors
-
     @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
     def form_add_hidden(self, name, value=None, **kwargs):
         return self.add_hidden(name, value, **kwargs)
@@ -239,12 +227,6 @@ class EntityFieldsForm(FieldsForm):
                 edited.add(field.role_name())
         self.add_hidden('_cw_edited_fields', u','.join(edited),
                         eidparam=True)
-
-    def _field_has_error(self, field):
-        """return true if the field has some error in given validation exception
-        """
-        return super(EntityFieldsForm, self)._field_has_error(field) \
-               and self.form_valerror.eid == self.edited_entity.eid
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(

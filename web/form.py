@@ -7,7 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.common.decorators import iclassmethod
+from logilab.common.deprecation import deprecated
 
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
@@ -81,16 +84,18 @@ class Form(AppObject):
         return self.parent_form.root_form
 
     @property
-    def form_previous_values(self):
-        if self.parent_form is None:
-            return self._form_previous_values
-        return self.parent_form.form_previous_values
-
-    @property
     def form_valerror(self):
+        """the validation error exception if any"""
         if self.parent_form is None:
             return self._form_valerror
         return self.parent_form.form_valerror
+
+    @property
+    def form_previous_values(self):
+        """previously posted values (on validation error)"""
+        if self.parent_form is None:
+            return self._form_previous_values
+        return self.parent_form.form_previous_values
 
     @iclassmethod
     def _fieldsattr(cls_or_self):
@@ -153,10 +158,8 @@ class Form(AppObject):
         # method on successful commit
         forminfo = self._cw.get_session_data(sessionkey, pop=True)
         if forminfo:
-            # XXX remove _cw.data assigment once cw.web.widget is killed
-            self._cw.data['formvalues'] = self._form_previous_values = forminfo['values']
-            self._cw.data['formerrors'] = self._form_valerror = forminfo['errors']
-            self._cw.data['displayederrors'] = self.form_displayed_errors = set()
+            self._form_previous_values = forminfo['values']
+            self._form_valerror = forminfo['error']
             # if some validation error occured on entity creation, we have to
             # get the original variable name from its attributed eid
             foreid = self.form_valerror.entity
@@ -169,3 +172,29 @@ class Form(AppObject):
         else:
             self._form_previous_values = {}
             self._form_valerror = None
+
+    def field_error(self, field):
+        """return field's error if specified in current validation exception"""
+        if self.form_valerror:
+            if field.eidparam and self.edited_entity.eid != self.form_valerror.eid:
+                return None
+            try:
+                return self.form_valerror.errors.pop(field.role_name())
+            except KeyError:
+                if field.role and field.name in self.form_valerror:
+                    warn('%s: errors key of attribute/relation should be suffixed by "-<role>"'
+                         % self.form_valerror.__class__, DeprecationWarning)
+                    return self.form_valerror.errors.pop(field.name)
+        return None
+
+    def remaining_errors(self):
+        return sorted(self.form_valerror.errors.items())
+
+    @deprecated('[3.6] use form.field_error and/or new renderer.render_error method')
+    def form_field_error(self, field):
+        """return validation error for widget's field, if any"""
+        err = self.field_error(field)
+        if err:
+            return u'<span class="error">%s</span>' % err
+        return u''
+
