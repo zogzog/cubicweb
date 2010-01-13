@@ -30,7 +30,7 @@ DBG_SQL = 2   # executed sql
 DBG_REPO = 4  # repository events
 DBG_MS = 8    # multi-sources
 DBG_MORE = 16 # more verbosity
-
+DBG_ALL = 1 + 2 + 4 + 8 + 16
 # current debug mode
 DEBUG = 0
 
