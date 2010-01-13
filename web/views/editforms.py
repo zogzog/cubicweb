@@ -142,13 +142,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
         if rschema.final:
-            form = self._build_form(entity, rtype, role, 'edition', default, reload, lzone)
+            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone)
             if not self.should_edit_attribute(entity, rschema, role, form):
                 self.w(entity.printable_value(rtype))
                 return
             value = entity.printable_value(rtype) or default
-            self.relation_form(lzone, value, form,
-                               self._build_renderer(entity, rtype, role))
         else:
             rvid = self._compute_best_vid(entity.e_schema, rschema, role)
             rset = entity.related(rtype, role)
@@ -160,12 +158,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 if rset:
                     self.w(value)
                 return
+            # XXX do we really have to give lzone twice?
             form = self._build_form(entity, rtype, role, 'base', default, reload, lzone,
                                     dict(vid=rvid, lzone=lzone))
-            field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
-            form.append_field(field)
-            self.relation_form(lzone, value, form,
-                               self._build_renderer(entity, rtype, role))
+        field = form.field_by_name(rtype, role, entity.e_schema)
+        form.append_field(field)
+        self.relation_form(lzone, value, form,
+                           self._build_renderer(entity, rtype, role))
 
     def should_edit_attribute(self, entity, rschema, role, form):
         rtype = str(rschema)
@@ -174,7 +173,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         if 'main_hidden' in afs or not entity.has_perm('update'):
             return False
         try:
-            form.field_by_name(rtype, role)
+            form.field_by_name(rtype, role, entity.e_schema)
         except FieldNotFound:
             return False
         return True
@@ -262,7 +261,7 @@ class DummyForm(object):
         return u''
     def append_field(self, *args):
         pass
-    def field_by_name(self, rtype, role):
+    def field_by_name(self, rtype, role, eschema=None):
         return None
 
 

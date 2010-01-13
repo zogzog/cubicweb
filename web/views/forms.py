@@ -9,15 +9,16 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common.decorators import iclassmethod
 from logilab.common.compat import any
 from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
-from cubicweb.web import form, formwidgets as fwdgs
+from cubicweb.web import uicfg, form, formwidgets as fwdgs
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
-from cubicweb.web.formfields import StringField, relvoc_unrelated
+from cubicweb.web.formfields import StringField, relvoc_unrelated, guess_field
 
 
 class FieldsForm(form.Form):
@@ -177,6 +178,8 @@ class FieldsForm(form.Form):
             renderer = self.form_default_renderer()
         return renderer.render(self, values)
 
+_AFF = uicfg.autoform_field
+_AFF_KWARGS = uicfg.autoform_field_kwargs
 
 class EntityFieldsForm(FieldsForm):
     __regid__ = 'base'
@@ -185,6 +188,33 @@ class EntityFieldsForm(FieldsForm):
 
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
+
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role=None, eschema=None):
+        """return field with the given name and role. If field is not explicitly
+        defined for the form but `eclass` is specified, guess_field will be
+        called.
+        """
+        try:
+            return super(EntityFieldsForm, cls_or_self).field_by_name(name, role)
+        except form.FieldNotFound:
+            if eschema is None or role is None or not name in eschema.schema:
+                raise
+            rschema = eschema.schema.rschema(name)
+            # XXX use a sample target type. Document this.
+            tschemas = rschema.targets(eschema, role)
+            fieldcls = _AFF.etype_get(eschema, rschema, role, tschemas[0])
+            kwargs = _AFF_KWARGS.etype_get(eschema, rschema, role, tschemas[0])
+            if kwargs is None:
+                kwargs = {}
+            if fieldcls:
+                if not isinstance(fieldcls, type):
+                    return fieldcls # already and instance
+                return fieldcls(name=name, role=role, eidparam=True, **kwargs)
+            field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
+            if field is None:
+                raise
+            return field
 
     def __init__(self, *args, **kwargs):
         self.edited_entity = kwargs.pop('entity', None)

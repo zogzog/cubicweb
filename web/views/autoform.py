@@ -9,12 +9,11 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import iclassmethod, cached
+from logilab.common.decorators import cached
 
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web import form, formwidgets as fwdgs
-from cubicweb.web.formfields import guess_field
 from cubicweb.web.views import forms, editforms
 
 _afs = uicfg.autoform_section
@@ -44,41 +43,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # set this to a list of [(relation, role)] if you want to explictily tell
     # which relations should be edited
     display_fields = None
-    # class attributes below are actually stored in the uicfg module since we
-    # don't want them to be reloaded
-    rfields = uicfg.autoform_field
-    rfields_kwargs = uicfg.autoform_field_kwargs
-
-    # class methods mapping schema relations to fields in the form ############
-
-    @iclassmethod
-    def field_by_name(cls_or_self, name, role=None, eschema=None):
-        """return field with the given name and role. If field is not explicitly
-        defined for the form but `eclass` is specified, guess_field will be
-        called.
-        """
-        try:
-            return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
-        except form.FieldNotFound:
-            if eschema is None or role is None or not name in eschema.schema:
-                raise
-            rschema = eschema.schema.rschema(name)
-            # XXX use a sample target type. Document this.
-            tschemas = rschema.targets(eschema, role)
-            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role,
-                                                     tschemas[0])
-            kwargs = cls_or_self.rfields_kwargs.etype_get(eschema, rschema,
-                                                          role, tschemas[0])
-            if kwargs is None:
-                kwargs = {}
-            if fieldcls:
-                if not isinstance(fieldcls, type):
-                    return fieldcls # already and instance
-                return fieldcls(name=name, role=role, eidparam=True, **kwargs)
-            field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
-            if field is None:
-                raise
-            return field
 
     # base automatic entity form methods #######################################
 
