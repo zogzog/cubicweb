@@ -344,7 +344,11 @@ class Field(object):
             if isinstance(previous_value, tuple):
                 # widget should return a set of untyped eids
                 previous_value = set(unicode(e.eid) for e in previous_value)
-            if form.edited_entity.has_eid() and (previous_value == self.process_form_value(form)):
+            try:
+                new_value = self.process_form_value(form)
+            except ProcessFormError:
+                return True
+            if form.edited_entity.has_eid() and previous_value == new_value:
                 return False # not modified
             return True
         return False
