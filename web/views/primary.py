@@ -287,7 +287,7 @@ class URLAttributeView(EntityView):
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
     def cell_call(self, row, col, rtype, **kwargs):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         url = entity.printable_value(rtype)
         if url:
             self.w(u'<a href="%s">%s</a>' % (url, url))

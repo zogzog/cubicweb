@@ -184,7 +184,7 @@ class ProgressBarView(EntityView):
 
     def cell_call(self, row, col):
         self._cw.add_css('cubicweb.iprogress.css')
-        self.req.add_js('cubicweb.iprogress.js')
+        self._cw.add_js('cubicweb.iprogress.js')
         entity = self.cw_rset.get_entity(row, col)
         widget = ProgressBarWidget(entity.done, entity.todo,
                                    entity.revised_cost)
