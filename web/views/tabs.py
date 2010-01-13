@@ -186,7 +186,7 @@ class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
     default_tab = 'main_tab'
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.render_entity_title(entity)
         # XXX uncomment this in 3.6
         #self.render_entity_toolbox(entity)
