@@ -146,19 +146,19 @@ url: %(url)s
 
     def context(self, **kwargs):
         context = super(EntityUpdatedNotificationView, self).context(**kwargs)
-        changes = self.req.transaction_data['changes'][self.rset[0][0]]
-        _ = self.req._
+        changes = self._cw.transaction_data['changes'][self.cw_rset[0][0]]
+        _ = self._cw._
         formatted_changes = []
-        entity = self.entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         for attr, oldvalue, newvalue in sorted(changes):
             # check current user has permission to see the attribute
-            rschema = self.vreg.schema[attr]
+            rschema = self._cw.vreg.schema[attr]
             if rschema.final:
                 rdef = entity.e_schema.rdef(rschema)
-                if not rdef.has_perm(self.req, 'read', eid=self.rset[0][0]):
+                if not rdef.has_perm(self._cw, 'read', eid=self.cw_rset[0][0]):
                     continue
             # XXX suppose it's a subject relation...
-            elif not rschema.has_perm(self.req, 'read', fromeid=self.rset[0][0]): # XXX toeid
+            elif not rschema.has_perm(self._cw, 'read', fromeid=self.cw_rset[0][0]): # XXX toeid
                 continue
             if attr in self.no_detailed_change_attrs:
                 msg = _('%s updated') % _(attr)
@@ -178,8 +178,8 @@ url: %(url)s
         return context
 
     def subject(self):
-        entity = self.entity(self.row or 0, self.col or 0)
-        return  u'%s #%s (%s)' % (self.req.__('Updated %s' % entity.e_schema),
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        return  u'%s #%s (%s)' % (self._cw.__('Updated %s' % entity.e_schema),
                                   entity.eid, self.user_data['login'])
 
 
