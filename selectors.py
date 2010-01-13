@@ -718,13 +718,17 @@ class may_add_relation(EntitySelector):
                  'object', default to 'subject'.
     """
 
-    def __init__(self, rtype, role='subject', once_is_enough=False):
+    def __init__(self, rtype, role='subject', target_etype=None,
+                 once_is_enough=False):
         super(may_add_relation, self).__init__(once_is_enough)
         self.rtype = rtype
         self.role = role
+        self.target_etype = target_etype
 
     def score_entity(self, entity):
         rschema = entity.schema.rschema(self.rtype)
+        if self.target_etype is not None:
+            rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
         if self.role == 'subject':
             if not rschema.has_perm(entity._cw, 'add', fromeid=entity.eid):
                 return 0
@@ -750,11 +754,12 @@ class partial_may_add_relation(PartialSelectorMixIn, may_add_relation):
                    be returned
     """
     def __init__(self, once_is_enough=False):
-        super(partial_may_add_relation, self).__init__(None, None, once_is_enough)
+        super(partial_may_add_relation, self).__init__(None, once_is_enough=once_is_enough)
 
     def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
+        self.target_etype = getattr(cls, 'etype', None)
 
 
 class has_related_entities(EntitySelector):
