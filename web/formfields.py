@@ -341,8 +341,8 @@ class Field(object):
                 # attribute or relation
                 return True
             # if it's a non final relation, we need the eids
-            if isinstance(previous_value, list):
-                # widget should return untyped eids
+            if isinstance(previous_value, tuple):
+                # widget should return a set of untyped eids
                 previous_value = set(unicode(e.eid) for e in previous_value)
             if form.edited_entity.has_eid() and (previous_value == self.process_form_value(form)):
                 return False # not modified
