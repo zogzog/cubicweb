@@ -449,6 +449,7 @@ class CubicWebRelationSchema(RelationSchema):
             for rdef in self.rdefs.itervalues():
                 if not rdef.has_perm(session, action, **kwargs):
                     return False
+        return True
 
     @deprecated('use .rdef(subjtype, objtype).role_cardinality(role)')
     def cardinality(self, subjtype, objtype, target):
