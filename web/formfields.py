@@ -19,7 +19,7 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
 
 from cubicweb.utils import ustrftime
 from cubicweb import tags, uilib
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
+from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param
 from cubicweb.web.formwidgets import (
     HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
     Radio, Select, DateTimePicker)
@@ -610,7 +610,13 @@ class IntField(Field):
             self.widget.attrs.setdefault('maxlength', 15)
 
     def process_form_value(self, form):
-        return int(Field.process_form_value(self, form))
+        value = Field.process_form_value(self, form)
+        if value:
+            try:
+                return int(value)
+            except ValueError:
+                raise ProcessFormError(form._cw._('an integer is expected'))
+        return None
 
 
 class BooleanField(Field):
@@ -636,7 +642,13 @@ class FloatField(IntField):
         return self.format_single_value(req, 1.234)
 
     def process_form_value(self, form):
-        return float(Field.process_form_value(self, form))
+        value = Field.process_form_value(self, form)
+        if value:
+            try:
+                return float(value)
+            except ValueError:
+                raise ProcessFormError(form._cw._('a float is expected'))
+        return None
 
 
 class DateField(StringField):
@@ -655,7 +667,10 @@ class DateField(StringField):
         # but for some widgets, it might be simpler to return date objects
         # directly, so handle that case :
         if isinstance(date, basestring):
-            date = form.parse_date(wdgdate, 'Date')
+            try:
+                date = form.parse_datetime(wdgdate, 'Date')
+            except ValueError, ex:
+                raise ProcessFormError(unicode(ex))
         return date
 
 
@@ -668,7 +683,10 @@ class DateTimeField(DateField):
         # but for some widgets, it might be simpler to return date objects
         # directly, so handle that case :
         if isinstance(date, basestring):
-            date = form.parse_datetime(date, 'Datetime')
+            try:
+                date = form.parse_datetime(wdgdate, 'Datetime')
+            except ValueError, ex:
+                raise ProcessFormError(unicode(ex))
         return date
 
 
@@ -682,7 +700,10 @@ class TimeField(DateField):
         # but for some widgets, it might be simpler to return time objects
         # directly, so handle that case :
         if isinstance(time, basestring):
-            time = form.parse_time(wdgdate, 'Time')
+            try:
+                time = form.parse_datetime(wdgdate, 'Time')
+            except ValueError, ex:
+                raise ProcessFormError(unicode(ex))
         return time
 
 
