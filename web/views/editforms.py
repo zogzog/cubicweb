@@ -91,8 +91,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
         w(u'<ul>\n')
         for entity in self.rset.entities():
             # don't use outofcontext view or any other that may contain inline edition form
-            w(u'<li>%s</li>' % tags.a(xml_escape(entity.view('textoutofcontext')),
-                                      href=xml_escape(entity.absolute_url())))
+            w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
+                                      href=entity.absolute_url()))
         w(u'</ul>\n')
         w(form.render())
 
