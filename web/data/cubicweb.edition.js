@@ -328,15 +328,22 @@ function _displayValidationerrors(formid, eid, errors) {
     for (fieldname in errors) {
 	var errmsg = errors[fieldname];
 	var fieldid = fieldname + ':' + eid;
-	var field = jqNode(fieldname + ':' + eid);
-	if (field && getNodeAttribute(field, 'type') != 'hidden') {
-	    if ( !firsterrfield ) {
-		firsterrfield = 'err-' + fieldid;
+	var suffixes = ['', '-subject', '-object'];
+	var found = false;
+	for (var i=0, length=suffixes.length; i<length;i++) {
+	    var field = jqNode(fieldname + suffixes[i] + ':' + eid);
+	    if (field && getNodeAttribute(field, 'type') != 'hidden') {
+		if ( !firsterrfield ) {
+		    firsterrfield = 'err-' + fieldid;
+		}
+		addElementClass(field, 'error');
+		var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
+		field.before(span);
+		found = true;
+		break;
 	    }
-	    addElementClass(field, 'error');
-	    var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
-	    field.before(span);
-	} else {
+	}
+	if (!found) {
 	    firsterrfield = formid;
 	    globalerrors.push(_(fieldname) + ' : ' + errmsg);
 	}
