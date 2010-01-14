@@ -352,7 +352,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	if (globalerrors.length == 1) {
 	    var innernode = SPAN(null, globalerrors[0]);
 	} else {
-	    var innernode = UL(null, map(LI, globalerrors));
+	    var innernode = UL(null, map(partial(LI, null), globalerrors));
 	}
 	// insert DIV and innernode before the form
 	var div = DIV({'class' : "errorMessage", 'id': formid + 'ErrorMessage'});
