@@ -672,7 +672,7 @@ class DateField(StringField):
         # directly, so handle that case :
         if isinstance(date, basestring):
             try:
-                date = form.parse_datetime(wdgdate, 'Date')
+                date = form.parse_datetime(date, 'Date')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return date
@@ -688,7 +688,7 @@ class DateTimeField(DateField):
         # directly, so handle that case :
         if isinstance(date, basestring):
             try:
-                date = form.parse_datetime(wdgdate, 'Datetime')
+                date = form.parse_datetime(date, 'Datetime')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return date
@@ -705,7 +705,7 @@ class TimeField(DateField):
         # directly, so handle that case :
         if isinstance(time, basestring):
             try:
-                time = form.parse_datetime(wdgdate, 'Time')
+                time = form.parse_datetime(time, 'Time')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return time
