@@ -148,39 +148,6 @@ class SortedNavigation(NavigationComponent):
         self.w(u'</div>')
 
 
-def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
-                               show_all_option=True, page_size=None):
-    if not (forcedisplay or req.form.get('__force_display') is not None):
-        nav = self.vreg['components'].select_object('navigation', req,
-                                      rset=rset, page_size=page_size)
-        if nav:
-            # get boundaries before component rendering
-            start, stop = nav.page_boundaries()
-            nav.render(w=w)
-            params = dict(req.form)
-            nav.clean_params(params)
-            # make a link to see them all
-            if show_all_option:
-                url = xml_escape(self.build_url(__force_display=1, **params))
-                w(u'<span><a href="%s">%s</a></span>\n'
-                  % (url, req._('show %s results') % len(rset)))
-            rset.limit(offset=start, limit=stop-start, inplace=True)
-
-
-# monkey patch base View class to add a .pagination(req, rset, w, forcedisplay)
-# method to be called on view's result set and printing pages index in the view
-from cubicweb.view import View
-View.pagination = deprecated('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
-
-def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
-    if rset is None:
-        rset = view.rset
-    if getattr(view, 'paginable', True):
-        limit_rset_using_paged_nav(view, view.req, rset, w or view.w,
-                                   not view.need_navigation, show_all_option,
-                                   page_size=page_size)
-View.paginate = paginate
-
 class NextPrevNavigationComponent(EntityVComponent):
     id = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
@@ -224,3 +191,55 @@ class NextPrevNavigationComponent(EntityVComponent):
             xml_escape(next.absolute_url()),
             self.req._('i18nprevnext_next'),
             xml_escape(cut(next.dc_title(), textsize)))
+
+
+def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
+    """write pages index in w stream (default to view.w) and then limit the result
+    set (default to view.rset) to the currently displayed page
+    """
+    req = view.req
+    if rset is None:
+        rset = view.rset
+    nav = req.vreg['components'].select_object(
+        'navigation', req, rset=rset, page_size=page_size)
+    if nav:
+        if w is None:
+            w = view.w
+        # get boundaries before component rendering
+        start, stop = nav.page_boundaries()
+        nav.render(w=w)
+        params = dict(req.form)
+        nav.clean_params(params)
+        # make a link to see them all
+        if show_all_option:
+            url = xml_escape(view.build_url(__force_display=1, **params))
+            w(u'<span><a href="%s">%s</a></span>\n'
+              % (url, req._('show %s results') % len(rset)))
+        rset.limit(offset=start, limit=stop-start, inplace=True)
+
+
+def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
+    """paginate results if the view is paginable and we're not explictly told to
+    display everything (by setting __force_display in req.form)
+    """
+    if not (view.paginable or view.req.form.get('__force_display')):
+        do_paginate(view, rset, w or view.w, show_all_option, page_size)
+
+# monkey patch base View class to add a .paginate([...])
+# method to be called to write pages index in the view and then limit the result
+# set to the current page
+from cubicweb.view import View
+View.do_paginate = do_paginate
+View.paginate = paginate
+
+
+#@deprecated (see below)
+def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
+                               show_all_option=True, page_size=None):
+    if not (forcedisplay or req.form.get('__force_display') is not None):
+        do_paginate(self, rset, w, show_all_option, page_size)
+
+View.pagination = deprecated('[3.2] .pagination is deprecated, use paginate')(
+    limit_rset_using_paged_nav)
+limit_rset_using_paged_nav = deprecated('[3.6] limit_rset_using_paged_nav is deprecated, use do_paginate')(
+    limit_rset_using_paged_nav)

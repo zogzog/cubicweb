@@ -71,7 +71,7 @@ class GoogleMapsView(EntityView):
     id = 'gmap-view'
 
     __select__ = implements(IGeocodable)
-    need_navigation = False
+    paginable = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
         self.req.demote_to_html()

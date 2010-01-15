@@ -57,7 +57,7 @@ class FilterBox(BoxTemplate):
         else:
             rset = self.rset
             vid, divid = None, 'pageContent'
-            paginate = view and view.need_navigation
+            paginate = view and view.paginable
         return rset, vid, divid, paginate
 
     def call(self, view=None):

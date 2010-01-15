@@ -40,7 +40,7 @@ try:
         Does apply to ICalendarable compatible entities
         """
         __select__ = implements(ICalendarable)
-        need_navigation = False
+        paginable = False
         content_type = 'text/calendar'
         title = _('iCalendar')
         templatable = False
@@ -73,7 +73,7 @@ class hCalView(EntityView):
     """
     id = 'hcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('hCalendar')
     #templatable = False
 
@@ -131,7 +131,7 @@ class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     id = 'onemonthcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('one month')
 
     def call(self):
@@ -322,7 +322,7 @@ class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     id = 'oneweekcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('one week')
 
     def call(self):

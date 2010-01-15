@@ -76,7 +76,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
     title = _('delete')
     # don't use navigation, all entities asked to be deleted should be displayed
     # else we will only delete the displayed page
-    need_navigation = False
+    paginable = False
 
     def call(self, onsubmit=None):
         """ask for confirmation before real deletion"""

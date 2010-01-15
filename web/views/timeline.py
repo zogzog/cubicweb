@@ -105,7 +105,7 @@ class TimelineView(TimelineViewMixIn, EntityView):
     id = 'timeline'
     title = _('timeline')
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     def call(self, tlunit=None):
         self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)
         rql = self.rset.printable_rql()

@@ -28,7 +28,7 @@ class TimeTableView(AnyRsetView):
     id = 'timetable'
     title = _('timetable')
     __select__ = implements(ITimetableViews)
-    need_navigation = False
+    paginable = False
 
     def call(self, title=None):
         """Dumps a timetable from a resultset composed of a note (anything

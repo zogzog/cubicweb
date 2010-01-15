@@ -118,7 +118,7 @@ class TheMainTemplate(MainTemplate):
         if etypefilter:
             etypefilter.render(w=w)
         self.nav_html = UStringIO()
-        if view and view.need_navigation:
+        if view:
             view.paginate(w=self.nav_html.write)
         w(_(self.nav_html.getvalue()))
         w(u'<div id="contentmain">\n')

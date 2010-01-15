@@ -26,7 +26,7 @@ MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
 class _CalendarView(EntityView):
     """base calendar view containing helpful methods to build calendar views"""
     __select__ = implements(ICalendarViews,)
-    need_navigation = False
+    paginable = False
 
     # Navigation building methods / views ####################################
 
