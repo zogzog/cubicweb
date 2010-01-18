@@ -21,6 +21,7 @@ class CWGroup(AnyEntity):
         """XXX goa specific"""
         return self.get('name')
 
+
 class CWUser(AnyEntity):
     id = 'CWUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
@@ -76,12 +77,12 @@ class CWUser(AnyEntity):
             groups = frozenset((groups,))
         elif isinstance(groups, (tuple, list)):
             groups = frozenset(groups)
-        return len(groups & self.groups)
+        return len(groups & self.groups) # XXX return the resulting set instead of its size
 
     def is_in_group(self, group):
         """convience / shortcut method to test if the user belongs to `group`
         """
-        return self.matching_groups(group) == 1
+        return group in self._groups
 
     def is_anonymous(self):
         """ checks if user is an anonymous user"""
