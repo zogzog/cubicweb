@@ -250,6 +250,8 @@ class EntityFieldsForm(FieldsForm):
         return '%s#%s' % (self._cw.url(), self.domid)
 
     def build_context(self, formvalues=None):
+        if self.formvalues is not None:
+            return # already built
         super(EntityFieldsForm, self).build_context(formvalues)
         edited = set()
         for field in self.fields:
