@@ -25,6 +25,12 @@ from cubicweb.web.formwidgets import (
     Radio, Select, DateTimePicker)
 
 
+class UnmodifiedField(Exception):
+    """raise this when a field has not actually been edited and you want to skip
+    it
+    """
+
+
 def vocab_sort(vocab):
     """sort vocabulary, considering option groups"""
     result = []
@@ -361,7 +367,10 @@ class Field(object):
     def process_posted(self, form):
         for field in self.actual_fields(form):
             if field is self:
-                yield field, field.process_form_value(form)
+                try:
+                    yield field, field.process_form_value(form)
+                except UnmodifiedField:
+                    continue
             else:
                 # recursive function: we might have compound fields
                 # of compound fields (of compound fields of ...)
@@ -550,20 +559,23 @@ class FileField(StringField):
     def process_form_value(self, form):
         posted = form._cw.form
         if self.input_name(form, u'__detach') in posted:
-            # drop current file value
+            # drop current file value on explictily asked to detach
+            return None
+        try:
+            value = posted[self.input_name(form)]
+        except KeyError:
+            # raise UnmodifiedField instead of returning None, since the later
+            # will try to remove already attached file if any
+            raise UnmodifiedField()
+        # skip browser submitted mime type
+        filename, _, stream = value
+        # value is a  3-uple (filename, mimetype, stream)
+        value = Binary(stream.read())
+        if not val.getvalue(): # usually an unexistant file
             value = None
         else:
-            value = posted.get(self.input_name(form))
-        # no need to check value when nor explicit detach nor new file
-        # submitted, since it will think the attribute is not modified
-        if value:
-            filename, _, stream = value
-            # value is a  3-uple (filename, mimetype, stream)
-            value = Binary(stream.read())
-            if not val.getvalue(): # usually an unexistant file
-                value = None
-            else:
-                value.filename = filename
+            # set filename on the Binary instance, may be used later in hooks
+            value.filename = filename
         return value
 
 
