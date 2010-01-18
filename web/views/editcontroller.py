@@ -202,7 +202,7 @@ class EditController(ViewController):
                         origvalues = set()
                     if value is None or value == origvalues:
                         continue # not edited / not modified / to do later
-                    if rschema.inlined and rqlquery is not None:
+                    if rschema.inlined and rqlquery is not None and field.role == 'subject':
                         self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
                     elif form.edited_entity.has_eid():
                         self.handle_relation(form, field, value, origvalues)
