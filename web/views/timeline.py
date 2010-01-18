@@ -3,7 +3,7 @@
 cf. http://code.google.com/p/simile-widgets/
 
 :organization: Logilab
-:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -105,7 +105,7 @@ class TimelineView(TimelineViewMixIn, EntityView):
     __regid__ = 'timeline'
     title = _('timeline')
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     def call(self, tlunit=None):
         self._cw.html_headers.define_var('Timeline_urlPrefix', self._cw.datadir_url)
         rql = self.cw_rset.printable_rql()

@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cStringIO import StringIO
+from warnings import warn
 
 from simplejson import dumps
 
@@ -97,11 +98,23 @@ class View(AppObject):
     __registry__ = 'views'
 
     templatable = True
-    need_navigation = True
     # content_type = 'application/xhtml+xml' # text/xhtml'
     binary = False
     add_to_breadcrumbs = True
     category = 'view'
+
+    @property
+    @deprecated('[3.6] need_navigation is deprecated, use .paginable')
+    def need_navigation(self):
+        return True
+
+    @property
+    def paginable(self):
+        if not isinstance(self.__class__.need_navigation, property):
+            warn('[3.6] %s.need_navigation is deprecated, use .paginable'
+                 % self.__class__, DeprecationWarninig)
+            return self.need_navigation
+        return True
 
     def __init__(self, req=None, rset=None, **kwargs):
         super(View, self).__init__(req, rset=rset, **kwargs)

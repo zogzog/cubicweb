@@ -1,7 +1,7 @@
 """twisted server for CubicWeb web instances
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -15,13 +15,12 @@ from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 
-from twisted.application import strports
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb
 from twisted.web2 import static, resource, responsecode
 
-from cubicweb import ObjectNotFound, CW_EVENT_MANAGER
+from cubicweb import ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.web import (AuthenticationError, NotFound, Redirect,
                           RemoteCallFailed, DirectResponse, StatusResponse,
                           ExplicitLogin)
@@ -296,7 +295,6 @@ class CubicWebRootResource(resource.PostableResource):
             content = self.appli.need_login_content(req)
         return http.Response(code, req.headers_out, content)
 
-from twisted.python import failure
 from twisted.internet import defer
 from twisted.web2 import fileupload
 
@@ -387,6 +385,9 @@ def run(config, debug):
     reactor.listenTCP(port, channel.HTTPFactory(website))
     logger = getLogger('cubicweb.twisted')
     if not debug:
+        if sys.platform == 'win32':
+            raise ConfigurationError("Under windows, you must use the service management "
+                                     "commands (e.g : 'net start my_instance)'")
         print 'instance starting in the background'
         if daemonize():
             return # child process

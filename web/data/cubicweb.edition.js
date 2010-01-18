@@ -258,7 +258,10 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
         // if the inlined form contains a file input, we must force
         // the form enctype to multipart/form-data
         if (form.find('input:file').length) {
-            form.closest('form').attr('enctype', 'multipart/form-data');
+	    // NOTE: IE doesn't support dynamic enctype modification, we have
+	    //       to set encoding too.
+            form.closest('form').attr('enctype', 'multipart/form-data')
+		.attr('encoding', 'multipart/form-data');
         }
         postAjaxLoad(dom);
     });

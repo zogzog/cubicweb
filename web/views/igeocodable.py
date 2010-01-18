@@ -1,7 +1,7 @@
 """Specific views for entities implementing IGeocodable
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -70,7 +70,8 @@ class GoogleMapsView(EntityView):
     __regid__ = 'gmap-view'
     __select__ = implements(IGeocodable)
 
-    need_navigation = False
+    __select__ = implements(IGeocodable)
+    paginable = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
         self._cw.demote_to_html()

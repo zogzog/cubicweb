@@ -4,7 +4,7 @@
 contains some functions designed to help implementation of cubicweb user interface
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -39,7 +39,6 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         # don't translate empty value if you don't want strange results
         if props is not None and value and props.get('internationalizable'):
             return req._(value)
-
         return value
     if attrtype == 'Date':
         return ustrftime(value, req.property_value('ui.date-format'))

@@ -1,7 +1,7 @@
 """Specific views for CWProperty
 
 :organization: Logilab
-:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -67,6 +67,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
     """site-wide properties edition form"""
     __regid__ = 'systempropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
+    form_buttons = [SubmitButton()]
 
     title = _('site configuration')
     category = 'startupview'
@@ -187,10 +188,9 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return entity
 
     def form(self, formid, keys, splitlabel=False):
-        buttons = [SubmitButton()]
-        form = self._cw.vreg['forms'].select(
-            'composite', self._cw, domid=formid, action=self._cw.build_url(),
-            form_buttons=buttons,
+        form = self.vreg['forms'].select(
+            'composite', self.req, domid=formid, action=self.build_url(),
+            form_buttons=self.form_buttons,
             onsubmit="return validatePrefsForm('%s')" % formid,
             submitmsg=self._cw._('changes applied'))
         path = self._cw.relative_path()

@@ -1,7 +1,7 @@
 """entity classes user and group entities
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -20,6 +20,7 @@ class CWGroup(AnyEntity):
     def db_key_name(self):
         """XXX goa specific"""
         return self.get('name')
+
 
 class CWUser(AnyEntity):
     __regid__ = 'CWUser'
@@ -77,12 +78,12 @@ class CWUser(AnyEntity):
             groups = frozenset((groups,))
         elif isinstance(groups, (tuple, list)):
             groups = frozenset(groups)
-        return len(groups & self.groups)
+        return len(groups & self.groups) # XXX return the resulting set instead of its size
 
     def is_in_group(self, group):
         """convience / shortcut method to test if the user belongs to `group`
         """
-        return self.matching_groups(group) == 1
+        return group in self._groups
 
     def is_anonymous(self):
         """ checks if user is an anonymous user"""

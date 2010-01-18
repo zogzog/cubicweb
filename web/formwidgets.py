@@ -1,7 +1,7 @@
 """widget classes for form construction
 
 :organization: Logilab
-:copyright: 2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -504,7 +504,7 @@ class Button(Input):
         elif self.onclick:
             attrs['onclick'] = self.onclick
         if self.name:
-            attrs['name'] = name
+            attrs['name'] = self.name
             if self.setdomid:
                 attrs['id'] = self.name
         if self.settabindex and not 'tabindex' in attrs:

@@ -1,7 +1,7 @@
 """html calendar views
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -26,7 +26,7 @@ MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
 class _CalendarView(EntityView):
     """base calendar view containing helpful methods to build calendar views"""
     __select__ = implements(ICalendarViews,)
-    need_navigation = False
+    paginable = False
 
     # Navigation building methods / views ####################################
 

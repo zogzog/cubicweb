@@ -2,7 +2,7 @@
 or a list of entities of the same type
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -77,7 +77,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
     title = _('delete')
     # don't use navigation, all entities asked to be deleted should be displayed
     # else we will only delete the displayed page
-    need_navigation = False
+    paginable = False
 
     def call(self, onsubmit=None):
         """ask for confirmation before real deletion"""

@@ -1,7 +1,7 @@
 """html calendar views
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -40,7 +40,7 @@ try:
         Does apply to ICalendarable compatible entities
         """
         __select__ = implements(ICalendarable)
-        need_navigation = False
+        paginable = False
         content_type = 'text/calendar'
         title = _('iCalendar')
         templatable = False
@@ -73,7 +73,7 @@ class hCalView(EntityView):
     """
     __regid__ = 'hcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('hCalendar')
     #templatable = False
 
@@ -131,7 +131,7 @@ class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __regid__ = 'onemonthcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('one month')
 
     def call(self):
@@ -322,7 +322,7 @@ class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __regid__ = 'oneweekcal'
     __select__ = implements(ICalendarable)
-    need_navigation = False
+    paginable = False
     title = _('one week')
 
     def call(self):

@@ -1,7 +1,7 @@
 """cubicweb-ctl commands and command handlers specific to the server.serverconfig
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -29,11 +29,15 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     """
     from getpass import getpass
     from logilab.common.db import get_connection
-    dbhost = source['db-host']
+    dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
-    print '-> connecting to %s database %s@%s' % (driver, dbname, dbhost or 'localhost'),
+    print '-> connecting to %s database' % driver,
+    if dbhost:
+        print '%s@%s' % (dbname, dbhost),
+    else:
+        print dbname,
     if not verbose or (not special_privs and source.get('db-user')):
         user = source['db-user']
         print 'as', user
