@@ -479,7 +479,7 @@ class Button(Input):
         elif self.onclick:
             attrs['onclick'] = self.onclick
         if self.name:
-            attrs['name'] = name
+            attrs['name'] = self.name
             if self.setdomid:
                 attrs['id'] = self.name
         if self.settabindex and not 'tabindex' in attrs:
