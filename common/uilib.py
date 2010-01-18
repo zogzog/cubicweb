@@ -39,7 +39,6 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         # don't translate empty value if you don't want strange results
         if props is not None and value and props.get('internationalizable'):
             return req._(value)
-
         return value
     if attrtype == 'Date':
         return ustrftime(value, req.property_value('ui.date-format'))
