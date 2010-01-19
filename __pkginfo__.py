@@ -48,7 +48,6 @@ import glob
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
 include_dirs = [join('test', 'data'),
-                join('common', 'test', 'data'),
                 join('server', 'test', 'data'),
                 join('web', 'test', 'data'),
                 join('devtools', 'test', 'data'),

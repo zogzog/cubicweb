@@ -33,7 +33,6 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_clean
 	dh_installdirs
 
-	#python setup.py install_lib --no-compile --install-dir=debian/cubicweb-common/usr/lib/python2.4/site-packages/
 	python setup.py -q install --no-compile --prefix=debian/tmp/usr
 
 	# Put all the python library and data in cubicweb-common
@@ -51,7 +50,6 @@ install: build $(basename $(wildcard debian/*.in))
 	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/site-packages/cubicweb/web/test
 	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/site-packages/cubicweb/etwist/test
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/ext/test
-	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/common/test
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/entities/test
 
 	# cubes directory must be managed as a valid python module
