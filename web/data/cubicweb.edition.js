@@ -414,11 +414,14 @@ function freezeFormButtons(formid) {
 function postForm(bname, bvalue, formid) {
     var form = getNode(formid);
     if (bname) {
-	form.appendChild(INPUT({type: 'hidden', name: bname, value: bvalue}));
+	var child = form.appendChild(INPUT({type: 'hidden', name: bname, value: bvalue}));
     }
     var onsubmit = form.onsubmit;
     if (!onsubmit || (onsubmit && onsubmit())) {
 	form.submit();
+    }
+    if (bname) {
+	jQuery(child).remove(); /* cleanup */
     }
 }
 
