@@ -726,7 +726,7 @@ class may_add_relation(EntitySelector):
         self.target_etype = target_etype
 
     def score_entity(self, entity):
-        rschema = entity.schema.rschema(self.rtype)
+        rschema = entity._cw.vreg.schema.rschema(self.rtype)
         if self.target_etype is not None:
             rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
         if self.role == 'subject':
