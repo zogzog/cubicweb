@@ -189,15 +189,40 @@ class EntityFieldsForm(FieldsForm):
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
-    def __init__(self, req, rset=None, row=None, col=None, *args, **kwargs):
-        # entity was either explicitly specified or we have a one line rset
-        if 'entity' in kwargs:
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role=None, eschema=None):
+        """return field with the given name and role. If field is not explicitly
+        defined for the form but `eclass` is specified, guess_field will be
+        called.
+        """
+        try:
+            return super(EntityFieldsForm, cls_or_self).field_by_name(name, role)
+        except form.FieldNotFound:
+            if eschema is None or role is None or not name in eschema.schema:
+                raise
+            rschema = eschema.schema.rschema(name)
+            # XXX use a sample target type. Document this.
+            tschemas = rschema.targets(eschema, role)
+            fieldcls = _AFF.etype_get(eschema, rschema, role, tschemas[0])
+            kwargs = _AFF_KWARGS.etype_get(eschema, rschema, role, tschemas[0])
+            if kwargs is None:
+                kwargs = {}
+            if fieldcls:
+                if not isinstance(fieldcls, type):
+                    return fieldcls # already and instance
+                return fieldcls(name=name, role=role, eidparam=True, **kwargs)
+            field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
+            if field is None:
+                raise
+            return field
+
+    def __init__(self, _cw, rset=None, row=None, col=None, **kwargs):
+        try:
             self.edited_entity = kwargs.pop('entity')
-        else:
+        except KeyError:
             self.edited_entity = rset.complete_entity(row or 0, col or 0)
-            self.edited_entity.complete()
         msg = kwargs.pop('submitmsg', None)
-        super(EntityFieldsForm, self).__init__(req, rset, row, col, *args, **kwargs)
+        super(EntityFieldsForm, self).__init__(_cw, rset, row, col, **kwargs)
         self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
         self.add_hidden('eid', self.edited_entity.eid)
         if kwargs.get('mainform', True): # mainform default to true in parent
