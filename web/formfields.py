@@ -685,7 +685,7 @@ class DateField(StringField):
         # directly, so handle that case :
         if isinstance(date, basestring):
             try:
-                date = form.parse_datetime(date, 'Date')
+                date = form._cw.parse_datetime(date, 'Date')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return date
@@ -701,7 +701,7 @@ class DateTimeField(DateField):
         # directly, so handle that case :
         if isinstance(date, basestring):
             try:
-                date = form.parse_datetime(date, 'Datetime')
+                date = form._cw.parse_datetime(date, 'Datetime')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return date
@@ -718,7 +718,7 @@ class TimeField(DateField):
         # directly, so handle that case :
         if isinstance(time, basestring):
             try:
-                time = form.parse_datetime(time, 'Time')
+                time = form._cw.parse_datetime(time, 'Time')
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
         return time
@@ -794,7 +794,7 @@ class RelationField(Field):
         vocab = relvoc_init(entity, self.name, self.role, self.required)
         method = '%s_%s_vocabulary' % (self.role, self.name)
         try:
-            vocab += getattr(form, method)(rtype, limit)
+            vocab += getattr(form, method)(self.name, limit)
             warn('[3.6] found %s on %s, should override field.choices instead (need tweaks)'
                  % (method, form), DeprecationWarning)
         except AttributeError:
