@@ -17,8 +17,8 @@ from yams.schema import KNOWN_METAATTRIBUTES
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
+from cubicweb import Binary, tags, uilib
 from cubicweb.utils import ustrftime
-from cubicweb import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param
 from cubicweb.web.formwidgets import (
     HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
