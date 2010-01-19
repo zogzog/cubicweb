@@ -190,7 +190,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject:X': u'toto',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'upassword': u'password and confirmation don\'t match'})
+        self.assertEquals(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
         req = self.request()
         req.form = {'__cloned_eid:X': u(user.eid),
                     'eid': 'X', '__type:X': 'CWUser',
@@ -200,7 +200,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject-confirm:X': u'tutu',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'upassword': u'password and confirmation don\'t match'})
+        self.assertEquals(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
 
 
     def test_interval_bound_constraint_success(self):
