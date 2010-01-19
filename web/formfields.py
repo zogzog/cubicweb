@@ -572,7 +572,7 @@ class FileField(StringField):
         filename, _, stream = value
         # value is a  3-uple (filename, mimetype, stream)
         value = Binary(stream.read())
-        if not val.getvalue(): # usually an unexistant file
+        if not value.getvalue(): # usually an unexistant file
             value = None
         else:
             # set filename on the Binary instance, may be used later in hooks
