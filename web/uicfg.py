@@ -437,8 +437,8 @@ class AutoformIsInlined(RelationTags):
         warn('autoform_is_inlined rtag is deprecated, use autoform_section '
              'with inlined formtype and "attributes" or "hidden" section',
              DeprecationWarning, stacklevel=2)
-        section = tag and 'attributes' or 'hidden'
-        autoform_section.tag_relation(key, 'inlined', section)
+        section = tag and 'inlined' or 'hidden'
+        autoform_section.tag_relation(key, 'main', section)
 
 # inlined view flag for non final relations: when True for an entry, the
 # entity(ies) at the other end of the relation will be editable from the
