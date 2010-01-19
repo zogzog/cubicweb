@@ -392,14 +392,14 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
 /* unfreeze form buttons when the validation process is over*/
 function unfreezeFormButtons(formid) {
     jQuery('#progress').hide();
-    jQuery('#' + formid + ' input.validateButton').removeAttr('disabled');
+    jQuery('#' + formid + ' .validateButton').removeAttr('disabled');
     return true;
 }
 
 /* disable form buttons while the validation is being done */
 function freezeFormButtons(formid) {
     jQuery('#progress').show();
-    jQuery('#' + formid + ' input.validateButton').attr('disabled', 'disabled');
+    jQuery('#' + formid + ' .validateButton').attr('disabled', 'disabled');
     return true;
 }
 
