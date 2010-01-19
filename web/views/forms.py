@@ -175,7 +175,7 @@ class FieldsForm(form.Form):
         self.build_context(values)
         renderer = values.pop('renderer', None)
         if renderer is None:
-            renderer = self.form_default_renderer()
+            renderer = self.default_renderer()
         return renderer.render(self, values)
 
 _AFF = uicfg.autoform_field
