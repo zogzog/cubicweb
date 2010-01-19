@@ -19,7 +19,7 @@ from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
-from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton
+from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton, FieldWidget
 from cubicweb.web.views import primary, formrenderers
 
 
@@ -258,7 +258,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
 
 # cwproperty form objects ######################################################
 
-class PlaceHolderWidget(object):
+class PlaceHolderWidget(FieldWidget):
 
     def render(self, form, field, renderer):
         domid = field.dom_id(form)
@@ -268,7 +268,7 @@ class PlaceHolderWidget(object):
             domid, domid, form._cw._('select a key first'))
 
 
-class NotEditableWidget(object):
+class NotEditableWidget(FieldWidget):
     def __init__(self, value, msg=None):
         self.value = value
         self.msg = msg
