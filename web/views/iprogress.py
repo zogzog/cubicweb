@@ -87,7 +87,7 @@ class ProgressTableView(EntityView):
 
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
-        return display_name(self._cw, ecls.id)
+        return display_name(self._cw, ecls.__regid__)
 
     def table_header(self, ecls):
         """builds the table's header"""
