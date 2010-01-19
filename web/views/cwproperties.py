@@ -212,10 +212,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             label = key
         subform = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
                                                 mainform=False)
-        subform.append_field(PropertyValueField(name='value', label=label,
+        subform.append_field(PropertyValueField(name='value', label=label, role='subject',
                                                 eidparam=True))
         #subform.vreg = self._cw.vreg
-        subform.add_hidden('pkey', key, eidparam=True)
+        subform.add_hidden('pkey', key, eidparam=True, role='subject')
         form.add_subform(subform)
         return subform
 
@@ -253,7 +253,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
         # if user is in the managers group and the property is being created,
         # we have to set for_user explicitly
         if not subform.edited_entity.has_eid() and self.user.matching_groups('managers'):
-            subform.add_hidden('for_user', self.user.eid, eidparam=True)
+            subform.add_hidden('for_user', self.user.eid, eidparam=True, role='subject')
 
 
 # cwproperty form objects ######################################################
