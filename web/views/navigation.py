@@ -197,9 +197,9 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     """write pages index in w stream (default to view.w) and then limit the result
     set (default to view.rset) to the currently displayed page
     """
-    req = view.req
+    req = view._cw
     if rset is None:
-        rset = view.rset
+        rset = view.cw_rset
     nav = req.vreg['components'].select_or_none(
         'navigation', req, rset=rset, page_size=page_size)
     if nav:

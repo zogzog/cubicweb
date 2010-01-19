@@ -188,8 +188,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return entity
 
     def form(self, formid, keys, splitlabel=False):
-        form = self.vreg['forms'].select(
-            'composite', self.req, domid=formid, action=self.build_url(),
+        form = self._cw.vreg['forms'].select(
+            'composite', self._cw, domid=formid, action=self._cw.build_url(),
             form_buttons=self.form_buttons,
             onsubmit="return validatePrefsForm('%s')" % formid,
             submitmsg=self._cw._('changes applied'))
