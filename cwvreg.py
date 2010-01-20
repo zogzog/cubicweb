@@ -115,6 +115,7 @@ class ETypeRegistry(CWRegistry):
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
         clear_cache(self, 'etype_class')
+        clear_cache(self, 'parent_classes')
 
     def register(self, obj, **kwargs):
         oid = kwargs.get('oid') or class_regid(obj)
