@@ -189,7 +189,6 @@ def _select_main_var(relations):
             return rel
         principal = rel
     if principal is None:
-        print iter(relations).next().root
         raise BadRQLQuery('unable to find principal in %s' % ', '.join(
             r.as_string() for r in relations))
     return principal
@@ -310,7 +309,7 @@ class IsAmbData(object):
         # apply relation restriction
         self.maydeambrels = maydeambrels = {}
         for rel in rqlst.iget_nodes(Relation):
-            if rel.is_types_restriction() or rel.r_type == 'eid':
+            if rel.r_type == 'eid' or rel.is_types_restriction():
                 continue
             lhs, rhs = rel.get_variable_parts()
             if isinstance(lhs, VariableRef) or isinstance(rhs, VariableRef):
@@ -385,9 +384,8 @@ class IsAmbData(object):
             for otheretype in otheretypes:
                 reltypes = frozenset(rtypefunc(otheretype))
                 if var.stinfo['possibletypes'] != reltypes:
-                    break
-            else:
-                self.restrict(var, var.stinfo['possibletypes'])
-                self.deambification_map[var] = deambiguifier
-                return True
+                    return False
+            self.restrict(var, var.stinfo['possibletypes'])
+            self.deambification_map[var] = deambiguifier
+            return True
         return False
