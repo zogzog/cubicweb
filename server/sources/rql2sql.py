@@ -1212,13 +1212,13 @@ class SQLGenerator(object):
     def _update_outer_tables(self, table, actualtables, oldalias, newalias):
         actualtables.remove(oldalias)
         actualtables.append(newalias)
+        self._state.outer_tables[table] = newalias
         # some tables which have already been used as outer table and replaced
         # by <oldalias> may not be reused here, though their associated value
         # in the outer_tables dict has to be updated as well
         for table, outerexpr in self._state.outer_tables.iteritems():
             if outerexpr == oldalias:
                 self._state.outer_tables[table] = newalias
-        self._state.outer_tables[table] = newalias
 
     def _var_table(self, var):
         var.accept(self)#.visit_variable(var)
