@@ -1581,6 +1581,10 @@ WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.
 FROM (SELECT 1) AS _T
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
+    def test_groupby_multiple_outerjoins(self):
+        self._check('Any A,U,P,group_concat(TN) GROUPBY A,U,P WHERE A is Affaire, A concerne N, N todo_by U?, T? tags A, T name TN, A todo_by P?',
+                    "SHOULD NOT CRASH")
+
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
