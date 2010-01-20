@@ -386,37 +386,7 @@ class CubicWebRequestBase(DBAPIRequest):
             raise RequestError(self._('missing parameters for entity %s') % eid)
         return params
 
-    def get_pending_operations(self, entity, relname, role):
-        operations = {'insert' : [], 'delete' : []}
-        for optype in ('insert', 'delete'):
-            data = self.get_session_data('pending_%s' % optype) or ()
-            for eidfrom, rel, eidto in data:
-                if relname == rel:
-                    if role == 'subject' and entity.eid == eidfrom:
-                        operations[optype].append(eidto)
-                    if role == 'object' and entity.eid == eidto:
-                        operations[optype].append(eidfrom)
-        return operations
-
-    def get_pending_inserts(self, eid=None):
-        """shortcut to access req's pending_insert entry
-
-        This is where are stored relations being added while editing
-        an entity. This used to be stored in a temporary cookie.
-        """
-        pending = self.get_session_data('pending_insert') or ()
-        return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
-                if eid is None or eid in (subj, obj)]
-
-    def get_pending_deletes(self, eid=None):
-        """shortcut to access req's pending_delete entry
-
-        This is where are stored relations being removed while editing
-        an entity. This used to be stored in a temporary cookie.
-        """
-        pending = self.get_session_data('pending_delete') or ()
-        return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
-                if eid is None or eid in (subj, obj)]
+    # XXX this should go to the GenericRelationsField. missing edition cancel protocol.
 
     def remove_pending_operations(self):
         """shortcut to clear req's pending_{delete,insert} entries

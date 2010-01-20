@@ -35,19 +35,6 @@ def redirect_params(form):
             params[navparam] = form[redirectparam]
     return params
 
-def parse_relations_descr(rdescr):
-    """parse a string describing some relations, in the form
-    subjeids:rtype:objeids
-    where subjeids and objeids are eids separeted by a underscore
-
-    return an iterator on (subject eid, relation type, object eid) found
-    """
-    for rstr in rdescr:
-        subjs, rtype, objs = rstr.split(':')
-        for subj in subjs.split('_'):
-            for obj in objs.split('_'):
-                yield typed_eid(subj), rtype, typed_eid(obj)
-
 def append_url_params(url, params):
     """append raw parameters to the url. Given parameters, if any, are expected
     to be already url-quoted.
@@ -136,22 +123,6 @@ class Controller(AppObject):
             self._cw.set_message(self._cw._('entities deleted'))
         else:
             self._cw.set_message(self._cw._('entity deleted'))
-
-    def delete_relations(self, rdefs):
-        """delete relations from the repository"""
-        # FIXME convert to using the syntax subject:relation:eids
-        execute = self._cw.execute
-        for subj, rtype, obj in rdefs:
-            rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-            execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
-        self._cw.set_message(self._cw._('relations deleted'))
-
-    def insert_relations(self, rdefs):
-        """insert relations into the repository"""
-        execute = self._cw.execute
-        for subj, rtype, obj in rdefs:
-            rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-            execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
 
 
     def reset(self):

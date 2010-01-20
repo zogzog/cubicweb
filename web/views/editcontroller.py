@@ -13,7 +13,7 @@ from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
-from cubicweb.web.controller import parse_relations_descr
+from cubicweb.web.views.editviews import delete_relations, insert_relations
 from cubicweb.web.views.basecontrollers import ViewController
 
 
@@ -73,8 +73,6 @@ class EditController(ViewController):
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         self._pending_fields = req.data['pendingfields'] = set()
-        todelete = self._cw.get_pending_deletes()
-        toinsert = self._cw.get_pending_inserts()
         try:
             methodname = req.form.pop('__method', None)
             for eid in req.edited_eids():
@@ -88,7 +86,7 @@ class EditController(ViewController):
         except (RequestError, NothingToEdit), ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
-            elif not ('__delete' in req.form or '__insert' in req.form or todelete or toinsert):
+            elif not ('__delete' in req.form or '__insert' in req.form):
                 raise ValidationError(None, {None: unicode(ex)})
         # handle relations in newly created entities
         if self._pending_fields:
@@ -99,13 +97,15 @@ class EditController(ViewController):
             self._cw.execute(*querydef)
         # XXX this processes *all* pending operations of *all* entities
         if req.form.has_key('__delete'):
-            todelete += req.list_form_param('__delete', req.form, pop=True)
-        if todelete:
-            self.delete_relations(parse_relations_descr(todelete))
+            todelete = req.list_form_param('__delete', req.form, pop=True)
+            if todelete:
+                delete_relations(self._cw, todelete)
         if req.form.has_key('__insert'):
+            warn('[3.6] stop using __insert, support will be removed',
+                 DeprecationWarning)
             toinsert = req.list_form_param('__insert', req.form, pop=True)
-        if toinsert:
-            self.insert_relations(parse_relations_descr(toinsert))
+            if toinsert:
+                insert_relations(self._cw, toinsert)
         self._cw.remove_pending_operations()
         if self.errors:
             errors = dict((f.name, unicode(ex)) for f, ex in self.errors)
@@ -171,13 +171,11 @@ class EditController(ViewController):
         if is_main_entity:
             self.notify_edited(entity)
         if formparams.has_key('__delete'):
+            # XXX deprecate?
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
-            self.delete_relations(parse_relations_descr(todelete))
+            delete_relations(self._cw, todelete)
         if formparams.has_key('__cloned_eid'):
             entity.copy_relations(typed_eid(formparams['__cloned_eid']))
-        if formparams.has_key('__insert'):
-            toinsert = self._cw.list_form_param('__insert', formparams, pop=True)
-            self.insert_relations(parse_relations_descr(toinsert))
         if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(entity.eid)
         return eid

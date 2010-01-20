@@ -9,12 +9,12 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, iclassmethod
 
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web import form, formwidgets as fwdgs
-from cubicweb.web.views import forms, editforms
+from cubicweb.web.views import forms, editforms, editviews
 
 _afs = uicfg.autoform_section
 
@@ -44,6 +44,31 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # which relations should be edited
     display_fields = None
 
+    def _generic_relations_field(self):
+        try:
+            srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
+            warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
+                 'override editable_relations instead' % classid(form),
+                 DeprecationWarning)
+        except AttributeError:
+            srels_by_cat = self.editable_relations()
+        if not srels_by_cat:
+            raise form.FieldNotFound('_cw_generic_field')
+        return editviews.GenericRelationsField(self.editable_relations())
+
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role=None, eschema=None):
+        """return field with the given name and role. If field is not explicitly
+        defined for the form but `eclass` is specified, guess_field will be
+        called.
+        """
+        try:
+            return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role, eschema)
+        except form.FieldNotFound:
+            if name == '_cw_generic_field' and not isinstance(cls_or_self, type):
+                return cls_or_self._generic_relations_field()
+            raise
+
     # base automatic entity form methods #######################################
 
     def __init__(self, *args, **kwargs):
@@ -64,6 +89,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except form.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
+        if self.formtype == 'main' and entity.has_eid():
+            try:
+                self.fields.append(self.field_by_name('_cw_generic_field'))
+            except form.FieldNotFound:
+                # no editable relation
+                pass
         self.maxrelitems = self._cw.property_value('navigation.related-limit')
         self.force_display = bool(self._cw.form.get('__force_display'))
         fnum = len(self.fields)
@@ -162,63 +193,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         return self._relations_by_section('inlined')
 
     # generic relations modifier ###############################################
-
-    def relations_table(self):
-        """yiels 3-tuples (rtype, target, related_list)
-        where <related_list> itself a list of :
-          - node_id (will be the entity element's DOM id)
-          - appropriate javascript's togglePendingDelete() function call
-          - status 'pendingdelete' or ''
-          - oneline view of related entity
-        """
-        entity = self.edited_entity
-        pending_deletes = self._cw.get_pending_deletes(entity.eid)
-        for label, rschema, role in self.editable_relations():
-            relatedrset = entity.related(rschema, role, limit=self.related_limit)
-            if rschema.has_perm(self._cw, 'delete'):
-                toggleable_rel_link_func = editforms.toggleable_relation_link
-            else:
-                toggleable_rel_link_func = lambda x, y, z: u''
-            related = []
-            for row in xrange(relatedrset.rowcount):
-                nodeid = editforms.relation_id(entity.eid, rschema, role,
-                                               relatedrset[row][0])
-                if nodeid in pending_deletes:
-                    status = u'pendingDelete'
-                    label = '+'
-                else:
-                    status = u''
-                    label = 'x'
-                dellink = toggleable_rel_link_func(entity.eid, nodeid, label)
-                eview = self._cw.view('oneline', relatedrset, row=row)
-                related.append((nodeid, dellink, status, eview))
-            yield (rschema, role, related)
-
-    def restore_pending_inserts(self, cell=False):
-        """used to restore edition page as it was before clicking on
-        'search for <some entity type>'
-        """
-        eid = self.edited_entity.eid
-        cell = cell and "div_insert_" or "tr"
-        pending_inserts = set(self._cw.get_pending_inserts(eid))
-        for pendingid in pending_inserts:
-            eidfrom, rtype, eidto = pendingid.split(':')
-            if typed_eid(eidfrom) == eid: # subject
-                label = display_name(self._cw, rtype, 'subject',
-                                     self.edited_entity.__regid__)
-                reid = eidto
-            else:
-                label = display_name(self._cw, rtype, 'object',
-                                     self.edited_entity.__regid__)
-                reid = eidfrom
-            jscall = "javascript: cancelPendingInsert('%s', '%s', null, %s);" \
-                     % (pendingid, cell, eid)
-            rset = self._cw.eid_rset(reid)
-            eview = self._cw.view('text', rset, row=0)
-            # XXX find a clean way to handle baskets
-            if rset.description[0][0] == 'Basket':
-                eview = '%s (%s)' % (eview, display_name(self._cw, 'Basket'))
-            yield rtype, pendingid, jscall, label, reid, eview
 
     # inlined forms support ####################################################
 

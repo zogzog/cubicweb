@@ -30,21 +30,6 @@ from cubicweb.web.views import forms
 
 _pvdc = uicfg.primaryview_display_ctrl
 
-def relation_id(eid, rtype, role, reid):
-    """return an identifier for a relation between two entities"""
-    if role == 'subject':
-        return u'%s:%s:%s' % (eid, rtype, reid)
-    return u'%s:%s:%s' % (reid, rtype, eid)
-
-def toggleable_relation_link(eid, nodeid, label='x'):
-    """return javascript snippet to delete/undelete a relation between two
-    entities
-    """
-    js = u"javascript: togglePendingDelete('%s', %s);" % (
-        nodeid, xml_escape(dumps(eid)))
-    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (
-        js, nodeid, label)
-
 
 class DeleteConfForm(forms.CompositeForm):
     __regid__ = 'deleteconf'

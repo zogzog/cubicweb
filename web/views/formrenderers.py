@@ -205,14 +205,15 @@ class FormRenderer(AppObject):
             w(u'<table class="%s">' % self.table_class)
             for field in fields:
                 w(u'<tr class="%s_%s_row">' % (field.name, field.role))
-                if self.display_label:
+                if self.display_label and field.label is not None:
                     w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
+                w('<td')
+                if field.label is None:
+                    w(' colspan="2"')
                 error = form.field_error(field)
                 if error:
-                    w(u'<td class="error">')
-                    self.render_error(w, error)
-                else:
-                    w(u'<td>')
+                    w(u' class="error"')
+                w(u'>')
                 w(field.render(form, self))
                 if self.display_help:
                     w(self.render_help(form, field))
@@ -392,72 +393,6 @@ class EntityFormRenderer(BaseFormRenderer):
  </table>""" % tuple(button.render(form) for button in form.form_buttons))
         else:
             super(EntityFormRenderer, self).render_buttons(w, form)
-
-    def relations_form(self, w, form):
-        try:
-            srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
-            warn('[3.6] %s: srelations_by_category is deprecated, override '
-                 'editable_relations instead' % classid(form), DeprecationWarning)
-        except AttributeError:
-            srels_by_cat = form.editable_relations()
-        if not srels_by_cat:
-            return u''
-        req = self._cw
-        _ = req._
-        __ = _
-        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
-        eid = form.edited_entity.eid
-        w(u'<fieldset class="subentity">')
-        w(u'<legend class="iformTitle">%s</legend>' % label)
-        w(u'<table id="relatedEntities">')
-        for rschema, target, related in form.relations_table():
-            # already linked entities
-            if related:
-                w(u'<tr><th class="labelCol">%s</th>' % rschema.display_name(req, target))
-                w(u'<td>')
-                w(u'<ul>')
-                for viewparams in related:
-                    w(u'<li class="invisible">%s<div id="span%s" class="%s">%s</div></li>'
-                      % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
-                if not form.force_display and form.maxrelitems < len(related):
-                    link = (u'<span class="invisible">'
-                            '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % self._cw._('view all'))
-                    w(u'<li class="invisible">%s</li>' % link)
-                w(u'</ul>')
-                w(u'</td>')
-                w(u'</tr>')
-        pendings = list(form.restore_pending_inserts())
-        if not pendings:
-            w(u'<tr><th>&#160;</th><td>&#160;</td></tr>')
-        else:
-            for row in pendings:
-                # soon to be linked to entities
-                w(u'<tr id="tr%s">' % row[1])
-                w(u'<th>%s</th>' % row[3])
-                w(u'<td>')
-                w(u'<a class="handle" title="%s" href="%s">[x]</a>' %
-                  (_('cancel this insert'), row[2]))
-                w(u'<a id="a%s" class="editionPending" href="%s">%s</a>'
-                  % (row[1], row[4], xml_escape(row[5])))
-                w(u'</td>')
-                w(u'</tr>')
-        w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
-        w(u'<th class="labelCol">')
-        w(u'<select id="relationSelector_%s" tabindex="%s" '
-          'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
-        w(u'<option value="">%s</option>' % _('select a relation'))
-        for i18nrtype, rschema, target in srels_by_cat:
-            # more entities to link to
-            w(u'<option value="%s_%s">%s</option>' % (rschema, target, i18nrtype))
-        w(u'</select>')
-        w(u'</th>')
-        w(u'<td id="unrelatedDivs_%s"></td>' % eid)
-        w(u'</tr>')
-        w(u'</table>')
-        w(u'</fieldset>')
-
     # NOTE: should_* and display_* method extracted and moved to the form to
     # ease overriding
 

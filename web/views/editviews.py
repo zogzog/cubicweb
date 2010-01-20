@@ -13,14 +13,29 @@ from simplejson import dumps
 from logilab.common.decorators import cached
 from logilab.mtconverter import xml_escape
 
-from cubicweb import typed_eid
+from cubicweb import typed_eid, uilib
+from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, non_final_entity,
                                 match_search_state, match_form_params)
-from cubicweb.uilib import cut
-from cubicweb.web.views import linksearch_select_url
-from cubicweb.web.views.editforms import relation_id
-from cubicweb.web.views.baseviews import FinalView
+from cubicweb.web import formwidgets as fw, formfields as ff
+from cubicweb.web.views import baseviews, linksearch_select_url
+
+
+def relation_id(eid, rtype, role, reid):
+    """return an identifier for a relation between two entities"""
+    if role == 'subject':
+        return u'%s:%s:%s' % (eid, rtype, reid)
+    return u'%s:%s:%s' % (reid, rtype, eid)
+
+def toggleable_relation_link(eid, nodeid, label='x'):
+    """return javascript snippet to delete/undelete a relation between two
+    entities
+    """
+    js = u"javascript: togglePendingDelete('%s', %s);" % (
+        nodeid, xml_escape(dumps(eid)))
+    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (
+        js, nodeid, label)
 
 
 class SearchForAssociationView(EntityView):
@@ -73,6 +88,195 @@ class OutOfContextSearch(EntityView):
             entity.view('outofcontext', w=self.w)
 
 
+def get_pending_inserts(req, eid=None):
+    """shortcut to access req's pending_insert entry
+
+    This is where are stored relations being added while editing
+    an entity. This used to be stored in a temporary cookie.
+    """
+    pending = req.get_session_data('pending_insert') or ()
+    return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
+            if eid is None or eid in (subj, obj)]
+
+def get_pending_deletes(req, eid=None):
+    """shortcut to access req's pending_delete entry
+
+    This is where are stored relations being removed while editing
+    an entity. This used to be stored in a temporary cookie.
+    """
+    pending = req.get_session_data('pending_delete') or ()
+    return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
+            if eid is None or eid in (subj, obj)]
+
+def parse_relations_descr(rdescr):
+    """parse a string describing some relations, in the form
+    subjeids:rtype:objeids
+    where subjeids and objeids are eids separeted by a underscore
+
+    return an iterator on (subject eid, relation type, object eid) found
+    """
+    for rstr in rdescr:
+        subjs, rtype, objs = rstr.split(':')
+        for subj in subjs.split('_'):
+            for obj in objs.split('_'):
+                yield typed_eid(subj), rtype, typed_eid(obj)
+
+def delete_relations(req, rdefs):
+    """delete relations from the repository"""
+    # FIXME convert to using the syntax subject:relation:eids
+    execute = req.execute
+    for subj, rtype, obj in parse_relations_descr(rdefs):
+        rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
+        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+    req.set_message(req._('relations deleted'))
+
+def insert_relations(req, rdefs):
+    """insert relations into the repository"""
+    execute = req.execute
+    for subj, rtype, obj in parse_relations_descr(rdefs):
+        rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
+        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+
+
+
+class GenericRelationsWidget(fw.FieldWidget):
+
+    def render(self, form, field, renderer):
+        stream = []
+        w = stream.append
+        req = form._cw
+        _ = req._
+        __ = _
+        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
+        eid = form.edited_entity.eid
+        w(u'<fieldset class="subentity">')
+        w(u'<legend class="iformTitle">%s</legend>' % label)
+        w(u'<table id="relatedEntities">')
+        for rschema, role, related in field.relations_table(form):
+            # already linked entities
+            if related:
+                w(u'<tr><th class="labelCol">%s</th>' % rschema.display_name(req, role))
+                w(u'<td>')
+                w(u'<ul>')
+                for viewparams in related:
+                    w(u'<li class="invisible">%s<div id="span%s" class="%s">%s</div></li>'
+                      % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
+                if not form.force_display and form.maxrelitems < len(related):
+                    link = (u'<span class="invisible">'
+                            '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
+                            '</span>' % self._cw._('view all'))
+                    w(u'<li class="invisible">%s</li>' % link)
+                w(u'</ul>')
+                w(u'</td>')
+                w(u'</tr>')
+        pendings = list(field.restore_pending_inserts(form))
+        if not pendings:
+            w(u'<tr><th>&#160;</th><td>&#160;</td></tr>')
+        else:
+            for row in pendings:
+                # soon to be linked to entities
+                w(u'<tr id="tr%s">' % row[1])
+                w(u'<th>%s</th>' % row[3])
+                w(u'<td>')
+                w(u'<a class="handle" title="%s" href="%s">[x]</a>' %
+                  (_('cancel this insert'), row[2]))
+                w(u'<a id="a%s" class="editionPending" href="%s">%s</a>'
+                  % (row[1], row[4], xml_escape(row[5])))
+                w(u'</td>')
+                w(u'</tr>')
+        w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
+        w(u'<th class="labelCol">')
+        w(u'<select id="relationSelector_%s" tabindex="%s" '
+          'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
+          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
+        w(u'<option value="">%s</option>' % _('select a relation'))
+        for i18nrtype, rschema, role in field.relations:
+            # more entities to link to
+            w(u'<option value="%s_%s">%s</option>' % (rschema, role, i18nrtype))
+        w(u'</select>')
+        w(u'</th>')
+        w(u'<td id="unrelatedDivs_%s"></td>' % eid)
+        w(u'</tr>')
+        w(u'</table>')
+        w(u'</fieldset>')
+        return '\n'.join(stream)
+
+
+class GenericRelationsField(ff.Field):
+    widget = GenericRelationsWidget
+
+    def __init__(self, relations, name='_cw_generic_field', **kwargs):
+        assert relations
+        kwargs['eidparam'] = True
+        super(GenericRelationsField, self).__init__(name, **kwargs)
+        self.relations = relations
+        self.label = None
+
+    def process_posted(self, form):
+        todelete = get_pending_deletes(form._cw)
+        if todelete:
+            delete_relations(form._cw, todelete)
+        toinsert = get_pending_inserts(form._cw)
+        if toinsert:
+            insert_relations(form._cw, toinsert)
+        return ()
+
+    def relations_table(self, form):
+        """yiels 3-tuples (rtype, role, related_list)
+        where <related_list> itself a list of :
+          - node_id (will be the entity element's DOM id)
+          - appropriate javascript's togglePendingDelete() function call
+          - status 'pendingdelete' or ''
+          - oneline view of related entity
+        """
+        entity = form.edited_entity
+        pending_deletes = get_pending_deletes(form._cw, entity.eid)
+        for label, rschema, role in self.relations:
+            related = []
+            if entity.has_eid():
+                rset = entity.related(rschema, role, limit=form.related_limit)
+                if rschema.has_perm(form._cw, 'delete'):
+                    toggleable_rel_link_func = toggleable_relation_link
+                else:
+                    toggleable_rel_link_func = lambda x, y, z: u''
+                for row in xrange(rset.rowcount):
+                    nodeid = relation_id(entity.eid, rschema, role,
+                                         rset[row][0])
+                    if nodeid in pending_deletes:
+                        status, label = u'pendingDelete', '+'
+                    else:
+                        status, label = u'', 'x'
+                    dellink = toggleable_rel_link_func(entity.eid, nodeid, label)
+                    eview = form._cw.view('oneline', rset, row=row)
+                    related.append((nodeid, dellink, status, eview))
+            yield (rschema, role, related)
+
+    def restore_pending_inserts(self, form):
+        """used to restore edition page as it was before clicking on
+        'search for <some entity type>'
+        """
+        entity = form.edited_entity
+        pending_inserts = set(get_pending_inserts(form._cw, form.edited_entity.eid))
+        for pendingid in pending_inserts:
+            eidfrom, rtype, eidto = pendingid.split(':')
+            if typed_eid(eidfrom) == entity.eid: # subject
+                label = display_name(form._cw, rtype, 'subject',
+                                     entity.__regid__)
+                reid = eidto
+            else:
+                label = display_name(form._cw, rtype, 'object',
+                                     entity.__regid__)
+                reid = eidfrom
+            jscall = "javascript: cancelPendingInsert('%s', 'tr', null, %s);" \
+                     % (pendingid, entity.eid)
+            rset = form._cw.eid_rset(reid)
+            eview = form._cw.view('text', rset, row=0)
+            # XXX find a clean way to handle baskets
+            if rset.description[0][0] == 'Basket':
+                eview = '%s (%s)' % (eview, display_name(form._cw, 'Basket'))
+            yield rtype, pendingid, jscall, label, reid, eview
+
+
 class UnrelatedDivs(EntityView):
     __regid__ = 'unrelateddivs'
     __select__ = match_form_params('relation')
@@ -97,7 +301,7 @@ class UnrelatedDivs(EntityView):
         else:
             targettypes = rschema.subjects(entity.e_schema)
             etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
-        etypes = cut(etypes, self._cw.property_value('navigation.short-line-size'))
+        etypes = uilib.cut(etypes, self._cw.property_value('navigation.short-line-size'))
         options.append('<option>%s %s</option>' % (self._cw._('select a'), etypes))
         options += self._get_select_options(entity, rschema, target)
         options += self._get_search_options(entity, rschema, target, targettypes)
@@ -117,15 +321,16 @@ class UnrelatedDivs(EntityView):
     def _get_select_options(self, entity, rschema, target):
         """add options to search among all entities of each possible type"""
         options = []
-        pending_inserts = self._cw.get_pending_inserts(entity.eid)
+        pending_inserts = get_pending_inserts(self._cw, entity.eid)
         rtype = rschema.type
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
         field = form.field_by_name(rschema, target, entity.e_schema)
         limit = self._cw.property_value('navigation.combobox-limit')
         for eview, reid in field.choices(form, limit): # XXX expect 'limit' arg on choices
             if reid is None:
-                options.append('<option class="separator">-- %s --</option>'
-                               % xml_escape(eview))
+                if eview: # skip blank value
+                    options.append('<option class="separator">-- %s --</option>'
+                                   % xml_escape(eview))
             else:
                 optionid = relation_id(entity.eid, rtype, target, reid)
                 if optionid not in pending_inserts:
@@ -193,7 +398,7 @@ class ComboboxView(EntityView):
         self.wview('textoutofcontext', self.cw_rset, row=row, col=col)
 
 
-class EditableFinalView(FinalView):
+class EditableFinalView(baseviews.FinalView):
     """same as FinalView but enables inplace-edition when possible"""
     __regid__ = 'editable-final'
 
