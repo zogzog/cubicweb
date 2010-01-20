@@ -108,7 +108,7 @@ table.attributeForm label.required {
   background: url("required.png") 100% 50% no-repeat;
 }
 
-.entityForm input.validateButton {
+.entityForm .validateButton {
   margin: 5px 10px 5px 0px;
 }
 
@@ -226,7 +226,7 @@ div.notice {
   cursor: default;
 }
 
-input.validateButton {
+.validateButton {
   margin: 1em 1em 0px 0px;
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
