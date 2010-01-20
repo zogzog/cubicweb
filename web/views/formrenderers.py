@@ -353,8 +353,7 @@ class EntityFormRenderer(BaseFormRenderer):
     # needs some additional points in some case (XXX explain cases)
     __select__ = implements('Any') & yes()
 
-    _options = FormRenderer._options + ('display_relations_form', 'main_form_title')
-    display_relations_form = True
+    _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')
 
     def render(self, form, values):
@@ -372,8 +371,6 @@ class EntityFormRenderer(BaseFormRenderer):
     def render_fields(self, w, form, values):
         super(EntityFormRenderer, self).render_fields(w, form, values)
         self.inline_entities_form(w, form)
-        if form.edited_entity.has_eid() and self.display_relations_form:
-            self.relations_form(w, form)
 
     def _render_fields(self, fields, w, form):
         if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
