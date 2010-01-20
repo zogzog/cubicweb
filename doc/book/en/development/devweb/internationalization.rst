@@ -87,15 +87,20 @@ For exemple the following schema ::
 
 May generate the following message ::
 
-  creating EntityB (EntityA %(linkto)s relation_a2b EntityB)
+  add Execution has_export File subject
 
 This message will be used in views of ``EntityA`` for creation of a new
 ``EntityB`` with a preset relation ``relation_a2b`` between the current
 ``EntityA`` and the new ``EntityB``. The opposite message ::
 
-  creating EntityA (EntityA relation_a2b %(linkto)s EntityA)
+  add Execution has_export File object
 
-Is used for similar creation of an ``EntityA`` from a view of ``EntityB``.
+Is used for similar creation of an ``EntityA`` from a view of ``EntityB``. The
+title of they respective creation form will be ::
+
+  creating EntityB (EntityA %(linkto)s relation_a2b EntityB)
+
+  creating EntityA (EntityA relation_a2b %(linkto)s EntityA)
 
 In the translated string you can use ``%(linkto)s`` for reference to the source
 ``entity``.

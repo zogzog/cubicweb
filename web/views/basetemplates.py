@@ -266,7 +266,10 @@ class SimpleMainTemplate(TheMainTemplate):
             self.w(u'</tr></table>\n')
 
 if can_do_pdf_conversion():
-    from xml.etree.cElementTree import ElementTree
+    try:
+      from xml.etree.cElementTree import ElementTree
+    except ImportError: #python2.4
+        from elementtree import ElementTree
     from subprocess import Popen as sub
     from StringIO import StringIO
     from tempfile import NamedTemporaryFile
