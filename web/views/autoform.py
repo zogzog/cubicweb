@@ -89,7 +89,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except form.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
-        if self.formtype == 'main' and entity.has_eid():
+        if self.formtype == 'main' and entity.has_eid() and (
+            self.display_fields is None or
+            '_cw_generic_field' in self.display_fields):
             try:
                 self.fields.append(self.field_by_name('_cw_generic_field'))
             except form.FieldNotFound:
