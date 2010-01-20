@@ -135,7 +135,7 @@ class FieldsForm(form.Form):
         """
         if rendervalues is not None:
             warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
-                 DeprecationWarning, stacklevel=1)
+                 DeprecationWarning, stacklevel=2)
             kwargs = rendervalues
         self.build_context(formvalues)
         if renderer is None:
