@@ -283,19 +283,19 @@ class UnrelatedDivs(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
-        relname, target = self._cw.form.get('relation').rsplit('_', 1)
+        relname, role = self._cw.form.get('relation').rsplit('_', 1)
         rschema = self._cw.vreg.schema.rschema(relname)
         hidden = 'hidden' in self._cw.form
         is_cell = 'is_cell' in self._cw.form
-        self.w(self.build_unrelated_select_div(entity, rschema, target,
+        self.w(self.build_unrelated_select_div(entity, rschema, role,
                                                is_cell=is_cell, hidden=hidden))
 
-    def build_unrelated_select_div(self, entity, rschema, target,
+    def build_unrelated_select_div(self, entity, rschema, role,
                                    is_cell=False, hidden=True):
         options = []
-        divid = 'div%s_%s_%s' % (rschema.type, target, entity.eid)
-        selectid = 'select%s_%s_%s' % (rschema.type, target, entity.eid)
-        if rschema.symetric or target == 'subject':
+        divid = 'div%s_%s_%s' % (rschema.type, role, entity.eid)
+        selectid = 'select%s_%s_%s' % (rschema.type, role, entity.eid)
+        if rschema.symetric or role == 'subject':
             targettypes = rschema.objects(entity.e_schema)
             etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
         else:
@@ -303,11 +303,11 @@ class UnrelatedDivs(EntityView):
             etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
         etypes = uilib.cut(etypes, self._cw.property_value('navigation.short-line-size'))
         options.append('<option>%s %s</option>' % (self._cw._('select a'), etypes))
-        options += self._get_select_options(entity, rschema, target)
-        options += self._get_search_options(entity, rschema, target, targettypes)
+        options += self._get_select_options(entity, rschema, role)
+        options += self._get_search_options(entity, rschema, role, targettypes)
         if 'Basket' in self._cw.vreg.schema: # XXX
-            options += self._get_basket_options(entity, rschema, target, targettypes)
-        relname, target = self._cw.form.get('relation').rsplit('_', 1)
+            options += self._get_basket_options(entity, rschema, role, targettypes)
+        relname, role = self._cw.form.get('relation').rsplit('_', 1)
         return u"""\
 <div class="%s" id="%s">
   <select id="%s" onchange="javascript: addPendingInsert(this.options[this.selectedIndex], %s, %s, '%s');">
@@ -318,13 +318,13 @@ class UnrelatedDivs(EntityView):
        xml_escape(dumps(entity.eid)), is_cell and 'true' or 'null', relname,
        '\n'.join(options))
 
-    def _get_select_options(self, entity, rschema, target):
+    def _get_select_options(self, entity, rschema, role):
         """add options to search among all entities of each possible type"""
         options = []
         pending_inserts = get_pending_inserts(self._cw, entity.eid)
         rtype = rschema.type
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
-        field = form.field_by_name(rschema, target, entity.e_schema)
+        field = form.field_by_name(rschema, role, entity.e_schema)
         limit = self._cw.property_value('navigation.combobox-limit')
         for eview, reid in field.choices(form, limit): # XXX expect 'limit' arg on choices
             if reid is None:
@@ -332,19 +332,19 @@ class UnrelatedDivs(EntityView):
                     options.append('<option class="separator">-- %s --</option>'
                                    % xml_escape(eview))
             else:
-                optionid = relation_id(entity.eid, rtype, target, reid)
+                optionid = relation_id(entity.eid, rtype, role, reid)
                 if optionid not in pending_inserts:
                     # prefix option's id with letters to make valid XHTML wise
                     options.append('<option id="id%s" value="%s">%s</option>' %
                                    (optionid, reid, xml_escape(eview)))
         return options
 
-    def _get_search_options(self, entity, rschema, target, targettypes):
+    def _get_search_options(self, entity, rschema, role, targettypes):
         """add options to search among all entities of each possible type"""
         options = []
         _ = self._cw._
         for eschema in targettypes:
-            mode = '%s:%s:%s:%s' % (target, entity.eid, rschema.type, eschema)
+            mode = '%s:%s:%s:%s' % (role, entity.eid, rschema.type, eschema)
             url = self._cw.build_url(entity.rest_path(), vid='search-associate',
                                  __mode=mode)
             options.append((eschema.display_name(self._cw),
@@ -352,18 +352,18 @@ class UnrelatedDivs(EntityView):
                 xml_escape(url), _('Search for'), eschema.display_name(self._cw))))
         return [o for l, o in sorted(options)]
 
-    def _get_basket_options(self, entity, rschema, target, targettypes):
+    def _get_basket_options(self, entity, rschema, role, targettypes):
         options = []
         rtype = rschema.type
         _ = self._cw._
         for basketeid, basketname in self._get_basket_links(self._cw.user.eid,
-                                                            target, targettypes):
-            optionid = relation_id(entity.eid, rtype, target, basketeid)
+                                                            role, targettypes):
+            optionid = relation_id(entity.eid, rtype, role, basketeid)
             options.append('<option id="%s" value="%s">%s %s</option>' % (
                 optionid, basketeid, _('link to each item in'), xml_escape(basketname)))
         return options
 
-    def _get_basket_links(self, ueid, target, targettypes):
+    def _get_basket_links(self, ueid, role, targettypes):
         targettypes = set(targettypes)
         for basketeid, basketname, elements in self._get_basket_info(ueid):
             baskettypes = elements.column_types(0)

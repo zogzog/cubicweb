@@ -21,8 +21,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
 from cubicweb.view import EntityView
 from cubicweb import tags
-from cubicweb.web import stdmsgs, eid_param
-from cubicweb.web import uicfg
+from cubicweb.web import uicfg, stdmsgs, eid_param
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
