@@ -841,7 +841,7 @@ div.footer a {
   font-weight: bold;
 }
 
-input.validateButton {
+.validateButton {
   margin: 1em 1em 0px 0px;
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;

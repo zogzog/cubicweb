@@ -134,7 +134,7 @@ function initEvents(){
     jQuery('form').each(function() {
 	var form = jQuery(this);
 	//freezeFormButtons(form.attr('id'));
-	form.find('input.validateButton').attr('disabled', 'disabled');
+	form.find('.validateButton').attr('disabled', 'disabled');
 	form.find('input[type=text]').keyup(function(){
 	    checkValues(form);
 	});
