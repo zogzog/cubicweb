@@ -1616,6 +1616,13 @@ WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.
 FROM (SELECT 1) AS _T
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
+    def test_groupby_multiple_outerjoins(self):
+        self._check('Any A,U,P,group_concat(TN) GROUPBY A,U,P WHERE A is Affaire, A concerne N, N todo_by U?, T? tags A, T name TN, A todo_by P?',
+                     '''SELECT _A.cw_eid, rel_todo_by1.eid_to, rel_todo_by3.eid_to, GROUP_CONCAT(_T.cw_name)
+FROM concerne_relation AS rel_concerne0, cw_Affaire AS _A LEFT OUTER JOIN tags_relation AS rel_tags2 ON (rel_tags2.eid_to=_A.cw_eid) LEFT OUTER JOIN cw_Tag AS _T ON (rel_tags2.eid_from=_T.cw_eid) LEFT OUTER JOIN todo_by_relation AS rel_todo_by3 ON (rel_todo_by3.eid_from=_A.cw_eid), cw_Note AS _N LEFT OUTER JOIN todo_by_relation AS rel_todo_by1 ON (rel_todo_by1.eid_from=_N.cw_eid)
+WHERE rel_concerne0.eid_from=_A.cw_eid AND rel_concerne0.eid_to=_N.cw_eid
+GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
+
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
