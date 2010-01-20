@@ -115,7 +115,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                          __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self._cw.vreg.schema.rschema('owned_by'))
         form.append_field(field)
-        self.w(form.render(rendervalues=dict(display_progress_div=False)))
+        self.w(form.render(display_progress_div=False))
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
