@@ -366,6 +366,10 @@ class IsAmbData(object):
                     # we know variable won't be invariant, try to use
                     # it to deambguify the current variable
                     otheretypes = self.varsols[deambiguifier]
+            if not deambiguifier.stinfo['typerels']:
+                # if deambiguifier has no type restriction using 'is',
+                # don't record it
+                deambiguifier = None
         elif isinstance(other, Constant) and other.uidtype:
             otheretypes = (other.uidtype,)
             deambiguifier = None
