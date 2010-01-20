@@ -164,7 +164,7 @@ class GenericRelationsWidget(fw.FieldWidget):
                 if not form.force_display and form.maxrelitems < len(related):
                     link = (u'<span class="invisible">'
                             '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % self._cw._('view all'))
+                            '</span>' % _('view all'))
                     w(u'<li class="invisible">%s</li>' % link)
                 w(u'</ul>')
                 w(u'</td>')
