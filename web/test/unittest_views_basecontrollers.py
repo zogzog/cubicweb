@@ -15,9 +15,14 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
 from cubicweb.entities.authobjs import CWUser
-
+from cubicweb.web.views.editviews import get_pending_inserts, get_pending_deletes
 u = unicode
 
+def req_form(user):
+    return {'eid': [str(user.eid)],
+            '_cw_edited_fields:%s' % user.eid: '_cw_generic_field',
+            '__type:%s' % user.eid: user.__regid__
+            }
 
 class EditControllerTC(CubicWebTC):
     def setUp(self):
@@ -241,13 +246,13 @@ class EditControllerTC(CubicWebTC):
         """make sure req's pending insertions are taken into account"""
         tmpgroup = self.request().create_entity('CWGroup', name=u"test")
         user = self.user()
-        req = self.request()
+        req = self.request(**req_form(user))
         req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
-        self.assertEquals(req.get_pending_inserts(), [])
+        self.assertEquals(get_pending_inserts(req), [])
 
 
     def test_req_pending_delete(self):
@@ -260,13 +265,13 @@ class EditControllerTC(CubicWebTC):
         # just make sure everything was set correctly
         self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
         # now try to delete the relation
-        req = self.request()
+        req = self.request(**req_form(user))
         req.set_session_data('pending_delete', set([(user.eid, 'in_group', groupeid)]))
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertUnorderedIterableEquals(usergroups, ['managers'])
-        self.assertEquals(req.get_pending_deletes(), [])
+        self.assertEquals(get_pending_deletes(req), [])
 
     # def test_custom_attribute_handler(self):
     #     def custom_login_edit(self, formparams, value, relations):
@@ -582,58 +587,58 @@ class JSONControllerTC(CubicWebTC):
 
     def test_pending_insertion(self):
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])
-        deletes = req.get_pending_deletes()
+        deletes = get_pending_deletes(req)
         self.assertEquals(deletes, [])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, ['12:tags:13'])
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
-        deletes = req.get_pending_deletes()
+        deletes = get_pending_deletes(req)
         self.assertEquals(deletes, [])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
-        inserts = req.get_pending_inserts(12)
+        inserts = get_pending_inserts(req, 12)
         self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
-        inserts = req.get_pending_inserts(13)
+        inserts = get_pending_inserts(req, 13)
         self.assertEquals(inserts, ['12:tags:13'])
-        inserts = req.get_pending_inserts(14)
+        inserts = get_pending_inserts(req, 14)
         self.assertEquals(inserts, ['12:tags:14'])
         req.remove_pending_operations()
 
     def test_pending_deletion(self):
         res, req = self.remote_call('add_pending_delete', ['12', 'tags', '13'])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, [])
-        deletes = req.get_pending_deletes()
+        deletes = get_pending_deletes(req)
         self.assertEquals(deletes, ['12:tags:13'])
         res, req = self.remote_call('add_pending_delete', ['12', 'tags', '14'])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, [])
-        deletes = req.get_pending_deletes()
+        deletes = get_pending_deletes(req)
         self.assertEquals(deletes, ['12:tags:13', '12:tags:14'])
-        deletes = req.get_pending_deletes(12)
+        deletes = get_pending_deletes(req, 12)
         self.assertEquals(deletes, ['12:tags:13', '12:tags:14'])
-        deletes = req.get_pending_deletes(13)
+        deletes = get_pending_deletes(req, 13)
         self.assertEquals(deletes, ['12:tags:13'])
-        deletes = req.get_pending_deletes(14)
+        deletes = get_pending_deletes(req, 14)
         self.assertEquals(deletes, ['12:tags:14'])
         req.remove_pending_operations()
 
     def test_remove_pending_operations(self):
         self.remote_call('add_pending_delete', ['12', 'tags', '13'])
         _, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, ['12:tags:14'])
-        deletes = req.get_pending_deletes()
+        deletes = get_pending_deletes(req)
         self.assertEquals(deletes, ['12:tags:13'])
         req.remove_pending_operations()
-        self.assertEquals(req.get_pending_deletes(), [])
-        self.assertEquals(req.get_pending_inserts(), [])
+        self.assertEquals(get_pending_deletes(req), [])
+        self.assertEquals(get_pending_inserts(req), [])
 
 
     def test_add_inserts(self):
         res, req = self.remote_call('add_pending_inserts',
                                     [('12', 'tags', '13'), ('12', 'tags', '14')])
-        inserts = req.get_pending_inserts()
+        inserts = get_pending_inserts(req)
         self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
         req.remove_pending_operations()
 
