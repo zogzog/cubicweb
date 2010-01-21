@@ -387,7 +387,6 @@ class CubicWebVRegistry(VRegistry):
 
     def initialization_completed(self):
         for regname, reg in self.items():
-            self.debug('available in registry %s: %s', regname, sorted(reg))
             reg.initialization_completed()
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
