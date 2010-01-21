@@ -327,7 +327,7 @@ class RQLRewriter(object):
             self.compute_solutions()
         except Unsupported:
             # some solutions have been lost, can't apply this rql expr
-            self.select.remove_subquery(new, undefine=True)
+            self.select.remove_subquery(self.select.with_[-1])
             raise
         return subselect
 
