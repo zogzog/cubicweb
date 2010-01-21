@@ -593,4 +593,77 @@ class ImgButton(object):
 
 # more widgets #################################################################
 
-# XXX EntityLinkComboBoxWidget, [Raw]DynamicComboBoxWidget
+class EditableURLWidget(TextInput):
+    """custom widget to edit separatly an url path / query string (used by
+    default for Bookmark.path for instance), dealing with url quoting nicely
+    (eg user edit the unquoted value).
+    """
+    type = 'text'
+
+    def render(self, form, field, renderer):
+        """render the widget for the given `field` of `form`.
+
+        Generate one <input> tag for each field's value
+        """
+        self.add_media(form)
+        req = form._cw
+        pathqname = field.input_name(form, 'path')
+        fqsqname = field.input_name(form, 'fqs') # formatted query string
+        if pathqname in form.form_previous_values:
+            path = form.form_previous_values[pathqname]
+            fqs = form.form_previous_values[fqsqname]
+        else:
+            if field.name in req.form:
+                value = req.form[field.name]
+            else:
+                value = self.typed_value(form, field)
+            try:
+                path, qs = value.split('?', 1)
+            except ValueError:
+                path = value
+                qs = ''
+            fqs = u'\n'.join(u'%s=%s' % (k, v) for k, v in req.url_parse_qsl(qs))
+        attrs = dict(self.attrs)
+        if self.setdomid:
+            attrs['id'] = field.dom_id(form)
+        if self.settabindex and not 'tabindex' in attrs:
+            attrs['tabindex'] = req.next_tabindex()
+        # ensure something is rendered
+        inputs = [u'<table><tr><th>',
+                  req._('i18n_bookmark_url_path'),
+                  u'</th><td>',
+                  tags.input(name=pathqname, type='string', value=path, **attrs),
+                  u'</td></tr><tr><th>',
+                  req._('i18n_bookmark_url_fqs'),
+                  u'</th><td>']
+        if self.setdomid:
+            attrs['id'] = field.dom_id(form, 'fqs')
+        if self.settabindex:
+            attrs['tabindex'] = req.next_tabindex()
+        attrs.setdefault('onkeyup', 'autogrow(this)')
+        inputs += [tags.textarea(fqs, name=fqsqname, **attrs),
+                   u'</td></tr></table>']
+        return u'\n'.join(inputs)
+
+    def process_field_data(self, form, field):
+        req = form._cw
+        values = {}
+        path = req.form.get(field.input_name(form, 'path'))
+        if isinstance(path, basestring):
+            path = path.strip() or None
+        fqs = req.form.get(field.input_name(form, 'fqs'))
+        if isinstance(fqs, basestring):
+            fqs = fqs.strip() or None
+            if fqs:
+                for i, line in enumerate(fqs.split('\n')):
+                    line = line.strip()
+                    if line:
+                        try:
+                            key, val = line.split('=', 1)
+                        except ValueError:
+                            raise ProcessFormError(req._("wrong query parameter line %s") % (i+1))
+                        # value will be url quoted by build_url_params
+                        values.setdefault(key.encode(req.encoding), []).append(val)
+        if not values:
+            return path
+        return u'%s?%s' % (path, req.build_url_params(**values))
