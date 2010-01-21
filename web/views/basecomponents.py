@@ -15,7 +15,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from rql import parse
 
-from cubicweb.selectors import yes, two_etypes_rset, match_form_params
+from cubicweb.selectors import yes, multi_etypes_rset, match_form_params
 from cubicweb.schema import display_name
 from cubicweb.uilib import toggle_action
 from cubicweb.web import component
@@ -169,7 +169,7 @@ class EtypeRestrictionComponent(component.Component):
     to be able to filter accordingly.
     """
     __regid__ = 'etypenavigation'
-    __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
+    __select__ = multi_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
                                                        '__restrrql')
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty

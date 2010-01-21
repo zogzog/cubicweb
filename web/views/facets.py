@@ -12,7 +12,7 @@ from simplejson import dumps
 from logilab.mtconverter import xml_escape
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (non_final_entity, two_lines_rset,
+from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
@@ -30,7 +30,7 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
 class FilterBox(BoxTemplate):
     """filter results of a query"""
     __regid__ = 'filter_box'
-    __select__ = (((non_final_entity() & two_lines_rset())
+    __select__ = (((non_final_entity() & multi_lines_rset())
                    | contextview_selector()
                    ) & match_context_prop())
     context = 'left'

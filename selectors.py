@@ -326,21 +326,27 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
         return 1
     return 0
 
-@objectify_selector
-@lltrace
-def two_lines_rset(cls, req, rset=None, **kwargs):
-    """accept result set with *at least* two lines of result"""
-    if rset is not None and rset.rowcount > 1:
-        return 1
-    return 0
 
-@objectify_selector
-@lltrace
-def two_cols_rset(cls, req, rset=None, **kwargs):
-    """accept result set with at least one line and two columns of result"""
-    if rset is not None and rset.rowcount and len(rset.rows[0]) > 1:
-        return 1
-    return 0
+class multi_lines_rset(Selector):
+    def __init__(self, nb=None):
+        self.expected = nb
+
+    def match_expected(self, num):
+        if self.expected is None:
+            return num > 1
+        return num == self.expected
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        return rset is not None and self.match_expected(rset.rowcount)
+
+
+class multi_columns_rset(multi_lines_rset):
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        return rset and self.match_expected(len(rset.rows[0]))
+
 
 @objectify_selector
 @lltrace
@@ -384,17 +390,13 @@ def one_etype_rset(cls, req, rset=None, col=0, **kwargs):
         return 0
     return 1
 
-@objectify_selector
-@lltrace
-def two_etypes_rset(cls, req, rset=None, col=0, **kwargs):
-    """accept result set where entities in the specified column (or 0) are not
-    of the same type
-    """
-    if rset:
-        etypes = rset.column_types(col)
-        if len(etypes) > 1:
-            return 1
-    return 0
+
+class multi_etypes_rset(multi_lines_rset):
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, **kwargs):
+        return rset and self.match_expected(len(rset.column_types(col)))
+
 
 class non_final_entity(EClassSelector):
     """accept if entity type found in the result set is non final.
@@ -405,6 +407,7 @@ class non_final_entity(EClassSelector):
         if etype in BASE_TYPES:
             return 0
         return 1
+
 
 @objectify_selector
 @lltrace
@@ -965,3 +968,11 @@ class _but_etype(EntitySelector):
         return 1
 
 but_etype = class_renamed('but_etype', _but_etype, 'use ~implements(*etypes) instead')
+
+
+# XXX deprecated the one_* variants of selectors below w/ multi_xxx(nb=1)?
+#     take care at the implementation though (looking for the 'row' argument's
+#     value)
+two_lines_rset = class_renamed('two_lines_rset', multi_lines_rset)
+two_cols_rset = class_renamed('two_cols_rset', multi_columns_rset)
+two_etypes_rset = class_renamed('two_etypes_rset', multi_etypes_rset)

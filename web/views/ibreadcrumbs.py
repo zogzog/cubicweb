@@ -12,7 +12,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import IBreadCrumbs
 from cubicweb.selectors import (one_line_rset, implements, one_etype_rset,
-                                two_lines_rset, any_rset)
+                                multi_lines_rset, any_rset)
 from cubicweb.view import EntityView, Component
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.entity import Entity
@@ -77,7 +77,7 @@ class BreadCrumbEntityVComponent(Component):
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
-    __select__ = two_lines_rset() & one_etype_rset() & \
+    __select__ = multi_lines_rset() & one_etype_rset() & \
                  implements(IBreadCrumbs, accept_none=False)
 
     def render_breadcrumbs(self, contextentity, path):

@@ -17,13 +17,8 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid, UStringIO, datetime2ticks
 from cubicweb.appobject import objectify_selector
+from cubicweb.selectors import multi_columns_rset
 from cubicweb.web.views import baseviews
-
-@objectify_selector
-def at_least_two_columns(cls, req, rset=None, *args, **kwargs):
-    if not rset:
-        return 0
-    return len(rset.rows[0]) >= 2
 
 @objectify_selector
 def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
@@ -130,7 +125,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
 class PlotView(baseviews.AnyRsetView):
     __regid__ = 'plot'
     title = _('generic plot')
-    __select__ = at_least_two_columns() & all_columns_are_numbers()
+    __select__ = multi_columns_rset() & all_columns_are_numbers()
     timemode = False
 
     def call(self, width=500, height=400):
@@ -149,7 +144,7 @@ class PlotView(baseviews.AnyRsetView):
 
 
 class TimeSeriePlotView(PlotView):
-    __select__ = at_least_two_columns() & columns_are_date_then_numbers()
+    __select__ = multi_columns_rset() & columns_are_date_then_numbers()
     timemode = True
 
 
@@ -180,7 +175,7 @@ else:
         __regid__ = 'piechart'
         pieclass = Pie
 
-        __select__ = at_least_two_columns() & second_column_is_number()
+        __select__ = multi_columns_rset() & second_column_is_number()
 
         def _guess_vid(self, row):
             etype = self.cw_rset.description[row][0]

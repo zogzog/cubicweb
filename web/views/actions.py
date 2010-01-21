@@ -10,7 +10,7 @@ _ = unicode
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (EntitySelector, yes,
-    one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
+    one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission,
@@ -139,7 +139,7 @@ class ModifyAction(action.Action):
 
 class MultipleEditAction(action.Action):
     __regid__ = 'muledit' # XXX get strange conflicts if id='edit'
-    __select__ = (action.Action.__select__ & two_lines_rset() &
+    __select__ = (action.Action.__select__ & multi_lines_rset() &
                   one_etype_rset() & has_permission('update'))
 
     title = _('modify')
@@ -210,7 +210,7 @@ class AddNewAction(MultipleEditAction):
     __regid__ = 'addentity'
     __select__ = (action.Action.__select__ &
                   (addable_etype_empty_rset()
-                   | (two_lines_rset() & one_etype_rset & has_add_permission()))
+                   | (multi_lines_rset() & one_etype_rset & has_add_permission()))
                   )
 
     category = 'moreactions'
