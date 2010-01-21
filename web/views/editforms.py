@@ -440,7 +440,14 @@ class TableEditFormView(FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select(self.__regid__, self._cw,
                                              rset=self.cw_rset,
                                              copy_nav_params=True)
-        self.w(form.render())
+        # XXX overriding formvid (eg __form_id) necessary to make work edition:
+        # the edit controller try to select the form with no rset but
+        # entity=entity, and use this form to edit the entity. So we want
+        # edition form there but specifying formvid may have other undesired
+        # side effect. Maybe we should provide another variable optinally
+        # telling which form the edit controller should select (eg difffers
+        # between html generation / post handling form)
+        self.w(form.render(formvid='edition'))
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
