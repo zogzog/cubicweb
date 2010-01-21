@@ -51,8 +51,48 @@ class FieldWidget(object):
         """
         raise NotImplementedError
 
+    def typed_value(self, form, field):
+        """return field's *typed* value specified in:
+        3. extra form values given to render()
+        4. field's typed value
+        """
+        qname = field.input_name(form)
+        for key in (field, qname):
+            try:
+                return form.formvalues[key]
+            except KeyError:
+                continue
+        if field.name != qname and field.name in form.formvalues:
+            return form.formvalues[field.name]
+        return field.typed_value(form)
+
+    def format_value(self, form, field, value):
+        return field.format_value(form._cw, value)
+
     def values_and_attributes(self, form, field):
-        values = field.display_value(form)
+        """found field's *string* value in:
+        1. previously submitted form values if any (eg on validation error)
+        2. req.form
+        3. extra form values given to render()
+        4. field's typed value
+
+        values found in 1. and 2. are expected te be already some 'display'
+        value while those found in 3. and 4. are expected to be correctly typed.
+
+        3 and 4 are handle by the .typed_value(form, field) method
+        """
+        qname = field.input_name(form)
+        if qname in form.form_previous_values:
+            values = form.form_previous_values[qname]
+        elif qname in form._cw.form:
+            values = form._cw.form[qname]
+        elif field.name != qname and field.name in form._cw.form:
+            # compat: accept attr=value in req.form to specify value of attr-subject
+            values = form._cw.form[field.name]
+        else:
+            values = self.typed_value(form, field)
+            if values != INTERNAL_FIELD_VALUE:
+                values = self.format_value(form, field, values)
         if not isinstance(values, (tuple, list)):
             values = (values,)
         attrs = dict(self.attrs)
@@ -551,5 +591,6 @@ class ImgButton(object):
             'domid': self.domid, 'href': self.href}
 
 
+# more widgets #################################################################
 
 # XXX EntityLinkComboBoxWidget, [Raw]DynamicComboBoxWidget

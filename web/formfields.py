@@ -213,40 +213,6 @@ class Field(object):
             return eid_param(id, form.edited_entity.eid)
         return id
 
-    def display_value(self, form):
-        """return field's *string* value to use for display
-
-        looks in
-        1. previously submitted form values if any (eg on validation error)
-        2. req.form
-        3. extra form args given to render_form
-        4. field's typed value
-
-        values found in 1. and 2. are expected te be already some 'display'
-        value while those found in 3. and 4. are expected to be correctly typed.
-        """
-        qname = self.input_name(form)
-        if qname in form.form_previous_values:
-            return form.form_previous_values[qname]
-        if qname in form._cw.form:
-            return form._cw.form[qname]
-        if self.name != qname and self.name in form._cw.form:
-            return form._cw.form[self.name]
-        for key in (self, qname):
-            try:
-                value = form.formvalues[key]
-                break
-            except:
-                continue
-        else:
-            if self.name != qname and self.name in form.formvalues:
-                value = form.formvalues[self.name]
-            else:
-                value = self.typed_value(form)
-        if value != INTERNAL_FIELD_VALUE:
-            value = self.format_value(form._cw, value)
-        return value
-
     def typed_value(self, form, load_bytes=False):
         if self.value is not _MARKER:
             if callable(self.value):
@@ -544,7 +510,7 @@ class FileField(StringField):
             if self.encoding_field:
                 wdgs.append(self.render_subfield(form, self.encoding_field, renderer))
             wdgs.append(u'</div>')
-        if not self.required and self.display_value(form):
+        if not self.required and self._typed_value(form):
             # trick to be able to delete an uploaded file
             wdgs.append(u'<br/>')
             wdgs.append(tags.input(name=self.input_name(form, u'__detach'),
@@ -805,16 +771,16 @@ class RelationField(Field):
         return vocab
 
     def form_init(self, form):
-        if not self.display_value(form):
-            value = form.edited_entity.linked_to(self.name, self.role)
-            if value:
-                searchedvalues = ['%s:%s:%s' % (self.name, eid, self.role)
-                                  for eid in value]
-                # remove associated __linkto hidden fields
-                for field in form.root_form.fields_by_name('__linkto'):
-                    if field.value in searchedvalues:
-                        form.root_form.remove_field(field)
-                form.formvalues[self] = value
+        #if not self.display_value(form):
+        value = form.edited_entity.linked_to(self.name, self.role)
+        if value:
+            searchedvalues = ['%s:%s:%s' % (self.name, eid, self.role)
+                              for eid in value]
+            # remove associated __linkto hidden fields
+            for field in form.root_form.fields_by_name('__linkto'):
+                if field.value in searchedvalues:
+                    form.root_form.remove_field(field)
+            form.formvalues[self] = value
 
     def _typed_value(self, form, load_bytes=False):
         entity = form.edited_entity
