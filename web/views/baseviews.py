@@ -72,13 +72,16 @@ class FinalView(AnyRsetView):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
 
+        if value is None:
+            self.w(u'')
+            return
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
                 # yes !
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
-        if etype in ('Time', 'Interval'):
+        elif etype in ('Time', 'Interval'):
             if etype == 'Interval' and isinstance(value, (int, long)):
                 # `date - date`, unlike `datetime - datetime` gives an int
                 # (number of days), not a timedelta
