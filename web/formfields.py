@@ -191,13 +191,12 @@ class Field(object):
     @cached
     def input_name(self, form, suffix=None):
         """return 'qualified name' for this field"""
+        name = self.role_name()
+        if suffix is not None:
+            name += suffix
         if self.eidparam:
-            if suffix is None:
-                return eid_param(self.role_name(), form.edited_entity.eid)
-            return eid_param(self.role_name() + suffix, form.edited_entity.eid)
-        if suffix is None:
-            return self.name
-        return self.name + suffix
+            return eid_param(name, form.edited_entity.eid)
+        return name
 
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
