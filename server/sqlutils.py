@@ -8,6 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 import os
+import subprocess
 from os.path import exists
 from warnings import warn
 from datetime import datetime, date, timedelta
@@ -173,7 +174,7 @@ class SQLAdapterMixIn(object):
         cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
                                            self.dbuser, backupfile,
                                            keepownership=False)
-        if os.system(cmd):
+        if subprocess.call(cmd):
             raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
@@ -182,7 +183,7 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            if os.system(cmd):
+            if subprocess.call(cmd):
                 print '-> Failed command: %s' % cmd
                 if not confirm('Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)

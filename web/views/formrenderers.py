@@ -27,6 +27,14 @@ def checkbox(name, value, attrs='', checked=None):
     return u'<input type="checkbox" name="%s" value="%s" %s %s />' % (
         name, value, checked, attrs)
 
+def field_label(form, field):
+    # XXX with 3.6 we can now properly rely on 'if field.role is not None' and
+    # stop having a tuple for label
+    if isinstance(field.label, tuple): # i.e. needs contextual translation
+        return form._cw.pgettext(*field.label)
+    return form._cw._(field.label)
+
+
 
 class FormRenderer(AppObject):
     """basic renderer displaying fields in a two columns table label | value
@@ -93,10 +101,7 @@ class FormRenderer(AppObject):
     def render_label(self, form, field):
         if field.label is None:
             return u''
-        if isinstance(field.label, tuple): # i.e. needs contextual translation
-            label = self._cw.pgettext(*field.label)
-        else:
-            label = self._cw._(field.label)
+        label = field_label(form, field)
         attrs = {'for': field.dom_id(form)}
         if field.required:
             attrs['class'] = 'required'
@@ -307,7 +312,7 @@ class EntityCompositeFormRenderer(FormRenderer):
                              title=self._cw._('toggle check boxes'),
                              onclick="setCheckboxesState('eid', this.checked)"))
                 for field in subfields:
-                    w(u'<th>%s</th>' % self._cw._(field.label))
+                    w(u'<th>%s</th>' % field_label(form, field))
                 w(u'</tr>')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
         if form.parent_form is None:
