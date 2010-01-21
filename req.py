@@ -1,7 +1,7 @@
 """Base class for request/session
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: Library General Public License version 2 - http://www.gnu.org/licenses
 """
