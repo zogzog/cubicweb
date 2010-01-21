@@ -242,7 +242,7 @@ class CubicWebPublisher(object):
         if not vreg.initialized:
             self.config.init_cubes(self.repo.get_cubes())
             vreg.init_properties(self.repo.properties())
-        vreg.set_schema(self.repo.get_schema())
+            vreg.set_schema(self.repo.get_schema())
         # set the correct publish method
         if config['query-log-file']:
             from threading import Lock
