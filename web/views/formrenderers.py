@@ -20,6 +20,14 @@ from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.widgets import checkbox
 from cubicweb.web.formfields import HiddenInitialValueField
 
+def field_label(form, field):
+    # XXX with 3.6 we can now properly rely on 'if field.role is not None' and
+    # stop having a tuple for label
+    if isinstance(field.label, tuple): # i.e. needs contextual translation
+        return form.req.pgettext(*field.label)
+    return form.req._(field.label)
+
+
 
 class FormRenderer(AppObject):
     """basic renderer displaying fields in a two columns table label | value
@@ -87,10 +95,7 @@ class FormRenderer(AppObject):
     def render_label(self, form, field):
         if field.label is None:
             return u''
-        if isinstance(field.label, tuple): # i.e. needs contextual translation
-            label = self.req.pgettext(*field.label)
-        else:
-            label = self.req._(field.label)
+        label = field_label(form, field)
         attrs = {'for': form.context[field]['id']}
         if field.required:
             attrs['class'] = 'required'
@@ -324,7 +329,7 @@ class EntityCompositeFormRenderer(FormRenderer):
                              title=self.req._('toggle check boxes'),
                              onclick="setCheckboxesState('eid', this.checked)"))
                 for field in subfields:
-                    w(u'<th>%s</th>' % self.req._(field.label))
+                    w(u'<th>%s</th>' % field_label(form, field))
                 w(u'</tr>')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
         if form.parent_form is None:
