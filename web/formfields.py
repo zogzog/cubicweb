@@ -204,9 +204,11 @@ class Field(object):
             return '%s-%s' % (self.name, self.role)
         return self.name
 
-    def dom_id(self, form):
+    def dom_id(self, form, suffix=None):
         """return an html dom identifier for this field"""
         id = self.id or self.role_name()
+        if suffix is not None:
+            id += suffix
         if self.eidparam:
             return eid_param(id, form.edited_entity.eid)
         return id
