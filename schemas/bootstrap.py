@@ -131,7 +131,7 @@ class RQLExpression(EntityType):
                                       'relation\'subject, object and to '
                                       'the request user. '))
 
-    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='+?', composite='subject',
+    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
                                       description=_('rql expression allowing to read entities/relations of this type'))
     add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
                                      description=_('rql expression allowing to add entities/relations of this type'))
@@ -162,7 +162,7 @@ class CWGroup(EntityType):
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
-    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='+*',
+    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='**',
                                       description=_('groups allowed to read entities/relations of this type'))
     add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'),
                                      description=_('groups allowed to add entities/relations of this type'))
