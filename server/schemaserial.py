@@ -28,7 +28,8 @@ def group_mapping(cursor, interactive=True):
     from the user.
     """
     res = {}
-    for eid, name in cursor.execute('Any G, N WHERE G is CWGroup, G name N'):
+    for eid, name in cursor.execute('Any G, N WHERE G is CWGroup, G name N',
+                                    build_descr=False):
         res[name] = eid
     if not interactive:
         return res
@@ -112,23 +113,21 @@ def deserialize_schema(schema, session):
                 print sql
                 sqlcu.execute(sql)
         # other table renaming done once schema has been read
-    index = {}
+    sidx = {}
     permsdict = deserialize_ertype_permissions(session)
     schema.reading_from_database = True
-    for eid, etype, desc in session.execute('Any X, N, D WHERE '
-                                            'X is CWEType, X name N, '
-                                            'X description D',
-                                            build_descr=False):
+    for eid, etype, desc in session.execute(
+        'Any X, N, D WHERE X is CWEType, X name N, X description D',
+        build_descr=False):
         # base types are already in the schema, skip them
         if etype in schemamod.BASE_TYPES:
             # just set the eid
             eschema = schema.eschema(etype)
             eschema.eid = eid
-            index[eid] = eschema
+            sidx[eid] = eschema
             continue
         if etype in ETYPE_NAME_MAP:
             netype = ETYPE_NAME_MAP[etype]
-            print 'fixing etype name from %s to %s' % (etype, netype)
             # can't use write rql queries at this point, use raw sql
             session.system_sql('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
                                % {'p': sqlutils.SQL_PREFIX},
@@ -155,34 +154,21 @@ def deserialize_schema(schema, session):
             etype = netype
         etype = ybo.EntityType(name=etype, description=desc, eid=eid)
         eschema = schema.add_entity_type(etype)
-        index[eid] = eschema
-        set_perms(eschema, permsdict.get(eid, {}))
-    try:
-        rset = session.execute('Any XN, ETN WHERE X is CWEType, X name XN, '
-                               'X specializes ET, ET name ETN')
-    except: # `specializes` relation not available for versions prior to 2.50
-        session.rollback(False)
-    else:
-        for etype, stype in rset:
-            eschema = schema.eschema(etype)
-            seschema = schema.eschema(stype)
-            eschema._specialized_type = stype
-            seschema._specialized_by.append(etype)
-    for eid, rtype, desc, sym, il in session.execute(
-        'Any X,N,D,S,I WHERE X is CWRType, X name N, X description D, '
-        'X symetric S, X inlined I', build_descr=False):
-        try:
-            # bw compat: fulltext_container added in 2.47
-            ft_container = session.execute('Any FTC WHERE X eid %(x)s, X fulltext_container FTC',
-                                           {'x': eid}).rows[0][0]
-        except:
-            ft_container = None
-            session.rollback(False)
+        sidx[eid] = eschema
+        set_perms(eschema, permsdict)
+    for etype, stype in session.execute(
+        'Any XN, ETN WHERE X is CWEType, X name XN, X specializes ET, ET name ETN',
+        build_descr=False):
+        schema.eschema(etype)._specialized_type = stype
+        schema.eschema(stype)._specialized_by.append(etype)
+    for eid, rtype, desc, sym, il, ftc in session.execute(
+        'Any X,N,D,S,I,FTC WHERE X is CWRType, X name N, X description D, '
+        'X symetric S, X inlined I, X fulltext_container FTC', build_descr=False):
         rtype = ybo.RelationType(name=rtype, description=desc,
                                  symetric=bool(sym), inlined=bool(il),
-                                 fulltext_container=ft_container, eid=eid)
+                                 fulltext_container=ftc, eid=eid)
         rschema = schema.add_relation_type(rtype)
-        index[eid] = rschema
+        sidx[eid] = rschema
     cstrsdict = deserialize_rdef_constraints(session)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
@@ -191,37 +177,30 @@ def deserialize_schema(schema, session):
         'X fulltextindexed FTIDX, X from_entity SE, X to_entity OE',
         build_descr=False):
         rdefeid, seid, reid, teid, card, ord, desc, idx, ftidx, i18n, default = values
-        constraints = cstrsdict.get(rdefeid, ())
-        frometype = index[seid].type
-        rtype = index[reid].type
-        toetype = index[teid].type
-        rdef = ybo.RelationDefinition(frometype, rtype, toetype, cardinality=card,
-                                  order=ord, description=desc,
-                                  constraints=constraints,
-                                  indexed=idx, fulltextindexed=ftidx,
-                                  internationalizable=i18n,
-                                  default=default, eid=rdefeid)
+        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
+                                      cardinality=card,
+                                      constraints=cstrsdict.get(rdefeid, ()),
+                                      order=ord, description=desc,
+                                      indexed=idx, fulltextindexed=ftidx,
+                                      internationalizable=i18n,
+                                      default=default, eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
         # rdefs can be None on duplicated relation definitions (e.g. symetrics)
-        if rdefs:
-            set_perms(rdefs, permsdict.get(rdefeid, {}))
+        if rdefs is not None:
+            set_perms(rdefs, permsdict)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
         'X from_entity SE, X to_entity OE, X composite C', build_descr=False):
         rdefeid, seid, reid, teid, card, ord, desc, c = values
-        frometype = index[seid].type
-        rtype = index[reid].type
-        toetype = index[teid].type
-        constraints = cstrsdict.get(rdefeid, ())
-        rdef = ybo.RelationDefinition(frometype, rtype, toetype, cardinality=card,
-                                  order=ord, description=desc,
-                                  composite=c, constraints=constraints,
-                                  eid=rdefeid)
+        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
+                                      constraints=cstrsdict.get(rdefeid, ()),
+                                      cardinality=card, order=ord, description=desc,
+                                      composite=c,  eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
         # rdefs can be None on duplicated relation definitions (e.g. symetrics)
-        if rdefs:
-            set_perms(rdefs, permsdict.get(rdefeid, {}))
+        if rdefs is not None:
+            set_perms(rdefs, permsdict)
     schema.infer_specialization_rules()
     if _3_2_migration:
         _update_database(schema, sqlcu)
@@ -255,14 +234,15 @@ def set_perms(erschema, permsdict):
     definition dictionary as built by deserialize_ertype_permissions for a
     given erschema's eid
     """
-    for action in erschema.ACTIONS:
-        actperms = []
-        for something in permsdict.get(action, ()):
-            if isinstance(something, tuple):
-                actperms.append(erschema.rql_expression(*something))
-            else: # group name
-                actperms.append(something)
-        erschema.set_action_permissions(action, actperms)
+    try:
+        thispermsdict = permsdict[erschema.eid]
+    except KeyError:
+        return
+    permissions = erschema.permissions
+    for action, somethings in thispermsdict.iteritems():
+        permissions[action] = tuple(
+            isinstance(p, tuple) and erschema.rql_expression(*p) or p
+            for p in somethings)
 
 
 def deserialize_rdef_constraints(session):
@@ -287,6 +267,7 @@ def serialize_schema(cursor, schema, verbose=False):
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
+    execute = cursor.execute
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
     if not verbose and not quiet:
@@ -298,7 +279,7 @@ def serialize_schema(cursor, schema, verbose=False):
     for cstrtype in CONSTRAINTS:
         if verbose:
             print rql
-        cursor.execute(rql, {'ct': unicode(cstrtype)})
+        execute(rql, {'ct': unicode(cstrtype)}, build_descr=False)
         if pb is not None:
             pb.update()
     groupmap = group_mapping(cursor, interactive=False)
@@ -311,13 +292,13 @@ def serialize_schema(cursor, schema, verbose=False):
         for rql, kwargs in erschema2rql(schema[ertype], groupmap):
             if verbose:
                 print rql % kwargs
-            cursor.execute(rql, kwargs)
+            execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
         if verbose:
             print rql % kwargs
-        cursor.execute(rql, kwargs)
+        execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     if not quiet:
