@@ -12,12 +12,21 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import implements, one_line_rset
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web import action, box, uicfg
+from cubicweb.web import action, box, uicfg, formwidgets as fw
 from cubicweb.web.views import primary
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('*', 'bookmarked_by', '*'), False)
 _abaa.tag_object_of(('*', 'bookmarked_by', '*'), False)
+
+_afs = uicfg.autoform_section
+_afs.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'main', 'metadata')
+_afs.tag_attribute(('Bookmark', 'path'), 'main', 'attributes')
+_afs.tag_attribute(('Bookmark', 'path'), 'muledit', 'attributes')
+
+_affk = uicfg.autoform_field_kwargs
+_affk.tag_attribute(('Bookmark', 'path'), {'widget': fw.URLUnescapedInput})
+
 
 class FollowAction(action.Action):
     __regid__ = 'follow'

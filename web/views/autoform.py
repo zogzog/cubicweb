@@ -327,9 +327,6 @@ _afs.tag_attribute(('CWUser', 'surname'), 'main', 'attributes')
 _afs.tag_attribute(('CWUser', 'last_login_time'), 'main', 'metadata')
 _afs.tag_subject_of(('CWUser', 'in_group', '*'), 'main', 'attributes')
 _afs.tag_subject_of(('CWUser', 'in_group', '*'), 'muledit', 'attributes')
-_afs.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'main', 'metadata')
-_afs.tag_attribute(('Bookmark', 'path'), 'main', 'attributes')
-_afs.tag_attribute(('Bookmark', 'path'), 'muledit', 'attributes')
 _afs.tag_subject_of(('*', 'primary_email', '*'), 'main', 'relations')
 _afs.tag_subject_of(('*', 'use_email', '*'), 'main', 'inlined')
 _afs.tag_subject_of(('CWRelation', 'relation_type', '*'), 'main', 'inlined')
@@ -337,8 +334,6 @@ _afs.tag_subject_of(('CWRelation', 'from_entity', '*'), 'main', 'inlined')
 _afs.tag_subject_of(('CWRelation', 'to_entity', '*'), 'main', 'inlined')
 
 uicfg.autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
-                                          {'widget': fwdgs.TextInput})
-uicfg.autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
                                           {'widget': fwdgs.TextInput})
 uicfg.autoform_field_kwargs.tag_subject_of(('TrInfo', 'wf_info_for', '*'),
                                            {'widget': fwdgs.HiddenInput})
