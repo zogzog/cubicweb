@@ -25,7 +25,7 @@ _afs.tag_attribute(('Bookmark', 'path'), 'main', 'attributes')
 _afs.tag_attribute(('Bookmark', 'path'), 'muledit', 'attributes')
 
 _affk = uicfg.autoform_field_kwargs
-_affk.tag_attribute(('Bookmark', 'path'), {'widget': fw.URLUnescapedInput})
+_affk.tag_attribute(('Bookmark', 'path'), {'widget': fw.EditableURLWidget})
 
 
 class FollowAction(action.Action):
