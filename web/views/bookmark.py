@@ -100,6 +100,8 @@ class BookmarksBox(box.UserRQLBoxTemplate):
             # use a relative path so that we can move the instance without
             # loosing bookmarks
             path = req.relative_path()
+            # XXX if vtitle specified in params, extract it and use it as default value
+            # for bookmark's title
             url = self.create_url(self.etype, __linkto=linkto, path=path)
             boxmenu.append(self.mk_action(req._('bookmark this page'), url,
                                           category='manage', id='bookmark'))
