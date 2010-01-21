@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
+from cgi import parse_qsl
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -258,6 +259,16 @@ class RequestSessionBase(object):
             return unicode(urlunquote(quoted), self.encoding)
         except UnicodeDecodeError: # might occurs on manually typed URLs
             return unicode(urlunquote(quoted), 'iso-8859-1')
+
+    def url_parse_qsl(self, querystring):
+        """return a list of (key, val) found in the url quoted query string"""
+        if isinstance(querystring, unicode):
+            querystring = querystring.encode(self.encoding)
+        for key, val in parse_qsl(querystring):
+            try:
+                yield unicode(key, self.encoding), unicode(val, self.encoding)
+            except UnicodeDecodeError: # might occurs on manually typed URLs
+                yield unicode(key, 'iso-8859-1'), unicode(val, 'iso-8859-1')
 
     # bound user related methods ###############################################
 
