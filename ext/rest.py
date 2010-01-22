@@ -96,7 +96,7 @@ def winclude_directive(name, arguments, options, content, lineno,
         lineno - state_machine.input_offset - 1)
     #source_dir = os.path.dirname(os.path.abspath(source))
     fid = arguments[0]
-    for lang in chain((context.req.lang, context.vreg.property_value('ui.language')),
+    for lang in chain((context._cw.lang, context.vreg.property_value('ui.language')),
                       context.config.available_languages()):
         rid = '%s_%s.rst' % (fid, lang)
         resourcedir = context.config.locate_doc_file(rid)
@@ -166,7 +166,7 @@ else:
             lexer = get_lexer_by_name('text')
         parsed = highlight(u'\n'.join(content), lexer, _PYGMENTS_FORMATTER)
         context = state.document.settings.context
-        context.req.add_css('pygments.css')
+        context._cw.add_css('pygments.css')
         return [nodes.raw('', parsed, format='html')]
 
     pygments_directive.arguments = (1, 0, 1)
