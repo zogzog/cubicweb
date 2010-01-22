@@ -881,7 +881,7 @@ the repository',
                 if exists(sitefile) and not sitefile in self._site_loaded:
                     self._load_site_cubicweb(sitefile)
                     self._site_loaded.add(sitefile)
-                    self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
+                    self.warning('[3.5] site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
         # XXX extrapath argument to load_module_from_file only in lgc > 0.46
