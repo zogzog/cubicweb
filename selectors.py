@@ -394,7 +394,7 @@ def one_etype_rset(cls, req, rset=None, col=0, **kwargs):
 class multi_etypes_rset(multi_lines_rset):
 
     @lltrace
-    def __call__(self, cls, req, rset=None, **kwargs):
+    def __call__(self, cls, req, rset=None, col=0, **kwargs):
         return rset and self.match_expected(len(rset.column_types(col)))
 
 
