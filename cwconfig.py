@@ -1037,3 +1037,11 @@ def register_stored_procedures():
         supported_backends = ('mysql', 'postgres', 'sqlite',)
 
     register_function(TEXT_LIMIT_SIZE)
+
+
+
+    class FSPATH(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'Bytes'
+
+    register_function(FSPATH)
