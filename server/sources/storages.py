@@ -31,6 +31,7 @@ class Storage(object):
 # TODO
 # * make it configurable without code
 # * better file path attribution
+# * handle backup/restore
 
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
