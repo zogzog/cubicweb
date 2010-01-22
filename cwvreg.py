@@ -373,12 +373,8 @@ class CubicWebVRegistry(VRegistry):
 
     def _register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
-        extrapath = {}
-        for cubesdir in self.config.cubes_search_path():
-            if cubesdir != self.config.CUBES_DIR:
-                extrapath[cubesdir] = 'cubes'
         if super(CubicWebVRegistry, self).register_objects(path, force_reload,
-                                                          extrapath):
+                                                          self.config.extrapath):
             self.initialization_completed()
             # don't check rtags if we don't want to cleanup_interface_sobjects
             for rtag in RTAGS:

@@ -84,7 +84,7 @@ from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
 from warnings import warn
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
@@ -355,6 +355,13 @@ this option is set to yes",
         if not cls.CUBES_DIR in path:
             path.append(cls.CUBES_DIR)
         return path
+
+    @classproperty
+    def extrapath(cls):
+        extrapath = {}
+        for cubesdir in cls.cubes_search_path():
+            if cubesdir != cls.CUBES_DIR:
+                extrapath[cubesdir] = 'cubes'
 
     @classmethod
     def cube_dir(cls, cube):
