@@ -362,6 +362,7 @@ this option is set to yes",
         for cubesdir in cls.cubes_search_path():
             if cubesdir != cls.CUBES_DIR:
                 extrapath[cubesdir] = 'cubes'
+        return extrapath
 
     @classmethod
     def cube_dir(cls, cube):
