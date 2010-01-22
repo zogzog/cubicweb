@@ -10,12 +10,12 @@ CREATE OR REPLACE FUNCTION _fsopen(bytea) RETURNS bytea AS $$
     fpath = args[0]
     if fpath:
         try:
-	    data = file(fpath, 'rb').read()
-	    #/* XXX due to plpython bug we have to replace some characters... */
+            data = file(fpath, 'rb').read()
+            #/* XXX due to plpython bug we have to replace some characters... */
             return data.replace("\\", r"\134").replace("\000", r"\000").replace("'", r"\047") #'
         except Exception, ex:
-	    plpy.warning('failed to get content for %s: %s', fpath, ex)
-     return None
+            plpy.warning('failed to get content for %s: %s', fpath, ex)
+    return None
 $$ LANGUAGE plpythonu
 /* WITH(ISCACHABLE) XXX does postgres handle caching of large data nicely */
 ;;
