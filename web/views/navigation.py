@@ -222,7 +222,7 @@ def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
     """paginate results if the view is paginable and we're not explictly told to
     display everything (by setting __force_display in req.form)
     """
-    if view.paginable ant not view.req.form.get('__force_display'):
+    if view.paginable and not view.req.form.get('__force_display'):
         do_paginate(view, rset, w or view.w, show_all_option, page_size)
 
 # monkey patch base View class to add a .paginate([...])
