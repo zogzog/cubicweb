@@ -139,7 +139,6 @@ class Registry(dict):
 
     # dynamic selection methods ################################################
 
-    @deprecated('[3.6] use select instead of object_by_id')
     def object_by_id(self, oid, *args, **kwargs):
         """return object with the given oid. Only one object is expected to be
         found.
