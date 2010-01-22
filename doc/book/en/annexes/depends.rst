@@ -42,26 +42,31 @@ to have installed in order for CubicWeb to work:
 * indexer - http://www.logilab.org/project/indexer -
   http://pypi.python.org/pypi/indexer - included in the forest
 
-To activate Sparql querying:
-
-* fyzz - http://www.logilab.org/project/fyzz - http://pypi.python.org/pypi/fyzz
-  - included in the forest
-
 To use network communication between cubicweb instances / clients:
 
 * Pyro - http://pyro.sourceforge.net/ - http://pypi.python.org/pypi/Pyro
 
 If you're using a Postgres database (recommended):
+
 * psycopg2 - http://initd.org/projects/psycopg2 - http://pypi.python.org/pypi/psycopg2
+* plpythonu extension
+* tsearch2 extension (for postgres < 8.3, in postgres-contrib)
+
+Other optional packages :
+
+:
+
+* fyzz - http://www.logilab.org/project/fyzz -
+  http://pypi.python.org/pypi/fyzz - included in the forest, *to activate Sparql querying*
 
 For the google-appengine extension to be available, you also need:
 
-* dateutil - http://labix.org/python-dateutil -
-  http://pypi.python.org/pypi/python-dateutil/
-
 * vobject - http://vobject.skyhouseconsulting.com/ -
-  http://pypi.python.org/pypi/vobject
+  http://pypi.python.org/pypi/vobject, *for the icalendar view*. For those not
+  benefiting from a packaging system, note that vobject itself depends on
+  dateutil - http://labix.org/python-dateutil -
+  http://pypi.python.org/pypi/python-dateutil/.
 
-  
+
 Any help with the packaging of CubicWeb for more than Debian/Ubuntu (including
 eggs, buildouts, etc) will be greatly appreciated.

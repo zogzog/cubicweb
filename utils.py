@@ -152,6 +152,9 @@ def merge_dicts(dict1, dict2):
 # use networkX instead ?
 # http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
 def transitive_closure_of(entity, relname, _seen=None):
+    """return transitive closure *for the subgraph starting from the given
+    entity* (eg 'parent' entities are not included in the results)
+    """
     if _seen is None:
         _seen = set()
     _seen.add(entity.eid)
