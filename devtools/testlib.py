@@ -657,6 +657,9 @@ class CubicWebTC(TestCase):
         if validatorclass is None:
             return None
         validator = validatorclass()
+        if isinstance(validator, htmlparser.DTDValidator):
+            # XXX remove <canvas> used in progress widget, unknown in html dtd
+            output = re.sub('<canvas.*?></canvas>', '', output)
         return validator.parse_string(output.strip())
 
     # deprecated ###############################################################
