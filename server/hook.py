@@ -141,18 +141,23 @@ class match_rtype(match_search_state):
     :param *expected: parameters (eg `basestring`) which are expected to be
                       found in named arguments (kwargs)
     """
-    def __init__(self, *expected):
+    def __init__(self, *expected, **more):
         self.expected = expected
-        # if len(expected) == 1:
-        #     try:
-        #         iter(expected[0])
-        #         self.expected = expected[0]
-        #     except TypeError:
-        #         pass
+        self.frometypes = more.pop('frometypes', None)
+        self.toetypes = more.pop('toetypes', None)
 
     @lltrace
     def __call__(self, cls, req, *args, **kwargs):
-        return kwargs.get('rtype') in self.expected
+        if kwargs.get('rtype') not in self.expected:
+            return 0
+        if self.frometypes is not None and \
+               req.describe(kwargs['eidfrom'])[0] not in self.frometypes:
+            return 0
+        if self.toetypes is not None and \
+               req.describe(kwargs['eidto'])[0] not in self.toetypes:
+            return 0
+        return 1
+
 
 class match_rtype_sets(match_search_state):
     """accept if parameters specified as initializer arguments are specified
