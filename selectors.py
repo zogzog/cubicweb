@@ -345,7 +345,7 @@ class multi_columns_rset(multi_lines_rset):
 
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        return rset and self.match_expected(len(rset.rows[0]))
+        return rset and self.match_expected(len(rset.rows[0])) or 0 # *must not* return None
 
 
 @objectify_selector
