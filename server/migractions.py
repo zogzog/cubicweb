@@ -148,7 +148,7 @@ class ServerMigrationHelper(MigrationHelper):
                 try:
                     source.backup(osp.join(tmpdir, source.uri))
                 except Exception, exc:
-                    print '-> error trying to backup [%s]' % exc
+                    print '-> error trying to backup %s [%s]' % (source.uri, exc)
                     if not self.confirm('Continue anyway?', default='n'):
                         raise SystemExit(1)
                     else:
@@ -180,7 +180,7 @@ class ServerMigrationHelper(MigrationHelper):
             bkup = tarfile.open(backupfile, 'r|gz')
         except tarfile.ReadError:
             # assume restoring old backup
-            shutil.copy(backupfile, osp.join(tmpdir, 'system'))  
+            shutil.copy(backupfile, osp.join(tmpdir, 'system'))
         else:
             for name in bkup.getnames():
                 if name[0] in '/.':
@@ -198,7 +198,7 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 source.restore(osp.join(tmpdir, source.uri), self.confirm, drop)
             except Exception, exc:
-                print '-> error trying to restore [%s]' % exc
+                print '-> error trying to restore %s [%s]' % (source.uri, exc)
                 if not self.confirm('Continue anyway?', default='n'):
                     raise SystemExit(1)
         shutil.rmtree(tmpdir)
