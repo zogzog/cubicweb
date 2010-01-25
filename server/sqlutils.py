@@ -33,6 +33,15 @@ from cubicweb.server.utils import crypt_password
 lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
+def bw_run_command(cmd):
+    """backup/restore command are string w/ lgc < 0.47, lists with earlier versions
+    """
+    if isinstance(cmd, basestring):
+        print cmd
+        return os.system(cmd)
+    print ' '.join(cmd)
+    return subprocess.call(cmd)
+
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=not os.environ.get('APYCOT_ROOT'),
             pbtitle='', delimiter=';'):
@@ -171,11 +180,12 @@ class SQLAdapterMixIn(object):
         return cnx
 
     def backup_to_file(self, backupfile):
-        cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
-                                           self.dbuser, backupfile,
-                                           keepownership=False)
-        if subprocess.call(cmd):
-            raise Exception('Failed command: %s' % cmd)
+        for cmd in self.dbhelper.backup_commands(self.dbname, self.dbhost,
+                                                 self.dbuser, backupfile,
+                                                 keepownership=False):
+            if bw_run_command(cmd):
+                if not confirm('-> Failed. Continue anyway?', default='n'):
+                    raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
         for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
@@ -183,9 +193,8 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            if subprocess.call(cmd):
-                print '-> Failed command: %s' % cmd
-                if not confirm('Continue anyway?', default='n'):
+            if bw_run_command(cmd):
+                if not confirm('Failed. Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
