@@ -436,7 +436,7 @@ class AutoformIsInlined(RelationTags):
     def tag_relation(self, key, tag):
         warn('autoform_is_inlined rtag is deprecated, use autoform_section '
              'with inlined formtype and "attributes" or "hidden" section',
-             DeprecationWarning, stacklevel=2)
+             DeprecationWarning, stacklevel=3)
         section = tag and 'inlined' or 'hidden'
         autoform_section.tag_relation(key, 'main', section)
 

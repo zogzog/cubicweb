@@ -1053,7 +1053,8 @@ class ServerMigrationHelper(MigrationHelper):
             return rset.get_entity(0, 0)
         return self.cmd_add_workflow('%s workflow' % ';'.join(etypes), etypes)
 
-    @deprecated('[3.5] use add_workflow and Workflow.add_state method')
+    @deprecated('[3.5] use add_workflow and Workflow.add_state method',
+                stacklevel=3)
     def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
@@ -1064,7 +1065,8 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return state.eid
 
-    @deprecated('[3.5] use add_workflow and Workflow.add_transition method')
+    @deprecated('[3.5] use add_workflow and Workflow.add_transition method',
+                stacklevel=3)
     def cmd_add_transition(self, name, transitionof, fromstates, tostate,
                            requiredgroups=(), conditions=(), commit=False, **kwargs):
         """method to ease workflow definition: add a transition for one or more
@@ -1077,7 +1079,8 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return tr.eid
 
-    @deprecated('[3.5] use Transition.set_transition_permissions method')
+    @deprecated('[3.5] use Transition.set_transition_permissions method',
+                stacklevel=3)
     def cmd_set_transition_permissions(self, treid,
                                        requiredgroups=(), conditions=(),
                                        reset=True, commit=False):
@@ -1089,7 +1092,8 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('[3.5] use entity.fire_transition("transition") or entity.change_state("state")')
+    @deprecated('[3.5] use entity.fire_transition("transition") or entity.change_state("state")',
+                stacklevel=3)
     def cmd_set_state(self, eid, statename, commit=False):
         self._cw.entity_from_eid(eid).change_state(statename)
         if commit:

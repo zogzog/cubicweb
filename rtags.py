@@ -87,7 +87,8 @@ class RelationTags(object):
     def tag_attribute(self, key, *args, **kwargs):
         key = list(key)
         key.append('*')
-        self.tag_subject_of(key, *args, **kwargs)
+        key.append('subject')
+        self.tag_relation(key, *args, **kwargs)
 
     def tag_subject_of(self, key, *args, **kwargs):
         key = list(key)
