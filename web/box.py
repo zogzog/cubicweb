@@ -16,6 +16,7 @@ from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, partial_has_related_entities)
 from cubicweb.view import View, ReloadableMixIn
 
+from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
 from cubicweb.web.action import UnregisteredAction
@@ -222,7 +223,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
                                          row=self.cw_row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
         for _, eid in field.choices(form):
-            if eid is not None:
+            if eid is not None and eid != INTERNAL_FIELD_VALUE:
                 rset = self._cw.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))
         return entities
