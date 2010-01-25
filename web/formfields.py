@@ -255,11 +255,18 @@ class Field(object):
         assert self.choices is not None
         if callable(self.choices):
             try:
-                vocab = self.choices(form=form)
+                if getattr(self.choices, 'im_self', None) is self:
+                    vocab = self.choices(form=form)
+                else:
+                    vocab = self.choices(form=form, field=self)
             except TypeError:
-                warn('[3.3] vocabulary method (eg field.choices) should now take '
-                     'the form instance as argument', DeprecationWarning)
-                vocab = self.choices(req=form._cw)
+                warn('[3.6]  %s: choices should now take '
+                     'the form and field as named arguments', self)
+                try:
+                    vocab = self.choices(req=form._cw)
+                except TypeError:
+                    warn('[3.3]  %s: choices should now take '
+                         'the form and field as named arguments', self)
         else:
             vocab = self.choices
         if vocab and not isinstance(vocab[0], (list, tuple)):
