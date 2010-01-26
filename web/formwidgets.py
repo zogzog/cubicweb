@@ -698,12 +698,11 @@ class ImgButton(object):
 
 # more widgets #################################################################
 
-class EditableURLWidget(TextInput):
+class EditableURLWidget(FieldWidget):
     """custom widget to edit separatly an url path / query string (used by
     default for Bookmark.path for instance), dealing with url quoting nicely
     (eg user edit the unquoted value).
     """
-    type = 'text'
 
     def _render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
