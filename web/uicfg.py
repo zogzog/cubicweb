@@ -205,25 +205,16 @@ class InitializableDict(dict):
             else:
                 self.setdefault(eschema, 'application')
 
-indexview_etype_section = {'EmailAddress': 'subobject',
-                           'CWUser': 'system',
-                           'CWGroup': 'system',
-                           'CWPermission': 'system',
-                           'CWCache': 'system',
-                           'Workflow': 'system',
-                           'State': 'hidden',
-                           'BaseTransition': 'hidden',
-                           'Transition': 'hidden',
-                           'WorkflowTransition': 'hidden',
-                           }
-
-indexview_etype_section = InitializableDict(EmailAddress='subobject',
-                                            CWUser='system',
-                                            CWGroup='system',
-                                            CWPermission='system',
-                                            CWCache='system',
-                                            Workflow='system',
-                                            )
+indexview_etype_section = InitializableDict(
+    EmailAddress='subobject',
+    # entity types in the 'system' table by default (managers only)
+    CWUser='system', CWGroup='system',
+    CWPermission='system',
+    CWCache='system',
+    Workflow='system',
+    ExternalUri='system',
+    Bookmark='system',
+    )
 
 # autoform.AutomaticEntityForm configuration ##################################
 
