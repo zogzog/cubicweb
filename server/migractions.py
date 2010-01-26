@@ -1135,7 +1135,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return entity
 
-    @deprecated('use create_entity')
+    @deprecated('[3.5] use create_entity', stacklevel=3)
     def cmd_add_entity(self, etype, *args, **kwargs):
         """add a new entity of the given type"""
         return self.cmd_create_entity(etype, *args, **kwargs).eid
