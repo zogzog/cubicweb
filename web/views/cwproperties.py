@@ -22,6 +22,7 @@ from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton, FieldWidget
 from cubicweb.web.views import primary, formrenderers
 
+uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
 
 # some string we want to be internationalizable for nicer display of property
 # groups
