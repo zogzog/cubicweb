@@ -328,6 +328,8 @@ class Field(object):
                 new_value = self.process_form_value(form)
             except ProcessFormError:
                 return True
+            except UnmodifiedField:
+                return False
             if form.edited_entity.has_eid() and previous_value == new_value:
                 return False # not modified
             return True
