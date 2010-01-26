@@ -191,8 +191,10 @@ class InitializableDict(dict):
     def __init__(self, *args, **kwargs):
         super(InitializableDict, self).__init__(*args, **kwargs)
         register_rtag(self)
+        self.__defaults = dict(self)
 
     def init(self, schema, check=True):
+        self.update(self.__defaults)
         for eschema in schema.entities():
             if eschema.final:
                 continue
