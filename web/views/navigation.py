@@ -200,6 +200,8 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     req = view._cw
     if rset is None:
         rset = view.cw_rset
+    if w is None:
+        w = view.w
     nav = req.vreg['components'].select_or_none(
         'navigation', req, rset=rset, page_size=page_size)
     if nav:
@@ -223,7 +225,7 @@ def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
     display everything (by setting __force_display in req.form)
     """
     if view.paginable and not view._cw.form.get('__force_display'):
-        do_paginate(view, rset, w or view.w, show_all_option, page_size)
+        do_paginate(view, rset, w, show_all_option, page_size)
 
 # monkey patch base View class to add a .paginate([...])
 # method to be called to write pages index in the view and then limit the result
