@@ -564,7 +564,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             counter=self._cw.data[countkey] , **kwargs))
 
     def form_title(self, entity, i18nctx):
-        return self._cw.pgettext(i18nctx, 'This %s' % entity.e_schema)
+        return self._cw.pgettext(i18nctx, entity.__regid__)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""

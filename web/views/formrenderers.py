@@ -412,8 +412,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
-        ctx = values.pop('i18nctx')
-        values['removemsg'] = self._cw.pgettext(ctx, 'remove this %s' % eschema)
+        values['removemsg'] = self._cw._('remove-inlined-entity-form')
         w(u'<div class="iformTitle"><span>%(title)s</span> '
           '#<span class="icounter">%(counter)s</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
