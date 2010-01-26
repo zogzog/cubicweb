@@ -103,6 +103,17 @@ class CubicWebRequestBase(DBAPIRequest):
 
     @property
     def varmaker(self):
+        """the rql varmaker is exposed both as a property and as the
+        set_varmaker function since we've two use cases:
+
+        * accessing the req.varmaker property to get a new variable name
+
+        * calling req.set_varmaker() to ensure a varmaker is set for later ajax
+          calls sharing our .pageid
+        """
+        return self.set_varmaker()
+
+    def set_varmaker(self):
         varmaker = self.get_page_data('rql_varmaker')
         if varmaker is None:
             varmaker = rqlvar_maker()

@@ -590,6 +590,7 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
     form = None # no actual form wrapped
 
     def call(self, i18nctx, **kwargs):
+        self._cw.set_varmaker()
         divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
         self.w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
           % divid)
