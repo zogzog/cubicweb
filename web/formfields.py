@@ -17,12 +17,9 @@ from yams.schema import KNOWN_METAATTRIBUTES
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
-from cubicweb import Binary, tags, uilib
-from cubicweb.utils import ustrftime
-from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param
-from cubicweb.web.formwidgets import (
-    HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
-    Radio, Select, DateTimePicker)
+from cubicweb import Binary, tags, uilib, utils
+from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
+     formwidgets as fw
 
 
 class UnmodifiedField(Exception):
@@ -97,7 +94,7 @@ class Field(object):
     """
     # default widget associated to this class of fields. May be overriden per
     # instance
-    widget = TextInput
+    widget = fw.TextInput
     # does this field requires a multipart form
     needs_multipart = False
     # class attribute used for ordering of fields in a form
@@ -143,7 +140,7 @@ class Field(object):
         if widget is not None:
             self.widget = widget
         elif self.choices and not self.widget.vocabulary_widget:
-            self.widget = Select()
+            self.widget = fw.Select()
         if isinstance(self.widget, type):
             self.widget = self.widget()
 
@@ -156,7 +153,7 @@ class Field(object):
 
     def is_visible(self):
         """return true if the field is not an hidden field"""
-        return not isinstance(self.widget, HiddenInput)
+        return not isinstance(self.widget, fw.HiddenInput)
 
     def actual_fields(self, form):
         """return actual fields composing this field in case of a compound
@@ -362,7 +359,7 @@ class Field(object):
 
 
 class StringField(Field):
-    widget = TextArea
+    widget = fw.TextArea
     size = 45
 
     def __init__(self, name=None, max_length=None, **kwargs):
@@ -372,14 +369,14 @@ class StringField(Field):
     def init_widget(self, widget):
         if widget is None:
             if self.choices:
-                widget = Select()
+                widget = fw.Select()
             elif self.max_length and self.max_length < 257:
-                widget = TextInput()
+                widget = fw.TextInput()
 
         super(StringField, self).init_widget(widget)
-        if isinstance(self.widget, TextArea):
+        if isinstance(self.widget, fw.TextArea):
             self.init_text_area(self.widget)
-        elif isinstance(self.widget, TextInput):
+        elif isinstance(self.widget, fw.TextInput):
             self.init_text_input(self.widget)
 
     def init_text_input(self, widget):
@@ -394,7 +391,7 @@ class StringField(Field):
 
 
 class PasswordField(StringField):
-    widget = PasswordInput
+    widget = fw.PasswordInput
 
     def _typed_value(self, form, load_bytes=False):
         if self.eidparam:
@@ -417,8 +414,8 @@ class RichTextField(StringField):
     def get_widget(self, form):
         if self.widget is None:
             if self.use_fckeditor(form):
-                return FCKEditor()
-            widget = TextArea()
+                return fw.FCKEditor()
+            widget = fw.TextArea()
             self.init_text_area(widget)
             return widget
         return self.widget
@@ -436,11 +433,11 @@ class RichTextField(StringField):
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
-                fkwargs['widget'] = HiddenInput()
+                fkwargs['widget'] = fw.HiddenInput()
                 fkwargs['value'] = 'text/html'
             else:
                 # else we want a format selector
-                fkwargs['widget'] = Select()
+                fkwargs['widget'] = fw.Select()
                 fcstr = FormatConstraint()
                 fkwargs['choices'] = fcstr.vocabulary(form=form)
                 fkwargs['internationalizable'] = True
@@ -477,7 +474,7 @@ class RichTextField(StringField):
 
 
 class FileField(StringField):
-    widget = FileInput
+    widget = fw.FileInput
     needs_multipart = True
 
     def __init__(self, format_field=None, encoding_field=None, name_field=None,
@@ -588,7 +585,7 @@ class EditableFileField(FileField):
                             'You can either submit a new file using the browse button above'
                             ', or edit file content online with the widget below.')
                     wdgs.append(u'<p><b>%s</b></p>' % msg)
-                    wdgs.append(TextArea(setdomid=False).render(form, self, renderer))
+                    wdgs.append(fw.TextArea(setdomid=False).render(form, self, renderer))
                     # XXX restore form context?
         return '\n'.join(wdgs)
 
@@ -605,7 +602,7 @@ class IntField(Field):
         super(IntField, self).__init__(**kwargs)
         self.min = min
         self.max = max
-        if isinstance(self.widget, TextInput):
+        if isinstance(self.widget, fw.TextInput):
             self.widget.attrs.setdefault('size', 5)
             self.widget.attrs.setdefault('maxlength', 15)
 
@@ -620,7 +617,7 @@ class IntField(Field):
 
 
 class BooleanField(Field):
-    widget = Radio
+    widget = fw.Radio
 
     def vocabulary(self, form):
         if self.choices:
@@ -764,7 +761,7 @@ class RelationField(Field):
 
     @staticmethod
     def fromcardinality(card, **kwargs):
-        kwargs.setdefault('widget', Select(multiple=card in '*+'))
+        kwargs.setdefault('widget', fw.Select(multiple=card in '*+'))
         return RelationField(**kwargs)
 
     def choices(self, form, limit=None):
