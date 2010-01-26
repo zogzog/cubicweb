@@ -478,6 +478,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         entity = self._entity()
         form = self._cw.vreg['forms'].select('edition', self._cw,
                                              entity=entity,
+                                             formtype='inlined',
                                              form_renderer_id='inline',
                                              copy_nav_params=False,
                                              mainform=False,
