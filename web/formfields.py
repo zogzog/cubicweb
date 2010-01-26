@@ -661,8 +661,9 @@ class FloatField(IntField):
 
 
 class DateField(StringField):
+    widget = fw.JQueryDatePicker
     format_prop = 'ui.date-format'
-    widget = DateTimePicker
+    etype = 'Date'
 
     def format_single_value(self, req, value):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
@@ -680,11 +681,13 @@ class DateField(StringField):
 
 
 class DateTimeField(DateField):
+    widget = fw.JQueryDateTimePicker
     format_prop = 'ui.datetime-format'
     etype = 'Datetime'
 
 
 class TimeField(DateField):
+    widget = fw.JQueryTimePicker
     format_prop = 'ui.time-format'
     etype = 'Time'
 
