@@ -73,14 +73,17 @@ class RelationTags(object):
                         self.del_rtag(stype, rtype, otype, tagged)
                         break
         if self._initfunc is not None:
-            for eschema in schema.entities():
-                for rschema, tschemas, role in eschema.relation_definitions(True):
-                    for tschema in tschemas:
-                        if role == 'subject':
-                            sschema, oschema = eschema, tschema
-                        else:
-                            sschema, oschema = tschema, eschema
-                        self._initfunc(self, sschema, rschema, oschema, role)
+            self.apply(schema, self._initfunc)
+
+    def apply(self, schema, func):
+        for eschema in schema.entities():
+            for rschema, tschemas, role in eschema.relation_definitions(True):
+                for tschema in tschemas:
+                    if role == 'subject':
+                        sschema, oschema = eschema, tschema
+                    else:
+                        sschema, oschema = tschema, eschema
+                    func(self, sschema, rschema, oschema, role)
 
     # rtag declaration api ####################################################
 

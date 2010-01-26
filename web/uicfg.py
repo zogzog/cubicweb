@@ -253,11 +253,26 @@ class AutoformSectionRelationTags(RelationTagsSet):
                        'muledit': ('attributes', 'hidden'),
                        }
 
+    def init(self, schema, check=True):
+        super(AutoformSectionRelationTags, self).init(schema, check)
+        self.apply(schema, self._initfunc_step2)
+
     @staticmethod
     def _initfunc(self, sschema, rschema, oschema, role):
         formsections = self.init_get(sschema, rschema, oschema, role)
         if formsections is None:
             formsections = self.tag_container_cls()
+        if not any(tag.startswith('inlined') for tag in formsections):
+            if not rschema.final:
+                negsects = self.init_get(sschema, rschema, oschema, neg_role(role))
+                if 'main_inlined' in negsects:
+                    formsections.add('inlined_hidden')
+        key = _ensure_str_key( (sschema, rschema, oschema, role) )
+        self._tagdefs[key] = formsections
+
+    @staticmethod
+    def _initfunc_step2(self, sschema, rschema, oschema, role):
+        formsections = self.get(sschema, rschema, oschema, role)
         sectdict = _formsections_as_dict(formsections)
         if rschema in META_RTYPES:
             sectdict.setdefault('main', 'hidden')
@@ -289,12 +304,10 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 if card in '1+' and not composed:
                     sectdict['muledit'] = 'attributes'
         if not 'inlined' in sectdict:
-            sectdict['inlined'] = 'hidden'
+            sectdict['inlined'] = sectdict['main']
         # recompute formsections and set it to avoid recomputing
         for formtype, section in sectdict.iteritems():
             formsections.add('%s_%s' % (formtype, section))
-        key = _ensure_str_key( (sschema, rschema, oschema, role) )
-        self._tagdefs[key] = formsections
 
     def tag_relation(self, key, formtype, section=None):
         if section is None:
