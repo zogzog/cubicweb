@@ -98,7 +98,7 @@ class TreeMixIn(object):
         path.reverse()
         return path
 
-    def iterparents(self):
+    def iterparents(self, strict=True):
         def _uptoroot(self):
             curr = self
             while True:
@@ -106,6 +106,8 @@ class TreeMixIn(object):
                 if curr is None:
                     break
                 yield curr
+        if not strict:
+            return chain([self], _uptoroot(self))
         return _uptoroot(self)
 
     def notification_references(self, view):
