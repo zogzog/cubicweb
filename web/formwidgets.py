@@ -747,7 +747,9 @@ class EditableURLWidget(FieldWidget):
         attrs.setdefault('onkeyup', 'autogrow(this)')
         inputs += [tags.textarea(fqs, name=fqsqname, **attrs),
                    u'</td></tr></table>']
-        return u'\n'.join(inputs)
+        # surrounding div necessary for proper error localization
+        return u'<div id="%s">%s%s</div>' % (
+            field.dom_id(form), u'\n'.join(inputs))
 
     def process_field_data(self, form, field):
         req = form._cw
