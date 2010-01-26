@@ -211,25 +211,29 @@ class Field(object):
         return id
 
     def typed_value(self, form, load_bytes=False):
+        if self.eidparam and self.role is not None:
+            entity = form.edited_entity
+            if form._cw.vreg.schema.rschema(self.name).final:
+                if entity.has_eid() or self.name in entity:
+                    return getattr(entity, self.name)
+            elif entity.has_eid() or entity.relation_cached(self.name, self.role):
+                return [r[0] for r in entity.related(self.name, self.role)]
+        return self.initial_typed_value(form, load_bytes)
+
+    def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
                 return self.value(form)
             return self.value
-        return self._typed_value(form, load_bytes)
-
-    def _typed_value(self, form, load_bytes=False):
-        if self.eidparam:
-            assert form._cw.vreg.schema.rschema(self.name).final
-            entity = form.edited_entity
-            if entity.has_eid() or self.name in entity:
-                return getattr(entity, self.name)
         formattr = '%s_%s_default' % (self.role, self.name)
         if hasattr(form, formattr):
             warn('[3.6] %s.%s deprecated, use field.value' % (
                 form.__class__.__name__, formattr), DeprecationWarning)
             return getattr(form, formattr)()
-        if self.eidparam:
-            return entity.e_schema.default(self.name)
+        if self.eidparam and self.role is not None:
+            if form._cw.vreg.schema.rschema(self.name).final:
+                return form.edited_entity.e_schema.default(self.name)
+            return ()
         return None
 
     def example_format(self, req):
@@ -393,13 +397,13 @@ class StringField(Field):
 class PasswordField(StringField):
     widget = fw.PasswordInput
 
-    def _typed_value(self, form, load_bytes=False):
+    def typed_value(self, form, load_bytes=False):
         if self.eidparam:
             # no way to fetch actual password value with cw
             if form.edited_entity.has_eid():
                 return INTERNAL_FIELD_VALUE
-            return form.edited_entity.e_schema.default(self.name)
-        return super(PasswordField, self)._typed_value(form, load_bytes)
+            return self.initial_typed_value(form, load_bytes)
+        return super(PasswordField, self).typed_value(form, load_bytes)
 
 
 class RichTextField(StringField):
@@ -493,8 +497,8 @@ class FileField(StringField):
         if self.name_field:
             yield self.name_field
 
-    def _typed_value(self, form, load_bytes=False):
-        if self.eidparam:
+    def typed_value(self, form, load_bytes=False):
+        if self.eidparam and self.role is not None:
             if form.edited_entity.has_eid():
                 if load_bytes:
                     return getattr(form.edited_entity, self.name)
@@ -504,7 +508,7 @@ class FileField(StringField):
                 # * check length(data) / data != null
                 return True
             return False
-        return super(FileField, self)._typed_value(form, load_bytes)
+        return super(FileField, self).typed_value(form, load_bytes)
 
     def render(self, form, renderer):
         wdgs = [self.get_widget(form).render(form, self, renderer)]
@@ -523,7 +527,7 @@ class FileField(StringField):
             if self.encoding_field:
                 wdgs.append(self.render_subfield(form, self.encoding_field, renderer))
             wdgs.append(u'</div>')
-        if not self.required and self._typed_value(form):
+        if not self.required and self.typed_value(form):
             # trick to be able to delete an uploaded file
             wdgs.append(u'<br/>')
             wdgs.append(tags.input(name=self.input_name(form, u'__detach'),
@@ -794,13 +798,6 @@ class RelationField(Field):
                 if field.value in searchedvalues:
                     form.root_form.remove_field(field)
             form.formvalues[self] = value
-
-    def _typed_value(self, form, load_bytes=False):
-        entity = form.edited_entity
-        # non final relation field
-        if entity.has_eid() or entity.relation_cached(self.name, self.role):
-            return [r[0] for r in entity.related(self.name, self.role)]
-        return ()
 
     def format_single_value(self, req, value):
         return value
