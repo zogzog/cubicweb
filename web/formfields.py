@@ -346,7 +346,15 @@ class Field(object):
 
     def _process_form_value(self, form):
         widget = self.get_widget(form)
-        return widget.process_field_data(form, self)
+        value = widget.process_field_data(form, self)
+        return self._ensure_correctly_typed(form, value)
+
+    def _ensure_correctly_typed(self, form, value):
+        """widget might to return date as a correctly formatted string or as
+        correctly typed objects, but process_for_value must return a typed value.
+        Override this method to type the value if necessary
+        """
+        return value
 
     def process_posted(self, form):
         for field in self.actual_fields(form):
@@ -610,14 +618,13 @@ class IntField(Field):
             self.widget.attrs.setdefault('size', 5)
             self.widget.attrs.setdefault('maxlength', 15)
 
-    def _process_form_value(self, form):
-        value = Field._process_form_value(self, form)
-        if value:
+    def _ensure_correctly_typed(self, form, value):
+        if isinstance(value, basestring):
             try:
                 return int(value)
             except ValueError:
                 raise ProcessFormError(form._cw._('an integer is expected'))
-        return None
+        return value
 
 
 class BooleanField(Field):
@@ -628,8 +635,10 @@ class BooleanField(Field):
             return super(BooleanField, self).vocabulary(form)
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
-    def _process_form_value(self, form):
-        return bool(Field._process_form_value(self, form))
+    def _ensure_correctly_typed(self, form, value):
+        if value is not None:
+            return bool(value)
+        return value
 
 
 class FloatField(IntField):
@@ -642,9 +651,8 @@ class FloatField(IntField):
     def render_example(self, req):
         return self.format_single_value(req, 1.234)
 
-    def _process_form_value(self, form):
-        value = Field._process_form_value(self, form)
-        if value:
+    def _ensure_correctly_typed(self, form, value):
+        if isinstance(value, basestring):
             try:
                 return float(value)
             except ValueError:
@@ -662,50 +670,23 @@ class DateField(StringField):
     def render_example(self, req):
         return self.format_single_value(req, datetime.now())
 
-    def _process_form_value(self, form):
-        # widget is supposed to return a date as a correctly formatted string
-        date = Field._process_form_value(self, form)
-        # but for some widgets, it might be simpler to return date objects
-        # directly, so handle that case :
-        if isinstance(date, basestring):
+    def _ensure_correctly_typed(self, form, value):
+        if isinstance(value, basestring):
             try:
-                date = form._cw.parse_datetime(date, 'Date')
+                value = form._cw.parse_datetime(value, self.etype)
             except ValueError, ex:
                 raise ProcessFormError(unicode(ex))
-        return date
+        return value
 
 
 class DateTimeField(DateField):
     format_prop = 'ui.datetime-format'
-
-    def _process_form_value(self, form):
-        # widget is supposed to return a date as a correctly formatted string
-        date = Field._process_form_value(self, form)
-        # but for some widgets, it might be simpler to return date objects
-        # directly, so handle that case :
-        if isinstance(date, basestring):
-            try:
-                date = form._cw.parse_datetime(date, 'Datetime')
-            except ValueError, ex:
-                raise ProcessFormError(unicode(ex))
-        return date
+    etype = 'Datetime'
 
 
 class TimeField(DateField):
     format_prop = 'ui.time-format'
-    widget = TextInput
-
-    def _process_form_value(self, form):
-        # widget is supposed to return a date as a correctly formatted string
-        time = Field._process_form_value(self, form)
-        # but for some widgets, it might be simpler to return time objects
-        # directly, so handle that case :
-        if isinstance(time, basestring):
-            try:
-                time = form._cw.parse_datetime(time, 'Time')
-            except ValueError, ex:
-                raise ProcessFormError(unicode(ex))
-        return time
+    etype = 'Time'
 
 
 # relation vocabulary helper functions #########################################
