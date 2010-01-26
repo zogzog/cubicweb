@@ -68,7 +68,7 @@ class DownloadView(EntityView):
 
     def set_request_content_type(self):
         """overriden to set the correct filetype and filename"""
-        entity = self.complete_entity(0)
+        entity = self.cw_rset.complete_entity(0, 0)
         encoding = entity.download_encoding()
         if encoding in BINARY_ENCODINGS:
             contenttype = 'application/%s' % encoding
@@ -80,7 +80,7 @@ class DownloadView(EntityView):
                                   encoding=encoding)
 
     def call(self):
-        self.w(self.complete_entity(0).download_data())
+        self.w(self.cw_rset.complete_entity(0, 0).download_data())
 
 
 class DownloadLinkView(EntityView):

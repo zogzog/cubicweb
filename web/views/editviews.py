@@ -66,8 +66,8 @@ class SearchForAssociationView(EntityView):
         # since the latter is mainly there to select relevant items in the combo
         # box, it doesn't give interesting result in this context
         rql, args = entity.unrelated_rql(rtype, etype, role,
-                                   ordermethod='fetch_order',
-                                   vocabconstraints=False)
+                                         ordermethod='fetch_order',
+                                         vocabconstraints=False)
         rset = self._cw.execute(rql, args, tuple(args))
         return rset, 'list', "search-associate-content", True
 
@@ -136,7 +136,6 @@ def insert_relations(req, rdefs):
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
         execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
-
 
 
 class GenericRelationsWidget(fw.FieldWidget):
@@ -347,6 +346,7 @@ class UnrelatedDivs(EntityView):
                 xml_escape(url), _('Search for'), eschema.display_name(self._cw))))
         return [o for l, o in sorted(options)]
 
+    # XXX move this out
     def _get_basket_options(self, entity, rschema, role, targettypes):
         options = []
         rtype = rschema.type

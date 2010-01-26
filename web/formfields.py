@@ -668,7 +668,9 @@ class DateField(StringField):
     etype = 'Date'
 
     def format_single_value(self, req, value):
-        return value and ustrftime(value, req.property_value(self.format_prop)) or u''
+        if value:
+            return utils.ustrftime(value, req.property_value(self.format_prop))
+        return u''
 
     def render_example(self, req):
         return self.format_single_value(req, datetime.now())

@@ -185,7 +185,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         """
         role, target = get_role(self), get_target(self)
         args = {role[0] : entity.eid, target[0] : etarget.eid}
-        url = self.user_rql_callback((rql, args))
+        url = self._cw.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
         label = u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
                                                etarget.view('incontext'))
@@ -219,8 +219,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
             return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
-        form = self.vreg['forms'].select('edition', self._cw, rset=self.cw_rset,
-                                         row=self.cw_row or 0)
+        form = self._cw.vreg['forms'].select('edition', self._cw, rset=self.cw_rset,
+                                             row=self.cw_row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
         for _, eid in field.choices(form):
             if eid is not None and eid != INTERNAL_FIELD_VALUE:

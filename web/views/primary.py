@@ -127,7 +127,7 @@ class PrimaryView(EntityView):
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
                 if rset:
-                    value = self.view(vid, rset)
+                    value = self._cw.view(vid, rset)
                 else:
                     value = None
             if self.skip_none and (value is None or value == ''):
