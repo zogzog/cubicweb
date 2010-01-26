@@ -1,6 +1,7 @@
 """custom storages for the system source"""
 from os import unlink, path as osp
 
+from cubicweb import Binary
 from cubicweb.server.hook import Operation
 
 
@@ -77,16 +78,19 @@ class BytesFileSystemStorage(Storage):
         DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
 
     def new_fs_path(self, entity, attr):
-        fpath = osp.join(self.default_directory, '%s_%s_%s' % (
-            self.default_directory, entity.eid, attr))
+        fspath = osp.join(self.default_directory, '%s_%s' % (entity.eid, attr))
         while osp.exists(fspath):
             fspath = '_' + fspath
         return fspath
 
     def current_fs_path(self, entity, attr):
-        cu = entity._cw.system_sql('SELECT cw_%s.%s WHERE cw_eid=%s' %
-                                   (entity.__regid__, attr, entity.eid))
-        return cu.fetchone()[0]
+        sysource = entity._cw.pool.source('system')
+        cu = sysource.doexec(entity._cw,
+                             'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
+                                 attr, entity.__regid__, entity.eid))
+        dbmod = sysource.dbapi_module
+        return dbmod.process_value(cu.fetchone()[0], [None, dbmod.BINARY],
+                                   binarywrap=str)
 
 
 class AddFileOp(Operation):
@@ -107,5 +111,5 @@ class UpdateFileOp(Operation):
     def precommit_event(self):
         try:
             file(self.filepath, 'w').write(self.filedata)
-        except:
-            pass
+        except Exception, ex:
+            self.exception(str(ex))
