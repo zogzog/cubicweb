@@ -112,7 +112,7 @@ class Field(object):
     order = None
     value = _MARKER
 
-    def __init__(self, name=None, label=None, widget=None, **kwargs):
+    def __init__(self, name=None, label=_MARKER, widget=None, **kwargs):
         for key, val in kwargs.items():
             if key == 'initial':
                 warn('[3.6] use value instead of initial', DeprecationWarning,
@@ -121,7 +121,9 @@ class Field(object):
             assert hasattr(self.__class__, key) and not key[0] == '_', key
             setattr(self, key, val)
         self.name = name
-        self.label = label or name
+        if label is _MARKER:
+            label = name or _MARKER
+        self.label = label
         # has to be done after other attributes initialization
         self.init_widget(widget)
         # ordering number for this field instance
@@ -148,7 +150,7 @@ class Field(object):
         """automatically set .label when name is set"""
         assert name
         self.name = name
-        if not self.label:
+        if self.label is _MARKER:
             self.label = name
 
     def is_visible(self):
