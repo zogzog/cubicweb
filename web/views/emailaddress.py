@@ -108,6 +108,13 @@ class EmailAddressMailToView(baseviews.OneLineView):
             self.w(u'</b>')
 
 
+class EmailAddressInContextView(baseviews.InContextView):
+    __select__ = implements('EmailAddress')
+
+    def cell_call(self, row, col, **kwargs):
+        self.wview('mailto', self.cw_rset, row=row, col=col, **kwargs)
+
+
 class EmailAddressTextView(baseviews.TextView):
     __select__ = implements('EmailAddress')
 
