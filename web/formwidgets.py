@@ -24,10 +24,12 @@ class FieldWidget(object):
     # automatically set id and tabindex attributes ?
     setdomid = True
     settabindex = True
+    # to ease usage as a sub-widgets (eg widget used by another widget)
+    suffix = None
     # does this widget expect a vocabulary
     vocabulary_widget = False
 
-    def __init__(self, attrs=None, setdomid=None, settabindex=None):
+    def __init__(self, attrs=None, setdomid=None, settabindex=None, suffix=None):
         if attrs is None:
             attrs = {}
         self.attrs = attrs
@@ -37,6 +39,8 @@ class FieldWidget(object):
         if settabindex is not None:
             # override class's default value
             self.settabindex = settabindex
+        if suffix is not None:
+            self.suffix = suffix
 
     def add_media(self, form):
         """adds media (CSS & JS) required by this widget"""
@@ -81,7 +85,15 @@ class FieldWidget(object):
 
         3 and 4 are handle by the .typed_value(form, field) method
         """
-        qname = field.input_name(form)
+        attrs = dict(self.attrs)
+        if self.setdomid:
+            attrs['id'] = field.dom_id(form, self.suffix)
+        if self.settabindex and not 'tabindex' in attrs:
+            attrs['tabindex'] = form._cw.next_tabindex()
+        return self.values(form, field), attrs
+
+    def values(self, form, field):
+        qname = field.input_name(form, self.suffix)
         if qname in form.form_previous_values:
             values = form.form_previous_values[qname]
         elif qname in form._cw.form:
@@ -95,16 +107,11 @@ class FieldWidget(object):
                 values = self.format_value(form, field, values)
         if not isinstance(values, (tuple, list)):
             values = (values,)
-        attrs = dict(self.attrs)
-        if self.setdomid:
-            attrs['id'] = field.dom_id(form)
-        if self.settabindex and not 'tabindex' in attrs:
-            attrs['tabindex'] = form._cw.next_tabindex()
-        return values, attrs
+        return values
 
     def process_field_data(self, form, field):
         posted = form._cw.form
-        val = posted.get(field.input_name(form))
+        val = posted.get(field.input_name(form, self.suffix))
         if isinstance(val, basestring):
             val = val.strip() or None
         return val
@@ -114,7 +121,7 @@ class FieldWidget(object):
         """return html tag name, attributes and a list of values for the field
         """
         values, attrs = self.values_and_attributes(form, field)
-        return field.input_name(form), values, attrs
+        return field.input_name(form, self.suffix), values, attrs
 
 
 class Input(FieldWidget):
@@ -131,8 +138,8 @@ class Input(FieldWidget):
         # ensure something is rendered
         if not values:
             values = (INTERNAL_FIELD_VALUE,)
-        inputs = [tags.input(name=field.input_name(form), type=self.type,
-                             value=value, **attrs)
+        inputs = [tags.input(name=field.input_name(form, self.suffix),
+                             type=self.type, value=value, **attrs)
                   for value in values]
         return u'\n'.join(inputs)
 
@@ -229,7 +236,8 @@ class TextArea(FieldWidget):
             linecount += len(line) / 80
         attrs.setdefault('cols', 80)
         attrs.setdefault('rows', min(15, linecount + 2))
-        return tags.textarea(value, name=field.input_name(form), **attrs)
+        return tags.textarea(value, name=field.input_name(form, self.suffix),
+                             **attrs)
 
 
 class FCKEditor(TextArea):
@@ -277,8 +285,8 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, **oattrs))
         if optgroup_opened:
             options.append(u'</optgroup>')
-        return tags.select(name=field.input_name(form), multiple=self._multiple,
-                           options=options, **attrs)
+        return tags.select(name=field.input_name(form, self.suffix),
+                           multiple=self._multiple, options=options, **attrs)
 
 
 class CheckBox(Input):
@@ -305,8 +313,8 @@ class CheckBox(Input):
                 iattrs.setdefault('id', domid)
             if value in curvalues:
                 iattrs['checked'] = u'checked'
-            tag = tags.input(name=field.input_name(form), type=self.type,
-                             value=value, **iattrs)
+            tag = tags.input(name=field.input_name(form, self.suffix),
+                             type=self.type, value=value, **iattrs)
             options.append(tag + label)
         return sep.join(options)
 
