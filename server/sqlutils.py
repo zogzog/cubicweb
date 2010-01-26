@@ -33,12 +33,12 @@ from cubicweb.server.utils import crypt_password
 lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
-def bw_run_command(cmd):
+def _run_command(cmd):
     """backup/restore command are string w/ lgc < 0.47, lists with earlier versions
     """
     if isinstance(cmd, basestring):
-        print cmd
-        return os.system(cmd)
+        print '->', cmd
+        return subprocess.call(cmd, shell=True)
     print ' '.join(cmd)
     return subprocess.call(cmd)
 
@@ -183,8 +183,8 @@ class SQLAdapterMixIn(object):
         for cmd in self.dbhelper.backup_commands(self.dbname, self.dbhost,
                                                  self.dbuser, backupfile,
                                                  keepownership=False):
-            if bw_run_command(cmd):
-                if not confirm('-> Failed. Continue anyway?', default='n'):
+            if _run_command(cmd):
+                if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
@@ -193,8 +193,8 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            if bw_run_command(cmd):
-                if not confirm('Failed. Continue anyway?', default='n'):
+            if _run_command(cmd):
+                if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
@@ -237,7 +237,6 @@ class SQLAdapterMixIn(object):
                 result.append(process_value(value, descr[col], encoding, binary))
             results[i] = result
         return results
-
 
     def preprocess_entity(self, entity):
         """return a dictionary to use as extra argument to cursor.execute
