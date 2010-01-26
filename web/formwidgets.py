@@ -49,11 +49,13 @@ class FieldWidget(object):
         if self.needs_css:
             form._cw.add_css(self.needs_css)
 
-    def render(self, form, field, renderer):
-        """render the widget for the given `field` of `form`.
-        To override in concrete class
-        """
-        raise NotImplementedError
+
+    def render(self, form, field, renderer=None):
+        self.add_media(form)
+        return self._render(form, field, renderer)
+
+    def _render(self, form, field, renderer):
+        raise NotImplementedError()
 
     def typed_value(self, form, field):
         """return field's *typed* value specified in:
@@ -128,12 +130,11 @@ class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
     type = None
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
 
         Generate one <input> tag for each field's value
         """
-        self.add_media(form)
         values, attrs = self.values_and_attributes(form, field)
         # ensure something is rendered
         if not values:
@@ -157,8 +158,8 @@ class PasswordInput(Input):
     """
     type = 'password'
 
-    def render(self, form, field, renderer):
-        self.add_media(form)
+    def _render(self, form, field, renderer):
+        assert self.suffix is None, 'suffix not supported'
         values, attrs = self.values_and_attributes(form, field)
         assert len(values) == 1
         id = attrs.pop('id')
@@ -221,7 +222,7 @@ class ButtonInput(Input):
 class TextArea(FieldWidget):
     """<textarea>"""
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         values, attrs = self.values_and_attributes(form, field)
         attrs.setdefault('onkeyup', 'autogrow(this)')
         if not values:
@@ -246,9 +247,9 @@ class FCKEditor(TextArea):
         super(FCKEditor, self).__init__(*args, **kwargs)
         self.attrs['cubicweb:type'] = 'wysiwyg'
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         form._cw.fckeditor_config()
-        return super(FCKEditor, self).render(form, field, renderer)
+        return super(FCKEditor, self)._render(form, field, renderer)
 
 
 class Select(FieldWidget):
@@ -436,8 +437,7 @@ class AjaxWidget(FieldWidget):
         if inputid is not None:
             self.attrs['cubicweb:inputid'] = inputid
 
-    def render(self, form, field, renderer):
-        self.add_media(form)
+    def _render(self, form, field, renderer):
         attrs = self.values_and_attributes(form, field)[-1]
         return tags.div(**attrs)
 
@@ -608,12 +608,12 @@ class EditableURLWidget(TextInput):
     """
     type = 'text'
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
 
         Generate one <input> tag for each field's value
         """
-        self.add_media(form)
+        assert self.suffix is None, 'not supported'
         req = form._cw
         pathqname = field.input_name(form, 'path')
         fqsqname = field.input_name(form, 'fqs') # formatted query string
