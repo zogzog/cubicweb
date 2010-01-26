@@ -316,9 +316,12 @@ class Entity(AppObject, dict):
                 path += '/eid'
             elif needcheck:
                 # make sure url is not ambiguous
-                rql = 'Any COUNT(X) WHERE X is %s, X %s %%(value)s' % (
-                    etype, mainattr)
-                nbresults = self._cw.execute(rql, {'value' : value})[0][0]
+                try:
+                    nbresults = self.__unique
+                except AttributeError:
+                    rql = 'Any COUNT(X) WHERE X is %s, X %s %%(value)s' % (
+                        etype, mainattr)
+                    nbresults = self.__unique = self._cw.execute(rql, {'value' : value})[0][0]
                 if nbresults != 1: # ambiguity?
                     mainattr = 'eid'
                     path += '/eid'
