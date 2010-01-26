@@ -147,10 +147,7 @@ class GenericRelationsWidget(fw.FieldWidget):
         req = form._cw
         _ = req._
         __ = _
-        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
         eid = form.edited_entity.eid
-        w(u'<fieldset class="subentity">')
-        w(u'<legend class="iformTitle">%s</legend>' % label)
         w(u'<table id="relatedEntities">')
         for rschema, role, related in field.relations_table(form):
             # already linked entities
@@ -198,7 +195,6 @@ class GenericRelationsWidget(fw.FieldWidget):
         w(u'<td id="unrelatedDivs_%s"></td>' % eid)
         w(u'</tr>')
         w(u'</table>')
-        w(u'</fieldset>')
         return '\n'.join(stream)
 
 
@@ -210,7 +206,6 @@ class GenericRelationsField(ff.Field):
         kwargs['eidparam'] = True
         super(GenericRelationsField, self).__init__(name, **kwargs)
         self.relations = relations
-        self.label = None
 
     def process_posted(self, form):
         todelete = get_pending_deletes(form._cw)
