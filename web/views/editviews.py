@@ -331,7 +331,7 @@ class UnrelatedDivs(EntityView):
                 if eview: # skip blank value
                     options.append('<option class="separator">-- %s --</option>'
                                    % xml_escape(eview))
-            else:
+            elif reid != ff.INTERNAL_FIELD_VALUE:
                 optionid = relation_id(entity.eid, rtype, role, reid)
                 if optionid not in pending_inserts:
                     # prefix option's id with letters to make valid XHTML wise
