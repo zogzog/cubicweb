@@ -46,18 +46,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # which relations should be edited
     display_fields = None
 
-    def _generic_relations_field(self):
-        try:
-            srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
-            warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
-                 'override editable_relations instead' % classid(form),
-                 DeprecationWarning)
-        except AttributeError:
-            srels_by_cat = self.editable_relations()
-        if not srels_by_cat:
-            raise form.FieldNotFound('_cw_generic_field')
-        return editviews.GenericRelationsField(self.editable_relations())
-
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
         """return field with the given name and role. If field is not explicitly
