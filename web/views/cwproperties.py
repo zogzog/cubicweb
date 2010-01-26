@@ -354,9 +354,6 @@ class PropertyValueField(StringField):
                 self.choices = field.vocabulary(form)
         self.widget = wdg
 
-uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
-uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
-
 
 class CWPropertiesFormRenderer(formrenderers.FormRenderer):
     """specific renderer for properties"""
@@ -385,3 +382,11 @@ class CWPropertiesFormRenderer(formrenderers.FormRenderer):
         for button in form.form_buttons:
             w(u'%s\n' % button.render(form))
         w(u'</div>')
+
+
+_afs = uicfg.autoform_section
+_afs.tag_subject_of(('*', 'for_user', '*'), 'main', 'hidden')
+_afs.tag_object_of(('*', 'for_user', '*'), 'main', 'hidden')
+_aff = uicfg.autoform_field
+_aff.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
+_aff.tag_attribute(('CWProperty', 'value'), PropertyValueField)
