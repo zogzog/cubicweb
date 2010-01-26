@@ -230,8 +230,8 @@ function selectForAssociation(tripletIdsString, originalEid) {
 }
 
 
-function updateInlinedEntitiesCounters(rtype) {
-    jQuery('#inline' + rtype + 'slot span.icounter').each(function (i) {
+function updateInlinedEntitiesCounters(rtype, role) {
+    jQuery('div.inline-' + rtype + '-' + role + '-slot span.icounter').each(function (i) {
 	this.innerHTML = i+1;
     });
 }
@@ -252,7 +252,7 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
         var form = jQuery(dom);
         form.css('display', 'none');
         form.insertBefore(insertBefore).slideDown('fast');
-        updateInlinedEntitiesCounters(rtype);
+        updateInlinedEntitiesCounters(rtype, role);
         reorderTabindex();
         jQuery(CubicWeb).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
@@ -273,10 +273,10 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
 /*
  * removes the part of the form used to edit an inlined entity
  */
-function removeInlineForm(peid, rtype, eid, showaddnewlink) {
+function removeInlineForm(peid, rtype, role, eid, showaddnewlink) {
     jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
 	$(this).remove();
-	updateInlinedEntitiesCounters(rtype);
+	updateInlinedEntitiesCounters(rtype, role);
     });
     if (showaddnewlink) {
 	toggleVisibility(showaddnewlink);

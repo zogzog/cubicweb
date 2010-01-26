@@ -21,10 +21,9 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
 from cubicweb.view import EntityView
 from cubicweb import tags
-from cubicweb.web import uicfg, stdmsgs, eid_param
+from cubicweb.web import uicfg, stdmsgs, eid_param, \
+     formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
-from cubicweb.web.formfields import guess_field
-from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.views import forms
 
 _pvdc = uicfg.primaryview_display_ctrl
@@ -36,8 +35,8 @@ class DeleteConfForm(forms.CompositeForm):
 
     domid = 'deleteconf'
     copy_nav_params = True
-    form_buttons = [Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
-                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+    form_buttons = [fw.Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
+                    fw.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     @property
     def action(self):
         return self._cw.build_url('edit')
@@ -230,8 +229,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select(
             formid, self._cw, entity=entity, domid='%s-form' % divid,
             cssstyle='display: none', onsubmit=onsubmit, action='#',
-            form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
-                                                 onclick=cancelclick)],
+            form_buttons=[fw.SubmitButton(),
+                          fw.Button(stdmsgs.BUTTON_CANCEL, onclick=cancelclick)],
             **formargs)
         form.event_args = event_args
         return form
@@ -410,8 +409,8 @@ class TableEditForm(forms.CompositeForm):
     __regid__ = 'muledit'
     domid = 'entityForm'
     onsubmit = "return validateForm('%s', null);" % domid
-    form_buttons = [SubmitButton(_('validate modifications on selected items')),
-                    ResetButton(_('revert changes'))]
+    form_buttons = [fw.SubmitButton(_('validate modifications on selected items')),
+                    fw.ResetButton(_('revert changes'))]
 
     def __init__(self, req, rset, **kwargs):
         kwargs.setdefault('__redirectrql', rset.printable_rql())
@@ -450,6 +449,53 @@ class TableEditFormView(FormViewMixIn, EntityView):
         self.w(form.render(formvid='edition'))
 
 
+# inlined form handling ########################################################
+
+class InlinedFormField(ff.Field):
+    def __init__(self, view=None, **kwargs):
+        if view.role == 'object':
+            fieldset = u'%s_object%s' % view.rtype
+        else:
+            fieldset = view.rtype
+        #kwargs.setdefault('fieldset', fieldset)
+        kwargs.setdefault('label', None)
+        super(InlinedFormField, self).__init__(name=view.rtype, role=view.role,
+                                               eidparam=True, **kwargs)
+        self.view = view
+
+    def render(self, form, renderer):
+        """render this field, which is part of form, using the given form
+        renderer
+        """
+        view = self.view
+        i18nctx = 'inlined:%s.%s.%s' % (form.edited_entity.e_schema,
+                                        view.rtype, view.role)
+        return u'<div class="inline-%s-%s-slot">%s</div>' % (
+            view.rtype, view.role,
+            view.render(i18nctx=i18nctx, row=view.cw_row, col=view.cw_col))
+
+    def form_init(self, form):
+        """method called before by build_context to trigger potential field
+        initialization requiring the form instance
+        """
+        if self.view.form:
+            self.view.form.build_context(form.formvalues)
+
+    @property
+    def needs_multipart(self):
+        if self.view.form:
+            # take a look at inlined forms to check (recursively) if they need
+            # multipart handling.
+            return self.view.form.needs_multipart
+        return False
+
+    def has_been_modified(self, form):
+        return False
+
+    def process_posted(self, form):
+        pass # handled by the subform
+
+
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     """
     :attr peid: the parent entity's eid hosting the inline form
@@ -460,7 +506,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     __regid__ = 'inline-edition'
     __select__ = non_final_entity() & match_kwargs('peid', 'rtype')
 
-    _select_attrs = ('peid', 'rtype', 'role', 'pform')
+    _select_attrs = ('peid', 'rtype', 'role', 'pform', 'etype')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"
 
     def __init__(self, *args, **kwargs):
@@ -548,7 +594,6 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     __regid__ = 'inline-creation'
     __select__ = (match_kwargs('peid', 'rtype')
                   & specified_etype_implements('Any'))
-    _select_attrs = InlineEntityEditionFormView._select_attrs + ('etype',)
 
     @property
     def removejs(self):
@@ -559,9 +604,11 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         # we have to make this link appears back. This is done by giving add new link
         # id to removeInlineForm.
         if card not in '?1':
-            return "removeInlineForm('%s', '%s', '%s')"
-        divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
-        return "removeInlineForm('%%s', '%%s', '%%s', '%s')" % divid
+            return "removeInlineForm('%%s', '%%s', '%s', '%%s')" % self.role
+        divid = "addNew%s%s%s:%s" % (
+            self.etype, self.rtype, self.role, self.peid)
+        return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
+            self.role, divid)
 
     @cached
     def _entity(self):

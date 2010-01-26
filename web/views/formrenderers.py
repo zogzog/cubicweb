@@ -373,10 +373,6 @@ class EntityFormRenderer(BaseFormRenderer):
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
-    def render_fields(self, w, form, values):
-        super(EntityFormRenderer, self).render_fields(w, form, values)
-        self.inline_entities_form(w, form)
-
     def _render_fields(self, fields, w, form):
         if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
             super(EntityFormRenderer, self)._render_fields(fields, w, form)
@@ -395,29 +391,6 @@ class EntityFormRenderer(BaseFormRenderer):
  </table>""" % tuple(button.render(form) for button in form.form_buttons))
         else:
             super(EntityFormRenderer, self).render_buttons(w, form)
-    # NOTE: should_* and display_* method extracted and moved to the form to
-    # ease overriding
-
-    def inline_entities_form(self, w, form):
-        """create a form to edit entity's inlined relations"""
-        if not hasattr(form, 'inlined_form_views'):
-            return
-        keysinorder = []
-        formviews = form.inlined_form_views()
-        for formview in formviews:
-            if not (formview.rtype, formview.role) in keysinorder:
-                keysinorder.append( (formview.rtype, formview.role) )
-        for key in keysinorder:
-            self.inline_relation_form(w, form, [fv for fv in formviews
-                                                if (fv.rtype, fv.role) == key])
-
-    def inline_relation_form(self, w, form, formviews):
-        i18nctx = 'inlined:%s.%s.%s' % (form.edited_entity.e_schema,
-                                        formviews[0].rtype, formviews[0].role)
-        w(u'<div id="inline%sslot">' % formviews[0].rtype)
-        for formview in formviews:
-            w(formview.render(i18nctx=i18nctx, row=formview.cw_row, col=formview.cw_col))
-        w(u'</div>')
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
@@ -460,6 +433,5 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
         if fields:
             self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
-        self.inline_entities_form(w, form)
         w(u'</fieldset>')
 
