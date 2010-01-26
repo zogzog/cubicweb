@@ -337,6 +337,13 @@ class Field(object):
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
+        try:
+            return form.formvalues[self]
+        except KeyError:
+            value = form.formvalues[self] = self._process_form_value(form)
+            return value
+
+    def _process_form_value(self, form):
         widget = self.get_widget(form)
         return widget.process_field_data(form, self)
 
@@ -533,7 +540,7 @@ class FileField(StringField):
                 + renderer.render_help(form, field)
                 + u'<br/>')
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         posted = form._cw.form
         if self.input_name(form, u'__detach') in posted:
             # drop current file value on explictily asked to detach
@@ -585,12 +592,12 @@ class EditableFileField(FileField):
                     # XXX restore form context?
         return '\n'.join(wdgs)
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         value = form._cw.form.get(self.input_name(form))
         if isinstance(value, unicode):
             # file modified using a text widget
             return Binary(value.encode(self.encoding(form)))
-        return super(EditableFileField, self).process_form_value(form)
+        return super(EditableFileField, self)._process_form_value(form)
 
 
 class IntField(Field):
@@ -602,8 +609,8 @@ class IntField(Field):
             self.widget.attrs.setdefault('size', 5)
             self.widget.attrs.setdefault('maxlength', 15)
 
-    def process_form_value(self, form):
-        value = Field.process_form_value(self, form)
+    def _process_form_value(self, form):
+        value = Field._process_form_value(self, form)
         if value:
             try:
                 return int(value)
@@ -620,8 +627,8 @@ class BooleanField(Field):
             return super(BooleanField, self).vocabulary(form)
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
-    def process_form_value(self, form):
-        return bool(Field.process_form_value(self, form))
+    def _process_form_value(self, form):
+        return bool(Field._process_form_value(self, form))
 
 
 class FloatField(IntField):
@@ -634,8 +641,8 @@ class FloatField(IntField):
     def render_example(self, req):
         return self.format_single_value(req, 1.234)
 
-    def process_form_value(self, form):
-        value = Field.process_form_value(self, form)
+    def _process_form_value(self, form):
+        value = Field._process_form_value(self, form)
         if value:
             try:
                 return float(value)
@@ -654,9 +661,9 @@ class DateField(StringField):
     def render_example(self, req):
         return self.format_single_value(req, datetime.now())
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         # widget is supposed to return a date as a correctly formatted string
-        date = Field.process_form_value(self, form)
+        date = Field._process_form_value(self, form)
         # but for some widgets, it might be simpler to return date objects
         # directly, so handle that case :
         if isinstance(date, basestring):
@@ -670,9 +677,9 @@ class DateField(StringField):
 class DateTimeField(DateField):
     format_prop = 'ui.datetime-format'
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         # widget is supposed to return a date as a correctly formatted string
-        date = Field.process_form_value(self, form)
+        date = Field._process_form_value(self, form)
         # but for some widgets, it might be simpler to return date objects
         # directly, so handle that case :
         if isinstance(date, basestring):
@@ -687,9 +694,9 @@ class TimeField(DateField):
     format_prop = 'ui.time-format'
     widget = TextInput
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         # widget is supposed to return a date as a correctly formatted string
-        time = Field.process_form_value(self, form)
+        time = Field._process_form_value(self, form)
         # but for some widgets, it might be simpler to return time objects
         # directly, so handle that case :
         if isinstance(time, basestring):
@@ -801,7 +808,7 @@ class RelationField(Field):
     def format_single_value(self, req, value):
         return value
 
-    def process_form_value(self, form):
+    def _process_form_value(self, form):
         """process posted form and return correctly typed value"""
         widget = self.get_widget(form)
         values = widget.process_field_data(form, self)

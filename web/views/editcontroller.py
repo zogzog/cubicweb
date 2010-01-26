@@ -145,6 +145,7 @@ class EditController(ViewController):
         formid = self._cw.form.get('__form_id', 'edition')
         form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
         eid = form.actual_eid(entity.eid)
+        form.formvalues = {} # init fields value cache
         try:
             editedfields = formparams['_cw_edited_fields']
         except KeyError:
