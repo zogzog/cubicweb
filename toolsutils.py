@@ -250,7 +250,7 @@ class Command(BaseCommand):
 def main_run(args, doc):
     """command line tool"""
     try:
-        base_main_run(args, doc)
+        base_main_run(args, doc, copyright=None)
     except ConfigurationError, err:
         print 'ERROR: ', err
         sys.exit(1)

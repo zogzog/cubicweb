@@ -1,7 +1,7 @@
 """%%prog %s [options] %s
 
-CubicWeb main instances controller.
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+The CubicWeb swiss-knife.
+
 %s"""
 
 import sys
