@@ -13,7 +13,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb import tags, uilib
+from cubicweb import tags, uilib, utils
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 class FieldWidget(object):
@@ -416,6 +416,103 @@ class DateTimePicker(TextInput):
                    form._cw.external_resource('CALENDAR_ICON'),
                    form._cw._('calendar'), helperid) )
 
+
+class JQueryDatePicker(FieldWidget):
+    """use jquery.ui.datepicker to define a date time picker"""
+    needs_js = ('jquery.ui.js', )
+    needs_css = ('jquery.ui.css',)
+
+    def __init__(self, datestr=None, **kwargs):
+        super(JQueryDatePicker, self).__init__(**kwargs)
+        self.datestr = datestr
+
+    def _render(self, form, field, renderer):
+        req = form._cw
+        domid = field.dom_id(form, self.suffix)
+        # XXX find a way to understand every format
+        fmt = req.property_value('ui.date-format')
+        fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
+        req.add_onload(u'jqNode("%s").datepicker('
+                       '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
+                       ' showOn: "button", buttonImageOnly: true})' % (
+                           domid, req.external_resource('CALENDAR_ICON'), fmt))
+        if self.datestr is None:
+            value = self.values(form, field)[0]
+        else:
+            value = self.datestr
+        return tags.input(id=domid, name=domid, value=value,
+                          type='text', size='10')
+
+
+class JQueryTimePicker(FieldWidget):
+    """use jquery.timePicker.js to define a js time picker"""
+    needs_js = ('jquery.timePicker.js',)
+    needs_css = ('jquery.timepicker.css',)
+
+    def __init__(self, timestr=None, timesteps=30, **kwargs):
+        super(JQueryTimePicker, self).__init__(**kwargs)
+        self.timestr = timestr
+        self.timesteps = timesteps
+
+    def _render(self, form, field, renderer):
+        req = form._cw
+        domid = field.dom_id(form, self.suffix)
+        req.add_onload(u'jqNode("%s").timePicker({selectedTime: "%s", step: %s})' % (
+            domid, self.timestr, self.timesteps))
+        if self.timestr is None:
+            value = self.values(form, field)[0]
+        else:
+            value = self.timestr
+        return tags.input(id=domid, name=domid, value=value,
+                          type='text', size='5')
+
+
+class JQueryDateTimePicker(FieldWidget):
+    def __init__(self, initialtime=None, timesteps=15, **kwargs):
+        super(JQueryDateTimePicker, self).__init__(**kwargs)
+        self.initialtime = initialtime
+        self.timesteps = timesteps
+
+    def _render(self, form, field, renderer):
+        """render the widget for the given `field` of `form`.
+
+        Generate one <input> tag for each field's value
+        """
+        req = form._cw
+        dateqname = field.input_name(form, 'date')
+        timeqname = field.input_name(form, 'time')
+        if dateqname in form.form_previous_values:
+            datestr = form.form_previous_values[dateqname]
+            timestr = form.form_previous_values[timeqname]
+        else:
+            datestr = timestr = u''
+            if field.name in req.form:
+                value = req.parse_datetime(req.form[field.name])
+            else:
+                value = self.typed_value(form, field)
+            if value:
+                datestr = req.format_date(value)
+                timestr = req.format_time(value)
+            elif self.initialtime:
+                timestr = req.format_time(self.initialtime)
+        datepicker = JQueryDatePicker(datestr=datestr, suffix='date')
+        timepicker = JQueryTimePicker(timestr=timestr, timesteps=self.timesteps,
+                                      suffix='time')
+        return u'<div id="%s">%s%s</div>' % (field.dom_id(form),
+                                            datepicker.render(form, field),
+                                            timepicker.render(form, field))
+
+    def process_field_data(self, form, field):
+        req = form._cw
+        datestr = req.form.get(field.input_name(form, 'date')).strip() or None
+        timestr = req.form.get(field.input_name(form, 'time')).strip() or None
+        if datestr is None:
+            return None
+        date = utils.todatetime(req.parse_datetime(datestr, 'Date'))
+        if timestr is None:
+            return date
+        time = req.parse_datetime(timestr, 'Time')
+        return date.replace(hour=time.hour, minute=time.minute, second=time.second)
 
 
 # ajax widgets ################################################################
