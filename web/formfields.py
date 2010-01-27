@@ -336,7 +336,7 @@ class Field(object):
                 return True
             except UnmodifiedField:
                 return False
-            if form.edited_entity.has_eid() and previous_value == new_value:
+            if previous_value == new_value:
                 return False # not modified
             return True
         return False
@@ -751,6 +751,7 @@ def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
 
 
 class RelationField(Field):
+    """the relation field to edit non final relations of an entity"""
 
     @staticmethod
     def fromcardinality(card, **kwargs):

@@ -50,7 +50,7 @@ class TreeMixIn(object):
                            entities=entities)
         if entities:
             return [e for e in res if e.e_schema == self.e_schema]
-        return res.filtered_rset(lambda x: x.e_schema == self.e_schema, self.cw_col)
+        return res.filtered_rset(lambda x: x.e_schema is self.e_schema, self.cw_col)
 
     def iterchildren(self, _done=None):
         if _done is None:
