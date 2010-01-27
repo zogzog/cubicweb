@@ -160,9 +160,9 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                 continue
             for tschema in targetschemas:
                 fsections = afs.etype_get(eschema, rschema, role, tschema)
-                if 'inlined_attributes' in fsections and \
+                if 'main_inlined' in fsections and \
                        (libconfig is None or not
-                        'inlined_attributes' in libafs.etype_get(
+                        'main_inlined' in libafs.etype_get(
                             eschema, rschema, role, tschema)):
                     add_msg(w, 'add a %s' % tschema,
                             'inlined:%s.%s.%s' % (etype, rschema, role))
