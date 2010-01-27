@@ -359,7 +359,7 @@ class Field(object):
         correctly typed objects, but process_for_value must return a typed value.
         Override this method to type the value if necessary
         """
-        return value
+        return value or None
 
     def process_posted(self, form):
         for field in self.actual_fields(form):

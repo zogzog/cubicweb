@@ -115,7 +115,7 @@ class FieldWidget(object):
         posted = form._cw.form
         val = posted.get(field.input_name(form, self.suffix))
         if isinstance(val, basestring):
-            val = val.strip() or None
+            val = val.strip()
         return val
 
     @deprecated('[3.6] use values_and_attributes')
