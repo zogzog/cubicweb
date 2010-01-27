@@ -264,12 +264,15 @@ class Field(object):
                     vocab = self.choices(form=form, field=self)
             except TypeError:
                 warn('[3.6]  %s: choices should now take '
-                     'the form and field as named arguments', self)
+                     'the form and field as named arguments' % self,
+                     DeprecationWarning)
                 try:
-                    vocab = self.choices(req=form._cw)
+                    vocab = self.choices(form=form)
                 except TypeError:
                     warn('[3.3]  %s: choices should now take '
-                         'the form and field as named arguments', self)
+                         'the form and field as named arguments' % self,
+                         DeprecationWarning)
+                    vocab = self.choices(req=form._cw)
         else:
             vocab = self.choices
         if vocab and not isinstance(vocab[0], (list, tuple)):
