@@ -339,7 +339,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
 
     def get(self, *key):
         # overriden to avoid recomputing done in parent classes
-        return self._tagdefs[key]
+        return self._tagdefs.get(key, ())
 
     def relations_by_section(self, entity, formtype, section,
                              permission=None, strict=False):
