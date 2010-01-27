@@ -35,7 +35,7 @@ class SendEmailAction(action.Action):
                                   **params)
 
 
-def recipient_vocabulary(form):
+def recipient_vocabulary(form, field):
     vocab = [(entity.get_email(), entity.eid) for entity in form.cw_rset.entities()]
     return [(label, value) for label, value in vocab if label]
 
