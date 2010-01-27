@@ -251,7 +251,7 @@ class Field(object):
         widget = self.get_widget(form)
         return widget.render(form, self, renderer)
 
-    def vocabulary(self, form):
+    def vocabulary(self, form, **kwargs):
         """return vocabulary for this field. This method will be called by
         widgets which requires a vocabulary.
         """
@@ -259,20 +259,20 @@ class Field(object):
         if callable(self.choices):
             try:
                 if getattr(self.choices, 'im_self', None) is self:
-                    vocab = self.choices(form=form)
+                    vocab = self.choices(form=form, **kwargs)
                 else:
-                    vocab = self.choices(form=form, field=self)
+                    vocab = self.choices(form=form, field=self, **kwargs)
             except TypeError:
                 warn('[3.6]  %s: choices should now take '
                      'the form and field as named arguments' % self,
                      DeprecationWarning)
                 try:
-                    vocab = self.choices(form=form)
+                    vocab = self.choices(form=form, **kwargs)
                 except TypeError:
                     warn('[3.3]  %s: choices should now take '
                          'the form and field as named arguments' % self,
                          DeprecationWarning)
-                    vocab = self.choices(req=form._cw)
+                    vocab = self.choices(req=form._cw, **kwargs)
         else:
             vocab = self.choices
         if vocab and not isinstance(vocab[0], (list, tuple)):
@@ -760,13 +760,24 @@ class RelationField(Field):
         return RelationField(**kwargs)
 
     def choices(self, form, limit=None):
+        """Take care, choices function for relation field instance should take
+        an extra 'limit' argument, with default to None.
+
+        This argument is used by the 'unrelateddivs' view (see in autoform) and
+        when it's specified (eg not None), vocabulary returned should:
+        * not include already related entities
+        * have a max size of `limit` entities
+        """
         entity = form.edited_entity
         # first see if its specified by __linkto form parameters
-        linkedto = relvoc_linkedto(entity, self.name, self.role)
-        if linkedto:
-            return linkedto
+        if limit is None:
+            linkedto = relvoc_linkedto(entity, self.name, self.role)
+            if linkedto:
+                return linkedto
+            vocab = relvoc_init(entity, self.name, self.role, self.required)
+        else:
+            vocab = []
         # it isn't, check if the entity provides a method to get correct values
-        vocab = relvoc_init(entity, self.name, self.role, self.required)
         method = '%s_%s_vocabulary' % (self.role, self.name)
         try:
             vocab += getattr(form, method)(self.name, limit)
