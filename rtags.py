@@ -104,6 +104,7 @@ class RelationTags(object):
         self.tag_relation(key, *args, **kwargs)
 
     def tag_relation(self, key, tag):
+        assert len(key) == 4, 'bad key: %s' % list(key)
         if self._allowed_values is not None:
             assert tag in self._allowed_values, \
                    '%r is not an allowed tag (should be in %s)' % (
