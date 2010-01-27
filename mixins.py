@@ -67,14 +67,11 @@ class TreeMixIn(object):
             _done = set()
         if self.eid in _done:
             return
-        yield self
         _done.add(self.eid)
-        for child in self.iterchildren(_done):
-            try:
-                for entity in child.prefixiter(_done):
-                    yield entity
-            except AttributeError:
-                pass
+        yield self
+        for child in self.same_type_children():
+            for entity in child.prefixiter(_done):
+                yield entity
 
     @cached
     def path(self):
