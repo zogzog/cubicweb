@@ -15,7 +15,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
 from cubicweb.entities.authobjs import CWUser
-from cubicweb.web.views.editviews import get_pending_inserts, get_pending_deletes
+from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 u = unicode
 
 def req_form(user):
@@ -379,7 +379,7 @@ class EditControllerTC(CubicWebTC):
             '__type:'+cwetypeeid:  'CWEType',
             '_cw_edited_fields:'+cwetypeeid: 'name-subject,final-subject,description-subject,read_permission-subject',
             'name-subject:'+cwetypeeid:     u'CWEType',
-            #'final-subject:'+cwetypeeid:    False,
+            'final-subject:'+cwetypeeid:    '',
             'description-subject:'+cwetypeeid:     u'users group',
             'read_permission-subject:'+cwetypeeid:  groups,
             }

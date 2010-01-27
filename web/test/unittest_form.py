@@ -15,9 +15,9 @@ from logilab.common.compat import any
 from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
-                                     PasswordField, DateTimeField, DateTimePicker,
+                                     PasswordField, DateTimeField,
                                      FileField, EditableFileField)
-from cubicweb.web.formwidgets import PasswordInput, Input
+from cubicweb.web.formwidgets import PasswordInput, Input, DateTimePicker
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -67,10 +67,10 @@ class EntityFieldsFormTC(CubicWebTC):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         e.eid = 'A'
         form = EntityFieldsForm(self.request(login=u'toto'), None, entity=e)
-        field = StringField(name='login', eidparam=True)
+        field = StringField(name='login', role='subject', eidparam=True)
         form.append_field(field)
         form.build_context({})
-        self.assertEquals(field.display_value(form), 'toto')
+        self.assertEquals(field.widget.values(form, field), (u'toto',))
 
 
     def test_linkto_field_duplication(self):
@@ -130,7 +130,8 @@ class EntityFieldsFormTC(CubicWebTC):
     def _test_richtextfield(self, expected):
         class RTFForm(EntityFieldsForm):
             description = RichTextField(eidparam=True, role='subject')
-        state = self.execute('State X WHERE X name "activated", X state_of WF, WF workflow_of ET, ET name "CWUser"').get_entity(0, 0)
+        state = self.vreg['etypes'].etype_class('State')(self.req)
+        state.eid = 'S'
         form = RTFForm(self.req, redirect_path='perdu.com', entity=state)
         # make it think it can use fck editor anyway
         form.field_by_name('description', 'subject').format = lambda x: 'text/html'

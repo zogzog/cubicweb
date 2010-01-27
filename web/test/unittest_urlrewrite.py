@@ -39,7 +39,7 @@ class UrlRewriteTC(CubicWebTC):
             ('/notfound', dict(vid='404')),
             ('/error', dict(vid='error')),
             ('/sparql', dict(vid='sparql')),
-            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'eschema'}),
+            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'primary'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
             ('/doc/?$', dict(fid='main', vid='wdoc')),
