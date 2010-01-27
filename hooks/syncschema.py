@@ -20,7 +20,7 @@ from logilab.common.decorators import clear_cache
 
 from cubicweb import ValidationError, RepositoryError
 from cubicweb.selectors import implements
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS, display_name
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
 
