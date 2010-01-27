@@ -16,7 +16,6 @@ from simplejson import dumps
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
-from cubicweb import neg_role
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
 from cubicweb.view import EntityView
@@ -81,204 +80,6 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
                                       href=entity.absolute_url()))
         w(u'</ul>\n')
         w(form.render())
-
-
-class ClickAndEditFormView(FormViewMixIn, EntityView):
-    """form used to permit ajax edition of a relation or attribute of an entity
-    in a view, if logged user have the permission to edit it.
-
-    (double-click on the field to see an appropriate edition widget).
-    """
-    __regid__ = 'doreledit'
-    __select__ = non_final_entity() & match_kwargs('rtype')
-    # FIXME editableField class could be toggleable from userprefs
-
-    _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
-    _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
-                 "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
-    _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
-    _defaultlandingzone = (u'<img title="%(msg)s" src="data/pen_icon.png" '
-                           'alt="%(msg)s"/>')
-    _landingzonemsg = _('click to edit this field')
-    # default relation vids according to cardinality
-    _one_rvid = 'incontext'
-    _many_rvid = 'csv'
-
-
-    def cell_call(self, row, col, rtype=None, role='subject',
-                  reload=False,      # controls reloading the whole page after change
-                  rvid=None,         # vid to be applied to other side of rtype (non final relations only)
-                  default=None,      # default value
-                  landing_zone=None  # prepend value with a separate html element to click onto
-                                     # (esp. needed when values are links)
-                  ):
-        """display field to edit entity's `rtype` relation on click"""
-        assert rtype
-        assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
-        self._cw.add_js('cubicweb.edition.js')
-        self._cw.add_css('cubicweb.form.css')
-        if default is None:
-            default = xml_escape(self._cw._('<no value>'))
-        schema = self._cw.vreg.schema
-        entity = self.cw_rset.get_entity(row, col)
-        rschema = schema.rschema(rtype)
-        lzone = self._build_landing_zone(landing_zone)
-        # compute value, checking perms, build form
-        if rschema.final:
-            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone)
-            if not self.should_edit_attribute(entity, rschema, role, form):
-                self.w(entity.printable_value(rtype))
-                return
-            value = entity.printable_value(rtype) or default
-        else:
-            rvid = self._compute_best_vid(entity.e_schema, rschema, role)
-            rset = entity.related(rtype, role)
-            if rset:
-                value = self._cw.view(rvid, rset)
-            else:
-                value = default
-            if not self.should_edit_relation(entity, rschema, role, rvid):
-                if rset:
-                    self.w(value)
-                return
-            # XXX do we really have to give lzone twice?
-            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone,
-                                    dict(vid=rvid, lzone=lzone))
-        field = form.field_by_name(rtype, role, entity.e_schema)
-        form.append_field(field)
-        self.relation_form(lzone, value, form,
-                           self._build_renderer(entity, rtype, role))
-
-    def should_edit_attribute(self, entity, rschema, role, form):
-        rtype = str(rschema)
-        ttype = rschema.targets(entity.__regid__, role)[0]
-        afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
-        if 'main_hidden' in afs or not entity.has_perm('update'):
-            return False
-        try:
-            form.field_by_name(rtype, role, entity.e_schema)
-        except FieldNotFound:
-            return False
-        return True
-
-    def should_edit_relation(self, entity, rschema, role, rvid):
-        if ((role == 'subject' and not rschema.has_perm(self._cw, 'add',
-                                                        fromeid=entity.eid))
-            or
-            (role == 'object' and not rschema.has_perm(self._cw, 'add',
-                                                       toeid=entity.eid))):
-            return False
-        return True
-
-    def relation_form(self, lzone, value, form, renderer):
-        """xxx-reledit div (class=field)
-              +-xxx div (class="editableField")
-              |   +-landing zone
-              +-xxx-value div
-              +-xxx-form div
-        """
-        w = self.w
-        divid = form.event_args['divid']
-        w(u'<div id="%s-reledit" class="field" '
-          u'onmouseout="addElementClass(jQuery(\'#%s\'), \'hidden\')" '
-          u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
-          % (divid, divid, divid))
-        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
-        w(form.render(renderer=renderer))
-        w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
-                divid, xml_escape(self._onclick % form.event_args),
-                self._cw._(self._landingzonemsg)))
-        w(lzone)
-        w(u'</div>')
-        w(u'</div>')
-
-    def _compute_best_vid(self, eschema, rschema, role):
-        dispctrl = _pvdc.etype_get(eschema, rschema, role)
-        if dispctrl.get('rvid'):
-            return dispctrl['rvid']
-        if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
-            return self._many_rvid
-        return self._one_rvid
-
-    def _build_landing_zone(self, lzone):
-        return lzone or self._defaultlandingzone % {
-            'msg': xml_escape(self._cw._(self._landingzonemsg))}
-
-    def _build_renderer(self, entity, rtype, role):
-        return self._cw.vreg['formrenderers'].select(
-            'base', self._cw, entity=entity, display_label=False,
-            display_help=False, table_class='',
-            button_bar_class='buttonbar', display_progress_div=False)
-
-    def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
-                    extradata=None):
-        divid = '%s-%s-%s' % (rtype, role, entity.eid)
-        event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
-                      'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
-                      'lzone' : lzone}
-        if extradata:
-            event_args.update(extradata)
-        return divid, event_args
-
-    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
-                  extradata=None, **formargs):
-        divid, event_args = self._build_args(entity, rtype, role, formid, default,
-                                      reload, lzone, extradata)
-        onsubmit = self._onsubmit % event_args
-        cancelclick = self._cancelclick % (entity.eid, rtype, divid)
-        form = self._cw.vreg['forms'].select(
-            formid, self._cw, entity=entity, domid='%s-form' % divid,
-            cssstyle='display: none', onsubmit=onsubmit, action='#',
-            form_buttons=[fw.SubmitButton(),
-                          fw.Button(stdmsgs.BUTTON_CANCEL, onclick=cancelclick)],
-            **formargs)
-        form.event_args = event_args
-        return form
-
-
-class DummyForm(object):
-    __slots__ = ('event_args',)
-    def form_render(self, **_args):
-        return u''
-    def render(self, **_args):
-        return u''
-    def append_field(self, *args):
-        pass
-    def field_by_name(self, rtype, role, eschema=None):
-        return None
-
-
-class AutoClickAndEditFormView(ClickAndEditFormView):
-    """same as ClickAndEditFormView but checking if the view *should* be applied
-    by checking uicfg configuration and composite relation property.
-    """
-    __regid__ = 'reledit'
-    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', "
-                "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
-
-    def should_edit_relation(self, entity, rschema, role, rvid):
-        eschema = entity.e_schema
-        rtype = str(rschema)
-        # XXX check autoform_section. what if 'generic'?
-        dispctrl = _pvdc.etype_get(eschema, rtype, role)
-        vid = dispctrl.get('vid', 'reledit')
-        if vid != 'reledit': # reledit explicitly disabled
-            return False
-        if eschema.rdef(rschema, role).composite == role:
-            return False
-        return super(AutoClickAndEditFormView, self).should_edit_relation(
-            entity, rschema, role, rvid)
-
-    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
-                  extradata=None, **formargs):
-        _divid, event_args = self._build_args(entity, rtype, role, formid, default,
-                                              reload, lzone, extradata)
-        form = DummyForm()
-        form.event_args = event_args
-        return form
-
-    def _build_renderer(self, entity, rtype, role):
-        pass
 
 
 class EditionFormView(FormViewMixIn, EntityView):
@@ -449,203 +250,202 @@ class TableEditFormView(FormViewMixIn, EntityView):
         self.w(form.render(formvid='edition'))
 
 
-# inlined form handling ########################################################
+# click and edit handling ('reledit') ##########################################
 
-class InlinedFormField(ff.Field):
-    def __init__(self, view=None, **kwargs):
-        if view.role == 'object':
-            fieldset = u'%s_object%s' % view.rtype
+class DummyForm(object):
+    __slots__ = ('event_args',)
+    def form_render(self, **_args):
+        return u''
+    def render(self, **_args):
+        return u''
+    def append_field(self, *args):
+        pass
+    def field_by_name(self, rtype, role, eschema=None):
+        return None
+
+
+class ClickAndEditFormView(FormViewMixIn, EntityView):
+    """form used to permit ajax edition of a relation or attribute of an entity
+    in a view, if logged user have the permission to edit it.
+
+    (double-click on the field to see an appropriate edition widget).
+    """
+    __regid__ = 'doreledit'
+    __select__ = non_final_entity() & match_kwargs('rtype')
+    # FIXME editableField class could be toggleable from userprefs
+
+    _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
+    _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
+                 "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
+    _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
+    _defaultlandingzone = (u'<img title="%(msg)s" src="data/pen_icon.png" '
+                           'alt="%(msg)s"/>')
+    _landingzonemsg = _('click to edit this field')
+    # default relation vids according to cardinality
+    _one_rvid = 'incontext'
+    _many_rvid = 'csv'
+
+
+    def cell_call(self, row, col, rtype=None, role='subject',
+                  reload=False,      # controls reloading the whole page after change
+                  rvid=None,         # vid to be applied to other side of rtype (non final relations only)
+                  default=None,      # default value
+                  landing_zone=None  # prepend value with a separate html element to click onto
+                                     # (esp. needed when values are links)
+                  ):
+        """display field to edit entity's `rtype` relation on click"""
+        assert rtype
+        assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
+        self._cw.add_js('cubicweb.edition.js')
+        self._cw.add_css('cubicweb.form.css')
+        if default is None:
+            default = xml_escape(self._cw._('<no value>'))
+        schema = self._cw.vreg.schema
+        entity = self.cw_rset.get_entity(row, col)
+        rschema = schema.rschema(rtype)
+        lzone = self._build_landing_zone(landing_zone)
+        # compute value, checking perms, build form
+        if rschema.final:
+            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone)
+            if not self.should_edit_attribute(entity, rschema, role, form):
+                self.w(entity.printable_value(rtype))
+                return
+            value = entity.printable_value(rtype) or default
         else:
-            fieldset = view.rtype
-        #kwargs.setdefault('fieldset', fieldset)
-        kwargs.setdefault('label', None)
-        super(InlinedFormField, self).__init__(name=view.rtype, role=view.role,
-                                               eidparam=True, **kwargs)
-        self.view = view
+            rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+            rset = entity.related(rtype, role)
+            if rset:
+                value = self._cw.view(rvid, rset)
+            else:
+                value = default
+            if not self.should_edit_relation(entity, rschema, role, rvid):
+                if rset:
+                    self.w(value)
+                return
+            # XXX do we really have to give lzone twice?
+            form = self._build_form(entity, rtype, role, 'base', default, reload, lzone,
+                                    dict(vid=rvid, lzone=lzone))
+        field = form.field_by_name(rtype, role, entity.e_schema)
+        form.append_field(field)
+        self.relation_form(lzone, value, form,
+                           self._build_renderer(entity, rtype, role))
 
-    def render(self, form, renderer):
-        """render this field, which is part of form, using the given form
-        renderer
-        """
-        view = self.view
-        i18nctx = 'inlined:%s.%s.%s' % (form.edited_entity.e_schema,
-                                        view.rtype, view.role)
-        return u'<div class="inline-%s-%s-slot">%s</div>' % (
-            view.rtype, view.role,
-            view.render(i18nctx=i18nctx, row=view.cw_row, col=view.cw_col))
-
-    def form_init(self, form):
-        """method called before by build_context to trigger potential field
-        initialization requiring the form instance
-        """
-        if self.view.form:
-            self.view.form.build_context(form.formvalues)
-
-    @property
-    def needs_multipart(self):
-        if self.view.form:
-            # take a look at inlined forms to check (recursively) if they need
-            # multipart handling.
-            return self.view.form.needs_multipart
-        return False
-
-    def has_been_modified(self, form):
-        return False
-
-    def process_posted(self, form):
-        pass # handled by the subform
-
-
-class InlineEntityEditionFormView(FormViewMixIn, EntityView):
-    """
-    :attr peid: the parent entity's eid hosting the inline form
-    :attr rtype: the relation bridging `etype` and `peid`
-    :attr role: the role played by the `peid` in the relation
-    :attr pform: the parent form where this inlined form is being displayed
-    """
-    __regid__ = 'inline-edition'
-    __select__ = non_final_entity() & match_kwargs('peid', 'rtype')
-
-    _select_attrs = ('peid', 'rtype', 'role', 'pform', 'etype')
-    removejs = "removeInlinedEntity('%s', '%s', '%s')"
-
-    def __init__(self, *args, **kwargs):
-        for attr in self._select_attrs:
-            setattr(self, attr, kwargs.pop(attr, None))
-        super(InlineEntityEditionFormView, self).__init__(*args, **kwargs)
-
-    def _entity(self):
-        assert self.cw_row is not None, self
-        return self.cw_rset.get_entity(self.cw_row, self.cw_col)
-
-    @property
-    @cached
-    def form(self):
-        entity = self._entity()
-        form = self._cw.vreg['forms'].select('edition', self._cw,
-                                             entity=entity,
-                                             formtype='inlined',
-                                             form_renderer_id='inline',
-                                             copy_nav_params=False,
-                                             mainform=False,
-                                             parent_form=self.pform,
-                                             **self.cw_extra_kwargs)
-        if self.pform is None:
-            form.restore_previous_post(form.session_key())
-        #assert form.parent_form
-        self.add_hiddens(form, entity)
-        return form
-
-    def cell_call(self, row, col, i18nctx, **kwargs):
-        """
-        :param peid: the parent entity's eid hosting the inline form
-        :param rtype: the relation bridging `etype` and `peid`
-        :param role: the role played by the `peid` in the relation
-        """
-        entity = self._entity()
-        divonclick = "restoreInlinedEntity('%s', '%s', '%s')" % (
-            self.peid, self.rtype, entity.eid)
-        self.render_form(i18nctx, divonclick=divonclick, **kwargs)
-
-    def render_form(self, i18nctx, **kwargs):
-        """fetch and render the form"""
-        entity = self._entity()
-        divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        title = self.form_title(entity, i18nctx)
-        removejs = self.removejs and self.removejs % (
-            self.peid, self.rtype, entity.eid)
-        countkey = '%s_count' % self.rtype
+    def should_edit_attribute(self, entity, rschema, role, form):
+        rtype = str(rschema)
+        ttype = rschema.targets(entity.__regid__, role)[0]
+        afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
+        if 'main_hidden' in afs or not entity.has_perm('update'):
+            return False
         try:
-            self._cw.data[countkey] += 1
-        except KeyError:
-            self._cw.data[countkey] = 1
-        self.w(self.form.render(
-            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
-            counter=self._cw.data[countkey] , **kwargs))
-
-    def form_title(self, entity, i18nctx):
-        return self._cw.pgettext(i18nctx, entity.__regid__)
-
-    def add_hiddens(self, form, entity):
-        """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
-        iid = 'rel-%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        #  * str(self.rtype) in case it's a schema object
-        #  * neged_role() since role is the for parent entity, we want the role
-        #    of the inlined entity
-        form.add_hidden(name=str(self.rtype), value=self.peid,
-                        role=neg_role(self.role), eidparam=True, id=iid)
-
-    def keep_entity(self, form, entity):
-        if not entity.has_eid():
-            return True
-        # are we regenerating form because of a validation error ?
-        if form.form_previous_values:
-            cdvalues = self._cw.list_form_param(eid_param(self.rtype, self.peid),
-                                                form.form_previous_values)
-            if unicode(entity.eid) not in cdvalues:
-                return False
+            form.field_by_name(rtype, role, entity.e_schema)
+        except FieldNotFound:
+            return False
         return True
 
+    def should_edit_relation(self, entity, rschema, role, rvid):
+        if ((role == 'subject' and not rschema.has_perm(self._cw, 'add',
+                                                        fromeid=entity.eid))
+            or
+            (role == 'object' and not rschema.has_perm(self._cw, 'add',
+                                                       toeid=entity.eid))):
+            return False
+        return True
 
-class InlineEntityCreationFormView(InlineEntityEditionFormView):
+    def relation_form(self, lzone, value, form, renderer):
+        """xxx-reledit div (class=field)
+              +-xxx div (class="editableField")
+              |   +-landing zone
+              +-xxx-value div
+              +-xxx-form div
+        """
+        w = self.w
+        divid = form.event_args['divid']
+        w(u'<div id="%s-reledit" class="field" '
+          u'onmouseout="addElementClass(jQuery(\'#%s\'), \'hidden\')" '
+          u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
+          % (divid, divid, divid))
+        w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
+        w(form.render(renderer=renderer))
+        w(u'<div id="%s" class="editableField hidden" onclick="%s" title="%s">' % (
+                divid, xml_escape(self._onclick % form.event_args),
+                self._cw._(self._landingzonemsg)))
+        w(lzone)
+        w(u'</div>')
+        w(u'</div>')
+
+    def _compute_best_vid(self, eschema, rschema, role):
+        dispctrl = _pvdc.etype_get(eschema, rschema, role)
+        if dispctrl.get('rvid'):
+            return dispctrl['rvid']
+        if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
+            return self._many_rvid
+        return self._one_rvid
+
+    def _build_landing_zone(self, lzone):
+        return lzone or self._defaultlandingzone % {
+            'msg': xml_escape(self._cw._(self._landingzonemsg))}
+
+    def _build_renderer(self, entity, rtype, role):
+        return self._cw.vreg['formrenderers'].select(
+            'base', self._cw, entity=entity, display_label=False,
+            display_help=False, table_class='',
+            button_bar_class='buttonbar', display_progress_div=False)
+
+    def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
+                    extradata=None):
+        divid = '%s-%s-%s' % (rtype, role, entity.eid)
+        event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
+                      'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
+                      'lzone' : lzone}
+        if extradata:
+            event_args.update(extradata)
+        return divid, event_args
+
+    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
+                  extradata=None, **formargs):
+        divid, event_args = self._build_args(entity, rtype, role, formid, default,
+                                      reload, lzone, extradata)
+        onsubmit = self._onsubmit % event_args
+        cancelclick = self._cancelclick % (entity.eid, rtype, divid)
+        form = self._cw.vreg['forms'].select(
+            formid, self._cw, entity=entity, domid='%s-form' % divid,
+            cssstyle='display: none', onsubmit=onsubmit, action='#',
+            form_buttons=[fw.SubmitButton(),
+                          fw.Button(stdmsgs.BUTTON_CANCEL, onclick=cancelclick)],
+            **formargs)
+        form.event_args = event_args
+        return form
+
+
+class AutoClickAndEditFormView(ClickAndEditFormView):
+    """same as ClickAndEditFormView but checking if the view *should* be applied
+    by checking uicfg configuration and composite relation property.
     """
-    :attr etype: the entity type being created in the inline form
-    """
-    __regid__ = 'inline-creation'
-    __select__ = (match_kwargs('peid', 'rtype')
-                  & specified_etype_implements('Any'))
+    __regid__ = 'reledit'
+    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', "
+                "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
 
-    @property
-    def removejs(self):
-        entity = self._entity()
-        card = entity.e_schema.rdef(self.rtype, neg_role(self.role)).role_cardinality(self.role)
-        # when one is adding an inline entity for a relation of a single card,
-        # the 'add a new xxx' link disappears. If the user then cancel the addition,
-        # we have to make this link appears back. This is done by giving add new link
-        # id to removeInlineForm.
-        if card not in '?1':
-            return "removeInlineForm('%%s', '%%s', '%s', '%%s')" % self.role
-        divid = "addNew%s%s%s:%s" % (
-            self.etype, self.rtype, self.role, self.peid)
-        return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
-            self.role, divid)
+    def should_edit_relation(self, entity, rschema, role, rvid):
+        eschema = entity.e_schema
+        rtype = str(rschema)
+        # XXX check autoform_section. what if 'generic'?
+        dispctrl = _pvdc.etype_get(eschema, rtype, role)
+        vid = dispctrl.get('vid', 'reledit')
+        if vid != 'reledit': # reledit explicitly disabled
+            return False
+        if eschema.rdef(rschema, role).composite == role:
+            return False
+        return super(AutoClickAndEditFormView, self).should_edit_relation(
+            entity, rschema, role, rvid)
 
-    @cached
-    def _entity(self):
-        try:
-            cls = self._cw.vreg['etypes'].etype_class(self.etype)
-        except:
-            self.w(self._cw._('no such entity type %s') % etype)
-            return
-        entity = cls(self._cw)
-        entity.eid = self._cw.varmaker.next()
-        return entity
+    def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
+                  extradata=None, **formargs):
+        _divid, event_args = self._build_args(entity, rtype, role, formid, default,
+                                              reload, lzone, extradata)
+        form = DummyForm()
+        form.event_args = event_args
+        return form
 
-    def call(self, i18nctx, **kwargs):
-        self.render_form(i18nctx, **kwargs)
+    def _build_renderer(self, entity, rtype, role):
+        pass
 
-
-class InlineAddNewLinkView(InlineEntityCreationFormView):
-    """
-    :attr card: the cardinality of the relation according to role of `peid`
-    """
-    __regid__ = 'inline-addnew-link'
-    __select__ = (match_kwargs('peid', 'rtype')
-                  & specified_etype_implements('Any'))
-
-    _select_attrs = InlineEntityCreationFormView._select_attrs + ('card',)
-    form = None # no actual form wrapped
-
-    def call(self, i18nctx, **kwargs):
-        self._cw.set_varmaker()
-        divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
-        self.w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
-          % divid)
-        js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s')" % (
-            self.peid, self.etype, self.rtype, self.role, i18nctx)
-        if self.pform.should_hide_add_new_relation_link(self.rtype, self.card):
-            js = "toggleVisibility('%s'); %s" % (divid, js)
-        __ = self._cw.pgettext
-        self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
-          % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
-        self.w(u'</div>')

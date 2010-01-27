@@ -13,8 +13,7 @@ from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
-from cubicweb.web.views.editviews import delete_relations, insert_relations
-from cubicweb.web.views.basecontrollers import ViewController
+from cubicweb.web.views import basecontrollers, autoform
 
 
 class RqlQuery(object):
@@ -44,7 +43,7 @@ class RqlQuery(object):
         return rql
 
 
-class EditController(ViewController):
+class EditController(basecontrollers.ViewController):
     __regid__ = 'edit'
 
     def publish(self, rset=None):
@@ -99,13 +98,13 @@ class EditController(ViewController):
         if req.form.has_key('__delete'):
             todelete = req.list_form_param('__delete', req.form, pop=True)
             if todelete:
-                delete_relations(self._cw, todelete)
+                autoform.delete_relations(self._cw, todelete)
         if req.form.has_key('__insert'):
             warn('[3.6] stop using __insert, support will be removed',
                  DeprecationWarning)
             toinsert = req.list_form_param('__insert', req.form, pop=True)
             if toinsert:
-                insert_relations(self._cw, toinsert)
+                autoform.insert_relations(self._cw, toinsert)
         self._cw.remove_pending_operations()
         if self.errors:
             errors = dict((f.name, unicode(ex)) for f, ex in self.errors)
@@ -174,7 +173,7 @@ class EditController(ViewController):
         if formparams.has_key('__delete'):
             # XXX deprecate?
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
-            delete_relations(self._cw, todelete)
+            autoform.delete_relations(self._cw, todelete)
         if formparams.has_key('__cloned_eid'):
             entity.copy_relations(typed_eid(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
