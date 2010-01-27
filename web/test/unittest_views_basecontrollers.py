@@ -365,35 +365,8 @@ class EditControllerTC(CubicWebTC):
         self.assertEquals(path, 'view')
         self.assertEquals(params, {u'__message': u'entities deleted'})
 
-    def test_nonregr_egroup_etype_editing(self):
-        """non-regression test checking that a manager user can edit a CWEType entity (CWGroup)
-        """
-        groupeids = [eid for eid, in self.execute('CWGroup G WHERE G name "managers"')]
-        groups = [u(eid) for eid in groupeids]
-        cwetypeeid = u(self.execute('CWEType X WHERE X name "CWGroup"')[0][0])
-        basegroups = [u(eid) for eid, in self.execute('CWGroup G WHERE X read_permission G, X eid %(x)s', {'x': cwetypeeid})]
-        req = self.request()
-        req.form = {
-            'eid':      cwetypeeid,
-            '__type:'+cwetypeeid:   'CWEType',
-            '_cw_edited_fields:'+cwetypeeid: 'name-subject,final-subject,description-subject,read_permission-subject',
-            'name-subject:'+cwetypeeid:     u'CWGroup',
-            #'final-subject:'+cwetypeeid:    False,
-            'description-subject:'+cwetypeeid:     u'users group',
-            'read_permission-subject:'+cwetypeeid:  groups,
-            }
-        try:
-            path, params = self.expect_redirect_publish(req, 'edit')
-            e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}, 'x').get_entity(0, 0)
-            self.assertEquals(e.name, 'CWGroup')
-            self.assertEquals([g.eid for g in e.read_permission], groupeids)
-        finally:
-            # restore
-            self.execute('SET X read_permission Y WHERE X name "CWGroup", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
-            self.commit()
-
     def test_nonregr_eetype_etype_editing(self):
-        """non-regression test checking that a manager user can edit a CWEType entity (CWEType)
+        """non-regression test checking that a manager user can edit a CWEType entity
         """
         groupeids = sorted(eid for eid, in self.execute('CWGroup G WHERE G name in ("managers", "users")'))
         groups = [u(eid) for eid in groupeids]
