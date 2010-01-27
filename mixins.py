@@ -8,6 +8,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from itertools import chain
+
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
 
