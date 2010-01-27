@@ -209,22 +209,23 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         return entity.related(self.rtype, get_role(self), entities=True)
 
     def unrelated_entities(self, entity):
-        """returns the list of unrelated entities
-
-        if etype is not defined on the Box's class, the default
-        behaviour is to use the entity's appropraite vocabulary function
+        """returns the list of unrelated entities, using the entity's
+        appropriate vocabulary function
         """
-        # use entity.unrelated if we've been asked for a particular etype
-        if hasattr(self, 'etype'):
-            return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
-        # in other cases, use vocabulary functions
+        skip = set(e.eid for e in entity.related(self.rtype, get_role(self),
+                                                 entities=True))
+        skip.add(None)
+        skip.add(INTERNAL_FIELD_VALUE)
+        filteretype = getattr(self, 'etype', None)
         entities = []
-        form = self._cw.vreg['forms'].select('edition', self._cw, rset=self.cw_rset,
+        form = self._cw.vreg['forms'].select('edition', self._cw,
+                                             rset=self.cw_rset,
                                              row=self.cw_row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
-        for _, eid in field.choices(form):
-            if eid is not None and eid != INTERNAL_FIELD_VALUE:
-                rset = self._cw.eid_rset(eid)
-                entities.append(rset.get_entity(0, 0))
+        for _, eid in field.vocabulary(form):
+            if eid not in skip:
+                entity = self._cw.entity_from_eid(eid)
+                if filteretype is None or entity.__regid__ == filteretype:
+                    entities.append(entity)
         return entities
 
