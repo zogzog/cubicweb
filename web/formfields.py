@@ -641,9 +641,7 @@ class BooleanField(Field):
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
     def _ensure_correctly_typed(self, form, value):
-        if value is not None:
-            return bool(value)
-        return value
+        return bool(value)
 
 
 class FloatField(IntField):
