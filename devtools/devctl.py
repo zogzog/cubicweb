@@ -156,6 +156,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         if eschema.final:
             continue
         for rschema, targetschemas, role in eschema.relation_definitions(True):
+            if rschema.final:
+                continue
             for tschema in targetschemas:
                 fsections = afs.etype_get(eschema, rschema, role, tschema)
                 if 'inlined_attributes' in fsections and \
