@@ -82,7 +82,7 @@ class CWUser(AnyEntity):
     def is_in_group(self, group):
         """convience / shortcut method to test if the user belongs to `group`
         """
-        return group in self._groups
+        return group in self.groups
 
     def is_anonymous(self):
         """ checks if user is an anonymous user"""
