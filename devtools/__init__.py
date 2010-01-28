@@ -321,13 +321,13 @@ def init_test_database_postgres(config, source, vreg=None):
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, drop=True, vreg=vreg)
 
-def cleanup_sqlite(dbfile, removecube=False):
+def cleanup_sqlite(dbfile, removetemplate=False):
     try:
         os.remove(dbfile)
         os.remove('%s-journal' % dbfile)
     except OSError:
         pass
-    if removecube:
+    if removetemplate:
         try:
             os.remove('%s-template' % dbfile)
         except OSError:
