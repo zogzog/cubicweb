@@ -489,7 +489,7 @@ class WorkflowableMixIn(object):
             stateeid = statename.eid
         else:
             if not isinstance(statename, basestring):
-                warn('give a state name')
+                warn('[3.5] give a state name', DeprecationWarning)
                 state = self.current_workflow.state_by_eid(statename)
             else:
                 state = self.current_workflow.state_by_name(statename)
