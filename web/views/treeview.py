@@ -108,7 +108,7 @@ class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree"""
     id = 'treeitemview'
 
-    def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
+    def cell_call(self, row, col, vid='oneline', treeid=None, **morekwargs):
         assert treeid is not None
         entity = self.entity(row, col)
         itemview = self.view(vid, self.rset, row=row, col=col)
