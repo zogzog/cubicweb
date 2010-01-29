@@ -573,6 +573,7 @@ class Entity(AppObject, dict):
                 continue
             yield attr
 
+    _cw_completed = False
     def complete(self, attributes=None, skip_bytes=True):
         """complete this entity by adding missing attributes (i.e. query the
         repository to fill the entity)
@@ -582,6 +583,10 @@ class Entity(AppObject, dict):
           if true, attribute of type Bytes won't be considered
         """
         assert self.has_eid()
+        if self._cw_completed:
+            return
+        if attributes is None:
+            self._cw_completed = True
         varmaker = rqlvar_maker()
         V = varmaker.next()
         rql = ['WHERE %s eid %%(x)s' % V]
@@ -864,14 +869,23 @@ class Entity(AppObject, dict):
             self._related_cache.pop('%s_%s' % (rtype, role), None)
 
     def clear_all_caches(self):
+        """flush all caches on this entity. Further attributes/relations access
+        will triggers new database queries to get back values.
+
+        If you use custom caches on your entity class (take care to @cached!),
+        you should override this method to clear them as well.
+        """
+        # clear attributes cache
         haseid = 'eid' in self
+        self._cw_completed = False
         self.clear()
-        for rschema, _, role in self.e_schema.relation_definitions():
-            self.clear_related_cache(rschema.type, role)
         # set eid if it was in, else we may get nasty error while editing this
         # entity if it's bound to a repo session
         if haseid:
             self['eid'] = self.eid
+        # clear relations cache
+        for rschema, _, role in self.e_schema.relation_definitions():
+            self.clear_related_cache(rschema.type, role)
 
     # raw edition utilities ###################################################
 
