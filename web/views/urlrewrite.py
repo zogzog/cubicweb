@@ -83,7 +83,9 @@ class SimpleReqRewriter(URLRewriter):
         ('/notfound', dict(vid='404')),
         ('/error', dict(vid='error')),
         ('/sparql', dict(vid='sparql')),
-        (rgx('/schema/([^/]+?)/?'),  dict(vid='eschema', rql=r'Any X WHERE X is CWEType, X name "\1"')),
+        # XXX should be case insensitive as 'create', but I would like to find another way than
+        # relying on the etype_selector
+        (rgx('/schema/([^/]+?)/?'),  dict(vid='primary', rql=r'Any X WHERE X is CWEType, X name "\1"')),
         (rgx('/add/([^/]+?)/?'), dict(vid='creation', etype=r'\1')),
         (rgx('/doc/images/(.+?)/?'), dict(vid='wdocimages', fid=r'\1')),
         (rgx('/doc/?'), dict(vid='wdoc', fid=r'main')),
