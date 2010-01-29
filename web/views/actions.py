@@ -8,12 +8,13 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from cubicweb.schema import display_name
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (EntitySelector, yes,
     one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
-    has_permission, has_add_permission,
+    has_permission, has_add_permission, implements,
     )
 from cubicweb.web import uicfg, controller, action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
@@ -295,6 +296,25 @@ class AddRelatedActions(action.Action):
                                   __redirectpath=entity.rest_path(), # should not be url quoted!
                                   __redirectvid=self._cw.form.get('vid', ''))
 
+
+class ViewSameCWEType(Action):
+    """when displaying the schema of a CWEType, offer to list entities of that type
+    """
+    id = 'entitiesoftype'
+    __select__ = one_line_rset() & implements('CWEType')
+    category = 'mainactions'
+    order = 40
+
+    @property
+    def etype(self):
+        return self.rset.get_entity(0,0).name
+
+    @property
+    def title(self):
+        return self.req._('view all %s') % display_name(self.req, self.etype, 'plural').lower()
+
+    def url(self):
+        return self.build_url(self.etype)
 
 # logged user actions #########################################################
 
