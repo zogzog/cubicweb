@@ -377,9 +377,9 @@ class Entity(AppObject, dict):
     def has_perm(self, action):
         return self.e_schema.has_perm(self.req, action, self.eid)
 
-    def view(self, vid, __registry='views', **kwargs):
+    def view(self, __vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
-        return self.vreg[__registry].render(vid, self.req, rset=self.rset,
+        return self.vreg[__registry].render(__vid, self.req, rset=self.rset,
                                             row=self.row, col=self.col, **kwargs)
 
     def absolute_url(self, *args, **kwargs):
