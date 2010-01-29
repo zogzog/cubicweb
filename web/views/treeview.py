@@ -59,9 +59,13 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
-        for rowidx in xrange(len(self.rset)):
-            self.wview(self.itemvid, self.rset, row=rowidx, col=0,
-                       vid=subvid, parentvid=self.id, treeid=treeid, **morekwargs)
+        for i, entity in enumerate(sorted(self.rset.entities(), key=lambda x: x.dc_title())):
+            if i+1 < len(self.rset):
+                morekwargs['is_last'] = False
+            else:
+                morekwargs['is_last'] = True
+            entity.view(self.itemvid, vid=subvid, parentvid=self.id,
+                        treeid=treeid, w=self.w, **morekwargs)
         self.w(u'</ul>')
 
     def cell_call(self, *args, **allargs):
@@ -70,6 +74,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
         allargs.pop('row')
         allargs.pop('col')
         self.call(*args, **allargs)
+
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
@@ -129,11 +134,11 @@ class TreeViewItemView(EntityView):
             return str(eeid) in treestate.value.split(';')
         return self.default_branch_state_is_open
 
-    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview', **morekwargs):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
+                  is_last=False, **morekwargs):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
-        is_last = row == len(self.rset) - 1
         is_open = self.open_state(entity.eid, treeid)
         is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
         if is_leaf:
