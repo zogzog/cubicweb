@@ -297,10 +297,10 @@ class AddRelatedActions(action.Action):
                                   __redirectvid=self._cw.form.get('vid', ''))
 
 
-class ViewSameCWEType(Action):
+class ViewSameCWEType(action.Action):
     """when displaying the schema of a CWEType, offer to list entities of that type
     """
-    id = 'entitiesoftype'
+    __regid__ = 'entitiesoftype'
     __select__ = one_line_rset() & implements('CWEType')
     category = 'mainactions'
     order = 40
