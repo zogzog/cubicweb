@@ -49,7 +49,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (self.req._(transition.name),
                                       entity.view('oneline')))
-        msg = _('status will change from %(st1)s to %(st2)s') % {
+        msg = self.req._('status will change from %(st1)s to %(st2)s') % {
             'st1': entity.printable_state,
             'st2': self.req._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)
