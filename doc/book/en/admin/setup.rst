@@ -232,7 +232,7 @@ Running an instance as a service
 This currently assumes that the instances configurations is located
 at C:\etc\cubicweb.d.
 
-For a cube 'my_cube', you will then find C:\etc\cubicweb.d\my_cube\win32svc.py
+For a cube 'my_cube', you will then find C:\\etc\\cubicweb.d\\my_cube\\win32svc.py
 that has to be used thusly::
 
   win32svc install
