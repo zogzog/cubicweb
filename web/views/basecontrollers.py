@@ -487,6 +487,7 @@ class JSonController(Controller):
             cookies[statename] = ';'.join(marked)
             self.req.set_cookie(cookies, statename)
 
+    @jsonize
     def js_set_cookie(self, cookiename, cookievalue):
         # XXX we should consider jQuery.Cookie
         cookiename, cookievalue = str(cookiename), str(cookievalue)
