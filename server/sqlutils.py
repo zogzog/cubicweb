@@ -174,7 +174,7 @@ class SQLAdapterMixIn(object):
         cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
                                            self.dbuser, backupfile,
                                            keepownership=False)
-        if subprocess.call(cmd):
+        if subprocess.call(cmd, shell=isinstance(cmd, str)):
             raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
@@ -183,7 +183,7 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            if subprocess.call(cmd):
+            if subprocess.call(cmd, shell=isinstance(cmd, str)):
                 print '-> Failed command: %s' % cmd
                 if not confirm('Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
