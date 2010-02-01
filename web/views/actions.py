@@ -307,14 +307,14 @@ class ViewSameCWEType(action.Action):
 
     @property
     def etype(self):
-        return self.rset.get_entity(0,0).name
+        return self.cw_rset.get_entity(0,0).name
 
     @property
     def title(self):
-        return self.req._('view all %s') % display_name(self.req, self.etype, 'plural').lower()
+        return self._cw.__('view all %s') % display_name(self._cw, self.etype, 'plural').lower()
 
     def url(self):
-        return self.build_url(self.etype)
+        return self._cw.build_url(self.etype)
 
 # logged user actions #########################################################
 
