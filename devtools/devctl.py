@@ -14,12 +14,16 @@ from os import mkdir, chdir, getcwd
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 from copy import deepcopy
 from warnings import warn
+from tempfile import NamedTemporaryFile
+from subprocess import Popen
 
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
 from logilab.common.textutils import splitstrip
 from logilab.common.shellutils import ASK
-from logilab.common.clcommands import register_commands
+from logilab.common.clcommands import register_commands, pop_arg
+
+from yams import schema2dot
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
@@ -35,15 +39,10 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
     cubicweb_appobject_path = ServerConfiguration.cubicweb_appobject_path | WebConfiguration.cubicweb_appobject_path
     cube_appobject_path = ServerConfiguration.cube_appobject_path | WebConfiguration.cube_appobject_path
 
-    def __init__(self, cube):
-        super(DevCubeConfiguration, self).__init__(cube)
-        if cube is None:
-            self._cubes = ()
-        else:
-            self._cubes = self.reorder_cubes(self.expand_cubes(self.my_cubes(cube)))
-
-    def my_cubes(self, cube):
-        return (cube,) + self.cube_dependencies(cube) + self.cube_recommends(cube)
+    def __init__(self, *cubes):
+        super(DevCubeConfiguration, self).__init__(cubes[0])
+        self._cubes = self.reorder_cubes(self.expand_cubes(cubes,
+                                         with_recommends=True))
 
     @property
     def apphome(self):
@@ -60,9 +59,6 @@ class DevDepConfiguration(DevCubeConfiguration):
     """configuration to use to generate cubicweb po files or to use as "library" configuration
     to filter out message ids from cubicweb and dependencies of a cube
     """
-
-    def my_cubes(self, cube):
-        return self.cube_dependencies(cube) + self.cube_recommends(cube)
 
     def default_log_file(self):
         return None
@@ -624,9 +620,42 @@ class ExamineLogCommand(Command):
         for clocktime, cputime, occ, rql in stat:
             print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime, cputime, occ, rql)
 
+class GenerateSchema(Command):
+    """Generate schema image for the given cube"""
+    name = "schema"
+    arguments = '<cube>'
+    options = [('output-file', {'type':'file', 'default': None,
+                 'metavar': '<file>', 'short':'o', 'help':'output image file',
+                 'input':False}),
+               ('viewer', {'type': 'string', 'default':None,
+                'short': "w", 'metavar':'<cmd>',
+                 'help':'command use to view the generated file (empty for none)'}
+               ),
+              ]
+
+    def run(self, args):
+        from logilab.common.textutils import splitstrip
+        cubes = splitstrip(pop_arg(args, 1))
+
+        dev_conf = DevCubeConfiguration(*cubes)
+        schema = dev_conf.load_schema()
+
+
+        out, viewer = self['output-file'], self['viewer']
+        if out is None:
+            tmp_file = NamedTemporaryFile(suffix=".svg")
+            out = tmp_file.name
+        schema2dot.schema2dot(schema, out,
+            #skiptypes=("identity",)
+            )
+        if viewer:
+            p = Popen((viewer, out))
+            p.wait()
+
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    LiveServerCommand,
                    NewCubeCommand,
                    ExamineLogCommand,
+                   GenerateSchema,
                    ))
