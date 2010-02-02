@@ -113,7 +113,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
 
     def header_if_modified_since(self):
         """If the HTTP header If-modified-since is set, return the equivalent
-        mx date time value (GMT), else return None
+        date time value (GMT), else return None
         """
         mtime = self.get_header('If-modified-since', raw=False)
         if mtime:

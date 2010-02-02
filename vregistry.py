@@ -108,7 +108,6 @@ class Registry(dict):
             # use classid() to compare classes because vreg will probably
             # have its own version of the class, loaded through execfile
             if registered.classid() == oid:
-                # XXX automatic reloading management
                 self[obj.id].remove(registered)
                 break
         else:
