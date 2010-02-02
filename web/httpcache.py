@@ -111,14 +111,10 @@ def last_modified(self):
         mtime = self.req.header_if_modified_since()
         if mtime:
             tdelta = (ctime - mtime)
-            if tdelta.days * 24*60*60 + tdelta.seconds > self.cache_max_age:
-                mtime = ctime
-        else:
-            mtime = ctime
-    else:
-        mtime = ctime
+            if tdelta.days * 24*60*60 + tdelta.seconds <= self.cache_max_age:
+                return mtime
     # mtime = ctime will force page rerendering
-    return mtime
+    return ctime
 viewmod.View.last_modified = last_modified
 
 # configure default caching
