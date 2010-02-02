@@ -530,26 +530,45 @@ class ResultSet(object):
             result[-1][1] = i
         return result
 
+    def _locate_query_params(self, rqlst, row, col):
+        locate_query_col = col
+        etype = self.description[row][col]
+        # final type, find a better one to locate the correct subquery
+        # (ambiguous if possible)
+        eschema = self.vreg.schema.eschema
+        if eschema(etype).final:
+            for select in rqlst.children:
+                try:
+                    myvar = select.selection[col].variable
+                except AttributeError:
+                    # not a variable
+                    continue
+                for i in xrange(len(select.selection)):
+                    if i == col:
+                        continue
+                    coletype = self.description[row][i]
+                    # None description possible on column resulting from an outer join
+                    if coletype is None or eschema(coletype).final:
+                        continue
+                    try:
+                        ivar = select.selection[i].variable
+                    except AttributeError:
+                        # not a variable
+                        continue
+                    # check variables don't comes from a subquery or are both
+                    # coming from the same subquery
+                    if getattr(ivar, 'query', None) is getattr(myvar, 'query', None):
+                        etype = coletype
+                        locate_query_col = i
+                        if len(self.column_types(i)) > 1:
+                            return etype, locate_query_col
+        return etype, locate_query_col
+
     @cached
     def related_entity(self, row, col):
         """try to get the related entity to extract format information if any"""
-        locate_query_col = col
         rqlst = self.syntax_tree()
-        etype = self.description[row][col]
-        if self.vreg.schema.eschema(etype).final:
-            # final type, find a better one to locate the correct subquery
-            # (ambiguous if possible)
-            for i in xrange(len(rqlst.children[0].selection)):
-                if i == col:
-                    continue
-                coletype = self.description[row][i]
-                if coletype is None:
-                    continue
-                if not self.vreg.schema.eschema(coletype).final:
-                    etype = coletype
-                    locate_query_col = i
-                    if len(self.column_types(i)) > 1:
-                        break
+        etype, locate_query_col = self._locate_query_params(rqlst, row, col)
         # UNION query, find the subquery from which this entity has been found
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
         col = rqlst.subquery_selection_index(select, col)

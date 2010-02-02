@@ -345,6 +345,14 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
 
+    def test_related_entity_trap_subquery(self):
+        req = self.request()
+        req.create_entity('Bookmark', title=u'test bookmark', path=u'')
+        self.execute('SET B bookmarked_by U WHERE U login "admin"')
+        rset = self.execute('Any B,T,L WHERE B bookmarked_by U, U login L '
+                            'WITH B,T BEING (Any B,T WHERE B is Bookmark, B title T)')
+        rset.related_entity(0, 2)
+
     def test_entities(self):
         rset = self.execute('Any U,G WHERE U in_group G')
         # make sure we have at least one element
