@@ -31,6 +31,9 @@ from cubicweb.toolsutils import Command, copy_skeleton, underline_title
 from cubicweb.schema import CONSTRAINTS
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
+from yams import BASE_TYPES
+from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
+                             WORKFLOW_TYPES, INTERNAL_TYPES)
 
 
 class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
@@ -628,8 +631,28 @@ class GenerateSchema(Command):
                  'metavar': '<file>', 'short':'o', 'help':'output image file',
                  'input':False}),
                ('viewer', {'type': 'string', 'default':None,
-                'short': "w", 'metavar':'<cmd>',
+                'short': "d", 'metavar':'<cmd>',
                  'help':'command use to view the generated file (empty for none)'}
+               ),
+               ('show-meta', {'action': 'store_true', 'default':False,
+                'short': "m", 'metavar': "<yN>",
+                 'help':'include meta and internal entities in schema'}
+               ),
+               ('show-workflow', {'action': 'store_true', 'default':False,
+                'short': "w", 'metavar': "<yN>",
+                'help':'include workflow entities in schema'}
+               ),
+               ('show-cw-user', {'action': 'store_true', 'default':False,
+                'metavar': "<yN>",
+                'help':'include cubicweb user entities in schema'}
+               ),
+               ('exclude-type', {'type':'string', 'default':'',
+                'short': "x", 'metavar': "<types>",
+                 'help':'coma separated list of entity types to remove from view'}
+               ),
+               ('include-type', {'type':'string', 'default':'',
+                'short': "i", 'metavar': "<types>",
+                 'help':'coma separated list of entity types to include in view'}
                ),
               ]
 
@@ -645,9 +668,19 @@ class GenerateSchema(Command):
         if out is None:
             tmp_file = NamedTemporaryFile(suffix=".svg")
             out = tmp_file.name
-        schema2dot.schema2dot(schema, out,
-            #skiptypes=("identity",)
-            )
+
+        skiptypes = BASE_TYPES | SCHEMA_TYPES
+        if not self['show-meta']:
+            skiptypes |=  META_RTYPES | SYSTEM_RTYPES | INTERNAL_TYPES
+        if not self['show-workflow']:
+            skiptypes |= WORKFLOW_TYPES
+        if not self['show-cw-user']:
+            skiptypes |= set(('CWUser', 'CWGroup', 'EmailAddress'))
+        skiptypes |= set(self['exclude-type'].split(','))
+        skiptypes -= set(self['include-type'].split(','))
+
+        schema2dot.schema2dot(schema, out, skiptypes=skiptypes)
+
         if viewer:
             p = Popen((viewer, out))
             p.wait()

@@ -55,6 +55,12 @@ SCHEMA_TYPES = set((
     'constrained_by', 'cstrtype',
     ))
 
+WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
+                         'WorkflowTransition', 'BaseTransition',
+                         'SubWorkflowExitPoint'))
+INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri'))
+
+
 _LOGGER = getLogger('cubicweb.schemaloader')
 
 # schema entities created from serialized schema have an eid rproperty
