@@ -8,6 +8,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from time import mktime
 from datetime import datetime
 
 # time delta usable to convert localized time to GMT time
@@ -23,6 +24,7 @@ class NoHTTPCacheManager(object):
     def set_headers(self):
         self.req.set_header('Cache-control', 'no-cache')
 
+
 class MaxAgeHTTPCacheManager(NoHTTPCacheManager):
     """max-age cache manager: set max-age cache control policy, with max-age
     specified with the `cache_max_age` attribute of the view
@@ -31,6 +33,7 @@ class MaxAgeHTTPCacheManager(NoHTTPCacheManager):
         self.req.set_header('Cache-control',
                             'max-age=%s' % self.view.cache_max_age)
 
+
 class EtagHTTPCacheManager(NoHTTPCacheManager):
     """etag based cache manager for startup views
 
@@ -38,8 +41,6 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     * set policy to 'must-revalidate' and expires to the current time to force
       revalidation on each request
     """
-    # GMT time required
-    date_format = "%a, %d %b %Y %H:%M:%S GMT"
 
     def etag(self):
         return self.view.id + '/' + ','.join(sorted(self.req.user.groups))
@@ -49,6 +50,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
         return 0
 
     def last_modified(self):
+        """return view's last modified GMT time"""
         return self.view.last_modified()
 
     def set_headers(self):
@@ -61,7 +63,12 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
         req.set_header('Cache-control',
                        'must-revalidate;max-age=%s' % self.max_age())
         mdate = self.last_modified()
-        req.set_header('Last-modified', mdate.strftime(self.date_format))
+        # use a timestamp, not a formatted raw header, and let
+        # the front-end correctly generate it
+        # ("%a, %d %b %Y %H:%M:%S GMT" return localized date that
+        # twisted don't parse correctly)
+        req.set_header('Last-modified', mktime(mdate.timetuple()), raw=False)
+
 
 class EntityHTTPCacheManager(EtagHTTPCacheManager):
     """etag based cache manager for view displaying a single entity
@@ -99,6 +106,7 @@ def set_http_cache_headers(self):
     self.http_cache_manager(self).set_headers()
 viewmod.View.set_http_cache_headers = set_http_cache_headers
 
+
 def last_modified(self):
     """return the date/time where this view should be considered as
     modified. Take care of possible related objects modifications.
@@ -116,6 +124,7 @@ def last_modified(self):
     # mtime = ctime will force page rerendering
     return ctime
 viewmod.View.last_modified = last_modified
+
 
 # configure default caching
 viewmod.View.http_cache_manager = NoHTTPCacheManager
