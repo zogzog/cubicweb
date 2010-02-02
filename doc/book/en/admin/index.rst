@@ -20,6 +20,7 @@ instances based on that framework.
    multisources
    ldap
    gae
+   addition-tips
 
 RQL logs
 --------
