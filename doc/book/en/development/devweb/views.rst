@@ -75,7 +75,7 @@ Here are some of the subclasses of `View` defined in `cubicweb.common.view`
 that are more concrete as they relate to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
-* `StartupView`, start view that does not._cwuire a result set to apply to
+* `StartupView`, start view that does not require a result set to apply to
 * `AnyRsetView`, view applicable to any result set
 * `EmptyRsetView`, view applicable to an empty result set
 
@@ -210,7 +210,7 @@ to safely fill (X)HTML elements from Python unicode strings.
 
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view called 'a_view' to all the entities
-of a result set only._cwuires to have for each entity of this result set,
+of a result set only requires to have for each entity of this result set,
 an available view called 'a_view' which accepts the entity.
 
 Instead of merely using type based dispatch, we do predicate dispatch

@@ -6,7 +6,7 @@ The 'edit' controller (:mod:`cubicweb.web.views.editcontroller`)
 Editing control
 ~~~~~~~~~~~~~~~~
 
-Re._cwuisites: the parameters related to entities to edit are
+Re-requisites: the parameters related to entities to edit are
 specified as follows ::
 
   <field name>:<entity eid>

@@ -86,13 +86,13 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
   from yams.buildobjs import EntityType, String, SubjectRelation, Date
 
   class Blog(EntityType):
-    title = String(maxsize=50,._cwuired=True)
+    title = String(maxsize=50, required=True)
     description = String()
 
   class BlogEntry(EntityType):
-    title = String._cwuired=True, fulltextindexed=True, maxsize=256)
+    title = String(required=True, fulltextindexed=True, maxsize=256)
     publish_date = Date(default='TODAY')
-    content = String._cwuired=True, fulltextindexed=True)
+    content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*')
 
 The first step is the import of the EntityType (generic class for entity and 
@@ -103,7 +103,7 @@ required and must be less than 50 characters.  The
 description is a string that is not constrained.
 
 A BlogEntry has a title, a publish_date and a content. The title is a
-string that is._cwuired and must be less than 100 characters. The
+string that is required and must be less than 100 characters. The
 publish_date is a Date with a default value of TODAY, meaning that
 when a BlogEntry is created, its publish_date will be the current day
 unless it is modified. The content is a string that will be indexed in
@@ -321,7 +321,7 @@ To do so, please apply the following changes:
           super(BlogEntryPrimaryView, self).render_entity_attributes(entity)
 
 .. note::
-  When a view is modified, it is not._cwuired to restart the instance
+  When a view is modified, it is not required to restart the instance
   server. Save the Python file and reload the page in your web browser
   to view the changes.
 
@@ -367,7 +367,7 @@ You can redefine each entity to provide additional functions to help you write y
             else:	
                 return False
 
-Customizing an entity._cwuires that your entity:
+Customizing an entity requires that your entity:
  - inherits from ``cubicweb.entities`` or any subclass
  - defines a ``__regid__`` linked to the corresponding data type of your schema
  - implements the base class by explicitly using ``__implements__``.
@@ -397,15 +397,15 @@ Updating the schema and synchronising the instance
 While developping your cube, you may want to update your data model. Let's say you
 want to add a ``category`` attribute in the ``Blog`` data type. This is called a migration.
 
-The._cwuired steps are:
+The required steps are:
 1. modify the file ``schema.py``. The ``Blog`` class looks now like this:
 
 .. sourcecode:: python
 
  class Blog(EntityType):
-   title = String(maxsize=50,._cwuired=True)
+   title = String(maxsize=50, required=True)
    description = String()
-   category = String._cwuired=True, vocabulary=(_('Professional'), _('Personal')), default='Personal')
+   category = String(required=True, vocabulary=(_('Professional'), _('Personal')), default='Personal')
 
 2. stop your ``blogdemo`` instance
 

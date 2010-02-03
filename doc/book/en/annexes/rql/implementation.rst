@@ -142,7 +142,7 @@ Known limitations
 
 - missing proper explicit type conversion,  COALESCE and certainly other things...
 
-- writing a rql query._cwuire knowledge of the schema used (with real relation
+- writing a rql query require knowledge of the schema used (with real relation
   names and entities, not those viewing in the user interface). On the other
   hand, we can not really bypass that, and it is the job of a user interface to
   hide the RQL.

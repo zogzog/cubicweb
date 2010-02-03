@@ -11,7 +11,7 @@ Loaded attributes and default sorting management
 
 * The class method `fetch_order(attr, var)` expects an attribute (or relation)
   name as a parameter and a variable name, and it should return a string
-  to use in the._cwuirement `ORDERBY` of an RQL query to automatically
+  to use in the requirement `ORDERBY` of an RQL query to automatically
   sort the list of entities of such type according to this attribute, or
   `None` if we do not want to sort on the attribute given in the parameter.
   By default, the entities are sorted according to their creation date.

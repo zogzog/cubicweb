@@ -102,7 +102,7 @@ for HTMLPageFooter and override it in your views file as in:
           self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
           self.w(u'</div>')
 
-Updating a view does not._cwuire any restart of the server. By reloading
+Updating a view does not require any restart of the server. By reloading
 the page you can see your new page footer.
 
 

@@ -25,7 +25,7 @@ The following built-in types are available : `String`, `Int`, `Float`,
 `Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte`
 and `Password`.
 
-You'll also have access to :ref:`CWBaseEntityTypes_:base cubicweb entitye types`.
+You'll also have access to :ref:`base cubicweb entity types <CWBaseEntityTypes>`.
 
 The instance schema is accessible through the .schema attribute of the
 `vregistry`.  It's an instance of :class:`cubicweb.schema.Schema`, which
@@ -350,7 +350,7 @@ defined in the module ``mycube.schema``.
 
 When defining a schema using python files, you may use the following shortcuts:
 
-- ._cwuired` : boolean indicating if the attribute is._cwuired, eg subject cardinality is '1'
+- `required` : boolean indicating if the attribute is required, eg subject cardinality is '1'
 
 - `vocabulary` : specify static possible values of an attribute
 
@@ -364,8 +364,8 @@ For example:
     """A person with the properties and the relations necessary for my
     application"""
 
-    last_name = String._cwuired=True, fulltextindexed=True)
-    first_name = String._cwuired=True, fulltextindexed=True)
+    last_name = String(required=True, fulltextindexed=True)
+    first_name = String(required=True, fulltextindexed=True)
     title = String(vocabulary=('Mr', 'Mrs', 'Miss'))
     date_of_birth = Date()
     works_for = SubjectRelation('Company', cardinality='?*')
@@ -438,7 +438,7 @@ In the case of simultaneous relations definitions, `subject` and `object`
 can both be equal to the value of the first argument of `SubjectRelation`
 and `ObjectRelation`.
 
-When a relation is not inlined and not symmetrical, and it does not._cwuire
+When a relation is not inlined and not symmetrical, and it does not require
 specific permissions, its definition (by using `SubjectRelation` and
 `ObjectRelation`) is all we need.
 
@@ -455,13 +455,13 @@ this entity type is as follow:
     class CWPermission(EntityType):
 	"""entity type that may be used to construct some advanced security configuration
 	"""
-	name = String._cwuired=True, indexed=True, internationalizable=True, maxsize=100)
-._cwuire_group = SubjectRelation('CWGroup', cardinality='+*',
+	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
+ require_group = SubjectRelation('CWGroup', cardinality='+*',
 					description=_('groups to which the permission is granted'))
-._cwuire_state = SubjectRelation('State',
+ require_state = SubjectRelation('State',
                                         description=_("entity's state in which the permission is applicable"))
 	# can be used on any entity
-._cwuire_permission = ObjectRelation('**', cardinality='*1', composite='subject',
+ require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
 					    description=_("link a permission to the entity. This "
 							  "permission should be used in the security "
 							  "definition of the entity's type to be useful."))
@@ -482,8 +482,8 @@ Example of configuration:
 		       'delete': ('managers', ),
 		       'add':    ('managers', 'logilab',
 				  ERQLExpression('X version_of PROJ, U in_group G,'
-						 'PROJ._cwuire_permission P, P name "add_version",'
-						 'P._cwuire_group G'),)}
+						 'PROJ require_permission P, P name "add_version",'
+						 'P require_group G'),)}
 
 
     class version_of(RelationType):
@@ -492,8 +492,8 @@ Example of configuration:
 	__permissions__ = {'read':   ('managers', 'users', 'guests',),
 		       'delete': ('managers', ),
 		       'add':    ('managers', 'logilab',
-				  RRQLExpression('O._cwuire_permission P, P name "add_version",'
-						 'U in_group G, P._cwuire_group G'),)
+				  RRQLExpression('O require_permission P, P name "add_version",'
+						 'U in_group G, P require_group G'),)
 		       }
 	inlined = True
 
@@ -506,4 +506,4 @@ new versions on this project to specific groups. It is important to notice that 
 
 * because of the genericity of the entity type `CWPermission`, we have to execute
   a unification with the groups and/or the states if necessary in the expression
-  ("U in_group G, P._cwuire_group G" in the above example)
+  ("U in_group G, P require_group G" in the above example)

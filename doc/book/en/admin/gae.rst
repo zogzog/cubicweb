@@ -168,13 +168,13 @@ In ``app.conf`` modify the following variable::
   # does this instance rely on google authentication service or not.
   use-google-auth=no
 
-In ``app.yaml`` comment the `login:._cwuired` set by default in the handler::
+In ``app.yaml`` comment the `login: required` set by default in the handler::
 
   - url: .*
   script: main.py
   # comment the line below to allow anonymous access or if you don't want to use
   # google authentication service
-  #login:._cwuired
+  #login: required
 
 
 
@@ -208,7 +208,7 @@ If you choosed to use google authentication, then you will not need to set up
 and administrator login but you will get the cookie value as well.
 
 This cookie values needs to be provided to ``laxctl`` commands
-in order to handle datastore administration._cwuests.
+in order to handle datastore administration requests.
 
 .. image:: ../images/lax-book.02-cookie-values.en.png
    :alt: displaying the detailed view of the cookie values returned

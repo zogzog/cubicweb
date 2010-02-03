@@ -47,7 +47,7 @@ has_text
 
 identity
   Relation to use to tell that a RQL variable should be the same as entity another
-(but you've to use two different rql variables for querying purpose)
+  (but you've to use two different rql variables for querying purpose)
 
 
 

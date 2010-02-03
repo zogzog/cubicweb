@@ -82,10 +82,10 @@ systems, other |cubicweb| instance repositories, GAE's DataStore, etc).
 All interactions with the repository are done using the Relation Query Language
 (RQL). The repository federates the data sources and hides them from the
 querier, which does not realize when a query spans accross several data sources
-and._cwuires running sub-queries and merges to complete.
+and requires running sub-queries and merges to complete.
 
 It is common to run the web engine and the repository in the same process (see
-instances of type all-in-one above), but this is not a._cwuirement. A repository
+instances of type all-in-one above), but this is not a requirement. A repository
 can be set up to be accessed remotely using Pyro (`Python Remote Objects`_) and
 act as a server.
 
@@ -298,7 +298,7 @@ the framework, there are two running modes with |cubicweb|:
   - instances are stored in :file:`~/etc/cubicweb.d`
   - temporary files (such as pid file) in :file:`/tmp`
 
-* 'system', resources are searched / created in the system directories (eg usually._cwuiring root access):
+* 'system', resources are searched / created in the system directories (eg usually requiring root access):
   - instances are stored in :file:`/etc/cubicweb.d`
   - temporary files (such as pid file) in :file:`/var/run/cubicweb`
 
