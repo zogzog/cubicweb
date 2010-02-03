@@ -1,5 +1,3 @@
-. -*- coding: utf-8 -*-
-
 The VRegistry
 --------------
 
@@ -9,21 +7,41 @@ The recording process on startup
 Details of the recording process
 ````````````````````````````````
 
-XXX this part needs to be updated and checked
+.. index::
+   vregistry: registration_callback
+
+On startup, |cubicweb| have to fill the vregistry with appobjects defined
+in its library and in cubes used by the instance. Appobjects from the library
+are loaded first, then appobjects provided by cubes are loaded in an ordered
+way (e.g. if your cube depends on an other, appobjects from the dependancy will
+be loaded first). Cube's modules or packages where appobject are looked at is explained
+in :ref:`cubelayout`.
+
+For each module:
 
 * by default all objects are registered automatically
 
 * if some objects have to replace other objects or be included only if a
-  condition is true,
-  - explicitly register the object by defining `registration_callback(vreg)`
-  - call registration methods on objects listed in the vreg registry
+  condition is true, you'll have to define a `registration_callback(vreg)`
+  function in your module and explicitly register *all objects* in this
+  module, using the vregistry api defined below.
 
 .. note::
     Once the function `registration_callback(vreg)` is implemented, all the objects
     have to be explicitly registered as it disables the automatic object registering.
 
-Examples:
 
+API d'enregistrement des objets
+```````````````````````````````
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_all
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_and_replace
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_if_interface_found
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.unregister
+
+
+Examples
+````````
 .. sourcecode:: python
 
    # web/views/basecomponents.py
@@ -37,31 +55,17 @@ Examples:
    # goa/appobjects/sessions.py
    def registration_callback(vreg):
       vreg.register(SessionsCleaner)
-      vreg.register(GAEAuthenticationManager, clear=True)
-      vreg.register(GAEPersistentSessionManager, clear=True)
-
-
-API d'enregistrement des objets
-```````````````````````````````
-
-.. sourcecode:: python
-
-   register(obj, registryname=None, oid=None, clear=False)
-
-   register_all(objects, modname, butclasses=())
-
-   unregister(obj, registryname=None)
-
-   register_and_replace(obj, replaced, registryname=None)
-
-   register_if_interface_found(obj, ifaces, **kwargs)
+      # replace AuthenticationManager by GAEAuthenticationManager 
+      vreg.register_and_replace(GAEAuthenticationManager, AuthenticationManager)
+      # replace PersistentSessionManager by GAEPersistentSessionManager
+      vreg.register_and_replace(GAEPersistentSessionManager, PersistentSessionManager)
 
 
 Runtime objects selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defining selectors
-``````````````````
+Using and combining existant selectors
+``````````````````````````````````````
 
 The object's selector is defined by its `__select__` class attribute.
 
@@ -75,7 +79,7 @@ positive score is returned.
 Of course you can use paren to balance expressions.
 
 
-For instance, if you are selecting the primary (eg `id = 'primary'`) view (eg
+For instance, if you are selecting the primary (eg `__regid__ = 'primary'`) view (eg
 `__registry__ = 'view'`) for a result set containing a `Card` entity, 2 objects
 will probably be selectable:
 
@@ -148,10 +152,20 @@ Of course, once this is done, you have to:
 * redefine this method on Blog.
 
 When to use selectors?
-```````````````````````
+``````````````````````
 
-Selectors are to be used whenever arises the need of dispatching on
-the shape or content of a result set. That is, almost all the time.
+Selectors are to be used whenever arises the need of dispatching on the shape or
+content of a result set or whatever else context (value in._cwuest form params,
+authenticated user groups, etc...). That is, almost all the time.
+
+XXX add and example of a single view w/ big "if" inside splitted into two views
+with appropriate selectors.
+
+
+Defining your own selectors
+```````````````````````````
+XXX objectify_selector, EntitySelector, EClassSelector...
+
 
 Debugging
 `````````
@@ -165,22 +179,17 @@ Here is an example:
 
 .. sourcecode:: python
 
-    def possible_objects(self, registry, *args, **kwargs):
-        """return an iterator on possible objects in a registry for this result set
-
-        actions returned are classes, not instances
-        """
-        from cubicweb.selectors import traced_selection
-        with traced_selection():
-            for vobjects in self.registry(registry).values():
-                try:
-                    yield self.select(vobjects, *args, **kwargs)
-                except NoSelectableObject:
-                    continue
+     from cubicweb.selectors import traced_selection
+     with traced_selection():
+         mycomp = self._cw.vreg['views'].select('wfhistory', self._cw, rset=rset)
 
 Don't forget the 'from __future__ import with_statement' at the module
-top-level.
+top-level if you're using python 2.5.
 
 This will yield additional WARNINGs in the logs, like this::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+
+
+Take care not filtering-out messages whose log level is <= LOG_WARNING!

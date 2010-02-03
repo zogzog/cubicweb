@@ -132,7 +132,7 @@ Ignore the errors that print "No translation file found for domain
    Otherwise, please skip it.
 
 You will never need to add new entries in the translation catalog. Instead we
-would recommand you to use ``self.req._("msgId")`` in your code to flag new
+would recommand you to use ``self._cw._("msgId")`` in your code to flag new
 message id to add to the catalog, where ``_`` refers to xgettext that is used to
 collect new strings to translate.  While running ``laxctl i18ncube``, new string
 will be added to the catalogs.
@@ -168,13 +168,13 @@ In ``app.conf`` modify the following variable::
   # does this instance rely on google authentication service or not.
   use-google-auth=no
 
-In ``app.yaml`` comment the `login: required` set by default in the handler::
+In ``app.yaml`` comment the `login:._cwuired` set by default in the handler::
 
   - url: .*
   script: main.py
   # comment the line below to allow anonymous access or if you don't want to use
   # google authentication service
-  #login: required
+  #login:._cwuired
 
 
 
@@ -208,7 +208,7 @@ If you choosed to use google authentication, then you will not need to set up
 and administrator login but you will get the cookie value as well.
 
 This cookie values needs to be provided to ``laxctl`` commands
-in order to handle datastore administration requests.
+in order to handle datastore administration._cwuests.
 
 .. image:: ../images/lax-book.02-cookie-values.en.png
    :alt: displaying the detailed view of the cookie values returned

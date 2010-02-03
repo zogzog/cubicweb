@@ -40,7 +40,7 @@ its rendering method
 
     def cell_call(self, row, col):
         self.row = row
-        self.maxrelated = self.req.property_value('navigation.related-limit')
+        self.maxrelated = self._cw.property_value('navigation.related-limit')
         entity = self.complete_entity(row, col)
         self.render_entity(entity)
 

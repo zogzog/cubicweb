@@ -19,6 +19,7 @@
 # serve to show the default value.
 
 import sys, os
+from cubicweb import __pkginfo__ as cw
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -42,16 +43,16 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General substitutions.
-project = 'Cubicweb'
+project = 'CubicWeb'
 copyright = '2008-2010, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '3.5'
+version = '.'.join(str(n) for n in cw.numversion[:2])
 # The full version, including alpha/beta/rc tags.
-release = '3.5'
+release = cw.version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

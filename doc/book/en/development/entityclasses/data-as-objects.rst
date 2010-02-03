@@ -30,9 +30,9 @@ classes are registered in order to initialize the class according to its schema:
 :Data handling:
 
   * `as_rset()`, converts the entity into an equivalent result set simulating the
-     request `Any X WHERE X eid _eid_`
+    ._cwuest `Any X WHERE X eid _eid_`
 
-  * `complete(skip_bytes=True)`, executes a request that recovers all at once
+  * `complete(skip_bytes=True)`, executes a._cwuest that recovers all at once
     all the missing attributes of an entity
 
   * `get_value(name)`, returns the value associated to the attribute name given
@@ -54,7 +54,7 @@ classes are registered in order to initialize the class according to its schema:
   * `delete()` allows to delete the entity
 
 
-Tne :class:`AnyEntity` class
+The :class:`AnyEntity` class
 ----------------------------
 
 To provide a specific behavior for each entity, we have to define a class
@@ -90,3 +90,22 @@ following ones:
 
   * `dc_type(form='')`, returns a string to display the entity type by
     specifying the preferred form (`plural` for a plural form)
+
+
+Inheritance
+-----------
+
+When describing a data model, entities can inherit from other entities as is
+common in object-oriented programming.
+
+You have the possibility to adapt some entity attributes, as follow:
+
+.. sourcecode:: python
+
+    from cubes.OTHER_CUBE import entities
+    class EntityExample(entities.EntityExample):
+        def dc_long_title(self):
+            return '%s (%s)' % (self.name, self.description)
+
+Notice this is different than yams schema inheritance.
+

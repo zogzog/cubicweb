@@ -5,7 +5,7 @@ Usual selector: no_rset or yes.
 Views that don't apply to a result set
 
 *index*
-    This view defines the home page of your application. It does not require
+    This view defines the home page of your application. It does not._cwuire
     a result set to apply to.
 
 *schema*

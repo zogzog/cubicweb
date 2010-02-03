@@ -5,66 +5,73 @@ Yams *schema*
 
 The **schema** is the core piece of a *CubicWeb* instance as it defines
 the handled data model. It is based on entity types that are either already
-defined in the *CubicWeb* standard library; or more specific types, that
-*CubicWeb* expects to find in one or more Python files under the directory
-`schema`.
+defined in the *CubicWeb* standard library; or more specific types defined
+in cubes. The schema for a cube is defined in a :file:schema.py file or in
+one or more Python files under the :file:`schema` directory (python package).
 
 At this point, it is important to make clear the difference between
 *relation type* and *relation definition*: a *relation type* is only a relation
-name with potentially other additionnal properties (see XXXX), whereas a
+name with potentially other additionnal properties (see below), whereas a
 *relation definition* is a complete triplet
 "<subject entity type> <relation type> <object entity type>".
 A relation type could have been implied if none is related to a
 relation definition of the schema.
 
+Also, it should be clear that to properly handle data migration, an instance'schema
+is stored in the database, so the python schema file used to defined it are only readen
+when the instance is created or upgraded.
 
-All *CubicWeb* built-in types are available : `String`, `Int`, `Float`,
+The following built-in types are available : `String`, `Int`, `Float`,
 `Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte`
 and `Password`.
-They are implicitely imported (as well as the special the function "_"
-for translation :ref:`internationalization`).
 
-The instance schema is defined on all appobjects by a .schema class attribute set
-on registration.  It's an instance of :class:`yams.schema.Schema`.
+You'll also have access to :ref:`CWBaseEntityTypes_:base cubicweb entitye types`.
+
+The instance schema is accessible through the .schema attribute of the
+`vregistry`.  It's an instance of :class:`cubicweb.schema.Schema`, which
+extends :class:`yams.schema.Schema`.
+
+:note:
+  In previous yams versions, almost all classes where available without
+  any import, but the should now be explicitely imported.
+
 
 Entity type
 ~~~~~~~~~~~
-It's an instance of :class:`yams.schema.EntitySchema`
+It's an instance of :class:`yams.schema.EntitySchema`. Each entity types has
+a set of attributes and relation and some permissions, defining who can add, read,
+update or delete entities of this type.
 
-XXX meta
-XXX permission
 XXX yams inheritance
 
 Relation type
 ~~~~~~~~~~~~~
-It's an instance of :class:`yams.schema.RelationSchema`
+It's an instance of :class:`yams.schema.RelationSchema`. A relation type is simply
+a semantic definition of a kind of relationship that may occurs in your application.
 
-In addition to the permissions, the properties of the relation types
-(shared also by all definition of relation of this type) are :
+It's important to choose a good name, at least to avoid conflicts with some semantically
+different relation defined in other cubes (since we've no namespace yet).
 
+A relation type hold the following properties (which are hence shared between all
+relation definitions of that type):
 
 * `inlined` : boolean handling the physical optimization for archiving
   the relation in the subject entity table, instead of creating a specific
-  table for the relation. This applies to the relation when the cardinality
-  of subject->relation->object is 0..1 (`?`) or 1..1 (`1`)
+  table for the relation. This applies to relations where cardinality
+  of subject->relation->object is 0..1 (`?`) or 1..1 (`1`) for *all* its relation
+  definitions.
 
 * `symmetric` : boolean indicating that the relation is symmetrical, which
-  means `X relation Y` implies `Y relation X`
-
-XXX meta
-XXX permission
+  means that `X relation Y` implies `Y relation X`.
 
 
 Relation definition
 ~~~~~~~~~~~~~~~~~~~
-Relation definition are represented in yams using an internal structure only exposed through the :mod:`api <yams.schema>`.
+It's an instance of :class:`yams.schema.RelationDefinition`. It is a complete triplet
+"<subject entity type> <relation type> <object entity type>".
 
 Properties
 ``````````
-Properties defined below are accessible through the following api:
-
-  RelationSchema.rproperties()
-  RelationSchema.rproperty(subjtype, objtype, property name)
 
 * Optional properties for attributes and relations :
 
@@ -88,12 +95,7 @@ Properties defined below are accessible through the following api:
     * `+`: 1..n
     * `*`: 0..n
 
-  - `meta` : boolean indicating that the relation is a meta-relation (false by
-    default, will disappear in *CubicWeb* 3.5)
-
 * optional properties for attributes :
-
-  - `required` : boolean indicating if the attribute is required (false by default)
 
   - `unique` : boolean indicating if the value of the attribute has to be unique
     or not within all entities of the same type (false by default)
@@ -106,8 +108,6 @@ Properties defined below are accessible through the following api:
   - `default` : default value of the attribute. In case of date types, the values
     which could be used correspond to the RQL keywords `TODAY` and `NOW`.
 
-  - `vocabulary` : specify static possible values of an attribute
-
 * optional properties of type `String` :
 
   - `fulltextindexed` : boolean indicating if the attribute is part of
@@ -117,15 +117,13 @@ Properties defined below are accessible through the following api:
   - `internationalizable` : boolean indicating if the value of the attribute
     is internationalizable (false by default)
 
-  - `maxsize` : integer providing the maximum size of the string (no limit by default)
-
 * optional properties for relations :
 
   - `composite` : string indicating that the subject (composite == 'subject')
     is composed of the objects of the relations. For the opposite case (when
     the object is composed of the subjects of the relation), we just set
     'object' as value. The composition implies that when the relation
-    is deleted (so when the composite is deleted), the composed are also deleted.
+    is deleted (so when the composite is deleted, at least), the composed are also deleted.
 
   - `fti_container`: XXX feed me
 
@@ -146,6 +144,8 @@ General Constraints
 * `UniqueConstraint` : identical to "unique=True"
 
 * `StaticVocabularyConstraint` : identical to "vocabulary=(...)"
+
+XXX Attribute, TODAY, NOW
 
 RQL Based Constraints
 ......................
@@ -239,7 +239,7 @@ For *CubicWeb* in particular:
   actions if all the other groups the user belongs does not provide
   those permissions
 
-Setting permissions is done with the attribute `permissions` of entities and
+Setting permissions is done with the attribute `__permissions__` of entities and
 relation types. It defines a dictionary where the keys are the access types
 (action), and the values are the authorized groups or expressions.
 
@@ -283,7 +283,7 @@ RQL expression for entity type permission :
 
 * in this expression, the variables X and U are pre-defined references
   respectively on the current entity (on which the action is verified) and
-  on the user who send the request
+  on the user who send the._cwuest
 
 * it is possible to use, in this expression, a special relation
   "has_<ACTION>_permission" where the subject is the user and the
@@ -348,15 +348,24 @@ for the defined entity type.
 The class name corresponds to the entity type name. It is exepected to be
 defined in the module ``mycube.schema``.
 
+When defining a schema using python files, you may use the following shortcuts:
 
-For example ::
+- ._cwuired` : boolean indicating if the attribute is._cwuired, eg subject cardinality is '1'
+
+- `vocabulary` : specify static possible values of an attribute
+
+- `maxsize` : integer providing the maximum size of a string (no limit by default)
+
+For example:
+
+.. sourcecode:: python
 
   class Person(EntityType):
     """A person with the properties and the relations necessary for my
     application"""
 
-    last_name = String(required=True, fulltextindexed=True)
-    first_name = String(required=True, fulltextindexed=True)
+    last_name = String._cwuired=True, fulltextindexed=True)
+    first_name = String._cwuired=True, fulltextindexed=True)
     title = String(vocabulary=('Mr', 'Mrs', 'Miss'))
     date_of_birth = Date()
     works_for = SubjectRelation('Company', cardinality='?*')
@@ -429,7 +438,7 @@ In the case of simultaneous relations definitions, `subject` and `object`
 can both be equal to the value of the first argument of `SubjectRelation`
 and `ObjectRelation`.
 
-When a relation is not inlined and not symmetrical, and it does not require
+When a relation is not inlined and not symmetrical, and it does not._cwuire
 specific permissions, its definition (by using `SubjectRelation` and
 `ObjectRelation`) is all we need.
 
@@ -439,24 +448,28 @@ Definition of permissions
 
 In addition to that the entity type `CWPermission` from the standard library
 allow to build very complex and dynamic security architecture. The schema of
-this entity type is as follow : ::
+this entity type is as follow:
 
-    class CWPermission(MetaEntityType):
+.. sourcecode:: python
+
+    class CWPermission(EntityType):
 	"""entity type that may be used to construct some advanced security configuration
 	"""
-	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
-	require_group = SubjectRelation('CWGroup', cardinality='+*',
+	name = String._cwuired=True, indexed=True, internationalizable=True, maxsize=100)
+._cwuire_group = SubjectRelation('CWGroup', cardinality='+*',
 					description=_('groups to which the permission is granted'))
-	require_state = SubjectRelation('State',
+._cwuire_state = SubjectRelation('State',
                                         description=_("entity's state in which the permission is applicable"))
 	# can be used on any entity
-	require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
+._cwuire_permission = ObjectRelation('**', cardinality='*1', composite='subject',
 					    description=_("link a permission to the entity. This "
 							  "permission should be used in the security "
 							  "definition of the entity's type to be useful."))
 
 
-Example of configuration ::
+Example of configuration:
+
+.. sourcecode:: python
 
 
     ...
@@ -464,24 +477,23 @@ Example of configuration ::
     class Version(EntityType):
 	"""a version is defining the content of a particular project's release"""
 
-	permissions = {'read':   ('managers', 'users', 'guests',),
+	__permissions__ = {'read':   ('managers', 'users', 'guests',),
 		       'update': ('managers', 'logilab', 'owners',),
 		       'delete': ('managers', ),
 		       'add':    ('managers', 'logilab',
 				  ERQLExpression('X version_of PROJ, U in_group G,'
-						 'PROJ require_permission P, P name "add_version",'
-						 'P require_group G'),)}
+						 'PROJ._cwuire_permission P, P name "add_version",'
+						 'P._cwuire_group G'),)}
 
-    ...
 
     class version_of(RelationType):
 	"""link a version to its project. A version is necessarily linked to one and only one project.
 	"""
-	permissions = {'read':   ('managers', 'users', 'guests',),
+	__permissions__ = {'read':   ('managers', 'users', 'guests',),
 		       'delete': ('managers', ),
 		       'add':    ('managers', 'logilab',
-				  RRQLExpression('O require_permission P, P name "add_version",'
-						 'U in_group G, P require_group G'),)
+				  RRQLExpression('O._cwuire_permission P, P name "add_version",'
+						 'U in_group G, P._cwuire_group G'),)
 		       }
 	inlined = True
 
@@ -494,4 +506,4 @@ new versions on this project to specific groups. It is important to notice that 
 
 * because of the genericity of the entity type `CWPermission`, we have to execute
   a unification with the groups and/or the states if necessary in the expression
-  ("U in_group G, P require_group G" in the above example)
+  ("U in_group G, P._cwuire_group G" in the above example)

@@ -79,7 +79,7 @@ The following identifiers are pre-defined in migration scripts:
 
 In the `repository` scripts, the following identifiers are also defined:
 
-* `checkpoint`, request confirming and executing a "commit" at checking point
+* `checkpoint`,._cwuest confirming and executing a "commit" at checking point
 
 * `schema`, instance schema (readen from the database)
 
@@ -165,7 +165,7 @@ scripts:
 * `add_state(name, stateof, initial=False, commit=False, **kwargs)`, adds a new state
   in the workflow.
 
-* `add_transition(name, transitionof, fromstates, tostate, requiredgroups=(), commit=False, **kwargs)`,
+* `add_transition(name, transitionof, fromstates, tostate,._cwuiredgroups=(), commit=False, **kwargs)`,
   adds a new transition in the workflow.
 
 You can find more details about workflows in the chapter :ref:`Workflow` .

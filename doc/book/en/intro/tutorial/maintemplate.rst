@@ -52,25 +52,25 @@ login graphic component such as follows:
           """build the top menu with authentification info and the rql box"""
           self.w(u'<table id="header"><tr>\n')
           self.w(u'<td id="firstcolumn">')
-          self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+          self._cw.vreg.select_component('logo', self._cw, self.cw_rset).dispatch(w=self.w)
           self.w(u'</td>\n')
           # appliname and breadcrumbs
           self.w(u'<td id="headtext">')
-          comp = self.vreg.select_component('appliname', self.req, self.rset)
+          comp = self._cw.vreg.select_component('appliname', self._cw, self.cw_rset)
           if comp and comp.propval('visible'):
               comp.dispatch(w=self.w)
-          comp = self.vreg.select_component('breadcrumbs', self.req, self.rset, view=view)
+          comp = self._cw.vreg.select_component('breadcrumbs', self._cw, self.cw_rset, view=view)
           if comp and comp.propval('visible'):
               comp.dispatch(w=self.w, view=view)
           self.w(u'</td>')
           # logged user and help
           #self.w(u'<td>\n')
-          #comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
+          #comp = self._cw.vreg.select_component('loggeduserlink', self._cw, self.cw_rset)
           #comp.dispatch(w=self.w)
           #self.w(u'</td><td>')
 
           self.w(u'<td>')
-          helpcomp = self.vreg.select_component('help', self.req, self.rset)
+          helpcomp = self._cw.vreg.select_component('help', self._cw, self.cw_rset)
           if helpcomp: # may not be available if Card is not defined in the schema
               helpcomp.dispatch(w=self.w)
           self.w(u'</td>')
@@ -78,7 +78,7 @@ login graphic component such as follows:
           self.w(u'<td id="lastcolumn">')
           self.w(u'</td>\n')
           self.w(u'</tr></table>\n')
-          self.template('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
+          self.template('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
                         title=False, message=False)
 
 
@@ -102,7 +102,7 @@ for HTMLPageFooter and override it in your views file as in:
           self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
           self.w(u'</div>')
 
-Updating a view does not require any restart of the server. By reloading
+Updating a view does not._cwuire any restart of the server. By reloading
 the page you can see your new page footer.
 
 

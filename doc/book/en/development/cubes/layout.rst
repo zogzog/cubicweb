@@ -79,7 +79,7 @@ where :
 
 * ``schema`` contains the schema definition (server side only)
 * ``entities`` contains the entities definition (server side and web interface)
-* ``sobjects`` contains hooks and/or views notifications (server side only)
+* ``hooks`` contains hooks and/or views notifications (server side only)
 * ``views`` contains the web interface components (web interface only)
 * ``test`` contains tests related to the cube (not installed)
 * ``i18n`` contains message catalogs for supported languages (server side and

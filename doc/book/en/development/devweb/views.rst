@@ -15,7 +15,7 @@ selection principle which makes *CubicWeb* web interface very flexible.
 A `View` is an object applied to another object such as an entity.
 
 Basic class for views
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Class `View` (`cubicweb.view`)
 `````````````````````````````````````
@@ -34,7 +34,7 @@ subclasses may be parametrized using the following class attributes:
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-At instantiation time, the standard `req` and `rset` attributes are
+At instantiation time, the standard ._cw` and `rset` attributes are
 added and the `w` attribute will be set at rendering time.
 
 A view writes to its output stream thanks to its attribute `w` (an
@@ -58,7 +58,7 @@ tabular structure with rows and columns, hence cells):
 
 * `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier
   `__vid` on the given result set. It is possible to give a view identifier
-  of fallback that will be used if the view requested is not applicable to the
+  of fallback that will be used if the view._cwuested is not applicable to the
   result set. This is actually defined on the AppObject class.
 
 * `wview(__vid, rset, __fallback_vid=None, **kwargs)`, similar to `view` except
@@ -75,7 +75,7 @@ Here are some of the subclasses of `View` defined in `cubicweb.common.view`
 that are more concrete as they relate to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
-* `StartupView`, start view that does not require a result set to apply to
+* `StartupView`, start view that does not._cwuire a result set to apply to
 * `AnyRsetView`, view applicable to any result set
 * `EmptyRsetView`, view applicable to an empty result set
 
@@ -110,7 +110,7 @@ Examples of views class
 
 
 Example of view customization and creation
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
@@ -157,7 +157,7 @@ Let us now improve the primary view of a blog
      rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
 
      def render_entity_relations(self, entity):
-         rset = self.req.execute(self.rql, {'b' : entity.eid})
+         rset = self._cw.execute(self.rql, {'b' : entity.eid})
          for entry in rset.entities():
              self.w(u'<p>%s</p>' % entry.view('inblogcontext'))
 
@@ -166,7 +166,7 @@ Let us now improve the primary view of a blog
      __select__ = implements('BlogEntry')
 
      def cell_call(self, row, col):
-         entity = self.rset.get_entity(row, col)
+         entity = self.cw_rset.get_entity(row, col)
          self.w(u'<a href="%s" title="%s">%s</a>' %
                 entity.absolute_url(),
                 xml_escape(entity.content[:50]),
@@ -176,14 +176,14 @@ This happens in two places. First we override the
 render_entity_relations method of a Blog's primary view. Here we want
 to display our blog entries in a custom way.
 
-At `line 10`, a simple request is made to build a result set with all
+At `line 10`, a simple._cwuest is made to build a result set with all
 the entities linked to the current ``Blog`` entity by the relationship
-``entry_of``. The part of the framework handling the request knows
+``entry_of``. The part of the framework handling the._cwuest knows
 about the schema and infers that such entities have to be of the
 ``BlogEntry`` kind and retrieves them (in the prescribed publish_date
 order).
 
-The request returns a selection of data called a result set. Result
+The._cwuest returns a selection of data called a result set. Result
 set objects have an .entities() method returning a generator on
 requested entities (going transparently through the `ORM` layer).
 
@@ -210,7 +210,7 @@ to safely fill (X)HTML elements from Python unicode strings.
 
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view called 'a_view' to all the entities
-of a result set only requires to have for each entity of this result set,
+of a result set only._cwuires to have for each entity of this result set,
 an available view called 'a_view' which accepts the entity.
 
 Instead of merely using type based dispatch, we do predicate dispatch
@@ -223,7 +223,7 @@ now allows to read its description and all its entries.
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is
-at the core of *CubicWeb*. Everywhere in the engine, data is requested
+at the core of *CubicWeb*. Everywhere in the engine, data is._cwuested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
 view to the result set returned by the query. That is where most of the
 flexibility comes from.**
@@ -252,8 +252,8 @@ and show that ajax comes for free.
 [FILLME]
 
 
-XML views, binaries...
-----------------------
+XML views, binaries views...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For views generating other formats than HTML (an image generated dynamically
 for example), and which can not simply be included in the HTML page generated

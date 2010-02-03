@@ -7,7 +7,7 @@ Conventions
 
 XXX external_resources variable
     naming convention
-    request.add_css
+   ._cwuest.add_css
 
 
 Extending / overriding existing styles

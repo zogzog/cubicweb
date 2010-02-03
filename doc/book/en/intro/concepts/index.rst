@@ -2,10 +2,10 @@
 
 .. _Concepts:
 
-The Core Concepts of CubicWeb
-=============================
+The Core Concepts of |cubicweb|
+===============================
 
-This section defines some terms and core concepts of the *CubicWeb*
+This section defines some terms and core concepts of the |cubicweb|
 framework. To avoid confusion while reading this book, take time to go through
 the following definitions and use this section as a reference during your
 reading.
@@ -24,19 +24,19 @@ a whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_
 and `cubicweb-comment`_ could be used to make a cube named *myblog* with
 commentable blog entries.
 
-The `CubicWeb Forge`_ offers a large number of cubes developed by the community
+The `|cubicweb| Forge`_ offers a large number of cubes developed by the community
 and available under a free software license.
 
-The command ``cubicweb-ctl list`` displays the list of cubes installed on your
+The command :command:`cubicweb-ctl list` displays the list of cubes installed on your
 system.
 
 On a Unix system, the available cubes are usually stored in the directory
-:file:`/usr/share/cubicweb/cubes`. During development, the cubes are commonly
-found in the directory :file:`/path/to/cubicweb_forest/cubes`. The environment
-variable :envvar:`CW_CUBES_PATH` gives additionnal locations where to search for
-cubes.
+:file:`/usr/share/cubicweb/cubes`. If you're using the cubicweb forest
+(:ref:SourceInstallation), the cubes are searched in the directory
+:file:`/path/to/cubicweb_forest/cubes`. The environment variable
+:envvar:`CW_CUBES_PATH` gives additionnal locations where to search for cubes.
 
-.. _`CubicWeb Forge`: http://www.cubicweb.org/project/
+.. _`|cubicweb| Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
 .. _`cubicweb-comment`: http://www.cubicweb.org/project/cubicweb-comment
 
@@ -59,7 +59,7 @@ and data (back-end) instances can be set-up to share the load.
 
 .. image:: ../../images/archi_globale.en.png
 
-The command ``cubicweb-ctl list`` also displays the list of instances
+The command :command:`cubicweb-ctl list` also displays the list of instances
 installed on your system.
 
 On a Unix system, the instances are usually stored in the directory
@@ -75,17 +75,17 @@ depending on the context. This book will try to use *application*, *cube* and
 Data Repository
 ---------------
 
-The data repository [#]_ provides access to one or more data sources (including
+The data repository [1]_ provides access to one or more data sources (including
 SQL databases, LDAP repositories, Mercurial or Subversion version control
-systems, other CubicWeb instance repositories, GAE's DataStore, etc).
+systems, other |cubicweb| instance repositories, GAE's DataStore, etc).
 
 All interactions with the repository are done using the Relation Query Language
 (RQL). The repository federates the data sources and hides them from the
 querier, which does not realize when a query spans accross several data sources
-and requires running sub-queries and merges to complete.
+and._cwuires running sub-queries and merges to complete.
 
 It is common to run the web engine and the repository in the same process (see
-instances of type all-in-one above), but this is not a requirement. A repository
+instances of type all-in-one above), but this is not a._cwuirement. A repository
 can be set up to be accessed remotely using Pyro (`Python Remote Objects`_) and
 act as a server.
 
@@ -93,13 +93,13 @@ Some logic can be attached to events that happen in the repository, like
 creation of entities, deletion of relations, etc. This is used for example to
 send email notifications when the state of an object changes. See `Hooks` below.
 
-.. _[#]: not to be confused with a Mercurial repository or a Debian repository.
+.. [1] not to be confused with a Mercurial repository or a Debian repository.
 .. _`Python Remote Objects`: http://pyro.sourceforge.net/
 
 Web Engine
 ----------
 
-The web engine replies to http requests and runs the user interface
+The web engine replies to http._cwuests and runs the user interface
 and most of the application logic.
 
 By default the web engine provides a default user interface based on
@@ -135,7 +135,7 @@ Some meta-data necessary to the system is added to the data model. That includes
 entities like users and groups, the entities used to store the data model
 itself and attributes like unique identifier, creation date, creator, etc.
 
-When you create a new *CubicWeb* instance, the schema is stored in the database.
+When you create a new |cubicweb| instance, the schema is stored in the database.
 When the cubes the instance is based on evolve, they may change their data model
 and provide migration scripts that will be executed when the administrator will
 run the upgrade process for the instance.
@@ -173,7 +173,7 @@ Selectors
 Each appobject has a selector, that is used to compute how well the object fits
 a given context. The better the object fits the context, the higher the score.
 
-CubicWeb provides a set of basic selectors that may be parametrized. Selectors
+|cubicweb| provides a set of basic selectors that may be parametrized. Selectors
 can be combined with the binary operators `&` and `|` to build more complex
 selector that can be combined too.
 
@@ -213,7 +213,7 @@ The RQL query language
 
 **No need for a complicated ORM when you have a powerful query language**
 
-All the persistent data in a CubicWeb instance is retrieved and modified by using the
+All the persistent data in a |cubicweb| instance is retrieved and modified by using the
 Relation Query Language.
 
 This query language is inspired by SQL but is on a higher level in order to
@@ -228,10 +228,10 @@ XXX feed me
 Result set
 ~~~~~~~~~~
 
-Every request made (using RQL) to the data repository returns an
+Every._cwuest made (using RQL) to the data repository returns an
 object we call a Result Set. It enables easy use of the retrieved
 data, providing a translation layer between the backend's native
-datatypes and *CubicWeb* schema's EntityTypes.
+datatypes and |cubicweb| schema's EntityTypes.
 
 Result sets provide access to the raw data, yielding either basic
 Python data types, or schema-defined high-level entities, in a
@@ -241,7 +241,7 @@ straightforward way.
 Views
 -----
 
-** *CubicWeb* is data driven **
+**CubicWeb| is data driven**
 
 The view system is loosely coupled to data through a selection
 system. Views are, in essence, defined by an id, a selection predicate
@@ -252,7 +252,8 @@ XXX feed me.
 
 Hooks
 -----
-** *CubicWeb* provides an extensible data repository **
+
+**CubicWeb provides an extensible data repository**
 
 The data model defined using Yams types allows to express the data
 model in a comfortable way. However several aspects of the data model
@@ -282,3 +283,35 @@ Hooks are basically functions that dispatch on both:
 
 They are an essential building block of any moderately complicated
 cubicweb application.
+
+
+.. _RunMode:
+
+Running mode
+------------
+
+A running mode is a predifined set of configuration telling where it should look
+for various resources, such as cubes, instances, etc. To ease development with
+the framework, there are two running modes with |cubicweb|:
+
+* 'user', resources are searched / created in the user home directory:
+  - instances are stored in :file:`~/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/tmp`
+
+* 'system', resources are searched / created in the system directories (eg usually._cwuiring root access):
+  - instances are stored in :file:`/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/var/run/cubicweb`
+
+Cubes search path is also affected, see the :ref:Cube section.
+
+By default, the mode automatically set to 'user' if a :file:`.hg` directory is found
+in the cubicweb package, else it's set to 'system'. You can force this by setting
+the :envvar:`CW_MODE` environment variable to either 'user' or 'system'.
+
+If you've a doubt about the mode you're currently running, check the first line
+outputed by the :command:`cubicweb-ctl list` command.
+
+Notice that each resource path may be explicitly set using an environment
+variable if the default doesn't suit your needs.
+
+.. |cubicweb| replace:: *CubicWeb*

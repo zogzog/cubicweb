@@ -2,7 +2,7 @@ Base selectors
 --------------
 
 Selectors are scoring functions that are called by the view dispatcher to tell
-whenever a view can be applied to a given result set of a request. Selector sets
+whenever a view can be applied to a given result set of a._cwuest. Selector sets
 are the glue that tie views to the data model. Using them appropriately is an
 essential part of the construction of well behaved cubes.
 
