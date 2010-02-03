@@ -381,7 +381,7 @@ or the relation in *CubicWeb* application.
 
 An attribute is defined in the schema as follows::
 
-    attr_name = attr_type(properties*)
+    attr_name = attr_type(properties)
 
 where `attr_type` is one of the type listed above and `properties` is
 a list of the attribute needs to statisfy (see :ref:`properties`
