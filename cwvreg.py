@@ -343,7 +343,7 @@ class CubicWebVRegistry(VRegistry):
 
     def register_if_interface_found(self, obj, ifaces, **kwargs):
         """register an object but remove it if no entity class implements one of
-        the given interfaces
+        the given interfaces at the end of the registration process
         """
         self.register(obj, **kwargs)
         if not isinstance(ifaces,  (tuple, list)):
