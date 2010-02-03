@@ -283,7 +283,7 @@ RQL expression for entity type permission :
 
 * in this expression, the variables X and U are pre-defined references
   respectively on the current entity (on which the action is verified) and
-  on the user who send the._cwuest
+  on the user who send the request
 
 * it is possible to use, in this expression, a special relation
   "has_<ACTION>_permission" where the subject is the user and the

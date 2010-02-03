@@ -155,7 +155,7 @@ When to use selectors?
 ``````````````````````
 
 Selectors are to be used whenever arises the need of dispatching on the shape or
-content of a result set or whatever else context (value in._cwuest form params,
+content of a result set or whatever else context (value in request form params,
 authenticated user groups, etc...). That is, almost all the time.
 
 XXX add and example of a single view w/ big "if" inside splitted into two views

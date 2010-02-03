@@ -79,7 +79,7 @@ The following identifiers are pre-defined in migration scripts:
 
 In the `repository` scripts, the following identifiers are also defined:
 
-* `checkpoint`,._cwuest confirming and executing a "commit" at checking point
+* `checkpoint`, request confirming and executing a "commit" at checking point
 
 * `schema`, instance schema (readen from the database)
 

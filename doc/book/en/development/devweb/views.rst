@@ -34,7 +34,7 @@ subclasses may be parametrized using the following class attributes:
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-At instantiation time, the standard ._cw` and `rset` attributes are
+At instantiation time, the standard `_cw` and `cw_rset` attributes are
 added and the `w` attribute will be set at rendering time.
 
 A view writes to its output stream thanks to its attribute `w` (an
@@ -58,7 +58,7 @@ tabular structure with rows and columns, hence cells):
 
 * `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier
   `__vid` on the given result set. It is possible to give a view identifier
-  of fallback that will be used if the view._cwuested is not applicable to the
+  of fallback that will be used if the view requested is not applicable to the
   result set. This is actually defined on the AppObject class.
 
 * `wview(__vid, rset, __fallback_vid=None, **kwargs)`, similar to `view` except
@@ -176,14 +176,14 @@ This happens in two places. First we override the
 render_entity_relations method of a Blog's primary view. Here we want
 to display our blog entries in a custom way.
 
-At `line 10`, a simple._cwuest is made to build a result set with all
+At `line 10`, a simple request is made to build a result set with all
 the entities linked to the current ``Blog`` entity by the relationship
-``entry_of``. The part of the framework handling the._cwuest knows
+``entry_of``. The part of the framework handling the request knows
 about the schema and infers that such entities have to be of the
 ``BlogEntry`` kind and retrieves them (in the prescribed publish_date
 order).
 
-The._cwuest returns a selection of data called a result set. Result
+The request returns a selection of data called a result set. Result
 set objects have an .entities() method returning a generator on
 requested entities (going transparently through the `ORM` layer).
 
@@ -223,7 +223,7 @@ now allows to read its description and all its entries.
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is
-at the core of *CubicWeb*. Everywhere in the engine, data is._cwuested
+at the core of *CubicWeb*. Everywhere in the engine, data is requested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
 view to the result set returned by the query. That is where most of the
 flexibility comes from.**

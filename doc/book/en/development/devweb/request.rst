@@ -3,10 +3,10 @@
 The `Request` class (`cubicweb.web`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A._cwuest instance is created when an HTTP._cwuest is sent to the web server.
+A request instance is created when an HTTP request is sent to the web server.
 It contains informations such as form parameters, user authenticated, etc.
 
-**Globally, a._cwuest represents a user query, either through HTTP or not
+**Globally, a request represents a user query, either through HTTP or not
 (we also talk about RQL queries on the server side for example).**
 
 An instance of `Request` has the following attributes:
@@ -36,21 +36,21 @@ But also:
   * `remove_cookie(cookie, key)`, forces a value to expire
 
 :URL handling:
-  * `url()`, returns the full URL of the HTTP._cwuest
+  * `url()`, returns the full URL of the HTTP request
   * `base_url()`, returns the root URL of the web application
-  * `relative_path()`, returns the relative path of the._cwuest
+  * `relative_path()`, returns the relative path of the request
 
 :And more...:
   * `set_content_type(content_type, filename=None)`, adds the header HTTP
     'Content-Type'
   * `get_header(header)`, returns the value associated to an arbitrary header
-    of the HTTP._cwuest
+    of the HTTP request
   * `set_header(header, value)`, adds an arbitrary header in the response
   * `cursor()` returns a RQL cursor on the session
   * `execute(*args, **kwargs)`, shortcut to ``.cursor().execute()``
   * `property_value(key)`, properties management (`CWProperty`)
   * dictionary `data` to store data to share informations between components
-    *while a._cwuest is executed*
+    *while a request is executed*
 
 Please note that this class is abstract and that a concrete implementation
 will be provided by the *frontend* web used (in particular *twisted* as of

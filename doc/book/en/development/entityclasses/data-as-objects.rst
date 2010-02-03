@@ -30,9 +30,9 @@ classes are registered in order to initialize the class according to its schema:
 :Data handling:
 
   * `as_rset()`, converts the entity into an equivalent result set simulating the
-    ._cwuest `Any X WHERE X eid _eid_`
+     request `Any X WHERE X eid _eid_`
 
-  * `complete(skip_bytes=True)`, executes a._cwuest that recovers all at once
+  * `complete(skip_bytes=True)`, executes a request that recovers all at once
     all the missing attributes of an entity
 
   * `get_value(name)`, returns the value associated to the attribute name given

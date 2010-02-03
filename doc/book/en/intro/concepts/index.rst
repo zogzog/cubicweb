@@ -99,7 +99,7 @@ send email notifications when the state of an object changes. See `Hooks` below.
 Web Engine
 ----------
 
-The web engine replies to http._cwuests and runs the user interface
+The web engine replies to http requests and runs the user interface
 and most of the application logic.
 
 By default the web engine provides a default user interface based on
@@ -228,7 +228,7 @@ XXX feed me
 Result set
 ~~~~~~~~~~
 
-Every._cwuest made (using RQL) to the data repository returns an
+Every request made (using RQL) to the data repository returns an
 object we call a Result Set. It enables easy use of the retrieved
 data, providing a translation layer between the backend's native
 datatypes and |cubicweb| schema's EntityTypes.

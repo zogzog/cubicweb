@@ -26,7 +26,7 @@ name those parameters as *qualified*.
       for this relaiton and we then look for the new value(s)  in the parameter
       <relation name> (qualified)
    3. if the value returned is different from the initial value, an database update
-     ._cwuest is done
+      request is done
 
 3. For each entity to edit:
 
@@ -102,7 +102,7 @@ following parameters:
 
 * `__redirectparams`: forms parameters to add to the path
 
-* `__redirectrql`: redirection RQL._cwuest
+* `__redirectrql`: redirection RQL request
 
 * `__redirectvid`: redirection view identifier
 

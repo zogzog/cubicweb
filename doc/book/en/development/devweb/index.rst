@@ -6,7 +6,7 @@ In this chapter, we will describe the core api for web development in the *Cubic
 .. toctree::
    :maxdepth: 1
 
-  ._cwuest
+   request
    publisher
    controllers
    property

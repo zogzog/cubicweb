@@ -35,7 +35,7 @@ marked in one of the following ways :
 
   OR
 
- * by using the equivalent._cwuest's method ::
+ * by using the equivalent request's method ::
 
      class NoResultView(EmptyRsetView):
          """default view when no result has been found"""
@@ -50,10 +50,10 @@ translatable strings**, it will only return the string to translate
 itself, but not its translation (it's actually another name for the
 `unicode` builtin).
 
-In the other hand the._cwuest's method `self._cw._` is meant to retrieve the
-proper translation of translation strings in the._cwuested language.
+In the other hand the request's method `self._cw._` is meant to retrieve the
+proper translation of translation strings in the requested language.
 
-Finally you can also use the `__` attribute of._cwuest object to get a
+Finally you can also use the `__` attribute of request object to get a
 translation for a string *which should not itself added to the catalog*,
 usually in case where the actual msgid is created by string interpolation ::
 
