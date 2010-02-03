@@ -1,4 +1,6 @@
-"""field classes for form construction
+"""Fields are used to control what's displayed in forms. It makes the link
+between something to edit and its display in the form. Actual display is handled
+by a widget associated to the field.
 
 :organization: Logilab
 :copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -46,13 +48,11 @@ def vocab_sort(vocab):
 _MARKER = object()
 
 class Field(object):
-    """field class is introduced to control what's displayed in forms. It makes
-    the link between something to edit and its display in the form. Actual
-    display is handled by a widget associated to the field.
+    """This class is the abstract base class for all fields. It hold a bunch
+    of attributes which may be used for fine control of the behaviour of a
+    concret field.
 
-    Attributes
-    ----------
-    all the attributes described below have sensible default value which may be
+    All the attributes described below have sensible default value which may be
     overriden by value given to field's constructor.
 
     :name:
