@@ -6,6 +6,13 @@ entity is in the result set and needs to be displayed.
 
 This view is supposed to render a maximum of informations about the entity.
 
+Beware when overriding this top level `cell_call` in a primary because
+you will loose a bunch of functionnality that automatically comes with
+it : `in-context` boxes, related boxes, some navigation, some
+displaying of the metadata, etc. It might be interresting to
+understand the implementation fo the `cell_call` to override specifics
+bits of it.
+
 Rendering methods and attributes for ``PrimaryView``
 ----------------------------------------------------
 

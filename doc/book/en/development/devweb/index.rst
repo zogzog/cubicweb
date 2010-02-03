@@ -12,6 +12,7 @@ In this chapter, we will describe the core api for web development in the *Cubic
    property
    rtags
    views
+   gettingdata
    form
    facets
    httpcaching

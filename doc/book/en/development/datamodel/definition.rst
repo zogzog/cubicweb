@@ -397,6 +397,10 @@ for more details).
 * it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)
 
+*Note* : if you end up with an `if` in the definition of your entity, this probably
+means that you need two separate entities that implement the `ITree` interface and
+get the result from `.children()` which ever entity is concerned.
+
 Inheritance
 ```````````
 XXX feed me
