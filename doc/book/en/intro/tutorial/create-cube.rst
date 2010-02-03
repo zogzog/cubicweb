@@ -14,6 +14,7 @@ Create the directory to hold the code of your cube. The most important files tha
   * schema.py: contains the data model
   * views.py: contains your custom views
   * entities.py: contains XXX 
+
 The detailed structure of the code directory is described in :ref:`cubelayout`.
 
 2. :ref:`DefineDataModel`
@@ -389,7 +390,7 @@ This function can then be used when you customize your views. For instance, you 
 
 Then each blog entry whose title contains 'CW' is shown with the CubicWeb logo in front of it.
 
-.. _UpdatingSchemaAndSynchronisingInstance
+.. _UpdatingSchemaAndSynchronisingInstance:
 
 Updating the schema and synchronising the instance
 --------------------------------------------------
