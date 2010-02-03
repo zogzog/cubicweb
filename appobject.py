@@ -525,9 +525,8 @@ class AppObject(object):
 
     def format_float(self, num):
         """return a string for floating point number according to instance's
-        configuration
-        """
-        if num:
+        configuration """
+        if num is not None:
             return self.req.property_value('ui.float-format') % num
         return u''
 
