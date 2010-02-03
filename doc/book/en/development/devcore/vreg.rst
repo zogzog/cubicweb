@@ -164,6 +164,8 @@ XXX add and example of a single view w/ big "if" inside splitted into two views
 with appropriate selectors.
 
 
+.. CustomSelectors_
+
 Defining your own selectors
 ```````````````````````````
 XXX objectify_selector, EntitySelector, EClassSelector...
@@ -192,6 +194,17 @@ This will yield additional WARNINGs in the logs, like this::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
 
-
-
 Take care not filtering-out messages whose log level is <= LOG_WARNING!
+
+You can also give to traced_selection the registry ids of objects on which to debug
+you want to debug selection ('wfhistory' in the example above).
+
+Also, if you're using python 2.4, which as no 'with' yet, you'll have to to it
+the following way:
+
+.. sourcecode:: python
+
+         from cubicweb import selectors
+         selectors.TRACED_OIDS = ('wfhistory',)
+         mycomp = self._cw.vreg['views'].select('wfhistory', self._cw, rset=rset)
+         selectors.TRACED_OIDS = ()
