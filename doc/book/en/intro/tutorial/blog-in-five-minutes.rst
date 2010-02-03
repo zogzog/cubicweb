@@ -5,9 +5,11 @@
 Get a blog running in five minutes!
 -----------------------------------
 
-First install the following packages (:ref:`DebianInstallation`)::
+For Debian or Ubuntu users, first install the following packages (:ref:`DebianInstallation`)::
 
     cubicweb, cubicweb-dev, cubicweb-blog
+
+For Windows or Mac OS X users, you must install cubicweb from source (see :ref:`SourceInstallation` and  :ref:`WindowsInstallation`).
 
 Then create and initialize your instance::
 

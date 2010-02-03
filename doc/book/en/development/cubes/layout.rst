@@ -29,6 +29,7 @@ A cube is structured as follows:
   |
   |-- i18n/
   |   |-- en.po
+  |   |-- es.po
   |   `-- fr.po
   |
   |-- __init__.py
