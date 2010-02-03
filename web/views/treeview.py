@@ -59,9 +59,14 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
-        for rowidx in xrange(len(self.cw_rset)):
-            self.wview(self.itemvid, self.cw_rset, row=rowidx, col=0,
-                       vid=subvid, parentvid=self.__regid__, treeid=treeid, **morekwargs)
+        for i, entity in enumerate(sorted(self.cw_rset.entities(),
+                                          key=lambda x: x.dc_title())):
+            if i+1 < len(self.cw_rset):
+                morekwargs['is_last'] = False
+            else:
+                morekwargs['is_last'] = True
+            entity.view(self.itemvid, vid=subvid, parentvid=self.__regid__,
+                        treeid=treeid, w=self.w, **morekwargs)
         self.w(u'</ul>')
 
     def cell_call(self, *args, **allargs):
@@ -70,6 +75,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
         allargs.pop('row')
         allargs.pop('col')
         self.call(*args, **allargs)
+
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
@@ -103,7 +109,7 @@ class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree"""
     __regid__ = 'treeitemview'
 
-    def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
+    def cell_call(self, row, col, vid='oneline', treeid=None, **morekwargs):
         assert treeid is not None
         entity = self.cw_rset.get_entity(row, col)
         itemview = self._cw.view(vid, self.cw_rset, row=row, col=col)
@@ -129,11 +135,11 @@ class TreeViewItemView(EntityView):
             return str(eeid) in treestate.value.split(';')
         return self.default_branch_state_is_open
 
-    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview', **morekwargs):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
+                  is_last=False, **morekwargs):
         w = self.w
         entity = self.cw_rset.get_entity(row, col)
         liclasses = []
-        is_last = row == len(self.cw_rset) - 1
         is_open = self.open_state(entity.eid, treeid)
         is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
         if is_leaf:

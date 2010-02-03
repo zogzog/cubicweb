@@ -67,7 +67,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         form = self.get_form(entity, transition)
         self.w(u'<h4>%s %s</h4>\n' % (self._cw._(transition.name),
                                       entity.view('oneline')))
-        msg = _('status will change from %(st1)s to %(st2)s') % {
+        msg = self.req._('status will change from %(st1)s to %(st2)s') % {
             'st1': entity.printable_state,
             'st2': self._cw._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)

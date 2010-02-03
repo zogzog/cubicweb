@@ -434,7 +434,7 @@ function postForm(bname, bvalue, formid) {
  */
 function setFormsTarget(node) {
     var $node = jQuery(node || document.body);
-    $node.find('form.entityForm').each(function () {
+    $node.find('form').each(function () {
 	var form = jQuery(this);
 	var target = form.attr('cubicweb:target');
 	if (target) {

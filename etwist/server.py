@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 import select
+import errno
 import hotshot
 from time import mktime
 from datetime import date, timedelta
