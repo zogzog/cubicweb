@@ -76,6 +76,8 @@ When two selectors are combined using the `|` operator (former `chainfirst`), it
 means that one of them should return a positive score. On success, the first
 positive score is returned.
 
+You can also "negate"  a selector by precedeing it by the `~` operator.
+
 Of course you can use paren to balance expressions.
 
 
