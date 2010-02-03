@@ -38,7 +38,7 @@ At instantiation time, the standard `_cw` and `cw_rset` attributes are
 added and the `w` attribute will be set at rendering time.
 
 A view writes to its output stream thanks to its attribute `w` (an
-`UStreamIO`).
+`UStreamIO`, except for binary views).
 
 The basic interface for views is as follows (remember that the result set has a
 tabular structure with rows and columns, hence cells):
