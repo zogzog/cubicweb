@@ -70,7 +70,6 @@ class GoogleMapsView(EntityView):
     __regid__ = 'gmap-view'
     __select__ = implements(IGeocodable)
 
-    __select__ = implements(IGeocodable)
     paginable = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
