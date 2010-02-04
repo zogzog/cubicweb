@@ -79,7 +79,7 @@ class FakeRequest(CubicWebRequestBase):
         """
         pass
 
-    def set_header(self, header, value):
+    def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
         pass
 
