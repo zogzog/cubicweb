@@ -32,7 +32,8 @@ def objectify_selector(selector_func):
 
     """
     return type(selector_func.__name__, (Selector,),
-                {'__call__': lambda self, *args, **kwargs: selector_func(*args, **kwargs)})
+                {'__doc__': selector_func.__doc__,
+                 '__call__': lambda self, *a, **kw: selector_func(*a, **kw)})
 
 
 def _instantiate_selector(selector):

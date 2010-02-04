@@ -83,6 +83,7 @@ def lltrace(selector):
             print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
         return ret
     traced.__name__ = selector.__name__
+    traced.__doc__ = selector.__doc__
     return traced
 
 class traced_selection(object):
