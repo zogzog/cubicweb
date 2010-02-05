@@ -131,10 +131,6 @@ def sqldropschema(schema, driver, text_index=True,
                      skip_relations=skip_relations))
     return '\n'.join(output)
 
-try:
-    from mx.DateTime import DateTimeType, DateTimeDeltaType
-except ImportError:
-    DateTimeType = DateTimeDeltaType = None
 
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
@@ -199,25 +195,15 @@ class SQLAdapterMixIn(object):
 
     def merge_args(self, args, query_args):
         if args is not None:
-            args = dict(args)
-            for key, val in args.items():
+            newargs = {}
+            for key, val in args.iteritems():
                 # convert cubicweb binary into db binary
                 if isinstance(val, Binary):
                     val = self.binary(val.getvalue())
-                # XXX <3.2 bw compat
-                elif type(val) is DateTimeType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    val = datetime(val.year, val.month, val.day,
-                                   val.hour, val.minute, int(val.second))
-                elif type(val) is DateTimeDeltaType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    val = timedelta(0, int(val.seconds), 0)
-                args[key] = val
+                newargs[key] = val
             # should not collide
-            args.update(query_args)
-            return args
+            newargs.update(query_args)
+            return newargs
         return query_args
 
     def process_result(self, cursor):
