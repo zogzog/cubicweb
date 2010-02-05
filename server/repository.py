@@ -1129,7 +1129,7 @@ class Repository(object):
                                eidfrom=subject, rtype=rtype, eidto=object)
         source.add_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
-        session.update_rel_cache_add(subject, rtype, object, rschema.symetric)
+        session.update_rel_cache_add(subject, rtype, object, rschema.symmetric)
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_relation', session,
                                eidfrom=subject, rtype=rtype, eidto=object)
@@ -1144,9 +1144,9 @@ class Repository(object):
                                eidfrom=subject, rtype=rtype, eidto=object)
         source.delete_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
-        session.update_rel_cache_del(subject, rtype, object, rschema.symetric)
-        if rschema.symetric:
-            # on symetric relation, we can't now in which sense it's
+        session.update_rel_cache_del(subject, rtype, object, rschema.symmetric)
+        if rschema.symmetric:
+            # on symmetric relation, we can't now in which sense it's
             # stored so try to delete both
             source.delete_relation(session, object, rtype, subject)
         if source.should_call_hooks:

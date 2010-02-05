@@ -23,7 +23,7 @@ def _annotate_select(annotator, rqlst):
     has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
-        if getrschema(rel.r_type).symetric and not rel.neged(strict=True):
+        if getrschema(rel.r_type).symmetric and not rel.neged(strict=True):
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
                 if not stinfo['constnode'] and stinfo['selected']:
@@ -105,7 +105,7 @@ def _annotate_select(annotator, rqlst):
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
                         break
-                elif rschema.symetric and stinfo['selected']:
+                elif rschema.symmetric and stinfo['selected']:
                     break
             joins.add(rel)
         else:

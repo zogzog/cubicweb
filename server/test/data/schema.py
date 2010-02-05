@@ -118,7 +118,7 @@ class ecrit_par(RelationType):
     inlined = True
 
 class connait(RelationType):
-    symetric = True
+    symmetric = True
 
 class concerne(RelationType):
     __permissions__ = {

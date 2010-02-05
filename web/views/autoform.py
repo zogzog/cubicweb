@@ -449,7 +449,7 @@ class UnrelatedDivs(EntityView):
         options = []
         divid = 'div%s_%s_%s' % (rschema.type, role, entity.eid)
         selectid = 'select%s_%s_%s' % (rschema.type, role, entity.eid)
-        if rschema.symetric or role == 'subject':
+        if rschema.symmetric or role == 'subject':
             targettypes = rschema.objects(entity.e_schema)
             etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
         else:

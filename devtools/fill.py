@@ -394,7 +394,7 @@ class RelationsQueriesGenerator(object):
             # for each couple (subjschema, objschema), insert relations
             for subj, obj in rschema.rdefs:
                 sym.add( (subj, obj) )
-                if rschema.symetric and (obj, subj) in sym:
+                if rschema.symmetric and (obj, subj) in sym:
                     continue
                 subjcard, objcard = rschema.rdef(subj, obj).cardinality
                 # process mandatory relations first

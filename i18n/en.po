@@ -3486,11 +3486,11 @@ msgctxt "CWUser"
 msgid "surname"
 msgstr ""
 
-msgid "symetric"
+msgid "symmetric"
 msgstr ""
 
 msgctxt "CWRType"
-msgid "symetric"
+msgid "symmetric"
 msgstr ""
 
 msgid "system entities"

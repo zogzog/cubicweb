@@ -897,7 +897,7 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
                              description=entity.get('description'),
                              meta=entity.get('meta', False),
                              inlined=entity.get('inlined', False),
-                             symetric=entity.get('symetric', False),
+                             symmetric=entity.get('symmetric', False),
                              eid=entity.eid)
         MemSchemaCWRTypeAdd(self._cw, rtype)
 
@@ -919,7 +919,7 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
         entity = self.entity
         rschema = self._cw.vreg.schema.rschema(entity.name)
         newvalues = {}
-        for prop in ('meta', 'symetric', 'inlined'):
+        for prop in ('meta', 'symmetric', 'inlined'):
             if prop in entity:
                 newvalues[prop] = entity[prop]
         if newvalues:

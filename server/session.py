@@ -133,16 +133,16 @@ class Session(RequestSessionBase):
 
     # relations cache handling #################################################
 
-    def update_rel_cache_add(self, subject, rtype, object, symetric=False):
+    def update_rel_cache_add(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
-        if symetric:
+        if symmetric:
             self._update_entity_rel_cache_add(object, rtype, 'subject', subject)
         else:
             self._update_entity_rel_cache_add(object, rtype, 'object', subject)
 
-    def update_rel_cache_del(self, subject, rtype, object, symetric=False):
+    def update_rel_cache_del(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
-        if symetric:
+        if symmetric:
             self._update_entity_rel_cache_del(object, rtype, 'object', object)
         else:
             self._update_entity_rel_cache_del(object, rtype, 'object', subject)

@@ -156,7 +156,7 @@ class EntityTC(CubicWebTC):
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
                               'AC evaluee AE?, AE modification_date AF'
                               )
-            # testing symetric relation
+            # testing symmetric relation
             Personne.fetch_attrs = ('nom', 'connait')
             self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
                               'WHERE X is Personne, X nom AA, X connait AB?')

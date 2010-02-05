@@ -395,7 +395,7 @@ class ServerMigrationHelper(MigrationHelper):
         current definition:
 
         * description
-        * symetric, meta
+        * symmetric, meta
         * inlined
         * relation definitions if `syncrdefs`
         * permissions if `syncperms`
@@ -482,7 +482,7 @@ class ServerMigrationHelper(MigrationHelper):
         if (subjtype, rschema, objtype) in self._synchronized:
             return
         self._synchronized.add((subjtype, rschema, objtype))
-        if rschema.symetric:
+        if rschema.symmetric:
             self._synchronized.add((objtype, rschema, subjtype))
         confirm = self.verbosity >= 2
         if syncprops:
@@ -764,7 +764,7 @@ class ServerMigrationHelper(MigrationHelper):
                         self.cmd_add_relation_type(rschema.type, False, commit=True)
                         rtypeadded = True
                     # register relation definition
-                    # remember this two avoid adding twice non symetric relation
+                    # remember this two avoid adding twice non symmetric relation
                     # such as "Emailthread forked_from Emailthread"
                     added.append((etype, rschema.type, targettype))
                     self.rqlexecall(ss.rdef2rql(rschema, etype, targettype,

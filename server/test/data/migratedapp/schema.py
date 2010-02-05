@@ -102,7 +102,7 @@ class Personne(EntityType):
     travaille = SubjectRelation('Societe')
     concerne = SubjectRelation('Affaire')
     concerne2 = SubjectRelation(('Affaire', 'Note'), cardinality='1*')
-    connait = SubjectRelation('Personne', symetric=True)
+    connait = SubjectRelation('Personne', symmetric=True)
 
 class Societe(WorkflowableEntityType):
     __permissions__ = {

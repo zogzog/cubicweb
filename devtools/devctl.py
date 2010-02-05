@@ -185,7 +185,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             # XXX also generate "creating ...' messages for actions in the
             # addrelated submenu
     w('# subject and object forms for each relation type\n')
-    w('# (no object form for final or symetric relation types)\n')
+    w('# (no object form for final or symmetric relation types)\n')
     w('\n')
     for rschema in sorted(schema.relations()):
         rtype = rschema.type
@@ -205,7 +205,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
-        if not (schema.rschema(rtype).final or rschema.symetric):
+        if not (schema.rschema(rtype).final or rschema.symmetric):
             if rschema not in no_context_rtypes:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():

@@ -204,7 +204,7 @@ class same_as(RelationType):
         'delete': ('managers', 'owners'),
         }
     cardinality = '*1'
-    symetric = True
+    symmetric = True
     # NOTE: the 'object = ExternalUri' declaration will still be mandatory
     #       in the cube's schema.
     object = 'ExternalUri'
@@ -234,7 +234,7 @@ class CWCache(EntityType):
 
 class identical_to(RelationType):
     """identical to"""
-    symetric = True
+    symmetric = True
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         # XXX should have update __permissions__ on both subject and object,
@@ -249,7 +249,7 @@ class identical_to(RelationType):
 
 class see_also(RelationType):
     """generic relation to link one entity to another"""
-    symetric = True
+    symmetric = True
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),

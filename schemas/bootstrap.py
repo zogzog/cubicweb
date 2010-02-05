@@ -33,7 +33,7 @@ class CWRType(EntityType):
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
                              description=_('semantic description of this relation type'))
-    symetric = Boolean(description=_('is this relation equivalent in both direction ?'))
+    symmetric = Boolean(description=_('is this relation equivalent in both direction ?'))
     inlined = Boolean(description=_('is this relation physically inlined? you should know what you\'re doing if you are changing this!'))
     fulltext_container = String(description=_('if full text content of subject/object entity '
                                               'should be added to other side entity (the container).'),

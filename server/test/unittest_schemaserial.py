@@ -49,8 +49,8 @@ class Schema2RQLTC(TestCase):
     def test_rschema2rql1(self):
         self.assertListEquals(list(rschema2rql(schema.rschema('relation_type'))),
                              [
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symetric %(symetric)s',
-             {'description': u'link a relation definition to its relation type', 'symetric': False, 'name': u'relation_type', 'final' : False, 'fulltext_container': None, 'inlined': True}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
+             {'description': u'link a relation definition to its relation type', 'symmetric': False, 'name': u'relation_type', 'final' : False, 'fulltext_container': None, 'inlined': True}),
 
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
              {'rt': 'relation_type', 'description': u'', 'composite': u'object', 'oe': 'CWRType',
@@ -68,7 +68,7 @@ class Schema2RQLTC(TestCase):
     def test_rschema2rql2(self):
         self.assertListEquals(list(rschema2rql(schema.rschema('add_permission'))),
                               [
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symetric %(symetric)s', {'description': u'core relation giving to a group the permission to add an entity or relation type', 'symetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s', {'description': u'core relation giving to a group the permission to add an entity or relation type', 'symmetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
 
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
              {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 3, 'cardinality': u'**', 'se': 'CWAttribute'}),
@@ -89,8 +89,8 @@ class Schema2RQLTC(TestCase):
     def test_rschema2rql3(self):
         self.assertListEquals(list(rschema2rql(schema.rschema('cardinality'))),
                              [
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symetric %(symetric)s',
-             {'description': u'', 'symetric': False, 'name': u'cardinality', 'final': True, 'fulltext_container': None, 'inlined': False}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
+             {'description': u'', 'symmetric': False, 'name': u'cardinality', 'final': True, 'fulltext_container': None, 'inlined': False}),
 
             ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
              {'rt': 'cardinality', 'description': u'subject/object cardinality', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 5, 'defaultval': None, 'indexed': False, 'cardinality': u'?1', 'oe': 'String', 'se': 'CWAttribute'}),
@@ -123,16 +123,16 @@ class Schema2RQLTC(TestCase):
     def test_updaterschema2rql1(self):
         self.assertListEquals(list(updaterschema2rql(schema.rschema('relation_type'))),
                              [
-            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symetric %(symetric)s WHERE X is CWRType, X name %(rt)s',
-             {'rt': 'relation_type', 'symetric': False,
+            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X is CWRType, X name %(rt)s',
+             {'rt': 'relation_type', 'symmetric': False,
               'description': u'link a relation definition to its relation type',
               'final': False, 'fulltext_container': None, 'inlined': True, 'name': u'relation_type'})
             ])
 
     def test_updaterschema2rql2(self):
         expected = [
-            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symetric %(symetric)s WHERE X is CWRType, X name %(rt)s',
-             {'rt': 'add_permission', 'symetric': False,
+            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X is CWRType, X name %(rt)s',
+             {'rt': 'add_permission', 'symmetric': False,
               'description': u'core relation giving to a group the permission to add an entity or relation type',
               'final': False, 'fulltext_container': None, 'inlined': False, 'name': u'add_permission'})
             ]

@@ -44,7 +44,7 @@ class SomeViewsTC(GAEBasedTC):
                                   'inlined', 'inlined_relation', 'is', 'is_instance_of',
                                   'label', 'last_login_time', 'login',
                                   'mainvars', 'meta', 'modification_date', 'name', 'owned_by', 'pkey', 'primary_email',
-                                  'read_permission', 'require_group', 'state_of', 'surname', 'symetric',
+                                  'read_permission', 'require_group', 'state_of', 'surname', 'symmetric',
                                   'synopsis', 'talks_about', 'title', 'to_state', 'transition_of',
                                   'update_permission', 'use_email', 'value')))
 

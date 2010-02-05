@@ -302,7 +302,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         # schema should be update on insertion (after commit)
         eeid = self.execute('INSERT CWEType X: X name "Societe2", X description "", X final FALSE')[0][0]
         self._set_perms(eeid)
-        self.execute('INSERT CWRType X: X name "concerne2", X description "", X final FALSE, X symetric FALSE')
+        self.execute('INSERT CWRType X: X name "concerne2", X description "", X final FALSE, X symmetric FALSE')
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
         # have to commit before adding definition relations

@@ -172,8 +172,8 @@ class SchemaViewer(object):
             stereotypes = []
             if rschema.meta:
                 stereotypes.append('meta')
-            if rschema.symetric:
-                stereotypes.append('symetric')
+            if rschema.symmetric:
+                stereotypes.append('symmetric')
             if rschema.inlined:
                 stereotypes.append('inlined')
             title = Section(children=(title, ' (%s)'%rschema.display_name(self.req)), klass='title')
@@ -199,7 +199,7 @@ class SchemaViewer(object):
                 if (subjtype, objtype) in done:
                     continue
                 done.add((subjtype, objtype))
-                if rschema.symetric:
+                if rschema.symmetric:
                     done.add((objtype, subjtype))
                 data.append(Link(self.eschema_link_url(schema[subjtype]), subjtype))
                 data.append(Link(self.eschema_link_url(schema[objtype]), objtype))

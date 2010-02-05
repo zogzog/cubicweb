@@ -113,6 +113,13 @@ def deserialize_schema(schema, session):
                 print sql
                 sqlcu.execute(sql)
         # other table renaming done once schema has been read
+    # 3.6 migration
+    sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
+    if sqlcu.fetchall():
+        sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',
+                                      dbhelper.TYPE_MAPPING['Boolean'], True)
+        sqlcu.execute(sql)
+        sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
     sidx = {}
     permsdict = deserialize_ertype_permissions(session)
     schema.reading_from_database = True
@@ -163,9 +170,9 @@ def deserialize_schema(schema, session):
         schema.eschema(stype)._specialized_by.append(etype)
     for eid, rtype, desc, sym, il, ftc in session.execute(
         'Any X,N,D,S,I,FTC WHERE X is CWRType, X name N, X description D, '
-        'X symetric S, X inlined I, X fulltext_container FTC', build_descr=False):
+        'X symmetric S, X inlined I, X fulltext_container FTC', build_descr=False):
         rtype = ybo.RelationType(name=rtype, description=desc,
-                                 symetric=bool(sym), inlined=bool(il),
+                                 symmetric=bool(sym), inlined=bool(il),
                                  fulltext_container=ftc, eid=eid)
         rschema = schema.add_relation_type(rtype)
         sidx[eid] = rschema
@@ -185,7 +192,7 @@ def deserialize_schema(schema, session):
                                       internationalizable=i18n,
                                       default=default, eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symetrics)
+        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
         if rdefs is not None:
             set_perms(rdefs, permsdict)
     for values in session.execute(
@@ -198,7 +205,7 @@ def deserialize_schema(schema, session):
                                       cardinality=card, order=ord, description=desc,
                                       composite=c,  eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symetrics)
+        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
         if rdefs is not None:
             set_perms(rdefs, permsdict)
     schema.infer_specialization_rules()
@@ -331,7 +338,7 @@ HAS_FULLTEXT_CONTAINER = True
 def rschema_relations_values(rschema):
     values = _ervalues(rschema)
     values['final'] = rschema.final
-    values['symetric'] = rschema.symetric
+    values['symmetric'] = rschema.symmetric
     values['inlined'] = rschema.inlined
     if HAS_FULLTEXT_CONTAINER:
         if isinstance(rschema.fulltext_container, str):

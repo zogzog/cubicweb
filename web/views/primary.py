@@ -309,5 +309,5 @@ _pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 for attr in ('name', 'final'):
     _pvs.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'final', 'symetric', 'inlined'):
+for attr in ('name', 'final', 'symmetric', 'inlined'):
     _pvs.tag_attribute(('CWRType', attr), 'hidden')

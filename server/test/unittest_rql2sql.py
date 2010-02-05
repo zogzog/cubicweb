@@ -1325,7 +1325,7 @@ GROUP BY _ET.cw_name'''),
         rqlst = self._prepare(rql)
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
-    def test_symetric(self):
+    def test_symmetric(self):
         for t in self._parse(SYMETRIC):
             yield t
 
