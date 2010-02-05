@@ -271,7 +271,7 @@ of the cube (``migration/precreate.py``).
 
 
 Use of RQL expression for write permissions
- ```````````````````````````````````````````
+```````````````````````````````````````````
 It is possible to define RQL expression to provide update permission
 (`add`, `delete` and `update`) on relation and entity types.
 
