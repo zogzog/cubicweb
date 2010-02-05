@@ -27,7 +27,7 @@ def objectify_selector(selector_func):
     would be overkill::
 
         @objectify_selector
-        def yes(cls, *args, **kwargs):
+        def one(cls, *args, **kwargs):
             return 1
 
     """
@@ -185,9 +185,13 @@ class NotSelector(Selector):
 
 
 class yes(Selector):
-    """return arbitrary score
+    """Return the score given as parameter, with a default score of 0.5 so any
+    other selector take precedence.
 
-    default score of 0.5 so any other selector take precedence
+    Usually used for appobjects which can be selected whatever the context, or
+    also sometimes to add arbitrary points to a score.
+
+    Take care, `yes(0)` could be named 'no'...
     """
     def __init__(self, score=0.5):
         self.score = score

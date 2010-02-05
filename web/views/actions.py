@@ -211,7 +211,7 @@ class AddNewAction(MultipleEditAction):
     __regid__ = 'addentity'
     __select__ = (action.Action.__select__ &
                   (addable_etype_empty_rset()
-                   | (multi_lines_rset() & one_etype_rset & has_add_permission()))
+                   | (multi_lines_rset() & one_etype_rset() & has_add_permission()))
                   )
 
     category = 'moreactions'

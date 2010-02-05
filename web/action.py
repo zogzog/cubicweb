@@ -10,7 +10,7 @@ _ = unicode
 
 from cubicweb import target
 from cubicweb.selectors import (partial_relation_possible, match_search_state,
-                                one_line_rset, partial_may_add_relation, yes)
+                                one_line_rset, yes)
 from cubicweb.appobject import AppObject
 
 
@@ -76,22 +76,28 @@ class UnregisteredAction(Action):
 
 
 class LinkToEntityAction(Action):
-    """base class for actions consisting to create a new object
-    with an initial relation set to an entity.
-    Additionaly to EntityAction behaviour, this class is parametrized
-    using .etype, .rtype and .target attributes to check if the
-    action apply and if the logged user has access to it
+    """base class for actions consisting to create a new object with an initial
+    relation set to an entity.
+
+    Additionaly to EntityAction behaviour, this class is parametrized using
+    .rtype, .role and .target_etype attributes to check if the action apply and
+    if the logged user has access to it (see
+    :class:`~cubicweb.selectors.partial_relation_possible` selector
+    documentation for more information).
     """
     __select__ = (match_search_state('normal') & one_line_rset()
-                  & partial_relation_possible(action='add')
-                  & partial_may_add_relation())
+                  & partial_relation_possible(action='add', strict=True))
 
     submenu = 'addrelated'
 
     def url(self):
-        current_entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
-        linkto = '%s:%s:%s' % (self.rtype, current_entity.eid, target(self))
-        return self._cw.build_url('add/%s' % self.etype, __linkto=linkto,
-                                  __redirectpath=current_entity.rest_path(), # should not be url quoted!
+        try:
+            ttype = self.etype # deprecated in 3.6, already warned by the selector
+        except AttributeError:
+            ttype = self.target_etype
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        linkto = '%s:%s:%s' % (self.rtype, entity.eid, target(self))
+        return self._cw.build_url('add/%s' % ttype, __linkto=linkto,
+                                  __redirectpath=entity.rest_path(),
                                   __redirectvid=self._cw.form.get('__redirectvid', ''))
 
