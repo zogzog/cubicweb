@@ -17,7 +17,7 @@ HTML_PAGE = u"""<html>
 """
 
 class SimpleView(EntityView):
-    id = 'simple'
+    __regid__ = 'simple'
     __select__ = implements('Bug',)
 
     def call(self, **kwargs):
@@ -27,7 +27,7 @@ class SimpleView(EntityView):
         self.w(HTML_PAGE)
 
 class RaisingView(EntityView):
-    id = 'raising'
+    __regid__ = 'raising'
     __select__ = implements('Bug',)
 
     def cell_call(self, row, col):
