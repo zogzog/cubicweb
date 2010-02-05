@@ -318,9 +318,11 @@ class AdaptedListView(EntityView):
         self.wview(self.item_vid, self.cw_rset, row=row, col=col, vid=vid, **kwargs)
 
 
-class AdaptedListItemView(ListItemView):
+class AdaptedListItemView(EntityView):
     __regid__ = 'adaptedlistitem'
 
+    def cell_call(self, row, col, **kwargs):
+        self.wview('listitem', self.cw_rset, row=row, col=col, **kwargs)
 
 class CSVView(SimpleListView):
     __regid__ = 'csv'
