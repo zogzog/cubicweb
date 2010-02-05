@@ -13,16 +13,16 @@ from copy import deepcopy
 from datetime import date, datetime, timedelta
 
 from logilab.mtconverter import xml_escape
-
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached
+from logilab.common.date import datetime2ticks, ustrftime
 from logilab.common.compat import all
 
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
-from cubicweb.utils import datetime2ticks, make_uid, ustrftime
+from cubicweb.utils import make_uid
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
 from cubicweb.web.htmlwidgets import HTMLWidget

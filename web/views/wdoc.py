@@ -13,11 +13,11 @@ from bisect import bisect_right
 from datetime import date
 
 from logilab.common.changelog import ChangeLog
+from logilab.common.date import strptime, todate
 from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.selectors import match_form_params, yes
 from cubicweb.view import StartupView
-from cubicweb.utils import strptime, todate
 from cubicweb.uilib import rest_publish
 from cubicweb.web import NotFound, action
 _ = unicode

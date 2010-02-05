@@ -14,15 +14,15 @@ from warnings import warn
 from datetime import datetime, date, timedelta
 
 import logilab.common as lgc
-from logilab.common.shellutils import ProgressBar
 from logilab.common import db
+from logilab.common.shellutils import ProgressBar
 from logilab.common.adbh import get_adv_func_helper
 from logilab.common.sqlgen import SQLGenerator
+from logilab.common.date import todate, todatetime
 
 from indexer import get_indexer
 
 from cubicweb import Binary, ConfigurationError
-from cubicweb.utils import todate, todatetime
 from cubicweb.uilib import remove_html_tags
 from cubicweb.toolsutils import restrict_perms_to_user
 from cubicweb.schema import PURE_VIRTUAL_RTYPES

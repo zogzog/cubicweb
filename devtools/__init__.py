@@ -13,8 +13,8 @@ from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs)
 
+from logilab.common.date import strptime
 from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig
-from cubicweb.utils import strptime
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
 

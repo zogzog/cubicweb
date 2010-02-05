@@ -13,9 +13,10 @@ import time
 from simplejson import dumps
 
 from logilab.common import flatten
+from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import make_uid, UStringIO, datetime2ticks
+from cubicweb.utils import make_uid, UStringIO
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import multi_columns_rset
 from cubicweb.web.views import baseviews

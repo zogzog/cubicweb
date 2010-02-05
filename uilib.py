@@ -15,8 +15,8 @@ import re
 from StringIO import StringIO
 
 from logilab.mtconverter import xml_escape, html_unescape
+from logilab.common.date import ustrftime
 
-from cubicweb.utils import ustrftime
 
 def rql_for_eid(eid):
     """return the rql query necessary to fetch entity with the given eid.  This

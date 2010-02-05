@@ -13,10 +13,10 @@ from cgi import parse_qsl
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
+from logilab.common.date import ustrftime, strptime, todate, todatetime
 
 from cubicweb import Unauthorized, RegistryException, typed_eid
 from cubicweb.rset import ResultSet
-from cubicweb.utils import ustrftime, strptime, todate, todatetime
 
 ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}

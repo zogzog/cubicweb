@@ -8,7 +8,8 @@
 """
 from datetime import date
 
-from cubicweb.utils import last_day
+from logilab.common.date import last_day
+
 from cubicweb.web.views import baseviews, boxes, calendar
 from cubicweb.web.htmlwidgets import BoxLink, BoxWidget
 

@@ -9,9 +9,10 @@
 from datetime import date, time, timedelta
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import (ONEDAY, ONEWEEK, days_in_month, previous_month,
+                                 next_month, first_day, last_day, date_range)
 
 from cubicweb.interfaces import ICalendarViews
-from cubicweb.utils import ONEDAY, ONEWEEK, date_range, first_day, last_day, previous_month, next_month, days_in_month
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
 

@@ -7,10 +7,10 @@
 """
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import date_range, todatetime
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.selectors import implements
-from cubicweb.utils import date_range, todatetime
 from cubicweb.view import AnyRsetView
 
 

@@ -11,10 +11,10 @@ _ = unicode
 from datetime import datetime, date, timedelta
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import strptime, date_range, todate, todatetime
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.utils import strptime, date_range, todate, todatetime
 from cubicweb.view import EntityView
 
 

@@ -32,11 +32,6 @@ from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 import cubicweb
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 
-# XXX <3.2 bw compat
-from yams import schema
-schema.use_py_datetime()
-nodes.use_py_datetime()
-
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
