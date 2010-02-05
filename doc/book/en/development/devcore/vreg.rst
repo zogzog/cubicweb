@@ -168,7 +168,19 @@ with appropriate selectors.
 
 Defining your own selectors
 ```````````````````````````
-XXX objectify_selector, EntitySelector, EClassSelector...
+.. autoclass:: cubicweb.appobject.Selector
+   :members: __call__
+
+.. autofunction:: cubicweb.appobject.objectify_selector
+.. autofunction:: cubicweb.selectors.lltrace
+
+Selectors __call__ should *always* return a positive integer, and shall never
+return `None`.
+
+Useful abstract base classes for 'entity' selectors:
+
+.. autoclass:: cubicweb.selectors.EClassSelector
+.. autoclass:: cubicweb.selectors.EntitySelector
 
 
 Debugging
@@ -177,7 +189,7 @@ Debugging
 Once in a while, one needs to understand why a view (or any AppObject)
 is, or is not selected appropriately. Looking at which selectors fired
 (or did not) is the way. There exists a traced_selection context
-manager to help with that.
+manager to help with that, *if you're running your instance in debug mode*.
 
 Here is an example:
 
@@ -193,8 +205,6 @@ top-level if you're using python 2.5.
 This will yield additional WARNINGs in the logs, like this::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
-
-Take care not filtering-out messages whose log level is <= LOG_WARNING!
 
 You can also give to traced_selection the registry ids of objects on which to debug
 you want to debug selection ('wfhistory' in the example above).

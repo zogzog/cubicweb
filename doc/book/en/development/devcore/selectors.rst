@@ -1,101 +1,89 @@
 Base selectors
 --------------
 
-Selectors are scoring functions that are called by the view dispatcher to tell
-whenever a view can be applied to a given result set of a._cwuest. Selector sets
-are the glue that tie views to the data model. Using them appropriately is an
+Selectors are scoring functions that are called by the registry to tell whenever
+an appobject can be selected in a given context. Selector sets are for instance
+the glue that tie views to the data model. Using them appropriately is an
 essential part of the construction of well behaved cubes.
 
+Of course you may have to write your own set of selectors as your needs grows and
+you get familiar with the framework (see :ref:CustomSelectors).
 
-*CubicWeb* provides its own set of selectors that you can use and here is a
-description of some of the most common used:
+Here is a description of generic selectors provided by CubicWeb that should suit
+most of your needs.
 
-Of course you will write your own set of selectors as you get familiar with the
-framework.
-
-
-:yes([score=1]):
-  Return the score given as parameter (default to 1). Usually used for appobjects
-  which can be selected whatever the context, or also sometimes to add arbitrary
-  points to a score. Take care, `yes(0)` could be named 'no'...
-
-
-Rset selectors
+Bare selectors
 ~~~~~~~~~~~~~~
-:none_rset():
-  Return 1 if the result set is None.
+Those selectors are somewhat dumb, which doesn't mean they're not (very) useful.
 
-:any_rset():
-  Return 1 for any result set, whatever the number of rows in it.
+.. autoclass:: cubicweb.appobject.yes
+.. autoclass:: cubicweb.selectors.match_kwargs
+.. autoclass:: cubicweb.selectors.appobject_selectable
 
-:nonempty_rset():
-  Return 1 for non empty result set.
 
-:empty_rset():
-  Return 1 for empty result set.
+Result set selectors
+~~~~~~~~~~~~~~~~~~~~~
+Those selectors are looking for a result set in the context ('rset' argument or
+the input context) and match or not according to its shape. Some of these
+selectors have different behaviour if a particular cell of the result set is
+specified using 'row' and 'col' arguments of the input context or not.
 
-:one_line_rset():
-  Return 1 if the result set is of size 1 or if a row is specified.
+.. autoclass:: cubicweb.selectors.none_rset
+.. autoclass:: cubicweb.selectors.any_rset
+.. autoclass:: cubicweb.selectors.nonempty_rset
+.. autoclass:: cubicweb.selectors.empty_rset
+.. autoclass:: cubicweb.selectors.one_line_rset
+.. autoclass:: cubicweb.selectors.multi_lines_rset
+.. autoclass:: cubicweb.selectors.multi_columns_rset
+.. autoclass:: cubicweb.selectors.paginated_rset
+.. autoclass:: cubicweb.selectors.sorted_rset
+.. autoclass:: cubicweb.selectors.one_etype_rset
+.. autoclass:: cubicweb.selectors.multi_etypes_rset
 
-:two_lines_rset():
-  Return 1 if the result set has *at least* two rows.
 
-:two_cols_rset():
-  Return 1 if the result set is not empty and has *at least* two columns per
-  row.
+Entity selectors
+~~~~~~~~~~~~~~~~
+Those selectors are looking for either an `entity` argument in the input context,
+or entity found in the result set ('rset' argument or the input context) and
+match or not according to entity's (instance or class) properties.
 
-:paginated_rset():
-  Return 1 if the result set has more rows the specified by the
-  `navigation.page-size` property.
+.. autoclass:: cubicweb.selectors.non_final_entity
+.. autoclass:: cubicweb.selectors.implements
+.. autoclass:: cubicweb.selectors.score_entity
+.. autoclass:: cubicweb.selectors.rql_condition
+.. autoclass:: cubicweb.selectors.relation_possible
+.. autoclass:: cubicweb.selectors.partial_relation_possible
+.. autoclass:: cubicweb.selectors.has_related_entities
+.. autoclass:: cubicweb.selectors.partial_has_related_entities
+.. autoclass:: cubicweb.selectors.has_permission
+.. autoclass:: cubicweb.selectors.has_add_permission
 
-:sorted_rset():
-  Return 1 if the result set has an ORDERBY clause.
 
-:one_etype_rset():
-  Return 1 if the result set has entities which are all of the same type in a
-  given column (default to column 0).
+Logged user selectors
+~~~~~~~~~~~~~~~~~~~~~
+Those selectors are looking for properties of the user issuing the request.
 
-:non_final_entity():
-  Return 1 if the result set contains entities in a given column (the first one
-  by default), and no "final" values such as string of int.
+.. autoclass:: cubicweb.selectors.anonymous_user
+.. autoclass:: cubicweb.selectors.authenticated_user
+.. autoclass:: cubicweb.selectors.match_user_groups
 
-:implements(<iface or etype>, ...):
-  Return positive score if entities in the result set are of the given entity
-  type or implements given interface.  If multiple arguments are given, matching
-  one of them is enough. Returned score reflects the "distance" between expected
-  type or interface and matched entities. Entity types are usually given as
-  string, the corresponding class will be fetched from the vregistry.
 
-:two_etypes_rset(): XXX
-:entity_implements(): XXX
-:relation_possible(): XXX
-:partial_relation_possible(): XXX
-:may_add_relation(): XXX
-:partial_may_add_relation(): XXX
-:has_related_entities(): XXX
-:partial_has_related_entities(): XXX
-:has_permission(): XXX
-:has_add_permission(): XXX
-:rql_condition(): XXX
-:but_etype(): XXX
-:score_entity(): XXX
+Web request selectors
+~~~~~~~~~~~~~~~~~~~~~
+Those selectors are looking for properties of *web* request, they can not be
+used on the data repository side.
 
-Request selectors
-~~~~~~~~~~~~~~~~~~
-:anonymous_user():
-  Return 1 if user isn't authenticated (eg is the anonymous user).
+.. autoclass:: cubicweb.selectors.match_form_params
+.. autoclass:: cubicweb.selectors.match_search_state
+.. autoclass:: cubicweb.selectors.match_context_prop
+.. autoclass:: cubicweb.selectors.match_view
+.. autoclass:: cubicweb.selectors.primary_view
+.. autoclass:: cubicweb.selectors.specified_etype_implements
 
-:authenticated_user():
-  Return 1 if user is authenticated.
-
-:match_user_groups(): XXX
-:match_search_state(): XXX
-:match_form_params(): XXX
 
 Other selectors
 ~~~~~~~~~~~~~~~
-:match_kwargs(): XXX
-:match_context_prop(): XXX
-:appobject_selectable(): XXX
-:specified_etype_implements(): XXX
-:primary_view(): XXX
+.. autoclass:: cubicweb.selectors.match_transition
+
+You'll also find some other (very) specific selectors hidden in other modules
+than :module:`cubicweb.selectors`.
