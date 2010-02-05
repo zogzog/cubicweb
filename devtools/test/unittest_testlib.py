@@ -26,7 +26,7 @@ class WebTestTC(TestCase):
         class MyWebTest(CubicWebTC):
 
             def test_error_view(self):
-                self.add_entity('Bug', title=u"bt")
+                self.request().create_entity('Bug', title=u"bt")
                 self.view('raising', self.execute('Bug B'), template=None)
 
             def test_correct_view(self):
