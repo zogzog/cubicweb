@@ -18,37 +18,9 @@ from time import time
 from random import randint, seed
 import decimal
 
-from logilab.common.date import strptime, todate, next_month
-
 # initialize random seed from current time
 seed()
 
-# XXX should replace lgc.date.date_range implementation
-def date_range(begin, end, incday=None, incmonth=None):
-    """yields each date between begin and end
-    :param begin: the start date
-    :param end: the end date
-    :param incr: the step to use to iterate over dates. Default is
-                 one day.
-    :param include: None (means no exclusion) or a function taking a
-                    date as parameter, and returning True if the date
-                    should be included.
-    """
-    assert not (incday and incmonth)
-    begin = todate(begin)
-    end = todate(end)
-    if incmonth:
-        while begin < end:
-            begin = next_month(begin, incmonth)
-            yield begin
-    else:
-        if not incday:
-            incr = ONEDAY
-        else:
-            incr = datetime.timedelta(incday)
-        while begin <= end:
-           yield begin
-           begin += incr
 
 
 if sys.version_info[:2] < (2, 5):
