@@ -113,10 +113,8 @@ class DefaultTreeViewItemView(EntityView):
         assert treeid is not None
         entity = self.cw_rset.get_entity(row, col)
         itemview = self._cw.view(vid, self.cw_rset, row=row, col=col)
-        if row == len(self.cw_rset) - 1:
-            self.w(u'<li class="last">%s</li>' % itemview)
-        else:
-            self.w(u'<li>%s</li>' % itemview)
+        last_class = morekwargs['is_last'] and ' class="last"' or ''
+        self.w(u'<li%s>%s</li>' % (last_class, itemview))
 
 
 class TreeViewItemView(EntityView):

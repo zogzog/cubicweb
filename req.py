@@ -341,7 +341,7 @@ class RequestSessionBase(object):
         """return a string for floating point number according to instance's
         configuration
         """
-        if num:
+        if num is not None:
             return self.property_value('ui.float-format') % num
         return u''
 

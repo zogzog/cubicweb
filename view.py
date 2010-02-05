@@ -112,7 +112,7 @@ class View(AppObject):
     def paginable(self):
         if not isinstance(self.__class__.need_navigation, property):
             warn('[3.6] %s.need_navigation is deprecated, use .paginable'
-                 % self.__class__, DeprecationWarninig)
+                 % self.__class__, DeprecationWarning)
             return self.need_navigation
         return True
 

@@ -1,4 +1,4 @@
-.. -*- coding: utf-8 -*-
+ .. -*- coding: utf-8 -*-
 
 Yams *schema*
 -------------
@@ -226,17 +226,17 @@ For *CubicWeb* in particular:
 * we associate rights at the enttities/relations schema level
 * for each entity, we distinguish four kind of permissions: read,
   add, update and delete
-* for each relation, we distinguish three king of permissions: read,
+* for each relation, we distinguish three kinds of permissions: read,
   add and delete (we can not modify a relation)
 * the basic groups are: Administrators, Users and Guests
-* by default, users belongs to the group Users
-* there is a virtual group called `Owners users` to which we
+* by default, users belong to the group Users
+* there is a virtual group called `Owners` to which we
   can associate only deletion and update permissions
-* we can not add users to the `Owners users` group, they are
-  implicetely added to it according to the context of the objects
+* we can not add users to the `Owners` group, they are
+  implicitly added to it according to the context of the objects
   they own
-* the permissions of this group are only be checked on update/deletion
-  actions if all the other groups the user belongs does not provide
+* the permissions of this group are only checked on update/deletion
+  actions if all the other groups the user belongs to does not provide
   those permissions
 
 Setting permissions is done with the attribute `__permissions__` of entities and
@@ -250,8 +250,8 @@ For a relation type, the possible actions are `read`, `add`, and `delete`.
 
 For each access type, a tuple indicates the name of the authorized groups and/or
 one or multiple RQL expressions to satisfy to grant access. The access is
-provided once the user is in the listed groups or one of the RQL condition is
-satisfied.
+provided if the user is in one of the listed groups or one of if the RQL condition
+is satisfied.
 
 The standard user groups
 ````````````````````````
@@ -271,7 +271,7 @@ of the cube (``migration/precreate.py``).
 
 
 Use of RQL expression for write permissions
-```````````````````````````````````````````
+ ```````````````````````````````````````````
 It is possible to define RQL expression to provide update permission
 (`add`, `delete` and `update`) on relation and entity types.
 
@@ -287,7 +287,7 @@ RQL expression for entity type permission :
 
 * it is possible to use, in this expression, a special relation
   "has_<ACTION>_permission" where the subject is the user and the
-  object is a any variable, meaning that the user needs to have
+  object is any variable, meaning that the user needs to have
   permission to execute the action <ACTION> on the entities related
   to this variable
 
@@ -311,13 +311,14 @@ for the following :
 
 :Note on the use of RQL expression for `add` permission:
 
-  Potentially, the use of an RQL expression to add an entity or a relation
-  can cause problems for the user interface, because if the expression uses
-  the entity or the relation to create, then we are not able to verify the
-  permissions before we actually add the entity (please note that this is
-  not a problem for the RQL server at all, because the permissions checks are
-  done after the creation). In such case, the permission check methods
-  (check_perm, has_perm) can indicate that the user is not allowed to create
+  Potentially, the use of an RQL expression to add an entity or a
+  relation can cause problems for the user interface, because if the
+  expression uses the entity or the relation to create, then we are
+  not able to verify the permissions before we actually add the entity
+  (please note that this is not a problem for the RQL server at all,
+  because the permissions checks are done after the creation). In such
+  case, the permission check methods (CubicWebEntitySchema.check_perm
+  and has_perm) can indicate that the user is not allowed to create
   this entity but can obtain the permission.
   To compensate this problem, it is usually necessary, for such case,
   to use an action that reflects the schema permissions but which enables
@@ -445,57 +446,54 @@ specific permissions, its definition (by using `SubjectRelation` and
 
 Definition of permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In addition to that the entity type `CWPermission` from the standard library
-allow to build very complex and dynamic security architecture. The schema of
-this entity type is as follow:
+The entity type `CWPermission` from the standard library
+allows to build very complex and dynamic security architectures. The schema of
+this entity type is as follow :
 
 .. sourcecode:: python
 
     class CWPermission(EntityType):
-	"""entity type that may be used to construct some advanced security configuration
-	"""
-	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
+        """entity type that may be used to construct some advanced security configuration
+        """
+        name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
  require_group = SubjectRelation('CWGroup', cardinality='+*',
-					description=_('groups to which the permission is granted'))
+                                        description=_('groups to which the permission is granted'))
  require_state = SubjectRelation('State',
                                         description=_("entity's state in which the permission is applicable"))
-	# can be used on any entity
+        # can be used on any entity
  require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
-					    description=_("link a permission to the entity. This "
-							  "permission should be used in the security "
-							  "definition of the entity's type to be useful."))
+                                            description=_("link a permission to the entity. This "
+                                                          "permission should be used in the security "
+                                                          "definition of the entity's type to be useful."))
 
 
 Example of configuration:
 
 .. sourcecode:: python
 
-
-    ...
-
     class Version(EntityType):
-	"""a version is defining the content of a particular project's release"""
+        """a version is defining the content of a particular project's release"""
 
-	__permissions__ = {'read':   ('managers', 'users', 'guests',),
-		       'update': ('managers', 'logilab', 'owners',),
-		       'delete': ('managers', ),
-		       'add':    ('managers', 'logilab',
-				  ERQLExpression('X version_of PROJ, U in_group G,'
-						 'PROJ require_permission P, P name "add_version",'
-						 'P require_group G'),)}
+        __permissions__ = {'read':   ('managers', 'users', 'guests',),
+                           'update': ('managers', 'logilab', 'owners',),
+                           'delete': ('managers', ),
+                           'add':    ('managers', 'logilab',
+                                       ERQLExpression('X version_of PROJ, U in_group G,'
+                                                 'PROJ require_permission P, P name "add_version",'
+                                                 'P require_group G'),)}
 
 
     class version_of(RelationType):
-	"""link a version to its project. A version is necessarily linked to one and only one project.
-	"""
-	__permissions__ = {'read':   ('managers', 'users', 'guests',),
-		       'delete': ('managers', ),
-		       'add':    ('managers', 'logilab',
-				  RRQLExpression('O require_permission P, P name "add_version",'
-						 'U in_group G, P require_group G'),)
-		       }
-	inlined = True
+        """link a version to its project. A version is necessarily linked to one and only one project.
+        """
+        __permissions__ = {'read':   ('managers', 'users', 'guests',),
+                           'delete': ('managers', ),
+                           'add':    ('managers', 'logilab',
+                                  RRQLExpression('O require_permission P, P name "add_version",'
+                                                 'U in_group G, P require_group G'),)
+                       }
+        inlined = True
+
 
 This configuration indicates that an entity `CWPermission` named
 "add_version" can be associated to a project and provides rights to create

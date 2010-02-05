@@ -752,7 +752,7 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def document_surrounding_div(self):
         if self.xhtml_browser():
-            return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+            return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE + # XXX encoding ?
                     u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
         return u'<div>'
 
