@@ -22,10 +22,10 @@ ISODATE_SRE = re.compile('(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})$')
 
 class MyValueGenerator(ValueGenerator):
 
-    def generate_Bug_severity(self, index):
+    def generate_Bug_severity(self, entity, index):
         return u'dangerous'
 
-    def generate_Any_description(self, index, format=None):
+    def generate_Any_description(self, entity, index, format=None):
         return u'yo'
 
 
@@ -65,12 +65,12 @@ class ValueGeneratorTC(TestCase):
 
     def test_string(self):
         """test string generation"""
-        surname = self.person_valgen._generate_value('surname', 12)
+        surname = self.person_valgen.generate_attribute_value({}, 'surname', 12)
         self.assertEquals(surname, u'é&surname12')
 
     def test_domain_value(self):
         """test value generation from a given domain value"""
-        firstname = self.person_valgen._generate_value('firstname', 12)
+        firstname = self.person_valgen.generate_attribute_value({}, 'firstname', 12)
         possible_choices = self._choice_func('Person', 'firstname')
         self.failUnless(firstname in possible_choices,
                         '%s not in %s' % (firstname, possible_choices))
@@ -79,21 +79,21 @@ class ValueGeneratorTC(TestCase):
         """test choice generation"""
         # Test for random index
         for index in range(5):
-            sx_value = self.person_valgen._generate_value('civility', index)
+            sx_value = self.person_valgen.generate_attribute_value({}, 'civility', index)
             self.failUnless(sx_value in ('Mr', 'Mrs', 'Ms'))
 
     def test_integer(self):
         """test integer generation"""
         # Test for random index
         for index in range(5):
-            cost_value = self.bug_valgen._generate_value('cost', index)
+            cost_value = self.bug_valgen.generate_attribute_value({}, 'cost', index)
             self.failUnless(cost_value in range(index+1))
 
     def test_date(self):
         """test date generation"""
         # Test for random index
         for index in range(5):
-            date_value = self.person_valgen._generate_value('birthday', index)
+            date_value = self.person_valgen.generate_attribute_value({}, 'birthday', index)
             self._check_date(date_value)
 
     def test_phone(self):
@@ -102,11 +102,11 @@ class ValueGeneratorTC(TestCase):
 
 
     def test_customized_generation(self):
-        self.assertEquals(self.bug_valgen._generate_value('severity', 12),
+        self.assertEquals(self.bug_valgen.generate_attribute_value({}, 'severity', 12),
                           u'dangerous')
-        self.assertEquals(self.bug_valgen._generate_value('description', 12),
+        self.assertEquals(self.bug_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
-        self.assertEquals(self.person_valgen._generate_value('description', 12),
+        self.assertEquals(self.person_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
 
 
