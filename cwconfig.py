@@ -479,7 +479,7 @@ this option is set to yes",
         from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
         for ctlfile in ('web/webctl.py',  'etwist/twctl.py',
-                        'server/serverctl.py', 'hercule.py',
+                        'server/serverctl.py', 
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:
