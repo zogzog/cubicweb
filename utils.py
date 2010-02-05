@@ -15,9 +15,9 @@ import decimal
 import datetime as pydatetime
 from md5 import md5
 from datetime import datetime, timedelta, date
-from time import time, mktime
+from time import time
 from random import randint, seed
-from calendar import monthrange
+from calendar import monthrange, timegm
 
 # initialize random seed from current time
 seed()
@@ -44,7 +44,7 @@ def todatetime(somedate):
     return datetime(somedate.year, somedate.month, somedate.day)
 
 def datetime2ticks(date):
-    return mktime(date.timetuple()) * 1000
+    return timegm(date.timetuple()) * 1000
 
 ONEDAY = timedelta(days=1)
 ONEWEEK = timedelta(days=7)
