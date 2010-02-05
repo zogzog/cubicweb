@@ -251,16 +251,6 @@ class SQLAdapterMixIn(object):
                     value = todate(value)
                 elif isinstance(value, Binary):
                     value = self.binary(value.getvalue())
-                # XXX <3.2 bw compat
-                elif type(value) is DateTimeType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    value = datetime(value.year, value.month, value.day,
-                                   value.hour, value.minute, int(value.second))
-                elif type(value) is DateTimeDeltaType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    value = timedelta(0, int(value.seconds), 0)
             attrs[SQL_PREFIX+str(attr)] = value
         return attrs
 
