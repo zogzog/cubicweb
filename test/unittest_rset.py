@@ -212,7 +212,7 @@ class ResultSetTC(CubicWebTC):
         self.assert_(rqlst1 is rqlst2)
 
     def test_get_entity_simple(self):
-        self.add_entity('CWUser', login=u'adim', upassword='adim',
+        self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                         surname=u'di mascio', firstname=u'adrien')
         e = self.entity('Any X,T WHERE X login "adim", X surname T')
         self.assertEquals(e['surname'], 'di mascio')
@@ -224,7 +224,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(pprelcachedict(e._related_cache), [])
 
     def test_get_entity_advanced(self):
-        self.add_entity('Bookmark', title=u'zou', path=u'/view')
+        self.request().create_entity('Bookmark', title=u'zou', path=u'/view')
         self.execute('SET X bookmarked_by Y WHERE X is Bookmark, Y login "anon"')
         rset = self.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
@@ -262,7 +262,7 @@ class ResultSetTC(CubicWebTC):
                           [('in_state_subject', [seid])])
 
     def test_get_entity_advanced_prefilled_cache(self):
-        e = self.add_entity('Bookmark', title=u'zou', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'zou', path=u'path')
         self.commit()
         rset = self.execute('Any X,U,S,XT,UL,SN WHERE X created_by U, U in_state S, '
                             'X title XT, S name SN, U login UL, X eid %s' % e.eid)
@@ -295,7 +295,7 @@ class ResultSetTC(CubicWebTC):
 
 
     def test_get_entity_union(self):
-        e = self.add_entity('Bookmark', title=u'manger', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'manger', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is Bookmark, X title N)'
                             ' UNION '
@@ -310,14 +310,14 @@ class ResultSetTC(CubicWebTC):
             self.assertEquals(entity[attr], n)
 
     def test_related_entity_optional(self):
-        e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any B,U,L WHERE B bookmarked_by U?, U login L')
         entity, rtype = rset.related_entity(0, 2)
         self.assertEquals(entity, None)
         self.assertEquals(rtype, None)
 
     def test_related_entity_union_subquery(self):
-        e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
