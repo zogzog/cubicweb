@@ -458,6 +458,7 @@ du :eid:`1:*ReST*`'''
         self.assertEquals(person.rest_path(), 'personne/doe')
         # ambiguity test
         person2 = req.create_entity('Personne', prenom=u'remi', nom=u'doe')
+        person.clear_all_caches()
         self.assertEquals(person.rest_path(), 'personne/eid/%s' % person.eid)
         self.assertEquals(person2.rest_path(), 'personne/eid/%s' % person2.eid)
         # unique attr with None value (wikiid in this case)

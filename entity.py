@@ -785,7 +785,12 @@ class Entity(AppObject, dict):
         # clear relations cache
         for rschema, _, role in self.e_schema.relation_definitions():
             self.clear_related_cache(rschema.type, role)
-
+        # rest path unique cache
+        try:
+            del self.__unique
+        except AttributeError:
+            pass
+    
     # raw edition utilities ###################################################
 
     def set_attributes(self, _cw_unsafe=False, **kwargs):
