@@ -373,7 +373,7 @@ class ResultSet(object):
         return entity
 
     @cached
-    def get_entity(self, row, col=None):
+    def get_entity(self, row, col):
         """special method for query retreiving a single entity, returns a
         partially initialized Entity instance.
 
@@ -387,11 +387,6 @@ class ResultSet(object):
 
         :return: the partially initialized `Entity` instance
         """
-        if col is None:
-            from warnings import warn
-            msg = '[3.2] col parameter will become mandatory in future version'
-            warn(msg, DeprecationWarning, stacklevel=3)
-            col = 0
         etype = self.description[row][col]
         try:
             eschema = self.vreg.schema.eschema(etype)

@@ -26,8 +26,6 @@ http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-__revision__ = "$Id: stresstester.py,v 1.3 2006-03-05 14:35:27 syt Exp $"
-
 import os
 import sys
 import threading

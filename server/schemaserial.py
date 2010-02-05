@@ -52,39 +52,6 @@ def group_mapping(cursor, interactive=True):
                     continue
     return res
 
-def _set_sql_prefix(prefix):
-    """3.2.0 migration function: allow to unset/reset SQL_PREFIX"""
-    for module in ('checkintegrity', 'migractions', 'schemahooks',
-                   'sources.rql2sql', 'sources.native', 'sqlutils'):
-        try:
-            sys.modules['cubicweb.server.%s' % module].SQL_PREFIX = prefix
-            print 'changed SQL_PREFIX for %s' % module
-        except KeyError:
-            pass
-
-def _update_database(schema, sqlcu):
-    """3.2.0 migration function: update database schema by adding SQL_PREFIX to
-    entity type tables and columns
-    """
-    for etype in schema.entities():
-        if etype.final:
-            continue
-        try:
-            sql = 'ALTER TABLE %s RENAME TO cw_%s' % (
-                etype, ETYPE_NAME_MAP.get(etype, etype))
-            print sql
-            sqlcu.execute(sql)
-        except:
-            pass
-        for rschema in etype.subject_relations():
-            if rschema == 'has_text':
-                continue
-            if rschema.final or rschema.inlined:
-                sql = 'ALTER TABLE cw_%s RENAME %s TO cw_%s' % (
-                    etype, rschema, rschema)
-                print sql
-                sqlcu.execute(sql)
-
 # schema / perms deserialization ##############################################
 OLD_SCHEMA_TYPES = frozenset(('EFRDef', 'ENFRDef', 'ERType', 'EEType',
                               'EConstraintType', 'EConstraint', 'EGroup',
@@ -94,26 +61,10 @@ def deserialize_schema(schema, session):
     """return a schema according to information stored in an rql database
     as CWRType and CWEType entities
     """
-    #
     repo = session.repo
-    sqlcu = session.pool['system']
-    _3_2_migration = False
     dbhelper = repo.system_source.dbhelper
-    tables = set(t.lower() for t in dbhelper.list_tables(sqlcu))
-    if 'eetype' in tables:
-        _3_2_migration = True
-        # 3.2 migration
-        _set_sql_prefix('')
-        # first rename entity types whose name changed in 3.2 without adding the
-        # cw_ prefix
-        for etype in OLD_SCHEMA_TYPES:
-            if etype.lower() in tables:
-                sql = 'ALTER TABLE %s RENAME TO %s' % (etype,
-                                                       ETYPE_NAME_MAP[etype])
-                print sql
-                sqlcu.execute(sql)
-        # other table renaming done once schema has been read
     # 3.6 migration
+    sqlcu = session.pool['system']
     sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
     if sqlcu.fetchall():
         sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',
@@ -209,9 +160,6 @@ def deserialize_schema(schema, session):
         if rdefs is not None:
             set_perms(rdefs, permsdict)
     schema.infer_specialization_rules()
-    if _3_2_migration:
-        _update_database(schema, sqlcu)
-        _set_sql_prefix('cw_')
     session.commit()
     schema.reading_from_database = False
 

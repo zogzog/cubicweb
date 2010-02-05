@@ -56,51 +56,12 @@ class Binary(StringIO):
                "Binary objects must use raw strings, not %s" % data.__class__
         StringIO.write(self, data)
 
-# use this dictionary for renaming of entity types while keeping bw compat
-ETYPE_NAME_MAP = {# 3.2 migration
-                  'ECache': 'CWCache',
-                  'EUser': 'CWUser',
-                  'EGroup': 'CWGroup',
-                  'EProperty': 'CWProperty',
-                  'EFRDef': 'CWAttribute',
-                  'ENFRDef': 'CWRelation',
-                  'ERType': 'CWRType',
-                  'EEType': 'CWEType',
-                  'EConstraintType': 'CWConstraintType',
-                  'EConstraint': 'CWConstraint',
-                  'EPermission': 'CWPermission',
-                  }
+# use this dictionary to rename entity types while keeping bw compat
+ETYPE_NAME_MAP = {}
 
-
-# XXX cubic web cube migration map
-CW_MIGRATION_MAP = {'erudi': 'cubicweb',
-                    'eaddressbook': 'addressbook',
-                    'ebasket': 'basket',
-                    'eblog': 'blog',
-                    'ebook': 'book',
-                    'eclassschemes': 'keyword',
-                    'eclassfolders': 'folder',
-                    'eclasstags': 'tag',
-                    'ecomment': 'comment',
-                    'ecompany': 'company',
-                    'econference':  'conference',
-                    'eemail': 'email',
-                    'eevent': 'event',
-                    'eexpense': 'expense',
-                    'efile': 'file',
-                    'einvoice': 'invoice',
-                    'elink': 'link',
-                    'emailinglist': 'mailinglist',
-                    'eperson': 'person',
-                    'eshopcart': 'shopcart',
-                    'eskillmat': 'skillmat',
-                    'etask': 'task',
-                    'eworkcase': 'workcase',
-                    'eworkorder': 'workorder',
-                    'ezone': 'zone',
-                    'i18ncontent': 'i18ncontent',
-                    'svnfile': 'vcsfile',
-                    }
+# XXX cubic web cube migration map. See if it's worth keeping this mecanism
+#     to help in cube renaming
+CW_MIGRATION_MAP = {}
 
 def neg_role(role):
     if role == 'subject':
