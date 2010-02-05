@@ -247,6 +247,7 @@ class BadSchemaRQLExprTC(TestCase):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
         self.loader.loaded_files = []
+        self.loader.post_build_callbacks = []
         self.loader._pyreader = PyFileReader(self.loader)
 
     def _test(self, schemafile, msg):
