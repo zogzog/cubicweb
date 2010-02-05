@@ -36,16 +36,25 @@ from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
 
 
-class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
-    """dummy config to get full library schema and entities"""
+class DevConfiguration(ServerConfiguration, WebConfiguration):
+    """dummy config to get full library schema and appobjects for
+    a cube or for cubicweb (without a home)
+    """
     creating = True
-    cubicweb_appobject_path = ServerConfiguration.cubicweb_appobject_path | WebConfiguration.cubicweb_appobject_path
-    cube_appobject_path = ServerConfiguration.cube_appobject_path | WebConfiguration.cube_appobject_path
+    cleanup_interface_sobjects = False
+
+    cubicweb_appobject_path = (ServerConfiguration.cubicweb_appobject_path
+                               | WebConfiguration.cubicweb_appobject_path)
+    cube_appobject_path = (ServerConfiguration.cube_appobject_path
+                           | WebConfiguration.cube_appobject_path)
 
     def __init__(self, *cubes):
-        super(DevCubeConfiguration, self).__init__(cubes[0])
-        self._cubes = self.reorder_cubes(self.expand_cubes(cubes,
-                                         with_recommends=True))
+        super(DevConfiguration, self).__init__(cubes and cubes[0] or None)
+        if cubes:
+            self._cubes = self.reorder_cubes(
+                self.expand_cubes(cubes, with_recommends=True))
+        else:
+            self._cubes = ()
 
     @property
     def apphome(self):
@@ -56,13 +65,6 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
         pass
     def load_configuration(self):
         pass
-
-
-class DevDepConfiguration(DevCubeConfiguration):
-    """configuration to use to generate cubicweb po files or to use as "library" configuration
-    to filter out message ids from cubicweb and dependencies of a cube
-    """
-
     def default_log_file(self):
         return None
 
@@ -93,16 +95,16 @@ def generate_schema_pot(w, cubedir=None):
     should be marked using '_' and extracted using xgettext
     """
     from cubicweb.cwvreg import CubicWebVRegistry
-    cube = cubedir and split(cubedir)[-1]
-    libconfig = DevDepConfiguration(cube)
-    libconfig.cleanup_interface_sobjects = False
-    cleanup_sys_modules(libconfig)
     if cubedir:
-        config = DevCubeConfiguration(cube)
-        config.cleanup_interface_sobjects = False
+        cube = split(cubedir)[-1]
+        config = DevConfiguration(cube)
+        depcubes = list(config._cubes)
+        depcubes.remove(cube)
+        libconfig = DevConfiguration(*depcubes)
     else:
-        config = libconfig
-        libconfig = None
+        config = DevConfiguration()
+        cube = libconfig = None
+    cleanup_sys_modules(config)
     schema = config.load_schema(remove_unused_rtypes=False)
     vreg = CubicWebVRegistry(config)
     # set_schema triggers objects registrations
@@ -346,9 +348,10 @@ class UpdateTemplateCatalogCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
-            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in args]
+            cubes = [DevConfiguration.cube_dir(cube) for cube in args]
         else:
-            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in DevCubeConfiguration.available_cubes()]
+            cubes = [DevConfiguration.cube_dir(cube)
+                     for cube in DevConfiguration.available_cubes()]
             cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
@@ -624,6 +627,7 @@ class ExamineLogCommand(Command):
         for clocktime, cputime, occ, rql in stat:
             print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime, cputime, occ, rql)
 
+
 class GenerateSchema(Command):
     """Generate schema image for the given cube"""
     name = "schema"
@@ -660,16 +664,12 @@ class GenerateSchema(Command):
     def run(self, args):
         from logilab.common.textutils import splitstrip
         cubes = splitstrip(pop_arg(args, 1))
-
-        dev_conf = DevCubeConfiguration(*cubes)
+        dev_conf = DevConfiguration(*cubes)
         schema = dev_conf.load_schema()
-
-
         out, viewer = self['output-file'], self['viewer']
         if out is None:
             tmp_file = NamedTemporaryFile(suffix=".svg")
             out = tmp_file.name
-
         skiptypes = BASE_TYPES | SCHEMA_TYPES
         if not self['show-meta']:
             skiptypes |=  META_RTYPES | SYSTEM_RTYPES | INTERNAL_TYPES
@@ -679,9 +679,7 @@ class GenerateSchema(Command):
             skiptypes |= set(('CWUser', 'CWGroup', 'EmailAddress'))
         skiptypes |= set(self['exclude-type'].split(','))
         skiptypes -= set(self['include-type'].split(','))
-
         schema2dot.schema2dot(schema, out, skiptypes=skiptypes)
-
         if viewer:
             p = Popen((viewer, out))
             p.wait()
