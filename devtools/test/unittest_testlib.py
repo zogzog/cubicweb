@@ -39,17 +39,6 @@ class WebTestTC(TestCase):
         self.assertEquals(len(result.failures), 1)
 
 
-class TestLibTC(CubicWebTC):
-    def test_add_entity_with_relation(self):
-        bug = self.add_entity(u'Bug', title=u"toto")
-        self.add_entity(u'Bug', title=u"tata", identical_to=bug)
-
-        rset = self.execute('Any BA WHERE BA is Bug, BA title "toto"')
-        self.assertEquals(len(rset), 1)
-        bug = tuple(rset.entities())[0]
-        self.assertEquals(bug.identical_to[0].title, "tata")
-
-
 
 HTML_PAGE = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
