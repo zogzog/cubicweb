@@ -13,13 +13,14 @@ from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import ustrftime
 from logilab.common.decorators import cached
 
 from yams.schema import KNOWN_METAATTRIBUTES
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
-from cubicweb import Binary, tags, uilib, utils
+from cubicweb import Binary, tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
      formwidgets as fw
 
@@ -670,7 +671,7 @@ class DateField(StringField):
 
     def format_single_value(self, req, value):
         if value:
-            return utils.ustrftime(value, req.property_value(self.format_prop))
+            return ustrftime(value, req.property_value(self.format_prop))
         return u''
 
     def render_example(self, req):

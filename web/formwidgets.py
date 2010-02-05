@@ -12,8 +12,9 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
+from logilab.common.date import todatetime
 
-from cubicweb import tags, uilib, utils
+from cubicweb import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 class FieldWidget(object):
@@ -508,7 +509,7 @@ class JQueryDateTimePicker(FieldWidget):
         timestr = req.form.get(field.input_name(form, 'time')).strip() or None
         if datestr is None:
             return None
-        date = utils.todatetime(req.parse_datetime(datestr, 'Date'))
+        date = todatetime(req.parse_datetime(datestr, 'Date'))
         if timestr is None:
             return date
         time = req.parse_datetime(timestr, 'Time')
