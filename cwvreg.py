@@ -63,6 +63,7 @@ class CWRegistry(Registry):
         # registry content
         for appobjects in self.itervalues():
             for appobject in appobjects:
+                # XXX kill vreg_initialization_completed
                 appobject.vreg_initialization_completed()
 
     def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
@@ -376,7 +377,7 @@ class CubicWebVRegistry(VRegistry):
                           check=self.config.cleanup_interface_sobjects)
 
     def initialization_completed(self):
-        for regname, reg in self.items():
+        for regname, reg in self.iteritems():
             self.debug('available in registry %s: %s', regname, sorted(reg))
             reg.initialization_completed()
             for appobjects in reg.itervalues():
