@@ -226,17 +226,23 @@ class CubicWebPublisher(object):
     def __init__(self, config, debug=None,
                  session_handler_fact=CookieSessionHandler,
                  vreg=None):
-        super(CubicWebPublisher, self).__init__()
-        # connect to the repository and get instance's schema
+        self.info('starting web instance from %s', config.apphome)
         if vreg is None:
             vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
+            need_set_schema = True
+        else:
+            # vreg is specified during test and the vreg is already properly
+            # initialized. Even, reinitializing it may cause some unwanted
+            # side effect due to unproper reloading of appobjects modules
+            need_set_schema = False
         self.vreg = vreg
-        self.info('starting web instance from %s', config.apphome)
+        # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)
         if not vreg.initialized:
             self.config.init_cubes(self.repo.get_cubes())
             vreg.init_properties(self.repo.properties())
-        vreg.set_schema(self.repo.get_schema())
+        if need_set_schema:
+            vreg.set_schema(self.repo.get_schema())
         # set the correct publish method
         if config['query-log-file']:
             from threading import Lock
