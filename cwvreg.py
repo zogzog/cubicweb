@@ -379,6 +379,9 @@ class CubicWebVRegistry(VRegistry):
         for regname, reg in self.items():
             self.debug('available in registry %s: %s', regname, sorted(reg))
             reg.initialization_completed()
+            for appobjects in reg.itervalues():
+                for appobjectcls in appobjects:
+                    appobjectcls.register_properties()
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:

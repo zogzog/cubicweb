@@ -295,7 +295,6 @@ class AppObject(object):
         cls.vreg = registry.vreg
         cls.schema = registry.schema
         cls.config = registry.config
-        cls.register_properties()
         return cls
 
     @classmethod
