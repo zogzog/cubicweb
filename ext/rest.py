@@ -159,14 +159,16 @@ else:
         try:
             lexer = get_lexer_by_name(arguments[0])
         except ValueError:
-            import traceback
-            traceback.print_exc()
-            print sorted(aliases for module_name, name, aliases, _, _  in LEXERS.itervalues())
             # no lexer found
             lexer = get_lexer_by_name('text')
         parsed = highlight(u'\n'.join(content), lexer, _PYGMENTS_FORMATTER)
-        context = state.document.settings.context
-        context._cw.add_css('pygments.css')
+        # don't fail if no context set on the sourcecode directive
+        try:
+            context = state.document.settings.context
+            context._cw.add_css('pygments.css')
+        except AttributeError:
+            # used outside cubicweb
+            pass
         return [nodes.raw('', parsed, format='html')]
 
     pygments_directive.arguments = (1, 0, 1)
