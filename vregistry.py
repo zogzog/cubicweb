@@ -84,6 +84,11 @@ class Registry(dict):
         except KeyError:
             raise ObjectNotFound(name), None, sys.exc_info()[-1]
 
+    def initialization_completed(self):
+        for appobjects in self.itervalues():
+            for appobjectcls in appobjects:
+                appobjectcls.__registered__(self)
+
     def register(self, obj, oid=None, clear=False):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
@@ -93,11 +98,9 @@ class Registry(dict):
             appobjects = self[oid] =  []
         else:
             appobjects = self.setdefault(oid, [])
-        appobject = obj.__registered__(self)
-        assert not appobject in appobjects, \
-               'object %s is already registered' % appobject
-        assert callable(appobject.__select__), appobject
-        appobjects.append(appobject)
+        assert not obj in appobjects, \
+               'object %s is already registered' % obj
+        appobjects.append(obj)
 
     def register_and_replace(self, obj, replaced):
         # XXXFIXME this is a duplication of unregister()
@@ -356,7 +359,14 @@ class VRegistry(dict):
         for filepath, modname in filemods:
             if self.load_file(filepath, modname, force_reload):
                 change = True
+        if change:
+            self.initialization_completed()
         return change
+
+    def initialization_completed(self):
+        for regname, reg in self.iteritems():
+            self.debug('available in registry %s: %s', regname, sorted(reg))
+            reg.initialization_completed()
 
     def load_file(self, filepath, modname, force_reload=False):
         """load app objects from a python file"""

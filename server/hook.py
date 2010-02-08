@@ -193,8 +193,8 @@ class Hook(AppObject):
         return str(id(cls))
 
     @classmethod
-    def __registered__(cls, vreg):
-        super(Hook, cls).__registered__(vreg)
+    def __registered__(cls, reg):
+        super(Hook, cls).__registered__(reg)
         if getattr(cls, 'accepts', None):
             warn('[3.6] %s.%s: accepts is deprecated, define proper __select__'
                  % (cls.__module__, cls.__name__), DeprecationWarning)

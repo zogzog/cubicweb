@@ -268,6 +268,7 @@ class AppObject(object):
             pdef['default'] = getattr(cls, propid, pdef['default'])
             pdef['sitewide'] = getattr(cls, 'site_wide', pdef.get('sitewide'))
             registry.vreg.register_property(cls._cwpropkey(propid), **pdef)
+        assert callable(cls.__select__), obj
         return cls
 
     def __init__(self, req, **extra):

@@ -13,6 +13,7 @@ from cubicweb import CW_SOFTWARE_ROOT as BASE
 from cubicweb.appobject import AppObject
 from cubicweb.cwvreg import CubicWebVRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.interfaces import IMileStone
 
 from cubes.card.entities import Card
@@ -40,10 +41,6 @@ class VRegistryTC(TestCase):
         self.vreg.initialization_completed()
         self.assertEquals(len(self.vreg['views']['primary']), 1)
 
-    def test_properties(self):
-        self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
-        self.failUnless(self.vreg.property_info('system.version.cubicweb'))
-        self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')
 
     def test_load_subinterface_based_appobjects(self):
         self.vreg.reset()
@@ -60,6 +57,18 @@ class VRegistryTC(TestCase):
         # check progressbar isn't kicked
         self.assertEquals(len(self.vreg['views']['progressbar']), 1)
 
+    def test_properties(self):
+        self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
+        self.failUnless(self.vreg.property_info('system.version.cubicweb'))
+        self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')
+
+
+class CWVregTC(CubicWebTC):
+
+    def test_property_default_overriding(self):
+        # see data/views.py
+        from cubicweb.web.views.xmlrss import RSSIconBox
+        self.assertEquals(self.vreg.property_info(RSSIconBox._cwpropkey('visible'))['default'], True)
 
 if __name__ == '__main__':
     unittest_main()

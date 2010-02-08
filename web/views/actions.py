@@ -163,13 +163,13 @@ class ManagePermissionsAction(action.Action):
     order = 15
 
     @classmethod
-    def __registered__(cls, vreg):
-        if 'require_permission' in vreg.schema:
+    def __registered__(cls, reg):
+        if 'require_permission' in reg.schema:
             cls.__select__ = (one_line_rset() & non_final_entity() &
                               (match_user_groups('managers')
                                | relation_possible('require_permission', 'subject', 'CWPermission',
                                                    action='add')))
-        return super(ManagePermissionsAction, cls).__registered__(vreg)
+        return super(ManagePermissionsAction, cls).__registered__(reg)
 
     def url(self):
         return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).absolute_url(vid='security')

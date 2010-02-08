@@ -72,15 +72,15 @@ class CubicWebConfigurationTC(TestCase):
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
 
     def test_expand_cubes(self):
-        self.assertEquals(self.config.expand_cubes(('email', 'eblog')),
-                          ['email', 'eblog', 'file'])
+        self.assertEquals(self.config.expand_cubes(('email', 'blog')),
+                          ['email', 'blog', 'file'])
 
     def test_vregistry_path(self):
         self.assertEquals([unabsolutize(p) for p in self.config.vregistry_path()],
                           ['entities', 'web/views', 'sobjects', 'hooks',
                            'file/entities.py', 'file/views', 'file/hooks.py',
                            'email/entities.py', 'email/views', 'email/hooks.py',
-                           'test/data/entities.py'])
+                           'test/data/entities.py', 'test/data/views.py'])
 
     def test_cubes_path(self):
         # make sure we don't import the email cube, but the stdlib email package

@@ -112,6 +112,7 @@ class MatchUserGroupsTC(CubicWebTC):
             __select__ = match_user_groups('owners')
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register_appobject_class(SomeAction)
+        SomeAction.__registered__(self.vreg['actions'])
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
             # login as a simple user

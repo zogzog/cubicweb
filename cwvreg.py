@@ -58,9 +58,6 @@ class CWRegistry(Registry):
     def schema(self):
         return self.vreg.schema
 
-    def initialization_completed(self):
-        pass
-
     @deprecated('[3.6] select object, then use obj.render()')
     def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
                **kwargs):
@@ -363,27 +360,23 @@ class CubicWebVRegistry(VRegistry):
         if force_reload is None:
             force_reload = self.config.debugmode
         try:
-            self._register_objects(path, force_reload)
+            super(CubicWebVRegistry, self).register_objects(
+                path, force_reload, self.config.extrapath)
         except RegistryOutOfDate:
             CW_EVENT_MANAGER.emit('before-registry-reload')
             # modification detected, reset and reload
             self.reset(path, force_reload)
-            self._register_objects(path, force_reload)
+            super(CubicWebVRegistry, self).register_objects(
+                path, force_reload, self.config.extrapath)
             CW_EVENT_MANAGER.emit('after-registry-reload')
 
-    def _register_objects(self, path, force_reload=None):
-        """overriden to remove objects requiring a missing interface"""
-        if super(CubicWebVRegistry, self).register_objects(path, force_reload,
-                                                          self.config.extrapath):
-            self.initialization_completed()
-            # don't check rtags if we don't want to cleanup_interface_sobjects
-            for rtag in RTAGS:
-                rtag.init(self.schema,
-                          check=self.config.cleanup_interface_sobjects)
-
     def initialization_completed(self):
-        for regname, reg in self.items():
-            reg.initialization_completed()
+        """cw specific code once vreg initialization is completed:
+
+        * remove objects requiring a missing interface, unless
+          config.cleanup_interface_sobjects is false
+        * init rtags
+        """
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
@@ -410,6 +403,11 @@ class CubicWebVRegistry(VRegistry):
         # clear needs_iface so we don't try to remove some not-anymore-in
         # objects on automatic reloading
         self._needs_iface.clear()
+        super(CubicWebVRegistry, self).initialization_completed()
+        for rtag in RTAGS:
+            # don't check rtags if we don't want to cleanup_interface_sobjects
+            rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
+
 
     # rql parsing utilities ####################################################
 
@@ -470,7 +468,7 @@ class CubicWebVRegistry(VRegistry):
         try:
             return self['propertyvalues'][key]
         except KeyError:
-            return self['propertydefs'][key]['default']
+            return self.property_info(key)['default']
 
     def typed_value(self, key, value):
         """value is an unicode string, return it correctly typed. Let potential

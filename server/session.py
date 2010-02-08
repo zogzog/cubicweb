@@ -484,7 +484,8 @@ class Session(RequestSessionBase):
                 try:
                     operation.handle_event('%s_event' % trstate)
                 except:
-                    self.exception('error while %sing', trstate)
+                    self.critical('error while %sing', trstate,
+                                  exc_info=sys.exc_info())
             self.debug('%s session %s done', trstate, self.id)
         finally:
             self._touch()

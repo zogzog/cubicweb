@@ -101,7 +101,6 @@ class RQLBoxTemplate(BoxTemplate):
     according to application schema and display according to connected
     user's rights) and rql attributes
     """
-#XXX    __selectors__ = BoxTemplate.__selectors__ + (etype_rtype_selector,)
 
     rql  = None
 

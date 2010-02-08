@@ -8,6 +8,8 @@ validity
 """
 __docformat__ = "restructuredtext en"
 
+from threading import Lock
+
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.selectors import implements
@@ -21,6 +23,41 @@ DONT_CHECK_RTYPES_ON_ADD = set(('owned_by', 'created_by',
                                 'wf_info_for', 'from_state', 'to_state'))
 DONT_CHECK_RTYPES_ON_DEL = set(('is', 'is_instance_of',
                                 'wf_info_for', 'from_state', 'to_state'))
+
+_UNIQUE_CONSTRAINTS_LOCK = Lock()
+_UNIQUE_CONSTRAINTS_HOLDER = None
+
+def _acquire_unique_cstr_lock(session):
+    """acquire the _UNIQUE_CONSTRAINTS_LOCK for the session.
+
+    This lock used to avoid potential integrity pb when checking
+    RQLUniqueConstraint in two different transactions, as explained in
+    http://intranet.logilab.fr/jpl/ticket/36564
+    """
+    global _UNIQUE_CONSTRAINTS_HOLDER
+    asession = session.actual_session()
+    if _UNIQUE_CONSTRAINTS_HOLDER is asession:
+        return
+    _UNIQUE_CONSTRAINTS_LOCK.acquire()
+    _UNIQUE_CONSTRAINTS_HOLDER = asession
+    # register operation responsible to release the lock on commit/rollback
+    _ReleaseUniqueConstraintsOperation(asession)
+
+def _release_unique_cstr_lock(session):
+    global _UNIQUE_CONSTRAINTS_HOLDER
+    if _UNIQUE_CONSTRAINTS_HOLDER is session:
+        _UNIQUE_CONSTRAINTS_HOLDER = None
+        _UNIQUE_CONSTRAINTS_LOCK.release()
+    else:
+        assert _UNIQUE_CONSTRAINTS_HOLDER is None
+
+class _ReleaseUniqueConstraintsOperation(hook.Operation):
+    def commit_event(self):
+        pass
+    def postcommit_event(self):
+        _release_unique_cstr_lock(self.session)
+    def rollback_event(self):
+        _release_unique_cstr_lock(self.session)
 
 
 class _CheckRequiredRelationOperation(hook.LateOperation):
@@ -126,6 +163,12 @@ class _CheckConstraintsOp(hook.LateOperation):
         if self.session.deleted_in_transaction(eidto):
             return
         for constraint in self.constraints:
+            # XXX
+            # * lock RQLConstraint as well?
+            # * use a constraint id to use per constraint lock and avoid
+            #   unnecessary commit serialization ?
+            if isinstance(constraint, RQLUniqueConstraint):
+                _acquire_unique_cstr_lock(self.session)
             try:
                 constraint.repo_check(self.session, eidfrom, rtype, eidto)
             except NotImplementedError:
