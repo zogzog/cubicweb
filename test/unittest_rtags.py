@@ -39,7 +39,7 @@ class RelationTagsTC(TestCase):
 #             __rtags__ = {
 #                 ('evaluee', 'Note', 'subject') : set(('inlineview',)),
 #                 }
-#         self.vreg.register_appobject_class(Personne2)
+#         self.vreg.register(Personne2)
 #         rtags = Personne2.rtags
 #         self.assertEquals(rtags.rtag('evaluee', 'Note', 'subject'), set(('inlineview', 'link')))
 #         self.assertEquals(rtags.is_inlined('evaluee', 'Note', 'subject'), True)

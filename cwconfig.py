@@ -291,11 +291,6 @@ registered.',
 this option is set to yes",
           'group': 'email', 'inputlevel': 2,
           }),
-        ('disable-appobjects',
-         {'type' : 'csv', 'default': (),
-          'help': 'comma separated list of identifiers of application objects (<registry>.<oid>) to disable',
-          'group': 'appobjects', 'inputlevel': 2,
-          }),
         )
     # static and class methods used to get instance independant resources ##
 

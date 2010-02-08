@@ -51,7 +51,7 @@ class VRegistryTC(TestCase):
             __implements__ = (IMileStone,)
         self.vreg.reset()
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_appobject_class(MyCard)
+        self.vreg.register(MyCard)
         self.vreg.register_objects([join(BASE, 'entities', '__init__.py'),
                                     join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar isn't kicked

@@ -299,7 +299,7 @@ class VRegistryTC(ViewSelectorTC):
         class CWUserCreationForm(editforms.CreationFormView):
             __select__ = specified_etype_implements('CWUser')
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_appobject_class(CWUserCreationForm)
+        self.vreg.register(CWUserCreationForm)
         req.form['etype'] = 'CWUser'
         self.assertIsInstance(self.vreg['views'].select('creation', req, rset=rset),
                               CWUserCreationForm)
@@ -467,7 +467,9 @@ class RQLActionTC(ViewSelectorTC):
     def setUp(self):
         super(RQLActionTC, self).setUp()
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_appobject_class(CWETypeRQLAction)
+        self.vreg.register(CWETypeRQLAction)
+        actionsreg = self.vreg['actions']
+        actionsreg[0].__registered__(actionsreg)
 
     def tearDown(self):
         super(RQLActionTC, self).tearDown()

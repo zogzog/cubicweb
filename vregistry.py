@@ -408,52 +408,48 @@ class VRegistry(dict):
                 self._load_ancestors_then_object(module.__name__, obj)
         self.debug('loaded %s', module)
 
-    def _load_ancestors_then_object(self, modname, obj):
+    def _load_ancestors_then_object(self, modname, appobjectcls):
+        """handle automatic appobject class registration:
+
+        - first ensure parent classes are already registered
+
+        - class with __abstract__ == True in their local dictionnary or
+          with a name starting starting by an underscore are not registered
+
+        - appobject class needs to have __registry__ and __regid__ attributes
+          set to a non empty string to be registered.
+        """
         # imported classes
-        objmodname = getattr(obj, '__module__', None)
+        objmodname = getattr(appobjectcls, '__module__', None)
         if objmodname != modname:
             if objmodname in self._toloadmods:
                 self.load_file(self._toloadmods[objmodname], objmodname)
             return
         # skip non registerable object
         try:
-            if not issubclass(obj, AppObject):
+            if not issubclass(appobjectcls, AppObject):
                 return
         except TypeError:
             return
-        clsid = classid(obj)
+        clsid = classid(appobjectcls)
         if clsid in self._loadedmods[modname]:
             return
-        self._loadedmods[modname][clsid] = obj
-        for parent in obj.__bases__:
+        self._loadedmods[modname][clsid] = appobjectcls
+        for parent in appobjectcls.__bases__:
             self._load_ancestors_then_object(modname, parent)
-        self.load_object(obj)
-
-    def load_object(self, obj):
+        if (appobjectcls.__dict__.get('__abstract__')
+            or appobjectcls.__name__[0] == '_'
+            or not appobjectcls.__registry__
+            or not class_regid(appobjectcls)):
+            return
         try:
-            self.register_appobject_class(obj)
+            self.register(appobjectcls)
         except Exception, ex:
             if self.config.mode in ('test', 'dev'):
                 raise
-            self.exception('appobject %s registration failed: %s', obj, ex)
+            self.exception('appobject %s registration failed: %s',
+                           appobjectcls, ex)
 
-    # old automatic registration XXX deprecated ###############################
-
-    def register_appobject_class(self, cls):
-        """handle appobject class registration
-
-        appobject class with __abstract__ == True in their local dictionnary or
-        with a name starting starting by an underscore are not registered.
-        Also a appobject class needs to have __registry__ and id attributes set
-        to a non empty string to be registered.
-        """
-        if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
-            or not cls.__registry__ or not class_regid(cls)):
-            return
-        regname = cls.__registry__
-        if '%s.%s' % (regname, class_regid(cls)) in self.config['disable-appobjects']:
-            return
-        self.register(cls)
 
 # init logging
 set_log_methods(VRegistry, getLogger('cubicweb.vreg'))
