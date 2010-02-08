@@ -969,7 +969,7 @@ def match_context_prop(cls, req, context=None, **kwargs):
     in a configurable place.
     """
     if context is None:
-        return 0
+        return 1
     propval = req.property_value('%s.%s.context' % (cls.__registry__,
                                                     cls.__regid__))
     if not propval:
