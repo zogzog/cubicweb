@@ -1,4 +1,4 @@
- """Some utilities for CubicWeb server/clients.
+"""Some utilities for CubicWeb server/clients.
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
