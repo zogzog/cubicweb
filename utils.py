@@ -1,4 +1,4 @@
-"""Some utilities for CubicWeb server/clients.
+ """Some utilities for CubicWeb server/clients.
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -16,12 +16,9 @@ import datetime
 from md5 import md5
 from time import time
 from random import randint, seed
-import decimal
 
 # initialize random seed from current time
 seed()
-
-
 
 if sys.version_info[:2] < (2, 5):
     def make_uid(key):
