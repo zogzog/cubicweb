@@ -48,8 +48,6 @@ def _release_unique_cstr_lock(session):
     if _UNIQUE_CONSTRAINTS_HOLDER is session:
         _UNIQUE_CONSTRAINTS_HOLDER = None
         _UNIQUE_CONSTRAINTS_LOCK.release()
-    else:
-        assert _UNIQUE_CONSTRAINTS_HOLDER is None
 
 class _ReleaseUniqueConstraintsOperation(hook.Operation):
     def commit_event(self):
