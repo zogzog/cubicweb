@@ -461,9 +461,21 @@ class Session(RequestSessionMixIn):
                     self.debug('%s session %s done', trstate, self.id)
                 except:
                     self.exception('error while %sing', trstate)
+                    # if error on [pre]commit:
+                    #
+                    # * set .failed = True on the operation causing the failure
+                    # * call revert<event>_event on processed operations
+                    # * call rollback_event on *all* operations
+                    #
+                    # that seems more natural than not calling rollback_event
+                    # for processed operations, and allow generic rollback
+                    # instead of having to implements rollback, revertprecommit
+                    # and revertcommit, that will be enough in mont case.
                     operation.failed = True
                     for operation in processed:
                         operation.handle_event('revert%s_event' % trstate)
+                    # res
+                    self.pending_operations = processed + self.pending_operations
                     self.rollback(reset_pool)
                     raise
             self.pool.commit()
