@@ -312,35 +312,33 @@ class Field(object):
         pass
 
     def has_been_modified(self, form):
-        if self.is_visible():
-            # fields not corresponding to an entity attribute / relations
-            # are considered modified
-            if not self.eidparam or not self.role or not form.edited_entity.has_eid():
-                return True # XXX
-            try:
-                if self.role == 'subject':
-                    previous_value = getattr(form.edited_entity, self.name)
-                else:
-                    previous_value = getattr(form.edited_entity,
-                                             'reverse_%s' % self.name)
-            except AttributeError:
-                # fields with eidparam=True but not corresponding to an actual
-                # attribute or relation
-                return True
-            # if it's a non final relation, we need the eids
-            if isinstance(previous_value, tuple):
-                # widget should return a set of untyped eids
-                previous_value = set(unicode(e.eid) for e in previous_value)
-            try:
-                new_value = self.process_form_value(form)
-            except ProcessFormError:
-                return True
-            except UnmodifiedField:
-                return False
-            if previous_value == new_value:
-                return False # not modified
+        # fields not corresponding to an entity attribute / relations
+        # are considered modified
+        if not self.eidparam or not self.role or not form.edited_entity.has_eid():
+            return True # XXX
+        try:
+            if self.role == 'subject':
+                previous_value = getattr(form.edited_entity, self.name)
+            else:
+                previous_value = getattr(form.edited_entity,
+                                         'reverse_%s' % self.name)
+        except AttributeError:
+            # fields with eidparam=True but not corresponding to an actual
+            # attribute or relation
             return True
-        return False
+        # if it's a non final relation, we need the eids
+        if isinstance(previous_value, tuple):
+            # widget should return a set of untyped eids
+            previous_value = set(unicode(e.eid) for e in previous_value)
+        try:
+            new_value = self.process_form_value(form)
+        except ProcessFormError:
+            return True
+        except UnmodifiedField:
+            return False
+        if previous_value == new_value:
+            return False # not modified
+        return True
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
