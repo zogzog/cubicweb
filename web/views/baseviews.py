@@ -316,8 +316,8 @@ class SameETypeListView(EntityView):
             self.w(u'<h1>%s</h1>' % self.title)
         super(SameETypeListView, self).call(**kwargs)
 
-    def cell_call(self, row, col=0, vid=None, **kwargs):
-        self.wview(self.item_vid, self.cw_rset, row=row, col=col, vid=vid, **kwargs)
+    def cell_call(self, row, col=0, **kwargs):
+        self.wview(self.item_vid, self.cw_rset, row=row, col=col, **kwargs)
 
 
 class SameETypeListItemView(EntityView):
