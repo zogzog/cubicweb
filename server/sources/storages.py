@@ -10,6 +10,10 @@ def set_attribute_storage(repo, etype, attr, storage):
     ETYPE_ATTR_STORAGE.setdefault(etype, {})[attr] = storage
     repo.system_source.map_attribute(etype, attr, storage.sqlgen_callback)
 
+def unset_attribute_storage(repo, etype, attr):
+    ETYPE_ATTR_STORAGE.setdefault(etype, {}).pop(attr, None)
+    repo.system_source.unmap_attribute(etype, attr)
+
 
 class Storage(object):
     """abstract storage"""

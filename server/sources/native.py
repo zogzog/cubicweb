@@ -231,6 +231,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def map_attribute(self, etype, attr, cb):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
 
+    def unmap_attribute(self, etype, attr):
+        self._rql_sqlgen.attr_map.pop('%s.%s' % (etype, attr), None)
+
     # ISource interface #######################################################
 
     def compile_rql(self, rql, sols):
