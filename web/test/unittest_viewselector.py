@@ -89,8 +89,7 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         rset = req.execute('CWGroup X WHERE X name "managers"')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -100,6 +99,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
@@ -113,8 +113,7 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         rset = req.execute('CWGroup X')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -124,6 +123,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
@@ -201,8 +201,7 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         rset = req.execute('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -213,6 +212,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),

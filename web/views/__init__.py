@@ -82,7 +82,7 @@ def vid_from_rset(req, rset, schema):
                 return 'primary'
             return 'outofcontext-search'
         if len(rset.column_types(0)) == 1:
-            return 'adaptedlist'
+            return 'sameetypelist'
         return 'list'
     return 'table'
 

@@ -47,9 +47,9 @@ class VidFromRsetTC(CubicWebTC):
     def test_more_than_one_entity_same_type(self):
         req = self.request()
         rset = self.execute('Any X WHERE X is CWUser')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
         rset = self.execute('Any X, L WHERE X login L')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
 
     def test_more_than_one_entity_diff_type(self):
         req = self.request()

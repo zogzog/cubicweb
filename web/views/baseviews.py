@@ -297,11 +297,13 @@ class SimpleListView(ListItemView):
     redirect_vid = 'incontext'
 
 
-class AdaptedListView(EntityView):
-    """list of entities of the same type"""
-    __regid__ = 'adaptedlist'
+class SameETypeListView(EntityView):
+    """list of entities of the same type, when asked explicitly for adapted list
+    view (for instance, display gallery if only images)
+    """
+    __regid__ = 'sameetypelist'
     __select__ = EntityView.__select__ & one_etype_rset()
-    item_vid = 'adaptedlistitem'
+    item_vid = 'sameetypelistitem'
 
     @property
     def title(self):
@@ -312,17 +314,18 @@ class AdaptedListView(EntityView):
         """display a list of entities by calling their <item_vid> view"""
         if not 'vtitle' in self._cw.form:
             self.w(u'<h1>%s</h1>' % self.title)
-        super(AdaptedListView, self).call(**kwargs)
+        super(SameETypeListView, self).call(**kwargs)
 
     def cell_call(self, row, col=0, vid=None, **kwargs):
         self.wview(self.item_vid, self.cw_rset, row=row, col=col, vid=vid, **kwargs)
 
 
-class AdaptedListItemView(EntityView):
-    __regid__ = 'adaptedlistitem'
+class SameETypeListItemView(EntityView):
+    __regid__ = 'sameetypelistitem'
 
     def cell_call(self, row, col, **kwargs):
         self.wview('listitem', self.cw_rset, row=row, col=col, **kwargs)
+
 
 class CSVView(SimpleListView):
     __regid__ = 'csv'
