@@ -5,7 +5,7 @@
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
+from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
 from cubicweb.selectors import (match_user_groups, implements,
                                 specified_etype_implements, rql_condition,
                                 traced_selection)
@@ -453,7 +453,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertEquals(self.vreg.property_value('boxes.edit_box.order'), 2)
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
-        self.assertRaises(KeyError, self.vreg.property_value, 'boxes.actions_box')
+        self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
 
 
 
