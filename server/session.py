@@ -475,7 +475,7 @@ class Session(RequestSessionMixIn):
                     for operation in processed:
                         operation.handle_event('revert%s_event' % trstate)
                     # res
-                    self.pending_operations = processed + self.pending_operations
+                    self.pending_operations[:] = processed + self.pending_operations
                     self.rollback(reset_pool)
                     raise
             self.pool.commit()
