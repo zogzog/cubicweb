@@ -264,11 +264,11 @@ class Field(object):
                 else:
                     vocab = self.choices(form=form, field=self, **kwargs)
             except TypeError:
-                warn('[3.6]  %s: choices should now take '
-                     'the form and field as named arguments' % self,
-                     DeprecationWarning)
                 try:
                     vocab = self.choices(form=form, **kwargs)
+                    warn('[3.6]  %s: choices should now take '
+                         'the form and field as named arguments' % self,
+                         DeprecationWarning)
                 except TypeError:
                     warn('[3.3]  %s: choices should now take '
                          'the form and field as named arguments' % self,
