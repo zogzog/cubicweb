@@ -624,6 +624,9 @@ class IntField(Field):
 
     def _ensure_correctly_typed(self, form, value):
         if isinstance(value, basestring):
+            value = value.strip()
+            if not value:
+                return None
             try:
                 return int(value)
             except ValueError:
@@ -655,6 +658,9 @@ class FloatField(IntField):
 
     def _ensure_correctly_typed(self, form, value):
         if isinstance(value, basestring):
+            value = value.strip()
+            if not value:
+                return None
             try:
                 return float(value)
             except ValueError:
@@ -669,7 +675,7 @@ class DateField(StringField):
 
     def format_single_value(self, req, value):
         if value:
-            return ustrftime(value, req.property_value(self.format_prop))
+            return ustrftime(value.strip(), req.property_value(self.format_prop))
         return u''
 
     def render_example(self, req):
@@ -677,6 +683,9 @@ class DateField(StringField):
 
     def _ensure_correctly_typed(self, form, value):
         if isinstance(value, basestring):
+            value = value.strip()
+            if not value:
+                return None
             try:
                 value = form._cw.parse_datetime(value, self.etype)
             except ValueError, ex:
