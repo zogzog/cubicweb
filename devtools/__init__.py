@@ -31,8 +31,9 @@ SYSTEM_ENTITIES = schema.SCHEMA_TYPES | set((
 SYSTEM_RELATIONS = schema.META_RTYPES | set((
     # workflow related
     'workflow_of', 'state_of', 'transition_of', 'initial_state', 'allowed_transition',
-    'destination_state', 'in_state', 'wf_info_for', 'from_state', 'to_state',
+    'destination_state', 'from_state', 'to_state',
     'condition', 'subworkflow', 'subworkflow_state', 'subworkflow_exit',
+    'custom_workflow', 'in_state', 'wf_info_for',
     # cwproperty
     'for_user',
     # schema definition
