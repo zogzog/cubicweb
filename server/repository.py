@@ -934,7 +934,7 @@ class Repository(object):
         """full text index a modified entity"""
         alreadydone = session.transaction_data.setdefault('indexedeids', set())
         if entity.eid in alreadydone:
-            self.info('skipping reindexation of %s, already done', entity.eid)
+            self.debug('skipping reindexation of %s, already done', entity.eid)
             return
         alreadydone.add(entity.eid)
         self.system_source.fti_index_entity(session, entity)

@@ -501,7 +501,7 @@ class Session(RequestSessionBase):
                 except:
                     self.critical('error while %sing', trstate,
                                   exc_info=sys.exc_info())
-            self.debug('%s session %s done', trstate, self.id)
+            self.info('%s session %s done', trstate, self.id)
         finally:
             self._touch()
             self.commit_state = None

@@ -552,7 +552,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_index_entity(self, session, entity):
         """add text content of a created/modified entity to the full text index
         """
-        self.info('reindexing %r', entity.eid)
+        self.debug('reindexing %r', entity.eid)
         try:
             self.indexer.cursor_reindex_object(entity.eid, entity,
                                                session.pool['system'])
