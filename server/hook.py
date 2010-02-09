@@ -238,7 +238,13 @@ set_log_methods(Hook, getLogger('cubicweb.hook'))
 # base classes for relation propagation ########################################
 
 class PropagateSubjectRelationHook(Hook):
-    """propagate permissions and nosy list when new entity are added"""
+    """propagate some `main_rtype` relation on entities linked as object of
+    `subject_relations` or as subject of `object_relations` (the watched
+    relations).
+
+    This hook ensure that when one of the watched relation is added, the
+    `main_rtype` relation is added to the target entity of the relation.
+    """
     events = ('after_add_relation',)
 
     # to set in concrete class
@@ -247,9 +253,10 @@ class PropagateSubjectRelationHook(Hook):
     object_relations = None
 
     def __call__(self):
+        assert self.main_rtype
         for eid in (self.eidfrom, self.eidto):
             etype = self._cw.describe(eid)[0]
-            if not self._cw.vreg.schema.eschema(etype).has_subject_relation(self.main_rtype):
+            if self.main_rtype not in self._cw.vreg.schema.eschema(etype).subjrels:
                 return
         if self.rtype in self.subject_relations:
             meid, seid = self.eidfrom, self.eidto
@@ -263,11 +270,12 @@ class PropagateSubjectRelationHook(Hook):
 
 
 class PropagateSubjectRelationAddHook(Hook):
-    """propagate on existing entities when a permission or nosy list is added"""
+    """propagate to entities at the end of watched relations when a `main_rtype`
+    relation is added
+    """
     events = ('after_add_relation',)
 
     # to set in concrete class
-    main_rtype = None
     subject_relations = None
     object_relations = None
 
@@ -287,11 +295,12 @@ class PropagateSubjectRelationAddHook(Hook):
 
 
 class PropagateSubjectRelationDelHook(Hook):
-    """propagate on existing entities when a permission is deleted"""
+    """propagate to entities at the end of watched relations when a `main_rtype`
+    relation is deleted
+    """
     events = ('after_delete_relation',)
 
     # to set in concrete class
-    main_rtype = None
     subject_relations = None
     object_relations = None
 
