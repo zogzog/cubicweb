@@ -27,7 +27,6 @@ DONT_CHECK_RTYPES_ON_DEL = set(('is', 'is_instance_of',
                                 'wf_info_for', 'from_state', 'to_state'))
 
 _UNIQUE_CONSTRAINTS_LOCK = Lock()
-_UNIQUE_CONSTRAINTS_HOLDER = None
 
 class _ReleaseUniqueConstraintsHook(Operation):
     def commit_event(self):
@@ -44,19 +43,17 @@ def _acquire_unique_cstr_lock(session):
     RQLUniqueConstraint in two different transactions, as explained in
     http://intranet.logilab.fr/jpl/ticket/36564
     """
-    global _UNIQUE_CONSTRAINTS_HOLDER
     asession = session.actual_session()
-    if _UNIQUE_CONSTRAINTS_HOLDER is asession:
+    if 'uniquecstrholder' in asession.transaction_data:
         return
     _UNIQUE_CONSTRAINTS_LOCK.acquire()
-    _UNIQUE_CONSTRAINTS_HOLDER = asession
+    asession.transaction_data['uniquecstrholder'] = True
     # register operation responsible to release the lock on commit/rollback
     _ReleaseUniqueConstraintsHook(asession)
 
 def _release_unique_cstr_lock(session):
-    global _UNIQUE_CONSTRAINTS_HOLDER
-    if _UNIQUE_CONSTRAINTS_HOLDER is session:
-        _UNIQUE_CONSTRAINTS_HOLDER = None
+    if 'uniquecstrholder' in session.transaction_data:
+        del session.transaction_data['uniquecstrholder']
         _UNIQUE_CONSTRAINTS_LOCK.release()
 
 
