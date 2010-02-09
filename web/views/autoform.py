@@ -725,7 +725,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             ttype = ttypes[0].type
             if self.should_inline_relation_form(rschema, ttype, role):
                 formviews = list(self.inline_edition_form_view(rschema, ttype, role))
-                card = rschema.rdef(entity.e_schema, ttype).role_cardinality(role)
+                card = rschema.role_rdef(entity.e_schema, ttype, role).role_cardinality(role)
                 # there is no related entity and we need at least one: we need to
                 # display one explicit inline-creation view
                 if self.should_display_inline_creation_form(rschema, formviews, card):
