@@ -106,6 +106,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common.compat import any
+
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, register_rtag, _ensure_str_key)
