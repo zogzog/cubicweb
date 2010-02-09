@@ -763,7 +763,7 @@ sources for migration will be automatically selected.",
         )
 
     def run(self, args):
-        appid = pop_arg(args, 99, msg="No instance specified !")
+        appid = pop_arg(args, None, msg="No instance specified !")
         if self.config.pyro:
             from cubicweb import AuthenticationError
             from cubicweb.dbapi import connect
