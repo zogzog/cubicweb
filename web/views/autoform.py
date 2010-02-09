@@ -32,11 +32,6 @@ _AFFK = uicfg.autoform_field_kwargs
 
 class InlinedFormField(ff.Field):
     def __init__(self, view=None, **kwargs):
-        if view.role == 'object':
-            fieldset = u'%s_object%s' % view.rtype
-        else:
-            fieldset = view.rtype
-        #kwargs.setdefault('fieldset', fieldset)
         kwargs.setdefault('label', None)
         super(InlinedFormField, self).__init__(name=view.rtype, role=view.role,
                                                eidparam=True, **kwargs)
