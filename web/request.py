@@ -126,33 +126,35 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         super(CubicWebRequestBase, self).set_connection(cnx, user)
         # set request language
-        vreg = self.vreg
-        if self.user:
-            try:
-                # 1. user specified language
-                lang = vreg.typed_value('ui.language',
-                                        self.user.properties['ui.language'])
-                self.set_language(lang)
-                return
-            except KeyError, ex:
-                pass
-        if vreg.config['language-negociation']:
-            # 2. http negociated language
-            for lang in self.header_accept_language():
-                if lang in self.translations:
+        try:
+            vreg = self.vreg
+            if self.user:
+                try:
+                    # 1. user specified language
+                    lang = vreg.typed_value('ui.language',
+                                            self.user.properties['ui.language'])
                     self.set_language(lang)
                     return
-        # 3. default language
-        self.set_default_language(vreg)
-        # XXX code smell
-        # have to be done here because language is not yet set in setup_params
-        #
-        # special key for created entity, added in controller's reset method
-        # if no message set, we don't want this neither
-        if '__createdpath' in self.form and self.message:
-            self.message += ' (<a href="%s">%s</a>)' % (
-                self.build_url(self.form.pop('__createdpath')),
-                self._('click here to see created entity'))
+                except KeyError, ex:
+                    pass
+            if vreg.config['language-negociation']:
+                # 2. http negociated language
+                for lang in self.header_accept_language():
+                    if lang in self.translations:
+                        self.set_language(lang)
+                        return
+            # 3. default language
+            self.set_default_language(vreg)
+        finally:
+            # XXX code smell
+            # have to be done here because language is not yet set in setup_params
+            #
+            # special key for created entity, added in controller's reset method
+            # if no message set, we don't want this neither
+            if '__createdpath' in self.form and self.message:
+                self.message += ' (<a href="%s">%s</a>)' % (
+                    self.build_url(self.form.pop('__createdpath')),
+                    self._('click here to see created entity'))
 
     def set_language(self, lang):
         gettext, self.pgettext = self.translations[lang]
