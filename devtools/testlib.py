@@ -503,7 +503,7 @@ class CubicWebTC(TestCase):
         else:
             self.fail('expected a Redirect exception')
 
-    def expect_redirect_publish(self, req, path='view'):
+    def expect_redirect_publish(self, req, path='edit'):
         """call the publish method of the application publisher, expecting to
         get a Redirect exception
         """
