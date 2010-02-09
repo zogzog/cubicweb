@@ -110,9 +110,9 @@ class HooksManager(object):
     def call_hooks(self, __event, __type='', *args, **kwargs):
         """call hook matching event and optional type"""
         if __type:
-            self.info('calling hooks for event %s (%s)', __event, __type)
+            self.debug('calling hooks for event %s (%s)', __event, __type)
         else:
-            self.info('calling hooks for event %s', __event)
+            self.debug('calling hooks for event %s', __event)
         # call generic hooks first
         for hook in self._hooks[__event]['']:
             #print '[generic]', hook.__name__
