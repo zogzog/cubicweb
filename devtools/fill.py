@@ -410,9 +410,9 @@ class RelationsQueriesGenerator(object):
                     yield query, args
 
     def qargs(self, subjeids, objeids, subjcard, objcard, subjeid, objeid):
-        if subjcard in '?1':
+        if subjcard in '?1+':
             subjeids.remove(subjeid)
-        if objcard in '?1':
+        if objcard in '?1+':
             objeids.remove(objeid)
         return {'subjeid' : subjeid, 'objeid' : objeid}
 

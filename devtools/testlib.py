@@ -692,31 +692,52 @@ class CubicWebTC(TestCase):
 
 from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 
+# XXX cleanup unprotected_entities & all mess
+
 def how_many_dict(schema, cursor, how_many, skip):
-    """compute how many entities by type we need to be able to satisfy relations
-    cardinality
+    """given a schema, compute how many entities by type we need to be able to
+    satisfy relations cardinality.
+
+    The `how_many` argument tells how many entities of which type we want at
+    least.
+
+    Return a dictionary with entity types as key, and the number of entities for
+    this type as value.
     """
-    # compute how many entities by type we need to be able to satisfy relation constraint
     relmap = {}
     for rschema in schema.relations():
         if rschema.final:
             continue
         for subj, obj in rschema.rdefs:
             card = rschema.rdef(subj, obj).cardinality
-            if card[0] in '1?' and len(rschema.subjects(obj)) == 1:
+            # if the relation is mandatory, we'll need at least as many subj and
+            # obj to satisfy it
+            if card[0] in '1+' and card[1] in '1?':
+                # subj has to be linked to at least one obj,
+                # but obj can be linked to only one subj
+                # -> we need at least as many subj as obj to satisfy
+                #    cardinalities for this relation
                 relmap.setdefault((rschema, subj), []).append(str(obj))
-            if card[1] in '1?' and len(rschema.objects(subj)) == 1:
+            if card[1] in '1+' and card[0] in '1?':
+                # reverse subj and obj in the above explanation
                 relmap.setdefault((rschema, obj), []).append(str(subj))
     unprotected = unprotected_entities(schema)
-    for etype in skip:
+    for etype in skip: # XXX (syt) duh? explain or kill
         unprotected.add(etype)
     howmanydict = {}
+    # step 1, compute a base number of each entity types: number of already
+    # existing entities of this type + `how_many`
     for etype in unprotected_entities(schema, strict=True):
         howmanydict[str(etype)] = cursor.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
         if etype in unprotected:
             howmanydict[str(etype)] += how_many
+    # step 2, augment nb entity per types to satisfy cardinality constraints,
+    # by recomputing for each relation that constrained an entity type:
+    #
+    # new num for etype = max(current num, sum(num for possible target etypes))
+    #
+    # XXX we should first check there is no cycle then propagate changes
     for (rschema, etype), targets in relmap.iteritems():
-        # XXX should 1. check no cycle 2. propagate changes
         relfactor = sum(howmanydict[e] for e in targets)
         howmanydict[str(etype)] = max(relfactor, howmanydict[etype])
     return howmanydict
