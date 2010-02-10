@@ -722,11 +722,14 @@ class EditableURLWidget(FieldWidget):
                 value = req.form[field.name]
             else:
                 value = self.typed_value(form, field)
-            try:
-                path, qs = value.split('?', 1)
-            except ValueError:
-                path = value
-                qs = ''
+            if value:
+                try:
+                    path, qs = value.split('?', 1)
+                except ValueError:
+                    path = value
+                    qs = ''
+            else:
+                path = qs = ''
             fqs = u'\n'.join(u'%s=%s' % (k, v) for k, v in req.url_parse_qsl(qs))
         attrs = dict(self.attrs)
         if self.setdomid:
