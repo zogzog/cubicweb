@@ -1912,8 +1912,8 @@ msgstr ""
 msgid "define a relation type, used to build the instance schema"
 msgstr ""
 
-msgid "define a rql expression used to define __permissions__"
-msgstr ""
+msgid "define a rql expression used to define permissions"
+msgstr "Expresión RQL utilizada para definir los derechos de acceso"
 
 msgid "define a schema constraint"
 msgstr "Define una condición de esquema"
@@ -2413,8 +2413,7 @@ msgstr "relación generica para ligar entidades"
 
 msgid ""
 "generic relation to specify that an external entity represent the same "
-"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
-"have to explicitly declare which entity types can have a same_as relation"
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def"
 msgstr ""
 
 msgid "go back to the index page"
@@ -4016,9 +4015,6 @@ msgstr ""
 msgid "workflow isn't a workflow for this type"
 msgstr ""
 
-msgid "workflow isn't a workflow of this type"
-msgstr ""
-
 msgid "workflow to which this state belongs"
 msgstr ""
 
@@ -4207,9 +4203,6 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "currently attached file: %s"
 #~ msgstr "archivo adjunto: %s"
-
-#~ msgid "define a rql expression used to define permissions"
-#~ msgstr "Expresión RQL utilizada para definir los derechos de acceso"
 
 #~ msgid ""
 #~ "deleted relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s "

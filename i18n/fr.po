@@ -1723,7 +1723,8 @@ msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s delete_permission "
 "RQLExpression)"
-msgstr "création d'une expression rql pour le droit de suppression de %(linkto)s"
+msgstr ""
+"création d'une expression rql pour le droit de suppression de %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
@@ -1754,7 +1755,8 @@ msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
 msgid ""
 "creating RQLExpression (CWRelation %(linkto)s delete_permission "
 "RQLExpression)"
-msgstr "création d'une expression rql pour le droit de suppression de %(linkto)s"
+msgstr ""
+"création d'une expression rql pour le droit de suppression de %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWRelation %(linkto)s read_permission RQLExpression)"
@@ -1926,7 +1928,7 @@ msgstr ""
 msgid "define a relation type, used to build the instance schema"
 msgstr "définit un type de relation"
 
-msgid "define a rql expression used to define __permissions__"
+msgid "define a rql expression used to define vpermissions"
 msgstr ""
 
 msgid "define a schema constraint"
@@ -1972,11 +1974,11 @@ msgstr "permission de supprimer"
 
 msgctxt "CWAttribute"
 msgid "delete_permission"
-msgstr ""
+msgstr "permission de supprimer"
 
 msgctxt "CWRelation"
 msgid "delete_permission"
-msgstr ""
+msgstr "permission de supprimer"
 
 msgctxt "CWGroup"
 msgid "delete_permission_object"
@@ -1998,6 +2000,8 @@ msgid ""
 "deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%"
 "(eidto)s"
 msgstr ""
+"relation %(rtype)s de %(frometype)s #%(eidfrom)s vers %(toetype)s #%(eidto)s "
+"supprimée"
 
 msgid "depends on the constraint type"
 msgstr "dépend du type de contrainte"
@@ -2431,9 +2435,10 @@ msgstr "relation générique pour lier une entité à une autre"
 
 msgid ""
 "generic relation to specify that an external entity represent the same "
-"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
-"have to explicitly declare which entity types can have a same_as relation"
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def"
 msgstr ""
+"relation générique permettant d'indiquer qu'une entité est identique à une "
+"autre ressource web (voir http://www.w3.org/TR/owl-ref/#sameAs-def)."
 
 msgid "go back to the index page"
 msgstr "retourner sur la page d'accueil"
@@ -2523,10 +2528,10 @@ msgstr ""
 "description du format)"
 
 msgid "i18n_bookmark_url_fqs"
-msgstr ""
+msgstr "paramètres"
 
 msgid "i18n_bookmark_url_path"
-msgstr ""
+msgstr "chemin"
 
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
@@ -2982,7 +2987,7 @@ msgstr "aucune permission associée"
 
 #, python-format
 msgid "no edited fields specified for entity %s"
-msgstr ""
+msgstr "aucun champ à éditer spécifié pour l'entité %s"
 
 msgid "no related project"
 msgstr "pas de projet rattaché"
@@ -3184,11 +3189,11 @@ msgstr "permission d'ajouter"
 
 msgctxt "CWAttribute"
 msgid "read_permission"
-msgstr ""
+msgstr "permission de lire"
 
 msgctxt "CWRelation"
 msgid "read_permission"
-msgstr ""
+msgstr "permission de lire"
 
 msgctxt "CWGroup"
 msgid "read_permission_object"
@@ -3242,7 +3247,7 @@ msgid "relative url of the bookmarked page"
 msgstr "url relative de la page"
 
 msgid "remove-inlined-entity-form"
-msgstr ""
+msgstr "supprimer"
 
 msgid "require_group"
 msgstr "nécessite le groupe"
@@ -3362,7 +3367,7 @@ msgid "see them all"
 msgstr "les voir toutes"
 
 msgid "see_also"
-msgstr "see also"
+msgstr "voir aussi"
 
 msgid "select"
 msgstr "sélectionner"
@@ -4044,9 +4049,6 @@ msgstr "entrée de l'historique de workflow"
 
 msgid "workflow isn't a workflow for this type"
 msgstr "le workflow ne s'applique pas à ce type d'entité"
-
-msgid "workflow isn't a workflow of this type"
-msgstr ""
 
 msgid "workflow to which this state belongs"
 msgstr "workflow auquel cet état appartient"
