@@ -194,10 +194,9 @@ class same_as(RelationType):
     """generic relation to specify that an external entity represent the same
     object as a local one:
        http://www.w3.org/TR/owl-ref/#sameAs-def
-
-    NOTE: You'll have to explicitly declare which entity types can have a
-    same_as relation
     """
+    #NOTE: You'll have to explicitly declare which entity types can have a
+    #same_as relation
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users'),

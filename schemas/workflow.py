@@ -40,7 +40,7 @@ class default_workflow(RelationType):
     object = 'Workflow'
     cardinality = '?*'
     constraints = [RQLConstraint('S final FALSE, O workflow_of S',
-                                 msg=_('workflow isn\'t a workflow of this type'))]
+                                 msg=_('workflow isn\'t a workflow for this type'))]
 
 
 class State(EntityType):

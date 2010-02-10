@@ -115,7 +115,7 @@ class CWRelation(EntityType):
 
 # not restricted since it has to be read when checking allowed transitions
 class RQLExpression(EntityType):
-    """define a rql expression used to define __permissions__"""
+    """define a rql expression used to define permissions"""
     __permissions__ = META_ETYPE_PERMS
     exprtype = String(required=True, vocabulary=['ERQLExpression', 'RRQLExpression'])
     mainvars = String(maxsize=8,
