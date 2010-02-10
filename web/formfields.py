@@ -112,6 +112,7 @@ class Field(object):
     fieldset = None
     order = None
     value = _MARKER
+    fallback_on_none_attribute = False
 
     def __init__(self, name=None, label=_MARKER, widget=None, **kwargs):
         for key, val in kwargs.items():
@@ -218,9 +219,13 @@ class Field(object):
             entity = form.edited_entity
             if form._cw.vreg.schema.rschema(self.name).final:
                 if entity.has_eid() or self.name in entity:
-                    return getattr(entity, self.name)
+                    value = getattr(entity, self.name)
+                    if value is not None or not self.fallback_on_none_attribute:
+                        return value
             elif entity.has_eid() or entity.relation_cached(self.name, self.role):
-                return [r[0] for r in entity.related(self.name, self.role)]
+                value = [r[0] for r in entity.related(self.name, self.role)]
+                if value or not self.fallback_on_none_attribute:
+                    return value
         return self.initial_typed_value(form, load_bytes)
 
     def initial_typed_value(self, form, load_bytes):

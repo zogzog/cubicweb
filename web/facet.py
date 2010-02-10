@@ -519,8 +519,7 @@ class RangeFacet(AttributeFacet):
         return FacetRangeWidget
 
     def get_widget(self):
-        """return the widget instance to use to display this facet
-        """
+        """return the widget instance to use to display this facet"""
         values = set(value for _, value in self.vocabulary() if value is not None)
         return self.wdgclass(self, min(values), max(values))
 
