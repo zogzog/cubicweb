@@ -142,10 +142,6 @@ class ViewController(Controller):
         if view.add_to_breadcrumbs and not view.binary:
             self.req.update_breadcrumbs()
 
-    def validate_cache(self, view):
-        view.set_http_cache_headers()
-        self.req.validate_cache()
-
     def execute_linkto(self, eid=None):
         """XXX __linkto parameter may cause security issue
 
@@ -350,6 +346,7 @@ class JSonController(Controller):
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
             view = self.vreg['views'].select(vid, req, rset=rset)
+        self.validate_cache(view)
         return self._call_view(view)
 
     @xhtmlize

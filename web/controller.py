@@ -154,6 +154,10 @@ class Controller(AppObject):
             rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
 
+    def validate_cache(self, view):
+        view.set_http_cache_headers()
+        self.req.validate_cache()
+
 
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
