@@ -1062,13 +1062,19 @@ class specified_etype_implements(implements):
 
 
 class match_transition(ExpectedValueSelector):
-    """Return 1 if a `transition` argument is found in the input context which
-    has a `.name` attribute matching one of the expected names given to the
-    initializer.
+    """Return 1 if:
+
+    * a `transition` argument is found in the input context which
+      has a `.name` attribute matching one of the expected names given to the
+      initializer
+
+    * no transition specified.
     """
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
+        if transition is None:
+            return 1
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
