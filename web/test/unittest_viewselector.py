@@ -470,7 +470,7 @@ class RQLActionTC(ViewSelectorTC):
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register(CWETypeRQLAction)
         actionsreg = self.vreg['actions']
-        actionsreg[0].__registered__(actionsreg)
+        actionsreg['testaction'][0].__registered__(actionsreg)
 
     def tearDown(self):
         super(RQLActionTC, self).tearDown()
