@@ -41,7 +41,7 @@ def _acquire_unique_cstr_lock(session):
     _UNIQUE_CONSTRAINTS_LOCK.acquire()
     asession.transaction_data['uniquecstrholder'] = True
     # register operation responsible to release the lock on commit/rollback
-    _ReleaseUniqueConstraintsHook(asession)
+    _ReleaseUniqueConstraintsOperation(asession)
 
 def _release_unique_cstr_lock(session):
     if 'uniquecstrholder' in session.transaction_data:
