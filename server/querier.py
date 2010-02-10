@@ -662,7 +662,7 @@ class QuerierHelper(object):
             # since it's actually realy only needed there (other relations
             # security is done *before* actual changes, and add/update entity
             # security is done after changes but in an operation, and exception
-            # generated in operation's events  properly generate a rollback on
+            # generated in operation's events properly generate a rollback on
             # the session). Even though, this is done here for a better
             # consistency: getting an Unauthorized exception means the
             # transaction has been rollbacked

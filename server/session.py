@@ -484,10 +484,8 @@ class Session(RequestSessionBase):
                     operation.failed = True
                     for operation in processed:
                         operation.handle_event('revert%s_event' % trstate)
-                    # res
-
-                    # XXX self.pending_operations is supposed to be
-                    # read-only, and we are clearly modifying it here.
+                    # XXX use slice notation since self.pending_operations is a
+                    # read-only property.
                     self.pending_operations[:] = processed + self.pending_operations 
                     self.rollback(reset_pool)
                     raise
