@@ -213,7 +213,7 @@ class destination_state(RelationType):
     inlined = True
 
 class allowed_transition(RelationType):
-    """allowed transition from this state"""
+    """allowed transitions from this state"""
     __permissions__ = META_RTYPE_PERMS
 
 
