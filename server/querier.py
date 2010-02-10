@@ -666,7 +666,14 @@ class QuerierHelper(object):
             # the session). Even though, this is done here for a better
             # consistency: getting an Unauthorized exception means the
             # transaction has been rollbacked
-            session.rollback()
+            #
+            # notes:
+            # * we should not reset the pool here, since we don't want the
+            #   session to loose its pool during processing
+            # * don't rollback if we're in the commit process, will be handled
+            #   by the session
+            if session.commit_state is None:
+                session.rollback(reset_pool=False)
             raise
         # build a description for the results if necessary
         descr = ()
