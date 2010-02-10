@@ -6,16 +6,14 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-#from __future__ import with_statement
+
+from urlparse import urlsplit
+
+from rql import parse
 
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.selectors import traced_selection
-
-from urlparse import urlsplit
-from rql import parse
-
 from cubicweb.rset import NotAnEntity, ResultSet, attr_desc_iterator
 
 

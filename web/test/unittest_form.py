@@ -5,7 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-#from __future__ import with_statement
 
 from xml.etree.ElementTree import fromstring
 
