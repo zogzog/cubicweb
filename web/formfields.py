@@ -675,7 +675,7 @@ class DateField(StringField):
 
     def format_single_value(self, req, value):
         if value:
-            return ustrftime(value.strip(), req.property_value(self.format_prop))
+            return ustrftime(value, req.property_value(self.format_prop))
         return u''
 
     def render_example(self, req):
