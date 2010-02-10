@@ -15,7 +15,7 @@ from cubicweb.devtools.repotest import RQLGeneratorTC
 
 from cubicweb.server.sources.ldapuser import *
 
-if socket.gethostbyname('ldap').startswith('172'):
+if socket.gethostbyname('ldap1').startswith('172'):
     SYT = 'syt'
     ADIM = 'adim'
 else:
