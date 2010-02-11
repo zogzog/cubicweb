@@ -59,8 +59,12 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
+        # XXX force sorting on x.sortvalue() (which return dc_title by default)
+        # we need proper ITree & co specification to avoid this.
+        # (pb when type ambiguity at the other side of the tree relation,
+        # unability to provide generic implementation on eg Folder...)
         for i, entity in enumerate(sorted(self.cw_rset.entities(),
-                                          key=lambda x: x.dc_title())):
+                                          key=lambda x: x.sortvalue())):
             if i+1 < len(self.cw_rset):
                 morekwargs['is_last'] = False
             else:
