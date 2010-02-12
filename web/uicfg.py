@@ -312,6 +312,10 @@ class AutoformSectionRelationTags(RelationTagsSet):
             formsections.add('%s_%s' % (formtype, section))
 
     def tag_relation(self, key, formtype, section=None):
+        if isinstance(formtype, tuple):
+            for ftype in formtype:
+                self.tag_relation(key, ftype, section)
+            return
         if section is None:
             tag = formtype
             for formtype, section in self.bw_tag_map[tag].iteritems():
