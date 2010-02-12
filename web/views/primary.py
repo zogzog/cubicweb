@@ -46,8 +46,8 @@ class PrimaryView(EntityView):
         self.render_entity(entity)
 
     def render_entity(self, entity):
-        self.render_entity_title(entity)
         self.render_entity_toolbox(entity)
+        self.render_entity_title(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
         if self.is_primary():
