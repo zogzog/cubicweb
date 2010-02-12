@@ -15,8 +15,8 @@ from cubicweb.web.application import AbstractSessionManager
 class InMemoryRepositorySessionManager(AbstractSessionManager):
     """manage session data associated to a session identifier"""
 
-    def __init__(self):
-        AbstractSessionManager.__init__(self)
+    def __init__(self, *args, **kwargs):
+        AbstractSessionManager.__init__(self, *args, **kwargs)
         # XXX require a RepositoryAuthenticationManager which violates
         #     authenticate interface by returning a session instead of a user
         #assert isinstance(self.authmanager, RepositoryAuthenticationManager)

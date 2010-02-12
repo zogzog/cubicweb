@@ -59,7 +59,7 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
 
 
 # keep cnx so it's not garbage collected and the associated session is closed
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 class BaseMSPlannerTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
@@ -74,16 +74,16 @@ class BaseMSPlannerTC(BasePlannerTC):
         #_QuerierTC.setUp(self)
         self.setup()
         # hijack Affaire security
-        affreadperms = list(self.schema['Affaire']._groups['read'])
+        affreadperms = list(self.schema['Affaire'].permissions['read'])
         self.prevrqlexpr_affaire = affreadperms[-1]
         # add access to type attribute so S can't be invariant
         affreadperms[-1] = ERQLExpression('X concerne S?, S owned_by U, S type "X"')
-        self.schema['Affaire']._groups['read'] = tuple(affreadperms)
+        self.schema['Affaire'].permissions['read'] = tuple(affreadperms)
         # hijack CWUser security
-        userreadperms = list(self.schema['CWUser']._groups['read'])
+        userreadperms = list(self.schema['CWUser'].permissions['read'])
         self.prevrqlexpr_user = userreadperms[-1]
         userreadperms[-1] = ERQLExpression('X owned_by U')
-        self.schema['CWUser']._groups['read'] = tuple(userreadperms)
+        self.schema['CWUser'].permissions['read'] = tuple(userreadperms)
         self.add_source(FakeUserROSource, 'ldap')
         self.add_source(FakeCardSource, 'cards')
 
@@ -91,19 +91,24 @@ class BaseMSPlannerTC(BasePlannerTC):
         super(BaseMSPlannerTC, self).tearDown()
         # restore hijacked security
         self.restore_orig_affaire_security()
-        self.restore_orig_euser_security()
+        self.restore_orig_cwuser_security()
 
     def restore_orig_affaire_security(self):
-        affreadperms = list(self.schema['Affaire']._groups['read'])
+        affreadperms = list(self.schema['Affaire'].permissions['read'])
         affreadperms[-1] = self.prevrqlexpr_affaire
-        self.schema['Affaire']._groups['read'] = tuple(affreadperms)
-        clear_cache(self.schema['Affaire'], 'ERSchema_get_rqlexprs')
+        self.schema['Affaire'].permissions['read'] = tuple(affreadperms)
+        clear_cache(self.schema['Affaire'], 'get_rqlexprs')
+        #clear_cache(self.schema['Affaire'], 'get_groups')
 
-    def restore_orig_euser_security(self):
-        userreadperms = list(self.schema['CWUser']._groups['read'])
+    def restore_orig_cwuser_security(self):
+        if hasattr(self, '_orig_cwuser_security_restored'):
+            return
+        self._orig_cwuser_security_restored = True
+        userreadperms = list(self.schema['CWUser'].permissions['read'])
         userreadperms[-1] = self.prevrqlexpr_user
-        self.schema['CWUser']._groups['read'] = tuple(userreadperms)
-        clear_cache(self.schema['CWUser'], 'ERSchema_get_rqlexprs')
+        self.schema['CWUser'].permissions['read'] = tuple(userreadperms)
+        clear_cache(self.schema['CWUser'], 'get_rqlexprs')
+        #clear_cache(self.schema['CWUser'], 'get_groups')
 
 
 class PartPlanInformationTC(BaseMSPlannerTC):
@@ -989,9 +994,10 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_security_3sources_identity(self):
-        self.restore_orig_euser_security()
+        self.restore_orig_cwuser_security()
         # use a guest user
         self.session = self._user_session()[1]
+        print self.session
         self._test('Any X, XT WHERE X is Card, X owned_by U, X title XT, U login "syt"',
                    [('FetchStep',
                      [('Any X,XT WHERE X title XT, X is Card', [{'X': 'Card', 'XT': 'String'}])],
@@ -1003,7 +1009,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_security_3sources_identity_optional_var(self):
-        self.restore_orig_euser_security()
+        self.restore_orig_cwuser_security()
         # use a guest user
         self.session = self._user_session()[1]
         self._test('Any X,XT,U WHERE X is Card, X owned_by U?, X title XT, U login L',

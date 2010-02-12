@@ -16,5 +16,5 @@ class Bug(EntityType):
     severity = String(vocabulary=('important', 'normal', 'minor'), default='normal')
     cost = Int()
     description	= String(maxsize=4096, fulltextindexed=True)
-    identical_to = SubjectRelation('Bug', symetric=True)
+    identical_to = SubjectRelation('Bug', symmetric=True)
 

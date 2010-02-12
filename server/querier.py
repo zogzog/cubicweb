@@ -14,7 +14,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLHelper, RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import (Relation, VariableRef, Constant, SubQuery)
+from rql.nodes import Relation, VariableRef, Constant, SubQuery
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -71,14 +71,23 @@ def check_read_access(schema, user, rqlst, solution):
             # XXX has_text may have specific perm ?
             if rel.r_type in READ_ONLY_RTYPES:
                 continue
-            if not schema.rschema(rel.r_type).has_access(user, 'read'):
+            rschema = schema.rschema(rel.r_type)
+            if rschema.final:
+                eschema = schema.eschema(solution[rel.children[0].name])
+                rdef = eschema.rdef(rschema)
+            else:
+                rdef = rschema.rdef(solution[rel.children[0].name],
+                                    solution[rel.children[1].children[0].name])
+            if not user.matching_groups(rdef.get_groups('read')):
                 raise Unauthorized('read', rel.r_type)
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
     for varname in rqlst.defined_vars:
         etype = solution[varname]
         eschema = schema.eschema(etype)
-        if not eschema.has_access(user, 'read'):
+        if eschema.final:
+            continue
+        if not user.matching_groups(eschema.get_groups('read')):
             erqlexprs = eschema.get_rqlexprs('read')
             if not erqlexprs:
                 ex = Unauthorized('read', etype)
@@ -653,11 +662,18 @@ class QuerierHelper(object):
             # since it's actually realy only needed there (other relations
             # security is done *before* actual changes, and add/update entity
             # security is done after changes but in an operation, and exception
-            # generated in operation's events  properly generate a rollback on
+            # generated in operation's events properly generate a rollback on
             # the session). Even though, this is done here for a better
             # consistency: getting an Unauthorized exception means the
             # transaction has been rollbacked
-            session.rollback()
+            #
+            # notes:
+            # * we should not reset the pool here, since we don't want the
+            #   session to loose its pool during processing
+            # * don't rollback if we're in the commit process, will be handled
+            #   by the session
+            if session.commit_state is None:
+                session.rollback(reset_pool=False)
             raise
         # build a description for the results if necessary
         descr = ()

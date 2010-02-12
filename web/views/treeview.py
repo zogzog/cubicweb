@@ -20,21 +20,21 @@ def treecookiename(treeid):
     return str('%s-treestate' % treeid)
 
 class TreeView(EntityView):
-    id = 'treeview'
+    __regid__ = 'treeview'
     itemvid = 'treeitemview'
     subvid = 'oneline'
     css_classes = 'treeview widget'
     title = _('tree view')
 
     def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax, morekwargs):
-        form = self.req.form
+        form = self._cw.form
         if subvid is None:
             subvid = form.pop('treesubvid', self.subvid) # consume it
         if treeid is None:
             treeid = form.pop('treeid', None)
             if treeid is None:
                 treeid = 'throw_away' + make_uid('uid')
-        if 'morekwargs' in self.req.form:
+        if 'morekwargs' in self._cw.form:
             ajaxargs = json.loads(form.pop('morekwargs'))
             # got unicode & python keywords must be strings
             morekwargs.update(dict((str(k), v)
@@ -44,9 +44,9 @@ class TreeView(EntityView):
         return subvid, treeid, toplevel_thru_ajax, toplevel
 
     def _init_headers(self, treeid, toplevel_thru_ajax):
-        self.req.add_css('jquery.treeview.css')
-        self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
-        self.req.html_headers.add_onload(u"""
+        self._cw.add_css('jquery.treeview.css')
+        self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
+        self._cw.html_headers.add_onload(u"""
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
                                          jsoncall=toplevel_thru_ajax)
 
@@ -59,12 +59,13 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
-        for i, entity in enumerate(sorted(self.rset.entities(), key=lambda x: x.dc_title())):
-            if i+1 < len(self.rset):
+        for i, entity in enumerate(sorted(self.cw_rset.entities(),
+                                          key=lambda x: x.dc_title())):
+            if i+1 < len(self.cw_rset):
                 morekwargs['is_last'] = False
             else:
                 morekwargs['is_last'] = True
-            entity.view(self.itemvid, vid=subvid, parentvid=self.id,
+            entity.view(self.itemvid, vid=subvid, parentvid=self.__regid__,
                         treeid=treeid, w=self.w, **morekwargs)
         self.w(u'</ul>')
 
@@ -79,7 +80,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
     """
-    id = 'filetree'
+    __regid__ = 'filetree'
     css_classes = 'treeview widget filetree'
     title = _('file tree view')
 
@@ -93,10 +94,10 @@ class FileItemInnerView(EntityView):
     This view adds an enclosing <span> with some specific CSS classes
     around the oneline view. This is needed by the jquery treeview plugin.
     """
-    id = 'filetree-oneline'
+    __regid__ = 'filetree-oneline'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
             self.w(u'<div class="folder">%s</div>\n' % entity.view('oneline'))
         else:
@@ -106,12 +107,12 @@ class FileItemInnerView(EntityView):
 
 class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree"""
-    id = 'treeitemview'
+    __regid__ = 'treeitemview'
 
     def cell_call(self, row, col, vid='oneline', treeid=None, **morekwargs):
         assert treeid is not None
-        entity = self.entity(row, col)
-        itemview = self.view(vid, self.rset, row=row, col=col)
+        entity = self.cw_rset.get_entity(row, col)
+        itemview = self._cw.view(vid, self.cw_rset, row=row, col=col)
         last_class = morekwargs['is_last'] and ' class="last"' or ''
         self.w(u'<li%s>%s</li>' % (last_class, itemview))
 
@@ -121,12 +122,12 @@ class TreeViewItemView(EntityView):
 
     (each item should be expandable if it's not a tree leaf)
     """
-    id = 'treeitemview'
-    default_branch_state_is_open = False
+    __regid__ = 'treeitemview'
     __select__ = implements(ITree)
+    default_branch_state_is_open = False
 
     def open_state(self, eeid, treeid):
-        cookies = self.req.get_cookie()
+        cookies = self._cw.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
             return str(eeid) in treestate.value.split(';')
@@ -135,7 +136,7 @@ class TreeViewItemView(EntityView):
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
                   is_last=False, **morekwargs):
         w = self.w
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         liclasses = []
         is_open = self.open_state(entity.eid, treeid)
         is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
@@ -145,12 +146,12 @@ class TreeViewItemView(EntityView):
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
-            url = xml_escape(self.build_url('json', rql=rql, vid=parentvid,
-                                            pageid=self.req.pageid,
-                                            treeid=treeid,
-                                            fname='view',
-                                            treesubvid=vid,
-                                            morekwargs=json.dumps(morekwargs)))
+            url = xml_escape(self._cw.build_url('json', rql=rql, vid=parentvid,
+                                                pageid=self._cw.pageid,
+                                                treeid=treeid,
+                                                fname='view',
+                                                treesubvid=vid,
+                                                morekwargs=json.dumps(morekwargs)))
             divclasses = ['hitarea']
             if is_open:
                 liclasses.append('collapsable')
@@ -181,7 +182,7 @@ class TreeViewItemView(EntityView):
             if not is_open:
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
-        self.wview(vid, self.rset, row=row, col=col, **morekwargs)
+        self.wview(vid, self.cw_rset, row=row, col=col, **morekwargs)
         if is_open and not is_leaf: #  => rql is defined
             self.wview(parentvid, entity.children(entities=False), subvid=vid,
                        treeid=treeid, initial_load=False, **morekwargs)

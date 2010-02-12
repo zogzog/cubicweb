@@ -15,7 +15,7 @@ from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
                               HOOKS_RTYPE_PERMS)
 
 class Workflow(EntityType):
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
@@ -34,20 +34,20 @@ class Workflow(EntityType):
 
 class default_workflow(RelationType):
     """default workflow for an entity type"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
     subject = 'CWEType'
     object = 'Workflow'
     cardinality = '?*'
     constraints = [RQLConstraint('S final FALSE, O workflow_of S',
-                                 msg=_('workflow isn\'t a workflow of this type'))]
+                                 msg=_('workflow isn\'t a workflow for this type'))]
 
 
 class State(EntityType):
     """used to associate simple states to an entity type and/or to define
     workflows
     """
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
@@ -70,7 +70,7 @@ class State(EntityType):
 
 class BaseTransition(EntityType):
     """abstract base class for transitions"""
-    permissions = META_ETYPE_PERMS
+    __permissions__ = META_ETYPE_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
@@ -140,7 +140,7 @@ class SubWorkflowExitPoint(EntityType):
 class TrInfo(EntityType):
     """workflow history item"""
     # 'add' security actually done by hooks
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',), # XXX U has_read_permission O ?
         'add':    ('managers', 'users', 'guests',),
         'delete': (), # XXX should we allow managers to delete TrInfo?
@@ -156,20 +156,16 @@ class TrInfo(EntityType):
     # get actor and date time using owned_by and creation_date
 
 class from_state(RelationType):
-    permissions = HOOKS_RTYPE_PERMS.copy()
+    __permissions__ = HOOKS_RTYPE_PERMS.copy()
     inlined = True
 
 class to_state(RelationType):
-    permissions = {
-        'read':   ('managers', 'users', 'guests',),
-        'add':    ('managers',),
-        'delete': (),
-    }
+    __permissions__ = HOOKS_RTYPE_PERMS.copy()
     inlined = True
 
 class by_transition(RelationType):
     # 'add' security actually done by hooks
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users', 'guests',),
         'delete': (),
@@ -178,52 +174,54 @@ class by_transition(RelationType):
 
 class workflow_of(RelationType):
     """link a workflow to one or more entity type"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class state_of(RelationType):
     """link a state to one or more workflow"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
+    inlined = True
 
 class transition_of(RelationType):
     """link a transition to one or more workflow"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
+    inlined = True
 
 class subworkflow(RelationType):
     """link a transition to one or more workflow"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class exit_point(RelationType):
     """link a transition to one or more workflow"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
 class subworkflow_state(RelationType):
     """link a transition to one or more workflow"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class initial_state(RelationType):
     """indicate which state should be used by default when an entity using
     states is created
     """
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class destination_state(RelationType):
     """destination state of a transition"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
     inlined = True
 
 class allowed_transition(RelationType):
-    """allowed transition from this state"""
-    permissions = META_RTYPE_PERMS
+    """allowed transitions from this state"""
+    __permissions__ = META_RTYPE_PERMS
 
 
 # "abstract" relations, set by WorkflowableEntityType ##########################
 
 class custom_workflow(RelationType):
     """allow to set a specific workflow for an entity"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = META_RTYPE_PERMS
 
     cardinality = '?*'
     constraints = [RQLConstraint('S is ET, O workflow_of ET',
@@ -234,7 +232,7 @@ class custom_workflow(RelationType):
 class wf_info_for(RelationType):
     """link a transition information to its object"""
     # 'add' security actually done by hooks
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users', 'guests',),
         'delete': (),
@@ -249,7 +247,7 @@ class wf_info_for(RelationType):
 
 class in_state(RelationType):
     """indicate the current state of an entity"""
-    permissions = HOOKS_RTYPE_PERMS
+    __permissions__ = HOOKS_RTYPE_PERMS
 
     # not inlined intentionnaly since when using ldap sources, user'state
     # has to be stored outside the CWUser table

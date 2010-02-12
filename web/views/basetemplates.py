@@ -24,7 +24,7 @@ class LogInOutTemplate(MainTemplate):
         self.set_request_content_type()
         w = self.w
         self.write_doctype()
-        self.template_header('text/html', self.req._('login_action'))
+        self.template_header('text/html', self._cw._('login_action'))
         w(u'<body>\n')
         self.content(w)
         w(u'</body>')
@@ -32,37 +32,37 @@ class LogInOutTemplate(MainTemplate):
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         w = self.whead
         # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
-        w(u'<base href="%s"></base>' % xml_escape(self.req.base_url()))
+        w(u'<base href="%s"></base>' % xml_escape(self._cw.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
-          % (content_type, self.req.encoding))
+          % (content_type, self._cw.encoding))
         w(NOINDEX)
         w(NOFOLLOW)
         w(u'\n'.join(additional_headers) + u'\n')
-        self.wview('htmlheader', rset=self.rset)
+        self.wview('htmlheader', rset=self.cw_rset)
         w(u'<title>%s</title>\n' % xml_escape(page_title))
 
 
 class LogInTemplate(LogInOutTemplate):
-    id = 'login'
+    __regid__ = 'login'
     title = 'log in'
 
     def content(self, w):
-        self.wview('logform', rset=self.rset, id='loginBox', klass='')
+        self.wview('logform', rset=self.cw_rset, id='loginBox', klass='')
 
 
 class LoggedOutTemplate(LogInOutTemplate):
-    id = 'loggedout'
+    __regid__ = 'loggedout'
     title = 'logged out'
 
     def content(self, w):
         # FIXME Deprecated code ?
-        msg = self.req._('you have been logged out')
+        msg = self._cw._('you have been logged out')
         w(u'<h2>%s</h2>\n' % msg)
-        if self.config['anonymous-user']:
-            indexurl = self.build_url('view', vid='index', __message=msg)
+        if self._cw.vreg.config['anonymous-user']:
+            indexurl = self._cw.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),
-                self.req._('go back to the index page')))
+                self._cw._('go back to the index page')))
 
 @objectify_selector
 def templatable_view(cls, req, rset, *args, **kwargs):
@@ -78,15 +78,15 @@ def templatable_view(cls, req, rset, *args, **kwargs):
 
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
-    id = 'main-template'
+    __regid__ = 'main-template'
     __select__ = ~templatable_view()
 
     def call(self, view):
         view.set_request_content_type()
         view.set_stream()
-        if (self.req.form.has_key('__notemplate') and view.templatable
-            and view.content_type == self.req.html_content_type()):
-            view.w(self.req.document_surrounding_div())
+        if (self._cw.form.has_key('__notemplate') and view.templatable
+            and view.content_type == self._cw.html_content_type()):
+            view.w(self._cw.document_surrounding_div())
             view.render()
             view.w(u'</div>')
         else:
@@ -101,7 +101,7 @@ class TheMainTemplate(MainTemplate):
 
     - call header / footer templates
     """
-    id = 'main-template'
+    __regid__ = 'main-template'
     __select__ = templatable_view()
 
     def call(self, view):
@@ -109,13 +109,13 @@ class TheMainTemplate(MainTemplate):
         self.template_header(self.content_type, view)
         w = self.w
         w(u'<div id="pageContent">\n')
-        vtitle = self.req.form.get('vtitle')
+        vtitle = self._cw.form.get('vtitle')
         if vtitle:
             w(u'<h1 class="vtitle">%s</h1>\n' % xml_escape(vtitle))
         # display entity type restriction component
-        etypefilter = self.vreg['components'].select_vobject(
-            'etypenavigation', self.req, rset=self.rset)
-        if etypefilter:
+        etypefilter = self._cw.vreg['components'].select_or_none(
+            'etypenavigation', self._cw, rset=self.cw_rset)
+        if etypefilter and etypefilter.cw_propval('visible'):
             etypefilter.render(w=w)
         self.nav_html = UStringIO()
         if view:
@@ -136,30 +136,29 @@ class TheMainTemplate(MainTemplate):
 
     def template_html_header(self, content_type, page_title, additional_headers=()):
         w = self.whead
-        lang = self.req.lang
+        lang = self._cw.lang
         self.write_doctype()
         # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
-        w(u'<base href="%s"></base>' % xml_escape(self.req.base_url()))
+        w(u'<base href="%s"></base>' % xml_escape(self._cw.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
-          % (content_type, self.req.encoding))
+          % (content_type, self._cw.encoding))
         w(u'\n'.join(additional_headers) + u'\n')
-        self.wview('htmlheader', rset=self.rset)
+        self.wview('htmlheader', rset=self.cw_rset)
         if page_title:
             w(u'<title>%s</title>\n' % xml_escape(page_title))
 
     def template_body_header(self, view):
         w = self.w
         w(u'<body>\n')
-        self.wview('header', rset=self.rset, view=view)
+        self.wview('header', rset=self.cw_rset, view=view)
         w(u'<div id="page"><table width="100%" border="0" id="mainLayout"><tr>\n')
         self.nav_column(view, 'left')
         w(u'<td id="contentcol">\n')
-        rqlcomp = self.vreg['components'].select_object('rqlinput', self.req,
-                                                        rset=self.rset)
+        components = self._cw.vreg['components']
+        rqlcomp = components.select_or_none('rqlinput', self._cw, rset=self.cw_rset)
         if rqlcomp:
             rqlcomp.render(w=self.w, view=view)
-        msgcomp = self.vreg['components'].select_object('applmessages',
-                                                        self.req, rset=self.rset)
+        msgcomp = components.select_or_none('applmessages', self._cw, rset=self.cw_rset)
         if msgcomp:
             msgcomp.render(w=self.w)
         self.content_header(view)
@@ -169,12 +168,12 @@ class TheMainTemplate(MainTemplate):
         self.w(u'</td>\n')
         self.nav_column(view, 'right')
         self.w(u'</tr></table></div>\n')
-        self.wview('footer', rset=self.rset)
+        self.wview('footer', rset=self.cw_rset)
         self.w(u'</body>')
 
     def nav_column(self, view, context):
-        boxes = list(self.vreg['boxes'].possible_vobjects(
-            self.req, rset=self.rset, view=view, context=context))
+        boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
             self.w(u'<td class="navcol"><div class="navboxes">\n')
             for box in boxes:
@@ -183,10 +182,10 @@ class TheMainTemplate(MainTemplate):
 
     def content_header(self, view=None):
         """by default, display informal messages in content header"""
-        self.wview('contentheader', rset=self.rset, view=view)
+        self.wview('contentheader', rset=self.cw_rset, view=view)
 
     def content_footer(self, view=None):
-        self.wview('contentfooter', rset=self.rset, view=view)
+        self.wview('contentfooter', rset=self.cw_rset, view=view)
 
 
 class ErrorTemplate(TheMainTemplate):
@@ -194,26 +193,26 @@ class ErrorTemplate(TheMainTemplate):
     main template. This template may be called for authentication error,
     which means that req.cnx and req.user may not be set.
     """
-    id = 'error-template'
+    __regid__ = 'error-template'
 
     def call(self):
         """display an unexpected error"""
         self.set_request_content_type()
-        self.req.reset_headers()
-        view = self.vreg['views'].select('error', self.req, rset=self.rset)
-        self.template_header(self.content_type, view, self.req._('an error occured'),
+        self._cw.reset_headers()
+        view = self._cw.vreg['views'].select('error', self._cw, rset=self.cw_rset)
+        self.template_header(self.content_type, view, self._cw._('an error occured'),
                              [NOINDEX, NOFOLLOW])
         view.render(w=self.w)
         self.template_footer(view)
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         w = self.whead
-        lang = self.req.lang
+        lang = self._cw.lang
         self.write_doctype()
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
-          % (content_type, self.req.encoding))
+          % (content_type, self._cw.encoding))
         w(u'\n'.join(additional_headers))
-        self.wview('htmlheader', rset=self.rset)
+        self.wview('htmlheader', rset=self.cw_rset)
         w(u'<title>%s</title>\n' % xml_escape(page_title))
         self.w(u'<body>\n')
 
@@ -223,18 +222,18 @@ class ErrorTemplate(TheMainTemplate):
 
 class SimpleMainTemplate(TheMainTemplate):
 
-    id = 'main-no-top'
+    __regid__ = 'main-no-top'
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         page_title = page_title or view.page_title()
         additional_headers = additional_headers or view.html_headers()
         whead = self.whead
-        lang = self.req.lang
+        lang = self._cw.lang
         self.write_doctype()
         whead(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
-              % (content_type, self.req.encoding))
+              % (content_type, self._cw.encoding))
         whead(u'\n'.join(additional_headers) + u'\n')
-        self.wview('htmlheader', rset=self.rset)
+        self.wview('htmlheader', rset=self.cw_rset)
         w = self.w
         w(u'<title>%s</title>\n' % xml_escape(page_title))
         w(u'<body>\n')
@@ -242,8 +241,8 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
         w(u'<td class="navcol">\n')
         self.topleft_header()
-        boxes = list(self.vreg['boxes'].possible_vobjects(
-            self.req, rset=self.rset, view=view, context='left'))
+        boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, view=view, context='left'))
         if boxes:
             w(u'<div class="navboxes">\n')
             for box in boxes:
@@ -252,14 +251,14 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'</td>')
         w(u'<td id="contentcol" rowspan="2">')
         w(u'<div id="pageContent">\n')
-        vtitle = self.req.form.get('vtitle')
+        vtitle = self._cw.form.get('vtitle')
         if vtitle:
             w(u'<h1 class="vtitle">%s</h1>' % xml_escape(vtitle))
 
     def topleft_header(self):
-        logo = self.vreg['components'].select_vobject('logo', self.req,
-                                                      rset=self.rset)
-        if logo:
+        logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
+                                                      rset=self.cw_rset)
+        if logo and logo.cw_propval('visible'):
             self.w(u'<table id="header"><tr>\n')
             self.w(u'<td>')
             logo.render(w=self.w)
@@ -277,15 +276,15 @@ if can_do_pdf_conversion():
     from cubicweb.ext.xhtml2fo import ReportTransformer
 
     class PdfMainTemplate(TheMainTemplate):
-        id = 'pdf-main-template'
+        __regid__ = 'pdf-main-template'
 
         def call(self, view):
             """build the standard view, then when it's all done, convert xhtml to pdf
             """
             super(PdfMainTemplate, self).call(view)
-            section = self.req.form.pop('section', 'contentmain')
+            section = self._cw.form.pop('section', 'contentmain')
             pdf = self.to_pdf(self._stream, section)
-            self.req.set_content_type('application/pdf', filename='report.pdf')
+            self._cw.set_content_type('application/pdf', filename='report.pdf')
             self.binary = True
             self.w = None
             self.set_stream()
@@ -312,7 +311,7 @@ if can_do_pdf_conversion():
 
 class HTMLHeader(View):
     """default html headers"""
-    id = 'htmlheader'
+    __regid__ = 'htmlheader'
 
     def call(self, **kwargs):
         self.favicon()
@@ -321,12 +320,12 @@ class HTMLHeader(View):
         self.alternates()
 
     def favicon(self):
-        favicon = self.req.external_resource('FAVICON', None)
+        favicon = self._cw.external_resource('FAVICON', None)
         if favicon:
             self.whead(u'<link rel="shortcut icon" href="%s"/>\n' % favicon)
 
     def stylesheets(self):
-        req = self.req
+        req = self._cw
         add_css = req.add_css
         for css in req.external_resource('STYLESHEETS'):
             add_css(css, localfile=False)
@@ -336,12 +335,12 @@ class HTMLHeader(View):
             add_css(css, localfile=False, ieonly=True)
 
     def javascripts(self):
-        for jscript in self.req.external_resource('JAVASCRIPTS'):
-            self.req.add_js(jscript, localfile=False)
+        for jscript in self._cw.external_resource('JAVASCRIPTS'):
+            self._cw.add_js(jscript, localfile=False)
 
     def alternates(self):
-        urlgetter = self.vreg['components'].select_object('rss_feed_url',
-                                            self.req, rset=self.rset)
+        urlgetter = self._cw.vreg['components'].select_or_none('rss_feed_url',
+                                                           self._cw, rset=self.cw_rset)
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
                        %  xml_escape(urlgetter.feed_url()))
@@ -349,7 +348,7 @@ class HTMLHeader(View):
 
 class HTMLPageHeader(View):
     """default html page header"""
-    id = 'header'
+    __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
 
     def call(self, view, **kwargs):
@@ -365,44 +364,44 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td id="firstcolumn">')
-        logo = self.vreg['components'].select_vobject(
-            'logo', self.req, rset=self.rset)
-        if logo:
+        logo = self._cw.vreg['components'].select_or_none(
+            'logo', self._cw, rset=self.cw_rset)
+        if logo and logo.cw_propval('visible'):
             logo.render(w=self.w)
         self.w(u'</td>\n')
         # appliname and breadcrumbs
         self.w(u'<td id="headtext">')
         for cid in self.main_cell_components:
-            comp = self.vreg['components'].select_vobject(
-                cid, self.req, rset=self.rset)
-            if comp:
+            comp = self._cw.vreg['components'].select_or_none(
+                cid, self._cw, rset=self.cw_rset)
+            if comp and comp.cw_propval('visible'):
                 comp.render(w=self.w)
         self.w(u'</td>')
         # logged user and help
         self.w(u'<td>\n')
-        comp = self.vreg['components'].select_vobject(
-            'loggeduserlink', self.req, rset=self.rset)
-        if comp:
+        comp = self._cw.vreg['components'].select_or_none(
+            'loggeduserlink', self._cw, rset=self.cw_rset)
+        if comp and comp.cw_propval('visible'):
             comp.render(w=self.w)
         self.w(u'</td>')
         # lastcolumn
         self.w(u'<td id="lastcolumn">')
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
-        self.wview('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
+        self.wview('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
                    title=False, message=False)
 
     def state_header(self):
-        state = self.req.search_state
+        state = self._cw.search_state
         if state[0] == 'normal':
             return
-        _ = self.req._
-        value = self.view('oneline', self.req.eid_rset(state[1][1]))
+        _ = self._cw._
+        value = self.view('oneline', self._cw.eid_rset(state[1][1]))
         msg = ' '.join((_("searching for"),
-                        display_name(self.req, state[1][3]),
+                        display_name(self._cw, state[1][3]),
                         _("to associate with"), value,
                         _("by relation"), '"',
-                        display_name(self.req, state[1][2], state[1][0]),
+                        display_name(self._cw, state[1][2], state[1][0]),
                         '"'))
         return self.w(u'<div class="stateMessage">%s</div>' % msg)
 
@@ -411,16 +410,17 @@ class HTMLPageHeader(View):
 class HTMLPageFooter(View):
     """default html page footer: include footer actions
     """
-    id = 'footer'
+    __regid__ = 'footer'
 
     def call(self, **kwargs):
-        req = self.req
+        req = self._cw
         self.w(u'<div class="footer">')
-        actions = self.vreg['actions'].possible_actions(self.req, rset=self.rset)
+        actions = self._cw.vreg['actions'].possible_actions(self._cw,
+                                                            rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
             self.w(u'<a href="%s">%s</a>' % (action.url(),
-                                             self.req._(action.title)))
+                                             self._cw._(action.title)))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
         self.w(u'</div>')
@@ -431,12 +431,12 @@ class HTMLContentHeader(View):
     * include message component if selectable for this request
     * include selectable content navigation components
     """
-    id = 'contentheader'
+    __regid__ = 'contentheader'
 
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
-        components = self.vreg['contentnavigation'].possible_vobjects(
-            self.req, rset=self.rset, view=view, context='navtop')
+        components = self._cw.vreg['contentnavigation'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, view=view, context='navtop')
         if components:
             self.w(u'<div id="contentheader">')
             for comp in components:
@@ -448,11 +448,11 @@ class HTMLContentFooter(View):
     """default html page content footer: include selectable content navigation
     components
     """
-    id = 'contentfooter'
+    __regid__ = 'contentfooter'
 
     def call(self, view, **kwargs):
-        components = self.vreg['contentnavigation'].possible_vobjects(
-            self.req, rset=self.rset, view=view, context='navbottom')
+        components = self._cw.vreg['contentnavigation'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, view=view, context='navbottom')
         if components:
             self.w(u'<div id="contentfooter">')
             for comp in components:
@@ -461,16 +461,16 @@ class HTMLContentFooter(View):
 
 
 class LogFormTemplate(View):
-    id = 'logform'
+    __regid__ = 'logform'
     __select__ = match_kwargs('id', 'klass')
 
     title = 'log in'
 
     def call(self, id, klass, title=True, message=True):
-        self.req.add_css('cubicweb.login.css')
+        self._cw.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
-            stitle = self.req.property_value('ui.site-title')
+            stitle = self._cw.property_value('ui.site-title')
             if stitle:
                 stitle = xml_escape(stitle)
             else:
@@ -480,7 +480,7 @@ class LogFormTemplate(View):
 
         if message:
             self.display_message()
-        if self.config['auth-mode'] == 'http':
+        if self._cw.vreg.config['auth-mode'] == 'http':
             # HTTP authentication
             pass
         else:
@@ -489,28 +489,35 @@ class LogFormTemplate(View):
         self.w(u'</div></div>\n')
 
     def display_message(self):
-        message = self.req.message
+        message = self._cw.message
         if message:
             self.w(u'<div class="simpleMessage">%s</div>\n' % message)
 
     def login_form(self, id):
-        _ = self.req._
+        _ = self._cw._
+        # XXX turn into a form
         self.w(u'<form method="post" action="%s" id="login_form">\n'
-               % xml_escape(login_form_url(self.config, self.req)))
+               % xml_escape(login_form_url(self._cw.vreg.config, self._cw)))
         self.w(u'<table>\n')
+        self.add_fields()
         self.w(u'<tr>\n')
-        msg = (self.config['allow-email-login'] and _('login or email')) or _('login')
-        self.w(u'<td><label for="__login">%s</label></td>' % msg)
-        self.w(u'<td><input name="__login" id="__login" class="data" type="text" /></td>')
-        self.w(u'</tr><tr>\n')
-        self.w(u'<td><label for="__password" >%s</label></td>' % _('password'))
-        self.w(u'<td><input name="__password" id="__password" class="data" type="password" /></td>\n')
-        self.w(u'</tr><tr>\n')
         self.w(u'<td>&#160;</td><td><input type="submit" class="loginButton right" value="%s" />\n</td>' % _('log in'))
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
         self.w(u'</form>\n')
-        self.req.html_headers.add_onload('jQuery("#__login:visible").focus()')
+        self._cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+
+    def add_fields(self):
+        msg = (self._cw.vreg.config['allow-email-login'] and _('login or email')) or _('login')
+        self.add_field('__login', msg, 'text')
+        self.add_field('__password', self._cw._('password'), 'password')
+
+    def add_field(self, name, label, inputtype):
+        self.w(u'<tr>\n')
+        self.w(u'<td><label for="%s" >%s</label></td>' % (name, label))
+        self.w(u'<td><input name="%s" id="%s" class="data" type="%s" /></td>\n' %
+               (name, name, inputtype))
+        self.w(u'</tr>\n')
 
 
 def login_form_url(config, req):

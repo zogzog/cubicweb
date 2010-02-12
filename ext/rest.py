@@ -70,10 +70,10 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     # Base URL mainly used by inliner.pep_reference; so this is correct:
     context = inliner.document.settings.context
     try:
-        refedentity = context.req.entity_from_eid(eid_num)
+        refedentity = context._cw.entity_from_eid(eid_num)
     except UnknownEid:
         ref = '#'
-        rest += u' ' + context.req._('(UNEXISTANT EID)')
+        rest += u' ' + context._cw._('(UNEXISTANT EID)')
     else:
         ref = refedentity.absolute_url()
     set_classes(options)
@@ -96,7 +96,7 @@ def winclude_directive(name, arguments, options, content, lineno,
         lineno - state_machine.input_offset - 1)
     #source_dir = os.path.dirname(os.path.abspath(source))
     fid = arguments[0]
-    for lang in chain((context.req.lang, context.vreg.property_value('ui.language')),
+    for lang in chain((context._cw.lang, context.vreg.property_value('ui.language')),
                       context.config.available_languages()):
         rid = '%s_%s.rst' % (fid, lang)
         resourcedir = context.config.locate_doc_file(rid)
@@ -159,14 +159,16 @@ else:
         try:
             lexer = get_lexer_by_name(arguments[0])
         except ValueError:
-            import traceback
-            traceback.print_exc()
-            print sorted(aliases for module_name, name, aliases, _, _  in LEXERS.itervalues())
             # no lexer found
             lexer = get_lexer_by_name('text')
         parsed = highlight(u'\n'.join(content), lexer, _PYGMENTS_FORMATTER)
-        context = state.document.settings.context
-        context.req.add_css('pygments.css')
+        # don't fail if no context set on the sourcecode directive
+        try:
+            context = state.document.settings.context
+            context._cw.add_css('pygments.css')
+        except AttributeError:
+            # used outside cubicweb
+            pass
         return [nodes.raw('', parsed, format='html')]
 
     pygments_directive.arguments = (1, 0, 1)
@@ -206,7 +208,7 @@ def rest_publish(context, data):
     :return:
       the data formatted as HTML or the original data if an error occured
     """
-    req = context.req
+    req = context._cw
     if isinstance(data, unicode):
         encoding = 'unicode'
         # remove unprintable characters unauthorized in xml

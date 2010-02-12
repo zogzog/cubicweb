@@ -15,7 +15,7 @@ selection principle which makes *CubicWeb* web interface very flexible.
 A `View` is an object applied to another object such as an entity.
 
 Basic class for views
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Class `View` (`cubicweb.view`)
 `````````````````````````````````````
@@ -34,11 +34,11 @@ subclasses may be parametrized using the following class attributes:
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-At instantiation time, the standard `req` and `rset` attributes are
+At instantiation time, the standard `_cw` and `cw_rset` attributes are
 added and the `w` attribute will be set at rendering time.
 
 A view writes to its output stream thanks to its attribute `w` (an
-`UStreamIO`).
+`UStreamIO`, except for binary views).
 
 The basic interface for views is as follows (remember that the result set has a
 tabular structure with rows and columns, hence cells):
@@ -110,7 +110,7 @@ Examples of views class
 
 
 Example of view customization and creation
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
@@ -157,16 +157,16 @@ Let us now improve the primary view of a blog
      rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
 
      def render_entity_relations(self, entity):
-         rset = self.req.execute(self.rql, {'b' : entity.eid})
+         rset = self._cw.execute(self.rql, {'b' : entity.eid})
          for entry in rset.entities():
              self.w(u'<p>%s</p>' % entry.view('inblogcontext'))
 
  class BlogEntryInBlogView(EntityView):
-     'inblogcontext'
+     id = 'inblogcontext'
      __select__ = implements('BlogEntry')
 
      def cell_call(self, row, col):
-         entity = self.rset.get_entity(row, col)
+         entity = self.cw_rset.get_entity(row, col)
          self.w(u'<a href="%s" title="%s">%s</a>' %
                 entity.absolute_url(),
                 xml_escape(entity.content[:50]),
@@ -252,8 +252,8 @@ and show that ajax comes for free.
 [FILLME]
 
 
-XML views, binaries...
-----------------------
+XML views, binaries views...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For views generating other formats than HTML (an image generated dynamically
 for example), and which can not simply be included in the HTML page generated

@@ -20,7 +20,7 @@ password = gingkow
 [ldapuser]
 adapter=ldapuser
 # ldap host
-host=ldap
+host=ldap1
 # base DN to lookup for usres
 user-base-dn=ou=People,dc=logilab,dc=fr
 # user search scope

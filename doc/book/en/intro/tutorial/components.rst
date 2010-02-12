@@ -69,7 +69,7 @@ Once you modified your data model, you need to synchronize the
 database with your model. For this purpose, *CubicWeb* provides
 a very useful command ``cubicweb-ctl shell blogdemo`` which
 launches an interactive shell where you can enter migration
-commands. (see :ref:`cubicweb-ctl` for more details))
+commands (see :ref:`cubicweb-ctl` for more details)).
 As you added the cube named `comment`, you need to run:
 
 ::

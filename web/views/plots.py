@@ -13,17 +13,13 @@ import time
 from simplejson import dumps
 
 from logilab.common import flatten
+from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import make_uid, UStringIO, datetime2ticks
+from cubicweb.utils import make_uid, UStringIO
 from cubicweb.appobject import objectify_selector
+from cubicweb.selectors import multi_columns_rset
 from cubicweb.web.views import baseviews
-
-@objectify_selector
-def at_least_two_columns(cls, req, rset=None, *args, **kwargs):
-    if not rset:
-        return 0
-    return len(rset.rows[0]) >= 2
 
 @objectify_selector
 def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
@@ -128,28 +124,28 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
 
 
 class PlotView(baseviews.AnyRsetView):
-    id = 'plot'
+    __regid__ = 'plot'
     title = _('generic plot')
-    __select__ = at_least_two_columns() & all_columns_are_numbers()
+    __select__ = multi_columns_rset() & all_columns_are_numbers()
     timemode = False
 
     def call(self, width=500, height=400):
         # prepare data
-        rqlst = self.rset.syntax_tree()
+        rqlst = self.cw_rset.syntax_tree()
         # XXX try to make it work with unions
         varnames = [var.name for var in rqlst.children[0].get_selected_variables()][1:]
-        abscissa = [row[0] for row in self.rset]
+        abscissa = [row[0] for row in self.cw_rset]
         plots = []
-        nbcols = len(self.rset.rows[0])
+        nbcols = len(self.cw_rset.rows[0])
         for col in xrange(1, nbcols):
-            data = [row[col] for row in self.rset]
+            data = [row[col] for row in self.cw_rset]
             plots.append(filterout_nulls(abscissa, data))
         plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)
-        plotwidget.render(self.req, width, height, w=self.w)
+        plotwidget.render(self._cw, width, height, w=self.w)
 
 
 class TimeSeriePlotView(PlotView):
-    __select__ = at_least_two_columns() & columns_are_date_then_numbers()
+    __select__ = multi_columns_rset() & columns_are_date_then_numbers()
     timemode = True
 
 
@@ -177,26 +173,26 @@ else:
             self.w(u'<img src="%s" />' % xml_escape(piechart.url))
 
     class PieChartView(baseviews.AnyRsetView):
-        id = 'piechart'
+        __regid__ = 'piechart'
         pieclass = Pie
 
-        __select__ = at_least_two_columns() & second_column_is_number()
+        __select__ = multi_columns_rset() & second_column_is_number()
 
         def _guess_vid(self, row):
-            etype = self.rset.description[row][0]
-            if self.schema.eschema(etype).final:
+            etype = self.cw_rset.description[row][0]
+            if self._cw.vreg.schema.eschema(etype).final:
                 return 'final'
             return 'textincontext'
 
         def call(self, title=None, width=None, height=None):
             labels = []
             values = []
-            for rowidx, (_, value) in enumerate(self.rset):
+            for rowidx, (_, value) in enumerate(self.cw_rset):
                 if value is not None:
                     vid = self._guess_vid(rowidx)
-                    label = '%s: %s' % (self.view(vid, self.rset, row=rowidx, col=0),
+                    label = '%s: %s' % (self.view(vid, self.cw_rset, row=rowidx, col=0),
                                         value)
-                    labels.append(label.encode(self.req.encoding))
+                    labels.append(label.encode(self._cw.encoding))
                     values.append(value)
             pie = PieChartWidget(labels, values, pieclass=self.pieclass,
                                  title=title)
@@ -206,5 +202,5 @@ else:
 
 
     class PieChart3DView(PieChartView):
-        id = 'piechart3D'
+        __regid__ = 'piechart3D'
         pieclass = Pie3D

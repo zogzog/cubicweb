@@ -78,12 +78,13 @@ _ = unicode
 import sys
 import os
 import logging
+import tempfile
 from smtplib import SMTP
 from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
-import tempfile
+from warnings import warn
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
@@ -290,11 +291,6 @@ registered.',
 this option is set to yes",
           'group': 'email', 'inputlevel': 2,
           }),
-        ('disable-appobjects',
-         {'type' : 'csv', 'default': (),
-          'help': 'comma separated list of identifiers of application objects (<registry>.<oid>) to disable',
-          'group': 'appobjects', 'inputlevel': 2,
-          }),
         )
     # static and class methods used to get instance independant resources ##
 
@@ -354,6 +350,14 @@ this option is set to yes",
         if not cls.CUBES_DIR in path:
             path.append(cls.CUBES_DIR)
         return path
+
+    @classproperty
+    def extrapath(cls):
+        extrapath = {}
+        for cubesdir in cls.cubes_search_path():
+            if cubesdir != cls.CUBES_DIR:
+                extrapath[cubesdir] = 'cubes'
+        return extrapath
 
     @classmethod
     def cube_dir(cls, cube):
@@ -470,7 +474,7 @@ this option is set to yes",
         from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
         for ctlfile in ('web/webctl.py',  'etwist/twctl.py',
-                        'server/serverctl.py', 'hercule.py',
+                        'server/serverctl.py', 
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:
@@ -480,14 +484,23 @@ this option is set to yes",
                                 (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
-            pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
+            oldpluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
+            pluginfile = join(cls.cube_dir(cube), 'ccplugin.py')
             initfile = join(cls.cube_dir(cube), '__init__.py')
             if exists(pluginfile):
+                try:
+                    __import__('cubes.%s.ccplugin' % cube)
+                    cls.info('loaded cubicweb-ctl plugin from %s', cube)
+                except:
+                    cls.exception('while loading plugin %s', pluginfile)
+            elif exists(oldpluginfile):
+                warn('[3.6] %s: ecplugin module should be renamed to ccplugin' % cube,
+                     DeprecationWarning)
                 try:
                     __import__('cubes.%s.ecplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
                 except:
-                    cls.exception('while loading plugin %s', pluginfile)
+                    cls.exception('while loading plugin %s', oldpluginfile)
             elif exists(initfile):
                 try:
                     __import__('cubes.%s' % cube)
@@ -556,6 +569,7 @@ this option is set to yes",
         return vregpath
 
     def __init__(self):
+        register_stored_procedures()
         ConfigurationMixIn.__init__(self)
         self.adjust_sys_path()
         self.load_defaults()
@@ -862,11 +876,15 @@ the repository',
                 if exists(sitefile) and not sitefile in self._site_loaded:
                     self._load_site_cubicweb(sitefile)
                     self._site_loaded.add(sitefile)
-                    self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
+                    self.warning('[3.5] site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
-        from logilab.common.modutils import load_module_from_file
-        module = load_module_from_file(sitefile)
+        # XXX extrapath argument to load_module_from_file only in lgc > 0.46
+        from logilab.common.modutils import load_module_from_modpath, modpath_from_file
+        def load_module_from_file(filepath, path=None, use_sys=1, extrapath=None):
+            return load_module_from_modpath(modpath_from_file(filepath, extrapath),
+                                            path, use_sys)
+        module = load_module_from_file(sitefile, extrapath=self.extrapath)
         self.info('%s loaded', sitefile)
         # cube specific options
         if getattr(module, 'options', None):
@@ -935,11 +953,11 @@ the repository',
 
     def migration_handler(self):
         """return a migration handler instance"""
-        from cubicweb.common.migration import MigrationHelper
+        from cubicweb.migration import MigrationHelper
         return MigrationHelper(self, verbosity=self.verbosity)
 
     def i18ncompile(self, langs=None):
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         if langs is None:
             langs = self.available_languages()
         i18ndir = join(self.apphome, 'i18n')
@@ -976,3 +994,61 @@ set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration
 # alias to get a configuration instance from an instance id
 instance_configuration = CubicWebConfiguration.config_for
 application_configuration = deprecated('use instance_configuration')(instance_configuration)
+
+
+_EXT_REGISTERED = False
+def register_stored_procedures():
+    from logilab.common.adbh import FunctionDescr
+    from rql.utils import register_function, iter_funcnode_variables
+
+    global _EXT_REGISTERED
+    if _EXT_REGISTERED:
+        return
+    _EXT_REGISTERED = True
+
+    class COMMA_JOIN(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'String'
+
+        @classmethod
+        def st_description(cls, funcnode, mainindex, tr):
+            return ', '.join(sorted(term.get_description(mainindex, tr)
+                                    for term in iter_funcnode_variables(funcnode)))
+
+    register_function(COMMA_JOIN)  # XXX do not expose?
+
+
+    class CONCAT_STRINGS(COMMA_JOIN):
+        aggregat = True
+
+    register_function(CONCAT_STRINGS) # XXX bw compat
+
+    class GROUP_CONCAT(CONCAT_STRINGS):
+        supported_backends = ('mysql', 'postgres', 'sqlite',)
+
+    register_function(GROUP_CONCAT)
+
+
+    class LIMIT_SIZE(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'String'
+
+        @classmethod
+        def st_description(cls, funcnode, mainindex, tr):
+            return funcnode.children[0].get_description(mainindex, tr)
+
+    register_function(LIMIT_SIZE)
+
+
+    class TEXT_LIMIT_SIZE(LIMIT_SIZE):
+        supported_backends = ('mysql', 'postgres', 'sqlite',)
+
+    register_function(TEXT_LIMIT_SIZE)
+
+
+
+    class FSPATH(FunctionDescr):
+        supported_backends = ('postgres', 'sqlite',)
+        rtype = 'Bytes'
+
+    register_function(FSPATH)

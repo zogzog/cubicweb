@@ -15,7 +15,8 @@ from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import RequestSessionMixIn, Binary, UnknownEid
+from cubicweb import Binary, UnknownEid
+from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
@@ -41,7 +42,7 @@ def _make_description(selected, args, solution):
     return description
 
 
-class Session(RequestSessionMixIn):
+class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
     together
     """
@@ -73,10 +74,6 @@ class Session(RequestSessionMixIn):
     def __str__(self):
         return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
-
-    @property
-    def schema(self):
-        return self.repo.schema
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
@@ -136,16 +133,16 @@ class Session(RequestSessionMixIn):
 
     # relations cache handling #################################################
 
-    def update_rel_cache_add(self, subject, rtype, object, symetric=False):
+    def update_rel_cache_add(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
-        if symetric:
+        if symmetric:
             self._update_entity_rel_cache_add(object, rtype, 'subject', subject)
         else:
             self._update_entity_rel_cache_add(object, rtype, 'object', subject)
 
-    def update_rel_cache_del(self, subject, rtype, object, symetric=False):
+    def update_rel_cache_del(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
-        if symetric:
+        if symmetric:
             self._update_entity_rel_cache_del(object, rtype, 'object', object)
         else:
             self._update_entity_rel_cache_del(object, rtype, 'object', subject)
@@ -165,10 +162,10 @@ class Session(RequestSessionMixIn):
                 rset.description = list(rset.description)
             rset.description.append([self.describe(targeteid)[0]])
             targetentity = self.entity_from_eid(targeteid)
-            if targetentity.rset is None:
-                targetentity.rset = rset
-                targetentity.row = rset.rowcount
-                targetentity.col = 0
+            if targetentity.cw_rset is None:
+                targetentity.cw_rset = rset
+                targetentity.cw_row = rset.rowcount
+                targetentity.cw_col = 0
             rset.rowcount += 1
             entities.append(targetentity)
             entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
@@ -234,6 +231,19 @@ class Session(RequestSessionMixIn):
     def change_property(self, prop, value):
         assert prop == 'lang' # this is the only one changeable property for now
         self.set_language(value)
+
+    def deleted_in_transaction(self, eid):
+        return eid in self.transaction_data.get('pendingeids', ())
+
+    def added_in_transaction(self, eid):
+        return eid in self.transaction_data.get('neweids', ())
+
+    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
+        rschema = self.repo.schema[rtype]
+        subjtype = self.describe(eidfrom)[0]
+        objtype = self.describe(eidto)[0]
+        rdef = rschema.rdef(subjtype, objtype)
+        return rdef.get(rprop)
 
     # connection management ###################################################
 
@@ -332,6 +342,11 @@ class Session(RequestSessionMixIn):
 
     # request interface #######################################################
 
+    @property
+    def cursor(self):
+        """return a rql cursor"""
+        return self
+
     def set_entity_cache(self, entity):
         # XXX session level caching may be a pb with multiple repository
         #     instances, but 1. this is probably not the only one :$ and 2. it
@@ -418,11 +433,6 @@ class Session(RequestSessionMixIn):
         return self.super_session.execute(rql, kwargs, eid_key, build_descr,
                                           propagate)
 
-    @property
-    def cursor(self):
-        """return a rql cursor"""
-        return self
-
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                 propagate=False):
         """db-api like method directly linked to the querier execute method
@@ -474,10 +484,8 @@ class Session(RequestSessionMixIn):
                     operation.failed = True
                     for operation in processed:
                         operation.handle_event('revert%s_event' % trstate)
-                    # res
-
-                    # XXX self.pending_operations is supposed to be
-                    # read-only, and we are clearly modifying it here.
+                    # XXX use slice notation since self.pending_operations is a
+                    # read-only property.
                     self.pending_operations[:] = processed + self.pending_operations 
                     self.rollback(reset_pool)
                     raise
@@ -491,7 +499,7 @@ class Session(RequestSessionMixIn):
                 except:
                     self.critical('error while %sing', trstate,
                                   exc_info=sys.exc_info())
-            self.debug('%s session %s done', trstate, self.id)
+            self.info('%s session %s done', trstate, self.id)
         finally:
             self._touch()
             self.commit_state = None
@@ -563,7 +571,6 @@ class Session(RequestSessionMixIn):
         except AttributeError:
             self._threaddata.pending_operations = []
             return self._threaddata.pending_operations
-
 
     def add_operation(self, operation, index=None):
         """add an observer"""
@@ -644,12 +651,19 @@ class Session(RequestSessionMixIn):
             description.append(tuple(row_descr))
         return description
 
-    @deprecated("use vreg['etypes'].etype_class(etype)")
+    # deprecated ###############################################################
+
+    @property
+    @deprecated("[3.6] use session.vreg.schema")
+    def schema(self):
+        return self.repo.schema
+
+    @deprecated("[3.4] use vreg['etypes'].etype_class(etype)")
     def etype_class(self, etype):
         """return an entity class for the given entity type"""
         return self.vreg['etypes'].etype_class(etype)
 
-    @deprecated('use direct access to session.transaction_data')
+    @deprecated('[3.4] use direct access to session.transaction_data')
     def query_data(self, key, default=None, setdefault=False, pop=False):
         if setdefault:
             assert not pop
@@ -659,7 +673,7 @@ class Session(RequestSessionMixIn):
         else:
             return self.transaction_data.get(key, default)
 
-    @deprecated('use entity_from_eid(eid, etype=None)')
+    @deprecated('[3.4] use entity_from_eid(eid, etype=None)')
     def entity(self, eid):
         """return a result set for the given eid"""
         return self.entity_from_eid(eid)
@@ -677,6 +691,7 @@ class ChildSession(Session):
         # session which has created this one
         self.parent_session = parent_session
         self.user = InternalManager()
+        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.repo = parent_session.repo
         self.vreg = parent_session.vreg
         self.data = parent_session.data
@@ -746,8 +761,9 @@ class InternalSession(Session):
     """special session created internaly by the repository"""
 
     def __init__(self, repo, cnxprops=None):
-        super(InternalSession, self).__init__(_IMANAGER, repo, cnxprops,
+        super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
+        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.is_internal_session = True
         self.is_super_session = True
@@ -784,7 +800,6 @@ class InternalManager(object):
             return 'en'
         return None
 
-_IMANAGER = InternalManager()
 
 from logging import getLogger
 from cubicweb import set_log_methods

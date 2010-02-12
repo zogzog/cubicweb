@@ -13,7 +13,7 @@ With `LAX`, views are defined by Python classes. A view includes :
 
 - an identifier (all objects in `LAX` are entered in a registry
   and this identifier will be used as a key)
-  
+
 - a filter to select the resulsets it can be applied to
 
 `LAX` provides a lot of standard views, for a complete list, you
@@ -25,13 +25,13 @@ If you want to change the way a ``BlogEntry`` is displayed, just
 override the view ``primary`` in ``BlogDemo/views.py`` ::
 
   from ginco.web.views import baseviews
-  
+
   class BlogEntryPrimaryView(baseviews.PrimaryView):
 
       accepts = ('BlogEntry',)
-      
+
       def cell_call(self, row, col):
-          entity = self.entity(row, col)
+          entity = self.rset.get_entity(row, col)
           self.w(u'<h1>%s</h1>' % entity.title)
           self.w(u'<div>%s</div>' % entity.publish_date)
           self.w(u'<div>%s</div>' % entity.category)
@@ -91,7 +91,7 @@ URL Rewriting
 
 [WRITE ME]
 
-* show how urls are mapped to selections and views and explain URLRewriting 
+* show how urls are mapped to selections and views and explain URLRewriting
 
 Security
 =========

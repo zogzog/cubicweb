@@ -14,16 +14,16 @@ from warnings import warn
 from datetime import datetime, date, timedelta
 
 import logilab.common as lgc
-from logilab.common.shellutils import ProgressBar
 from logilab.common import db
+from logilab.common.shellutils import ProgressBar
 from logilab.common.adbh import get_adv_func_helper
 from logilab.common.sqlgen import SQLGenerator
+from logilab.common.date import todate, todatetime
 
 from indexer import get_indexer
 
 from cubicweb import Binary, ConfigurationError
-from cubicweb.utils import todate, todatetime
-from cubicweb.common.uilib import remove_html_tags
+from cubicweb.uilib import remove_html_tags
 from cubicweb.toolsutils import restrict_perms_to_user
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server import SQL_CONNECT_HOOKS
@@ -32,6 +32,15 @@ from cubicweb.server.utils import crypt_password
 
 lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
+
+def _run_command(cmd):
+    """backup/restore command are string w/ lgc < 0.47, lists with earlier versions
+    """
+    if isinstance(cmd, basestring):
+        print '->', cmd
+        return subprocess.call(cmd, shell=True)
+    print ' '.join(cmd)
+    return subprocess.call(cmd)
 
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=not os.environ.get('APYCOT_ROOT'),
@@ -122,10 +131,6 @@ def sqldropschema(schema, driver, text_index=True,
                      skip_relations=skip_relations))
     return '\n'.join(output)
 
-try:
-    from mx.DateTime import DateTimeType, DateTimeDeltaType
-except ImportError:
-    DateTimeType = DateTimeDeltaType = None
 
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
@@ -171,11 +176,12 @@ class SQLAdapterMixIn(object):
         return cnx
 
     def backup_to_file(self, backupfile):
-        cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
-                                           self.dbuser, backupfile,
-                                           keepownership=False)
-        if subprocess.call(cmd, shell=isinstance(cmd, str)):
-            raise Exception('Failed command: %s' % cmd)
+        for cmd in self.dbhelper.backup_commands(self.dbname, self.dbhost,
+                                                 self.dbuser, backupfile,
+                                                 keepownership=False):
+            if _run_command(cmd):
+                if not confirm('   [Failed] Continue anyway?', default='n'):
+                    raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
         for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
@@ -183,32 +189,21 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            if subprocess.call(cmd, shell=isinstance(cmd, str)):
-                print '-> Failed command: %s' % cmd
-                if not confirm('Continue anyway?', default='n'):
+            if _run_command(cmd):
+                if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
         if args is not None:
-            args = dict(args)
-            for key, val in args.items():
+            newargs = {}
+            for key, val in args.iteritems():
                 # convert cubicweb binary into db binary
                 if isinstance(val, Binary):
                     val = self.binary(val.getvalue())
-                # XXX <3.2 bw compat
-                elif type(val) is DateTimeType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    val = datetime(val.year, val.month, val.day,
-                                   val.hour, val.minute, int(val.second))
-                elif type(val) is DateTimeDeltaType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    val = timedelta(0, int(val.seconds), 0)
-                args[key] = val
+                newargs[key] = val
             # should not collide
-            args.update(query_args)
-            return args
+            newargs.update(query_args)
+            return newargs
         return query_args
 
     def process_result(self, cursor):
@@ -228,7 +223,6 @@ class SQLAdapterMixIn(object):
                 result.append(process_value(value, descr[col], encoding, binary))
             results[i] = result
         return results
-
 
     def preprocess_entity(self, entity):
         """return a dictionary to use as extra argument to cursor.execute
@@ -257,16 +251,6 @@ class SQLAdapterMixIn(object):
                     value = todate(value)
                 elif isinstance(value, Binary):
                     value = self.binary(value.getvalue())
-                # XXX <3.2 bw compat
-                elif type(value) is DateTimeType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    value = datetime(value.year, value.month, value.day,
-                                   value.hour, value.minute, int(value.second))
-                elif type(value) is DateTimeDeltaType:
-                    warn('found mx date time instance, please update to use datetime',
-                         DeprecationWarning)
-                    value = timedelta(0, int(value.seconds), 0)
             attrs[SQL_PREFIX+str(attr)] = value
         return attrs
 
@@ -313,6 +297,29 @@ def init_sqlite_connexion(cnx):
     import yams.constraints
     if hasattr(yams.constraints, 'patch_sqlite_decimal'):
         yams.constraints.patch_sqlite_decimal()
+
+    def fspath(eid, etype, attr):
+        try:
+            cu = cnx.cursor()
+            cu.execute('SELECT X.cw_%s FROM cw_%s as X '
+                       'WHERE X.cw_eid=%%(eid)s' % (attr, etype),
+                       {'eid': eid})
+            return cu.fetchone()[0]
+        except:
+            import traceback
+            traceback.print_exc()
+            raise
+    cnx.create_function('fspath', 3, fspath)
+
+    def _fsopen(fspath):
+        if fspath:
+            try:
+                return buffer(file(fspath).read())
+            except:
+                import traceback
+                traceback.print_exc()
+                raise
+    cnx.create_function('_fsopen', 1, _fsopen)
 
 
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])

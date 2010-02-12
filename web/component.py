@@ -15,11 +15,10 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import role
 from cubicweb.utils import merge_dicts
-from cubicweb.view import View, Component
+from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
-    partial_has_related_entities, condition_compat, accepts_compat,
-    has_relation_compat)
+    partial_has_related_entities)
 
 
 class EntityVComponent(Component):
@@ -35,9 +34,8 @@ class EntityVComponent(Component):
 
     __registry__ = 'contentnavigation'
     __select__ = one_line_rset() & primary_view() & match_context_prop()
-    registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
 
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         _('order'):    dict(type='Int', default=99,
@@ -60,10 +58,10 @@ class EntityVComponent(Component):
 
 class NavigationComponent(Component):
     """abstract base class for navigation components"""
-    id = 'navigation'
+    __regid__ = 'navigation'
     __select__ = paginated_rset()
 
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         }
@@ -78,7 +76,7 @@ class NavigationComponent(Component):
     no_next_page_link = u'&gt;&gt;'
 
     def __init__(self, req, rset, **kwargs):
-        super(NavigationComponent, self).__init__(req, rset, **kwargs)
+        super(NavigationComponent, self).__init__(req, rset=rset, **kwargs)
         self.starting_from = 0
         self.total = rset.rowcount
 
@@ -86,12 +84,12 @@ class NavigationComponent(Component):
         try:
             return self._page_size
         except AttributeError:
-            page_size = self.extra_kwargs.get('page_size')
+            page_size = self.cw_extra_kwargs.get('page_size')
             if page_size is None:
-                if 'page_size' in self.req.form:
-                    page_size = int(self.req.form['page_size'])
+                if 'page_size' in self._cw.form:
+                    page_size = int(self._cw.form['page_size'])
                 else:
-                    page_size = self.req.property_value(self.page_size_property)
+                    page_size = self._cw.property_value(self.page_size_property)
             self._page_size = page_size
             return page_size
 
@@ -102,11 +100,11 @@ class NavigationComponent(Component):
 
     def page_boundaries(self):
         try:
-            stop = int(self.req.form[self.stop_param]) + 1
-            start = int(self.req.form[self.start_param])
+            stop = int(self._cw.form[self.stop_param]) + 1
+            start = int(self._cw.form[self.start_param])
         except KeyError:
             start, stop = 0, self.page_size
-        if start >= len(self.rset):
+        if start >= len(self.cw_rset):
             start, stop = 0, self.page_size
         self.starting_from = start
         return start, stop
@@ -121,13 +119,13 @@ class NavigationComponent(Component):
         params = merge_dicts(params, {self.start_param : start,
                                       self.stop_param : stop,})
         if path == 'json':
-            rql = params.pop('rql', self.rset.printable_rql())
+            rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
                 dumps(params.get('divid', 'paginated-content')),
                 dumps(rql), dumps(params.pop('vid', None)), dumps(params))
         else:
-            url = self.build_url(path, **params)
+            url = self._cw.build_url(path, **params)
         return url
 
     def page_link(self, path, params, start, stop, content):
@@ -167,15 +165,15 @@ class RelatedObjectsVComponent(EntityVComponent):
     def cell_call(self, row, col, view=None):
         rql = self.rql()
         if rql is None:
-            entity = self.rset.get_entity(row, col)
+            entity = self.cw_rset.get_entity(row, col)
             rset = entity.related(self.rtype, role(self))
         else:
-            eid = self.rset[row][col]
-            rset = self.req.execute(self.rql(), {'x': eid}, 'x')
+            eid = self.cw_rset[row][col]
+            rset = self._cw.execute(self.rql(), {'x': eid}, 'x')
         if not rset.rowcount:
             return
         self.w(u'<div class="%s">' % self.div_class())
-        self.w(u'<h4>%s</h4>\n' % self.req._(self.title).capitalize())
+        self.w(u'<h4>%s</h4>\n' % self._cw._(self.title).capitalize())
         self.wview(self.vid, rset)
         self.w(u'</div>')
 

@@ -237,14 +237,15 @@ directory (default to once a day).',
             self._connect()
         return ConnectionWrapper(self._conn)
 
-    def authenticate(self, session, login, password):
+    def authenticate(self, session, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have
         to fetch the salt first
         """
-        assert login, 'no login!'
+        if password is None:
+            raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
         searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
                              for o in self.user_classes])

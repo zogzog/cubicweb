@@ -5,10 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb import Unauthorized
-from cubicweb.devtools.apptest import EnvBasedTC
 
-class EmailAddressHooksTC(EnvBasedTC):
+from cubicweb import Unauthorized
+from cubicweb.devtools.testlib import CubicWebTC
+
+class EmailAddressHooksTC(CubicWebTC):
 
     def test_use_email_set_primary_email(self):
         self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U use_email X WHERE U login "admin"')

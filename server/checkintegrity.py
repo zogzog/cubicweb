@@ -68,8 +68,6 @@ def reindex_entities(schema, session):
     """reindex all entities in the repository"""
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
-    from cubicweb.server.hooks import (setmtime_before_update_entity,
-                                       uniquecstrcheck_before_modification)
     from cubicweb.server.repository import FTIndexEntityOp
     repo = session.repo
     cursor = session.pool['system']
@@ -80,10 +78,8 @@ def reindex_entities(schema, session):
         # XXX indexer.init_fti(cursor) once index 0.7 is out
         indexer.init_extensions(cursor)
         cursor.execute(indexer.sql_init_fti())
-    repo.hm.unregister_hook(setmtime_before_update_entity,
-                            'before_update_entity', '')
-    repo.hm.unregister_hook(uniquecstrcheck_before_modification,
-                            'before_update_entity', '')
+    repo.config.disabled_hooks_categories.add('metadata')
+    repo.config.disabled_hooks_categories.add('integrity')
     repo.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():

@@ -56,7 +56,7 @@ class IWorkflowable(Interface):
 class IProgress(Interface):
     """something that has a cost, a state and a progression
 
-    Take a look at cubicweb.common.mixins.ProgressMixIn for some
+    Take a look at cubicweb.mixins.ProgressMixIn for some
     default implementations
     """
 

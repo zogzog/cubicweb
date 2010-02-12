@@ -162,11 +162,8 @@ Workflow creation
 The following functions for workflow creation are available in `repository`
 scripts:
 
-* `add_state(name, stateof, initial=False, commit=False, **kwargs)`, adds a new state
-  in the workflow.
-
-* `add_transition(name, transitionof, fromstates, tostate, requiredgroups=(), commit=False, **kwargs)`,
-  adds a new transition in the workflow.
+* `add_workflow(label, workflowof, initial=False, commit=False, **kwargs)`, adds a new workflow
+  for a given type(s)
 
 You can find more details about workflows in the chapter :ref:`Workflow` .
 

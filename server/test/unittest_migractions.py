@@ -2,13 +2,14 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from copy import deepcopy
 from datetime import date
 from os.path import join
 
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ConfigurationError
-from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
+from cubicweb.devtools.testlib import CubicWebTC, get_versions
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
@@ -23,22 +24,28 @@ def teardown_module(*args):
     Repository.get_versions = orig_get_versions
 
 
-class MigrationCommandsTC(RepositoryBasedTC):
+class MigrationCommandsTC(CubicWebTC):
+
+    @classmethod
+    def init_config(cls, config):
+        super(MigrationCommandsTC, cls).init_config(config)
+        config._cubes = None
+        cls.repo.fill_schema()
+        cls.origschema = deepcopy(cls.repo.schema)
+        # hack to read the schema from data/migrschema
+        config.appid = join('data', 'migratedapp')
+        global migrschema
+        migrschema = config.load_schema()
+        config.appid = 'data'
+        assert 'Folder' in migrschema
+
+    @classmethod
+    def _refresh_repo(cls):
+        super(MigrationCommandsTC, cls)._refresh_repo()
+        cls.repo.schema = cls.vreg.schema = deepcopy(cls.origschema)
 
     def setUp(self):
-        if not hasattr(self, '_repo'):
-            # first initialization
-            repo = self.repo # set by the RepositoryBasedTC metaclass
-            # force to read schema from the database
-            repo.config._cubes = None
-            repo.fill_schema()
-            # hack to read the schema from data/migrschema
-            self.repo.config.appid = join('data', 'migratedapp')
-            global migrschema
-            migrschema = self.repo.config.load_schema()
-            self.repo.config.appid = 'data'
-            assert 'Folder' in migrschema
-        RepositoryBasedTC.setUp(self)
+        CubicWebTC.setUp(self)
         self.mh = ServerMigrationHelper(self.repo.config, migrschema,
                                         repo=self.repo, cnx=self.cnx,
                                         interactive=False)
@@ -48,7 +55,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
-        self.add_entity('Note')
+        self.request().create_entity('Note')
         self.commit()
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
@@ -61,7 +68,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(note.whatever, 2)
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
-        whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')
+        whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
         for k, v in orderdict.iteritems():
             if v >= whateverorder:
                 orderdict[k] = v+1
@@ -187,7 +194,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           ('Personne',))
         self.assertEquals(self.schema['concerne2'].objects(),
                           ('Affaire', ))
-        self.assertEquals(self.schema['concerne2'].rproperty('Personne', 'Affaire', 'cardinality'),
+        self.assertEquals(self.schema['concerne2'].rdef('Personne', 'Affaire').cardinality,
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
         self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
@@ -247,12 +254,12 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_change_relation_props_non_final(self):
         rschema = self.schema['concerne']
-        card = rschema.rproperty('Affaire', 'Societe', 'cardinality')
+        card = rschema.rdef('Affaire', 'Societe').cardinality
         self.assertEquals(card, '**')
         try:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
                                               cardinality='?*')
-            card = rschema.rproperty('Affaire', 'Societe', 'cardinality')
+            card = rschema.rdef('Affaire', 'Societe').cardinality
             self.assertEquals(card, '?*')
         finally:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
@@ -260,12 +267,12 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_change_relation_props_final(self):
         rschema = self.schema['adel']
-        card = rschema.rproperty('Personne', 'String', 'fulltextindexed')
+        card = rschema.rdef('Personne', 'String').fulltextindexed
         self.assertEquals(card, False)
         try:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=True)
-            card = rschema.rproperty('Personne', 'String', 'fulltextindexed')
+            card = rschema.rdef('Personne', 'String').fulltextindexed
             self.assertEquals(card, True)
         finally:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
@@ -273,13 +280,16 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
+        cursor.set_pool()
         nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
-        migrschema['titre']._rproperties[('Personne', 'String')]['order'] = 7
-        migrschema['adel']._rproperties[('Personne', 'String')]['order'] = 6
-        migrschema['ass']._rproperties[('Personne', 'String')]['order'] = 5
+        migrschema['titre'].rdefs[('Personne', 'String')].order = 7
+        migrschema['adel'].rdefs[('Personne', 'String')].order = 6
+        migrschema['ass'].rdefs[('Personne', 'String')].order = 5
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title'
-        migrschema['titre']._rproperties[('Personne', 'String')]['description'] = 'title for this person'
+        migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
+        delete_concerne_rqlexpr = self._rrqlexpr_rset('delete', 'concerne')
+        add_concerne_rqlexpr = self._rrqlexpr_rset('add', 'concerne')
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -317,7 +327,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(rexpr.expression,
                           'O require_permission P, P name "add_note", '
                           'U in_group G, P require_group G')
-        self.assertEquals([rt.name for rt in rexpr.reverse_add_permission], ['ecrit_par'])
+        self.assertEquals([rdef.rtype.name for rdef in rexpr.reverse_add_permission], ['ecrit_par'])
         self.assertEquals(rexpr.reverse_read_permission, ())
         self.assertEquals(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
@@ -335,8 +345,10 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
         self.assertEquals(len(self._erqlexpr_rset('add', 'Affaire')), 1)
         # no change for rqlexpr to add and delete concerne relation
-        self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), 1)
-        self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), 1)
+        for rdef in self.schema['concerne'].rdefs.values():
+            print rdef, rdef.permissions
+        self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
+        self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:
         #   * 8 deletion (2 in Affaire read + Societe + travaille + para rqlexprs)
         #   * 1 update (Affaire update)
@@ -357,7 +369,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
-        rql = 'RQLExpression X WHERE ET is CWRType, ET %s_permission X, ET name %%(name)s' % action
+        rql = 'RQLExpression X WHERE RT is CWRType, RDEF %s_permission X, RT name %%(name)s, RDEF relation_type RT' % action
         return self.mh.session.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)
@@ -379,7 +391,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
-        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also']._rproperties.keys()),
+        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.keys()),
                           sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                   ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))
@@ -394,7 +406,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
-                self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+                self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
                                           ('Bookmark', 'Note'),
@@ -417,7 +429,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
-            self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+            self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
                               sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                       ('Bookmark', 'Bookmark'),
                                       ('Bookmark', 'Note'),

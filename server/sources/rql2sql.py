@@ -742,7 +742,7 @@ class SQLGenerator(object):
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
         sql = ' AND '.join(sqls)
-        if rschema.symetric:
+        if rschema.symmetric:
             sql = '(%s OR %s)' % (sql, switch_relation_field(sql))
         return sql
 

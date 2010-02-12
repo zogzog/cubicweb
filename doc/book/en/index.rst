@@ -3,10 +3,10 @@
 .. _contents:
 
 =====================================================
-*CubicWeb* - The Semantic Web is a construction game!
+|cubicweb| - The Semantic Web is a construction game!
 =====================================================
 
-*CubicWeb* is a semantic web application framework, licensed under the LGPL,
+|cubicweb| is a semantic web application framework, licensed under the LGPL,
 that empowers developers to efficiently build web applications by reusing
 components (called `cubes`) and following the well known object-oriented design
 principles.
@@ -21,7 +21,7 @@ Its main features are:
 * the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
 
 Built since 2000 from an R&D effort still continued, supporting 100,000s of
-daily visits at some production sites, *CubicWeb* is a proven end to end solution
+daily visits at some production sites, |cubicweb| is a proven end to end solution
 for semantic web application development that promotes quality, reusability and
 efficiency.
 
@@ -58,3 +58,4 @@ See also:
 * the :ref:`modindex`,
 * and the :ref:`search`.
 
+.. |cubicweb| replace:: *CubicWeb*

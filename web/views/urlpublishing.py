@@ -28,8 +28,7 @@ __docformat__ = "restructuredtext en"
 from rql import TypeResolverException
 
 from cubicweb import RegistryException, typed_eid
-from cubicweb.web import NotFound, Redirect
-from cubicweb.web.component import Component, Component
+from cubicweb.web import NotFound, Redirect, component
 
 
 class PathDontMatch(Exception):
@@ -37,7 +36,7 @@ class PathDontMatch(Exception):
     a path
     """
 
-class URLPublisherComponent(Component):
+class URLPublisherComponent(component.Component):
     """associate url's path to view identifier / rql queries,
     by applying a chain of urlpathevaluator components.
 
@@ -50,13 +49,15 @@ class URLPublisherComponent(Component):
     lower priority.  The first evaluator returning a result or raising
     something else than `PathDontMatch` will stop the handlers chain.
     """
-    id = 'urlpublisher'
+    __regid__ = 'urlpublisher'
+    vreg = None # XXX necessary until property for deprecation warning is on appobject
 
-    def __init__(self, default_method='view'):
+    def __init__(self, vreg, default_method='view'):
         super(URLPublisherComponent, self).__init__()
+        self.vreg = vreg
         self.default_method = default_method
         evaluators = []
-        for evaluatorcls in self.vreg['components']['urlpathevaluator']:
+        for evaluatorcls in vreg['components']['urlpathevaluator']:
             # instantiation needed
             evaluator = evaluatorcls(self)
             evaluators.append(evaluator)
@@ -74,7 +75,7 @@ class URLPublisherComponent(Component):
         :type path: str
         :param path: the path of the resource to publish
 
-        :rtype: tuple(str, `cubicweb.common.utils.ResultSet` or None)
+        :rtype: tuple(str, `cubicweb.utils.ResultSet` or None)
         :return: the publishing method identifier and an optional result set
 
         :raise NotFound: if no handler is able to decode the given path
@@ -98,13 +99,14 @@ class URLPublisherComponent(Component):
         return pmid, rset
 
 
-class URLPathEvaluator(Component):
+class URLPathEvaluator(component.Component):
     __abstract__ = True
-    id = 'urlpathevaluator'
+    __regid__ = 'urlpathevaluator'
+    vreg = None # XXX necessary until property for deprecation warning is on appobject
 
     def __init__(self, urlpublisher):
         self.urlpublisher = urlpublisher
-
+        self.vreg = urlpublisher.vreg
 
 class RawPathEvaluator(URLPathEvaluator):
     """handle path of the form::
@@ -197,7 +199,7 @@ class URLRewriteEvaluator(URLPathEvaluator):
         evaluators = sorted(self.vreg['urlrewriting'].all_objects(),
                             key=lambda x: x.priority, reverse=True)
         for rewritercls in evaluators:
-            rewriter = rewritercls()
+            rewriter = rewritercls(req)
             try:
                 # XXX we might want to chain url rewrites
                 return rewriter.rewrite(req, uri)
@@ -217,6 +219,7 @@ class ActionPathEvaluator(URLPathEvaluator):
             raise PathDontMatch()
         # remove last part and see if this is something like an actions
         # if so, call
+        # XXX bad smell: refactor to simpler code
         try:
             actionsreg = self.vreg['actions']
             requested = parts.pop(-1)
@@ -232,7 +235,7 @@ class ActionPathEvaluator(URLPathEvaluator):
                 continue
             else:
                 try:
-                    action = actionsreg.select_best(actions, req, rset=rset)
+                    action = actionsreg._select_best(actions, req, rset=rset)
                 except RegistryException:
                     continue
                 else:

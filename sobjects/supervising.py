@@ -12,59 +12,8 @@ from cubicweb import UnknownEid
 from cubicweb.selectors import none_rset
 from cubicweb.schema import display_name
 from cubicweb.view import Component
-from cubicweb.common.mail import format_mail
-from cubicweb.server.hooksmanager import Hook
-from cubicweb.server.hookhelper import SendMailOp
-
-
-class SomethingChangedHook(Hook):
-    events = ('before_add_relation', 'before_delete_relation',
-              'after_add_entity', 'before_update_entity')
-    accepts = ('Any',)
-
-    def call(self, session, *args):
-        if session.is_super_session or session.repo.config.repairing:
-            return # ignore changes triggered by hooks or maintainance shell
-        dest = self.config['supervising-addrs']
-        if not dest: # no supervisors, don't do this for nothing...
-            return
-        self.session = session
-        if self._call(*args):
-            SupervisionMailOp(session)
-
-    def _call(self, *args):
-        if self._event() == 'update_entity':
-            if args[0].eid in self.session.transaction_data.get('neweids', ()):
-                return False
-            if args[0].e_schema == 'CWUser':
-                updated = set(args[0].iterkeys())
-                if not (updated - frozenset(('eid', 'modification_date',
-                                             'last_login_time'))):
-                    # don't record last_login_time update which are done
-                    # automatically at login time
-                    return False
-        self.session.transaction_data.setdefault('pendingchanges', []).append(
-            (self._event(), args))
-        return True
-
-    def _event(self):
-        return self.event.split('_', 1)[1]
-
-
-class EntityDeleteHook(SomethingChangedHook):
-    events = ('before_delete_entity',)
-
-    def _call(self, eid):
-        entity = self.session.entity_from_eid(eid)
-        try:
-            title = entity.dc_title()
-        except:
-            # may raise an error during deletion process, for instance due to
-            # missing required relation
-            title = '#%s' % eid
-        self.session.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (eid, str(entity.e_schema), title)))
-        return True
+from cubicweb.mail import format_mail
+from cubicweb.server.hook import SendMailOp
 
 
 def filter_changes(changes):
@@ -81,7 +30,7 @@ def filter_changes(changes):
     for change in changes[:]:
         event, changedescr = change
         if event == 'add_entity':
-            entity = changedescr[0]
+            entity = changedescr.entity
             added.add(entity.eid)
             if entity.e_schema == 'TrInfo':
                 changes.remove(change)
@@ -95,7 +44,7 @@ def filter_changes(changes):
         index.setdefault(event, set()).add(change)
     for key in ('delete_relation', 'add_relation'):
         for change in index.get(key, {}).copy():
-            if change[1][1] == 'in_state':
+            if change[1].rtype == 'in_state':
                 index[key].remove(change)
     # filter changes
     for eid in added:
@@ -104,26 +53,24 @@ def filter_changes(changes):
                 changedescr = change[1]
                 # skip meta-relations which are set automatically
                 # XXX generate list below using rtags (category = 'generated')
-                if changedescr[1] in ('created_by', 'owned_by', 'is', 'is_instance_of',
+                if changedescr.rtype in ('created_by', 'owned_by', 'is', 'is_instance_of',
                                       'from_state', 'to_state', 'by_transition',
                                       'wf_info_for') \
-                       and changedescr[0] == eid:
+                       and changedescr.eidfrom == eid:
                     index['add_relation'].remove(change)
-
         except KeyError:
             break
     for eid in deleted:
         try:
             for change in index['delete_relation'].copy():
-                fromeid, rtype, toeid = change[1]
-                if fromeid == eid:
+                if change[1].eidfrom == eid:
                     index['delete_relation'].remove(change)
-                elif toeid == eid:
+                elif change[1].eidto == eid:
                     index['delete_relation'].remove(change)
-                    if rtype == 'wf_info_for':
-                        for change in index['delete_entity'].copy():
-                            if change[1][0] == fromeid:
-                                index['delete_entity'].remove(change)
+                    if change[1].rtype == 'wf_info_for':
+                        for change_ in index['delete_entity'].copy():
+                            if change_[1].eidfrom == change[1].eidfrom:
+                                index['delete_entity'].remove(change_)
         except KeyError:
             break
     for change in changes:
@@ -135,22 +82,22 @@ def filter_changes(changes):
 class SupervisionEmailView(Component):
     """view implementing the email API for data changes supervision notification
     """
+    __regid__ = 'supervision_notif'
     __select__ = none_rset()
-    id = 'supervision_notif'
 
     def recipients(self):
-        return self.config['supervising-addrs']
+        return self._cw.vreg.config['supervising-addrs']
 
     def subject(self):
-        return self.req._('[%s supervision] changes summary') % self.config.appid
+        return self._cw._('[%s supervision] changes summary') % self._cw.vreg.config.appid
 
     def call(self, changes):
-        user = self.req.actual_session().user
-        self.w(self.req._('user %s has made the following change(s):\n\n')
+        user = self._cw.actual_session().user
+        self.w(self._cw._('user %s has made the following change(s):\n\n')
                % user.login)
         for event, changedescr in filter_changes(changes):
             self.w(u'* ')
-            getattr(self, event)(*changedescr)
+            getattr(self, event)(changedescr)
             self.w(u'\n\n')
 
     def _entity_context(self, entity):
@@ -158,32 +105,32 @@ class SupervisionEmailView(Component):
                 'etype': entity.dc_type().lower(),
                 'title': entity.dc_title()}
 
-    def add_entity(self, entity):
-        msg = self.req._('added %(etype)s #%(eid)s (%(title)s)')
-        self.w(u'%s\n' % (msg % self._entity_context(entity)))
-        self.w(u'  %s' % entity.absolute_url())
+    def add_entity(self, changedescr):
+        msg = self._cw._('added %(etype)s #%(eid)s (%(title)s)')
+        self.w(u'%s\n' % (msg % self._entity_context(changedescr.entity)))
+        self.w(u'  %s' % changedescr.entity.absolute_url())
 
-    def update_entity(self, entity):
-        msg = self.req._('updated %(etype)s #%(eid)s (%(title)s)')
-        self.w(u'%s\n' % (msg % self._entity_context(entity)))
+    def update_entity(self, changedescr):
+        msg = self._cw._('updated %(etype)s #%(eid)s (%(title)s)')
+        self.w(u'%s\n' % (msg % self._entity_context(changedescr.entity)))
         # XXX print changes
-        self.w(u'  %s' % entity.absolute_url())
+        self.w(u'  %s' % changedescr.entity.absolute_url())
 
-    def delete_entity(self, eid, etype, title):
-        msg = self.req._('deleted %(etype)s #%(eid)s (%(title)s)')
-        etype = display_name(self.req, etype).lower()
+    def delete_entity(self, (eid, etype, title)):
+        msg = self._cw._('deleted %(etype)s #%(eid)s (%(title)s)')
+        etype = display_name(self._cw, etype).lower()
         self.w(msg % locals())
 
-    def change_state(self, entity, fromstate, tostate):
-        msg = self.req._('changed state of %(etype)s #%(eid)s (%(title)s)')
+    def change_state(self, (entity, fromstate, tostate)):
+        msg = self._cw._('changed state of %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(entity)))
         self.w(_('  from state %(fromstate)s to state %(tostate)s\n' %
                  {'fromstate': _(fromstate.name), 'tostate': _(tostate.name)}))
         self.w(u'  %s' % entity.absolute_url())
 
-    def _relation_context(self, fromeid, rtype, toeid):
-        _ = self.req._
-        session = self.req.actual_session()
+    def _relation_context(self, changedescr):
+        _ = self._cw._
+        session = self._cw.actual_session()
         def describe(eid):
             try:
                 return _(session.describe(eid)[0]).lower()
@@ -191,19 +138,20 @@ class SupervisionEmailView(Component):
                 # may occurs when an entity has been deleted from an external
                 # source and we're cleaning its relation
                 return _('unknown external entity')
+        eidfrom, rtype, eidto = changedescr.eidfrom, changedescr.rtype, changedescr.eidto
         return {'rtype': _(rtype),
-                'fromeid': fromeid,
-                'frometype': describe(fromeid),
-                'toeid': toeid,
-                'toetype': describe(toeid)}
+                'eidfrom': eidfrom,
+                'frometype': describe(eidfrom),
+                'eidto': eidto,
+                'toetype': describe(eidto)}
 
-    def add_relation(self, fromeid, rtype, toeid):
-        msg = self.req._('added relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%(toeid)s')
-        self.w(msg % self._relation_context(fromeid, rtype, toeid))
+    def add_relation(self, changedescr):
+        msg = self._cw._('added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
+        self.w(msg % self._relation_context(changedescr))
 
-    def delete_relation(self, fromeid, rtype, toeid):
-        msg = self.req._('deleted relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%(toeid)s')
-        self.w(msg % self._relation_context(fromeid, rtype, toeid))
+    def delete_relation(self, changedescr):
+        msg = self._cw._('deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
+        self.w(msg % self._relation_context(changedescr))
 
 
 class SupervisionMailOp(SendMailOp):

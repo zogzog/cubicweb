@@ -30,7 +30,7 @@ DBG_SQL = 2   # executed sql
 DBG_REPO = 4  # repository events
 DBG_MS = 8    # multi-sources
 DBG_MORE = 16 # more verbosity
-
+DBG_ALL = 1 + 2 + 4 + 8 + 16
 # current debug mode
 DEBUG = 0
 
@@ -167,7 +167,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     session.commit()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, login, pwd)
+    repo, cnx = in_memory_cnx(config, login, password=pwd)
     # trigger vreg initialisation of entity classes
     config.cubicweb_appobject_path = set(('entities',))
     config.cube_appobject_path = set(('entities',))
@@ -203,6 +203,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
+    # deactivate every hooks but those responsible to set metadata
+    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
+    oldmode = config.set_hooks_mode(config.DENY_ALL)
+    changes = config.enable_hook_category('metadata')
     paths = [p for p in config.cubes_path() + [config.apphome]
              if exists(join(p, 'migration'))]
     # execute cubicweb's pre<event> script
@@ -218,6 +222,10 @@ def initialize_schema(config, schema, mhandler, event='create'):
     # execute cubes'post<event> script if any
     for path in reversed(paths):
         mhandler.exec_event_script('post%s' % event, path)
+    # restore hooks config
+    if changes:
+        config.disable_hook_category(changes)
+    config.set_hooks_mode(oldmode)
 
 
 # sqlite'stored procedures have to be registered at connexion opening time

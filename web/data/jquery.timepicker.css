@@ -1,0 +1,65 @@
+/*div.time-holder {
+    position: relative;
+    display: none;
+    z-index: 99;
+    width: 100px;
+}
+
+div.time-holder div.times {
+    position: absolute;
+    top: 0;
+    height: 120px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #000;
+}
+
+div.time-holder div.times ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 80px;
+}
+
+div.time-holder div.times li {
+    padding: 1px;
+}
+
+div.time-holder div.times li.selected {
+    background: #316AC5;
+    color: #fff;
+}
+*/
+
+div.time-picker {
+  position: absolute;
+  height: 200px;
+  width: 5em; /* needed for IE */
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #000;
+  z-index: 99;
+}
+div.time-picker-12hours {
+  width:8em; /* needed for IE */
+}
+
+div.time-picker ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+div.time-picker li {
+  background: none;
+  list-style-type: none;
+  padding: 1px;
+  cursor: pointer;
+}
+div.time-picker li.selected {
+  background: #316AC5;
+  color: #fff;
+}
+
+input.timepicker {
+  width: 5em;
+}

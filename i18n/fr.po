@@ -52,10 +52,6 @@ msgid "%(firstname)s %(surname)s"
 msgstr "%(firstname)s %(surname)s"
 
 #, python-format
-msgid "%(fmt1)s, or without time: %(fmt2)s"
-msgstr "%(fmt1)s, ou bien sans spécifier l'heure: %(fmt2)s"
-
-#, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 
@@ -122,10 +118,6 @@ msgstr "%s rapport d'erreur"
 #, python-format
 msgid "%s not estimated"
 msgstr "%s non estimé(s)"
-
-#, python-format
-msgid "%s results matching query"
-msgstr "%s résultats pour la requête"
 
 #, python-format
 msgid "%s software version of the database"
@@ -272,6 +264,14 @@ msgstr "Contraintes"
 msgid "CWEType"
 msgstr "Type d'entité"
 
+msgctxt "inlined:CWRelation.from_entity.subject"
+msgid "CWEType"
+msgstr "Type d'entité"
+
+msgctxt "inlined:CWRelation.to_entity.subject"
+msgid "CWEType"
+msgstr "Type d'entité"
+
 msgid "CWEType_plural"
 msgstr "Types d'entité"
 
@@ -293,6 +293,10 @@ msgstr "Propriété"
 msgid "CWProperty_plural"
 msgstr "Propriétés"
 
+msgid "CWRType"
+msgstr "Type de relation"
+
+msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "CWRType"
 msgstr "Type de relation"
 
@@ -323,10 +327,6 @@ msgstr "Date et heure"
 msgid "Datetime_plural"
 msgstr "Date et heure"
 
-#, python-format
-msgid "Debug level set to %s"
-msgstr "Niveau de debug mis à %s"
-
 msgid "Decimal"
 msgstr "Nombre décimal"
 
@@ -341,6 +341,10 @@ msgstr "Voulez-vous supprimer le(s) élément(s) suivant(s) ?"
 
 msgid "Download page as pdf"
 msgstr "télécharger la page au format PDF"
+
+msgctxt "inlined:CWUser.use_email.subject"
+msgid "EmailAddress"
+msgstr "Adresse électronique"
 
 msgid "EmailAddress"
 msgstr "Adresse électronique"
@@ -458,9 +462,6 @@ msgstr "Nouveau workflow"
 
 msgid "New WorkflowTransition"
 msgstr "Nouvelle transition workflow"
-
-msgid "No query has been executed"
-msgstr "Aucune requête n'a été éxécuté"
 
 msgid "No result matching query"
 msgstr "aucun résultat"
@@ -591,14 +592,6 @@ msgstr "Ce type de contrainte"
 msgid "This CWEType"
 msgstr "Ce type d'entité"
 
-msgctxt "inlined:CWRelation.from_entity.subject"
-msgid "This CWEType"
-msgstr "type d'entité sujet"
-
-msgctxt "inlined:CWRelation.to_entity.subject"
-msgid "This CWEType"
-msgstr "type d'entité objet"
-
 msgid "This CWGroup"
 msgstr "Ce groupe"
 
@@ -611,19 +604,11 @@ msgstr "Cette propriété"
 msgid "This CWRType"
 msgstr "Ce type de relation"
 
-msgctxt "inlined:CWRelation.relation_type.subject"
-msgid "This CWRType"
-msgstr "Ce type de relation"
-
 msgid "This CWRelation"
 msgstr "Cette définition de relation"
 
 msgid "This CWUser"
 msgstr "Cet utilisateur"
-
-msgctxt "inlined:CWUser.use_email.subject"
-msgid "This EmailAddress"
-msgstr "adresse électronique"
 
 msgid "This EmailAddress"
 msgstr "Cette adresse électronique"
@@ -670,10 +655,6 @@ msgstr "Transition"
 msgid "Transition_plural"
 msgstr "Transitions"
 
-#, python-format
-msgid "Unable to find anything named \"%s\" in the schema !"
-msgstr "Rien de nommé \"%s\" dans le schéma"
-
 msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
 
@@ -700,13 +681,6 @@ msgstr "Transitions workflow"
 
 msgid "Workflow_plural"
 msgstr "Workflows"
-
-msgid "You are not connected to an instance !"
-msgstr "Vous n'êtes pas connecté à une instance"
-
-#, python-format
-msgid "You are now connected to %s"
-msgstr "Vous êtes connecté à l'application %s"
 
 msgid ""
 "You can either submit a new file using the browse button above, or choose to "
@@ -760,6 +734,9 @@ msgstr ""
 
 msgid "a URI representing an object in external data store"
 msgstr "une Uri désignant un objet dans un entrepôt de données externe"
+
+msgid "a float is expected"
+msgstr "un nombre flottant est attendu"
 
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
@@ -846,6 +823,12 @@ msgid "actions_embed"
 msgstr "embarquer"
 
 msgid "actions_embed_description"
+msgstr ""
+
+msgid "actions_entitiesoftype"
+msgstr "voir les entités de ce type"
+
+msgid "actions_entitiesoftype_description"
 msgstr ""
 
 msgid "actions_follow"
@@ -962,8 +945,17 @@ msgstr "ajouter"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr "expression rql d'ajout"
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "contrainte"
+
+msgid "add CWAttribute delete_permission RQLExpression subject"
+msgstr "expression rql de suppression"
+
+msgid "add CWAttribute read_permission RQLExpression subject"
+msgstr "expression rql de lecture"
 
 msgid "add CWAttribute relation_type CWRType object"
 msgstr "définition d'attribut"
@@ -983,17 +975,17 @@ msgstr "définir une expression RQL de mise à jour"
 msgid "add CWProperty for_user CWUser object"
 msgstr "propriété"
 
-msgid "add CWRType add_permission RQLExpression subject"
-msgstr "expression RQL d'ajout"
-
-msgid "add CWRType delete_permission RQLExpression subject"
-msgstr "expression RQL de suppression"
-
-msgid "add CWRType read_permission RQLExpression subject"
-msgstr "expression RQL de lecture"
+msgid "add CWRelation add_permission RQLExpression subject"
+msgstr "expression rql d'ajout"
 
 msgid "add CWRelation constrained_by CWConstraint subject"
 msgstr "contrainte"
+
+msgid "add CWRelation delete_permission RQLExpression subject"
+msgstr "expression rql de suppression"
+
+msgid "add CWRelation read_permission RQLExpression subject"
+msgstr "expression rql de lecture"
 
 msgid "add CWRelation relation_type CWRType object"
 msgstr "définition de relation"
@@ -1056,9 +1048,6 @@ msgstr "ajouter une adresse électronique"
 msgid "add a new permission"
 msgstr "ajouter une permission"
 
-msgid "add relation"
-msgstr "ajouter une relation"
-
 msgid "add_perm"
 msgstr "ajout"
 
@@ -1073,7 +1062,11 @@ msgctxt "CWEType"
 msgid "add_permission"
 msgstr "permission d'ajout"
 
-msgctxt "CWRType"
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr "permission d'ajout"
+
+msgctxt "CWRelation"
 msgid "add_permission"
 msgstr "permission d'ajout"
 
@@ -1094,11 +1087,11 @@ msgstr "ajout de l'entité %(etype)s #%(eid)s (%(title)s)"
 
 #, python-format
 msgid ""
-"added relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
-"(toeid)s"
+"added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%"
+"(eidto)s"
 msgstr ""
-"ajout de la relation %(rtype)s de %(frometype)s #%(fromeid)s vers %(toetype)"
-"s #%(toeid)s"
+"la relation %(rtype)s de %(frometype)s #%(eidfrom)s vers %(toetype)s #%"
+"(eidto)s a été ajoutée"
 
 msgid "addrelated"
 msgstr "ajouter"
@@ -1172,8 +1165,11 @@ msgstr "une erreur est survenue pendant le traitement de votre requête"
 msgid "an error occured, the request cannot be fulfilled"
 msgstr "une erreur est survenue, la requête ne peut être complétée"
 
+msgid "an integer is expected"
+msgstr "un nombre entier est attendu"
+
 msgid "and linked"
-msgstr "et lié"
+msgstr "et liée"
 
 msgid "and/or between different values"
 msgstr "et/ou entre les différentes valeurs"
@@ -1314,9 +1310,6 @@ msgstr "supprimer"
 msgid "button_ok"
 msgstr "valider"
 
-msgid "button_reset"
-msgstr "annuler les changements"
-
 msgid "by"
 msgstr "par"
 
@@ -1363,6 +1356,12 @@ msgstr "calendrier (annuel)"
 msgid "can not resolve entity types:"
 msgstr "impossible d'interpréter les types d'entités :"
 
+msgid "can't be changed"
+msgstr "ne peut-être modifié"
+
+msgid "can't be deleted"
+msgstr "ne peut-être supprimé"
+
 #, python-format
 msgid "can't change the %s attribute"
 msgstr "ne peut changer l'attribut %s"
@@ -1377,6 +1376,10 @@ msgstr "impossible d'afficher les données à cause de l'erreur suivante: %s"
 
 msgid "can't have multiple exits on the same state"
 msgstr "ne peut avoir plusieurs sorties sur le même état"
+
+#, python-format
+msgid "can't parse %(value)r (expected %(format)s)"
+msgstr "ne peut analyser %(value)r (format attendu : %(format)s)"
 
 #, python-format
 msgid ""
@@ -1457,6 +1460,12 @@ msgstr "filtrage par type"
 
 msgid "components_etypenavigation_description"
 msgstr "permet de filtrer par type d'entité les résultats d'une recherche"
+
+msgid "components_help"
+msgstr "bouton aide"
+
+msgid "components_help_description"
+msgstr "le bouton d'aide, dans l'en-tête de page"
 
 msgid "components_loggeduserlink"
 msgstr "lien utilisateur"
@@ -1565,6 +1574,12 @@ msgstr "méta-données de l'entité"
 msgid "contentnavigation_metadata_description"
 msgstr ""
 
+msgid "contentnavigation_pdfview"
+msgstr "icône pdf"
+
+msgid "contentnavigation_pdfview_description"
+msgstr ""
+
 msgid "contentnavigation_prevnext"
 msgstr "élément précedent / suivant"
 
@@ -1580,12 +1595,6 @@ msgid "contentnavigation_seealso_description"
 msgstr ""
 "section affichant les entités liées par la relation \"voir aussi\" si "
 "l'entité supporte cette relation."
-
-msgid "contentnavigation_view_page_as_pdf"
-msgstr "icône pdf"
-
-msgid "contentnavigation_view_page_as_pdf_description"
-msgstr "l'icône pdf pour obtenir la page courant au format PDF"
 
 msgid "contentnavigation_wfhistory"
 msgstr "historique du workflow."
@@ -1609,9 +1618,6 @@ msgstr "contrôle l'ordre des relations de l'entité sujet"
 
 msgid "copy"
 msgstr "copier"
-
-msgid "copy edition"
-msgstr "édition d'une copie"
 
 msgid ""
 "core relation giving to a group the permission to add an entity or relation "
@@ -1711,6 +1717,20 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "création d'une adresse électronique pour l'utilisateur %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
+
+msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s delete_permission "
+"RQLExpression)"
+msgstr ""
+"création d'une expression rql pour le droit de suppression de %(linkto)s"
+
+msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
+msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
+
+msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr "création d'une expression RQL pour la permission d'ajout de %(linkto)s"
 
@@ -1729,22 +1749,18 @@ msgstr ""
 "création d'une expression RQL pour la permission de mise à jour de %(linkto)s"
 
 msgid ""
-"creating RQLExpression (CWRType %(linkto)s add_permission RQLExpression)"
-msgstr ""
-"création d'une expression RQL pour la permission d'ajout des relations %"
-"(linkto)s"
+"creating RQLExpression (CWRelation %(linkto)s add_permission RQLExpression)"
+msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
 
 msgid ""
-"creating RQLExpression (CWRType %(linkto)s delete_permission RQLExpression)"
+"creating RQLExpression (CWRelation %(linkto)s delete_permission "
+"RQLExpression)"
 msgstr ""
-"création d'une expression RQL pour la permission de suppression des "
-"relations %(linkto)s"
+"création d'une expression rql pour le droit de suppression de %(linkto)s"
 
 msgid ""
-"creating RQLExpression (CWRType %(linkto)s read_permission RQLExpression)"
-msgstr ""
-"création d'une expression RQL pour la permission de lire les relations %"
-"(linkto)s"
+"creating RQLExpression (CWRelation %(linkto)s read_permission RQLExpression)"
+msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
 
 msgid "creating RQLExpression (Transition %(linkto)s condition RQLExpression)"
 msgstr "création d'une expression RQL pour la transition %(linkto)s"
@@ -1818,10 +1834,6 @@ msgstr "export CSV"
 
 msgid "ctxtoolbar"
 msgstr "barre d'outils"
-
-#, python-format
-msgid "currently attached file: %s"
-msgstr "fichie actuellement attaché %s"
 
 msgid "custom_workflow"
 msgstr "workflow spécifique"
@@ -1916,8 +1928,8 @@ msgstr ""
 msgid "define a relation type, used to build the instance schema"
 msgstr "définit un type de relation"
 
-msgid "define a rql expression used to define permissions"
-msgstr "RQL expression utilisée pour définir les droits d'accès"
+msgid "define a rql expression used to define vpermissions"
+msgstr ""
 
 msgid "define a schema constraint"
 msgstr "définit une contrainte de schema"
@@ -1960,7 +1972,11 @@ msgctxt "CWEType"
 msgid "delete_permission"
 msgstr "permission de supprimer"
 
-msgctxt "CWRType"
+msgctxt "CWAttribute"
+msgid "delete_permission"
+msgstr "permission de supprimer"
+
+msgctxt "CWRelation"
 msgid "delete_permission"
 msgstr "permission de supprimer"
 
@@ -1981,11 +1997,11 @@ msgstr "suppression de l'entité %(etype)s #%(eid)s (%(title)s)"
 
 #, python-format
 msgid ""
-"deleted relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
-"(toeid)s"
+"deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%"
+"(eidto)s"
 msgstr ""
-"suppression de la relation %(rtype)s de %(frometype)s #%(fromeid)s vers %"
-"(toetype)s #%(toeid)s"
+"relation %(rtype)s de %(frometype)s #%(eidfrom)s vers %(toetype)s #%(eidto)s "
+"supprimée"
 
 msgid "depends on the constraint type"
 msgstr "dépend du type de contrainte"
@@ -2108,10 +2124,6 @@ msgstr "destination de"
 msgid "detach attached file"
 msgstr "détacher le fichier existant"
 
-#, python-format
-msgid "detach attached file %s"
-msgstr "détacher le fichier existant %s"
-
 msgid "display order of the action"
 msgstr "ordre d'affichage de l'action"
 
@@ -2167,15 +2179,6 @@ msgstr "édition"
 
 msgid "eid"
 msgstr "eid"
-
-msgid "element copied"
-msgstr "élément copié"
-
-msgid "element created"
-msgstr "élément créé"
-
-msgid "element edited"
-msgstr "élément édité"
 
 msgid "email address to use for notification"
 msgstr "adresse email à utiliser pour la notification"
@@ -2432,9 +2435,10 @@ msgstr "relation générique pour lier une entité à une autre"
 
 msgid ""
 "generic relation to specify that an external entity represent the same "
-"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
-"have to explicitly declare which entity types can have a same_as relation"
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def"
 msgstr ""
+"relation générique permettant d'indiquer qu'une entité est identique à une "
+"autre ressource web (voir http://www.w3.org/TR/owl-ref/#sameAs-def)."
 
 msgid "go back to the index page"
 msgstr "retourner sur la page d'accueil"
@@ -2522,6 +2526,12 @@ msgid "how to format time in the ui (\"man strftime\" for format description)"
 msgstr ""
 "comment formater l'heure dans l'interface (\"man strftime\" pour la "
 "description du format)"
+
+msgid "i18n_bookmark_url_fqs"
+msgstr "paramètres"
+
+msgid "i18n_bookmark_url_path"
+msgstr "chemin"
 
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
@@ -2665,15 +2675,6 @@ msgstr "internationalisable"
 #, python-format
 msgid "invalid action %r"
 msgstr "action %r invalide"
-
-msgid "invalid date"
-msgstr "cette date n'est pas valide"
-
-msgid "invalid float value"
-msgstr "nombre flottant non valide"
-
-msgid "invalid integer value"
-msgstr "nombre entier non valide"
 
 msgid "is"
 msgstr "de type"
@@ -2984,6 +2985,10 @@ msgstr "non"
 msgid "no associated permissions"
 msgstr "aucune permission associée"
 
+#, python-format
+msgid "no edited fields specified for entity %s"
+msgstr "aucun champ à éditer spécifié pour l'entité %s"
+
 msgid "no related project"
 msgstr "pas de projet rattaché"
 
@@ -3005,9 +3010,6 @@ msgstr "non autorisé"
 
 msgid "not selected"
 msgstr "non sélectionné"
-
-msgid "nothing to edit"
-msgstr "rien à éditer"
 
 msgid "november"
 msgstr "novembre"
@@ -3185,9 +3187,13 @@ msgctxt "CWEType"
 msgid "read_permission"
 msgstr "permission d'ajouter"
 
-msgctxt "CWRType"
+msgctxt "CWAttribute"
 msgid "read_permission"
-msgstr "permission d'ajouter"
+msgstr "permission de lire"
+
+msgctxt "CWRelation"
+msgid "read_permission"
+msgstr "permission de lire"
 
 msgctxt "CWGroup"
 msgid "read_permission_object"
@@ -3240,21 +3246,8 @@ msgstr "relations supprimées"
 msgid "relative url of the bookmarked page"
 msgstr "url relative de la page"
 
-msgctxt "inlined:CWRelation.from_entity.subject"
-msgid "remove this CWEType"
-msgstr "supprimer ce sujet de relation"
-
-msgctxt "inlined:CWRelation.to_entity.subject"
-msgid "remove this CWEType"
-msgstr "supprimer cet objet de la relation"
-
-msgctxt "inlined:CWRelation.relation_type.subject"
-msgid "remove this CWRType"
-msgstr "supprimer cette relation"
-
-msgctxt "inlined:CWUser.use_email.subject"
-msgid "remove this EmailAddress"
-msgstr "supprimer cette adresse électronique"
+msgid "remove-inlined-entity-form"
+msgstr "supprimer"
 
 msgid "require_group"
 msgstr "nécessite le groupe"
@@ -3374,7 +3367,7 @@ msgid "see them all"
 msgstr "les voir toutes"
 
 msgid "see_also"
-msgstr "see also"
+msgstr "voir aussi"
 
 msgid "select"
 msgstr "sélectionner"
@@ -3609,11 +3602,11 @@ msgctxt "CWUser"
 msgid "surname"
 msgstr "nom de famille"
 
-msgid "symetric"
+msgid "symmetric"
 msgstr "symétrique"
 
 msgctxt "CWRType"
-msgid "symetric"
+msgid "symmetric"
 msgstr "symétrique"
 
 msgid "system entities"
@@ -3947,13 +3940,6 @@ msgstr ""
 "l'utilisateur %s a effectué le(s) changement(s) suivant(s):\n"
 "\n"
 
-msgid ""
-"user for which this property is applying. If this relation is not set, the "
-"property is considered as a global property"
-msgstr ""
-"utilisateur a qui s'applique cette propriété. Si cette relation n'est pas "
-"spécifiée la propriété est considérée comme globale."
-
 msgid "user interface encoding"
 msgstr "encodage utilisé dans l'interface utilisateur"
 
@@ -4064,9 +4050,6 @@ msgstr "entrée de l'historique de workflow"
 msgid "workflow isn't a workflow for this type"
 msgstr "le workflow ne s'applique pas à ce type d'entité"
 
-msgid "workflow isn't a workflow of this type"
-msgstr ""
-
 msgid "workflow to which this state belongs"
 msgstr "workflow auquel cet état appartient"
 
@@ -4087,6 +4070,10 @@ msgstr "a pour workflow"
 msgid "workflow_of_object"
 msgstr "a pour workflow"
 
+#, python-format
+msgid "wrong query parameter line %s"
+msgstr ""
+
 msgid "xbel"
 msgstr "xbel"
 
@@ -4104,31 +4091,3 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
-
-#~ msgid "components_help"
-#~ msgstr "bouton aide"
-
-#~ msgid "components_help_description"
-#~ msgstr "le bouton d'aide, dans l'en-tête de page"
-
-#~ msgid "destination state"
-#~ msgstr "état de destination"
-
-#~ msgid "display the pdf icon or not"
-#~ msgstr "afficher l'icône pdf ou non"
-
-#~ msgctxt "inlined:CWRelation:from_entity:subject"
-#~ msgid "remove this CWEType"
-#~ msgstr "supprimer ce type d'entité"
-
-#~ msgctxt "inlined:CWRelation:to_entity:subject"
-#~ msgid "remove this CWEType"
-#~ msgstr "supprimer ce type d'entité"
-
-#~ msgctxt "inlined:CWRelation:relation_type:subject"
-#~ msgid "remove this CWRType"
-#~ msgstr "supprimer ce type de relation"
-
-#~ msgctxt "inlined:CWUser:use_email:subject"
-#~ msgid "remove this EmailAddress"
-#~ msgstr "supprimer cette adresse électronique"

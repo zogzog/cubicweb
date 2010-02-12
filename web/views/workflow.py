@@ -17,7 +17,7 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                entity_implements, score_entity)
+                                implements, score_entity)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -25,11 +25,30 @@ from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin, forms, primary, autoform
 
+_pvs = uicfg.primaryview_section
+_pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
+_pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+
+_abaa = uicfg.actionbox_appearsin_addmenu
+_abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
+_abaa.tag_subject_of(('State', 'allowed_transition', 'BaseTransition'), False)
+_abaa.tag_object_of(('SubWorkflowExitPoint', 'destination_state', 'State'),
+                    False)
+_abaa.tag_object_of(('State', 'state_of', 'Workflow'), True)
+_abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
+_abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
+
+_afs = uicfg.autoform_section
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
+
 
 # IWorkflowable views #########################################################
 
 class ChangeStateForm(forms.CompositeEntityForm):
-    id = 'changestate'
+    __regid__ = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
     form_buttons = [fwdgs.SubmitButton(),
@@ -37,58 +56,59 @@ class ChangeStateForm(forms.CompositeEntityForm):
 
 
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
-    id = 'statuschange'
+    __regid__ = 'statuschange'
     title = _('status change')
     __select__ = (one_line_rset() & implements(IWorkflowable)
                   & match_form_params('treid'))
 
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
-        transition = self.req.entity_from_eid(self.req.form['treid'])
+        entity = self.cw_rset.get_entity(row, col)
+        transition = self._cw.entity_from_eid(self._cw.form['treid'])
         form = self.get_form(entity, transition)
-        self.w(form.error_message())
-        self.w(u'<h4>%s %s</h4>\n' % (self.req._(transition.name),
+        self.w(u'<h4>%s %s</h4>\n' % (self._cw._(transition.name),
                                       entity.view('oneline')))
         msg = self.req._('status will change from %(st1)s to %(st2)s') % {
             'st1': entity.printable_state,
-            'st2': self.req._(transition.destination().name)}
+            'st2': self._cw._(transition.destination().name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.render(formvalues=dict(wf_info_for=entity.eid,
-                                           by_transition=transition.eid)))
+        self.w(form.render())
 
     def redirectpath(self, entity):
         return entity.rest_path()
 
     def get_form(self, entity, transition, **kwargs):
         # XXX used to specify both rset/row/col and entity in case implements
-        # selector (and not entity_implements) is used on custom form
-        form = self.vreg['forms'].select(
-            'changestate', self.req, entity=entity, transition=transition,
+        # selector (and not implements) is used on custom form
+        form = self._cw.vreg['forms'].select(
+            'changestate', self._cw, entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity), **kwargs)
-        trinfo = self.vreg['etypes'].etype_class('TrInfo')(self.req)
-        self.initialize_varmaker()
-        trinfo.eid = self.varmaker.next()
-        subform = self.vreg['forms'].select('edition', self.req, entity=trinfo,
-                                            mainform=False)
-        subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
+        trinfo = self._cw.vreg['etypes'].etype_class('TrInfo')(self._cw)
+        trinfo.eid = self._cw.varmaker.next()
+        subform = self._cw.vreg['forms'].select('edition', self._cw, entity=trinfo,
+                                                mainform=False)
+        subform.field_by_name('wf_info_for', 'subject').value = entity.eid
+        trfield = subform.field_by_name('by_transition', 'subject')
+        trfield.widget = fwdgs.HiddenInput()
+        trfield.value = transition.eid
         form.add_subform(subform)
         return form
 
 
 class WFHistoryView(EntityView):
-    id = 'wfhistory'
+    __regid__ = 'wfhistory'
     __select__ = relation_possible('wf_info_for', role='object') & \
                  score_entity(lambda x: x.workflow_history)
+
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):
-        _ = self.req._
-        eid = self.rset[row][col]
+        _ = self._cw._
+        eid = self.cw_rset[row][col]
         sel = 'Any FS,TS,WF,D'
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\
               'WF creation_date D'
-        if self.vreg.schema.eschema('CWUser').has_perm(self.req, 'read'):
+        if self._cw.vreg.schema.eschema('CWUser').has_perm(self._cw, 'read'):
             sel += ',U,C'
             rql += ', WF owned_by U?'
             displaycols = range(5)
@@ -100,7 +120,7 @@ class WFHistoryView(EntityView):
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
         rql = '%s %s, X eid %%(x)s' % (sel, rql)
         try:
-            rset = self.req.execute(rql, {'x': eid}, 'x')
+            rset = self._cw.execute(rql, {'x': eid}, 'x')
         except Unauthorized:
             return
         if rset:
@@ -110,20 +130,20 @@ class WFHistoryView(EntityView):
 
 class WFHistoryVComponent(component.EntityVComponent):
     """display the workflow history for entities supporting it"""
-    id = 'wfhistory'
+    __regid__ = 'wfhistory'
     __select__ = WFHistoryView.__select__ & component.EntityVComponent.__select__
     context = 'navcontentbottom'
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):
-        self.wview('wfhistory', self.rset, row=row, col=col, view=view)
+        self.wview('wfhistory', self.cw_rset, row=row, col=col, view=view)
 
 
 # workflow actions #############################################################
 
 class WorkflowActions(action.Action):
     """fill 'workflow' sub-menu of the actions box"""
-    id = 'workflow'
+    __regid__ = 'workflow'
     __select__ = (action.Action.__select__ & one_line_rset() &
                   relation_possible('in_state'))
 
@@ -131,25 +151,25 @@ class WorkflowActions(action.Action):
     order = 10
 
     def fill_menu(self, box, menu):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        menu.label = u'%s: %s' % (self.req._('state'), entity.printable_state)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        menu.label = u'%s: %s' % (self._cw._('state'), entity.printable_state)
         menu.append_anyway = True
         super(WorkflowActions, self).fill_menu(box, menu)
 
     def actual_actions(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         hastr = False
         for tr in entity.possible_transitions():
             url = entity.absolute_url(vid='statuschange', treid=tr.eid)
-            yield self.build_action(self.req._(tr.name), url)
+            yield self.build_action(self._cw._(tr.name), url)
             hastr = True
         # don't propose to see wf if user can't pass any transition
         if hastr:
             wfurl = entity.current_workflow.absolute_url()
-            yield self.build_action(self.req._('view workflow'), wfurl)
+            yield self.build_action(self._cw._('view workflow'), wfurl)
         if entity.workflow_history:
             wfurl = entity.absolute_url(vid='wfhistory')
-            yield self.build_action(self.req._('view history'), wfurl)
+            yield self.build_action(self._cw._('view history'), wfurl)
 
 
 # workflow entity types views ##################################################
@@ -176,34 +196,34 @@ class WorkflowPrimaryView(primary.PrimaryView):
         self.w(entity.view('reledit', rtype='description'))
         self.w(u'<img src="%s" alt="%s"/>' % (
             xml_escape(entity.absolute_url(vid='wfgraph')),
-            xml_escape(self.req._('graphical workflow for %s') % entity.name)))
+            xml_escape(self._cw._('graphical workflow for %s') % entity.name)))
 
 
 class CellView(view.EntityView):
-    id = 'cell'
+    __regid__ = 'cell'
     __select__ = implements('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
-        self.w(self.rset.get_entity(row, col).view('reledit', rtype='comment'))
+        self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
 class StateInContextView(view.EntityView):
     """convenience trick, State's incontext view should not be clickable"""
-    id = 'incontext'
+    __regid__ = 'incontext'
     __select__ = implements('State')
 
     def cell_call(self, row, col):
-        self.w(xml_escape(self.view('textincontext', self.rset,
-                                     row=row, col=col)))
+        self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
+                                        row=row, col=col)))
 
 
 # workflow entity types edition ################################################
 
 _afs = uicfg.autoform_section
-_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'generated')
-_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'generated')
-_afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
-_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'primary')
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
+_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 
 def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
     wf = req.entity_from_eid(wfeid)
@@ -214,12 +234,12 @@ def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
 
 
 class TransitionEditionForm(autoform.AutomaticEntityForm):
-    __select__ = entity_implements('Transition')
+    __select__ = implements('Transition')
 
     def workflow_states_for_relation(self, targetrelation):
         eids = self.edited_entity.linked_to('transition_of', 'subject')
         if eids:
-            return workflow_items_for_relation(self.req, eids[0], 'state_of',
+            return workflow_items_for_relation(self._cw, eids[0], 'state_of',
                                                targetrelation)
         return []
 
@@ -235,13 +255,13 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
 
 
 class StateEditionForm(autoform.AutomaticEntityForm):
-    __select__ = entity_implements('State')
+    __select__ = implements('State')
 
     def subject_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():
             eids = self.edited_entity.linked_to('state_of', 'subject')
             if eids:
-                return workflow_items_for_relation(self.req, eids[0], 'transition_of',
+                return workflow_items_for_relation(self._cw, eids[0], 'transition_of',
                                                    'allowed_transition')
         return []
 
@@ -302,15 +322,15 @@ class WorkflowVisitor:
 
 
 class WorkflowImageView(TmpFileViewMixin, view.EntityView):
-    id = 'wfgraph'
-    content_type = 'image/png'
+    __regid__ = 'wfgraph'
     __select__ = implements('Workflow')
+    content_type = 'image/png'
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
-        entity = self.rset.get_entity(self.row, self.col)
+        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
         visitor = WorkflowVisitor(entity)
-        prophdlr = WorkflowDotPropsHandler(self.req)
+        prophdlr = WorkflowDotPropsHandler(self._cw)
         generator = GraphGenerator(DotBackend('workflow', 'LR',
                                               ratio='compress', size='30,12'))
         return generator.generate(visitor, prophdlr, tmpfile)

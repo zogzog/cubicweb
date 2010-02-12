@@ -10,12 +10,49 @@ it should only include low level schema changes
 
 applcubicwebversion, cubicwebversion = versions_map['cubicweb']
 
+if applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
+    from cubicweb.server import schemaserial as ss
+    session.set_pool()
+    session.execute = session.unsafe_execute
+    permsdict = ss.deserialize_ertype_permissions(session)
+    def _add_relation_definition_no_perms(subjtype, rtype, objtype):
+        rschema = fsschema.rschema(rtype)
+        for query, args in ss.rdef2rql(rschema, subjtype, objtype, groupmap=None):
+            rql(query, args, ask_confirm=False)
+        commit(ask_confirm=False)
+
+    config.disabled_hooks_categories.add('integrity')
+    for rschema in repo.schema.relations():
+        rpermsdict = permsdict.get(rschema.eid, {})
+        for rdef in rschema.rdefs.values():
+            for action in ('read', 'add', 'delete'):
+                actperms = []
+                for something in rpermsdict.get(action, ()):
+                    if isinstance(something, tuple):
+                        actperms.append(rdef.rql_expression(*something))
+                    else: # group name
+                        actperms.append(something)
+                rdef.set_action_permissions(action, actperms)
+    for action in ('read', 'add', 'delete'):
+        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'CWGroup')
+        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'RQLExpression')
+        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'CWGroup')
+        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'RQLExpression')
+    for action in ('read', 'add', 'delete'):
+        rql('SET X %s_permission Y WHERE X is IN (CWAttribute, CWRelation), '
+            'RT %s_permission Y, X relation_type RT, Y is CWGroup' % (action, action))
+        rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
+            'X %s_permission Y WHERE X is IN (CWAttribute, CWRelation), '
+            'X relation_type RT, RT %s_permission Y2, Y2 exprtype YET, '
+            'Y2 mainvars YMV, Y2 expression YEX' % (action, action))
+        drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
+        drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
+    config.disabled_hooks_categories.add('integrity')
+
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
-    from cubicweb import RepositoryError
-    from cubicweb.server.hooks import uniquecstrcheck_before_modification
+
     session.set_shared_data('do-not-insert-cwuri', True)
-    repo.hm.unregister_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
-    repo.hm.unregister_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
+    deactivate_verification_hooks()
     add_relation_type('cwuri')
     base_url = session.base_url()
     # use an internal session since some entity might forbid modifications to admin
@@ -26,8 +63,7 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
             isession.execute('SET X cwuri %(u)s WHERE X eid %(x)s',
                              {'x': eid, 'u': base_url + u'eid/%s' % eid})
     isession.commit()
-    repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
-    repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
+    reactivate_verification_hooks()
     session.set_shared_data('do-not-insert-cwuri', False)
 
 if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
@@ -49,14 +85,22 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     # drop explicit 'State allowed_transition Transition' since it should be
     # infered due to yams inheritance.  However we've to disable the schema
     # sync hook first to avoid to destroy existing data...
-    from cubicweb.server.schemahooks import after_del_relation_type
-    repo.hm.unregister_hook(after_del_relation_type,
-                            'after_delete_relation', 'relation_type')
     try:
-        drop_relation_definition('State', 'allowed_transition', 'Transition')
-    finally:
-        repo.hm.register_hook(after_del_relation_type,
-                              'after_delete_relation', 'relation_type')
+        from cubicweb.hooks import syncschema
+        repo.vreg.unregister(syncschema.AfterDelRelationTypeHook)
+        try:
+            drop_relation_definition('State', 'allowed_transition', 'Transition')
+        finally:
+            repo.vreg.register(syncschema.AfterDelRelationTypeHook)
+    except ImportError: # syncschema is in CW >= 3.6 only
+        from cubicweb.server.schemahooks import after_del_relation_type
+        repo.hm.unregister_hook(after_del_relation_type,
+                                'after_delete_relation', 'relation_type')
+        try:
+            drop_relation_definition('State', 'allowed_transition', 'Transition')
+        finally:
+            repo.hm.register_hook(after_del_relation_type,
+                                  'after_delete_relation', 'relation_type')
     schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
 
     for et in rql('DISTINCT Any ET,ETN WHERE S state_of ET, ET name ETN',
@@ -74,7 +118,7 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     rql('DELETE TrInfo TI WHERE NOT TI from_state S')
     rql('SET TI by_transition T WHERE TI from_state FS, TI to_state TS, '
         'FS allowed_transition T, T destination_state TS')
-    checkpoint()
+    commit()
 
     drop_relation_definition('State', 'state_of', 'CWEType')
     drop_relation_definition('Transition', 'transition_of', 'CWEType')
@@ -89,7 +133,7 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
                               % table, ask_confirm=False):
             sql('UPDATE %s SET extid=%%(extid)s WHERE eid=%%(eid)s' % table,
                 {'extid': b64encode(extid), 'eid': eid}, ask_confirm=False)
-    checkpoint()
+    commit()
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)

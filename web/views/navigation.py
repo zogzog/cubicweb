@@ -17,7 +17,7 @@ from cubicweb.interfaces import IPrevNext
 from cubicweb.selectors import (paginated_rset, sorted_rset,
                                 primary_view, match_context_prop,
                                 one_line_rset, implements)
-from cubicweb.common.uilib import cut
+from cubicweb.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
 
@@ -26,8 +26,8 @@ class PageNavigation(NavigationComponent):
     def call(self):
         """displays a resultset by page"""
         w = self.w
-        req = self.req
-        rset = self.rset
+        req = self._cw
+        rset = self.cw_rset
         page_size = self.page_size
         start = 0
         blocklist = []
@@ -59,14 +59,14 @@ class SortedNavigation(NavigationComponent):
     nb_chars = 5
 
     def display_func(self, rset, col, attrname):
-        req = self.req
+        req = self._cw
         if attrname is not None:
             def index_display(row):
                 if not rset[row][col]: # outer join
                     return u''
                 entity = rset.get_entity(row, col)
                 return entity.printable_value(attrname, format='text/plain')
-        elif self.schema.eschema(rset.description[0][col]).final:
+        elif self._cw.vreg.schema.eschema(rset.description[0][col]).final:
             def index_display(row):
                 return unicode(rset[row][col])
         else:
@@ -82,9 +82,9 @@ class SortedNavigation(NavigationComponent):
         [ana - cro] | [cro - ghe] | ... | [tim - zou]
         """
         w = self.w
-        rset = self.rset
+        rset = self.cw_rset
         page_size = self.page_size
-        rschema = self.schema.rschema
+        rschema = self._cw.vreg.schema.rschema
         # attrname = the name of attribute according to which the sort
         # is done if any
         for sorterm in rset.syntax_tree().children[0].orderby:
@@ -124,10 +124,10 @@ class SortedNavigation(NavigationComponent):
             # nothing usable found, use the first column
             index_display = self.display_func(rset, 0, None)
         blocklist = []
-        params = dict(self.req.form)
+        params = dict(self._cw.form)
         self.clean_params(params)
         start = 0
-        basepath = self.req.relative_path(includeparams=False)
+        basepath = self._cw.relative_path(includeparams=False)
         while start < rset.rowcount:
             stop = min(start + page_size - 1, rset.rowcount - 1)
             cell = self.format_link_content(index_display(start), index_display(stop))
@@ -149,7 +149,7 @@ class SortedNavigation(NavigationComponent):
 
 
 class NextPrevNavigationComponent(EntityVComponent):
-    id = 'prevnext'
+    __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
     title = _('contentnavigation_prevnext')
@@ -159,23 +159,23 @@ class NextPrevNavigationComponent(EntityVComponent):
     context = 'navbottom'
     order = 10
     def call(self, view=None):
-        entity = self.entity(0)
+        entity = self.cw_rset.get_entity(0,0)
         previous = entity.previous_entity()
         next = entity.next_entity()
         if previous or next:
-            textsize = self.req.property_value('navigation.short-line-size')
+            textsize = self._cw.property_value('navigation.short-line-size')
             self.w(u'<div class="prevnext">')
             if previous:
                 self.w(u'<div class="previousEntity left">')
                 self.w(self.previous_link(previous, textsize))
                 self.w(u'</div>')
-                self.req.html_headers.add_raw('<link rel="prev" href="%s" />'
+                self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
                                               % xml_escape(previous.absolute_url()))
             if next:
                 self.w(u'<div class="nextEntity right">')
                 self.w(self.next_link(next, textsize))
                 self.w(u'</div>')
-                self.req.html_headers.add_raw('<link rel="next" href="%s" />'
+                self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
                                               % xml_escape(next.absolute_url()))
             self.w(u'</div>')
             self.w(u'<div class="clear"></div>')
@@ -183,13 +183,13 @@ class NextPrevNavigationComponent(EntityVComponent):
     def previous_link(self, previous, textsize):
         return u'<a href="%s" title="%s">&lt;&lt; %s</a>' % (
             xml_escape(previous.absolute_url()),
-            self.req._('i18nprevnext_previous'),
+            self._cw._('i18nprevnext_previous'),
             xml_escape(cut(previous.dc_title(), textsize)))
 
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
             xml_escape(next.absolute_url()),
-            self.req._('i18nprevnext_next'),
+            self._cw._('i18nprevnext_next'),
             xml_escape(cut(next.dc_title(), textsize)))
 
 
@@ -197,10 +197,12 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     """write pages index in w stream (default to view.w) and then limit the result
     set (default to view.rset) to the currently displayed page
     """
-    req = view.req
+    req = view._cw
     if rset is None:
-        rset = view.rset
-    nav = req.vreg['components'].select_object(
+        rset = view.cw_rset
+    if w is None:
+        w = view.w
+    nav = req.vreg['components'].select_or_none(
         'navigation', req, rset=rset, page_size=page_size)
     if nav:
         if w is None:
@@ -212,7 +214,7 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
         nav.clean_params(params)
         # make a link to see them all
         if show_all_option:
-            url = xml_escape(view.build_url(__force_display=1, **params))
+            url = xml_escape(req.build_url(__force_display=1, **params))
             w(u'<span><a href="%s">%s</a></span>\n'
               % (url, req._('show %s results') % len(rset)))
         rset.limit(offset=start, limit=stop-start, inplace=True)
@@ -222,8 +224,8 @@ def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
     """paginate results if the view is paginable and we're not explictly told to
     display everything (by setting __force_display in req.form)
     """
-    if view.paginable and not view.req.form.get('__force_display'):
-        do_paginate(view, rset, w or view.w, show_all_option, page_size)
+    if view.paginable and not view._cw.form.get('__force_display'):
+        do_paginate(view, rset, w, show_all_option, page_size)
 
 # monkey patch base View class to add a .paginate([...])
 # method to be called to write pages index in the view and then limit the result

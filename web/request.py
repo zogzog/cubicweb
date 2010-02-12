@@ -12,19 +12,21 @@ import sha
 import time
 import random
 import base64
+from datetime import date
 from urlparse import urlsplit
 from itertools import count
+
+from simplejson import dumps
 
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
-from cubicweb.common.mail import header
-from cubicweb.common.uilib import remove_html_tags
+from cubicweb.mail import header
+from cubicweb.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
@@ -83,7 +85,8 @@ class CubicWebRequestBase(DBAPIRequest):
         # tabindex generator
         self.tabindexgen = count(1)
         self.next_tabindex = self.tabindexgen.next
-        self.varmaker = rqlvar_maker()
+        # page id, set by htmlheader template
+        self.pageid = None
         self.datadir_url = self._datadir_url()
         self._set_pageid()
 
@@ -98,30 +101,60 @@ class CubicWebRequestBase(DBAPIRequest):
         self.pageid = pid
         self.html_headers.define_var('pageid', pid, override=False)
 
+    @property
+    def varmaker(self):
+        """the rql varmaker is exposed both as a property and as the
+        set_varmaker function since we've two use cases:
+
+        * accessing the req.varmaker property to get a new variable name
+
+        * calling req.set_varmaker() to ensure a varmaker is set for later ajax
+          calls sharing our .pageid
+        """
+        return self.set_varmaker()
+
+    def set_varmaker(self):
+        varmaker = self.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = rqlvar_maker()
+            self.set_page_data('rql_varmaker', varmaker)
+        return varmaker
+
     def set_connection(self, cnx, user=None):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
         """
         super(CubicWebRequestBase, self).set_connection(cnx, user)
         # set request language
-        vreg = self.vreg
-        if self.user:
-            try:
-                # 1. user specified language
-                lang = vreg.typed_value('ui.language',
-                                        self.user.properties['ui.language'])
-                self.set_language(lang)
-                return
-            except KeyError, ex:
-                pass
-        if vreg.config['language-negociation']:
-            # 2. http negociated language
-            for lang in self.header_accept_language():
-                if lang in self.translations:
+        try:
+            vreg = self.vreg
+            if self.user:
+                try:
+                    # 1. user specified language
+                    lang = vreg.typed_value('ui.language',
+                                            self.user.properties['ui.language'])
                     self.set_language(lang)
                     return
-        # 3. default language
-        self.set_default_language(vreg)
+                except KeyError, ex:
+                    pass
+            if vreg.config['language-negociation']:
+                # 2. http negociated language
+                for lang in self.header_accept_language():
+                    if lang in self.translations:
+                        self.set_language(lang)
+                        return
+            # 3. default language
+            self.set_default_language(vreg)
+        finally:
+            # XXX code smell
+            # have to be done here because language is not yet set in setup_params
+            #
+            # special key for created entity, added in controller's reset method
+            # if no message set, we don't want this neither
+            if '__createdpath' in self.form and self.message:
+                self.message += ' (<a href="%s">%s</a>)' % (
+                    self.build_url(self.form.pop('__createdpath')),
+                    self._('click here to see created entity'))
 
     def set_language(self, lang):
         gettext, self.pgettext = self.translations[lang]
@@ -164,12 +197,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 del self.form[k]
             else:
                 self.form[k] = v
-        # special key for created entity, added in controller's reset method
-        # if no message set, we don't want this neither
-        if '__createdpath' in params and self.message:
-            self.message += ' (<a href="%s">%s</a>)' % (
-                self.build_url(params.pop('__createdpath')),
-                self._('click here to see created entity'))
 
     def no_script_form_param(self, param, default=None, value=None):
         """ensure there is no script in a user form param
@@ -268,6 +295,24 @@ class CubicWebRequestBase(DBAPIRequest):
             return breadcrumbs.pop()
         return self.base_url()
 
+    def user_rql_callback(self, args, msg=None):
+        """register a user callback to execute some rql query and return an url
+        to call it ready to be inserted in html
+        """
+        def rqlexec(req, rql, args=None, key=None):
+            req.execute(rql, args, key)
+        return self.user_callback(rqlexec, args, msg)
+
+    def user_callback(self, cb, args, msg=None, nonify=False):
+        """register the given user callback and return an url to call it ready to be
+        inserted in html
+        """
+        self.add_js('cubicweb.ajax.js')
+        cbname = self.register_onetime_callback(cb, *args)
+        msg = dumps(msg or '')
+        return "javascript:userCallbackThenReloadPage('%s', %s)" % (
+            cbname, msg)
+
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
             sha.sha('%s%s%s%s' % (time.time(), func.__name__,
@@ -317,7 +362,7 @@ class CubicWebRequestBase(DBAPIRequest):
         try:
             eids = form['eid']
         except KeyError:
-            raise NothingToEdit(None, {None: self._('no selected entities')})
+            raise NothingToEdit(self._('no selected entities'))
         if isinstance(eids, basestring):
             eids = (eids,)
         for peid in eids:
@@ -329,7 +374,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 yield peid
             yielded = True
         if not yielded:
-            raise NothingToEdit(None, {None: self._('no selected entities')})
+            raise NothingToEdit(self._('no selected entities'))
 
     # minparams=3 by default: at least eid, __type, and some params to change
     def extract_entity_params(self, eid, minparams=3):
@@ -354,37 +399,7 @@ class CubicWebRequestBase(DBAPIRequest):
             raise RequestError(self._('missing parameters for entity %s') % eid)
         return params
 
-    def get_pending_operations(self, entity, relname, role):
-        operations = {'insert' : [], 'delete' : []}
-        for optype in ('insert', 'delete'):
-            data = self.get_session_data('pending_%s' % optype) or ()
-            for eidfrom, rel, eidto in data:
-                if relname == rel:
-                    if role == 'subject' and entity.eid == eidfrom:
-                        operations[optype].append(eidto)
-                    if role == 'object' and entity.eid == eidto:
-                        operations[optype].append(eidfrom)
-        return operations
-
-    def get_pending_inserts(self, eid=None):
-        """shortcut to access req's pending_insert entry
-
-        This is where are stored relations being added while editing
-        an entity. This used to be stored in a temporary cookie.
-        """
-        pending = self.get_session_data('pending_insert') or ()
-        return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
-                if eid is None or eid in (subj, obj)]
-
-    def get_pending_deletes(self, eid=None):
-        """shortcut to access req's pending_delete entry
-
-        This is where are stored relations being removed while editing
-        an entity. This used to be stored in a temporary cookie.
-        """
-        pending = self.get_session_data('pending_delete') or ()
-        return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
-                if eid is None or eid in (subj, obj)]
+    # XXX this should go to the GenericRelationsField. missing edition cancel protocol.
 
     def remove_pending_operations(self):
         """shortcut to clear req's pending_{delete,insert} entries
@@ -426,7 +441,7 @@ class CubicWebRequestBase(DBAPIRequest):
         except KeyError:
             return Cookie.SimpleCookie()
 
-    def set_cookie(self, cookie, key, maxage=300):
+    def set_cookie(self, cookie, key, maxage=300, expires=None):
         """set / update a cookie key
 
         by default, cookie will be available for the next 5 minutes.
@@ -436,20 +451,15 @@ class CubicWebRequestBase(DBAPIRequest):
         morsel = cookie[key]
         if maxage is not None:
             morsel['Max-Age'] = maxage
+        if expires:
+            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
         # make sure cookie is set on the correct path
         morsel['path'] = self.base_url_path()
         self.add_header('Set-Cookie', morsel.OutputString())
 
     def remove_cookie(self, cookie, key):
         """remove a cookie by expiring it"""
-        morsel = cookie[key]
-        morsel['Max-Age'] = 0
-        # The only way to set up cookie age for IE is to use an old "expired"
-        # syntax. IE doesn't support Max-Age there is no library support for
-        # managing
-        # ===> Do _NOT_ comment this line :
-        morsel['expires'] = 'Thu, 01-Jan-1970 00:00:00 GMT'
-        self.add_header('Set-Cookie', morsel.OutputString())
+        self.set_cookie(cookie, key, maxage=0, expires=date(1970, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename
@@ -640,7 +650,7 @@ class CubicWebRequestBase(DBAPIRequest):
                            auth, ex.__class__.__name__, ex)
         return None, None
 
-    @deprecated("use parse_accept_header('Accept-Language')")
+    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return [value.split('-')[0] for value in

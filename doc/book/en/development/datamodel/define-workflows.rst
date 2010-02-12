@@ -122,9 +122,8 @@ only perform the action if the two conditions are satisfied.
 
 If we use an RQL condition on a transition, we can use the following variables:
 
-* `%(eid)s`, object's eid
-* `%(ueid)s`, user executing the query eid
-* `%(seid)s`, the object's current state eid
+* `X`, the entity on which we may pass the transition
+* `U`, the user executing that may pass the transition
 
 
 .. image:: ../../images/03-transitions-view.en.png

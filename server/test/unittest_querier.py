@@ -46,7 +46,7 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 
 
@@ -559,7 +559,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 OFFSET 2 WHERE X name N')
         self.assertEquals(tuplify(rset.rows), [(3,), (4,)])
 
-    def test_select_symetric(self):
+    def test_select_symmetric(self):
         self.execute("INSERT Personne X: X nom 'machin'")
         self.execute("INSERT Personne X: X nom 'bidule'")
         self.execute("INSERT Personne X: X nom 'chouette'")
@@ -907,7 +907,8 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne Y: Y nom 'toto'")
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 1)
-        self.execute("DELETE Personne Y WHERE Y nom 'toto'")
+        drset = self.execute("DELETE Personne Y WHERE Y nom 'toto'")
+        self.assertEqual(drset.rows, rset.rows)
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 0)
 
@@ -937,7 +938,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Personne P WHERE P travaille S')
         self.assertEqual(len(rset.rows), 0)
 
-    def test_delete_symetric(self):
+    def test_delete_symmetric(self):
         teid1 = self.execute("INSERT Folder T: T name 'toto'")[0][0]
         teid2 = self.execute("INSERT Folder T: T name 'tutu'")[0][0]
         self.execute('SET X see_also Y WHERE X eid %s, Y eid %s' % (teid1, teid2))

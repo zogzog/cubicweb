@@ -111,7 +111,7 @@ musical works according to their composition date:
     class CompositionDateFacet(DateRangeFacet):
         # 1. make sure this facet is displayed only on Track selection
         __select__ = DateRangeFacet.__select__ & implements('Track')
-        # 2. give the facet an id (required by CubicWeb)
+        # 2. give the facet an id required by CubicWeb)
         id = 'compdate-facet'
         # 3. specify the attribute name that actually stores the date in the DB
         rtype = 'composition_date'

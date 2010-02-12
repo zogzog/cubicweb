@@ -4,8 +4,8 @@
 """
 from logilab.common.testlib import unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
 from cubicweb.selectors import (match_user_groups, implements,
                                 specified_etype_implements, rql_condition,
                                 traced_selection)
@@ -19,33 +19,26 @@ from cubicweb.web.views import (primary, baseviews, tableview, editforms,
 
 from cubes.folder import views as folderviews
 
-USERACTIONS = [('myprefs', actions.UserPreferencesAction),
-               ('myinfos', actions.UserInfoAction),
-               ('logout', actions.LogoutAction)]
-SITEACTIONS = [('siteconfig', actions.SiteConfigurationAction),
-               ('manage', actions.ManageAction),
-               ('schema', schema.ViewSchemaAction),
-               ('siteinfo', actions.SiteInfoAction),
-               ]
-FOOTERACTIONS = [('help', wdoc.HelpAction),
-                 ('changelog', wdoc.ChangeLogAction),
-                 ('about', wdoc.AboutAction),
-                 ('poweredby', actions.PoweredByAction)]
+USERACTIONS = [actions.UserPreferencesAction,
+               actions.UserInfoAction,
+               actions.LogoutAction]
+SITEACTIONS = [actions.SiteConfigurationAction,
+               actions.ManageAction,
+               schema.ViewSchemaAction,
+               actions.SiteInfoAction]
+FOOTERACTIONS = [wdoc.HelpAction,
+                 wdoc.ChangeLogAction,
+                 wdoc.AboutAction,
+                 actions.PoweredByAction]
 
-class ViewSelectorTC(EnvBasedTC):
+class ViewSelectorTC(CubicWebTC):
 
     def setup_database(self):
-        self.add_entity('BlogEntry', title=u"une news !", content=u"cubicweb c'est beau")
-        self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-        self.add_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
-        self.add_entity('Tag', name=u'x')
-
-    def pactions(self, req, rset):
-        resdict = self.vreg['actions'].possible_actions(req, rset)
-        for cat, actions in resdict.items():
-            resdict[cat] = [(a.id, a.__class__) for a in actions]
-        return resdict
-
+        req = self.request()
+        req.create_entity('BlogEntry', title=u"une news !", content=u"cubicweb c'est beau")
+        req.create_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
+        req.create_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
+        req.create_entity('Tag', name=u'x')
 
 class VRegistryTC(ViewSelectorTC):
     """test the view selector"""
@@ -80,22 +73,23 @@ class VRegistryTC(ViewSelectorTC):
                               ('manage', startup.ManageView),
                               ('owl', owl.OWLView),
                               ('propertiesform', cwproperties.CWPropertiesForm),
-                              ('registry', startup.RegistryView),
+                              ('registry', debug.RegistryView),
                               ('schema', schema.SchemaView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
                               ('tree', folderviews.FolderTreeView),
                               ])
 
     def test_possible_views_noresult(self):
-        rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
+        req = self.request()
+        rset = req.execute('Any X WHERE X eid 999999')
         self.assertListEqual(self.pviews(req, rset),
                              [])
 
     def test_possible_views_one_egroup(self):
-        rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
+        req = self.request()
+        rset = req.execute('CWGroup X WHERE X name "managers"')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -105,6 +99,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
@@ -115,10 +110,10 @@ class VRegistryTC(ViewSelectorTC):
                               ])
 
     def test_possible_views_multiple_egroups(self):
-        rset, req = self.env.get_rset_and_req('CWGroup X')
+        req = self.request()
+        rset = req.execute('CWGroup X')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -128,6 +123,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
@@ -139,16 +135,20 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_propertiesform_admin(self):
         assert self.vreg['views']['propertiesform']
-        rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
-        rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "anon"')
+        req1 = self.request()
+        req2 = self.request()
+        rset1 = req1.execute('CWUser X WHERE X login "admin"')
+        rset2 = req2.execute('CWUser X WHERE X login "anon"')
         self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=None))
         self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=rset1))
         self.failUnless(self.vreg['views'].select('propertiesform', req2, rset=rset2))
 
     def test_propertiesform_anon(self):
         self.login('anon')
-        rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
-        rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "anon"')
+        req1 = self.request()
+        req2 = self.request()
+        rset1 = req1.execute('CWUser X WHERE X login "admin"')
+        rset2 = req2.execute('CWUser X WHERE X login "anon"')
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=None)
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=rset1)
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=rset2)
@@ -156,14 +156,17 @@ class VRegistryTC(ViewSelectorTC):
     def test_propertiesform_jdoe(self):
         self.create_user('jdoe')
         self.login('jdoe')
-        rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
-        rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "jdoe"')
+        req1 = self.request()
+        req2 = self.request()
+        rset1 = req1.execute('CWUser X WHERE X login "admin"')
+        rset2 = req2.execute('CWUser X WHERE X login "jdoe"')
         self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=None))
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=rset1)
         self.failUnless(self.vreg['views'].select('propertiesform', req2, rset=rset2))
 
     def test_possible_views_multiple_different_types(self):
-        rset, req = self.env.get_rset_and_req('Any X')
+        req = self.request()
+        rset = req.execute('Any X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
@@ -185,7 +188,8 @@ class VRegistryTC(ViewSelectorTC):
                               ])
 
     def test_possible_views_any_rset(self):
-        rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
+        req = self.request()
+        rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
                               ('editable-table', tableview.EditableTableView),
@@ -194,10 +198,10 @@ class VRegistryTC(ViewSelectorTC):
                               ])
 
     def test_possible_views_multiple_eusers(self):
-        rset, req = self.env.get_rset_and_req('CWUser X')
+        req = self.request()
+        rset = req.execute('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
-                             [('adaptedlist', baseviews.AdaptedListView),
-                              ('csvexport', csvexport.CSVRsetView),
+                             [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -208,6 +212,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
+                              ('sameetypelist', baseviews.SameETypeListView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
@@ -220,59 +225,65 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_possible_actions_none_rset(self):
         req = self.request()
-        self.assertDictEqual(self.pactions(req, None),
+        self.assertDictEqual(self.pactionsdict(req, None, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
 
                               })
     def test_possible_actions_no_entity(self):
-        rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('Any X WHERE X eid 999999')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
                               })
 
     def test_possible_actions_same_type_entities(self):
-        rset, req = self.env.get_rset_and_req('CWGroup X')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('CWGroup X')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
-                              'mainactions': [('muledit', actions.MultipleEditAction)],
-                              'moreactions': [('delete', actions.DeleteAction),
-                                              ('addentity', actions.AddNewAction)],
+                              'mainactions': [actions.MultipleEditAction],
+                              'moreactions': [actions.DeleteAction,
+                                              actions.AddNewAction],
                               })
 
     def test_possible_actions_different_types_entities(self):
-        rset, req = self.env.get_rset_and_req('Any X')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('Any X')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
-                              'moreactions': [('delete', actions.DeleteAction)],
+                              'moreactions': [actions.DeleteAction],
                               })
 
     def test_possible_actions_final_entities(self):
-        rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
                               })
 
     def test_possible_actions_eetype_cwuser_entity(self):
-        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWUser"')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('CWEType X WHERE X name "CWUser"')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
+                              'mainactions': [actions.ModifyAction,
+                                              actions.ViewSameCWEType],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,
                                               ],
                               })
 
@@ -289,7 +300,7 @@ class VRegistryTC(ViewSelectorTC):
         class CWUserCreationForm(editforms.CreationFormView):
             __select__ = specified_etype_implements('CWUser')
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_appobject_class(CWUserCreationForm)
+        self.vreg.register(CWUserCreationForm)
         req.form['etype'] = 'CWUser'
         self.assertIsInstance(self.vreg['views'].select('creation', req, rset=rset),
                               CWUserCreationForm)
@@ -306,7 +317,8 @@ class VRegistryTC(ViewSelectorTC):
                              self.vreg['views'].select, 'table', req, rset=rset)
 
         # no entity
-        rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
+        req = self.request()
+        rset = req.execute('Any X WHERE X eid 999999')
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
@@ -316,7 +328,8 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                              self.vreg['views'].select, 'table', req, rset=rset)
         # one entity
-        rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
+        req = self.request()
+        rset = req.execute('CWGroup X WHERE X name "managers"')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                              primary.PrimaryView)
         self.assertIsInstance(self.vreg['views'].select('list', req, rset=rset),
@@ -330,7 +343,8 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # list of entities of the same type
-        rset, req = self.env.get_rset_and_req('CWGroup X')
+        req = self.request()
+        rset = req.execute('CWGroup X')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                              primary.PrimaryView)
         self.assertIsInstance(self.vreg['views'].select('list', req, rset=rset),
@@ -340,7 +354,8 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
         # list of entities of different types
-        rset, req = self.env.get_rset_and_req('Any X')
+        req = self.request()
+        rset = req.execute('Any X')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                                   primary.PrimaryView)
         self.assertIsInstance(self.vreg['views'].select('list', req, rset=rset),
@@ -352,7 +367,8 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # whatever
-        rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
+        req = self.request()
+        rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                                   tableview.TableView)
         self.failUnlessRaises(NoSelectableObject,
@@ -366,7 +382,8 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                              self.vreg['views'].select, 'edition', req, rset=rset)
         # mixed query
-        rset, req = self.env.get_rset_and_req('Any U,G WHERE U is CWUser, G is CWGroup')
+        req = self.request()
+        rset = req.execute('Any U,G WHERE U is CWUser, G is CWGroup')
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg['views'].select, 'edition', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
@@ -375,22 +392,25 @@ class VRegistryTC(ViewSelectorTC):
                               tableview.TableView)
 
     def test_interface_selector(self):
-        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
-        rset, req = self.env.get_rset_and_req('Image X WHERE X data_name "bim.png"')
+        req = self.request()
+        rset = req.execute('Image X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                               idownloadable.IDownloadablePrimaryView)
 
 
     def test_score_entity_selector(self):
-        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
-        rset, req = self.env.get_rset_and_req('Image X WHERE X data_name "bim.png"')
+        req = self.request()
+        rset = req.execute('Image X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
-        fileobj = self.add_entity('File', data_name=u'bim.txt', data=Binary('bim'))
+        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('bim'))
         # image primary view priority
-        rset, req = self.env.get_rset_and_req('File X WHERE X data_name "bim.txt"')
+        req = self.request()
+        rset = req.execute('File X WHERE X data_name "bim.txt"')
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
 
 
@@ -400,9 +420,11 @@ class VRegistryTC(ViewSelectorTC):
             rset = None
             req = self.request()
         else:
-            rset, req = self.env.get_rset_and_req(rql)
+            req = self.request()
+            rset = req.execute(rql)
         try:
-            self.vreg['views'].render(vid, req, rset=rset, **args)
+            obj = self.vreg['views'].select(vid, req, rset=rset, **args)
+            return obj.render(**args)
         except:
             print vid, rset, args
             raise
@@ -431,13 +453,13 @@ class VRegistryTC(ViewSelectorTC):
         self.assertEquals(self.vreg.property_value('boxes.edit_box.order'), 2)
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
-        self.assertRaises(KeyError, self.vreg.property_value, 'boxes.actions_box')
+        self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
 
 
 
 
 class CWETypeRQLAction(Action):
-    id = 'testaction'
+    __regid__ = 'testaction'
     __select__ = implements('CWEType') & rql_condition('X name "CWEType"')
     title = 'bla'
 
@@ -446,37 +468,40 @@ class RQLActionTC(ViewSelectorTC):
     def setUp(self):
         super(RQLActionTC, self).setUp()
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_appobject_class(CWETypeRQLAction)
+        self.vreg.register(CWETypeRQLAction)
+        actionsreg = self.vreg['actions']
+        actionsreg['testaction'][0].__registered__(actionsreg)
 
     def tearDown(self):
         super(RQLActionTC, self).tearDown()
         del self.vreg['actions']['testaction']
 
     def test(self):
-        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWEType"')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('CWEType X WHERE X name "CWEType"')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
-                                              ('testaction', CWETypeRQLAction),
+                              'mainactions': [actions.ModifyAction, actions.ViewSameCWEType],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,
+                                              CWETypeRQLAction,
                                               ],
                               })
-        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWRType"')
-        self.assertDictEqual(self.pactions(req, rset),
+        req = self.request()
+        rset = req.execute('CWEType X WHERE X name "CWRType"')
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
-                                              ],
+                              'mainactions': [actions.ModifyAction, actions.ViewSameCWEType],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,]
                               })
 
 

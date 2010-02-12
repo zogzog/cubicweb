@@ -10,15 +10,22 @@ __docformat__ = "restructuredtext en"
 
 from random import randint, choice
 from copy import deepcopy
-from datetime import datetime, date, time#timedelta
+from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 
+from logilab.common import attrdict
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
-                              IntervalBoundConstraint)
+                              IntervalBoundConstraint, BoundConstraint,
+                              Attribute, actual_value)
 from rql.utils import decompose_b26 as base_decompose_b26
 
 from cubicweb import Binary
 from cubicweb.schema import RQLConstraint
+
+def custom_range(start, stop, step):
+    while start < stop:
+        yield start
+        start += step
 
 def decompose_b26(index, ascii=False):
     """return a letter (base-26) decomposition of index"""
@@ -26,30 +33,13 @@ def decompose_b26(index, ascii=False):
         return base_decompose_b26(index)
     return base_decompose_b26(index, u'éabcdefghijklmnopqrstuvwxyz')
 
-def get_choices(eschema, attrname):
-    """returns possible choices for 'attrname'
-    if attrname doesn't have ChoiceConstraint, return None
-    """
-    for cst in eschema.constraints(attrname):
-        if isinstance(cst, StaticVocabularyConstraint):
-            return cst.vocabulary()
-    return None
-
-
 def get_max_length(eschema, attrname):
     """returns the maximum length allowed for 'attrname'"""
-    for cst in eschema.constraints(attrname):
+    for cst in eschema.rdef(attrname).constraints:
         if isinstance(cst, SizeConstraint) and cst.max:
             return cst.max
     return 300
     #raise AttributeError('No Size constraint on attribute "%s"' % attrname)
-
-def get_bounds(eschema, attrname):
-    for cst in eschema.constraints(attrname):
-        if isinstance(cst, IntervalBoundConstraint):
-            return cst.minvalue, cst.maxvalue
-    return None, None
-
 
 _GENERATED_VALUES = {}
 
@@ -64,55 +54,52 @@ class _ValueGenerator(object):
                 # some stuff ...
                 return alist_of_acceptable_values # or None
         """
-        self.e_schema = eschema
         self.choice_func = choice_func
+        self.eschema = eschema
 
-    def _generate_value(self, attrname, index, **kwargs):
-        if not self.e_schema.has_unique_values(attrname):
-            return self.__generate_value(attrname, index, **kwargs)
-        value = self.__generate_value(attrname, index, **kwargs)
-        while value in _GENERATED_VALUES.get((self.e_schema.type, attrname), ()):
-            index += 1
-            value = self.__generate_value(attrname, index, **kwargs)
-        _GENERATED_VALUES.setdefault((self.e_schema.type, attrname), set()).add(value)
+    def generate_attribute_value(self, entity, attrname, index=1, **kwargs):
+        if attrname in entity:
+            return entity[attrname]
+        eschema = self.eschema
+        if not eschema.has_unique_values(attrname):
+            value = self.__generate_value(entity, attrname, index, **kwargs)
+        else:
+            value = self.__generate_value(entity, attrname, index, **kwargs)
+            while value in _GENERATED_VALUES.get((eschema, attrname), ()):
+                index += 1
+                value = self.__generate_value(entity, attrname, index, **kwargs)
+            _GENERATED_VALUES.setdefault((eschema, attrname), set()).add(value)
+        entity[attrname] = value
         return value
 
-    def __generate_value(self, attrname, index, **kwargs):
+    def __generate_value(self, entity, attrname, index, **kwargs):
         """generates a consistent value for 'attrname'"""
-        attrtype = str(self.e_schema.destination(attrname)).lower()
+        eschema = self.eschema
+        attrtype = str(eschema.destination(attrname)).lower()
         # Before calling generate_%s functions, try to find values domain
-        etype = self.e_schema.type
         if self.choice_func is not None:
-            values_domain = self.choice_func(etype, attrname)
+            values_domain = self.choice_func(eschema, attrname)
             if values_domain is not None:
                 return choice(values_domain)
-        gen_func = getattr(self, 'generate_%s_%s' % (self.e_schema.type, attrname), None)
-        if gen_func is None:
-            gen_func = getattr(self, 'generate_Any_%s' % attrname, None)
+        gen_func = getattr(self, 'generate_%s_%s' % (eschema, attrname),
+                           getattr(self, 'generate_Any_%s' % attrname, None))
         if gen_func is not None:
-            return gen_func(index, **kwargs)
+            return gen_func(entity, index, **kwargs)
         # If no specific values domain, then generate a dummy value
         gen_func = getattr(self, 'generate_%s' % (attrtype))
-        return gen_func(attrname, index, **kwargs)
+        return gen_func(entity, attrname, index, **kwargs)
 
-    def generate_choice(self, attrname, index):
-        """generates a consistent value for 'attrname' if it's a choice"""
-        choices = get_choices(self.e_schema, attrname)
-        if choices is None:
-            return None
-        return unicode(choice(choices)) # FIXME
-
-    def generate_string(self, attrname, index, format=None):
+    def generate_string(self, entity, attrname, index, format=None):
         """generates a consistent value for 'attrname' if it's a string"""
         # First try to get choices
-        choosed = self.generate_choice(attrname, index)
+        choosed = self.get_choice(entity, attrname)
         if choosed is not None:
             return choosed
         # All other case, generate a default string
-        attrlength = get_max_length(self.e_schema, attrname)
+        attrlength = get_max_length(self.eschema, attrname)
         num_len = numlen(index)
         if num_len >= attrlength:
-            ascii = self.e_schema.rproperty(attrname, 'internationalizable')
+            ascii = self.eschema.rdef(attrname).internationalizable
             return ('&'+decompose_b26(index, ascii))[:attrlength]
         # always use plain text when no format is specified
         attrprefix = attrname[:max(attrlength-num_len-1, 0)]
@@ -131,69 +118,104 @@ title
             value = u'é&%s%d' % (attrprefix, index)
         return value[:attrlength]
 
-    def generate_password(self, attrname, index):
+    def generate_password(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's a password"""
         return u'toto'
 
-    def generate_integer(self, attrname, index):
+    def generate_integer(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's an integer"""
-        choosed = self.generate_choice(attrname, index)
-        if choosed is not None:
-            return choosed
-        minvalue, maxvalue = get_bounds(self.e_schema, attrname)
-        if maxvalue is not None and maxvalue <= 0 and minvalue is None:
-            minvalue = maxvalue - index # i.e. randint(-index, 0)
-        else:
-            maxvalue = maxvalue or index
-        return randint(minvalue or 0, maxvalue)
-
+        return self._constrained_generate(entity, attrname, 0, 1, index)
     generate_int = generate_integer
 
-    def generate_float(self, attrname, index):
+    def generate_float(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's a float"""
-        return float(randint(-index, index))
+        return self._constrained_generate(entity, attrname, 0.0, 1.0, index)
 
-    def generate_decimal(self, attrname, index):
+    def generate_decimal(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's a float"""
-        return Decimal(str(self.generate_float(attrname, index)))
+        return Decimal(str(self.generate_float(entity, attrname, index)))
 
-    def generate_date(self, attrname, index):
+    def generate_datetime(self, entity, attrname, index):
+        """generates a random date (format is 'yyyy-mm-dd HH:MM')"""
+        base = datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
+        return self._constrained_generate(entity, attrname, base, timedelta(hours=1), index)
+
+    def generate_date(self, entity, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
-        return date(randint(2000, 2004), randint(1, 12), randint(1, 28))
+        base = date(randint(2000, 2004), randint(1, 12), randint(1, 28))
+        return self._constrained_generate(entity, attrname, base, timedelta(days=1), index)
 
-    def generate_time(self, attrname, index):
+    def generate_time(self, entity, attrname, index):
         """generates a random time (format is ' HH:MM')"""
         return time(11, index%60) #'11:%02d' % (index % 60)
 
-    def generate_datetime(self, attrname, index):
-        """generates a random date (format is 'yyyy-mm-dd HH:MM')"""
-        return datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
-
-
-    def generate_bytes(self, attrname, index, format=None):
-        # modpython way
+    def generate_bytes(self, entity, attrname, index, format=None):
         fakefile = Binary("%s%s" % (attrname, index))
         fakefile.filename = u"file_%s" % attrname
-        fakefile.value = fakefile.getvalue()
         return fakefile
 
-    def generate_boolean(self, attrname, index):
+    def generate_boolean(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's a boolean"""
         return index % 2 == 0
 
-    def generate_Any_data_format(self, index, **kwargs):
+    def _constrained_generate(self, entity, attrname, base, step, index):
+        choosed = self.get_choice(entity, attrname)
+        if choosed is not None:
+            return choosed
+        # ensure index > 0
+        index += 1
+        minvalue, maxvalue = self.get_bounds(entity, attrname)
+        if maxvalue is None:
+            if minvalue is not None:
+                base = max(minvalue, base)
+            maxvalue = base + index * step
+        if minvalue is None:
+            minvalue = maxvalue - (index * step) # i.e. randint(-index, 0)
+        return choice(list(custom_range(minvalue, maxvalue, step)))
+
+    def _actual_boundary(self, entity, boundary):
+        if isinstance(boundary, Attribute):
+            # ensure we've a value for this attribute
+            self.generate_attribute_value(entity, boundary.attr)
+            boundary = actual_value(boundary, entity)
+        return boundary
+
+    def get_bounds(self, entity, attrname):
+        minvalue = maxvalue = None
+        for cst in self.eschema.rdef(attrname).constraints:
+            if isinstance(cst, IntervalBoundConstraint):
+                minvalue = self._actual_boundary(entity, cst.minvalue)
+                maxvalue = self._actual_boundary(entity, cst.maxvalue)
+            elif isinstance(cst, BoundConstraint):
+                if cst.operator[0] == '<':
+                    maxvalue = self._actual_boundary(entity, cst.boundary)
+                else:
+                    minvalue = self._actual_boundary(entity, cst.boundary)
+        return minvalue, maxvalue
+
+    def get_choice(self, entity, attrname):
+        """generates a consistent value for 'attrname' if it has some static
+        vocabulary set, else return None.
+        """
+        for cst in self.eschema.rdef(attrname).constraints:
+            if isinstance(cst, StaticVocabularyConstraint):
+                return unicode(choice(cst.vocabulary()))
+        return None
+
+    # XXX nothing to do here
+    def generate_Any_data_format(self, entity, index, **kwargs):
         # data_format attribute of Image/File has no vocabulary constraint, we
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'application/octet-stream'
 
-    def generate_Any_content_format(self, index, **kwargs):
+    def generate_Any_content_format(self, entity, index, **kwargs):
         # content_format attribute of EmailPart has no vocabulary constraint, we
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'text/plain'
 
-    def generate_Image_data_format(self, index, **kwargs):
+    def generate_Image_data_format(self, entity, index, **kwargs):
         # data_format attribute of Image/File has no vocabulary constraint, we
         # need this method else stupid values will be set which make mtconverter
         # raise exception
@@ -237,7 +259,7 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
                         returns acceptable values for this attribute
     """
     # XXX HACK, remove or fix asap
-    if etype in (('String', 'Int', 'Float', 'Boolean', 'Date', 'CWGroup', 'CWUser')):
+    if etype in set(('String', 'Int', 'Float', 'Boolean', 'Date', 'CWGroup', 'CWUser')):
         return []
     queries = []
     for index in xrange(entity_num):
@@ -264,7 +286,7 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
     """
     eschema = schema.eschema(etype)
     valgen = ValueGenerator(eschema, choice_func)
-    entity = {}
+    entity = attrdict()
     # preprocessing to deal with _format fields
     attributes = []
     relatedfields = {}
@@ -280,12 +302,11 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
     for attrname, attrschema in attributes:
         if attrname in relatedfields:
             # first generate a format and record it
-            format = valgen._generate_value(attrname + '_format', index)
-            entity[attrname + '_format'] = format
+            format = valgen.generate_attribute_value(entity, attrname + '_format', index)
             # then a value coherent with this format
-            value = valgen._generate_value(attrname, index, format=format)
+            value = valgen.generate_attribute_value(entity, attrname, index, format=format)
         else:
-            value = valgen._generate_value(attrname, index)
+            value = valgen.generate_attribute_value(entity, attrname, index)
         if form: # need to encode values
             if attrschema.type == 'Bytes':
                 # twisted way
@@ -303,7 +324,6 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
                 value = fmt % value
             else:
                 value = unicode(value)
-        entity[attrname] = value
     return entity
 
 
@@ -340,10 +360,10 @@ def make_relations_queries(schema, edict, cursor, ignored_relations=(),
 
 def composite_relation(rschema):
     for obj in rschema.objects():
-        if obj.objrproperty(rschema, 'composite') == 'subject':
+        if obj.rdef(rschema, 'object').composite == 'subject':
             return True
     for obj in rschema.subjects():
-        if obj.subjrproperty(rschema, 'composite') == 'object':
+        if obj.rdef(rschema, 'subject').composite == 'object':
             return True
     return False
 
@@ -372,11 +392,11 @@ class RelationsQueriesGenerator(object):
             oedict = deepcopy(edict)
             delayed = []
             # for each couple (subjschema, objschema), insert relations
-            for subj, obj in rschema.iter_rdefs():
+            for subj, obj in rschema.rdefs:
                 sym.add( (subj, obj) )
-                if rschema.symetric and (obj, subj) in sym:
+                if rschema.symmetric and (obj, subj) in sym:
                     continue
-                subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
+                subjcard, objcard = rschema.rdef(subj, obj).cardinality
                 # process mandatory relations first
                 if subjcard in '1+' or objcard in '1+' or composite_relation(rschema):
                     for query, args in self.make_relation_queries(sedict, oedict,
@@ -390,21 +410,22 @@ class RelationsQueriesGenerator(object):
                     yield query, args
 
     def qargs(self, subjeids, objeids, subjcard, objcard, subjeid, objeid):
-        if subjcard in '?1':
+        if subjcard in '?1+':
             subjeids.remove(subjeid)
-        if objcard in '?1':
+        if objcard in '?1+':
             objeids.remove(objeid)
         return {'subjeid' : subjeid, 'objeid' : objeid}
 
     def make_relation_queries(self, sedict, oedict, rschema, subj, obj):
-        subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
+        rdef = rschema.rdef(subj, obj)
+        subjcard, objcard = rdef.cardinality
         subjeids = sedict.get(subj, frozenset())
         used = self.existingrels[rschema.type]
         preexisting_subjrels = set(subj for subj, obj in used)
         preexisting_objrels = set(obj for subj, obj in used)
         # if there are constraints, only select appropriate objeids
         q = self.rql_tmpl % rschema.type
-        constraints = [c for c in rschema.rproperty(subj, obj, 'constraints')
+        constraints = [c for c in rdef.constraints
                        if isinstance(c, RQLConstraint)]
         if constraints:
             restrictions = ', '.join(c.restriction for c in constraints)

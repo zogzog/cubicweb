@@ -14,7 +14,7 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, score_entity,
                                 implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
-from cubicweb.common.mttransforms import ENGINE
+from cubicweb.mttransforms import ENGINE
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import primary, baseviews
 
@@ -26,7 +26,7 @@ def is_image(entity):
     return 1
 
 def download_box(w, entity, title=None, label=None, footer=u''):
-    req = entity.req
+    req = entity._cw
     w(u'<div class="sideBox">')
     if title is None:
         title = req._('download')
@@ -42,7 +42,7 @@ def download_box(w, entity, title=None, label=None, footer=u''):
 
 
 class DownloadBox(EntityBoxTemplate):
-    id = 'download_box'
+    __regid__ = 'download_box'
     # no download box for images
     # XXX primary_view selector ?
     __select__ = (one_line_rset() & implements(IDownloadable) &
@@ -50,7 +50,7 @@ class DownloadBox(EntityBoxTemplate):
     order = 10
 
     def cell_call(self, row, col, title=None, label=None, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         download_box(self.w, entity, title, label)
 
 
@@ -58,7 +58,7 @@ class DownloadView(EntityView):
     """this view is replacing the deprecated 'download' controller and allow
     downloading of entities providing the necessary interface
     """
-    id = 'download'
+    __regid__ = 'download'
     __select__ = one_line_rset() & implements(IDownloadable)
 
     templatable = False
@@ -68,30 +68,30 @@ class DownloadView(EntityView):
 
     def set_request_content_type(self):
         """overriden to set the correct filetype and filename"""
-        entity = self.complete_entity(0)
+        entity = self.cw_rset.complete_entity(0, 0)
         encoding = entity.download_encoding()
         if encoding in BINARY_ENCODINGS:
             contenttype = 'application/%s' % encoding
             encoding = None
         else:
             contenttype = entity.download_content_type()
-        self.req.set_content_type(contenttype or self.content_type,
+        self._cw.set_content_type(contenttype or self.content_type,
                                   filename=entity.download_file_name(),
                                   encoding=encoding)
 
     def call(self):
-        self.w(self.complete_entity(0).download_data())
+        self.w(self.cw_rset.complete_entity(0, 0).download_data())
 
 
 class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
-    id = 'downloadlink'
+    __regid__ = 'downloadlink'
     __select__ = implements(IDownloadable)
     title = None # should not be listed in possible views
 
 
     def cell_call(self, row, col, title=None, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         url = xml_escape(entity.download_url())
         self.w(u'<a href="%s">%s</a>' % (url, xml_escape(title or entity.dc_title())))
 
@@ -104,16 +104,17 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
-            self.wview('image', entity.rset, row=entity.row)
+            self.wview('image', entity.cw_rset, row=entity.cw_row)
         else:
-            self.wview('downloadlink', entity.rset, title=self.req._('download'), row=entity.row)
+            self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
             try:
                 if ENGINE.has_input(contenttype):
                     self.w(entity.printable_value('data'))
             except TransformError:
                 pass
             except Exception, ex:
-                msg = self.req._("can't display data, unexpected error: %s") % xml_escape(str(ex))
+                msg = self._cw._("can't display data, unexpected error: %s") \
+                      % xml_escape(str(ex))
                 self.w('<div class="error">%s</div>' % msg)
         self.w(u'</div>')
 
@@ -123,33 +124,33 @@ class IDownloadableLineView(baseviews.OneLineView):
 
     def cell_call(self, row, col, title=None, **kwargs):
         """the oneline view is a link to download the file"""
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         url = xml_escape(entity.absolute_url())
         name = xml_escape(title or entity.download_file_name())
         durl = xml_escape(entity.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
-               (url, name, durl, self.req._('download')))
+               (url, name, durl, self._cw._('download')))
 
 
 class ImageView(EntityView):
-    id = 'image'
+    __regid__ = 'image'
     __select__ = implements(IDownloadable) & score_entity(is_image)
 
     title = _('image')
 
     def call(self):
-        rset = self.rset
+        rset = self.cw_rset
         for i in xrange(len(rset)):
             self.w(u'<div class="efile">')
-            self.wview(self.id, rset, row=i, col=0)
+            self.wview(self.__regid__, rset, row=i, col=0)
             self.w(u'</div>')
 
     def cell_call(self, row, col, width=None, height=None, link=False):
-        entity = self.entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         #if entity.data_format.startswith('image/'):
         imgtag = u'<img src="%s" alt="%s" ' % (
             xml_escape(entity.download_url()),
-            (self.req._('download %s')  % xml_escape(entity.download_file_name())))
+            (self._cw._('download %s')  % xml_escape(entity.download_file_name())))
         if width:
             imgtag += u'width="%i" ' % width
         if height:

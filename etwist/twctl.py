@@ -8,7 +8,6 @@
 
 import sys
 
-from cubicweb import underline_title
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
 

@@ -9,7 +9,7 @@ from yams.buildobjs import EntityType, RelationType, SubjectRelation
 from cubicweb.schema import RRQLExpression
 
 class ToTo(EntityType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers',),
         'add': ('managers',),
         'update': ('managers',),
@@ -18,7 +18,7 @@ class ToTo(EntityType):
     toto = SubjectRelation('TuTu')
 
 class TuTu(EntityType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers',),
         'add': ('managers',),
         'update': ('managers',),
@@ -26,7 +26,7 @@ class TuTu(EntityType):
         }
 
 class toto(RelationType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers', RRQLExpression('S bla Y'), ),
         'add': ('managers',),
         'delete': ('managers',),

@@ -5,11 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.facet import insert_attr_select_relation, prepare_facets_rqlst
 
 
-class InsertAttrRelationTC(EnvBasedTC):
+class InsertAttrRelationTC(CubicWebTC):
 
     def parse(self, query):
         rqlst = self.vreg.parse(self.session, query)
@@ -67,16 +67,16 @@ class InsertAttrRelationTC(EnvBasedTC):
         select = self.parse('DISTINCT Any V,TN,L ORDERBY TN,L WHERE T nom TN, V connait T, T is Personne, V is CWUser,'
                             'NOT V in_state VS, VS name "published", V login L')
         rschema = self.schema['connait']
-        for s, o in rschema.iter_rdefs():
-            rschema.set_rproperty(s, o, 'cardinality', '++')
+        for rdefs in rschema.rdefs.values():
+            rdefs.cardinality =  '++'
         try:
             self.assertEquals(self._generate(select, 'in_state', 'subject', 'name'),
                               "DISTINCT Any A,B ORDERBY B WHERE V is CWUser, "
                               "NOT V in_state VS, VS name 'published', "
                               "V in_state A, A name B")
         finally:
-            for s, o in rschema.iter_rdefs():
-                rschema.set_rproperty(s, o, 'cardinality', '**')
+            for rdefs in rschema.rdefs.values():
+                rdefs.cardinality =  '**'
 
     def test_nonregr3(self):
         #'DISTINCT Any X,TMP,N WHERE P name TMP, X version_of P, P is Project, X is Version, not X in_state S,S name "published", X num N ORDERBY TMP,N'

@@ -7,26 +7,26 @@
 """
 from logilab.common.testlib import unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
-class ActionsTC(EnvBasedTC):
+class ActionsTC(CubicWebTC):
     def test_view_action(self):
         req = self.request(__message='bla bla bla', vid='rss', rql='CWUser X')
         rset = self.execute('CWUser X')
-        vaction = [action for action in self.vreg['actions'].possible_vobjects(req, rset=rset)
-                   if action.id == 'view'][0]
+        actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
+        vaction = [action for action in actions if action.__regid__ == 'view'][0]
         self.assertEquals(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
 
     def test_sendmail_action(self):
         req = self.request()
         rset = self.execute('Any X WHERE X login "admin"', req=req)
-        self.failUnless([action for action in self.vreg['actions'].possible_vobjects(req, rset=rset)
-                         if action.id == 'sendemail'])
+        actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
+        self.failUnless([action for action in actions if action.__regid__ == 'sendemail'])
         self.login('anon')
         req = self.request()
         rset = self.execute('Any X WHERE X login "anon"', req=req)
-        self.failIf([action for action in self.vreg['actions'].possible_vobjects(req, rset=rset)
-                     if action.id == 'sendemail'])
+        actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
+        self.failIf([action for action in actions if action.__regid__ == 'sendemail'])
 
 if __name__ == '__main__':
     unittest_main()

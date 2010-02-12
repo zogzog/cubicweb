@@ -53,6 +53,8 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "ap
 
 .. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
 
+.. _SourceInstallation:
+
 Install from source
 ```````````````````
 
@@ -82,6 +84,8 @@ if you do not intend to develop the framework itself.
 Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
 
 Make sure you have installed the dependencies (see appendixes for the list).
+
+.. _WindowsInstallation:
 
 Windows installation
 ````````````````````

@@ -7,12 +7,11 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.testlib import mock_object as Mock
 from logilab.common.adbh import get_adv_func_helper
 
 from indexer import get_indexer
 
-from cubicweb import RequestSessionMixIn
+from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
@@ -81,15 +80,15 @@ class FakeRequest(CubicWebRequestBase):
 
     def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
-        pass
+        self._headers[header] = value
 
     def add_header(self, header, value):
         """set an output HTTP header"""
-        pass
+        self._headers[header] = value # XXX
 
     def remove_header(self, header):
         """remove an output HTTP header"""
-        pass
+        self._headers.pop(header, None)
 
     def get_header(self, header, default=None):
         """return the value associated with the given input header,
@@ -97,16 +96,24 @@ class FakeRequest(CubicWebRequestBase):
         """
         return self._headers.get(header, default)
 
-    def set_cookie(self, cookie, key, maxage=300):
+    def set_cookie(self, cookie, key, maxage=300, expires=None):
         """set / update a cookie key
 
         by default, cookie will be available for the next 5 minutes
         """
-        pass
+        morsel = cookie[key]
+        if maxage is not None:
+            morsel['Max-Age'] = maxage
+        if expires:
+            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
+        # make sure cookie is set on the correct path
+        morsel['path'] = self.base_url_path()
+        self.add_header('Set-Cookie', morsel.OutputString())
+        self.add_header('Cookie', morsel.OutputString())
 
     def remove_cookie(self, cookie, key):
-        """remove a cookie by expiring it"""
-        pass
+        self.remove_header('Set-Cookie')
+        self.remove_header('Cookie')
 
     def validate_cache(self):
         pass
@@ -130,7 +137,7 @@ class FakeUser(object):
         return True
 
 
-class FakeSession(RequestSessionMixIn):
+class FakeSession(RequestSessionBase):
     def __init__(self, repo=None, user=None):
         self.repo = repo
         self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))

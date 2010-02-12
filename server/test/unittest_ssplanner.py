@@ -10,7 +10,7 @@ from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 from cubicweb.server.ssplanner import SSPlanner
 
 # keep cnx so it's not garbage collected and the associated session closed
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 class SSPlannerTC(BasePlannerTC):
     repo = repo

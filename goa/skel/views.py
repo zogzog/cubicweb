@@ -8,7 +8,8 @@
 """
 from datetime import date
 
-from cubicweb.utils import last_day
+from logilab.common.date import last_day
+
 from cubicweb.web.views import baseviews, boxes, calendar
 from cubicweb.web.htmlwidgets import BoxLink, BoxWidget
 
@@ -19,7 +20,7 @@ class BlogEntryPrimaryView(baseviews.PrimaryView):
     accepts = ('BlogEntry',)
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<h1>%s</h1>' % entity.dc_title())
         entity.view('metadata', w=self.w)
         self.w(entity.printable_value('text'))

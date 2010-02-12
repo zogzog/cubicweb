@@ -12,7 +12,7 @@ from simplejson import dumps
 from logilab.mtconverter import xml_escape
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (non_final_entity, two_lines_rset,
+from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
@@ -29,8 +29,8 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
 
 class FilterBox(BoxTemplate):
     """filter results of a query"""
-    id = 'filter_box'
-    __select__ = (((non_final_entity() & two_lines_rset())
+    __regid__ = 'filter_box'
+    __select__ = (((non_final_entity() & multi_lines_rset())
                    | contextview_selector()
                    ) & match_context_prop())
     context = 'left'
@@ -55,13 +55,13 @@ class FilterBox(BoxTemplate):
         if context:
             rset, vid, divid, paginate = context
         else:
-            rset = self.rset
+            rset = self.cw_rset
             vid, divid = None, 'pageContent'
             paginate = view and view.paginable
         return rset, vid, divid, paginate
 
     def call(self, view=None):
-        req = self.req
+        req = self._cw
         req.add_js( self.needs_js )
         req.add_css( self.needs_css)
         if self.roundcorners:
@@ -77,7 +77,7 @@ class FilterBox(BoxTemplate):
             mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
             widgets = []
             for facet in self.get_facets(rset, mainvar):
-                if facet.propval('visible'):
+                if facet.cw_propval('visible'):
                     wdg = facet.get_widget()
                     if wdg is not None:
                         widgets.append(wdg)
@@ -89,7 +89,7 @@ class FilterBox(BoxTemplate):
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
-            hiddens = {'facets': ','.join(wdg.facet.id for wdg in widgets),
+            hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
                        'baserql': baserql}
             for param in ('subvid', 'vtitle'):
                 if param in req.form:
@@ -102,44 +102,44 @@ class FilterBox(BoxTemplate):
             rqlst.recover()
 
     def display_bookmark_link(self, rset):
-        eschema = self.schema.eschema('Bookmark')
-        if eschema.has_perm(self.req, 'add'):
+        eschema = self._cw.vreg.schema.eschema('Bookmark')
+        if eschema.has_perm(self._cw, 'add'):
             bk_path = 'view?rql=%s' % rset.printable_rql()
-            bk_title = self.req._('my custom search')
-            linkto = 'bookmarked_by:%s:subject' % self.req.user.eid
-            bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
-            bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
+            bk_title = self._cw._('my custom search')
+            linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
+            bk_add_url = self._cw.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
+            bk_base_url = self._cw.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
             bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
                     xml_escape(bk_base_url),
                     xml_escape(bk_add_url),
-                    self.req._('bookmark this search'))
+                    self._cw._('bookmark this search'))
             self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
-        return self.vreg['facets'].possible_vobjects(self.req, rset=rset,
-                                                     context='facetbox',
-                                                     filtered_variable=mainvar)
+        return self._cw.vreg['facets'].poss_visible_objects(self._cw, rset=rset,
+                                                        context='facetbox',
+                                                        filtered_variable=mainvar)
 
 # facets ######################################################################
 
 class CreatedByFacet(RelationFacet):
-    id = 'created_by-facet'
+    __regid__ = 'created_by-facet'
     rtype = 'created_by'
     target_attr = 'login'
 
 class InGroupFacet(RelationFacet):
-    id = 'in_group-facet'
+    __regid__ = 'in_group-facet'
     rtype = 'in_group'
     target_attr = 'name'
 
 class InStateFacet(RelationFacet):
-    id = 'in_state-facet'
+    __regid__ = 'in_state-facet'
     rtype = 'in_state'
     target_attr = 'name'
 
 # inherit from RelationFacet to benefit from its possible_values implementation
 class ETypeFacet(RelationFacet):
-    id = 'etype-facet'
+    __regid__ = 'etype-facet'
     __select__ = yes()
     order = 1
     rtype = 'is'
@@ -147,17 +147,17 @@ class ETypeFacet(RelationFacet):
 
     @property
     def title(self):
-        return self.req._('entity type')
+        return self._cw._('entity type')
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
-        etypes = self.rset.column_types(0)
-        return sorted((self.req._(etype), etype) for etype in etypes)
+        etypes = self.cw_rset.column_types(0)
+        return sorted((self._cw._(etype), etype) for etype in etypes)
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         self.rqlst.add_type_restriction(self.filtered_variable, value)
@@ -180,13 +180,13 @@ class ETypeFacet(RelationFacet):
 
 class HasTextFacet(AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
-    id = 'has_text-facet'
+    __regid__ = 'has_text-facet'
     rtype = 'has_text'
     role = 'subject'
     order = 0
     @property
     def title(self):
-        return self.req._('has_text')
+        return self._cw._('has_text')
 
     def get_widget(self):
         """return the widget instance to use to display this facet
@@ -198,7 +198,7 @@ class HasTextFacet(AbstractFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         self.rqlst.add_constant_restriction(self.filtered_variable, 'has_text', value, 'String')

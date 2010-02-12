@@ -132,7 +132,7 @@ Ignore the errors that print "No translation file found for domain
    Otherwise, please skip it.
 
 You will never need to add new entries in the translation catalog. Instead we
-would recommand you to use ``self.req._("msgId")`` in your code to flag new
+would recommand you to use ``self._cw._("msgId")`` in your code to flag new
 message id to add to the catalog, where ``_`` refers to xgettext that is used to
 collect new strings to translate.  While running ``laxctl i18ncube``, new string
 will be added to the catalogs.

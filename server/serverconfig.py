@@ -86,7 +86,7 @@ class ServerConfiguration(CubicWebConfiguration):
     """standalone RQL server"""
     name = 'repository'
 
-    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects'])
+    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects', 'hooks'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])
 
     options = merge_options((
@@ -187,14 +187,56 @@ and if not set, it will be choosen randomly',
     # check user's state at login time
     consider_user_state = True
 
-    # hooks registration configuration
+    # hooks activation configuration
     # all hooks should be activated during normal execution
-    core_hooks = True
-    usergroup_hooks = True
-    schema_hooks = True
-    notification_hooks = True
-    security_hooks = True
-    instance_hooks = True
+    disabled_hooks_categories = set()
+    enabled_hooks_categories = set()
+    ALLOW_ALL = object()
+    DENY_ALL = object()
+    hooks_mode = ALLOW_ALL
+
+    @classmethod
+    def set_hooks_mode(cls, mode):
+        assert mode is cls.ALLOW_ALL or mode is cls.DENY_ALL
+        oldmode = cls.hooks_mode
+        cls.hooks_mode = mode
+        return oldmode
+
+    @classmethod
+    def disable_hook_category(cls, *categories):
+        changes = set()
+        if cls.hooks_mode is cls.DENY_ALL:
+            for category in categories:
+                if category in cls.enabled_hooks_categories:
+                    cls.enabled_hooks_categories.remove(category)
+                    changes.add(category)
+        else:
+            for category in categories:
+                if category not in cls.disabled_hooks_categories:
+                    cls.disabled_hooks_categories.add(category)
+                    changes.add(category)
+        return changes
+
+    @classmethod
+    def enable_hook_category(cls, *categories):
+        changes = set()
+        if cls.hooks_mode is cls.DENY_ALL:
+            for category in categories:
+                if category not in cls.enabled_hooks_categories:
+                    cls.enabled_hooks_categories.add(category)
+                    changes.add(category)
+        else:
+            for category in categories:
+                if category in cls.disabled_hooks_categories:
+                    cls.disabled_hooks_categories.remove(category)
+                    changes.add(category)
+        return changes
+
+    @classmethod
+    def is_hook_activated(cls, hook):
+        if cls.hooks_mode is cls.DENY_ALL:
+            return hook.category in cls.enabled_hooks_categories
+        return hook.category not in cls.disabled_hooks_categories
 
     # should some hooks be deactivated during [pre|post]create script execution
     free_wheel = False
@@ -258,20 +300,6 @@ and if not set, it will be choosen randomly',
     def pyro_enabled(self):
         """pyro is always enabled in standalone repository configuration"""
         return True
-
-    def load_hooks(self, vreg):
-        hooks = {}
-        try:
-            apphookdefs = vreg['hooks'].all_objects()
-        except RegistryNotFound:
-            return hooks
-        for hookdef in apphookdefs:
-            for event, ertype in hookdef.register_to():
-                if ertype == 'Any':
-                    ertype = ''
-                cb = hookdef.make_callback(event)
-                hooks.setdefault(event, {}).setdefault(ertype, []).append(cb)
-        return hooks
 
     def load_schema(self, expand_cubes=False, **kwargs):
         from cubicweb.schema import CubicWebSchemaLoader

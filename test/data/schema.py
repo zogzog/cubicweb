@@ -14,7 +14,7 @@ class Personne(EntityType):
     type = String()
     travaille = SubjectRelation('Societe')
     evaluee = SubjectRelation(('Note', 'Personne'))
-    connait = SubjectRelation('Personne', symetric=True)
+    connait = SubjectRelation('Personne', symmetric=True)
 
 class Societe(EntityType):
     nom = String()

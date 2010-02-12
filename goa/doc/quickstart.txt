@@ -1,3 +1,5 @@
+.. -*- coding: utf-8 -*-
+
 Introduction
 =============
 
@@ -11,7 +13,7 @@ Concepts et vocabulaire
   application.
 
 *result set*
-  objet qui encaspule les résultats d'une requête adressée à l'entrepôt 
+  objet qui encaspule les résultats d'une requête adressée à l'entrepôt
   de données et des informations sur cette requête.
 
 *vue*
@@ -23,8 +25,8 @@ Concepts et vocabulaire
 Définition d'une application de Blog
 ====================================
 
-La première chose à faire est de copier le squelette depuis le répertoire 
-``lax/skel`` vers un nouveau répertoire qui sera votre application 
+La première chose à faire est de copier le squelette depuis le répertoire
+``lax/skel`` vers un nouveau répertoire qui sera votre application
 ``Google AppEngine``::
 
   $ cp -r lax/skel myapp
@@ -36,7 +38,7 @@ Ouvrir le fichier ``myapp/schema.py`` afin de définir le schéma des
 données manipulées. La syntaxe de la définition est la même que celle
 proposée par `Google AppEngine`_ mais il faut remplacer la ligne
 d'import::
-  
+
   from google.appengine.ext import db
 
 par celle-ci::
@@ -47,7 +49,7 @@ par celle-ci::
 Un exemple de schéma de données pour un ``Blog`` pourrait être::
 
   from cubicweb.goa import db
-  
+
   class Blog(db.Model):
       # un titre à donner à l'entrée
       title = db.StringProperty(required=True)
@@ -56,15 +58,15 @@ Un exemple de schéma de données pour un ``Blog`` pourrait être::
       # le contenu de l'entrée
       content = db.TextProperty()
       # une entrée peut en citer une autre
-      cites = db.SelfReferenceProperty() 
-      
+      cites = db.SelfReferenceProperty()
+
 
 Personnalisation des vues
 -------------------------
 
 ``LAX`` permet de générer directement, à partir de la définition
-du schéma, des vues de consultation, d'ajout et de modification 
-pour tous les types de donées manipulés. Il est toutefois 
+du schéma, des vues de consultation, d'ajout et de modification
+pour tous les types de donées manipulés. Il est toutefois
 généralement souhaitable de personnaliser les vues de consultations.
 
 Dans ``LAX``, les vues sont représentées par des classes Python.
@@ -74,7 +76,7 @@ Une vue se caractérise par :
 - un identifiant (tous les objets dans ``LAX`` sont enregistrés
   dans un registre et cet identifiant sert de clé pour y retrouver
   la vue)
-  
+
 - une description des types de données auxquels elle s'applique
 
 Il existe dans ``LAX`` des vues prédéfinies et utilisées par le moteur
@@ -86,17 +88,17 @@ page principale de consultation d'un objet.
 Par exemple, si on souhaite modifier la page principale d'une entrée de
 blog, il faut surcharger la vue ``primary`` des objets ``Blog`` dans
 le fichier ``myapp/views.py``::
-  
+
   from cubicweb.web.views import baseviews
-  
+
   class BlogPrimaryView(baseviews.PrimaryView):
       accepts = ('Blog',)
-      
+
       def cell_call(self, row, col):
-          entity = self.entity(row, col)
+          entity = self.rset.get_entity(row, col)
           self.w(u'<h1>%s</h1>' % entity.title)
           self.w(u'<div>%s</div>' entity.content)
-    
+
 
 Génération du graphique de schéma
 ---------------------------------
@@ -104,13 +106,13 @@ Génération du graphique de schéma
 Il existe une vue ``schema`` qui permet d'afficher un graphique
 représantant les différents types d'entités définis dans le schéma
 ainsi que les relations entre ces types. Ce graphique doit être généré
-statiquement. Le script à utiliser pour générer ce schéma est 
+statiquement. Le script à utiliser pour générer ce schéma est
 dans ``myapp/tools``. Ce script nécessite d'avoir accès aux
 bibliothèques fournies par le SDK de ``Google AppEngine``. Il faut
 donc modifier son PYTHONPATH::
 
   $ export PYTHONPATH=GAE_ROOT/google:GAE_ROOT/lib/yaml
-  $ python tools/generate_schema_img.py 
+  $ python tools/generate_schema_img.py
 
 
 Génération des fichiers de traduction

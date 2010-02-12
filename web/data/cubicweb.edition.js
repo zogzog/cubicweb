@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -230,8 +230,8 @@ function selectForAssociation(tripletIdsString, originalEid) {
 }
 
 
-function updateInlinedEntitiesCounters(rtype) {
-    jQuery('#inline' + rtype + 'slot span.icounter').each(function (i) {
+function updateInlinedEntitiesCounters(rtype, role) {
+    jQuery('div.inline-' + rtype + '-' + role + '-slot span.icounter').each(function (i) {
 	this.innerHTML = i+1;
     });
 }
@@ -252,7 +252,7 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
         var form = jQuery(dom);
         form.css('display', 'none');
         form.insertBefore(insertBefore).slideDown('fast');
-        updateInlinedEntitiesCounters(rtype);
+        updateInlinedEntitiesCounters(rtype, role);
         reorderTabindex();
         jQuery(CubicWeb).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
@@ -273,10 +273,10 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
 /*
  * removes the part of the form used to edit an inlined entity
  */
-function removeInlineForm(peid, rtype, eid, showaddnewlink) {
+function removeInlineForm(peid, rtype, role, eid, showaddnewlink) {
     jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
 	$(this).remove();
-	updateInlinedEntitiesCounters(rtype);
+	updateInlinedEntitiesCounters(rtype, role);
     });
     if (showaddnewlink) {
 	toggleVisibility(showaddnewlink);
@@ -331,15 +331,22 @@ function _displayValidationerrors(formid, eid, errors) {
     for (fieldname in errors) {
 	var errmsg = errors[fieldname];
 	var fieldid = fieldname + ':' + eid;
-	var field = jqNode(fieldname + ':' + eid);
-	if (field && getNodeAttribute(field, 'type') != 'hidden') {
-	    if ( !firsterrfield ) {
-		firsterrfield = 'err-' + fieldid;
+	var suffixes = ['', '-subject', '-object'];
+	var found = false;
+	for (var i=0, length=suffixes.length; i<length;i++) {
+	    var field = jqNode(fieldname + suffixes[i] + ':' + eid);
+	    if (field && getNodeAttribute(field, 'type') != 'hidden') {
+		if ( !firsterrfield ) {
+		    firsterrfield = 'err-' + fieldid;
+		}
+		addElementClass(field, 'error');
+		var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
+		field.before(span);
+		found = true;
+		break;
 	    }
-	    addElementClass(field, 'error');
-	    var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
-	    field.before(span);
-	} else {
+	}
+	if (!found) {
 	    firsterrfield = formid;
 	    globalerrors.push(_(fieldname) + ' : ' + errmsg);
 	}
@@ -348,7 +355,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	if (globalerrors.length == 1) {
 	    var innernode = SPAN(null, globalerrors[0]);
 	} else {
-	    var innernode = UL(null, map(LI, globalerrors));
+	    var innernode = UL(null, map(partial(LI, null), globalerrors));
 	}
 	// insert DIV and innernode before the form
 	var div = DIV({'class' : "errorMessage", 'id': formid + 'ErrorMessage'});
@@ -407,11 +414,14 @@ function freezeFormButtons(formid) {
 function postForm(bname, bvalue, formid) {
     var form = getNode(formid);
     if (bname) {
-	form.appendChild(INPUT({type: 'hidden', name: bname, value: bvalue}));
+	var child = form.appendChild(INPUT({type: 'hidden', name: bname, value: bvalue}));
     }
     var onsubmit = form.onsubmit;
     if (!onsubmit || (onsubmit && onsubmit())) {
 	form.submit();
+    }
+    if (bname) {
+	jQuery(child).remove(); /* cleanup */
     }
 }
 

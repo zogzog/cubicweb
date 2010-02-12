@@ -34,6 +34,7 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 schema['in_state'].inlined = True
+schema['state_of'].inlined = False
 schema['comments'].inlined = False
 
 PARSER = [
@@ -358,10 +359,6 @@ ORDER BY 1'''),
     ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
      '''SELECT DISTINCT _X.cw_eid, rel_read_permission0.eid_to
 FROM cw_CWEType AS _X, read_permission_relation AS rel_read_permission0
-WHERE _X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=_X.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, rel_read_permission0.eid_to
-FROM cw_CWRType AS _X, read_permission_relation AS rel_read_permission0
 WHERE _X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=_X.cw_eid)'''),
 
     # no distinct, Y can't be invariant
@@ -372,14 +369,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read
 UNION ALL
 SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # DISTINCT but NEGED exists, can't be invariant
@@ -390,14 +379,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # should generate the same query as above
@@ -408,14 +389,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # neged relation, can't be inveriant
@@ -426,14 +399,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION ALL
 SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N, X is IN (Basket, Folder, Tag);',
@@ -1360,7 +1325,7 @@ GROUP BY _ET.cw_name'''),
         rqlst = self._prepare(rql)
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
-    def test_symetric(self):
+    def test_symmetric(self):
         for t in self._parse(SYMETRIC):
             yield t
 

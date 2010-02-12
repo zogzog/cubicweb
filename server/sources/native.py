@@ -96,11 +96,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """adapter for source using the native cubicweb schema (see below)
     """
     sqlgen_class = SQLGenerator
-
-    passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
-    auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
-    _sols = ({'X': 'CWUser', 'P': 'Password'},)
-
     options = (
         ('db-driver',
          {'type' : 'string',
@@ -148,6 +143,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
+        self.authentifiers = [LoginPasswordAuthentifier(self)]
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
         # sql generator
@@ -181,6 +177,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         #      create a new one each time necessary. If it appears to be time
         #      consuming, find another way
         return SQLAdapterMixIn.get_connection(self)
+
+    def add_authentifier(self, authentifier):
+        self.authentifiers.append(authentifier)
+        authentifier.source = self
+        authentifier.set_schema(self.schema)
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -230,12 +231,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def map_attribute(self, etype, attr, cb):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
 
+    def unmap_attribute(self, etype, attr):
+        self._rql_sqlgen.attr_map.pop('%s.%s' % (etype, attr), None)
+
     # ISource interface #######################################################
 
-    def compile_rql(self, rql):
+    def compile_rql(self, rql, sols):
         rqlst = self.repo.vreg.rqlhelper.parse(rql)
         rqlst.restricted_vars = ()
-        rqlst.children[0].solutions = self._sols
+        rqlst.children[0].solutions = sols
         self.repo.querier.sqlgen_annotate(rqlst)
         set_qdata(self.schema.rschema, rqlst, ())
         return rqlst
@@ -249,10 +253,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._rql_sqlgen.schema = schema
         except AttributeError:
             pass # __init__
-        if 'CWUser' in schema: # probably an empty schema if not true...
-            # rql syntax trees used to authenticate users
-            self._passwd_rqlst = self.compile_rql(self.passwd_rql)
-            self._auth_rqlst = self.compile_rql(self.auth_rql)
+        for authentifier in self.authentifiers:
+            authentifier.set_schema(self.schema)
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -273,30 +275,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def may_cross_relation(self, rtype):
         return True
 
-    def authenticate(self, session, login, password):
-        """return CWUser eid for the given login/password if this account is
-        defined in this source, else raise `AuthenticationError`
-
-        two queries are needed since passwords are stored crypted, so we have
-        to fetch the salt first
+    def authenticate(self, session, login, **kwargs):
+        """return CWUser eid for the given login and other authentication
+        information found in kwargs, else raise `AuthenticationError`
         """
-        args = {'login': login, 'pwd' : password}
-        if password is not None:
-            rset = self.syntax_tree_search(session, self._passwd_rqlst, args)
+        for authentifier in self.authentifiers:
             try:
-                pwd = rset[0][0]
-            except IndexError:
-                raise AuthenticationError('bad login')
-            # passwords are stored using the Bytes type, so we get a StringIO
-            if pwd is not None:
-                args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
-        # get eid from login and (crypted) password
-        # XXX why not simply compare password?
-        rset = self.syntax_tree_search(session, self._auth_rqlst, args)
-        try:
-            return rset[0][0]
-        except IndexError:
-            raise AuthenticationError('bad password')
+                return authentifier.authenticate(session, login, **kwargs)
+            except AuthenticationError:
+                continue
+        raise AuthenticationError()
 
     def syntax_tree_search(self, session, union, args=None, cachekey=None,
                            varmap=None):
@@ -534,7 +522,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
-        attrs = {'type': entity.id, 'eid': entity.eid, 'extid': extid,
+        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
         session.system_sql(self.sqlgen.insert('entities', attrs), attrs)
 
@@ -564,7 +552,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_index_entity(self, session, entity):
         """add text content of a created/modified entity to the full text index
         """
-        self.info('reindexing %r', entity.eid)
+        self.debug('reindexing %r', entity.eid)
         try:
             self.indexer.cursor_reindex_object(entity.eid, entity,
                                                session.pool['system'])
@@ -644,3 +632,49 @@ def grant_schema(user, set_owner=True):
     result += 'GRANT ALL ON deleted_entities TO %s;\n' % user
     result += 'GRANT ALL ON entities_id_seq TO %s;\n' % user
     return result
+
+
+class BaseAuthentifier(object):
+
+    def __init__(self, source=None):
+        self.source = source
+
+    def set_schema(self, schema):
+        """set the instance'schema"""
+        pass
+
+class LoginPasswordAuthentifier(BaseAuthentifier):
+    passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
+    auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
+    _sols = ({'X': 'CWUser', 'P': 'Password'},)
+
+    def set_schema(self, schema):
+        """set the instance'schema"""
+        if 'CWUser' in schema: # probably an empty schema if not true...
+            # rql syntax trees used to authenticate users
+            self._passwd_rqlst = self.source.compile_rql(self.passwd_rql, self._sols)
+            self._auth_rqlst = self.source.compile_rql(self.auth_rql, self._sols)
+
+    def authenticate(self, session, login, password=None, **kwargs):
+        """return CWUser eid for the given login/password if this account is
+        defined in this source, else raise `AuthenticationError`
+
+        two queries are needed since passwords are stored crypted, so we have
+        to fetch the salt first
+        """
+        args = {'login': login, 'pwd' : password}
+        if password is not None:
+            rset = self.source.syntax_tree_search(session, self._passwd_rqlst, args)
+            try:
+                pwd = rset[0][0]
+            except IndexError:
+                raise AuthenticationError('bad login')
+            # passwords are stored using the Bytes type, so we get a StringIO
+            if pwd is not None:
+                args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
+        # get eid from login and (crypted) password
+        rset = self.source.syntax_tree_search(session, self._auth_rqlst, args)
+        try:
+            return rset[0][0]
+        except IndexError:
+            raise AuthenticationError('bad password')

@@ -14,14 +14,14 @@ from cubicweb.selectors import implements
 from cubicweb.interfaces import ISiocItem, ISiocContainer
 
 class SIOCView(EntityView):
-    id = 'sioc'
+    __regid__ = 'sioc'
     __select__ = EntityView.__select__ & implements(ISiocItem, ISiocContainer)
     title = _('sioc')
     templatable = False
     content_type = 'text/xml'
 
     def call(self):
-        self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
+        self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self._cw.encoding)
         self.w(u'''<rdf:RDF
              xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
              xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
@@ -30,21 +30,21 @@ class SIOCView(EntityView):
              xmlns:sioc="http://rdfs.org/sioc/ns#"
              xmlns:sioctype="http://rdfs.org/sioc/types#"
              xmlns:dcterms="http://purl.org/dc/terms/">\n''')
-        for i in xrange(self.rset.rowcount):
+        for i in xrange(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</rdf:RDF>\n')
 
     def cell_call(self, row, col):
-        self.wview('sioc_element', self.rset, row=row, col=col)
+        self.wview('sioc_element', self.cw_rset, row=row, col=col)
 
 class SIOCContainerView(EntityView):
-    id = 'sioc_element'
+    __regid__ = 'sioc_element'
     __select__ = EntityView.__select__ & implements(ISiocContainer)
     templatable = False
     content_type = 'text/xml'
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         sioct = xml_escape(entity.isioc_type())
         self.w(u'<sioc:%s rdf:about="%s">\n'
                % (sioct, xml_escape(entity.absolute_url())))
@@ -59,13 +59,13 @@ class SIOCContainerView(EntityView):
 
 
 class SIOCItemView(EntityView):
-    id = 'sioc_element'
+    __regid__ = 'sioc_element'
     __select__ = EntityView.__select__ & implements(ISiocItem)
     templatable = False
     content_type = 'text/xml'
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         sioct = xml_escape(entity.isioc_type())
         self.w(u'<sioc:%s rdf:about="%s">\n'
                %  (sioct, xml_escape(entity.absolute_url())))

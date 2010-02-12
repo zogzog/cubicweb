@@ -1,31 +1,38 @@
 """form renderers, responsible to layout a form to html
 
 :organization: Logilab
-:copyright: 2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+
+from warnings import warn
 
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
 from simplejson import dumps
 
-from cubicweb.common import tags
+from cubicweb import tags
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import entity_implements, yes
-from cubicweb.web import eid_param
-from cubicweb.web import formwidgets as fwdgs
-from cubicweb.web.widgets import checkbox
-from cubicweb.web.formfields import HiddenInitialValueField
+from cubicweb.selectors import implements, yes
+from cubicweb.web import eid_param, formwidgets as fwdgs
+
+
+def checkbox(name, value, attrs='', checked=None):
+    if checked is None:
+        checked = value
+    checked = checked and 'checked="checked"' or ''
+    return u'<input type="checkbox" name="%s" value="%s" %s %s />' % (
+        name, value, checked, attrs)
 
 def field_label(form, field):
     # XXX with 3.6 we can now properly rely on 'if field.role is not None' and
     # stop having a tuple for label
     if isinstance(field.label, tuple): # i.e. needs contextual translation
-        return form.req.pgettext(*field.label)
-    return form.req._(field.label)
+        return form._cw.pgettext(*field.label)
+    return form._cw._(field.label)
 
 
 
@@ -42,13 +49,12 @@ class FormRenderer(AppObject):
     +---------+
     """
     __registry__ = 'formrenderers'
-    id = 'default'
+    __regid__ = 'default'
 
-    _options = ('display_fields', 'display_label', 'display_help',
+    _options = ('display_label', 'display_help',
                 'display_progress_div', 'table_class', 'button_bar_class',
                 # add entity since it may be given to select the renderer
                 'entity')
-    display_fields = None # None -> all fields
     display_label = True
     display_help = True
     display_progress_div = True
@@ -56,7 +62,7 @@ class FormRenderer(AppObject):
     button_bar_class = u'formButtonBar'
 
     def __init__(self, req=None, rset=None, row=None, col=None, **kwargs):
-        super(FormRenderer, self).__init__(req, rset, row, col)
+        super(FormRenderer, self).__init__(req, rset=rset, row=row, col=col)
         if self._set_options(kwargs):
             raise ValueError('unconsumed arguments %s' % kwargs)
 
@@ -77,10 +83,10 @@ class FormRenderer(AppObject):
         w = data.append
         w(self.open_form(form, values))
         if self.display_progress_div:
-            w(u'<div id="progress">%s</div>' % self.req._('validating...'))
+            w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type=u'hidden', name=u'__form_id',
-                     value=values.get('formvid', form.id)))
+                     value=values.get('formvid', form.__regid__)))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
         self.render_fields(w, form, values)
@@ -96,7 +102,7 @@ class FormRenderer(AppObject):
         if field.label is None:
             return u''
         label = field_label(form, field)
-        attrs = {'for': form.context[field]['id']}
+        attrs = {'for': field.dom_id(form)}
         if field.required:
             attrs['class'] = 'required'
         return tags.label(label, **attrs)
@@ -107,11 +113,11 @@ class FormRenderer(AppObject):
         if callable(descr):
             descr = descr(form)
         if descr:
-            help.append('<div class="helper">%s</div>' % self.req._(descr))
-        example = field.example_format(self.req)
+            help.append('<div class="helper">%s</div>' % self._cw._(descr))
+        example = field.example_format(self._cw)
         if example:
             help.append('<div class="helper">(%s: %s)</div>'
-                        % (self.req._('sample format'), example))
+                        % (self._cw._('sample format'), example))
         return u'&#160;'.join(help)
 
     # specific methods (mostly to ease overriding) #############################
@@ -121,14 +127,12 @@ class FormRenderer(AppObject):
 
         This method should be called once inlined field errors has been consumed
         """
-        req = self.req
+        req = self._cw
         errex = form.form_valerror
         # get extra errors
         if errex is not None:
             errormsg = req._('please correct the following errors:')
-            displayed = form.form_displayed_errors
-            errors = sorted((field, err) for field, err in errex.errors.items()
-                            if not field in displayed)
+            errors = form.remaining_errors()
             if errors:
                 if len(errors) > 1:
                     templstr = '<li>%s</li>\n'
@@ -145,12 +149,12 @@ class FormRenderer(AppObject):
         return u''
 
     def open_form(self, form, values):
-        if form.form_needs_multipart:
+        if form.needs_multipart:
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'
         if form.action is None:
-            action = self.req.build_url('edit')
+            action = self._cw.build_url('edit')
         else:
             action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
@@ -167,14 +171,6 @@ class FormRenderer(AppObject):
             tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
         return tag + '>'
 
-    def display_field(self, form, field):
-        if isinstance(field, HiddenInitialValueField):
-            field = field.visible_field
-        return (self.display_fields is None
-                or field.name in form.internal_fields
-                or (field.name, field.role) in self.display_fields
-                or (field.name, field.role) in form.internal_fields)
-
     def render_fields(self, w, form, values):
         fields = self._render_hidden_fields(w, form)
         if fields:
@@ -189,9 +185,7 @@ class FormRenderer(AppObject):
     def _render_hidden_fields(self, w, form):
         fields = form.fields[:]
         for field in form.fields:
-            if not self.display_field(form, field):
-                fields.remove(field)
-            elif not field.is_visible():
+            if not field.is_visible():
                 w(field.render(form, self))
                 fields.remove(field)
         return fields
@@ -212,18 +206,19 @@ class FormRenderer(AppObject):
                 continue
             w(u'<fieldset class="%s">' % (fieldset or u'default'))
             if fieldset:
-                w(u'<legend>%s</legend>' % self.req._(fieldset))
+                w(u'<legend>%s</legend>' % self._cw._(fieldset))
             w(u'<table class="%s">' % self.table_class)
             for field in fields:
                 w(u'<tr class="%s_%s_row">' % (field.name, field.role))
-                if self.display_label:
+                if self.display_label and field.label is not None:
                     w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
-                error = form.form_field_error(field)
+                w('<td')
+                if field.label is None:
+                    w(' colspan="2"')
+                error = form.field_error(field)
                 if error:
-                    w(u'<td class="error">')
-                    w(error)
-                else:
-                    w(u'<td>')
+                    w(u' class="error"')
+                w(u'>')
                 w(field.render(form, self))
                 if self.display_help:
                     w(self.render_help(form, field))
@@ -240,29 +235,18 @@ class FormRenderer(AppObject):
             w(u'<td>%s</td>\n' % button.render(form))
         w(u'</tr></table>')
 
+    def render_error(self, w, err):
+        """return validation error for widget's field, if any"""
+        w(u'<span class="error">%s</span>' % err)
+
+
 
 class BaseFormRenderer(FormRenderer):
     """use form_renderer_id = 'base' if you want base FormRenderer layout even
     when selected for an entity
     """
-    id = 'base'
+    __regid__ = 'base'
 
-
-class EntityBaseFormRenderer(BaseFormRenderer):
-    """use form_renderer_id = 'base' if you want base FormRenderer layout even
-    when selected for an entity
-    """
-    __select__ = entity_implements('Any')
-
-    def display_field(self, form, field):
-        if not super(EntityBaseFormRenderer, self).display_field(form, field):
-            if isinstance(field, HiddenInitialValueField):
-                field = field.visible_field
-            ismeta = form.edited_entity.e_schema.is_metadata(field.name)
-            return ismeta is not None and (
-                ismeta[0] in self.display_fields or
-                (ismeta[0], 'subject') in self.display_fields)
-        return True
 
 
 class HTableFormRenderer(FormRenderer):
@@ -274,7 +258,7 @@ class HTableFormRenderer(FormRenderer):
     | field1 input | field2 input | buttons
     +--------------+--------------+---------+
     """
-    id = 'htable'
+    __regid__ = 'htable'
 
     display_help = False
     def _render_fields(self, fields, w, form):
@@ -290,10 +274,10 @@ class HTableFormRenderer(FormRenderer):
         w(u'</tr>')
         w(u'<tr>')
         for field in fields:
-            error = form.form_field_error(field)
+            error = form.field_error(field)
             if error:
                 w(u'<td class="error">')
-                w(error)
+                self.render_error(w, error)
             else:
                 w(u'<td>')
             w(field.render(form, self))
@@ -311,7 +295,7 @@ class HTableFormRenderer(FormRenderer):
 
 class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
-    id = 'composite'
+    __regid__ = 'composite'
 
     _main_display_fields = None
 
@@ -319,14 +303,13 @@ class EntityCompositeFormRenderer(FormRenderer):
         if form.parent_form is None:
             w(u'<table class="listing">')
             subfields = [field for field in form.forms[0].fields
-                         if self.display_field(form, field)
-                         and field.is_visible()]
+                         if field.is_visible()]
             if subfields:
                 # main form, display table headers
                 w(u'<tr class="header">')
                 w(u'<th align="left">%s</th>' %
                   tags.input(type='checkbox',
-                             title=self.req._('toggle check boxes'),
+                             title=self._cw._('toggle check boxes'),
                              onclick="setCheckboxesState('eid', this.checked)"))
                 for field in subfields:
                     w(u'<th>%s</th>' % field_label(form, field))
@@ -345,15 +328,15 @@ class EntityCompositeFormRenderer(FormRenderer):
             qeid = eid_param('eid', entity.eid)
             cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
                          xml_escape(dumps(entity.eid))
-            w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
+            w(u'<tr class="%s">' % (entity.cw_row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
             w(u'<td>%s</td>' % checkbox('eid', entity.eid,
                                         checked=qeid in values))
             for field in fields:
-                error = form.form_field_error(field)
+                error = form.field_error(field)
                 if error:
                     w(u'<td class="error">')
-                    w(error)
+                    self.render_error(w, error)
                 else:
                     w(u'<td>')
                 if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox,
@@ -369,14 +352,13 @@ class EntityCompositeFormRenderer(FormRenderer):
             self._main_display_fields = fields
 
 
-class EntityFormRenderer(EntityBaseFormRenderer):
+class EntityFormRenderer(BaseFormRenderer):
     """specific renderer for entity edition form (edition)"""
-    id = 'default'
+    __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
-    __select__ = EntityBaseFormRenderer.__select__ & yes()
+    __select__ = implements('Any') & yes()
 
-    _options = FormRenderer._options + ('display_relations_form', 'main_form_title')
-    display_relations_form = True
+    _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')
 
     def render(self, form, values):
@@ -387,15 +369,9 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         attrs_fs_label = ''
         if self.main_form_title:
             attrs_fs_label += ('<div class="iformTitle"><span>%s</span></div>'
-                               % self.req._(self.main_form_title))
+                               % self._cw._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
-
-    def render_fields(self, w, form, values):
-        super(EntityFormRenderer, self).render_fields(w, form, values)
-        self.inline_entities_form(w, form)
-        if form.edited_entity.has_eid() and self.display_relations_form:
-            self.relations_form(w, form)
 
     def _render_fields(self, fields, w, form):
         if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
@@ -416,96 +392,12 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         else:
             super(EntityFormRenderer, self).render_buttons(w, form)
 
-    def relations_form(self, w, form):
-        srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
-        if not srels_by_cat:
-            return u''
-        req = self.req
-        _ = req._
-        __ = _
-        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
-        eid = form.edited_entity.eid
-        w(u'<fieldset class="subentity">')
-        w(u'<legend class="iformTitle">%s</legend>' % label)
-        w(u'<table id="relatedEntities">')
-        for rschema, target, related in form.relations_table():
-            # already linked entities
-            if related:
-                w(u'<tr><th class="labelCol">%s</th>' % rschema.display_name(req, target))
-                w(u'<td>')
-                w(u'<ul>')
-                for viewparams in related:
-                    w(u'<li class="invisible">%s<div id="span%s" class="%s">%s</div></li>'
-                      % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
-                if not form.force_display and form.maxrelitems < len(related):
-                    link = (u'<span class="invisible">'
-                            '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % self.req._('view all'))
-                    w(u'<li class="invisible">%s</li>' % link)
-                w(u'</ul>')
-                w(u'</td>')
-                w(u'</tr>')
-        pendings = list(form.restore_pending_inserts())
-        if not pendings:
-            w(u'<tr><th>&#160;</th><td>&#160;</td></tr>')
-        else:
-            for row in pendings:
-                # soon to be linked to entities
-                w(u'<tr id="tr%s">' % row[1])
-                w(u'<th>%s</th>' % row[3])
-                w(u'<td>')
-                w(u'<a class="handle" title="%s" href="%s">[x]</a>' %
-                  (_('cancel this insert'), row[2]))
-                w(u'<a id="a%s" class="editionPending" href="%s">%s</a>'
-                  % (row[1], row[4], xml_escape(row[5])))
-                w(u'</td>')
-                w(u'</tr>')
-        w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
-        w(u'<th class="labelCol">')
-        w(u'<select id="relationSelector_%s" tabindex="%s" '
-          'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
-        w(u'<option value="">%s</option>' % _('select a relation'))
-        for i18nrtype, rschema, target in srels_by_cat:
-            # more entities to link to
-            w(u'<option value="%s_%s">%s</option>' % (rschema, target, i18nrtype))
-        w(u'</select>')
-        w(u'</th>')
-        w(u'<td id="unrelatedDivs_%s"></td>' % eid)
-        w(u'</tr>')
-        w(u'</table>')
-        w(u'</fieldset>')
-
-    # NOTE: should_* and display_* method extracted and moved to the form to
-    # ease overriding
-
-    def inline_entities_form(self, w, form):
-        """create a form to edit entity's inlined relations"""
-        if not hasattr(form, 'inlined_form_views'):
-            return
-        keysinorder = []
-        formviews = form.inlined_form_views()
-        for formview in formviews:
-            if not (formview.rtype, formview.role) in keysinorder:
-                keysinorder.append( (formview.rtype, formview.role) )
-        for key in keysinorder:
-            self.inline_relation_form(w, form, [fv for fv in formviews
-                                                if (fv.rtype, fv.role) == key])
-
-    def inline_relation_form(self, w, form, formviews):
-        i18nctx = 'inlined:%s.%s.%s' % (form.edited_entity.e_schema,
-                                        formviews[0].rtype, formviews[0].role)
-        w(u'<div id="inline%sslot">' % formviews[0].rtype)
-        for formview in formviews:
-            w(formview.render(i18nctx=i18nctx, row=formview.row, col=formview.col))
-        w(u'</div>')
-
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
     """specific renderer for entity inlined edition form
     (inline-[creation|edition])
     """
-    id = 'inline'
+    __regid__ = 'inline'
 
     def render(self, form, values):
         form.add_media()
@@ -517,11 +409,10 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="div-%(divid)s">' % values)
         else:
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
-                values['divid'], self.req._('click on the box to cancel the deletion')))
+                values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
-        ctx = values.pop('i18nctx')
-        values['removemsg'] = self.req.pgettext(ctx, 'remove this %s' % eschema)
+        values['removemsg'] = self._cw._('remove-inlined-entity-form')
         w(u'<div class="iformTitle"><span>%(title)s</span> '
           '#<span class="icounter">%(counter)s</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
@@ -541,6 +432,5 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
         if fields:
             self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
-        self.inline_entities_form(w, form)
         w(u'</fieldset>')
 

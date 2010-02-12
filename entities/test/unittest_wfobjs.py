@@ -1,4 +1,4 @@
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import ValidationError
 
 def add_wf(self, etype, name=None, default=False):
@@ -18,7 +18,7 @@ def parse_hist(wfhist):
             for ti in wfhist]
 
 
-class WorkflowBuildingTC(EnvBasedTC):
+class WorkflowBuildingTC(CubicWebTC):
 
     def test_wf_construction(self):
         wf = add_wf(self, 'Company')
@@ -45,7 +45,6 @@ class WorkflowBuildingTC(EnvBasedTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
-        print '*'*80
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
@@ -72,12 +71,12 @@ class WorkflowBuildingTC(EnvBasedTC):
         self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
 
 
-class WorkflowTC(EnvBasedTC):
+class WorkflowTC(CubicWebTC):
 
     def setup_database(self):
         rschema = self.schema['in_state']
-        for x, y in rschema.iter_rdefs():
-            self.assertEquals(rschema.rproperty(x, y, 'cardinality'), '1*')
+        for rdef in rschema.rdefs.values():
+            self.assertEquals(rdef.cardinality, '1*')
         self.member = self.create_user('member')
 
     def test_workflow_base(self):
@@ -127,7 +126,7 @@ class WorkflowTC(EnvBasedTC):
         wf = add_wf(self, 'CWUser')
         s = wf.add_state(u'foo', initial=True)
         self.commit()
-        ex = self.assertRaises(ValidationError, self.session().unsafe_execute,
+        ex = self.assertRaises(ValidationError, self.session.unsafe_execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                {'x': self.user().eid, 's': s.eid}, 'x')
         self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
@@ -210,7 +209,7 @@ class WorkflowTC(EnvBasedTC):
                                       [(swfstate2, state2), (swfstate3, state3)])
         self.assertEquals(swftr1.destination().eid, swfstate1.eid)
         # workflows built, begin test
-        self.group = self.add_entity('CWGroup', name=u'grp1')
+        self.group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         self.assertEquals(self.group.current_state.eid, state1.eid)
         self.assertEquals(self.group.current_workflow.eid, mwf.eid)
@@ -234,7 +233,7 @@ class WorkflowTC(EnvBasedTC):
         # subworkflow input transition
         ex = self.assertRaises(ValidationError,
                                self.group.change_state, swfstate1, u'gadget')
-        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's current workflow"})
+        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's workflow"})
         self.rollback()
         # force back to state1
         self.group.change_state('state1', u'gadget')
@@ -295,7 +294,7 @@ class WorkflowTC(EnvBasedTC):
         twf.add_wftransition(_('close'), subwf, (released,),
                              [(xsigned, closed), (xaborted, released)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans in ('identify', 'release', 'close'):
             group.fire_transition(trans)
@@ -320,7 +319,7 @@ class WorkflowTC(EnvBasedTC):
         twf.add_wftransition(_('release'), subwf, identified,
                              [(xaborted, None)])
         self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
+        group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         for trans, nextstate in (('identify', 'xsigning'),
                                  ('xabort', 'created'),
@@ -335,14 +334,10 @@ class WorkflowTC(EnvBasedTC):
             self.assertEquals(group.state, nextstate)
 
 
-class CustomWorkflowTC(EnvBasedTC):
+class CustomWorkflowTC(CubicWebTC):
 
     def setup_database(self):
         self.member = self.create_user('member')
-
-    def tearDown(self):
-        super(CustomWorkflowTC, self).tearDown()
-        self.execute('DELETE X custom_workflow WF')
 
     def test_custom_wf_replace_state_no_history(self):
         """member in inital state with no previous history, state is simply
@@ -394,7 +389,7 @@ class CustomWorkflowTC(EnvBasedTC):
         wf = add_wf(self, 'Company')
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': self.member.eid})
+                     {'wf': wf.eid, 'x': self.member.eid}, 'x')
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
 
@@ -422,8 +417,7 @@ class CustomWorkflowTC(EnvBasedTC):
                            ('asleep', 'activated', None, 'workflow changed to "default user workflow"'),])
 
 
-
-class AutoTransitionTC(EnvBasedTC):
+class AutoTransitionTC(CubicWebTC):
 
     def setup_database(self):
         self.wf = add_wf(self, 'CWUser')
@@ -463,18 +457,17 @@ class AutoTransitionTC(EnvBasedTC):
                            ('asleep', 'dead', 'sick', None),])
 
 
-from cubicweb.devtools.apptest import RepositoryBasedTC
-
-class WorkflowHooksTC(RepositoryBasedTC):
+class WorkflowHooksTC(CubicWebTC):
 
     def setUp(self):
-        RepositoryBasedTC.setUp(self)
+        CubicWebTC.setUp(self)
         self.wf = self.session.user.current_workflow
+        self.session.set_pool()
         self.s_activated = self.wf.state_by_name('activated').eid
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
         self.wf.add_transition(u'dummy', (self.s_deactivated,), self.s_dummy)
-        ueid = self.create_user('stduser', commit=False)
+        ueid = self.create_user('stduser', commit=False).eid
         # test initial state is set
         rset = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                             {'x' : ueid})
@@ -490,13 +483,6 @@ class WorkflowHooksTC(RepositoryBasedTC):
                      'WHERE G name "users", X transition_of WF, WF eid %(wf)s',
                      {'wf': self.wf.eid})
         self.commit()
-
-    def tearDown(self):
-        self.execute('DELETE X require_group G '
-                     'WHERE G name "users", X transition_of WF, WF eid %(wf)s',
-                     {'wf': self.wf.eid})
-        self.commit()
-        RepositoryBasedTC.tearDown(self)
 
     # XXX currently, we've to rely on hooks to set initial state, or to use unsafe_execute
     # def test_initial_state(self):
@@ -522,7 +508,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
 
     def test_transition_checking1(self):
         cnx = self.login('stduser')
-        user = cnx.user(self.current_session())
+        user = cnx.user(self.session)
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'activate')
         self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
@@ -531,8 +517,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
 
     def test_transition_checking2(self):
         cnx = self.login('stduser')
-        user = cnx.user(self.current_session())
-        assert user.state == 'activated'
+        user = cnx.user(self.session)
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'dummy')
         self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
@@ -541,7 +526,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
 
     def test_transition_checking3(self):
         cnx = self.login('stduser')
-        session = self.current_session()
+        session = self.session
         user = cnx.user(session)
         user.fire_transition('deactivate')
         cnx.commit()

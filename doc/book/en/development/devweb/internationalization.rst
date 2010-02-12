@@ -43,23 +43,23 @@ marked in one of the following ways :
 
          def call(self, **kwargs):
              self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
-                 % self.req._('No result matching query'))
+                 % self._cw._('No result matching query'))
 
 The goal of the *built-in* function `_` is only **to mark the
 translatable strings**, it will only return the string to translate
 itself, but not its translation (it's actually another name for the
 `unicode` builtin).
 
-In the other hand the request's method `self.req._` is meant to retrieve the
+In the other hand the request's method `self._cw._` is meant to retrieve the
 proper translation of translation strings in the requested language.
 
 Finally you can also use the `__` attribute of request object to get a
 translation for a string *which should not itself added to the catalog*,
 usually in case where the actual msgid is created by string interpolation ::
 
-  self.req.__('This %s' % etype)
+  self._cw.__('This %s' % etype)
 
-In this example `req.__` is used instead of `req._` so we don't have 'This %s' in
+In this example ._cw.__` is used instead of ._cw._` so we don't have 'This %s' in
 messages catalogs.
 
 

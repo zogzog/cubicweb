@@ -25,7 +25,7 @@ uicfg.primaryview_section.tag_object_of(('*', 'in_group', 'CWGroup'), 'relations
 uicfg.primaryview_section.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
 
 class UserPreferencesEntityAction(action.Action):
-    id = 'prefs'
+    __regid__ = 'prefs'
     __select__ = (one_line_rset() & implements('CWUser') &
                   match_user_groups('owners', 'managers'))
 
@@ -33,12 +33,12 @@ class UserPreferencesEntityAction(action.Action):
     category = 'mainactions'
 
     def url(self):
-        login = self.rset.get_entity(self.row or 0, self.col or 0).login
-        return self.build_url('cwuser/%s'%login, vid='propertiesform')
+        login = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).login
+        return self._cw.build_url('cwuser/%s'%login, vid='propertiesform')
 
 
 class FoafView(EntityView):
-    id = 'foaf'
+    __regid__ = 'foaf'
     __select__ = implements('CWUser')
 
     title = _('foaf')
@@ -49,13 +49,13 @@ class FoafView(EntityView):
         self.w(u'''<?xml version="1.0" encoding="%s"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"
-         xmlns:foaf="http://xmlns.com/foaf/0.1/"> '''% self.req.encoding)
-        for i in xrange(self.rset.rowcount):
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"> '''% self._cw.encoding)
+        for i in xrange(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</rdf:RDF>\n')
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.w(u'''<foaf:PersonalProfileDocument rdf:about="">
                       <foaf:maker rdf:resource="%s"/>
                       <foaf:primaryTopic rdf:resource="%s"/>

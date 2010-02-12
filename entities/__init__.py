@@ -22,7 +22,7 @@ class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
-    id = 'Any'
+    __regid__ = 'Any'
     __implements__ = (IBreadCrumbs, IFeed)
 
     fetch_attrs = ('modification_date',)
@@ -82,21 +82,20 @@ class AnyEntity(Entity):
 
     def dc_date(self, date_format=None):# XXX default to ISO 8601 ?
         """return latest modification date of this entity"""
-        return self.format_date(self.modification_date, date_format=date_format)
+        return self._cw.format_date(self.modification_date, date_format=date_format)
 
     def dc_type(self, form=''):
         """return the display name for the type of this entity (translated)"""
-        return self.e_schema.display_name(self.req, form)
+        return self.e_schema.display_name(self._cw, form)
 
     def dc_language(self):
         """return language used by this entity (translated)"""
         # check if entities has internationalizable attributes
         # XXX one is enough or check if all String attributes are internationalizable?
         for rschema, attrschema in self.e_schema.attribute_definitions():
-            if rschema.rproperty(self.e_schema, attrschema,
-                                 'internationalizable'):
-                return self.req._(self.req.user.property_value('ui.language'))
-        return self.req._(self.vreg.property_value('ui.language'))
+            if rschema.rdef(self.e_schema, attrschema).internationalizable:
+                return self._cw._(self._cw.user.property_value('ui.language'))
+        return self._cw._(self._cw.vreg.property_value('ui.language'))
 
     @property
     def creator(self):
@@ -122,11 +121,11 @@ class AnyEntity(Entity):
                     path = parent.breadcrumbs(view) + [self]
         if not recurs:
             if view is None:
-                if 'vtitle' in self.req.form:
+                if 'vtitle' in self._cw.form:
                     # embeding for instance
-                    path.append( self.req.form['vtitle'] )
-            elif view.id != 'primary' and hasattr(view, 'title'):
-                path.append( self.req._(view.title) )
+                    path.append( self._cw.form['vtitle'] )
+            elif view.__regid__ != 'primary' and hasattr(view, 'title'):
+                path.append( self._cw._(view.title) )
         return path
 
     ## IFeed interface ########################################################
@@ -163,7 +162,7 @@ class AnyEntity(Entity):
             self.__linkto = {}
         except KeyError:
             pass
-        linktos = list(self.req.list_form_param('__linkto'))
+        linktos = list(self._cw.list_form_param('__linkto'))
         linkedto = []
         for linkto in linktos[:]:
             ltrtype, eid, ltrole = linkto.split(':')
@@ -172,7 +171,7 @@ class AnyEntity(Entity):
                 # hidden input
                 if remove:
                     linktos.remove(linkto)
-                    self.req.form['__linkto'] = linktos
+                    self._cw.form['__linkto'] = linktos
                 linkedto.append(typed_eid(eid))
         self.__linkto[(rtype, role)] = linkedto
         return linkedto
@@ -205,85 +204,6 @@ class AnyEntity(Entity):
         of previously sent email
         """
         return ()
-
-    # XXX deprecates, may be killed once old widgets system is gone ###########
-
-    @classmethod
-    def get_widget(cls, rschema, x='subject'):
-        """return a widget to view or edit a relation
-
-        notice that when the relation support multiple target types, the widget
-        is necessarily the same for all those types
-        """
-        # let ImportError propage if web par isn't available
-        from cubicweb.web.widgets import widget
-        if isinstance(rschema, basestring):
-            rschema = cls.schema.rschema(rschema)
-        if x == 'subject':
-            tschema = rschema.objects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, cls, rschema, tschema, 'subject')
-        else:
-            tschema = rschema.subjects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
-        return wdg
-
-    @deprecated('use EntityFieldsForm.subject_relation_vocabulary')
-    def subject_relation_vocabulary(self, rtype, limit):
-        form = self.vreg.select('forms', 'edition', self.req, entity=self)
-        return form.subject_relation_vocabulary(rtype, limit)
-
-    @deprecated('use EntityFieldsForm.object_relation_vocabulary')
-    def object_relation_vocabulary(self, rtype, limit):
-        form = self.vreg.select('forms', 'edition', self.req, entity=self)
-        return form.object_relation_vocabulary(rtype, limit)
-
-    @deprecated('use AutomaticEntityForm.[e]relations_by_category')
-    def relations_by_category(self, categories=None, permission=None):
-        from cubicweb.web.views.autoform import AutomaticEntityForm
-        return AutomaticEntityForm.erelations_by_category(self, categories, permission)
-
-    @deprecated('use AutomaticEntityForm.[e]srelations_by_category')
-    def srelations_by_category(self, categories=None, permission=None):
-        from cubicweb.web.views.autoform import AutomaticEntityForm
-        return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
-
-    def attribute_values(self, attrname):
-        if self.has_eid() or attrname in self:
-            try:
-                values = self[attrname]
-            except KeyError:
-                values = getattr(self, attrname)
-            # actual relation return a list of entities
-            if isinstance(values, list):
-                return [v.eid for v in values]
-            return (values,)
-        # the entity is being created, try to find default value for
-        # this attribute
-        try:
-            values = self.req.form[attrname]
-        except KeyError:
-            try:
-                values = self[attrname] # copying
-            except KeyError:
-                values = getattr(self, 'default_%s' % attrname,
-                                 self.e_schema.default(attrname))
-                if callable(values):
-                    values = values()
-        if values is None:
-            values = ()
-        elif not isinstance(values, (list, tuple)):
-            values = (values,)
-        return values
-
-    def use_fckeditor(self, attr):
-        """return True if fckeditor should be used to edit entity's attribute named
-        `attr`, according to user preferences
-        """
-        if self.req.use_fckeditor() and self.e_schema.has_metadata(attr, 'format'):
-            if self.has_eid() or '%s_format' % attr in self:
-                return self.attr_metadata(attr, 'format') == 'text/html'
-            return self.req.property_value('ui.default-text-format') == 'text/html'
-        return False
 
 # XXX:  store a reference to the AnyEntity class since it is hijacked in goa
 #       configuration and we need the actual reference to avoid infinite loops

@@ -57,7 +57,7 @@ class GAEAuthenticationManager(AbstractAuthenticationManager):
         clear_cache(req, 'cursor')
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=False)
-        cnx = repo_connect(self._repo, login, password, cnxprops=cnxprops)
+        cnx = repo_connect(self._repo, login, password=password, cnxprops=cnxprops)
         self._init_cnx(cnx, login, password)
         # associate the connection to the current request
         req.set_connection(cnx)
@@ -73,9 +73,9 @@ class GAEAuthenticationManager(AbstractAuthenticationManager):
 class GAEPersistentSessionManager(AbstractSessionManager):
     """manage session data associated to a session identifier"""
 
-    def __init__(self, *args, **kwargs):
-        super(GAEPersistentSessionManager, self).__init__(*args, **kwargs)
-        self._repo = self.config.repository(vreg=self.vreg)
+    def __init__(self, vreg, *args, **kwargs):
+        super(GAEPersistentSessionManager, self).__init__(vreg, *args, **kwargs)
+        self._repo = self.config.repository(vreg=vreg)
 
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""
@@ -251,7 +251,7 @@ from cubicweb import set_log_methods
 set_log_methods(ConnectionProxy, logging.getLogger('cubicweb.web.goa.session'))
 
 
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 from cubicweb.web import application
 
 class SessionsCleaner(StartupView):

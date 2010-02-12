@@ -19,20 +19,20 @@ class AddRelationView(EditRelationBoxTemplate):
     class attributes.
     """
     __registry__ = 'views'
+    __regid__ = 'xaddrelation'
     __select__ = (match_form_params('rtype', 'target')
                   | match_kwargs('rtype', 'target'))
-    property_defs = {} # don't want to inherit this from Box
-    id = 'xaddrelation'
+    cw_property_defs = {} # don't want to inherit this from Box
     expected_kwargs = form_params = ('rtype', 'target')
 
     build_js = EditRelationBoxTemplate.build_reload_js_call
 
     def cell_call(self, row, col, rtype=None, target=None, etype=None):
-        self.rtype = rtype or self.req.form['rtype']
-        self.target = target or self.req.form['target']
-        self.etype = etype or self.req.form.get('etype')
-        entity = self.entity(row, col)
-        rschema = self.schema.rschema(self.rtype)
+        self.rtype = rtype or self._cw.form['rtype']
+        self.target = target or self._cw.form['target']
+        self.etype = etype or self._cw.form.get('etype')
+        entity = self.cw_rset.get_entity(row, col)
+        rschema = self._cw.vreg.schema.rschema(self.rtype)
         if not self.etype:
             if self.target == 'object':
                 etypes = rschema.objects(entity.e_schema)
@@ -40,9 +40,9 @@ class AddRelationView(EditRelationBoxTemplate):
                 etypes = rschema.subjects(entity.e_schema)
             if len(etypes) == 1:
                 self.etype = etypes[0]
-        self.w(u'<div id="%s">' % self.id)
-        self.w(u'<h1>%s</h1>' % self.req._('relation %(relname)s of %(ent)s')
-               % {'relname': rschema.display_name(self.req, role(self)),
+        self.w(u'<div id="%s">' % self.__regid__)
+        self.w(u'<h1>%s</h1>' % self._cw._('relation %(relname)s of %(ent)s')
+               % {'relname': rschema.display_name(self._cw, role(self)),
                   'ent': entity.view('incontext')})
         self.w(u'<ul>')
         for boxitem in self.unrelated_boxitems(entity):
@@ -59,13 +59,13 @@ class AddRelationView(EditRelationBoxTemplate):
         if getattr(self, 'etype', None):
             rset = entity.unrelated(self.rtype, self.etype, role(self),
                                     ordermethod='fetch_order')
-            self.pagination(self.req, rset, w=self.w)
+            self.pagination(self._cw, rset, w=self.w)
             return rset.entities()
         # in other cases, use vocabulary functions
         entities = []
         # XXX to update for 3.2
         for _, eid in entity.vocabulary(self.rtype, role(self)):
             if eid is not None:
-                rset = self.req.eid_rset(eid)
+                rset = self._cw.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))
         return entities

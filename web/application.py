@@ -29,19 +29,19 @@ SESSION_MANAGER = None
 
 class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
-    id = 'sessionmanager'
+    __regid__ = 'sessionmanager'
 
-    def __init__(self):
-        self.session_time = self.vreg.config['http-session-time'] or None
+    def __init__(self, vreg):
+        self.session_time = vreg.config['http-session-time'] or None
         assert self.session_time is None or self.session_time > 0
-        self.cleanup_session_time = self.vreg.config['cleanup-session-time'] or 43200
+        self.cleanup_session_time = vreg.config['cleanup-session-time'] or 43200
         assert self.cleanup_session_time > 0
-        self.cleanup_anon_session_time = self.vreg.config['cleanup-anonymous-session-time'] or 120
+        self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 120
         assert self.cleanup_anon_session_time > 0
         if self.session_time:
             assert self.cleanup_session_time < self.session_time
             assert self.cleanup_anon_session_time < self.session_time
-        self.authmanager = self.vreg['components'].select('authmanager')
+        self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
@@ -92,6 +92,10 @@ class AbstractSessionManager(component.Component):
 class AbstractAuthenticationManager(component.Component):
     """authenticate user associated to a request and check session validity"""
     id = 'authmanager'
+    vreg = None # XXX necessary until property for deprecation warning is on appobject
+
+    def __init__(self, vreg):
+        self.vreg = vreg
 
     def authenticate(self, req):
         """authenticate user and return corresponding user object
@@ -113,7 +117,8 @@ class CookieSessionHandler(object):
 
     def __init__(self, appli):
         self.vreg = appli.vreg
-        self.session_manager = self.vreg['components'].select('sessionmanager')
+        self.session_manager = self.vreg['components'].select('sessionmanager',
+                                                              vreg=self.vreg)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
         if not 'last_login_time' in self.vreg.schema:
@@ -122,7 +127,8 @@ class CookieSessionHandler(object):
 
     def reset_session_manager(self):
         data = self.session_manager.dump_data()
-        self.session_manager = self.vreg['components'].select('sessionmanager')
+        self.session_manager = self.vreg['components'].select('sessionmanager',
+                                                              vreg=self.vreg)
         self.session_manager.restore_data(data)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
@@ -229,19 +235,12 @@ class CubicWebPublisher(object):
         self.info('starting web instance from %s', config.apphome)
         if vreg is None:
             vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
-            need_set_schema = True
-        else:
-            # vreg is specified during test and the vreg is already properly
-            # initialized. Even, reinitializing it may cause some unwanted
-            # side effect due to unproper reloading of appobjects modules
-            need_set_schema = False
         self.vreg = vreg
         # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)
         if not vreg.initialized:
             self.config.init_cubes(self.repo.get_cubes())
             vreg.init_properties(self.repo.properties())
-        if need_set_schema:
             vreg.set_schema(self.repo.get_schema())
         # set the correct publish method
         if config['query-log-file']:
@@ -258,7 +257,8 @@ class CubicWebPublisher(object):
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_urlresolver)
 
     def set_urlresolver(self):
-        self.url_resolver = self.vreg['components'].select('urlpublisher')
+        self.url_resolver = self.vreg['components'].select('urlpublisher',
+                                                           vreg=self.vreg)
 
     def connect(self, req):
         """return a connection for a logged user object according to existing
@@ -291,7 +291,7 @@ class CubicWebPublisher(object):
             finally:
                 self._logfile_lock.release()
 
-    @deprecated("use vreg.select('controllers', ...)")
+    @deprecated("[3.4] use vreg['controllers'].select(...)")
     def select_controller(self, oid, req):
         try:
             return self.vreg['controllers'].select(oid, req=req, appli=self)
@@ -374,7 +374,7 @@ class CubicWebPublisher(object):
     def validation_error_handler(self, req, ex):
         ex.errors = dict((k, v) for k, v in ex.errors.items())
         if '__errorurl' in req.form:
-            forminfo = {'errors': ex,
+            forminfo = {'error': ex,
                         'values': req.form,
                         'eidmap': req.data.get('eidmap', {})
                         }

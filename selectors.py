@@ -45,8 +45,8 @@ __docformat__ = "restructuredtext en"
 import logging
 from warnings import warn, filterwarnings
 
+from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
-from logilab.common.deprecation import deprecated
 from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
@@ -55,6 +55,7 @@ from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       role, typed_eid)
 # even if not used, let yes here so it's importable through this module
 from cubicweb.appobject import Selector, objectify_selector, yes
+from cubicweb.vregistry import class_regid
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
@@ -75,13 +76,14 @@ def lltrace(selector):
         else:
             selname = selector.__name__
             vobj = cls
-        oid = vobj.id
+        oid = class_regid(vobj)
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
             #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-            print '%s -> %s for %s' % (selname, ret, vobj)
+            print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
         return ret
     traced.__name__ = selector.__name__
+    traced.__doc__ = selector.__doc__
     return traced
 
 class traced_selection(object):
@@ -113,13 +115,13 @@ class traced_selection(object):
         return traceback is None
 
 
-def score_interface(cls_or_inst, cls, iface):
+def score_interface(etypesreg, cls_or_inst, cls, iface):
     """Return XXX if the give object (maybe an instance or class) implements
     the interface.
     """
     if getattr(iface, '__registry__', None) == 'etypes':
         # adjust score if the interface is an entity class
-        parents = cls_or_inst.parent_classes()
+        parents = etypesreg.parent_classes(cls_or_inst.__regid__)
         if iface is cls:
             return len(parents) + 4
         if iface is parents[-1]: # Any
@@ -134,7 +136,7 @@ def score_interface(cls_or_inst, cls, iface):
     return 0
 
 
-# abstract selectors ##########################################################
+# abstract selectors / mixin helpers ###########################################
 
 class PartialSelectorMixIn(object):
     """convenience mix-in for selectors that will look into the containing
@@ -158,32 +160,44 @@ class ImplementsMixIn(object):
         return '%s(%s)' % (self.__class__.__name__,
                            ','.join(str(s) for s in self.expected_ifaces))
 
-    def score_interfaces(self, cls_or_inst, cls):
+    def score_interfaces(self, req, cls_or_inst, cls):
         score = 0
-        vreg, eschema = cls_or_inst.vreg, cls_or_inst.e_schema
+        etypesreg = req.vreg['etypes']
+        eschema = cls_or_inst.e_schema
         for iface in self.expected_ifaces:
             if isinstance(iface, basestring):
                 # entity type
                 try:
-                    iface = vreg['etypes'].etype_class(iface)
+                    iface = etypesreg.etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
-            score += score_interface(cls_or_inst, cls, iface)
+            score += score_interface(etypesreg, cls_or_inst, cls, iface)
         return score
 
 
 class EClassSelector(Selector):
-    """abstract class for selectors working on the entity classes of the result
-    set. Its __call__ method has the following behaviour:
+    """abstract class for selectors working on *entity class(es)* specified
+    explicitly or found of the result set.
 
-    * if row is specified, return the score returned by the score_class method
-      called with the entity class found in the specified cell
-    * else return the sum of score returned by the score_class method for each
-      entity type found in the specified column, unless:
+    Here are entity lookup / scoring rules:
+
+    * if `entity` is specified, return score for this entity's class
+
+    * elif `row` is specified, return score for the class of the entity
+      found in the specified cell, using column specified by `col` or 0
+
+    * else return the sum of scores for each entity class found in the column
+      specified specified by the `col` argument or in column 0 if not specified,
+      unless:
+
+      - `once_is_enough` is False (the default) and some entity class is scored
+        to 0, in which case 0 is returned
+
       - `once_is_enough` is True, in which case the first non-zero score is
         returned
-      - `once_is_enough` is False, in which case if score_class return 0, 0 is
-        returned
+
+      - `accept_none` is False and some cell in the column has a None value
+        (this may occurs with outer join)
     """
     def __init__(self, once_is_enough=False, accept_none=True):
         self.once_is_enough = once_is_enough
@@ -191,6 +205,8 @@ class EClassSelector(Selector):
 
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        if kwargs.get('entity'):
+            return self.score_class(kwargs['entity'].__class__, req)
         if not rset:
             return 0
         score = 0
@@ -216,29 +232,42 @@ class EClassSelector(Selector):
     def score(self, cls, req, etype):
         if etype in BASE_TYPES:
             return 0
-        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        return self.score_class(req.vreg['etypes'].etype_class(etype), req)
 
     def score_class(self, eclass, req):
         raise NotImplementedError()
 
 
 class EntitySelector(EClassSelector):
-    """abstract class for selectors working on the entity instances of the
-    result set. Its __call__ method has the following behaviour:
+    """abstract class for selectors working on *entity instance(s)* specified
+    explicitly or found of the result set.
 
-    * if 'entity' find in kwargs, return the score returned by the score_entity
-      method for this entity
-    * if row is specified, return the score returned by the score_entity method
-      called with the entity instance found in the specified cell
-    * else return the sum of score returned by the score_entity method for each
-      entity found in the specified column, unless:
+    Here are entity lookup / scoring rules:
+
+    * if `entity` is specified, return score for this entity
+
+    * elif `row` is specified, return score for the entity found in the
+      specified cell, using column specified by `col` or 0
+
+    * else return the sum of scores for each entity found in the column
+      specified specified by the `col` argument or in column 0 if not specified,
+      unless:
+
+      - `once_is_enough` is False (the default) and some entity is scored
+        to 0, in which case 0 is returned
+
       - `once_is_enough` is True, in which case the first non-zero score is
         returned
-      - `once_is_enough` is False, in which case if score_class return 0, 0 is
-        returned
 
-    note: None values (resulting from some outer join in the query) are not
-          considered.
+      - `accept_none` is False and some cell in the column has a None value
+        (this may occurs with outer join)
+
+    .. note::
+       using EntitySelector or EClassSelector as base selector class impacts
+       performance, since when no entity or row is specified the later works on
+       every different *entity class* found in the result set, while the former
+       works on each *entity* (eg each row of the result set), which may be much
+       more costly.
     """
 
     @lltrace
@@ -252,6 +281,8 @@ class EntitySelector(EClassSelector):
             col = col or 0
             for row, rowvalue in enumerate(rset.rows):
                 if rowvalue[col] is None: # outer join
+                    if not self.accept_none:
+                        return 0
                     continue
                 escore = self.score(req, rset, row, col)
                 if not escore and not self.once_is_enough:
@@ -276,174 +307,9 @@ class EntitySelector(EClassSelector):
         raise NotImplementedError()
 
 
-# very basic selectors ########################################################
-
-@objectify_selector
-@lltrace
-def none_rset(cls, req, rset=None, **kwargs):
-    """accept no result set (e.g. given rset is None)"""
-    if rset is None:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def any_rset(cls, req, rset=None, **kwargs):
-    """accept result set, whatever the number of result it contains"""
-    if rset is not None:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def nonempty_rset(cls, req, rset=None, **kwargs):
-    """accept any non empty result set"""
-    if rset is not None and rset.rowcount:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def empty_rset(cls, req, rset=None, **kwargs):
-    """accept empty result set"""
-    if rset is not None and rset.rowcount == 0:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def one_line_rset(cls, req, rset=None, row=None, **kwargs):
-    """if row is specified, accept result set with a single line of result,
-    else accepts anyway
-    """
-    if rset is not None and (row is not None or rset.rowcount == 1):
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def two_lines_rset(cls, req, rset=None, **kwargs):
-    """accept result set with *at least* two lines of result"""
-    if rset is not None and rset.rowcount > 1:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def two_cols_rset(cls, req, rset=None, **kwargs):
-    """accept result set with at least one line and two columns of result"""
-    if rset is not None and rset.rowcount and len(rset.rows[0]) > 1:
-        return 1
-    return 0
-
-@objectify_selector
-@lltrace
-def paginated_rset(cls, req, rset=None, **kwargs):
-    """accept result set with more lines than the page size.
-
-    Page size is searched in (respecting order):
-    * a page_size argument
-    * a page_size form parameters
-    * the navigation.page-size property
-    """
-    page_size = kwargs.get('page_size')
-    if page_size is None:
-        page_size = req.form.get('page_size')
-        if page_size is None:
-            page_size = req.property_value('navigation.page-size')
-        else:
-            page_size = int(page_size)
-    if rset is None or rset.rowcount <= page_size:
-        return 0
-    return 1
-
-@objectify_selector
-@lltrace
-def sorted_rset(cls, req, rset=None, **kwargs):
-    """accept sorted result set"""
-    rqlst = rset.syntax_tree()
-    if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
-        return 0
-    return 2
-
-@objectify_selector
-@lltrace
-def one_etype_rset(cls, req, rset=None, col=0, **kwargs):
-    """accept result set where entities in the specified column (or 0) are all
-    of the same type
-    """
-    if rset is None:
-        return 0
-    if len(rset.column_types(col)) != 1:
-        return 0
-    return 1
-
-@objectify_selector
-@lltrace
-def two_etypes_rset(cls, req, rset=None, col=0, **kwargs):
-    """accept result set where entities in the specified column (or 0) are not
-    of the same type
-    """
-    if rset:
-        etypes = rset.column_types(col)
-        if len(etypes) > 1:
-            return 1
-    return 0
-
-class non_final_entity(EClassSelector):
-    """accept if entity type found in the result set is non final.
-
-    See `EClassSelector` documentation for behaviour when row is not specified.
-    """
-    def score(self, cls, req, etype):
-        if etype in BASE_TYPES:
-            return 0
-        return 1
-
-@objectify_selector
-@lltrace
-def authenticated_user(cls, req, *args, **kwargs):
-    """accept if user is authenticated"""
-    if req.cnx.anonymous_connection:
-        return 0
-    return 1
-
-def anonymous_user():
-    return ~ authenticated_user()
-
-@objectify_selector
-@lltrace
-def primary_view(cls, req, rset=None, row=None, col=0, view=None, **kwargs):
-    """accept if view given as named argument is a primary view, or if no view
-    is given
-    """
-    if view is not None and not view.is_primary():
-        return 0
-    return 1
-
-@objectify_selector
-@lltrace
-def match_context_prop(cls, req, rset=None, row=None, col=0, context=None,
-                       **kwargs):
-    """accept if:
-    * no context given
-    * context (`basestring`) is matching the context property value for the
-      given cls
-    """
-    propval = req.property_value('%s.%s.context' % (cls.__registry__, cls.id))
-    if not propval:
-        propval = cls.context
-    if context is not None and propval and context != propval:
-        return 0
-    return 1
-
-
-class match_search_state(Selector):
-    """accept if the current request search state is in one of the expected
-    states given to the initializer
-
-    :param expected: either 'normal' or 'linksearch' (eg searching for an
-                     object to create a relation with another)
+class ExpectedValueSelector(Selector):
+    """Take a list of expected values as initializer argument, check
+    _get_value method return one of these expected values.
     """
     def __init__(self, *expected):
         assert expected, self
@@ -454,356 +320,402 @@ class match_search_state(Selector):
                            ','.join(sorted(str(s) for s in self.expected)))
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        try:
-            if not req.search_state[0] in self.expected:
-                return 0
-        except AttributeError:
-            return 1 # class doesn't care about search state, accept it
-        return 1
+    def __call__(self, cls, req, **kwargs):
+        if self._get_value(cls, req, **kwargs) in self.expected:
+            return 1
+        return 0
+
+    def _get_value(self, cls, req, **kwargs):
+        raise NotImplementedError()
 
 
-class match_form_params(match_search_state):
-    """accept if parameters specified as initializer arguments are specified
-    in request's form parameters
+# bare selectors ##############################################################
 
-    :param *expected: parameters (eg `basestring`) which are expected to be
-                      found in request's form parameters
+class match_kwargs(ExpectedValueSelector):
+    """Return non-zero score if parameter names specified as initializer
+    arguments are specified in the input context. When multiple parameters are
+    specified, all of them should be specified in the input context. Return a
+    score corresponding to the number of expected parameters.
     """
 
     @lltrace
-    def __call__(self, cls, req, *args, **kwargs):
-        score = 0
-        for param in self.expected:
-            if not param in req.form:
-                return 0
-            score += 1
-        return len(self.expected)
-
-
-class match_kwargs(match_search_state):
-    """accept if parameters specified as initializer arguments are specified
-    in named arguments given to the selector
-
-    :param *expected: parameters (eg `basestring`) which are expected to be
-                      found in named arguments (kwargs)
-    """
-
-    @lltrace
-    def __call__(self, cls, req, *args, **kwargs):
+    def __call__(self, cls, req, **kwargs):
         for arg in self.expected:
             if not arg in kwargs:
                 return 0
         return len(self.expected)
 
 
-class match_user_groups(match_search_state):
-    """accept if logged users is in at least one of the given groups. Returned
-    score is the number of groups in which the user is.
-
-    If the special 'owners' group is given:
-    * if row is specified check the entity at the given row/col is owned by the
-      logged user
-    * if row is not specified check all entities in col are owned by the logged
-      user
-
-    :param *required_groups: name of groups (`basestring`) in which the logged
-                             user should be
-    """
-
-    @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        user = req.user
-        if user is None:
-            return int('guests' in self.expected)
-        score = user.matching_groups(self.expected)
-        if not score and 'owners' in self.expected and rset:
-            if row is not None:
-                if not user.owns(rset[row][col]):
-                    return 0
-                score = 1
-            else:
-                score = all(user.owns(r[col]) for r in rset)
-        return score
-
-
-class match_transition(match_search_state):
-    @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        try:
-            # XXX check this is a transition that apply to the object?
-            if not kwargs['transition'].name in self.expected:
-                return 0
-        except KeyError:
-            return 0
-        return 1
-
-
-class match_view(match_search_state):
-    """accept if the current view is in one of the expected vid given to the
-    initializer
-    """
-    @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, view=None, **kwargs):
-        if view is None or not view.id in self.expected:
-            return 0
-        return 1
-
-
 class appobject_selectable(Selector):
-    """accept with another appobject is selectable using selector's input
-    context.
+    """return 1 if another appobject is selectable using the same input context.
 
-    :param registry: a registry name (`basestring`)
-    :param oid: an object identifier (`basestring`)
+    Initializer arguments:
+    * `registry`, a registry name
+    * `regid`, an object identifier in this registry
     """
-    def __init__(self, registry, oid):
+    def __init__(self, registry, regid):
         self.registry = registry
-        self.oid = oid
+        self.regid = regid
 
     def __call__(self, cls, req, **kwargs):
         try:
-            cls.vreg[self.registry].select(self.oid, req, **kwargs)
+            req.vreg[self.registry].select(self.regid, req, **kwargs)
             return 1
         except NoSelectableObject:
             return 0
 
 
-# not so basic selectors ######################################################
+# rset selectors ##############################################################
 
-class implements(ImplementsMixIn, EClassSelector):
-    """accept if entity classes found in the result set implements at least one
-    of the interfaces given as argument. Returned score is the number of
-    implemented interfaces.
+@objectify_selector
+@lltrace
+def none_rset(cls, req, rset=None, **kwargs):
+    """Return 1 if the result set is None (eg usually not specified)."""
+    if rset is None:
+        return 1
+    return 0
 
-    See `EClassSelector` documentation for behaviour when row is not specified.
 
-    :param *expected_ifaces: expected interfaces. An interface may be a class
-                             or an entity type (e.g. `basestring`) in which case
-                             the associated class will be searched in the
-                             registry (at selection time)
+# XXX == ~ none_rset
+@objectify_selector
+@lltrace
+def any_rset(cls, req, rset=None, **kwargs):
+    """Return 1 for any result set, whatever the number of rows in it, even 0."""
+    if rset is not None:
+        return 1
+    return 0
 
-    note: when interface is an entity class, the score will reflect class
-          proximity so the most specific object'll be selected
+
+@objectify_selector
+@lltrace
+def nonempty_rset(cls, req, rset=None, **kwargs):
+    """Return 1 for result set containing one ore more rows."""
+    if rset is not None and rset.rowcount:
+        return 1
+    return 0
+
+
+# XXX == ~ nonempty_rset
+@objectify_selector
+@lltrace
+def empty_rset(cls, req, rset=None, **kwargs):
+    """Return 1 for result set which doesn't contain any row."""
+    if rset is not None and rset.rowcount == 0:
+        return 1
+    return 0
+
+
+# XXX == multi_lines_rset(1)
+@objectify_selector
+@lltrace
+def one_line_rset(cls, req, rset=None, row=None, **kwargs):
+    """Return 1 if the result set is of size 1 or if a specific row in the
+    result set is specified ('row' argument).
     """
-    def score_class(self, eclass, req):
-        return self.score_interfaces(eclass, eclass)
+    if rset is not None and (row is not None or rset.rowcount == 1):
+        return 1
+    return 0
 
 
-class specified_etype_implements(implements):
-    """accept if entity class specified using an 'etype' parameters in name
-    argument or request form implements at least one of the interfaces given as
-    argument. Returned score is the number of implemented interfaces.
+class multi_lines_rset(Selector):
+    """If `nb`is specified, return 1 if the result set has exactly `nb` row of
+    result. Else (`nb` is None), return 1 if the result set contains *at least*
+    two rows.
+    """
+    def __init__(self, nb=None):
+        self.expected = nb
 
-    :param *expected_ifaces: expected interfaces. An interface may be a class
-                             or an entity type (e.g. `basestring`) in which case
-                             the associated class will be searched in the
-                             registry (at selection time)
+    def match_expected(self, num):
+        if self.expected is None:
+            return num > 1
+        return num == self.expected
 
-    note: when interface is an entity class, the score will reflect class
-          proximity so the most specific object'll be selected
+    @lltrace
+    def __call__(self, cls, req, rset=None, **kwargs):
+        return rset is not None and self.match_expected(rset.rowcount)
+
+
+class multi_columns_rset(multi_lines_rset):
+    """If `nb`is specified, return 1 if the result set has exactly `nb` column
+    per row. Else (`nb` is None), return 1 if the result set contains *at least*
+    two columns per row. Return 0 for empty result set.
     """
 
     @lltrace
-    def __call__(self, cls, req, *args, **kwargs):
-        try:
-            etype = kwargs['etype']
-        except KeyError:
-            try:
-                etype = req.form['etype']
-            except KeyError:
-                return 0
-            else:
-                # only check this is a known type if etype comes from req.form,
-                # else we want the error to propagate
-                try:
-                    etype = cls.vreg.case_insensitive_etypes[etype.lower()]
-                    req.form['etype'] = etype
-                except KeyError:
-                    return 0
-        score = self.score_class(cls.vreg['etypes'].etype_class(etype), req)
-        if score:
-            eschema = req.vreg.schema.eschema(etype)
-            if eschema.has_local_role('add') or eschema.has_perm(req, 'add'):
-                return score
+    def __call__(self, cls, req, rset=None, **kwargs):
+        # 'or 0' since we *must not* return None
+        return rset and self.match_expected(len(rset.rows[0])) or 0
+
+
+@objectify_selector
+@lltrace
+def paginated_rset(cls, req, rset=None, **kwargs):
+    """Return 1 for result set with more rows than a page size.
+
+    Page size is searched in (respecting order):
+    * a `page_size` argument
+    * a `page_size` form parameters
+    * the :ref:`navigation.page-size` property
+    """
+    if rset is None:
         return 0
+    page_size = kwargs.get('page_size')
+    if page_size is None:
+        page_size = req.form.get('page_size')
+        if page_size is None:
+            page_size = req.property_value('navigation.page-size')
+        else:
+            page_size = int(page_size)
+    if rset.rowcount <= page_size:
+        return 0
+    return 1
 
 
-class entity_implements(ImplementsMixIn, EntitySelector):
-    """accept if entity instances found in the result set implements at least one
-    of the interfaces given as argument. Returned score is the number of
-    implemented interfaces.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-
-    :param *expected_ifaces: expected interfaces. An interface may be a class
-                             or an entity type (e.g. `basestring`) in which case
-                             the associated class will be searched in the
-                             registry (at selection time)
-
-    note: when interface is an entity class, the score will reflect class
-          proximity so the most specific object'll be selected
+@objectify_selector
+@lltrace
+def sorted_rset(cls, req, rset=None, **kwargs):
+    """Return 1 for sorted result set (e.g. from an RQL query containing an
+    :ref:ORDERBY clause.
     """
-    def score_entity(self, entity):
-        return self.score_interfaces(entity, entity.__class__)
+    if rset is None:
+        return 0
+    rqlst = rset.syntax_tree()
+    if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
+        return 0
+    return 2
 
 
-class relation_possible(EClassSelector):
-    """accept if entity class found in the result set support the relation.
-
-    See `EClassSelector` documentation for behaviour when row is not specified.
-
-    :param rtype: a relation type (`basestring`)
-    :param role: the role of the result set entity in the relation. 'subject' or
-                 'object', default to 'subject'.
-    :param target_type: if specified, check the relation's end may be of this
-                        target type (`basestring`)
-    :param action: a relation schema action (one of 'read', 'add', 'delete')
-                   which must be granted to the logged user, else a 0 score will
-                   be returned
+# XXX == multi_etypes_rset(1)
+@objectify_selector
+@lltrace
+def one_etype_rset(cls, req, rset=None, col=0, **kwargs):
+    """Return 1 if the result set contains entities which are all of the same
+    type in the column specified by the `col` argument of the input context, or
+    in column 0.
     """
+    if rset is None:
+        return 0
+    if len(rset.column_types(col)) != 1:
+        return 0
+    return 1
+
+
+class multi_etypes_rset(multi_lines_rset):
+    """If `nb` is specified, return 1 if the result set contains `nb` different
+    types of entities in the column specified by the `col` argument of the input
+    context, or in column 0. If `nb` is None, return 1 if the result set contains
+    *at least* two different types of entities.
+    """
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, col=0, **kwargs):
+        # 'or 0' since we *must not* return None
+        return rset and self.match_expected(len(rset.column_types(col))) or 0
+
+
+# entity selectors #############################################################
+
+class non_final_entity(EClassSelector):
+    """Return 1 for entity of a non final entity type(s). Remember, "final"
+    entity types are String, Int, etc... This is equivalent to
+    `implements('Any')` but more optimized.
+
+    See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
+    class lookup / score rules according to the input context.
+    """
+    def score(self, cls, req, etype):
+        if etype in BASE_TYPES:
+            return 0
+        return 1
+
+
+class implements(ImplementsMixIn, EClassSelector):
+    """Return non-zero score for entity that are of the given type(s) or
+    implements at least one of the given interface(s). If multiple arguments are
+    given, matching one of them is enough.
+
+    Entity types should be given as string, the corresponding class will be
+    fetched from the entity types registry at selection time.
+
+    See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
+    class lookup / score rules according to the input context.
+
+    .. note:: when interface is an entity class, the score will reflect class
+              proximity so the most specific object will be selected.
+    """
+    def score_class(self, eclass, req):
+        return self.score_interfaces(req, eclass, eclass)
+
+
+class score_entity(EntitySelector):
+    """Return score according to an arbitrary function given as argument which
+    will be called with input content entity as argument.
+
+    This is a very useful selector that will usually interest you since it
+    allows a lot of things without having to write a specific selector.
+
+    See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
+    lookup / score rules according to the input context.
+    """
+    def __init__(self, scorefunc, once_is_enough=False):
+        super(score_entity, self).__init__(once_is_enough)
+        def intscore(*args, **kwargs):
+            score = scorefunc(*args, **kwargs)
+            if not score:
+                return 0
+            if isinstance(score, (int, long)):
+                return score
+            return 1
+        self.score_entity = intscore
+
+
+class relation_possible(EntitySelector):
+    """Return 1 for entity that supports the relation, provided that the
+    request's user may do some `action` on it (see below).
+
+    The relation is specified by the following initializer arguments:
+
+    * `rtype`, the name of the relation
+
+    * `role`, the role of the entity in the relation, either 'subject' or
+      'object', default to 'subject'
+
+    * `target_etype`, optional name of an entity type that should be supported
+      at the other end of the relation
+
+    * `action`, a relation schema action (e.g. one of 'read', 'add', 'delete',
+      default to 'read') which must be granted to the user, else a 0 score will
+      be returned
+
+    * `strict`, boolean (default to False) telling what to do when the user has
+      not globally the permission for the action (eg the action is not granted
+      to one of the user's groups)
+
+      - when strict is False, if there are some local role defined for this
+        action (e.g. using rql expressions), then the permission will be
+        considered as granted
+
+      - when strict is True, then the permission will be actually checked for
+        each entity
+
+    Setting `strict` to True impacts performance for large result set since
+    you'll then get the :class:`~cubicweb.selectors.EntitySelector` behaviour
+    while otherwise you get the :class:`~cubicweb.selectors.EClassSelector`'s
+    one. See those classes documentation for entity lookup / score rules
+    according to the input context.
+    """
+
     def __init__(self, rtype, role='subject', target_etype=None,
-                 action='read', once_is_enough=False):
-        super(relation_possible, self).__init__(once_is_enough)
+                 action='read', strict=False, **kwargs):
+        super(relation_possible, self).__init__(**kwargs)
         self.rtype = rtype
         self.role = role
         self.target_etype = target_etype
         self.action = action
+        self.strict = strict
 
-    @lltrace
-    def __call__(self, cls, req, *args, **kwargs):
-        rschema = cls.schema.rschema(self.rtype)
-        if not (rschema.has_perm(req, self.action)
-                or rschema.has_local_role(self.action)):
-            return 0
-        if self.action != 'read':
-            if not (rschema.has_perm(req, 'read')
-                    or rschema.has_local_role('read')):
-                return 0
-        score = super(relation_possible, self).__call__(cls, req, *args, **kwargs)
-        return score
+    # hack hack hack
+    def __call__(self, cls, req, **kwargs):
+        if self.strict:
+            return EntitySelector.__call__(self, cls, req, **kwargs)
+        return EClassSelector.__call__(self, cls, req, **kwargs)
 
-    def score_class(self, eclass, req):
+    def score(self, *args):
+        if self.strict:
+            return EntitySelector.score(self, *args)
+        return EClassSelector.score(self, *args)
+
+    def _get_rschema(self, eclass):
         eschema = eclass.e_schema
         try:
             if self.role == 'object':
-                rschema = eschema.objrels[self.rtype]
+                return eschema.objrels[self.rtype]
             else:
-                rschema = eschema.subjrels[self.rtype]
+                return eschema.subjrels[self.rtype]
         except KeyError:
-            return 0
+            return None
+
+    def score_class(self, eclass, req):
+        rschema = self._get_rschema(eclass)
+        if rschema is None:
+            return 0 # relation not supported
+        eschema = eclass.e_schema
         if self.target_etype is not None:
             try:
-                if self.role == 'subject':
-                    return int(self.target_etype in rschema.objects(eschema))
-                else:
-                    return int(self.target_etype in rschema.subjects(eschema))
+                rdef = rschema.role_rdef(eschema, self.target_etype, self.role)
+                if not rdef.may_have_permission(self.action, req):
+                    return 0
             except KeyError:
                 return 0
+        else:
+            return rschema.may_have_permission(self.action, req, eschema, self.role)
+        return 1
+
+    def score_entity(self, entity):
+        rschema = self._get_rschema(entity)
+        if rschema is None:
+            return 0 # relation not supported
+        if self.target_etype is not None:
+            rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
+        if self.role == 'subject':
+            if not rschema.has_perm(entity._cw, 'add', fromeid=entity.eid):
+                return 0
+        elif not rschema.has_perm(entity._cw, 'add', toeid=entity.eid):
+            return 0
         return 1
 
 
 class partial_relation_possible(PartialSelectorMixIn, relation_possible):
-    """partial version of the relation_possible selector
+    """Same as :class:~`cubicweb.selectors.relation_possible`, but will look for
+    attributes of the selected class to get information which is otherwise
+    expected by the initializer, except for `action` and `strict` which are kept
+    as initializer arguments.
 
-    The selector will look for class attributes to find its missing
-    information. The list of attributes required on the class
-    for this selector are:
-
-    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
-
-    - `role`: this attribute will be passed to the `cubicweb.role` function
-      to determine the role of class in the relation
-
-    - `etype` (optional): the entity type on the other side of the relation
-
-    :param action: a relation schema action (one of 'read', 'add', 'delete')
-                   which must be granted to the logged user, else a 0 score will
-                   be returned
+    This is useful to predefine selector of an abstract class designed to be
+    customized.
     """
-    def __init__(self, action='read', once_is_enough=False):
+    def __init__(self, action='read', **kwargs):
         super(partial_relation_possible, self).__init__(None, None, None,
-                                                        action, once_is_enough)
+                                                        action, **kwargs)
 
     def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
         self.target_etype = getattr(cls, 'etype', None)
-
-
-class may_add_relation(EntitySelector):
-    """accept if the relation can be added to an entity found in the result set
-    by the logged user.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-
-    :param rtype: a relation type (`basestring`)
-    :param role: the role of the result set entity in the relation. 'subject' or
-                 'object', default to 'subject'.
-    """
-
-    def __init__(self, rtype, role='subject', once_is_enough=False):
-        super(may_add_relation, self).__init__(once_is_enough)
-        self.rtype = rtype
-        self.role = role
-
-    def score_entity(self, entity):
-        rschema = entity.schema.rschema(self.rtype)
-        if self.role == 'subject':
-            if not rschema.has_perm(entity.req, 'add', fromeid=entity.eid):
-                return 0
-        elif not rschema.has_perm(entity.req, 'add', toeid=entity.eid):
-            return 0
-        return 1
-
-
-class partial_may_add_relation(PartialSelectorMixIn, may_add_relation):
-    """partial version of the may_add_relation selector
-
-    The selector will look for class attributes to find its missing
-    information. The list of attributes required on the class
-    for this selector are:
-
-    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
-
-    - `role`: this attribute will be passed to the `cubicweb.role` function
-      to determine the role of class in the relation.
-
-    :param action: a relation schema action (one of 'read', 'add', 'delete')
-                   which must be granted to the logged user, else a 0 score will
-                   be returned
-    """
-    def __init__(self, once_is_enough=False):
-        super(partial_may_add_relation, self).__init__(None, None, once_is_enough)
-
-    def complete(self, cls):
-        self.rtype = cls.rtype
-        self.role = role(cls)
+        if self.target_etype is not None:
+            warn('[3.6] please rename etype to target_etype on %s' % cls,
+                 DeprecationWarning)
+        else:
+            self.target_etype = getattr(cls, 'target_etype', None)
 
 
 class has_related_entities(EntitySelector):
-    """accept if entity found in the result set has some linked entities using
-    the specified relation (optionaly filtered according to the specified target
-    type). Checks first if the relation is possible.
+    """Return 1 if entity support the specified relation and has some linked
+    entities by this relation , optionaly filtered according to the specified
+    target type.
 
-    See `EntitySelector` documentation for behaviour when row is not specified.
+    The relation is specified by the following initializer arguments:
 
-    :param rtype: a relation type (`basestring`)
-    :param role: the role of the result set entity in the relation. 'subject' or
-                 'object', default to 'subject'.
-    :param target_type: if specified, check the relation's end may be of this
-                        target type (`basestring`)
+    * `rtype`, the name of the relation
+
+    * `role`, the role of the entity in the relation, either 'subject' or
+      'object', default to 'subject'.
+
+    * `target_etype`, optional name of an entity type that should be found
+      at the other end of the relation
+
+    See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
+    lookup / score rules according to the input context.
     """
-    def __init__(self, rtype, role='subject', target_etype=None,
-                 once_is_enough=False):
-        super(has_related_entities, self).__init__(once_is_enough)
+    def __init__(self, rtype, role='subject', target_etype=None, **kwargs):
+        super(has_related_entities, self).__init__(**kwargs)
         self.rtype = rtype
         self.role = role
         self.target_etype = target_etype
 
     def score_entity(self, entity):
         relpossel = relation_possible(self.rtype, self.role, self.target_etype)
-        if not relpossel.score_class(entity.__class__, entity.req):
+        if not relpossel.score_class(entity.__class__, entity._cw):
             return 0
         rset = entity.related(self.rtype, self.role)
         if self.target_etype:
@@ -812,52 +724,52 @@ class has_related_entities(EntitySelector):
 
 
 class partial_has_related_entities(PartialSelectorMixIn, has_related_entities):
-    """partial version of the has_related_entities selector
+    """Same as :class:~`cubicweb.selectors.has_related_entity`, but will look
+    for attributes of the selected class to get information which is otherwise
+    expected by the initializer.
 
-    The selector will look for class attributes to find its missing
-    information. The list of attributes required on the class
-    for this selector are:
-
-    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
-
-    - `role`: this attribute will be passed to the `cubicweb.role` function
-      to determine the role of class in the relation.
-
-    - `etype` (optional): the entity type on the other side of the relation
-
-    :param action: a relation schema action (one of 'read', 'add', 'delete')
-                   which must be granted to the logged user, else a 0 score will
-                   be returned
+    This is useful to predefine selector of an abstract class designed to be
+    customized.
     """
-    def __init__(self, once_is_enough=False):
-        super(partial_has_related_entities, self).__init__(None, None,
-                                                           None, once_is_enough)
+    def __init__(self, **kwargs):
+        super(partial_has_related_entities, self).__init__(None, None, None,
+                                                           **kwargs)
+
     def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
         self.target_etype = getattr(cls, 'etype', None)
+        if self.target_etype is not None:
+            warn('[3.6] please rename etype to target_etype on %s' % cls,
+                 DeprecationWarning)
+        else:
+            self.target_etype = getattr(cls, 'target_etype', None)
 
 
 class has_permission(EntitySelector):
-    """accept if user has the permission to do the requested action on a result
-    set entity.
+    """Return non-zero score if request's user has the permission to do the
+    requested action on the entity. `action` is an entity schema action (eg one
+    of 'read', 'add', 'delete', 'update').
 
-    * if row is specified, return 1 if user has the permission on the entity
-      instance found in the specified cell
-    * else return a positive score if user has the permission for every entity
-      in the found in the specified column
+    Here are entity lookup / scoring rules:
 
-    note: None values (resulting from some outer join in the query) are not
-          considered.
+    * if `entity` is specified, check permission is granted for this entity
 
-    :param action: an entity schema action (eg 'read'/'add'/'delete'/'update')
+    * elif `row` is specified, check permission is granted for the entity found
+      in the specified cell
+
+    * else check permission is granted for each entity found in the column
+      specified specified by the `col` argument or in column 0
     """
-    def __init__(self, action, once_is_enough=False):
-        super(has_permission, self).__init__(once_is_enough)
+    def __init__(self, action):
         self.action = action
 
+    # don't use EntitySelector.__call__ but this optimized implementation to
+    # avoid considering each entity when it's not necessary
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        if kwargs.get('entity'):
+            return self.score_entity(kwargs['entity'])
         if rset is None:
             return 0
         user = req.user
@@ -865,7 +777,7 @@ class has_permission(EntitySelector):
         if row is None:
             score = 0
             need_local_check = []
-            geteschema = cls.schema.eschema
+            geteschema = req.vreg.schema.eschema
             for etype in rset.column_types(0):
                 if etype in BASE_TYPES:
                     return 0
@@ -897,32 +809,47 @@ class has_permission(EntitySelector):
 
 
 class has_add_permission(EClassSelector):
-    """accept if logged user has the add permission on entity class found in the
-    result set, and class is not a strict subobject.
+    """Return 1 if request's user has the add permission on entity type
+    specified in the `etype` initializer argument, or according to entity found
+    in the input content if not specified.
 
-    See `EClassSelector` documentation for behaviour when row is not specified.
+    It also check that then entity type is not a strict subobject (e.g. may only
+    be used as a composed of another entity).
+
+    See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
+    class lookup / score rules according to the input context when `etype` is
+    not specified.
     """
-    def score(self, cls, req, etype):
-        eschema = cls.schema.eschema(etype)
-        if not (eschema.final or eschema.is_subobject(strict=True)) \
-               and eschema.has_perm(req, 'add'):
-            return 1
-        return 0
+    def __init__(self, etype=None, **kwargs):
+        super(has_add_permission, self).__init__(**kwargs)
+        self.etype = etype
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        if self.etype is None:
+            return super(has_add_permission, self).__call__(cls, req, **kwargs)
+        return self.score(cls, req, self.etype)
+
+    def score_class(self, eclass, req):
+        eschema = eclass.e_schema
+        if eschema.final or eschema.is_subobject(strict=True) \
+               or not eschema.has_perm(req, 'add'):
+            return 0
+        return 1
 
 
 class rql_condition(EntitySelector):
-    """accept if an arbitrary rql return some results for an eid found in the
-    result set. Returned score is the number of items returned by the rql
+    """Return non-zero score if arbitrary rql specified in `expression`
+    initializer argument return some results for entity found in the input
+    context. Returned score is the number of items returned by the rql
     condition.
 
-    See `EntitySelector` documentation for behaviour when row is not specified.
+    `expression` is expected to be a string containing an rql expression, which
+    must use 'X' variable to represent the context entity and may use 'U' to
+    represent the request's user.
 
-    :param expression: basestring containing an rql expression, which should use
-                       X variable to represent the context entity and may use U
-                       to represent the logged user
-
-    return the sum of the number of items returned by the rql condition as score
-    or 0 at the first entity scoring to zero.
+    See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
+    lookup / score rules according to the input context.
     """
     def __init__(self, expression, once_is_enough=False):
         super(rql_condition, self).__init__(once_is_enough)
@@ -932,6 +859,9 @@ class rql_condition(EntitySelector):
             rql = 'Any X WHERE X eid %%(x)s, %s' % expression
         self.rql = rql
 
+    def __repr__(self):
+        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+
     def score(self, req, rset, row, col):
         try:
             return len(req.execute(self.rql, {'x': rset[row][col],
@@ -939,11 +869,222 @@ class rql_condition(EntitySelector):
         except Unauthorized:
             return 0
 
-    def __repr__(self):
-        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+# logged user selectors ########################################################
+
+@objectify_selector
+@lltrace
+def authenticated_user(cls, req, **kwargs):
+    """Return 1 if the user is authenticated (e.g. not the anonymous user).
+
+    May only be used on the web side, not on the data repository side.
+    """
+    if req.cnx.anonymous_connection:
+        return 0
+    return 1
 
 
-class but_etype(EntitySelector):
+# XXX == ~ authenticated_user()
+def anonymous_user():
+    """Return 1 if the user is not authenticated (e.g. is the anonymous user).
+
+    May only be used on the web side, not on the data repository side.
+    """
+    return ~ authenticated_user()
+
+
+class match_user_groups(ExpectedValueSelector):
+    """Return a non-zero score if request's user is in at least one of the
+    groups given as initializer argument. Returned score is the number of groups
+    in which the user is.
+
+    If the special 'owners' group is given and `rset` is specified in the input
+    context:
+
+    * if `row` is specified check the entity at the given `row`/`col` (default
+      to 0) is owned by the user
+
+    * else check all entities in `col` (default to 0) are owned by the user
+    """
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        user = req.user
+        if user is None:
+            return int('guests' in self.expected)
+        score = user.matching_groups(self.expected)
+        if not score and 'owners' in self.expected and rset:
+            if row is not None:
+                if not user.owns(rset[row][col]):
+                    return 0
+                score = 1
+            else:
+                score = all(user.owns(r[col]) for r in rset)
+        return score
+
+
+# Web request selectors ########################################################
+
+@objectify_selector
+@lltrace
+def primary_view(cls, req, view=None, **kwargs):
+    """Return 1 if:
+
+    * *no view is specified* in the input context
+
+    * a view is specified and its `.is_primary()` method return True
+
+    This selector is usually used by contextual components that only want to
+    appears for the primary view of an entity.
+    """
+    if view is not None and not view.is_primary():
+        return 0
+    return 1
+
+
+class match_view(ExpectedValueSelector):
+    """Return 1 if a view is specified an as its registry id is in one of the
+    expected view id given to the initializer.
+    """
+    @lltrace
+    def __call__(self, cls, req, view=None, **kwargs):
+        if view is None or not view.__regid__ in self.expected:
+            return 0
+        return 1
+
+
+@objectify_selector
+@lltrace
+def match_context_prop(cls, req, context=None, **kwargs):
+    """Return 1 if:
+
+    * no `context` is specified in input context (take care to confusion, here
+      `context` refers to a string given as an argument to the input context...)
+
+    * specified `context` is matching the context property value for the
+      appobject using this selector
+
+    * the appobject's context property value is None
+
+    This selector is usually used by contextual components that want to appears
+    in a configurable place.
+    """
+    if context is None:
+        return 1
+    propval = req.property_value('%s.%s.context' % (cls.__registry__,
+                                                    cls.__regid__))
+    if not propval:
+        propval = cls.context
+    if propval and context != propval:
+        return 0
+    return 1
+
+
+class match_search_state(ExpectedValueSelector):
+    """Return 1 if the current request search state is in one of the expected
+    states given to the initializer.
+
+    Known search states are either 'normal' or 'linksearch' (eg searching for an
+    object to create a relation with another).
+
+    This selector is usually used by action that want to appears or not according
+    to the ui search state.
+    """
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        try:
+            if not req.search_state[0] in self.expected:
+                return 0
+        except AttributeError:
+            return 1 # class doesn't care about search state, accept it
+        return 1
+
+
+class match_form_params(ExpectedValueSelector):
+    """Return non-zero score if parameter names specified as initializer
+    arguments are specified in request's form parameters. When multiple
+    parameters are specified, all of them should be found in req.form. Return a
+    score corresponding to the number of expected parameters.
+    """
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        for param in self.expected:
+            if not param in req.form:
+                return 0
+        return len(self.expected)
+
+
+class specified_etype_implements(implements):
+    """Return non-zero score if the entity type specified by an 'etype' key
+    searched in (by priority) input context kwargs and request form parameters
+    match a known entity type (case insensitivly), and it's associated entity
+    class is of one of the type(s) given to the initializer or implements at
+    least one of the given interfaces. If multiple arguments are given, matching
+    one of them is enough.
+
+    Entity types should be given as string, the corresponding class will be
+    fetched from the entity types registry at selection time.
+
+    .. note:: when interface is an entity class, the score will reflect class
+              proximity so the most specific object will be selected.
+
+    This selector is usually used by views holding entity creation forms (since
+    we've no result set to work on).
+    """
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        try:
+            etype = kwargs['etype']
+        except KeyError:
+            try:
+                etype = req.form['etype']
+            except KeyError:
+                return 0
+            else:
+                # only check this is a known type if etype comes from req.form,
+                # else we want the error to propagate
+                try:
+                    etype = req.vreg.case_insensitive_etypes[etype.lower()]
+                    req.form['etype'] = etype
+                except KeyError:
+                    return 0
+        score = self.score_class(req.vreg['etypes'].etype_class(etype), req)
+        if score:
+            eschema = req.vreg.schema.eschema(etype)
+            if eschema.has_local_role('add') or eschema.has_perm(req, 'add'):
+                return score
+        return 0
+
+
+# Other selectors ##############################################################
+
+
+class match_transition(ExpectedValueSelector):
+    """Return 1 if:
+
+    * a `transition` argument is found in the input context which
+      has a `.name` attribute matching one of the expected names given to the
+      initializer
+
+    * no transition specified.
+    """
+    @lltrace
+    def __call__(self, cls, req, transition=None, **kwargs):
+        # XXX check this is a transition that apply to the object?
+        if transition is None:
+            return 1
+        if transition is not None and getattr(transition, 'name', None) in self.expected:
+            return 1
+        return 0
+
+
+## deprecated stuff ############################################################
+
+entity_implements = class_renamed('entity_implements', implements)
+
+class _but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.
 
     See `EntitySelector` documentation for behaviour when row is not specified.
@@ -951,7 +1092,7 @@ class but_etype(EntitySelector):
     :param *etypes: entity types (`basestring`) which should be refused
     """
     def __init__(self, *etypes):
-        super(but_etype, self).__init__()
+        super(_but_etype, self).__init__()
         self.but_etypes = etypes
 
     def score(self, req, rset, row, col):
@@ -959,225 +1100,12 @@ class but_etype(EntitySelector):
             return 0
         return 1
 
-
-class score_entity(EntitySelector):
-    """accept if some arbitrary function return a positive score for an entity
-    found in the result set.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-
-    :param scorefunc: callable expected to take an entity as argument and to
-                      return a score >= 0
-    """
-    def __init__(self, scorefunc, once_is_enough=False):
-        super(score_entity, self).__init__(once_is_enough)
-        def intscore(*args, **kwargs):
-            score = scorefunc(*args, **kwargs)
-            if not score:
-                return 0
-            if isinstance(score, (int, long)):
-                return score
-            return 1
-        self.score_entity = intscore
+but_etype = class_renamed('but_etype', _but_etype, 'use ~implements(*etypes) instead')
 
 
-# XXX DEPRECATED ##############################################################
-# XXX remove when deprecated functions are removed
-filterwarnings('ignore',
-               category=DeprecationWarning,
-               module='cubicweb.selectors')
-from cubicweb.vregistry import chainall
-
-yes_selector = deprecated()(yes)
-norset_selector = deprecated()(none_rset)
-rset_selector = deprecated()(any_rset)
-anyrset_selector = deprecated()(nonempty_rset)
-emptyrset_selector = deprecated()(empty_rset)
-onelinerset_selector = deprecated()(one_line_rset)
-twolinerset_selector = deprecated()(two_lines_rset)
-twocolrset_selector = deprecated()(two_cols_rset)
-largerset_selector = deprecated()(paginated_rset)
-sortedrset_selector = deprecated()(sorted_rset)
-oneetyperset_selector = deprecated()(one_etype_rset)
-multitype_selector = deprecated()(two_etypes_rset)
-anonymous_selector = deprecated()(anonymous_user)
-not_anonymous_selector = deprecated()(authenticated_user)
-primaryview_selector = deprecated()(primary_view)
-contextprop_selector = deprecated()(match_context_prop)
-
-@deprecated('use non_final_entity instead of %s')
-def nfentity_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return non_final_entity()(cls, req, rset, row, col)
-
-@deprecated('use implements instead of %s')
-def implement_interface(cls, req, rset=None, row=None, col=0, **kwargs):
-    return implements(*cls.accepts_interfaces)(cls, req, rset, row, col)
-_interface_selector = deprecated()(implement_interface)
-interface_selector = deprecated()(implement_interface)
-
-@deprecated('use specified_etype_implements instead of %s')
-def accept_etype(cls, req, *args, **kwargs):
-    """check etype presence in request form *and* accepts conformance"""
-    return specified_etype_implements(*cls.accepts)(cls, req, *args)
-etype_form_selector = accept_etype
-
-@deprecated('use match_search_state instead of %s')
-def searchstate_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return match_search_state(cls.search_states)(cls, req, rset, row, col)
-
-@deprecated('use match_user_groups instead of %s')
-def match_user_group(cls, req, rset=None, row=None, col=0, **kwargs):
-    return match_user_groups(*cls.require_groups)(cls, req, rset, row, col, **kwargs)
-in_group_selector = match_user_group
-
-@deprecated('use relation_possible instead of %s')
-def has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
-    return relation_possible(cls.rtype, role(cls), cls.etype,
-                             getattr(cls, 'require_permission', 'read'))(cls, req, rset, row, col, **kwargs)
-
-@deprecated('use relation_possible instead of %s')
-def one_has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
-    return relation_possible(cls.rtype, role(cls), cls.etype,
-                             getattr(cls, 'require_permission', 'read',
-                                     once_is_enough=True))(cls, req, rset, row, col, **kwargs)
-
-@deprecated('use implements instead of %s')
-def accept_rset(cls, req, rset=None, row=None, col=0, **kwargs):
-    """simply delegate to cls.accept_rset method"""
-    return implements(*cls.accepts)(cls, req, rset, row=row, col=col)
-accept_rset_selector = accept_rset
-
-accept = chainall(non_final_entity(), accept_rset, name='accept')
-accept = deprecated('use implements selector')(accept)
-accept_selector = deprecated()(accept)
-
-accept_one = deprecated()(chainall(one_line_rset, accept,
-                                   name='accept_one'))
-accept_one_selector = deprecated()(accept_one)
-
-
-def _rql_condition(cls, req, rset=None, row=None, col=0, **kwargs):
-    if cls.condition:
-        return rql_condition(cls.condition)(cls, req, rset, row, col)
-    return 1
-_rqlcondition_selector = deprecated()(_rql_condition)
-
-rqlcondition_selector = deprecated()(chainall(non_final_entity(), one_line_rset, _rql_condition,
-                         name='rql_condition'))
-
-@deprecated('use but_etype instead of %s')
-def but_etype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return but_etype(cls.etype)(cls, req, rset, row, col)
-
-@lltrace
-def etype_rtype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    schema = cls.schema
-    perm = getattr(cls, 'require_permission', 'read')
-    if hasattr(cls, 'etype'):
-        eschema = schema.eschema(cls.etype)
-        if not (eschema.has_perm(req, perm) or eschema.has_local_role(perm)):
-            return 0
-    if hasattr(cls, 'rtype'):
-        rschema = schema.rschema(cls.rtype)
-        if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
-            return 0
-    return 1
-etype_rtype_selector = deprecated()(etype_rtype_selector)
-
-#req_form_params_selector = deprecated()(match_form_params) # form_params
-#kwargs_selector = deprecated()(match_kwargs) # expected_kwargs
-
-# compound selectors ##########################################################
-
-searchstate_accept = chainall(nonempty_rset(), accept,
-                              name='searchstate_accept')
-searchstate_accept_selector = deprecated()(searchstate_accept)
-
-searchstate_accept_one = chainall(one_line_rset, accept, _rql_condition,
-                                  name='searchstate_accept_one')
-searchstate_accept_one_selector = deprecated()(searchstate_accept_one)
-
-searchstate_accept = deprecated()(searchstate_accept)
-searchstate_accept_one = deprecated()(searchstate_accept_one)
-
-# end of deprecation section ##################################################
-
-def unbind_method(selector):
-    def new_selector(registered):
-        # get the unbound method
-        if hasattr(registered, 'im_func'):
-            registered = registered.im_func
-        # don't rebind since it will be done automatically during
-        # the assignment, inside the destination class body
-        return selector(registered)
-    new_selector.__name__ = selector.__name__
-    return new_selector
-
-
-def deprecate(registered, msg):
-    # get the unbound method
-    if hasattr(registered, 'im_func'):
-        registered = registered.im_func
-    def _deprecate(cls, vreg):
-        warn(msg, DeprecationWarning)
-        return registered(cls, vreg)
-    return _deprecate
-
-@unbind_method
-def require_group_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'require_groups', None):
-            warn('use "match_user_groups(group1, group2)" instead of using require_groups',
-                 DeprecationWarning)
-            cls.__select__ &= match_user_groups(cls.require_groups)
-        return cls
-    return plug_selector
-
-@unbind_method
-def accepts_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'accepts', None):
-            warn('use "implements("EntityType", IFace)" instead of using accepts on %s'
-                 % cls,
-                 DeprecationWarning)
-            cls.__select__ &= implements(*cls.accepts)
-        return cls
-    return plug_selector
-
-@unbind_method
-def accepts_etype_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'accepts', None):
-            warn('use "specified_etype_implements("EntityType", IFace)" instead of using accepts',
-                 DeprecationWarning)
-            cls.__select__ &= specified_etype_implements(*cls.accepts)
-        return cls
-    return plug_selector
-
-@unbind_method
-def condition_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'condition', None):
-            warn('use "use rql_condition(expression)" instead of using condition',
-                 DeprecationWarning)
-            cls.__select__ &= rql_condition(cls.condition)
-        return cls
-    return plug_selector
-
-@unbind_method
-def has_relation_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'etype', None):
-            warn('use relation_possible selector instead of using etype_rtype',
-                 DeprecationWarning)
-            cls.__select__ &= relation_possible(cls.rtype, role(cls),
-                                                getattr(cls, 'etype', None),
-                                                action=getattr(cls, 'require_permission', 'read'))
-        return cls
-    return plug_selector
-
+# XXX deprecated the one_* variants of selectors below w/ multi_xxx(nb=1)?
+#     take care at the implementation though (looking for the 'row' argument's
+#     value)
+two_lines_rset = class_renamed('two_lines_rset', multi_lines_rset)
+two_cols_rset = class_renamed('two_cols_rset', multi_columns_rset)
+two_etypes_rset = class_renamed('two_etypes_rset', multi_etypes_rset)

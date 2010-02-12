@@ -402,12 +402,12 @@ class RQLRewriter(object):
                 orel = self.varinfo['lhs_rels'][sniprel.r_type]
                 cardindex = 0
                 ttypes_func = rschema.objects
-                rprop = rschema.rproperty
+                rdef = rschema.rdef
             else: # target == 'subject':
                 orel = self.varinfo['rhs_rels'][sniprel.r_type]
                 cardindex = 1
                 ttypes_func = rschema.subjects
-                rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+                rdef = lambda x, y: rschema.rdef(y, x)
         except KeyError, ex:
             # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
             return None
@@ -419,7 +419,7 @@ class RQLRewriter(object):
         # variable from the original query
         for etype in self.varinfo['stinfo']['possibletypes']:
             for ttype in ttypes_func(etype):
-                if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':
+                if rdef(etype, ttype).cardinality[cardindex] in '+*':
                     return None
         return orel
 

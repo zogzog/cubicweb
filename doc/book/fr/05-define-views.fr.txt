@@ -20,17 +20,17 @@ L'interface de base des vues est la suivante :
 * `cell_call(row, col, **kwargs)`, appelle la vue pour une cellule donnée d'un
   result set
 * `url()`, retourne l'url permettant d'obtenir cette vue avec le result set en
-  cours 
+  cours
 * `view(__vid, rset, __fallback_vid=None, **kwargs)`, appelle la vue
   d'identificant `__vid` sur le result set donné. Il est possible de données un
   identificant de vue de "fallback" qui sera utilisé si la vue demandée n'est
   pas applicable au result set
-  
+
 * `wview(__vid, rset, __fallback_vid=None, **kwargs)`, pareil que `view` mais
   passe automatiquement le flux en argument
-  
+
 * `html_headers()`, retourne une liste d'en-tête HTML à placer par le template
-  principal 
+  principal
 
 * `page_title()`, retourne le titre à utiliser dans l'en tête HTML `title`
 
@@ -55,7 +55,7 @@ pour calculer les scores est dans ``cubicweb.vregistry.vreq``.
 
 [FROM-LAX-BOOK]
 
-Tip: when modifying views, you do not need to restart the local 
+Tip: when modifying views, you do not need to restart the local
 server. Just save the file in your editor and reload the page in your
 browser to see the changes.
 
@@ -63,7 +63,7 @@ With `LAX`, views are defined by Python classes. A view includes :
 
 - an identifier (all objects in `LAX` are entered in a registry
   and this identifier will be used as a key)
-  
+
 - a filter to select the resulsets it can be applied to
 
 `LAX` provides a lot of standard views, for a complete list, you
@@ -83,14 +83,14 @@ override the view ``primary`` in ``BlogDemo/views.py`` ::
   05.     accepts = ('BlogEntry',)
   06.
   07.     def cell_call(self, row, col):
-  08.         entity = self.entity(row, col)
+  08.         entity = self.rset.get_entity(row, col)
   09.         self.w(u'<h1>%s</h1>' % entity.title)
   10.         self.w(u'<p>published on %s in category %s</p>' % \
   11.                (entity.publish_date.strftime('%Y-%m-%d'), entity.category))
   12.         self.w(u'<p>%s</p>' % entity.text)
 
 The above source code defines a new primary view (`line 03`) for
-``BlogEntry`` (`line 05`). 
+``BlogEntry`` (`line 05`).
 
 Since views are applied to resultsets and resulsets can be tables of
 data, it is needed to recover the entity from its (row,col)
@@ -108,11 +108,11 @@ page is now looking much nicer.
 Let us now improve the primary view of a blog ::
 
   01. class BlogPrimaryView(baseviews.PrimaryView):
-  02. 
+  02.
   03.     accepts = ('Blog',)
   04.
   05.     def cell_call(self, row, col):
-  06.         entity = self.entity(row, col)
+  06.         entity = self.rset.get_entity(row, col)
   07.         self.w(u'<h1>%s</h1>' % entity.title)
   08.         self.w(u'<p>%s</p>' % entity.description)
   09.         rset = self.req.execute('Any E WHERE E entry_of B, B eid "%s"' % entity.eid)
@@ -127,9 +127,9 @@ the entities linked to the current ``Blog`` entity by the relationship
 about the schema and infer that such entities have to be of the
 ``BlogEntry`` kind and retrieves them.
 
-The request returns a selection of data called a resultset. At 
+The request returns a selection of data called a resultset. At
 `line 10` the view 'primary' is applied to this resultset to output
-HTML. 
+HTML.
 
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view to all the entities of a resultset only
@@ -159,7 +159,7 @@ to resultsets like "Any E WHERE E is BlogEntry"
 
 * create view "blogentry table" with title, publish_date, category
 
-We will show that by default the view that displays 
+We will show that by default the view that displays
 "Any E,D,C WHERE E publish_date D, E category C" is the table view.
 Of course, the same can be obtained by calling
 self.wview('table',rset)
@@ -244,4 +244,4 @@ Quelques trucs (X)HTML à respecter
 ----------------------------------
 Certains navigateurs (dont firefox) n'aime pas les `<div>` vides (par vide
 j'entend sans contenu dans la balise, il peut y avoir des attributs), faut
-toujours mettre `<div></div>` même s'il n'y a rien dedans, et non `<div/>`. 
+toujours mettre `<div></div>` même s'il n'y a rien dedans, et non `<div/>`.

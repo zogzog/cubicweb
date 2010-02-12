@@ -20,7 +20,7 @@ class CubicWebException(Exception):
             if self.args:
                 return self.msg % tuple(self.args)
             return self.msg
-        return ' '.join(str(arg) for arg in self.args)
+        return ' '.join(unicode(arg) for arg in self.args)
 
 
 class ConfigurationError(CubicWebException):

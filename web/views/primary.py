@@ -21,7 +21,7 @@ from cubicweb.web import uicfg
 
 class PrimaryView(EntityView):
     """the full view of an non final entity"""
-    id = 'primary'
+    __regid__ = 'primary'
     title = _('primary')
     show_attr_label = True
     show_rel_label = True
@@ -39,15 +39,15 @@ class PrimaryView(EntityView):
         return []
 
     def cell_call(self, row, col):
-        self.row = row
-        self.maxrelated = self.req.property_value('navigation.related-limit')
-        entity = self.complete_entity(row, col)
+        self.cw_row = row
+        self.cw_col = col
+        self.maxrelated = self._cw.property_value('navigation.related-limit')
+        entity = self.cw_rset.complete_entity(row, col)
         self.render_entity(entity)
 
     def render_entity(self, entity):
         self.render_entity_title(entity)
-        # XXX uncomment this in 3.6
-        #self.render_entity_toolbox(entity)
+        self.render_entity_toolbox(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
         if self.is_primary():
@@ -77,10 +77,10 @@ class PrimaryView(EntityView):
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
-        for comp in self.vreg['contentnavigation'].possible_vobjects(
-            self.req, rset=self.rset, row=self.row, view=self, context=context):
+        for comp in self._cw.vreg['contentnavigation'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, row=self.cw_row, view=self, context=context):
             try:
-                comp.render(w=self.w, row=self.row, view=self)
+                comp.render(w=self.w, row=self.cw_row, view=self)
             except NotImplementedError:
                 warn('component %s doesnt implement cell_call, please update'
                      % comp.__class__, DeprecationWarning)
@@ -94,7 +94,7 @@ class PrimaryView(EntityView):
             if self.is_primary():
                 self.w(u'<h1>%s</h1>' % title)
             else:
-                atitle = self.req._('follow this link for more information on this %s') % entity.dc_type()
+                atitle = self._cw._('follow this link for more information on this %s') % entity.dc_type()
                 self.w(u'<h4><a href="%s" title="%s">%s</a></h4>'
                        % (entity.absolute_url(), atitle, title))
 
@@ -126,7 +126,7 @@ class PrimaryView(EntityView):
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
                 if rset:
-                    value = self.view(vid, rset)
+                    value = self._cw.view(vid, rset)
                 else:
                     value = None
             if self.skip_none and (value is None or value == ''):
@@ -170,7 +170,7 @@ class PrimaryView(EntityView):
                 self.w(u'</div>')
             else:
                 try:
-                    box.render(w=self.w, row=self.row)
+                    box.render(w=self.w, row=self.cw_row)
                 except NotImplementedError:
                     # much probably a context insensitive box, which only implements
                     # .call() and not cell_call()
@@ -182,11 +182,11 @@ class PrimaryView(EntityView):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
                 continue
-            label = display_name(self.req, rschema.type, role)
+            label = display_name(self._cw, rschema.type, role)
             vid = dispctrl.get('vid', 'sidebox')
             sideboxes.append( (label, rset, vid, dispctrl) )
-        sideboxes += self.vreg['boxes'].possible_vobjects(
-            self.req, rset=self.rset, row=self.row, view=self,
+        sideboxes += self._cw.vreg['boxes'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
             context='incontext')
         # XXX since we've two sorted list, it may be worth using bisect
         def get_order(x):
@@ -195,7 +195,7 @@ class PrimaryView(EntityView):
                 # default to 1000 so view boxes occurs after component boxes
                 return x[-1].get('order', 1000)
             # x is a component box
-            return x.propval('order')
+            return x.cw_propval('order')
         return sorted(sideboxes, key=get_order)
 
     def _section_def(self, entity, where):
@@ -229,7 +229,7 @@ class PrimaryView(EntityView):
     def _render_relation(self, dispctrl, rset, defaultvid):
         self.w(u'<div class="section">')
         if dispctrl.get('showlabel', self.show_rel_label):
-            self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
+            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
         self.wview(dispctrl.get('vid', defaultvid), rset,
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
@@ -241,41 +241,40 @@ class PrimaryView(EntityView):
         else:
             showlabel = dispctrl.get('showlabel', self.show_rel_label)
         if dispctrl.get('label'):
-            label = self.req._(dispctrl.get('label'))
+            label = self._cw._(dispctrl.get('label'))
         else:
-            label = display_name(self.req, rschema.type, role)
+            label = display_name(self._cw, rschema.type, role)
         self.field(label, value, show_label=showlabel, tr=False, table=table)
 
 
 class RelatedView(EntityView):
-    id = 'autolimited'
+    __regid__ = 'autolimited'
 
     def call(self, **kwargs):
         # nb: rset retreived using entity.related with limit + 1 if any
         # because of that, we known that rset.printable_rql() will return
         # rql with no limit set anyway (since it's handled manually)
-        if 'dispctrl' in self.extra_kwargs:
-            limit = self.extra_kwargs['dispctrl'].get('limit')
+        if 'dispctrl' in self.cw_extra_kwargs:
+            limit = self.cw_extra_kwargs['dispctrl'].get('limit')
         else:
             limit = None
-        # if not too many entities, show them all in a list
-        if limit is None or self.rset.rowcount <= limit:
-            if self.rset.rowcount == 1:
-                self.wview('incontext', self.rset, row=0)
-            elif 1 < self.rset.rowcount <= 5:
-                self.wview('csv', self.rset)
+        if limit is None or self.cw_rset.rowcount <= limit:
+            if self.cw_rset.rowcount == 1:
+                self.wview('incontext', self.cw_rset, row=0)
+            elif 1 < self.cw_rset.rowcount <= 5:
+                self.wview('csv', self.cw_rset)
             else:
                 self.w(u'<div>')
-                self.wview('simplelist', self.rset)
+                self.wview('simplelist', self.cw_rset)
                 self.w(u'</div>')
         # else show links to display related entities
         else:
-            rql = self.rset.printable_rql()
-            self.rset.limit(limit) # remove extra entity
+            rql = self.cw_rset.printable_rql()
+            self.cw_rset.limit(limit) # remove extra entity
             self.w(u'<div>')
-            self.wview('simplelist', self.rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
-                                               self.req._('see them all')))
+            self.wview('simplelist', self.cw_rset)
+            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
+                                               self._cw._('see them all')))
             self.w(u'</div>')
 
 
@@ -283,11 +282,11 @@ class URLAttributeView(EntityView):
     """use this view for attributes whose value is an url and that you want
     to display as clickable link
     """
-    id = 'urlattr'
+    __regid__ = 'urlattr'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
     def cell_call(self, row, col, rtype, **kwargs):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         url = entity.printable_value(rtype)
         if url:
             self.w(u'<a href="%s">%s</a>' % (url, url))
@@ -310,5 +309,5 @@ _pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 for attr in ('name', 'final'):
     _pvs.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'final', 'symetric', 'inlined'):
+for attr in ('name', 'final', 'symmetric', 'inlined'):
     _pvs.tag_attribute(('CWRType', attr), 'hidden')

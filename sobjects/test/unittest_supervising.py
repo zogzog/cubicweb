@@ -9,24 +9,25 @@
 import re
 
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.sobjects.supervising import SendMailOp, SupervisionMailOp
 
 
-class SupervisingTC(EnvBasedTC):
+class SupervisingTC(CubicWebTC):
 
     def setup_database(self):
-        self.add_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
-        self.add_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
-        self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-        self.add_entity('Comment', content=u"Yo !")
+        req = self.request()
+        req.create_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
+        req.create_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
+        req.create_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
+        req.create_entity('Comment', content=u"Yo !")
         self.execute('SET C comments B WHERE B title "une autre news !", C content "Yo !"')
         self.vreg.config.global_set_option('supervising-addrs', 'test@logilab.fr')
 
 
     def test_supervision(self):
-        session = self.session()
+        session = self.session
         # do some modification
         user = self.execute('INSERT CWUser X: X login "toto", X upassword "sosafe", X in_group G '
                             'WHERE G name "users"').get_entity(0, 0)
@@ -88,7 +89,7 @@ class SupervisingTC(EnvBasedTC):
                               data)
 
     def test_nonregr1(self):
-        session = self.session()
+        session = self.session
         # do some unlogged modification
         self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': session.user.eid}, 'x')
         self.commit() # no crash

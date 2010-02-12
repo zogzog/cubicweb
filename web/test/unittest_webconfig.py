@@ -9,8 +9,7 @@ import os
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools._apptest import FakeRequest
-from cubicweb.devtools import ApptestConfiguration
+from cubicweb.devtools import ApptestConfiguration, fake
 
 class WebconfigTC(TestCase):
     def setUp(self):
@@ -21,7 +20,7 @@ class WebconfigTC(TestCase):
     def test_nonregr_print_css_as_list(self):
         """make sure PRINT_CSS *must* is a list"""
         config = self.config
-        req = FakeRequest()
+        req = fake.FakeRequest()
         print_css = req.external_resource('STYLESHEETS_PRINT')
         self.failUnless(isinstance(print_css, list))
         ie_css = req.external_resource('IE_STYLESHEETS')

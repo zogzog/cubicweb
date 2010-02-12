@@ -44,7 +44,7 @@ else:
 
         def rql_for_eid(eid):
             return 'Any X WHERE X eid "%s"' % eid
-        from cubicweb.common import uilib
+        from cubicweb import uilib
         uilib.rql_for_eid = rql_for_eid
 
         def typed_eid(eid):

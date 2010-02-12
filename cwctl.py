@@ -1,7 +1,7 @@
 """%%prog %s [options] %s
 
-CubicWeb main instances controller.
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+The CubicWeb swiss-knife.
+
 %s"""
 
 import sys
@@ -17,9 +17,9 @@ from os.path import exists, join, isfile, isdir, dirname, abspath
 from logilab.common.clcommands import register_commands, pop_arg
 from logilab.common.shellutils import ASK
 
-from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, underline_title
+from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
-from cubicweb.toolsutils import Command, main_run,  rm, create_dir
+from cubicweb.toolsutils import Command, main_run, rm, create_dir, underline_title
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -312,7 +312,7 @@ repository and the web server.',
         # handle i18n files structure
         # in the first cube given
         print '-> preparing i18n catalogs'
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
         errors = config.i18ncompile(langs)
         if errors:
@@ -690,7 +690,7 @@ given, appropriate sources for migration will be automatically selected \
         # * install new languages
         # * recompile catalogs
         # in the first componant given
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
         errors = config.i18ncompile(langs)

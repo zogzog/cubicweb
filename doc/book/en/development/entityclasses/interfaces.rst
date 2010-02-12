@@ -14,6 +14,7 @@ XXX __implements__
 Interfaces defined in the library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-automodule:: cubicweb.interface   :members:
+.. automodule:: cubicweb.interface
+   :members:
 
 

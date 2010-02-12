@@ -376,6 +376,7 @@ class DeleteEntitiesStep(Step):
 
     def execute(self):
         """execute this step"""
+        results = self.execute_child()
         todelete = frozenset(typed_eid(eid) for eid, in self.execute_child())
         session = self.plan.session
         delete = session.repo.glob_delete_entity
@@ -385,7 +386,7 @@ class DeleteEntitiesStep(Step):
         pending |= actual
         for eid in actual:
             delete(session, eid)
-
+        return results
 
 class DeleteRelationsStep(Step):
     """step consisting in deleting relations"""

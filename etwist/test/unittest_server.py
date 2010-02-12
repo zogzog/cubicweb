@@ -5,11 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.etwist.server import host_prefixed_baseurl
 
 
-class HostPrefixedBaseURLTC(EnvBasedTC):
+class HostPrefixedBaseURLTC(CubicWebTC):
 
     def _check(self, baseurl, host, waited):
         self.assertEquals(host_prefixed_baseurl(baseurl, host), waited,

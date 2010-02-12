@@ -10,7 +10,7 @@ from simplejson import loads
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
@@ -18,7 +18,7 @@ from cubicweb.web.views import vid_from_rset
 def loadjson(value):
     return loads(html_unescape(value))
 
-class VidFromRsetTC(EnvBasedTC):
+class VidFromRsetTC(CubicWebTC):
 
     def test_no_rset(self):
         req = self.request()
@@ -47,9 +47,9 @@ class VidFromRsetTC(EnvBasedTC):
     def test_more_than_one_entity_same_type(self):
         req = self.request()
         rset = self.execute('Any X WHERE X is CWUser')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
         rset = self.execute('Any X, L WHERE X login L')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
 
     def test_more_than_one_entity_diff_type(self):
         req = self.request()
@@ -84,13 +84,13 @@ class VidFromRsetTC(EnvBasedTC):
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 
 
-class TableViewTC(EnvBasedTC):
+class TableViewTC(CubicWebTC):
 
     def _prepare_entity(self):
-        e = self.add_entity("State", name=u'<toto>', description=u'loo"ong blabla')
-        rset = self.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
-                            {'x': e.eid}, 'x')
         req = self.request()
+        e = req.create_entity("State", name=u'<toto>', description=u'loo"ong blabla')
+        rset = req.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
+                            {'x': e.eid}, 'x')
         view = self.vreg['views'].select('table', req, rset=rset)
         return e, rset, view
 
