@@ -283,22 +283,10 @@ def check_permission_definitions(self):
                    isinstance(group_or_rqlexpr, RQLExpression):
                 msg = "can't use rql expression for read permission of %s"
                 raise BadSchemaDefinition(msg % self)
-            elif self.final and isinstance(group_or_rqlexpr, RRQLExpression):
-                if schema.reading_from_database:
-                    # we didn't have final relation earlier, so turn
-                    # RRQLExpression into ERQLExpression now
-                    rqlexpr = group_or_rqlexpr
-                    newrqlexprs = [x for x in self.get_rqlexprs(action)
-                                   if not x is rqlexpr]
-                    newrqlexprs.append(ERQLExpression(rqlexpr.expression,
-                                                      rqlexpr.mainvars,
-                                                      rqlexpr.eid))
-                    self.set_rqlexprs(action, newrqlexprs)
-                else:
-                    msg = "can't use RRQLExpression on %s, use an ERQLExpression"
-                    raise BadSchemaDefinition(msg % self)
-            elif not self.final and \
-                     isinstance(group_or_rqlexpr, ERQLExpression):
+            if self.final and isinstance(group_or_rqlexpr, RRQLExpression):
+                msg = "can't use RRQLExpression on %s, use an ERQLExpression"
+                raise BadSchemaDefinition(msg % self)
+            if not self.final and isinstance(group_or_rqlexpr, ERQLExpression):
                 msg = "can't use ERQLExpression on %s, use a RRQLExpression"
                 raise BadSchemaDefinition(msg % self)
 RelationDefinitionSchema.check_permission_definitions = check_permission_definitions
@@ -314,13 +302,14 @@ class CubicWebEntitySchema(EntitySchema):
         if eid is None and edef is not None:
             eid = getattr(edef, 'eid', None)
         self.eid = eid
-        # take care: no _groups attribute when deep-copying
-        if getattr(self, 'permissions', None):
-            for groups in self.permissions.itervalues():
-                for group_or_rqlexpr in groups:
-                    if isinstance(group_or_rqlexpr, RRQLExpression):
-                        msg = "can't use RRQLExpression on an entity type, use an ERQLExpression (%s)"
-                        raise BadSchemaDefinition(msg % self.type)
+
+    def check_permission_definitions(self):
+        super(CubicWebEntitySchema, self).check_permission_definitions()
+        for groups in self.permissions.itervalues():
+            for group_or_rqlexpr in groups:
+                if isinstance(group_or_rqlexpr, RRQLExpression):
+                    msg = "can't use RRQLExpression on %s, use an ERQLExpression"
+                    raise BadSchemaDefinition(msg % self.type)
 
     def attribute_definitions(self):
         """return an iterator on attribute definitions
