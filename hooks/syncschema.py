@@ -716,6 +716,9 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
             return
         if isinstance(erschema, RelationSchema): # XXX 3.6 migration
             return
+        if isinstance(erschema, RelationDefinitionSchema) and \
+               self.action in ('delete', 'add'): # XXX 3.6.1 migration
+            return
         perms = list(erschema.action_permissions(self.action))
         if hasattr(self, 'group_eid'):
             perm = self.session.entity_from_eid(self.group_eid).name

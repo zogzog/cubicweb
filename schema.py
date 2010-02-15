@@ -919,6 +919,11 @@ class RRQLExpression(RQLExpression):
             kwargs['o'] = toeid
         return self._check(session, **kwargs)
 
+# in yams, default 'update' perm for attributes granted to managers and owners.
+# Within cw, we want to default to users who may edit the entity holding the
+# attribute.
+ybo._DEFAULT_ATTRPERMS['update'] = (
+    'managers', ERQLExpression('U has_update_permission X'))
 
 # workflow extensions #########################################################
 

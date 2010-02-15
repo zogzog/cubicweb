@@ -28,7 +28,7 @@ def check_entity_attributes(session, entity):
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            rdef.check_perm(session, 'add', eid=eid)
+            rdef.check_perm(session, 'update', eid=eid)
 
 
 class _CheckEntityPermissionOp(hook.LateOperation):
