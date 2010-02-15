@@ -153,7 +153,7 @@ class AddCWPropertyHook(SyncSessionHook):
             raise ValidationError(self.entity.eid,
                                   {'value': session._(str(ex))})
         if not session.user.matching_groups('managers'):
-            session.add_relation(entity.eid, 'for_user', session.user.eid)
+            session.add_relation(self.entity.eid, 'for_user', session.user.eid)
         else:
             _AddCWPropertyOp(session, cwprop=self.entity)
 
@@ -178,7 +178,7 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
         if entity.for_user:
             for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
                 _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
-                                  key=key, value=value)
+                                    key=key, value=value)
         else:
             # site wide properties
             _ChangeCWPropertyOp(session, cwpropdict=session.vreg['propertyvalues'],
