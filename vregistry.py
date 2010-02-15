@@ -365,7 +365,6 @@ class VRegistry(dict):
 
     def initialization_completed(self):
         for regname, reg in self.iteritems():
-            self.debug('available in registry %s: %s', regname, sorted(reg))
             reg.initialization_completed()
 
     def load_file(self, filepath, modname, force_reload=False):
@@ -406,7 +405,6 @@ class VRegistry(dict):
                 if objname.startswith('_'):
                     continue
                 self._load_ancestors_then_object(module.__name__, obj)
-        self.debug('loaded %s', module)
 
     def _load_ancestors_then_object(self, modname, appobjectcls):
         """handle automatic appobject class registration:
