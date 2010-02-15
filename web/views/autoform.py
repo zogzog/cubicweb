@@ -85,7 +85,10 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
 
     def __init__(self, *args, **kwargs):
         for attr in self._select_attrs:
-            setattr(self, attr, kwargs.pop(attr, None))
+            # don't pop attributes from kwargs, so the end-up in
+            # self.cw_extra_kwargs which is then passed to the edition form (see
+            # the .form method)
+            setattr(self, attr, kwargs.get(attr))
         super(InlineEntityEditionFormView, self).__init__(*args, **kwargs)
 
     def _entity(self):
