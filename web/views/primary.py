@@ -161,7 +161,7 @@ class PrimaryView(EntityView):
                 try:
                     label, rset, vid, dispctrl  = box
                 except ValueError:
-                    warn('box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
+                    warn('[3.5] box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
                          'please update %s' % self.__class__.__name__,
                          DeprecationWarning)
                     label, rset, vid  = box
