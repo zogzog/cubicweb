@@ -17,6 +17,7 @@ from logilab.common.date import todatetime
 from cubicweb import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
+
 class FieldWidget(object):
     """abstract widget class"""
     # javascript / css files required by the widget

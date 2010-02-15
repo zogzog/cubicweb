@@ -838,7 +838,6 @@ class RelationField(Field):
             values = (values,)
         eids = set()
         for eid in values:
-            # XXX 'not eid' for AutoCompletionWidget, deal with this in the widget
             if not eid or eid == INTERNAL_FIELD_VALUE:
                 continue
             typed_eid = form.actual_eid(eid)
