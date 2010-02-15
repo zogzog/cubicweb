@@ -415,14 +415,24 @@ class CubicWebRelationSchema(RelationSchema):
 
     def has_perm(self, session, action, **kwargs):
         """return true if the action is granted globaly or localy"""
-        if 'fromeid' in kwargs:
-            subjtype = session.describe(kwargs['fromeid'])[0]
+        if self.final:
+            assert not ('fromeid' in kwargs or 'toeid' in kwargs), kwargs
+            assert action in ('read', 'update')
+            if 'eid' in kwargs:
+                subjtype = session.describe(kwargs['eid'])[0]
+            else:
+                subjtype = objtype = None
         else:
-            subjtype = None
-        if 'toeid' in kwargs:
-            objtype = session.describe(kwargs['toeid'])[0]
-        else:
-            objtype = None
+            assert not 'eid' in kwargs, kwargs
+            assert action in ('read', 'add', 'delete')
+            if 'fromeid' in kwargs:
+                subjtype = session.describe(kwargs['fromeid'])[0]
+            else:
+                subjtype = None
+            if 'toeid' in kwargs:
+                objtype = session.describe(kwargs['toeid'])[0]
+            else:
+                objtype = None
         if objtype and subjtype:
             return self.rdef(subjtype, objtype).has_perm(session, action, **kwargs)
         elif subjtype:
