@@ -92,7 +92,7 @@ class FormRenderer(AppObject):
         self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
-        w(u'</form>')
+        w(self.close_form(form, values))
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
@@ -170,6 +170,13 @@ class FormRenderer(AppObject):
         if form.cwtarget:
             tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
         return tag + '>'
+
+    def close_form(self, form, values):
+        """seem dump but important for consistency w/ close form, and necessary
+        for form renderers overriding open_form to use something else or more than
+        and <form>
+        """
+        return '</form>'
 
     def render_fields(self, w, form, values):
         fields = self._render_hidden_fields(w, form)
