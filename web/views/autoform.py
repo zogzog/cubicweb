@@ -384,7 +384,11 @@ class GenericRelationsField(ff.Field):
             related = []
             if entity.has_eid():
                 rset = entity.related(rschema, role, limit=form.related_limit)
-                if rschema.has_perm(form._cw, 'delete'):
+                if role == 'subject':
+                    haspermkwargs = {'fromeid': entity.eid}
+                else:
+                    haspermkwargs = {'toeid': entity.eid}
+                if rschema.has_perm(form._cw, 'delete', **haspermkwargs):
                     toggleable_rel_link_func = toggleable_relation_link
                 else:
                     toggleable_rel_link_func = lambda x, y, z: u''
