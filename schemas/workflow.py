@@ -172,6 +172,7 @@ class by_transition(RelationType):
     }
     inlined = True
 
+
 class workflow_of(RelationType):
     """link a workflow to one or more entity type"""
     __permissions__ = META_RTYPE_PERMS
@@ -186,27 +187,6 @@ class transition_of(RelationType):
     __permissions__ = META_RTYPE_PERMS
     inlined = True
 
-class subworkflow(RelationType):
-    """link a transition to one or more workflow"""
-    __permissions__ = META_RTYPE_PERMS
-    inlined = True
-
-class exit_point(RelationType):
-    """link a transition to one or more workflow"""
-    __permissions__ = META_RTYPE_PERMS
-
-class subworkflow_state(RelationType):
-    """link a transition to one or more workflow"""
-    __permissions__ = META_RTYPE_PERMS
-    inlined = True
-
-class initial_state(RelationType):
-    """indicate which state should be used by default when an entity using
-    states is created
-    """
-    __permissions__ = META_RTYPE_PERMS
-    inlined = True
-
 class destination_state(RelationType):
     """destination state of a transition"""
     __permissions__ = META_RTYPE_PERMS
@@ -215,6 +195,33 @@ class destination_state(RelationType):
 class allowed_transition(RelationType):
     """allowed transitions from this state"""
     __permissions__ = META_RTYPE_PERMS
+
+class initial_state(RelationType):
+    """indicate which state should be used by default when an entity using
+    states is created
+    """
+    __permissions__ = META_RTYPE_PERMS
+    inlined = True
+
+
+class subworkflow(RelationType):
+    __permissions__ = META_RTYPE_PERMS
+    inlined = True
+
+class exit_point(RelationType):
+    __permissions__ = META_RTYPE_PERMS
+
+class subworkflow_state(RelationType):
+    __permissions__ = META_RTYPE_PERMS
+    inlined = True
+
+
+class condition(RelationType):
+    __permissions__ = META_RTYPE_PERMS
+
+# already defined in base.py
+# class require_group(RelationType):
+#     __permissions__ = META_RTYPE_PERMS
 
 
 # "abstract" relations, set by WorkflowableEntityType ##########################
