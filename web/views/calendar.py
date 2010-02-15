@@ -155,7 +155,9 @@ class OneMonthCal(EntityView):
             last_day_of_month = date(year + 1, 1, 1) - timedelta(1)
         else:
             last_day_of_month = date(year, month + 1, 1) - timedelta(1)
-        lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday())
+        # date range exclude last day so we should at least add one day, hence
+        # the 7
+        lastday = last_day_of_month + timedelta(7 - last_day_of_month.weekday())
         month_dates = list(date_range(firstday, lastday))
         dates = {}
         task_max = 0
@@ -250,7 +252,6 @@ class OneMonthCal(EntityView):
         # output header
         self.w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' %
                tuple(self._cw._(day) for day in WEEKDAYS))
-
         # build calendar
         for mdate, task_rows in zip(month_dates, days):
             if mdate.weekday() == 0:
