@@ -9,7 +9,7 @@
 
 
 # CSS stylesheets to include in HTML headers
-#STYLESHEETS = DATADIR/cubicweb.css
+STYLESHEETS = DATADIR/cubicweb.reset.css, DATADIR/cubicweb.css
 
 # CSS stylesheets for print
 #STYLESHEETS_PRINT = DATADIR/cubicweb.print.css
