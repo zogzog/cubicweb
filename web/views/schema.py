@@ -380,7 +380,6 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 
     def _generate(self, tmpfile):
         """display global schema information"""
-        print 'skipedtypes', skip_types(self._cw)
         visitor = FullSchemaVisitor(self._cw, self._cw.vreg.schema,
                                     skiptypes=skip_types(self._cw))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)

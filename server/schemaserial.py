@@ -189,13 +189,17 @@ def set_perms(erschema, permsdict):
     definition dictionary as built by deserialize_ertype_permissions for a
     given erschema's eid
     """
+    # reset erschema permissions here to avoid getting yams default anyway
+    erschema.permissions = dict((action, ()) for action in erschema.ACTIONS)
     try:
         thispermsdict = permsdict[erschema.eid]
     except KeyError:
         return
-    permissions = erschema.permissions
     for action, somethings in thispermsdict.iteritems():
-        permissions[action] = tuple(
+        # XXX cw < 3.6.1 bw compat
+        if isinstance(erschema, schemamod.RelationDefinitionSchema) and erschema.final and action == 'add':
+            action = 'update'
+        erschema.permissions[action] = tuple(
             isinstance(p, tuple) and erschema.rql_expression(*p) or p
             for p in somethings)
 

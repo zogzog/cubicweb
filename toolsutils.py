@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 # XXX move most of this in logilab.common (shellutils ?)
 
 import os, sys
+import subprocess
 from os import listdir, makedirs, environ, chmod, walk, remove
 from os.path import exists, join, abspath, normpath
 
@@ -75,8 +76,8 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
     user decision
     """
     import shutil
-    p_output = os.popen('diff -u %s %s' % (appl_file, ref_file), 'r')
-    diffs = p_output.read()
+    pipe = subprocess.Popen(['diff', '-u', appl_file, ref_file], stdout=subprocess.PIPE)
+    diffs = pipe.stdout.read()
     if diffs:
         if askconfirm:
             print

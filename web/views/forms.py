@@ -266,6 +266,9 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)
 
+    def should_display_add_new_relation_link(self, rschema, existant, card):
+        return False
+
     # controller side method (eg POST reception handling)
 
     def actual_eid(self, eid):
@@ -283,9 +286,6 @@ class EntityFieldsForm(FieldsForm):
 
     def editable_relations(self):
         return ()
-
-    def should_display_add_new_relation_link(self, rschema, existant, card):
-        return False
 
     @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated function')
     def subject_relation_vocabulary(self, rtype, limit=None):

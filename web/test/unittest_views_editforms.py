@@ -16,7 +16,11 @@ AFFK = uicfg.autoform_field_kwargs
 AFS = uicfg.autoform_section
 
 def rbc(entity, formtype, section):
-    return [(rschema.type, x) for rschema, tschemas, x in AFS.relations_by_section(entity, formtype, section)]
+    if section in ('attributes', 'metadata', 'hidden'):
+        permission = 'update'
+    else:
+        permission = 'add'
+    return [(rschema.type, x) for rschema, tschemas, x in AFS.relations_by_section(entity, formtype, section, permission)]
 
 class AutomaticEntityFormTC(CubicWebTC):
 
@@ -69,19 +73,16 @@ class AutomaticEntityFormTC(CubicWebTC):
                               [('use_email', 'subject'),
                                ])
         # owned_by is defined both as subject and object relations on CWUser
-        self.assertListEquals(rbc(e, 'main', 'hidden'),
-                              [('in_state', 'subject'),
-                               ('is', 'subject'),
-                               ('is_instance_of', 'subject'),
-                               ('has_text', 'subject'),
-                               ('identity', 'subject'),
-                               ('tags', 'object'),
-                               ('for_user', 'object'),
-                               ('created_by', 'object'),
-                               ('wf_info_for', 'object'),
-                               ('owned_by', 'object'),
-                               ('identity', 'object'),
-                               ])
+        self.assertListEquals(sorted(rbc(e, 'main', 'hidden')),
+                              sorted([('has_text', 'subject'),
+                                      ('identity', 'subject'),
+                                      ('tags', 'object'),
+                                      ('for_user', 'object'),
+                                      ('created_by', 'object'),
+                                      ('wf_info_for', 'object'),
+                                      ('owned_by', 'object'),
+                                      ('identity', 'object'),
+                                      ]))
 
     def test_inlined_view(self):
         self.failUnless('main_inlined' in AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
@@ -122,10 +123,8 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ('connait', 'object')
                                ])
         self.assertListEquals(rbc(e, 'main', 'hidden'),
-                              [('is', 'subject'),
-                               ('has_text', 'subject'),
+                              [('has_text', 'subject'),
                                ('identity', 'subject'),
-                               ('is_instance_of', 'subject'),
                                ('identity', 'object'),
                                ])
 

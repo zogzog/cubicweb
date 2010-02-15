@@ -70,8 +70,11 @@ def execscript_confirm(scriptpath):
     ability to show the script's content
     """
     while True:
-        answer = ASK.ask('Execute %r ?' % scriptpath, ('Y','n','show'), 'Y')
-        if answer == 'n':
+        answer = ASK.ask('Execute %r ?' % scriptpath,
+                         ('Y','n','show','abort'), 'Y')
+        if answer == 'abort':
+            raise SystemExit(1)
+        elif answer == 'n':
             return False
         elif answer == 'show':
             stream = open(scriptpath)

@@ -816,6 +816,18 @@ class RelationField(Field):
     def format_single_value(self, req, value):
         return value
 
+    def process_form_value(self, form):
+        """process posted form and return correctly typed value"""
+        try:
+            return form.formvalues[self]
+        except KeyError:
+            value = self._process_form_value(form)
+            # if value is None, there are some remaining pending fields, we'll
+            # have to recompute this later -> don't cache in formvalues
+            if value is not None:
+                form.formvalues[self] = value
+            return value
+
     def _process_form_value(self, form):
         """process posted form and return correctly typed value"""
         widget = self.get_widget(form)
@@ -826,7 +838,6 @@ class RelationField(Field):
             values = (values,)
         eids = set()
         for eid in values:
-            # XXX 'not eid' for AutoCompletionWidget, deal with this in the widget
             if not eid or eid == INTERNAL_FIELD_VALUE:
                 continue
             typed_eid = form.actual_eid(eid)

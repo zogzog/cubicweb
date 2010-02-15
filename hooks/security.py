@@ -12,30 +12,31 @@ from cubicweb import Unauthorized
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
-def check_entity_attributes(session, entity):
+def check_entity_attributes(session, entity, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
     # ._default_set is only there on entity creation to indicate unspecified
     # attributes which has been set to a default value defined in the schema
     defaults = getattr(entity, '_default_set', ())
-    try:
-        editedattrs = entity.edited_attributes
-    except AttributeError:
-        editedattrs = entity
+    if editedattrs is None:
+        try:
+            editedattrs = entity.edited_attributes
+        except AttributeError:
+            editedattrs = entity
     for attr in editedattrs:
         if attr in defaults:
             continue
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            rdef.check_perm(session, 'add', eid=eid)
+            rdef.check_perm(session, 'update', eid=eid)
 
 
 class _CheckEntityPermissionOp(hook.LateOperation):
     def precommit_event(self):
         #print 'CheckEntityPermissionOp', self.session.user, self.entity, self.action
         self.entity.check_perm(self.action)
-        check_entity_attributes(self.session, self.entity)
+        check_entity_attributes(self.session, self.entity, self.editedattrs)
 
     def commit_event(self):
         pass
@@ -63,7 +64,9 @@ class AfterAddEntitySecurityHook(SecurityHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        _CheckEntityPermissionOp(self._cw, entity=self.entity, action='add')
+        _CheckEntityPermissionOp(self._cw, entity=self.entity,
+                                 editedattrs=tuple(self.entity.edited_attributes),
+                                 action='add')
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
@@ -77,7 +80,12 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
             check_entity_attributes(self._cw, self.entity)
         except Unauthorized:
             self.entity.clear_local_perm_cache('update')
-            _CheckEntityPermissionOp(self._cw, entity=self.entity, action='update')
+            # save back editedattrs in case the entity is reedited later in the
+            # same transaction, which will lead to edited_attributes being
+            # overwritten
+            _CheckEntityPermissionOp(self._cw, entity=self.entity,
+                                     editedattrs=tuple(self.entity.edited_attributes),
+                                     action='update')
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):

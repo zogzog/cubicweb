@@ -126,7 +126,7 @@ class EntityUpdateHook(NotificationHook):
             rqlsel.append(var)
             rqlrestr.append('X %s %s' % (attr, var))
         rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
-        rset = session.execute(rql, {'x': self.entity.eid}, 'x')
+        rset = session.unsafe_execute(rql, {'x': self.entity.eid}, 'x')
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
             newvalue = self.entity[attr]

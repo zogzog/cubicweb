@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            ObjectRelation, RichString, String, Boolean, Int)
+                            RichString, String, Boolean, Int)
 from cubicweb.schema import RQLConstraint
 from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
 
@@ -131,15 +131,6 @@ class RQLExpression(EntityType):
                                       'relation\'subject, object and to '
                                       'the request user. '))
 
-    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
-                                      description=_('rql expression allowing to read entities/relations of this type'))
-    add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
-                                     description=_('rql expression allowing to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='*?', composite='subject',
-                                        description=_('rql expression allowing to delete entities/relations of this type'))
-    update_permission = ObjectRelation('CWEType', cardinality='*?', composite='subject',
-                                        description=_('rql expression allowing to update entities of this type'))
-
 
 class CWConstraint(EntityType):
     """define a schema constraint"""
@@ -161,16 +152,6 @@ class CWGroup(EntityType):
     __permissions__ = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
-
-    read_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'), cardinality='**',
-                                      description=_('groups allowed to read entities/relations of this type'))
-    add_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'),
-                                     description=_('groups allowed to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('CWEType', 'CWAttribute', 'CWRelation'),
-                                        description=_('groups allowed to delete entities/relations of this type'))
-    update_permission = ObjectRelation('CWEType',
-                                        description=_('groups allowed to update entities of this type'))
-
 
 
 class CWProperty(EntityType):
@@ -215,27 +196,44 @@ class cstrtype(RelationType):
     inlined = True
 
 class read_permission(RelationType):
-    """core relation giving to a group the permission to read an entity or
-    relation type
+    """grant permission to read entity or relation through a group or rql
+    expression
     """
     __permissions__ = META_RTYPE_PERMS
+    subject = ('CWEType', 'CWAttribute', 'CWRelation')
+    object = ('CWGroup', 'RQLExpression')
+    cardinality = '*?'
+    composite = 'subject'
 
 class add_permission(RelationType):
-    """core relation giving to a group the permission to add an entity or
-    relation type
+    """grant permission to add entity or relation through a group or rql
+    expression
     """
     __permissions__ = META_RTYPE_PERMS
+    subject = ('CWEType', 'CWRelation')
+    object = ('CWGroup', 'RQLExpression')
+    cardinality = '*?'
+    composite = 'subject'
 
 class delete_permission(RelationType):
-    """core relation giving to a group the permission to delete an entity or
-    relation type
+    """grant permission to delete entity or relation through a group or rql
+    expression
     """
     __permissions__ = META_RTYPE_PERMS
+    subject = ('CWEType', 'CWRelation')
+    object = ('CWGroup', 'RQLExpression')
+    cardinality = '*?'
+    composite = 'subject'
 
 class update_permission(RelationType):
-    """core relation giving to a group the permission to update an entity type
+    """grant permission to update entity or attribute through a group or rql
+    expression
     """
     __permissions__ = META_RTYPE_PERMS
+    subject = ('CWEType', 'CWAttribute')
+    object = ('CWGroup', 'RQLExpression')
+    cardinality = '*?'
+    composite = 'subject'
 
 
 class is_(RelationType):

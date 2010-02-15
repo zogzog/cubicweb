@@ -46,8 +46,8 @@ class PrimaryView(EntityView):
         self.render_entity(entity)
 
     def render_entity(self, entity):
-        self.render_entity_title(entity)
         self.render_entity_toolbox(entity)
+        self.render_entity_title(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
         if self.is_primary():
@@ -161,7 +161,7 @@ class PrimaryView(EntityView):
                 try:
                     label, rset, vid, dispctrl  = box
                 except ValueError:
-                    warn('box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
+                    warn('[3.5] box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
                          'please update %s' % self.__class__.__name__,
                          DeprecationWarning)
                     label, rset, vid  = box

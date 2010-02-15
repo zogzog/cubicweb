@@ -55,7 +55,13 @@ class UpdateMetaAttrsHook(MetaDataHook):
     events = ('before_update_entity',)
 
     def __call__(self):
-        self.entity.setdefault('modification_date', datetime.now())
+        # repairing is true during c-c upgrade/shell and similar commands. We
+        # usually don't want to update modification date in such cases.
+        #
+        # XXX to be really clean, we should turn off modification_date update
+        # explicitly on each command where we do not want that behaviour.
+        if not self._cw.vreg.config.repairing:
+            self.entity.setdefault('modification_date', datetime.now())
 
 
 class _SetCreatorOp(hook.Operation):

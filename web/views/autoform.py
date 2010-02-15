@@ -85,7 +85,10 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
 
     def __init__(self, *args, **kwargs):
         for attr in self._select_attrs:
-            setattr(self, attr, kwargs.pop(attr, None))
+            # don't pop attributes from kwargs, so the end-up in
+            # self.cw_extra_kwargs which is then passed to the edition form (see
+            # the .form method)
+            setattr(self, attr, kwargs.get(attr))
         super(InlineEntityEditionFormView, self).__init__(*args, **kwargs)
 
     def _entity(self):
@@ -384,7 +387,11 @@ class GenericRelationsField(ff.Field):
             related = []
             if entity.has_eid():
                 rset = entity.related(rschema, role, limit=form.related_limit)
-                if rschema.has_perm(form._cw, 'delete'):
+                if role == 'subject':
+                    haspermkwargs = {'fromeid': entity.eid}
+                else:
+                    haspermkwargs = {'toeid': entity.eid}
+                if rschema.has_perm(form._cw, 'delete', **haspermkwargs):
                     toggleable_rel_link_func = toggleable_relation_link
                 else:
                     toggleable_rel_link_func = lambda x, y, z: u''
@@ -650,7 +657,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             return self.display_fields
         # XXX we should simply put eid in the generated section, no?
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
-            'attributes', strict=strict) if rtype != 'eid']
+            'attributes', 'update', strict) if rtype != 'eid']
 
     def editable_relations(self):
         """return a sorted list of (relation's label, relation'schema, role) for

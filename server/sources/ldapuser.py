@@ -78,7 +78,7 @@ class LDAPUserSource(AbstractSource):
         ('auth-realm',
          {'type' : 'string',
           'default': None,
-          'help': 'realm to use when using gssapp/kerberos authentication.',
+          'help': 'realm to use when using gssapi/kerberos authentication.',
           'group': 'ldap-source', 'inputlevel': 1,
           }),
 

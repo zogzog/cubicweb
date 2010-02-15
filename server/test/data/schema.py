@@ -137,14 +137,13 @@ class travaille(RelationType):
 class para(RelationType):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers', ERQLExpression('X in_state S, S name "todo"')),
-        'delete': ('managers', ERQLExpression('X in_state S, S name "todo"')),
+        'update':    ('managers', ERQLExpression('X in_state S, S name "todo"')),
         }
 
 class test(RelationType):
     __permissions__ = {'read': ('managers', 'users', 'guests'),
-                   'delete': ('managers',),
-                   'add': ('managers',)}
+                       'update': ('managers',),
+                       }
 
 class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')
