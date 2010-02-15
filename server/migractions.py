@@ -1166,6 +1166,10 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
+        try:
+            execute = self._cw.unsafe_execute
+        except AttributeError:
+            execute = self._cw.execute
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)
@@ -1173,7 +1177,7 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = rql
             if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
                 try:
-                    res = self._cw.execute(rql, kwargs, cachekey)
+                    res = execute(rql, kwargs, cachekey)
                 except Exception, ex:
                     if self.confirm('error: %s\nabort?' % ex):
                         raise
