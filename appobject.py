@@ -404,7 +404,7 @@ class AppObject(object):
     def format_date(self, date, date_format=None, time=False):
         return self._cw.format_date(date, date_format, time)
 
-    @deprecated('[3.6] use self._cw.format_timoe')
+    @deprecated('[3.6] use self._cw.format_time')
     def format_time(self, time):
         return self._cw.format_time(time)
 
