@@ -176,6 +176,22 @@ if you want to allow everything',
           'help': 'print the traceback on the error page when an error occured',
           'group': 'web', 'inputlevel': 2,
           }),
+
+        ('captcha-font-file',
+         {'type' : 'string',
+          'default': join(CubicWebConfiguration.shared_dir(), 'data', 'porkys.ttf'),
+          'help': 'True type font to use for captcha image generation (you \
+must have the python imaging library installed to use captcha)',
+          'group': 'web', 'inputlevel': 2,
+          }),
+        ('captcha-font-size',
+         {'type' : 'int',
+          'default': 25,
+          'help': 'Font size to use for captcha image generation (you must \
+have the python imaging library installed to use captcha)',
+          'group': 'web', 'inputlevel': 2,
+          }),
+
         ))
 
     def fckeditor_installed(self):
