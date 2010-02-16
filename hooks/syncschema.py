@@ -161,11 +161,16 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
         repo = self.session.repo
-        repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
-        # CWUser class might have changed, update current session users
-        cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
-        for session in repo._sessions.values():
-            session.user.__class__ = cwuser_cls
+        # commit event should not raise error, while set_schema has chances to
+        # do so because it triggers full vreg reloading
+        try:
+            repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
+            # CWUser class might have changed, update current session users
+            cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
+            for session in repo._sessions.values():
+                session.user.__class__ = cwuser_cls
+        except:
+            self.critical('error while setting schmea', exc_info=True)
 
     def rollback_event(self):
         self.precommit_event()
