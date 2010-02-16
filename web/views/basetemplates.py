@@ -9,6 +9,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
@@ -511,6 +512,8 @@ class LogFormView(View):
         form.field_by_name('__login').label = label
         self.w(form.render(table_class='', display_progress_div=False))
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+
+LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)
 
 def login_form_url(req):
     if req.https:
