@@ -318,7 +318,7 @@ class CheckBox(Input):
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=field.input_name(form, self.suffix),
                              type=self.type, value=value, **iattrs)
-            options.append(tag + label)
+            options.append(u'%s&#160;%s' % (tag, label))
         return sep.join(options)
 
 
@@ -521,9 +521,9 @@ class JQueryDateTimePicker(FieldWidget):
 
 def init_ajax_attributes(attrs, wdgtype, loadtype=u'auto'):
     try:
-        attrs['klass'] += u' widget'
+        attrs['class'] += u' widget'
     except KeyError:
-        attrs['klass'] = u'widget'
+        attrs['class'] = u'widget'
     attrs.setdefault('cubicweb:wdgtype', wdgtype)
     attrs.setdefault('cubicweb:loadtype', loadtype)
 
@@ -639,7 +639,7 @@ class Button(Input):
         self.value = ''
         self.onclick = onclick
         self.cwaction = cwaction
-        self.attrs.setdefault('klass', 'validateButton')
+        self.attrs.setdefault('class', 'validateButton')
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)

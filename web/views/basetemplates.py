@@ -15,6 +15,8 @@ from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import UStringIO, can_do_pdf_conversion
 from cubicweb.schema import display_name
+from cubicweb.web import formfields as ff, formwidgets as fw
+from cubicweb.web.views import forms
 
 # main templates ##############################################################
 
@@ -389,7 +391,7 @@ class HTMLPageHeader(View):
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
         self.wview('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
-                   title=False, message=False)
+                   title=False, showmessage=False)
 
     def state_header(self):
         state = self._cw.search_state
@@ -460,13 +462,28 @@ class HTMLContentFooter(View):
             self.w(u'</div>')
 
 
-class LogFormTemplate(View):
+class LogForm(forms.FieldsForm):
+    __regid__ = 'logform'
+    domid = 'loginForm'
+    # XXX have to recall fields name since python is mangling __login/__password
+    __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
+    __password = ff.StringField('__password', label=_('password'),
+                                widget=fw.PasswordSingleInput({'class': 'data'}))
+    form_buttons = [fw.SubmitButton(label=_('log in'),
+                                    attrs={'class': 'loginButton right'})]
+
+    @property
+    def action(self):
+        return xml_escape(login_form_url(self._cw))
+
+
+class LogFormView(View):
     __regid__ = 'logform'
     __select__ = match_kwargs('id', 'klass')
 
     title = 'log in'
 
-    def call(self, id, klass, title=True, message=True):
+    def call(self, id, klass, title=True, showmessage=True):
         self._cw.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
@@ -477,52 +494,28 @@ class LogFormTemplate(View):
                 stitle = u'&#160;'
             self.w(u'<div id="loginTitle">%s</div>' % stitle)
         self.w(u'<div id="loginContent">\n')
-
-        if message:
-            self.display_message()
-        if self._cw.vreg.config['auth-mode'] == 'http':
-            # HTTP authentication
-            pass
-        else:
+        if showmessage and self._cw.message:
+            self.w(u'<div class="simpleMessage">%s</div>\n' % self._cw.message)
+        if self._cw.vreg.config['auth-mode'] != 'http':
             # Cookie authentication
             self.login_form(id)
         self.w(u'</div></div>\n')
 
-    def display_message(self):
-        message = self._cw.message
-        if message:
-            self.w(u'<div class="simpleMessage">%s</div>\n' % message)
-
     def login_form(self, id):
-        _ = self._cw._
-        # XXX turn into a form
-        self.w(u'<form method="post" action="%s" id="login_form">\n'
-               % xml_escape(login_form_url(self._cw.vreg.config, self._cw)))
-        self.w(u'<table>\n')
-        self.add_fields()
-        self.w(u'<tr>\n')
-        self.w(u'<td>&#160;</td><td><input type="submit" class="loginButton right" value="%s" />\n</td>' % _('log in'))
-        self.w(u'</tr>\n')
-        self.w(u'</table>\n')
-        self.w(u'</form>\n')
-        self._cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+        cw = self._cw
+        form = cw.vreg['forms'].select('logform', cw)
+        if cw.vreg.config['allow-email-login']:
+            label = cw._('login or email')
+        else:
+            label = cw._('login')
+        form.field_by_name('__login').label = label
+        self.w(form.render(table_class='', display_progress_div=False))
+        cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
-    def add_fields(self):
-        msg = (self._cw.vreg.config['allow-email-login'] and _('login or email')) or _('login')
-        self.add_field('__login', msg, 'text')
-        self.add_field('__password', self._cw._('password'), 'password')
-
-    def add_field(self, name, label, inputtype):
-        self.w(u'<tr>\n')
-        self.w(u'<td><label for="%s" >%s</label></td>' % (name, label))
-        self.w(u'<td><input name="%s" id="%s" class="data" type="%s" /></td>\n' %
-               (name, name, inputtype))
-        self.w(u'</tr>\n')
-
-
-def login_form_url(config, req):
+def login_form_url(req):
     if req.https:
         return req.url()
-    if config.get('https-url'):
-        return req.url().replace(req.base_url(), config['https-url'])
+    httpsurl = req.vreg.config.get('https-url')
+    if httpsurl:
+        return req.url().replace(req.base_url(), httpsurl)
     return req.url()

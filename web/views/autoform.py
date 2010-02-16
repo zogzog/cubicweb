@@ -427,9 +427,6 @@ class GenericRelationsField(ff.Field):
                      % (pendingid, entity.eid)
             rset = form._cw.eid_rset(reid)
             eview = form._cw.view('text', rset, row=0)
-            # XXX find a clean way to handle baskets
-            if rset.description[0][0] == 'Basket':
-                eview = '%s (%s)' % (eview, display_name(form._cw, 'Basket'))
             yield rtype, pendingid, jscall, label, reid, eview
 
 
@@ -461,8 +458,6 @@ class UnrelatedDivs(EntityView):
         options.append('<option>%s %s</option>' % (self._cw._('select a'), etypes))
         options += self._get_select_options(entity, rschema, role)
         options += self._get_search_options(entity, rschema, role, targettypes)
-        if 'Basket' in self._cw.vreg.schema: # XXX
-            options += self._get_basket_options(entity, rschema, role, targettypes)
         relname, role = self._cw.form.get('relation').rsplit('_', 1)
         return u"""\
 <div class="%s" id="%s">
@@ -508,37 +503,6 @@ class UnrelatedDivs(EntityView):
                             '<option value="%s">%s %s</option>' % (
                 xml_escape(url), _('Search for'), eschema.display_name(self._cw))))
         return [o for l, o in sorted(options)]
-
-    # XXX move this out
-    def _get_basket_options(self, entity, rschema, role, targettypes):
-        options = []
-        rtype = rschema.type
-        _ = self._cw._
-        for basketeid, basketname in self._get_basket_links(self._cw.user.eid,
-                                                            role, targettypes):
-            optionid = relation_id(entity.eid, rtype, role, basketeid)
-            options.append('<option id="%s" value="%s">%s %s</option>' % (
-                optionid, basketeid, _('link to each item in'), xml_escape(basketname)))
-        return options
-
-    def _get_basket_links(self, ueid, role, targettypes):
-        targettypes = set(targettypes)
-        for basketeid, basketname, elements in self._get_basket_info(ueid):
-            baskettypes = elements.column_types(0)
-            # if every elements in the basket can be attached to the
-            # edited entity
-            if baskettypes & targettypes:
-                yield basketeid, basketname
-
-    def _get_basket_info(self, ueid):
-        basketref = []
-        basketrql = 'Any B,N WHERE B is Basket, B owned_by U, U eid %(x)s, B name N'
-        basketresultset = self._cw.execute(basketrql, {'x': ueid}, 'x')
-        for result in basketresultset:
-            basketitemsrql = 'Any X WHERE X in_basket B, B eid %(x)s'
-            rset = self._cw.execute(basketitemsrql, {'x': result[0]}, 'x')
-            basketref.append((result[0], result[1], rset))
-        return basketref
 
 
 # The automatic entity form ####################################################

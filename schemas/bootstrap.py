@@ -8,8 +8,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            RichString, String, Boolean, Int)
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+                            SubjectRelation, RichString, String, Boolean, Int)
 from cubicweb.schema import RQLConstraint
 from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
 
@@ -195,43 +195,72 @@ class cstrtype(RelationType):
     __permissions__ = META_RTYPE_PERMS
     inlined = True
 
-class read_permission(RelationType):
-    """grant permission to read entity or relation through a group or rql
-    expression
-    """
+
+class read_permission_cwgroup(RelationDefinition):
+    """groups allowed to read entities/relations of this type"""
     __permissions__ = META_RTYPE_PERMS
+    name = 'read_permission'
     subject = ('CWEType', 'CWAttribute', 'CWRelation')
-    object = ('CWGroup', 'RQLExpression')
-    cardinality = '*?'
-    composite = 'subject'
+    object = 'CWGroup'
+    cardinality = '**'
 
-class add_permission(RelationType):
-    """grant permission to add entity or relation through a group or rql
-    expression
-    """
+class add_permission_cwgroup(RelationDefinition):
+    """groups allowed to add entities/relations of this type"""
     __permissions__ = META_RTYPE_PERMS
+    name = 'add_permission'
     subject = ('CWEType', 'CWRelation')
-    object = ('CWGroup', 'RQLExpression')
-    cardinality = '*?'
-    composite = 'subject'
+    object = 'CWGroup'
+    cardinality = '**'
 
-class delete_permission(RelationType):
-    """grant permission to delete entity or relation through a group or rql
-    expression
-    """
+class delete_permission_cwgroup(RelationDefinition):
+    """groups allowed to delete entities/relations of this type"""
     __permissions__ = META_RTYPE_PERMS
+    name = 'delete_permission'
     subject = ('CWEType', 'CWRelation')
-    object = ('CWGroup', 'RQLExpression')
-    cardinality = '*?'
-    composite = 'subject'
+    object = 'CWGroup'
+    cardinality = '**'
 
-class update_permission(RelationType):
-    """grant permission to update entity or attribute through a group or rql
-    expression
-    """
+class update_permission_cwgroup(RelationDefinition):
+    """groups allowed to update entities/relations of this type"""
     __permissions__ = META_RTYPE_PERMS
+    name = 'update_permission'
     subject = ('CWEType', 'CWAttribute')
-    object = ('CWGroup', 'RQLExpression')
+    object = 'CWGroup'
+    cardinality = '**'
+
+class read_permission_rqlexpr(RelationDefinition):
+    """rql expression allowing to read entities/relations of this type"""
+    __permissions__ = META_RTYPE_PERMS
+    name = 'read_permission'
+    subject = ('CWEType', 'CWAttribute', 'CWRelation')
+    object = 'RQLExpression'
+    cardinality = '*?'
+    composite = 'subject'
+
+class add_permission_rqlexpr(RelationDefinition):
+    """rql expression allowing to add entities/relations of this type"""
+    __permissions__ = META_RTYPE_PERMS
+    name = 'add_permission'
+    subject = ('CWEType', 'CWRelation')
+    object = 'RQLExpression'
+    cardinality = '*?'
+    composite = 'subject'
+
+class delete_permission_rqlexpr(RelationDefinition):
+    """rql expression allowing to delete entities/relations of this type"""
+    __permissions__ = META_RTYPE_PERMS
+    name = 'delete_permission'
+    subject = ('CWEType', 'CWRelation')
+    object = 'RQLExpression'
+    cardinality = '*?'
+    composite = 'subject'
+
+class update_permission_rqlexpr(RelationDefinition):
+    """rql expression allowing to update entities/relations of this type"""
+    __permissions__ = META_RTYPE_PERMS
+    name = 'update_permission'
+    subject = ('CWEType', 'CWAttribute')
+    object = 'RQLExpression'
     cardinality = '*?'
     composite = 'subject'
 

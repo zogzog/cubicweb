@@ -170,19 +170,11 @@ class require_permission(RelationType):
     """link a permission to the entity. This permission should be used in the
     security definition of the entity's type to be useful.
     """
-    __permissions__ = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers',),
-        'delete': ('managers',),
-        }
+    __permissions__ = META_RTYPE_PERMS
 
 class require_group(RelationType):
     """used to grant a permission to a group"""
-    __permissions__ = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers',),
-        'delete': ('managers',),
-        }
+    __permissions__ = META_RTYPE_PERMS
 
 
 class ExternalUri(EntityType):
