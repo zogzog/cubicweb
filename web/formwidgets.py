@@ -318,7 +318,7 @@ class CheckBox(Input):
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=field.input_name(form, self.suffix),
                              type=self.type, value=value, **iattrs)
-            options.append(tag + label)
+            options.append(u'%s&#160;%s' % (tag, label))
         return sep.join(options)
 
 
