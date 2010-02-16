@@ -464,6 +464,7 @@ class HTMLContentFooter(View):
 
 class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
+    domid = 'loginForm'
     # XXX have to recall fields name since python is mangling __login/__password
     __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
     __password = ff.StringField('__password', label=_('password'),
@@ -508,7 +509,7 @@ class LogFormView(View):
         else:
             label = cw._('login')
         form.field_by_name('__login').label = label
-        self.w(form.render(table_class=''))
+        self.w(form.render(table_class='', display_progress_div=False))
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 def login_form_url(req):
