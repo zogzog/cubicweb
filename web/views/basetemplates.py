@@ -466,6 +466,7 @@ class HTMLContentFooter(View):
 class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
     domid = 'loginForm'
+    needs_css = ('cubicweb.login.css',)
     # XXX have to recall fields name since python is mangling __login/__password
     __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
     __password = ff.StringField('__password', label=_('password'),
@@ -485,7 +486,6 @@ class LogFormView(View):
     title = 'log in'
 
     def call(self, id, klass, title=True, showmessage=True):
-        self._cw.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             stitle = self._cw.property_value('ui.site-title')
