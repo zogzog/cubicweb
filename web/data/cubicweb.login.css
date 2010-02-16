@@ -75,7 +75,7 @@ div#loginBox div#loginContent form {
   width:12em;
 }
 
-input.loginButton {
+.loginButton {
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
   margin: 2px 0px 0px;
