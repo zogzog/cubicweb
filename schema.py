@@ -256,7 +256,7 @@ def check_perm(self, session, action, **kwargs):
     # object, if so that's enough
     if 'owners' in groups and (
           kwargs.get('creating')
-          or ('eid' in kwargs and session.user.owns(kwargs['eid'])):
+          or ('eid' in kwargs and session.user.owns(kwargs['eid']))):
         return
     # else if there is some rql expressions, check them
     if any(rqlexpr.check(session, **kwargs)
