@@ -512,6 +512,9 @@ class RangeFacet(AttributeFacet):
     def get_widget(self):
         """return the widget instance to use to display this facet"""
         values = set(value for _, value in self.vocabulary() if value is not None)
+        # Rset with entities (the facet is selected) but without values
+        if len(values) == 0:
+            return None
         return self.wdgclass(self, min(values), max(values))
 
     def infvalue(self):
