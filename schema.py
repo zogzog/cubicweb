@@ -806,9 +806,8 @@ class RQLExpression(object):
             # on the server side, use unsafe_execute, but this is not available
             # on the client side (session is actually a request)
             execute = getattr(session, 'unsafe_execute', session.execute)
-            # XXX what if 'u' in kwargs
+            kwargs.setdefault('u', session.user.eid)
             cachekey = kwargs.keys()
-            kwargs['u'] = session.user.eid
             try:
                 rset = execute(rql, kwargs, cachekey, build_descr=True)
             except NotImplementedError:
@@ -872,15 +871,15 @@ class ERQLExpression(RQLExpression):
             rql += ', U eid %(u)s'
         return rql
 
-    def check(self, session, eid=None, creating=False):
+    def check(self, session, eid=None, creating=False, **kwargs):
         if 'X' in self.rqlst.defined_vars:
             if eid is None:
                 if creating:
-                    return self._check(session, creating=True)
+                    return self._check(session, creating=True, **kwargs)
                 return False
             assert creating == False
-            return self._check(session, x=eid)
-        return self._check(session)
+            return self._check(session, x=eid, **kwargs)
+        return self._check(session, **kwargs)
 
 
 class RRQLExpression(RQLExpression):
