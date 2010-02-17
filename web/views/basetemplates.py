@@ -399,7 +399,7 @@ class HTMLPageHeader(View):
         if state[0] == 'normal':
             return
         _ = self._cw._
-        value = self.view('oneline', self._cw.eid_rset(state[1][1]))
+        value = self._cw.view('oneline', self._cw.eid_rset(state[1][1]))
         msg = ' '.join((_("searching for"),
                         display_name(self._cw, state[1][3]),
                         _("to associate with"), value,
