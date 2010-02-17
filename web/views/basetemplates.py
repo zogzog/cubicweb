@@ -472,7 +472,7 @@ class LogForm(forms.FieldsForm):
     __password = ff.StringField('__password', label=_('password'),
                                 widget=fw.PasswordSingleInput({'class': 'data'}))
     form_buttons = [fw.SubmitButton(label=_('log in'),
-                                    attrs={'class': 'loginButton right'})]
+                                    attrs={'class': 'loginButton'})]
 
     @property
     def action(self):
