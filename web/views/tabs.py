@@ -8,6 +8,7 @@
 
 __docformat__ = "restructuredtext en"
 
+from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, role
@@ -190,7 +191,8 @@ class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
         self.render_entity_toolbox(entity)
         self.render_entity_title(entity)
         self.render_tabs(self.tabs, self.default_tab, entity)
-TabedPrimaryView = TabbedPrimaryView # XXX deprecate that typo!
+
+TabedPrimaryView = class_renamed('TabedPrimaryView', TabbedPrimaryView)
 
 class PrimaryTab(primary.PrimaryView):
     __regid__ = 'main_tab'
