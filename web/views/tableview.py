@@ -37,7 +37,7 @@ class TableView(AnyRsetView):
         self._cw.vreg.rqlhelper.annotate(rqlst)
         mainvar, baserql = prepare_facets_rqlst(rqlst, self.cw_rset.args)
         wdgs = [facet.get_widget() for facet in self._cw.vreg['facets'].poss_visible_objects(
-            self._cw, rset=self.cw_rset, context='tablefilter',
+            self._cw, rset=self.cw_rset, rqlst=rqlst, context='tablefilter',
             filtered_variable=mainvar)]
         wdgs = [wdg for wdg in wdgs if wdg is not None]
         if wdgs:
