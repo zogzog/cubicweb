@@ -69,9 +69,11 @@ class FilterBox(BoxTemplate):
         rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
-        if vid is None:
-            vid = req.form.get('vid')
-        rqlst = rset.syntax_tree().copy()
+        rqlst = self.cw_rset.syntax_tree()
+        # union not yet supported
+        if len(rqlst.children) != 1:
+            return ()
+        rqlst = rqlst.copy()
         req.vreg.rqlhelper.annotate(rqlst)
         mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
         widgets = []
@@ -82,6 +84,8 @@ class FilterBox(BoxTemplate):
                     widgets.append(wdg)
         if not widgets:
             return
+        if vid is None:
+            vid = req.form.get('vid')
         if self.bk_linkbox_template:
             self.display_bookmark_link(rset)
         w = self.w

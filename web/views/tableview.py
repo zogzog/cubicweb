@@ -33,13 +33,13 @@ class TableView(AnyRsetView):
         # union not yet supported
         if len(rqlst.children) != 1:
             return ()
-        rqlst.save_state()
+        rqlst = rqlst.copy()
+        self._cw.vreg.rqlhelper.annotate(rqlst)
         mainvar, baserql = prepare_facets_rqlst(rqlst, self.cw_rset.args)
         wdgs = [facet.get_widget() for facet in self._cw.vreg['facets'].poss_visible_objects(
             self._cw, rset=self.cw_rset, context='tablefilter',
             filtered_variable=mainvar)]
         wdgs = [wdg for wdg in wdgs if wdg is not None]
-        rqlst.recover()
         if wdgs:
             self._generate_form(divid, baserql, wdgs, hidden,
                                vidargs={'displaycols': displaycols,
