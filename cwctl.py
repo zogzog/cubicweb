@@ -297,8 +297,6 @@ repository and the web server.',
         # create the registry directory for this instance
         print '\n'+underline_title('Creating the instance %s' % appid)
         create_dir(config.apphome)
-        # load site_cubicweb from the cubes dir (if any)
-        config.load_site_cubicweb()
         # cubicweb-ctl configuration
         print '\n'+underline_title('Configuring the instance (%s.conf)' % configname)
         config.input_config('main', self.config.config_level)
