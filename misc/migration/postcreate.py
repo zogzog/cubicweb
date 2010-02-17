@@ -5,7 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-
 # insert versions
 create_entity('CWProperty', pkey=u'system.version.cubicweb',
               value=unicode(config.cubicweb_version()))
@@ -38,9 +37,8 @@ if hasattr(config, 'anonymous_user'):
         print 'you are using a manager account as anonymous user.'
         print 'Hopefully this is not a production instance...'
     elif anonlogin:
-        rql('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s,'
-            'X in_group G WHERE G name "guests"',
-            {'login': unicode(anonlogin), 'pwd': anonpwd})
+        from cubicweb.server import create_user
+        create_user(session, unicode(anonlogin), anonpwd, 'guests')
 
 # need this since we already have at least one user in the database (the default admin)
 for user in rql('Any X WHERE X is CWUser').entities():
