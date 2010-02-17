@@ -303,6 +303,12 @@ repository and the web server.',
         # configuration'specific stuff
         print
         helper.bootstrap(cubes, self.config.config_level)
+        # input for cubes specific options
+        for section in set(sect.lower() for sect, opt, optdict in config.all_options()
+                           if optdict.get('inputlevel') <= self.config.config_level):
+            if section not in ('main', 'email', 'pyro'):
+                print '\n' + underline_title('%s options' % section)
+                config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
         self._handle_win32(config, appid)
