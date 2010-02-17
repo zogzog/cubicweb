@@ -257,7 +257,7 @@ class BadSchemaRQLExprTC(TestCase):
         self.assertEquals(str(ex), msg)
 
     def test_rrqlexpr_on_etype(self):
-        self._test('rrqlexpr_on_eetype.py', "can't use RRQLExpression on an entity type, use an ERQLExpression (ToTo)")
+        self._test('rrqlexpr_on_eetype.py', "can't use RRQLExpression on ToTo, use an ERQLExpression")
 
     def test_erqlexpr_on_rtype(self):
         self._test('erqlexpr_on_ertype.py', "can't use ERQLExpression on relation ToTo toto TuTu, use a RRQLExpression")

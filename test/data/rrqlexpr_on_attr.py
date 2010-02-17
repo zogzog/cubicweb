@@ -20,6 +20,5 @@ class ToTo(EntityType):
 class attr(RelationType):
     __permissions__ = {
         'read': ('managers', ),
-        'add': ('managers', RRQLExpression('S bla Y'),),
-        'delete': ('managers',),
+        'update': ('managers', RRQLExpression('S bla Y'),),
         }
