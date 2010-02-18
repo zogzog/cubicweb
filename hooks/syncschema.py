@@ -485,6 +485,10 @@ class SourceDbRDefUpdate(hook.Operation):
             sql = adbh.sql_set_null_allowed(table, column, coltype,
                                             self.values['cardinality'][0] != '1')
             self.session.system_sql(sql)
+        if 'fulltextindexed' in self.values:
+            UpdateFTIndexOp(self.session)
+            self.session.transaction_data.setdefault('fti_update_etypes',
+                                                     set()).add(etype)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -1133,6 +1137,39 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
             expr = self._cw.entity_from_eid(self.eidto).expression
             MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
                                    expr=expr)
+
+
+
+class UpdateFTIndexOp(hook.SingleLastOperation):
+    """operation to update full text indexation of entity whose schema change
+
+    We wait after the commit to as the schema in memory is only updated after the commit.
+    """
+
+    def postcommit_event(self):
+        session = self.session
+        source = session.repo.system_source
+        to_reindex = session.transaction_data.get('fti_update_etypes',())
+        self.info('%i etypes need full text indexed reindexation', len(to_reindex))
+        schema = self.session.repo.vreg.schema
+        for etype in to_reindex:
+            rset = session.execute('Any X WHERE X is %s' % etype)
+            self.info('Reindexing full text index for %i entity of type %s', len(rset), etype)
+            still_fti = list(schema[etype].indexable_attributes())
+            for entity in rset.entities():
+                try:
+                  source.fti_unindex_entity(session, entity.eid)
+                  for container in entity.fti_containers():
+                      if still_fti or container is not entity:
+                          session.repo.index_entity(session, container)
+                except Exception, ex:
+                    self.critical('Error while updating Full Text Index for'
+                                  ' entity %s', entity.eid, exc_info=True)
+        if len(to_reindex):
+            # Transaction have already been committed
+            session.pool.commit()
+
+
 
 
 # specializes synchronization hooks ############################################
