@@ -936,7 +936,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if syncprops:
                     self._synchronize_eschema(etype, syncperms=syncperms)
                 else:
-                    self._synchronize_permissions(self.fs_schema[etype], erschema.eid)
+                    self._synchronize_permissions(self.fs_schema[etype], etype.eid)
         if commit:
             self.commit()
 
