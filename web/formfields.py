@@ -413,12 +413,17 @@ class StringField(Field):
 
 class PasswordField(StringField):
     widget = fw.PasswordInput
+    def form_init(self, form):
+        if self.eidparam and form.edited_entity.has_eid():
+            # see below: value is probably set but we can't retreive it. Ensure
+            # the field isn't show as a required field on modification
+            self.required = False
 
     def typed_value(self, form, load_bytes=False):
         if self.eidparam:
             # no way to fetch actual password value with cw
             if form.edited_entity.has_eid():
-                return INTERNAL_FIELD_VALUE
+                return ''
             return self.initial_typed_value(form, load_bytes)
         return super(PasswordField, self).typed_value(form, load_bytes)
 
