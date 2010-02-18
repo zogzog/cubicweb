@@ -655,6 +655,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
             return self.display_fields
+        if self.edited_entity.has_eid() and not self.edited_entity.has_perm('update'):
+            return []
         # XXX we should simply put eid in the generated section, no?
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
             'attributes', 'update', strict) if rtype != 'eid']

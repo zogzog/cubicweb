@@ -380,10 +380,6 @@ class EntityFormRenderer(BaseFormRenderer):
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
-    def _render_fields(self, fields, w, form):
-        if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
-            super(EntityFormRenderer, self)._render_fields(fields, w, form)
-
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:
             w("""<table width="100%%">
