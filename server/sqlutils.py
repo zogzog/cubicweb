@@ -178,6 +178,7 @@ class SQLAdapterMixIn(object):
     def backup_to_file(self, backupfile):
         for cmd in self.dbhelper.backup_commands(self.dbname, self.dbhost,
                                                  self.dbuser, backupfile,
+                                                 dbport=self.dbport,
                                                  keepownership=False):
             if _run_command(cmd):
                 if not confirm('   [Failed] Continue anyway?', default='n'):
@@ -187,6 +188,7 @@ class SQLAdapterMixIn(object):
         for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
                                                   self.dbuser, backupfile,
                                                   self.encoding,
+                                                  dbport=self.dbport,
                                                   keepownership=False,
                                                   drop=drop):
             if _run_command(cmd):
