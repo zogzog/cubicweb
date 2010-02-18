@@ -350,12 +350,8 @@ class JSonController(Controller):
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/views/basecontrollers.py
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
-=======
             view = self.vreg['views'].select(vid, req, rset=rset)
-        self.validate_cache(view)
->>>>>>> /tmp/basecontrollers.py~other.stRkG5
         return self._call_view(view)
 
     @xhtmlize
