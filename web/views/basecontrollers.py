@@ -351,7 +351,7 @@ class JSonController(Controller):
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
-            view = self.vreg['views'].select(vid, req, rset=rset)
+        self.validate_cache(view)
         return self._call_view(view)
 
     @xhtmlize
