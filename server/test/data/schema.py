@@ -137,7 +137,7 @@ class travaille(RelationType):
 class para(RelationType):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
-        'update':    ('managers', ERQLExpression('X in_state S, S name "todo"')),
+        'update': ('managers', ERQLExpression('X in_state S, S name "todo"')),
         }
 
 class test(RelationType):
