@@ -205,6 +205,8 @@ class CookieSessionHandler(object):
         #      reopening. Is it actually a problem?
         self._update_last_login_time(req)
         args = req.form
+        for forminternal_key in ('__form_id', '__domid', '__errorurl'):
+            args.pop(forminternal_key, None)
         args['__message'] = req._('welcome %s !') % req.user.login
         if 'vid' in req.form:
             args['vid'] = req.form['vid']
