@@ -383,10 +383,10 @@ class JSonController(Controller):
 
     @check_pageid
     @xhtmlize
-    def js_inline_creation_form(self, peid, ttype, rtype, role, i18nctx):
+    def js_inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
         view = self._cw.vreg['views'].select('inline-creation', self._cw,
-                                         etype=ttype, peid=peid, rtype=rtype,
-                                         role=role)
+                                             etype=ttype, rtype=rtype, role=role,
+                                             peid=peid, petype=petype)
         return self._call_view(view, i18nctx=i18nctx)
 
     @jsonize
