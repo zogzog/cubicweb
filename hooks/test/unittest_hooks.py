@@ -292,6 +292,12 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.execute('SET X delete_permission G WHERE X eid %(x)s, G is CWGroup, G name "owners"',
                      {'x': eid}, 'x')
 
+    def _set_attr_perms(self, eid):
+        self.execute('SET X read_permission G WHERE X eid %(x)s, G is CWGroup',
+                     {'x': eid}, 'x')
+        self.execute('SET X update_permission G WHERE X eid %(x)s, G is CWGroup, G name "managers"',
+                     {'x': eid}, 'x')
+
     def test_base(self):
         schema = self.repo.schema
         self.session.set_pool()
@@ -312,7 +318,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", '
                                '   X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
                                'WHERE RT name "name", E name "Societe2", F name "String"')[0][0]
-        self._set_perms(attreid)
+        self._set_attr_perms(attreid)
         concerne2_rdef_eid = self.execute(
             'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
             'WHERE RT name "concerne2", E name "Societe2"')[0][0]
