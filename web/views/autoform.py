@@ -175,7 +175,9 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     @property
     def removejs(self):
         entity = self._entity()
-        card = entity.e_schema.rdef(self.rtype, neg_role(self.role)).role_cardinality(self.role)
+        ttype = self._cw.entity_from_eid(self.peid).__regid__
+        rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), ttype)
+        card= rdef.role_cardinality(self.role)
         # when one is adding an inline entity for a relation of a single card,
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link
