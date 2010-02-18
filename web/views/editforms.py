@@ -307,7 +307,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         # compute value, checking perms, build form
         if rschema.final:
             form = self._build_form(entity, rtype, role, 'base', default, reload, lzone)
-            if not self.should_edit_attribute(entity, rschema, role, form):
+            if not self.should_edit_attribute(entity, rschema, form):
                 self.w(entity.printable_value(rtype))
                 return
             value = entity.printable_value(rtype) or default
@@ -330,14 +330,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.relation_form(lzone, value, form,
                            self._build_renderer(entity, rtype, role))
 
-    def should_edit_attribute(self, entity, rschema, role, form):
+    def should_edit_attribute(self, entity, rschema, form):
         rtype = str(rschema)
-        ttype = rschema.targets(entity.__regid__, role)[0]
-        afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
+        rdef = entity.e_schema.rdef(rtype)
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rtype, 'subject', rdef.object)
         if 'main_hidden' in afs or not entity.has_perm('update'):
             return False
+        if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
+            return False
         try:
-            form.field_by_name(rtype, role, entity.e_schema)
+            form.field_by_name(rtype, 'subject', entity.e_schema)
         except FieldNotFound:
             return False
         return True
