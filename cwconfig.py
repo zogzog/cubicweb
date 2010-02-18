@@ -328,7 +328,7 @@ this option is set to yes",
         cubes = set()
         for directory in cls.cubes_search_path():
             if not os.path.exists(directory):
-                self.error('unexistant directory in cubes search path: %s'
+                cls.error('unexistant directory in cubes search path: %s'
                            % directory)
                 continue
             for cube in os.listdir(directory):
@@ -347,7 +347,7 @@ this option is set to yes",
                     path.append(directory)
         except KeyError:
             pass
-        if not cls.CUBES_DIR in path:
+        if not cls.CUBES_DIR in path and exists(cls.CUBES_DIR):
             path.append(cls.CUBES_DIR)
         return path
 
@@ -474,7 +474,7 @@ this option is set to yes",
         from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
         for ctlfile in ('web/webctl.py',  'etwist/twctl.py',
-                        'server/serverctl.py', 
+                        'server/serverctl.py',
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:

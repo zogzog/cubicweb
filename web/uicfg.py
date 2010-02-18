@@ -379,7 +379,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     continue
                 rdef = rschema.role_rdef(eschema, tschema, role)
                 if rschema.final:
-                    if not rdef.has_perm(cw, permission, eid=eid):
+                    if not rdef.has_perm(cw, permission, eid=eid,
+                                         creating=eid is None):
                         continue
                 elif strict or not rdef.has_local_role(relpermission):
                     if role == 'subject':

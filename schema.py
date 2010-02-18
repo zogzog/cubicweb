@@ -254,7 +254,9 @@ def check_perm(self, session, action, **kwargs):
         return
     # if 'owners' in allowed groups, check if the user actually owns this
     # object, if so that's enough
-    if 'owners' in groups and 'eid' in kwargs and session.user.owns(kwargs['eid']):
+    if 'owners' in groups and (
+          kwargs.get('creating')
+          or ('eid' in kwargs and session.user.owns(kwargs['eid']))):
         return
     # else if there is some rql expressions, check them
     if any(rqlexpr.check(session, **kwargs)
@@ -787,20 +789,25 @@ class RQLExpression(object):
 
         session may actually be a request as well
         """
-        if self.eid is not None:
+        creating = kwargs.get('creating')
+        if not creating and self.eid is not None:
             key = (self.eid, tuple(sorted(kwargs.iteritems())))
             try:
                 return session.local_perm_cache[key]
             except KeyError:
                 pass
         rql, has_perm_defs, keyarg = self.transform_has_permission()
+        if creating:
+            # when creating an entity, consider has_*_permission satisfied
+            if has_perm_defs:
+                return True
+            return False
         if keyarg is None:
             # on the server side, use unsafe_execute, but this is not available
             # on the client side (session is actually a request)
             execute = getattr(session, 'unsafe_execute', session.execute)
-            # XXX what if 'u' in kwargs
+            kwargs.setdefault('u', session.user.eid)
             cachekey = kwargs.keys()
-            kwargs['u'] = session.user.eid
             try:
                 rset = execute(rql, kwargs, cachekey, build_descr=True)
             except NotImplementedError:
@@ -864,12 +871,15 @@ class ERQLExpression(RQLExpression):
             rql += ', U eid %(u)s'
         return rql
 
-    def check(self, session, eid=None):
+    def check(self, session, eid=None, creating=False, **kwargs):
         if 'X' in self.rqlst.defined_vars:
             if eid is None:
+                if creating:
+                    return self._check(session, creating=True, **kwargs)
                 return False
-            return self._check(session, x=eid)
-        return self._check(session)
+            assert creating == False
+            return self._check(session, x=eid, **kwargs)
+        return self._check(session, **kwargs)
 
 
 class RRQLExpression(RQLExpression):

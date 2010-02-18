@@ -93,6 +93,14 @@ class debugged(object):
 
 # database initialization ######################################################
 
+def create_user(session, login, pwd, *groups):
+    # monkey patch this method if you want to customize admin/anon creation
+    # (that maybe necessary if you change CWUser's schema)
+    session.create_entity('CWUser', login=login, upassword=pwd)
+    for group in groups:
+        session.execute('SET U in_group G WHERE G name %(group)s',
+                        {'group': group})
+
 def init_repository(config, interactive=True, drop=False, vreg=None):
     """initialise a repository database by creating tables add filling them
     with the minimal set of entities (ie at least the schema, base groups and
@@ -161,9 +169,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     for group in sorted(BASE_GROUPS):
         session.execute('INSERT CWGroup X: X name %(name)s',
                         {'name': unicode(group)})
-    session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
-                    {'login': login, 'pwd': pwd})
-    session.execute('SET U in_group G WHERE G name "managers"')
+    create_user(session, login, pwd, 'managers')
     session.commit()
     # reloging using the admin user
     config._cubes = None # avoid assertion error

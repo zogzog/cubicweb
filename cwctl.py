@@ -297,14 +297,18 @@ repository and the web server.',
         # create the registry directory for this instance
         print '\n'+underline_title('Creating the instance %s' % appid)
         create_dir(config.apphome)
-        # load site_cubicweb from the cubes dir (if any)
-        config.load_site_cubicweb()
         # cubicweb-ctl configuration
         print '\n'+underline_title('Configuring the instance (%s.conf)' % configname)
         config.input_config('main', self.config.config_level)
         # configuration'specific stuff
         print
         helper.bootstrap(cubes, self.config.config_level)
+        # input for cubes specific options
+        for section in set(sect.lower() for sect, opt, optdict in config.all_options()
+                           if optdict.get('inputlevel') <= self.config.config_level):
+            if section not in ('main', 'email', 'pyro'):
+                print '\n' + underline_title('%s options' % section)
+                config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
         self._handle_win32(config, appid)

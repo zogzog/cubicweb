@@ -9,6 +9,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
@@ -398,7 +399,7 @@ class HTMLPageHeader(View):
         if state[0] == 'normal':
             return
         _ = self._cw._
-        value = self.view('oneline', self._cw.eid_rset(state[1][1]))
+        value = self._cw.view('oneline', self._cw.eid_rset(state[1][1]))
         msg = ' '.join((_("searching for"),
                         display_name(self._cw, state[1][3]),
                         _("to associate with"), value,
@@ -465,12 +466,13 @@ class HTMLContentFooter(View):
 class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
     domid = 'loginForm'
+    needs_css = ('cubicweb.login.css',)
     # XXX have to recall fields name since python is mangling __login/__password
     __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
     __password = ff.StringField('__password', label=_('password'),
                                 widget=fw.PasswordSingleInput({'class': 'data'}))
     form_buttons = [fw.SubmitButton(label=_('log in'),
-                                    attrs={'class': 'loginButton right'})]
+                                    attrs={'class': 'loginButton'})]
 
     @property
     def action(self):
@@ -484,7 +486,6 @@ class LogFormView(View):
     title = 'log in'
 
     def call(self, id, klass, title=True, showmessage=True):
-        self._cw.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             stitle = self._cw.property_value('ui.site-title')
@@ -511,6 +512,8 @@ class LogFormView(View):
         form.field_by_name('__login').label = label
         self.w(form.render(table_class='', display_progress_div=False))
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+
+LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)
 
 def login_form_url(req):
     if req.https:

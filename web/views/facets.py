@@ -69,37 +69,38 @@ class FilterBox(BoxTemplate):
         rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
+        rqlst = self.cw_rset.syntax_tree()
+        # union not yet supported
+        if len(rqlst.children) != 1:
+            return ()
+        rqlst = rqlst.copy()
+        req.vreg.rqlhelper.annotate(rqlst)
+        mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
+        widgets = []
+        for facet in self.get_facets(rset, rqlst.children[0], mainvar):
+            if facet.cw_propval('visible'):
+                wdg = facet.get_widget()
+                if wdg is not None:
+                    widgets.append(wdg)
+        if not widgets:
+            return
         if vid is None:
             vid = req.form.get('vid')
-        rqlst = rset.syntax_tree()
-        rqlst.save_state()
-        try:
-            mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
-            widgets = []
-            for facet in self.get_facets(rset, mainvar):
-                if facet.cw_propval('visible'):
-                    wdg = facet.get_widget()
-                    if wdg is not None:
-                        widgets.append(wdg)
-            if not widgets:
-                return
-            if self.bk_linkbox_template:
-                self.display_bookmark_link(rset)
-            w = self.w
-            w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
-                divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
-            w(u'<fieldset>')
-            hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
-                       'baserql': baserql}
-            for param in ('subvid', 'vtitle'):
-                if param in req.form:
-                    hiddens[param] = req.form[param]
-            filter_hiddens(w, **hiddens)
-            for wdg in widgets:
-                wdg.render(w=self.w)
-            w(u'</fieldset>\n</form>\n')
-        finally:
-            rqlst.recover()
+        if self.bk_linkbox_template:
+            self.display_bookmark_link(rset)
+        w = self.w
+        w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
+            divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
+        w(u'<fieldset>')
+        hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
+                   'baserql': baserql}
+        for param in ('subvid', 'vtitle'):
+            if param in req.form:
+                hiddens[param] = req.form[param]
+        filter_hiddens(w, **hiddens)
+        for wdg in widgets:
+            wdg.render(w=self.w)
+        w(u'</fieldset>\n</form>\n')
 
     def display_bookmark_link(self, rset):
         eschema = self._cw.vreg.schema.eschema('Bookmark')
@@ -115,10 +116,10 @@ class FilterBox(BoxTemplate):
                     self._cw._('bookmark this search'))
             self.w(self.bk_linkbox_template % bk_link)
 
-    def get_facets(self, rset, mainvar):
-        return self._cw.vreg['facets'].poss_visible_objects(self._cw, rset=rset,
-                                                        context='facetbox',
-                                                        filtered_variable=mainvar)
+    def get_facets(self, rset, rqlst, mainvar):
+        return self._cw.vreg['facets'].poss_visible_objects(
+            self._cw, rset=rset, rqlst=rqlst,
+            context='facetbox', filtered_variable=mainvar)
 
 # facets ######################################################################
 

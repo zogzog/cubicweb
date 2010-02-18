@@ -134,7 +134,7 @@ def mk_entity(row, map):
         try:
             for func in funcs:
                 res[dest] = func(res[dest])
-            if res[dest] is None or res[dest]==False:
+            if res[dest] is None:
                 raise AssertionError('undetermined value')
         except AssertionError, err:
             if optional in funcs:
@@ -220,7 +220,26 @@ def strip(txt):
     return txt.strip()
 
 def yesno(value):
-    return value.lower()[0] in 'yo1'
+    """simple heuristic that returns boolean value
+
+    >>> yesno("Yes")
+    True
+    >>> yesno("oui")
+    True
+    >>> yesno("1")
+    True
+    >>> yesno("11")
+    True
+    >>> yesno("")
+    False
+    >>> yesno("Non")
+    False
+    >>> yesno("blablabla")
+    False
+    """
+    if value:
+        return value.lower()[0] in 'yo1'
+    return False
 
 def isalpha(value):
     if value.isalpha():
