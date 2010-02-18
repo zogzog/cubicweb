@@ -236,7 +236,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     options = (
        ('log-threshold',
          {'type' : 'string', # XXX use a dedicated type?
-          'default': 'ERROR',
+          'default': 'WARNING',
           'help': 'server\'s log level',
           'group': 'main', 'inputlevel': 1,
           }),

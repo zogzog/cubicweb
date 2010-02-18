@@ -690,7 +690,7 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.eid)
+            self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
         if hasattr(self, 'group_eid'):
@@ -717,7 +717,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.eid)
+            self.warning('no schema for %s', self.eid)
             return
         if isinstance(erschema, RelationSchema): # XXX 3.6 migration
             return
