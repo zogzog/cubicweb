@@ -164,9 +164,9 @@ class PasswordInput(Input):
         assert self.suffix is None, 'suffix not supported'
         values, attrs = self.values_and_attributes(form, field)
         assert len(values) == 1
-        id = attrs.pop('id')
+        domid = attrs.pop('id')
         inputs = [tags.input(name=field.input_name(form),
-                             value=values[0], type=self.type, id=id, **attrs),
+                             value=values[0], type=self.type, id=domid, **attrs),
                   '<br/>',
                   tags.input(name=field.input_name(form, '-confirm'),
                              value=values[0], type=self.type, **attrs),
