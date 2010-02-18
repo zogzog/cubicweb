@@ -472,7 +472,12 @@ def _erperms2rql(erschema, groupmap):
     and CWGroup entities
     """
     for action in erschema.ACTIONS:
-        for group_or_rqlexpr in erschema.action_permissions(action):
+        try:
+            grantedto = erschema.action_permissions(action)
+        except KeyError:
+            # may occurs when modifying persistent schema
+            continue
+        for group_or_rqlexpr in grantedto:
             if isinstance(group_or_rqlexpr, basestring):
                 # group
                 try:
