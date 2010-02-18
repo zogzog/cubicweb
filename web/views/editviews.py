@@ -12,9 +12,10 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import xml_escape
 
 from cubicweb import typed_eid
-from cubicweb.view import EntityView
+from cubicweb.view import EntityView, StartupView
 from cubicweb.selectors import (one_line_rset, non_final_entity,
                                 match_search_state)
+from cubicweb.web import httpcache, captcha
 from cubicweb.web.views import baseviews, linksearch_select_url
 
 
@@ -93,3 +94,18 @@ class EditableFinalView(baseviews.FinalView):
             self.w(entity.view('reledit', rtype=rtype))
         else:
             super(EditableFinalView, self).cell_call(row, col, props)
+
+
+class CaptchaView(StartupView):
+    __regid__ = 'captcha'
+
+    http_cache_manager = httpcache.NoHTTPCacheManager
+    binary = True
+    templatable = False
+    content_type = 'image/jpg'
+
+    def call(self):
+        text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
+                                     self._cw.vreg.config['captcha-font-size'])
+        self._cw.set_session_data('captcha', text)
+        self.w(data.read())

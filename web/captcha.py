@@ -17,8 +17,7 @@ import Image, ImageFont, ImageDraw, ImageFilter
 from time import time
 
 from cubicweb import tags
-from cubicweb.view import StartupView
-from cubicweb.web import httpcache, formwidgets as fw, formfields as ff
+from cubicweb.web import formwidgets as fw
 
 
 def pil_captcha(text, fontfile, fontsize):
@@ -59,21 +58,6 @@ def captcha(fontfile, fontsize, size=5, format='JPEG'):
     img.save(out, format)
     out.seek(0)
     return text, out
-
-
-class CaptchaView(StartupView):
-    __regid__ = 'captcha'
-
-    http_cache_manager = httpcache.NoHTTPCacheManager
-    binary = True
-    templatable = False
-    content_type = 'image/jpg'
-
-    def call(self):
-        text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
-                                     self._cw.vreg.config['captcha-font-size'])
-        self._cw.set_session_data('captcha', text)
-        self.w(data.read())
 
 
 class CaptchaWidget(fw.TextInput):
