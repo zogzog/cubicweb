@@ -664,7 +664,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.cmd_add_attribute(etype, newname, attrtype, commit=True)
         # skipp NULL values if the attribute is required
         rql = 'SET X %s VAL WHERE X is %s, X %s VAL' % (newname, etype, oldname)
-        card = eschema.rproperty(newname, 'cardinality')[0]
+        card = eschema.rdef(newname).cardinality[0]
         if card == '1':
             rql += ', NOT X %s NULL' % oldname
         self.rqlexec(rql, ask_confirm=self.verbosity>=2)
@@ -735,9 +735,9 @@ class ServerMigrationHelper(MigrationHelper):
                         elif role == 'object':
                             subjschema = tschema
                             objschema = spschema
-                        if (rschema.rproperty(subjschema, objschema, 'infered')
+                        if (rschema.rdef(subjschema, objschema).infered
                             or (instschema.has_relation(rschema) and
-                                instschema[rschema].has_rdef(subjschema, objschema))):
+                                (subjschema, objschema) in instschema[rschema].rdefs)):
                                 continue
                         self.cmd_add_relation_definition(
                             subjschema.type, rschema.type, objschema.type)
