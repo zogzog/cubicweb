@@ -175,7 +175,7 @@ class EntityTC(CubicWebTC):
             Personne.fetch_attrs = pfetch_attrs
             Societe.fetch_attrs = sfetch_attrs
 
-    def test_related_rql(self):
+    def test_related_rql_base(self):
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
         self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
@@ -201,6 +201,14 @@ class EntityTC(CubicWebTC):
                           'Any X,AA,AB ORDERBY AA ASC '
                           'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
                           'X modification_date AB')
+
+    def test_related_rql_ambigous_cant_use_fetch_order(self):
+        tag = self.vreg['etypes'].etype_class('Tag')(self.request())
+        for ttype in self.schema['tags'].objects():
+            self.vreg['etypes'].etype_class(ttype).fetch_attrs = ('modification_date',)
+        self.assertEquals(tag.related_rql('tags', 'subject'),
+                          'Any X,AA ORDERBY AA DESC '
+                          'WHERE E eid %(x)s, E tags X, X modification_date AA')
 
     def test_unrelated_rql_security_1(self):
         user = self.request().user

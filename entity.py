@@ -638,8 +638,17 @@ class Entity(AppObject, dict):
                 rql = '%s WHERE %s' % (rql.split(' ORDERBY ', 1)[0],
                                        rql.split(' WHERE ', 1)[1])
         elif not ' ORDERBY ' in rql:
-            args = tuple(rql.split(' WHERE ', 1))
-            rql = '%s ORDERBY Z DESC WHERE X modification_date Z, %s' % args
+            args = rql.split(' WHERE ', 1)
+            # if modification_date already retreived, we should use it instead
+            # of adding another variable for sort. This should be be problematic
+            # but it's actually with sqlserver, see ticket #694445
+            if 'X modification_date ' in args[1]:
+                var = args[1].split('X modification_date ', 1)[1].split(',', 1)[0]
+                args.insert(1, var.strip())
+                rql = '%s ORDERBY %s DESC WHERE %s' % tuple(args)
+            else:
+                rql = '%s ORDERBY Z DESC WHERE X modification_date Z, %s' % \
+                      tuple(args)
         return rql
 
     # generic vocabulary methods ##############################################
