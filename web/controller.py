@@ -124,6 +124,10 @@ class Controller(AppObject):
         else:
             self._cw.set_message(self._cw._('entity deleted'))
 
+    def validate_cache(self, view):
+        view.set_http_cache_headers()
+        self.req.validate_cache()
+
 
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
