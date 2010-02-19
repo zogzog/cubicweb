@@ -232,7 +232,7 @@ class FireTransitionHook(WorkflowHook):
                     raise ValidationError(entity.eid, {'by_transition': msg})
             if entity.get('to_state'):
                 deststateeid = entity['to_state']
-                if not cowpowers and deststateeid != tr.destination().eid:
+                if not cowpowers and deststateeid != tr.destination(forentity).eid:
                     msg = session._("transition isn't allowed")
                     raise ValidationError(entity.eid, {'by_transition': msg})
                 if swtr is None:
@@ -241,7 +241,7 @@ class FireTransitionHook(WorkflowHook):
                         msg = session._("state doesn't belong to entity's workflow")
                         raise ValidationError(entity.eid, {'to_state': msg})
             else:
-                deststateeid = tr.destination().eid
+                deststateeid = tr.destination(forentity).eid
         # everything is ok, add missing information on the trinfo entity
         entity['from_state'] = fromstate.eid
         entity['to_state'] = deststateeid

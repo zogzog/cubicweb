@@ -256,8 +256,12 @@ class Transition(BaseTransition):
     """customized class for Transition entities"""
     __regid__ = 'Transition'
 
-    def destination(self):
-        return self.destination_state[0]
+    def destination(self, entity):
+        try:
+            return self.destination_state[0]
+        except IndexError:
+            return entity.latest_trinfo().previous_state
+
 
     def parent(self):
         return self.workflow

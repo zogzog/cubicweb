@@ -98,7 +98,7 @@ class WorkflowTC(CubicWebTC):
         trs = list(user.possible_transitions())
         self.assertEquals(len(trs), 1)
         self.assertEquals(trs[0].name, u'deactivate')
-        self.assertEquals(trs[0].destination().name, u'deactivated')
+        self.assertEquals(trs[0].destination(None).name, u'deactivated')
         # test a std user get no possible transition
         cnx = self.login('member')
         # fetch the entity using the new session
@@ -140,6 +140,27 @@ class WorkflowTC(CubicWebTC):
         self._test_manager_deactivate(user)
         trinfo = self._test_manager_deactivate(user)
         self.assertEquals(trinfo.transition.name, 'deactivate')
+
+    def test_goback_transition(self):
+        wf = self.session.user.current_workflow
+        asleep = wf.add_state('asleep')
+        wf.add_transition('rest', (wf.state_by_name('activated'), wf.state_by_name('deactivated')),
+                               asleep)
+        wf.add_transition('wake up', asleep)
+        user = self.create_user('stduser')
+        user.fire_transition('rest')
+        self.commit()
+        user.fire_transition('wake up')
+        self.commit()
+        self.assertEquals(user.state, 'activated')
+        user.fire_transition('deactivate')
+        self.commit()
+        user.fire_transition('rest')
+        self.commit()
+        user.fire_transition('wake up')
+        self.commit()
+        user.clear_all_caches()
+        self.assertEquals(user.state, 'deactivated')
 
     # XXX test managers can change state without matching transition
 
@@ -207,7 +228,7 @@ class WorkflowTC(CubicWebTC):
         state3 = mwf.add_state(u'state3')
         swftr1 = mwf.add_wftransition(u'swftr1', swf, state1,
                                       [(swfstate2, state2), (swfstate3, state3)])
-        self.assertEquals(swftr1.destination().eid, swfstate1.eid)
+        self.assertEquals(swftr1.destination(None).eid, swfstate1.eid)
         # workflows built, begin test
         self.group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
