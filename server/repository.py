@@ -101,14 +101,11 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # skip delete queries (only?) if session is an internal session. This is
-    # hooks responsability to ensure they do not violate relation's cardinality
-    if session.is_super_session:
-        return
-    ensure_card_respected(session.unsafe_execute, session, eidfrom, rtype, eidto)
-
-
-def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
+    # XXX now that rql in migraction default to unsafe_execute we don't want to
+    #     skip that anymore. Also we should imo rely on the orm to first fetch
+    #     existing entity if any then delete it
+    #if session.is_super_session:
+    #    return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
@@ -118,12 +115,12 @@ def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     # consistency.
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
-        if not rschema.inlined:
-            execute('DELETE X %s Y WHERE X eid %%(x)s,NOT Y eid %%(y)s' % rtype,
-                    {'x': eidfrom, 'y': eidto}, 'x')
+        if not rschema.inlined: # inlined relations will be implicitly deleted
+            session.unsafe_execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
+                                   {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                {'x': eidfrom, 'y': eidto}, 'y')
+        session.unsafe_execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+                               {'x': eidfrom, 'y': eidto}, 'y')
 
 
 class Repository(object):
