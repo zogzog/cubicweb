@@ -568,18 +568,18 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except f.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
+        if self.fieldsets_in_order:
+            fsio = list(self.fieldsets_in_order)
+        else:
+            fsio = [None]
+        self.fieldsets_in_order = fsio
+        # add fields for relation whose target should have an inline form
+        for formview in self.inlined_form_views():
+            field = self._inlined_form_view_field(formview)
+            self.fields.append(field)
+            if not field.fieldset in fsio:
+                fsio.append(field.fieldset)
         if self.formtype == 'main':
-            if self.fieldsets_in_order:
-                fsio = list(self.fieldsets_in_order)
-            else:
-                fsio = [None]
-            self.fieldsets_in_order = fsio
-            # add fields for relation whose target should have an inline form
-            for formview in self.inlined_form_views():
-                field = self._inlined_form_view_field(formview)
-                self.fields.append(field)
-                if not field.fieldset in fsio:
-                    fsio.append(field.fieldset)
             # add the generic relation field if necessary
             if entity.has_eid() and (
                 self.display_fields is None or
