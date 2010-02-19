@@ -123,7 +123,7 @@ class Workflow(AnyEntity):
             self._cw.execute('SET S allowed_transition T '
                              'WHERE S eid %(s)s, T eid %(t)s',
                              {'s': state, 't': tr.eid}, ('s', 't'))
-        tr.set_transition_permissions(requiredgroups, conditions, reset=False)
+        tr.set_permissions(requiredgroups, conditions, reset=False)
         return tr
 
     def add_transition(self, name, fromstates, tostate=None,
@@ -221,8 +221,7 @@ class BaseTransition(AnyEntity):
             return self.transition_of[0].rest_path(), {}
         return super(Transition, self).after_deletion_path()
 
-    def set_transition_permissions(self, requiredgroups=(), conditions=(),
-                                   reset=True):
+    def set_permissions(self, requiredgroups=(), conditions=(), reset=True):
         """set or add (if `reset` is False) groups and conditions for this
         transition
         """
@@ -250,6 +249,11 @@ class BaseTransition(AnyEntity):
                              'X expression %(expr)s, X mainvars %(mainvars)s, '
                              'T condition X WHERE T eid %(x)s',kwargs, 'x')
         # XXX clear caches?
+
+    @deprecated('[3.6.1] use set_permission')
+    def set_transition_permissions(self, requiredgroups=(), conditions=(),
+                                   reset=True):
+        return self.set_permissions(requiredgroups, conditions, reset)
 
 
 class Transition(BaseTransition):
