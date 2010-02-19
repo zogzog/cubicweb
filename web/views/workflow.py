@@ -69,7 +69,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
                                       entity.view('oneline')))
         msg = self.req._('status will change from %(st1)s to %(st2)s') % {
             'st1': entity.printable_state,
-            'st2': self._cw._(transition.destination().name)}
+            'st2': self._cw._(transition.destination(entity).name)}
         self.w(u'<p>%s</p>\n' % msg)
         self.w(form.render())
 
@@ -318,7 +318,8 @@ class WorkflowVisitor:
         for transition in self.entity.reverse_transition_of:
             for incomingstate in transition.reverse_allowed_transition:
                 yield incomingstate.eid, transition.eid, transition
-            yield transition.eid, transition.destination().eid, transition
+            for outgoingstate in transition.potential_destinations():
+                yield transition.eid, outgoingstate.eid, transition
 
 
 class WorkflowImageView(TmpFileViewMixin, view.EntityView):

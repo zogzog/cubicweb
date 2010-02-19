@@ -266,6 +266,12 @@ class Transition(BaseTransition):
         except IndexError:
             return entity.latest_trinfo().previous_state
 
+    def potential_destinations(self):
+        try:
+            yield self.destination_state[0]
+        except IndexError:
+            for state in self.reverse_allowed_transition:
+                yield state
 
     def parent(self):
         return self.workflow
@@ -279,8 +285,11 @@ class WorkflowTransition(BaseTransition):
     def subwf(self):
         return self.subworkflow[0]
 
-    def destination(self):
+    def destination(self, entity):
         return self.subwf.initial
+
+    def potential_destinations(self):
+        yield self.subwf.initial
 
     def add_exit_point(self, fromstate, tostate):
         if hasattr(fromstate, 'eid'):
