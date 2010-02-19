@@ -270,8 +270,10 @@ class Transition(BaseTransition):
         try:
             yield self.destination_state[0]
         except IndexError:
-            for state in self.reverse_allowed_transition:
-                yield state
+            for incomingstate in self.reverse_allowed_transition:
+                for tr in incomingstate.reverse_destination_state:
+                    for previousstate in tr.reverse_allowed_transition:
+                        yield previousstate
 
     def parent(self):
         return self.workflow
