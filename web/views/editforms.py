@@ -17,7 +17,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
-                                specified_etype_implements, yes)
+                                specified_etype_implements, implements, yes)
 from cubicweb.view import EntityView
 from cubicweb import tags
 from cubicweb.web import uicfg, stdmsgs, eid_param, \
@@ -30,15 +30,13 @@ _pvdc = uicfg.primaryview_display_ctrl
 
 class DeleteConfForm(forms.CompositeForm):
     __regid__ = 'deleteconf'
-    __select__ = non_final_entity()
+    # XXX non_final_entity does not implement eclass_selector
+    __select__ = implements('Any')
 
     domid = 'deleteconf'
     copy_nav_params = True
     form_buttons = [fw.Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
                     fw.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
-    @property
-    def action(self):
-        return self._cw.build_url('edit')
 
     def __init__(self, *args, **kwargs):
         super(DeleteConfForm, self).__init__(*args, **kwargs)
