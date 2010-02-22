@@ -9,6 +9,7 @@
 
 import os.path as osp
 import re
+import datetime
 
 from logilab.common.testlib import TestCase, unittest_main
 
@@ -41,7 +42,6 @@ class ValueGeneratorTC(TestCase):
     def _available_Person_firstname(self, etype, attrname):
         return [f.strip() for f in file(osp.join(DATADIR, 'firstnames.txt'))]
 
-
     def setUp(self):
         config = ApptestConfiguration('data')
         config.bootstrap_cubes()
@@ -51,17 +51,6 @@ class ValueGeneratorTC(TestCase):
         e_schema = schema.eschema('Bug')
         self.bug_valgen = MyValueGenerator(e_schema)
         self.config = config
-
-    def _check_date(self, date):
-        """checks that 'date' is well-formed"""
-        year = date.year
-        month = date.month
-        day = date.day
-        self.failUnless(day in range(1, 29), '%s not in [0;28]' % day)
-        self.failUnless(month in range(1, 13), '%s not in [1;12]' % month)
-        self.failUnless(year in range(2000, 2005),
-                        '%s not in [2000;2004]' % year)
-
 
     def test_string(self):
         """test string generation"""
@@ -92,14 +81,13 @@ class ValueGeneratorTC(TestCase):
     def test_date(self):
         """test date generation"""
         # Test for random index
-        for index in range(5):
+        for index in range(10):
             date_value = self.person_valgen.generate_attribute_value({}, 'birthday', index)
-            self._check_date(date_value)
+            self.failUnless(isinstance(date_value, datetime.date))
 
     def test_phone(self):
         """tests make_tel utility"""
         self.assertEquals(make_tel(22030405), '22 03 04 05')
-
 
     def test_customized_generation(self):
         self.assertEquals(self.bug_valgen.generate_attribute_value({}, 'severity', 12),
@@ -108,7 +96,6 @@ class ValueGeneratorTC(TestCase):
                           u'yo')
         self.assertEquals(self.person_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
-
 
 
 class ConstraintInsertionTC(TestCase):
