@@ -352,7 +352,7 @@ class ServerMigrationHelper(MigrationHelper):
                                             'T eid %%(x)s' % perm, {'x': teid}, 'x',
                                             ask_confirm=False):
                 if not gname in newgroups:
-                    if not confirm or self.confirm('remove %s permission of %s to %s?'
+                    if not confirm or self.confirm('Remove %s permission of %s to %s?'
                                                    % (action, erschema, gname)):
                         self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
                                      % (perm, teid),
@@ -360,7 +360,7 @@ class ServerMigrationHelper(MigrationHelper):
                 else:
                     newgroups.remove(gname)
             for gname in newgroups:
-                if not confirm or self.confirm('grant %s permission of %s to %s?'
+                if not confirm or self.confirm('Grant %s permission of %s to %s?'
                                                % (action, erschema, gname)):
                     self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
                                  % (perm, teid),
@@ -371,7 +371,7 @@ class ServerMigrationHelper(MigrationHelper):
                                                     'T eid %s' % (perm, teid),
                                                     ask_confirm=False):
                 if not expression in newexprs:
-                    if not confirm or self.confirm('remove %s expression for %s permission of %s?'
+                    if not confirm or self.confirm('Remove %s expression for %s permission of %s?'
                                                    % (expression, action, erschema)):
                         # deleting the relation will delete the expression entity
                         self.rqlexec('DELETE T %s E WHERE E eid %%(x)s, T eid %s'
@@ -381,7 +381,7 @@ class ServerMigrationHelper(MigrationHelper):
                     newexprs.pop(expression)
             for expression in newexprs.values():
                 expr = expression.expression
-                if not confirm or self.confirm('add %s expression for %s permission of %s?'
+                if not confirm or self.confirm('Add %s expression for %s permission of %s?'
                                                % (expr, action, erschema)):
                     self.rqlexec('INSERT RQLExpression X: X exprtype %%(exprtype)s, '
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
@@ -528,7 +528,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def checkpoint(self, ask_confirm=True):
         """checkpoint action"""
-        if not ask_confirm or self.confirm('commit now ?', shell=False):
+        if not ask_confirm or self.confirm('Commit now ?', shell=False):
             self.commit()
 
     def cmd_add_cube(self, cube, update_database=True):
@@ -1146,13 +1146,13 @@ class ServerMigrationHelper(MigrationHelper):
         should only be used for low level stuff undoable with existing higher
         level actions
         """
-        if not ask_confirm or self.confirm('execute sql: %s ?' % sql):
+        if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             self.session.set_pool() # ensure pool is set
             try:
                 cu = self.session.system_sql(sql, args)
             except:
                 ex = sys.exc_info()[1]
-                if self.confirm('error: %s\nabort?' % ex):
+                if self.confirm('Error: %s\nabort?' % ex):
                     raise
                 return
             try:
@@ -1175,11 +1175,11 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = '%s (%s)' % (rql, kwargs)
             else:
                 msg = rql
-            if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
+            if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
                     res = execute(rql, kwargs, cachekey)
                 except Exception, ex:
-                    if self.confirm('error: %s\nabort?' % ex):
+                    if self.confirm('Error: %s\nabort?' % ex):
                         raise
         return res
 
@@ -1264,12 +1264,12 @@ class ForRqlIterator:
         else:
             msg = rql
         if self.ask_confirm:
-            if not self._h.confirm('execute rql: %s ?' % msg):
+            if not self._h.confirm('Execute rql: %s ?' % msg):
                 raise StopIteration
         try:
             rset = self._h._cw.execute(rql, kwargs)
         except Exception, ex:
-            if self._h.confirm('error: %s\nabort?' % ex):
+            if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:
                 raise StopIteration
