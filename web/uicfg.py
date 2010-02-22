@@ -455,7 +455,7 @@ class AutoformIsInlined(RelationTags):
     """XXX for < 3.6 bw compat"""
     def tag_relation(self, key, tag):
         warn('autoform_is_inlined is deprecated, use autoform_section '
-             'with formtype="inlined", section="attributes" or section="hidden"',
+             'with formtype="main", section="inlined"',
              DeprecationWarning, stacklevel=3)
         section = tag and 'inlined' or 'hidden'
         autoform_section.tag_relation(key, 'main', section)
