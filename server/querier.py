@@ -572,7 +572,7 @@ class QuerierHelper(object):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
-        * `rql` should be an unicode string or a plain ascii string
+        * `rql` should be an Unicode string or a plain ASCII string
         * `args` the optional parameters dictionary associated to the query
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty
@@ -580,17 +580,17 @@ class QuerierHelper(object):
         * `eid_key` must be both a key in args and a substitution in the rql
           query. It should be used to enhance cacheability of rql queries.
           It may be a tuple for keys in args.
-          eid_key must be providen in case where a eid substitution is providen
-          and resolve some ambiguity in the possible solutions infered for each
+          `eid_key` must be provided in cases where a eid substitution is provided
+          and resolves ambiguities in the possible solutions inferred for each
           variable in the query.
 
-        on INSERT queries, there will be on row with the eid of each inserted
+        on INSERT queries, there will be one row with the eid of each inserted
         entity
 
         result for DELETE and SET queries is undefined yet
 
         to maximize the rql parsing/analyzing cache performance, you should
-        always use substitute arguments in queries (eg avoid query such as
+        always use substitute arguments in queries (i.e. avoid query such as
         'Any X WHERE X eid 123'!)
         """
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
