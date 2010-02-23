@@ -126,8 +126,7 @@ class Controller(AppObject):
 
     def validate_cache(self, view):
         view.set_http_cache_headers()
-        self.req.validate_cache()
-
+        self._cw.validate_cache()
 
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
