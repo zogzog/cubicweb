@@ -113,14 +113,17 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # the web interface but may occurs during test or dbapi connection (though
     # not expected for this).  So: don't do it, we pretend to ensure repository
     # consistency.
+    #
+    # also, we must not use unsafe_execute since we want the delete permission
+    # to be checked when some existing relation is deleted
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined: # inlined relations will be implicitly deleted
-            session.unsafe_execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                                   {'x': eidfrom, 'y': eidto}, 'x')
+            session.execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
+                            {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        session.unsafe_execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                               {'x': eidfrom, 'y': eidto}, 'y')
+        session.execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+                        {'x': eidfrom, 'y': eidto}, 'y')
 
 
 class Repository(object):
