@@ -97,15 +97,20 @@ class FieldWidget(object):
         return self.values(form, field), attrs
 
     def values(self, form, field):
-        qname = field.input_name(form, self.suffix)
-        if qname in form.form_previous_values:
-            values = form.form_previous_values[qname]
-        elif qname in form._cw.form:
-            values = form._cw.form[qname]
-        elif field.name != qname and field.name in form._cw.form:
-            # compat: accept attr=value in req.form to specify value of attr-subject
-            values = form._cw.form[field.name]
-        else:
+        values = None
+        if not field.ignore_req_params:
+            qname = field.input_name(form, self.suffix)
+            # value from a previous post that has raised a validation error
+            if qname in form.form_previous_values:
+                values = form.form_previous_values[qname]
+            # value specified using form parameters
+            elif qname in form._cw.form:
+                values = form._cw.form[qname]
+            elif field.name != qname and field.name in form._cw.form:
+                # XXX compat: accept attr=value in req.form to specify value of
+                # attr-subject
+                values = form._cw.form[field.name]
+        if values is None:
             values = self.typed_value(form, field)
             if values != INTERNAL_FIELD_VALUE:
                 values = self.format_value(form, field, values)

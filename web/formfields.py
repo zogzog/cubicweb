@@ -91,7 +91,10 @@ class Field(object):
        optional fieldset to which this field belongs to
     :order:
        key used by automatic forms to sort fields
-
+    :ignore_req_params:
+       when true, this field won't consider value potentialy specified using
+       request's form parameters (eg you won't be able to specify a value using for
+       instance url like http://mywebsite.com/form?field=value)
     """
     # default widget associated to this class of fields. May be overriden per
     # instance
@@ -113,6 +116,7 @@ class Field(object):
     order = None
     value = _MARKER
     fallback_on_none_attribute = False
+    ignore_req_params = False
 
     def __init__(self, name=None, label=_MARKER, widget=None, **kwargs):
         for key, val in kwargs.items():
