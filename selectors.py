@@ -528,6 +528,9 @@ class non_final_entity(EClassSelector):
             return 0
         return 1
 
+    def score_class(self, eclass, req):
+        return 1 # necessarily true if we're there
+
 
 class implements(ImplementsMixIn, EClassSelector):
     """Return non-zero score for entity that are of the given type(s) or
