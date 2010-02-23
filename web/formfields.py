@@ -352,9 +352,9 @@ class Field(object):
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
         try:
-            return form.formvalues[self]
+            return form.formvalues[(self, form)]
         except KeyError:
-            value = form.formvalues[self] = self._process_form_value(form)
+            value = form.formvalues[(self, form)] = self._process_form_value(form)
             return value
 
     def _process_form_value(self, form):
@@ -600,7 +600,7 @@ class EditableFileField(FileField):
             if data:
                 encoding = self.encoding(form)
                 try:
-                    form.formvalues[self] = unicode(data.getvalue(), encoding)
+                    form.formvalues[(self, form)] = unicode(data.getvalue(), encoding)
                 except UnicodeError:
                     pass
                 else:
@@ -820,7 +820,7 @@ class RelationField(Field):
             for field in form.root_form.fields_by_name('__linkto'):
                 if field.value in searchedvalues:
                     form.root_form.remove_field(field)
-            form.formvalues[self] = value
+            form.formvalues[(self, form)] = value
 
     def format_single_value(self, req, value):
         return value
@@ -828,13 +828,13 @@ class RelationField(Field):
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
         try:
-            return form.formvalues[self]
+            return form.formvalues[(self, form)]
         except KeyError:
             value = self._process_form_value(form)
             # if value is None, there are some remaining pending fields, we'll
             # have to recompute this later -> don't cache in formvalues
             if value is not None:
-                form.formvalues[self] = value
+                form.formvalues[(self, form)] = value
             return value
 
     def _process_form_value(self, form):
