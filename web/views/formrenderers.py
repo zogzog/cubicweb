@@ -85,10 +85,6 @@ class FormRenderer(AppObject):
         if self.display_progress_div:
             w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
         w(u'<fieldset>')
-        w(tags.input(type=u'hidden', name=u'__form_id',
-                     value=values.get('formvid', form.__regid__)))
-        if form.redirect_path:
-            w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
         self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
