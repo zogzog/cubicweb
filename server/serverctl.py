@@ -455,13 +455,21 @@ class ResetAdminPasswordCommand(Command):
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
         cursor = cnx.cursor()
+        # check admin exists
+        cursor.execute("SELECT * FROM cw_CWUser WHERE cw_login=%(l)s",
+                       {'l': adminlogin})
+        if not cursor.fetchall():
+            print ("-> error: admin user %r specified in sources doesn't exist "
+                   "in the database" % adminlogin)
+            print "   fix your sources file before running this command"
+            cnx.close()
+            sys.exit(1)
+        # ask for a new password
         _, passwd = manager_userpasswd(adminlogin, confirm=True,
                                        passwdmsg='new password for %s' % adminlogin)
         try:
-            sqlexec("UPDATE %(sp)sCWUser SET %(sp)supassword='%(p)s' WHERE %(sp)slogin='%(l)s'"
-                    % {'sp': SQL_PREFIX,
-                       'p': crypt_password(passwd), 'l': adminlogin},
-                    cursor, withpb=False)
+            cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
+                           {'p': crypt_password(passwd), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
@@ -475,6 +483,7 @@ class ResetAdminPasswordCommand(Command):
         else:
             cnx.commit()
             print '-> password reset, sources file regenerated.'
+        cnx.close()
 
 
 class StartRepositoryCommand(Command):
