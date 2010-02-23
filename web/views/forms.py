@@ -113,6 +113,7 @@ class FieldsForm(form.Form):
 
     def add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
+        kwargs.setdefault('ignore_req_params', True)
         kwargs.setdefault('widget', fwdgs.HiddenInput)
         field = StringField(name=name, value=value, **kwargs)
         if 'id' in kwargs:
@@ -223,9 +224,8 @@ class EntityFieldsForm(FieldsForm):
             self.edited_entity = rset.complete_entity(row or 0, col or 0)
         msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(_cw, rset, row, col, **kwargs)
-        self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True,
-                        ignore_req_params=True)
-        self.add_hidden('eid', self.edited_entity.eid, ignore_req_params=True)
+        self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
+        self.add_hidden('eid', self.edited_entity.eid)
         if kwargs.get('mainform', True): # mainform default to true in parent
             self.add_hidden(u'__maineid', self.edited_entity.eid)
             # If we need to directly attach the new object to another one
