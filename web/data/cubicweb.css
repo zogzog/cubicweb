@@ -392,7 +392,11 @@ ul.boxListing ul li a:hover {
   color: #111100;
 }
 
-
+ul.boxListing a.boxMenu:hover {
+                                background: #eeedd9 url(puce_down.png) no-repeat scroll 98% 6px;
+                                cursor:pointer;
+                                border-top:medium none;
+                                }
 a.boxMenu {
   background: transparent url("puce_down.png") 98% 6px no-repeat;
   display: block;
