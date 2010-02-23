@@ -59,21 +59,6 @@ class FieldWidget(object):
     def _render(self, form, field, renderer):
         raise NotImplementedError()
 
-    def typed_value(self, form, field):
-        """return field's *typed* value specified in:
-        3. extra form values given to render()
-        4. field's typed value
-        """
-        qname = field.input_name(form)
-        for key in (field, qname):
-            try:
-                return form.formvalues[key]
-            except KeyError:
-                continue
-        if field.name != qname and field.name in form.formvalues:
-            return form.formvalues[field.name]
-        return field.typed_value(form)
-
     def format_value(self, form, field, value):
         return field.format_value(form._cw, value)
 
@@ -117,6 +102,21 @@ class FieldWidget(object):
         if not isinstance(values, (tuple, list)):
             values = (values,)
         return values
+
+    def typed_value(self, form, field):
+        """return field's *typed* value specified in:
+        3. extra form values given to render()
+        4. field's typed value
+        """
+        qname = field.input_name(form)
+        for key in ((field, form), qname):
+            try:
+                return form.formvalues[key]
+            except KeyError:
+                continue
+        if field.name != qname and field.name in form.formvalues:
+            return form.formvalues[field.name]
+        return field.typed_value(form)
 
     def process_field_data(self, form, field):
         posted = form._cw.form

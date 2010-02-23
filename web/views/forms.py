@@ -179,6 +179,7 @@ class FieldsForm(form.Form):
             renderer = self.default_renderer()
         return renderer.render(self, values)
 
+
 _AFF = uicfg.autoform_field
 _AFF_KWARGS = uicfg.autoform_field_kwargs
 
@@ -259,8 +260,7 @@ class EntityFieldsForm(FieldsForm):
         for field in self.fields:
             if field.eidparam:
                 edited.add(field.role_name())
-        self.add_hidden('_cw_edited_fields', u','.join(edited),
-                        eidparam=True)
+        self.add_hidden('_cw_edited_fields', u','.join(edited), eidparam=True)
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(
