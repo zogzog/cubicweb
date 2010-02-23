@@ -159,8 +159,9 @@ class EditController(basecontrollers.ViewController):
                 field = form.field_by_name(name, role, eschema=entity.e_schema)
             else:
                 field = form.field_by_name(name, role)
-            if field.has_been_modified(form):
-                self.handle_formfield(form, field, rqlquery)
+            for field in field.actual_fields(form):
+                if field.has_been_modified(form):
+                    self.handle_formfield(form, field, rqlquery)
         if self.errors:
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(entity.eid, errors)
