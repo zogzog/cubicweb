@@ -188,14 +188,14 @@ class EntityTC(CubicWebTC):
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
         self.assertEquals(p.related_rql('evaluee'),
-                          'Any X,AA ORDERBY Z DESC '
-                          'WHERE X modification_date Z, E eid %(x)s, E evaluee X, '
+                          'Any X,AA ORDERBY AA DESC '
+                          'WHERE E eid %(x)s, E evaluee X, '
                           'X modification_date AA')
 
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
         self.assertEquals(tag.related_rql('tags', 'subject'),
-                          'Any X,AA ORDERBY Z DESC '
-                          'WHERE X modification_date Z, E eid %(x)s, E tags X, '
+                          'Any X,AA ORDERBY AA DESC '
+                          'WHERE E eid %(x)s, E tags X, '
                           'X modification_date AA')
         self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
                           'Any X,AA,AB ORDERBY AA ASC '
