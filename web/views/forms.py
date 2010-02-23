@@ -250,6 +250,8 @@ class EntityFieldsForm(FieldsForm):
         # entity primary view
         if self._cw.json_request and self.edited_entity.has_eid():
             return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
+        # XXX we should not consider some url parameters that may lead to
+        # different url after a validation error
         return '%s#%s' % (self._cw.url(), self.domid)
 
     def build_context(self, formvalues=None):
