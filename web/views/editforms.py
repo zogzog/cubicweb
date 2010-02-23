@@ -96,9 +96,7 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self._cw.vreg['forms'].select('edition', self._cw, rset=entity.cw_rset,
-                                             row=entity.cw_row, col=entity.cw_col,
-                                             entity=entity,
+        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.render())
@@ -238,7 +236,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         # the edit controller try to select the form with no rset but
         # entity=entity, and use this form to edit the entity. So we want
         # edition form there but specifying formvid may have other undesired
-        # side effect. Maybe we should provide another variable optinally
+        # side effect. Maybe we should provide another variable optionally
         # telling which form the edit controller should select (eg difffers
         # between html generation / post handling form)
         form = self._cw.vreg['forms'].select(self.__regid__, self._cw,

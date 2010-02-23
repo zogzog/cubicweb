@@ -1,4 +1,4 @@
-"""abstract controler classe for CubicWeb web client
+"""abstract controller classe for CubicWeb web client
 
 
 :organization: Logilab
