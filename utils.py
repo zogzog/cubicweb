@@ -7,27 +7,33 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import xml_escape
-
-import locale
 import sys
 import decimal
 import datetime
-from md5 import md5
-from time import time
-from random import randint, seed
+import random
+
+from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import deprecated
 
 # initialize random seed from current time
-seed()
+random.seed()
 
 if sys.version_info[:2] < (2, 5):
+
+    from time import time
+    from md5 import md5
+    from random import randint
+
     def make_uid(key):
         """forge a unique identifier
         not that unique on win32"""
         msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
         return md5(msg).hexdigest()
+
 else:
+
     from uuid import uuid4
+
     def make_uid(key):
         # remove dash, generated uid are used as identifier sometimes (sql table
         # names at least)
