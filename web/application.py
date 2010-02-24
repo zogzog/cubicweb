@@ -381,7 +381,11 @@ class CubicWebPublisher(object):
                         'eidmap': req.data.get('eidmap', {})
                         }
             req.set_session_data(req.form['__errorurl'], forminfo)
-            raise Redirect(req.form['__errorurl'])
+            # XXX form session key / __error_url should be differentiated:
+            # session key is 'url + #<form dom id', though we usually don't want
+            # the browser to move to the form since it hides the global
+            # messages.
+            raise Redirect(req.form['__errorurl'].rsplit('#', 1)[0])
         self.error_handler(req, ex, tb=False)
 
     def error_handler(self, req, ex, tb=False):
