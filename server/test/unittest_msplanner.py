@@ -5,7 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from logilab.common.decorators import clear_cache
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
@@ -78,12 +77,12 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.prevrqlexpr_affaire = affreadperms[-1]
         # add access to type attribute so S can't be invariant
         affreadperms[-1] = ERQLExpression('X concerne S?, S owned_by U, S type "X"')
-        self.schema['Affaire'].permissions['read'] = tuple(affreadperms)
+        self.schema['Affaire'].set_action_permissions('read', affreadperms)
         # hijack CWUser security
         userreadperms = list(self.schema['CWUser'].permissions['read'])
         self.prevrqlexpr_user = userreadperms[-1]
         userreadperms[-1] = ERQLExpression('X owned_by U')
-        self.schema['CWUser'].permissions['read'] = tuple(userreadperms)
+        self.schema['CWUser'].set_action_permissions('read', userreadperms)
         self.add_source(FakeUserROSource, 'ldap')
         self.add_source(FakeCardSource, 'cards')
 
@@ -96,9 +95,7 @@ class BaseMSPlannerTC(BasePlannerTC):
     def restore_orig_affaire_security(self):
         affreadperms = list(self.schema['Affaire'].permissions['read'])
         affreadperms[-1] = self.prevrqlexpr_affaire
-        self.schema['Affaire'].permissions['read'] = tuple(affreadperms)
-        clear_cache(self.schema['Affaire'], 'get_rqlexprs')
-        #clear_cache(self.schema['Affaire'], 'get_groups')
+        self.schema['Affaire'].set_action_permissions('read', affreadperms)
 
     def restore_orig_cwuser_security(self):
         if hasattr(self, '_orig_cwuser_security_restored'):
@@ -106,9 +103,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         self._orig_cwuser_security_restored = True
         userreadperms = list(self.schema['CWUser'].permissions['read'])
         userreadperms[-1] = self.prevrqlexpr_user
-        self.schema['CWUser'].permissions['read'] = tuple(userreadperms)
-        clear_cache(self.schema['CWUser'], 'get_rqlexprs')
-        #clear_cache(self.schema['CWUser'], 'get_groups')
+        self.schema['CWUser'].set_action_permissions('read', userreadperms)
 
 
 class PartPlanInformationTC(BaseMSPlannerTC):
