@@ -27,6 +27,8 @@ class PDFTC(TestCase):
         fopproc = sub(['/usr/bin/fop', foptmp.name, pdftmp.name])
         fopproc.wait()
         del foptmp
+        if fopproc.returncode:
+            self.skip('fop returned status %s' % fopproc.returncode)
         pdftmp.seek(0) # a bit superstitious
         reference = open(osp.join(DATADIR, 'sample1.pdf'), 'r').read()
         output = pdftmp.read()
