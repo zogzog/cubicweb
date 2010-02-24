@@ -68,22 +68,17 @@ class Schema2RQLTC(TestCase):
     def test_rschema2rql2(self):
         self.assertListEquals(list(rschema2rql(schema.rschema('add_permission'))),
                               [
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s', {'description': u'core relation giving to a group the permission to add an entity or relation type', 'symmetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s', {'description': u'', 'symmetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
 
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 3, 'cardinality': u'**', 'se': 'CWAttribute'}),
+             {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 9999, 'cardinality': u'**', 'se': 'CWEType'}),
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'oe': 'RQLExpression', 'ordernum': 5, 'cardinality': u'*?', 'se': 'CWAttribute'}),
+             {'rt': 'add_permission', 'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'oe': 'RQLExpression', 'ordernum': 9999, 'cardinality': u'*?', 'se': 'CWEType'}),
 
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 3, 'cardinality': u'**', 'se': 'CWEType'}),
+             {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 9999, 'cardinality': u'**', 'se': 'CWRelation'}),
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'oe': 'RQLExpression', 'ordernum': 5, 'cardinality': u'*?', 'se': 'CWEType'}),
-
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'oe': 'CWGroup', 'ordernum': 3, 'cardinality': u'**', 'se': 'CWRelation'}),
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE name %(se)s,ER name %(rt)s,OE name %(oe)s',
-             {'rt': 'add_permission', 'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'oe': 'RQLExpression', 'ordernum': 5, 'cardinality': u'*?', 'se': 'CWRelation'}),
+             {'rt': 'add_permission', 'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'oe': 'RQLExpression', 'ordernum': 9999, 'cardinality': u'*?', 'se': 'CWRelation'}),
             ])
 
     def test_rschema2rql3(self):
@@ -133,8 +128,8 @@ class Schema2RQLTC(TestCase):
         expected = [
             ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X is CWRType, X name %(rt)s',
              {'rt': 'add_permission', 'symmetric': False,
-              'description': u'core relation giving to a group the permission to add an entity or relation type',
-              'final': False, 'fulltext_container': None, 'inlined': False, 'name': u'add_permission'})
+              'description': u'', 'final': False, 'fulltext_container': None,
+              'inlined': False, 'name': u'add_permission'})
             ]
         for i, (rql, args) in enumerate(updaterschema2rql(schema.rschema('add_permission'))):
             yield self.assertEquals, (rql, args), expected[i]
@@ -172,10 +167,12 @@ class Perms2RQLTC(TestCase):
                               [('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 1}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 2}),
-                               ('SET X add_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
-                               ('SET X add_permission Y WHERE Y eid %(g)s, ', {'g': 1}),
-                               ('SET X delete_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
-                               ('SET X delete_permission Y WHERE Y eid %(g)s, ', {'g': 1}),
+                               ('SET X update_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
+                               ('INSERT RQLExpression E: '
+                                'E expression %(e)s, E exprtype %(t)s, E mainvars %(v)s, '
+                                'X update_permission E '
+                                'WHERE ', # completed by the outer function
+                                {'e': u'U has_update_permission X', 't': u'ERQLExpression', 'v': u'X'}),
                                ])
 
     #def test_perms2rql(self):
