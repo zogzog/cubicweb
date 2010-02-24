@@ -421,8 +421,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
         except Exception, ex:
-            self.critical("sql: %r\n args: %s\ndbms message: %r",
-                          query, args, ex.args[0])
+            if self.repo.config.mode != 'test':
+                # during test we get those message when trying to alter sqlite
+                # db schema
+                self.critical("sql: %r\n args: %s\ndbms message: %r",
+                              query, args, ex.args[0])
             if rollback:
                 try:
                     session.pool.connection(self.uri).rollback()
@@ -443,8 +446,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
         except Exception, ex:
-            self.critical("sql many: %r\n args: %s\ndbms message: %r",
-                          query, args, ex.args[0])
+            if self.repo.config.mode != 'test':
+                # during test we get those message when trying to alter sqlite
+                # db schema
+                self.critical("sql many: %r\n args: %s\ndbms message: %r",
+                              query, args, ex.args[0])
             try:
                 session.pool.connection(self.uri).rollback()
                 self.critical('transaction has been rollbacked')
