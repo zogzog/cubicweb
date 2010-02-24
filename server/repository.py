@@ -114,16 +114,27 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # not expected for this).  So: don't do it, we pretend to ensure repository
     # consistency.
     #
-    # also, we must not use unsafe_execute since we want the delete permission
-    # to be checked when some existing relation is deleted
+    # XXX we don't want read permissions to be applied but we want delete
+    # permission to be checked
+    rschema = session.repo.schema.rschema(rtype)
     if card[0] in '1?':
-        rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined: # inlined relations will be implicitly deleted
-            session.execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                            {'x': eidfrom, 'y': eidto}, 'x')
+            rset = session.unsafe_execute('Any X,Y WHERE X %s Y, X eid %%(x)s, '
+                                          'NOT Y eid %%(y)s' % rtype,
+                                          {'x': eidfrom, 'y': eidto}, 'x')
+            if rset:
+                safe_delete_relation(session, rschema, *rset[0])
     if card[1] in '1?':
-        session.execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                        {'x': eidfrom, 'y': eidto}, 'y')
+        rset = session.unsafe_execute('Any X,Y WHERE X %s Y, Y eid %%(y)s, '
+                                      'NOT X eid %%(x)s' % rtype,
+                                      {'x': eidfrom, 'y': eidto}, 'y')
+        if rset:
+            safe_delete_relation(session, rschema, *rset[0])
+
+def safe_delete_relation(session, rschema, subject, object):
+    if not rschema.has_perm(session, 'delete', fromeid=subject, toeid=object):
+        raise Unauthorized()
+    session.repo.glob_delete_relation(session, subject, rschema.type, object)
 
 
 class Repository(object):
