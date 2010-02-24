@@ -973,7 +973,7 @@ class ServerMigrationHelper(MigrationHelper):
         you usually want to use sync_schema_props_perms instead.
         """
         oldvalue = None
-        for constr in self.repo.schema.eschema(etype).constraints(rtype):
+        for constr in self.repo.schema.eschema(etype).rdef(rtype).constraints:
             if isinstance(constr, SizeConstraint):
                 oldvalue = constr.max
         if oldvalue == size:
