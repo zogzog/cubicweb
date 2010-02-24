@@ -26,9 +26,11 @@ if sys.version_info[:2] < (2, 5):
 
     def make_uid(key):
         """forge a unique identifier
-        not that unique on win32"""
-        msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
-        return md5(msg).hexdigest()
+        XXX not that unique on win32
+        """
+        key = str(key)
+        msg = key + "%.10f" % time() + str(randint(0, 1000000))
+        return key + md5(msg).hexdigest()
 
 else:
 
