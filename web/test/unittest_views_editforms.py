@@ -166,14 +166,14 @@ class FormViewsTC(CubicWebTC):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         rset = self.execute('CWUser X LIMIT 1')
         self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
-                  peid=geid, role='object', template=None, i18nctx='',
-                  pform=MOCKPFORM).source
+                  peid=geid, role='object', i18nctx='', pform=MOCKPFORM,
+                  template=None).source
 
     def test_automatic_inline_creation_formview(self):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         self.view('inline-creation', None, etype='CWUser', rtype='in_group',
-                  peid=geid, template=None, i18nctx='', role='object',
-                  pform=MOCKPFORM).source
+                  peid=geid, petype='CWGroup', i18nctx='', role='object', pform=MOCKPFORM,
+                  template=None)
 
 MOCKPFORM = mock_object(form_previous_values={}, form_valerror=None)
 
