@@ -102,10 +102,11 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     hooks order hazardness
     """
     # XXX now that rql in migraction default to unsafe_execute we don't want to
-    #     skip that anymore. Also we should imo rely on the orm to first fetch
-    #     existing entity if any then delete it
-    #if session.is_super_session:
-    #    return
+    #     skip that for super session (though we can still skip it for internal
+    #     sessions). Also we should imo rely on the orm to first fetch existing
+    #     entity if any then delete it.
+    if session.is_internal_session:
+        return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
