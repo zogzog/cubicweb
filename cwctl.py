@@ -159,14 +159,16 @@ class InstanceCommandFork(InstanceCommand):
 # base commands ###############################################################
 
 def version_strictly_lower(a,b):
+    from logilab.common.changelog import Version
     if a:
-        a = a.split('.')
+        a = Version(a)
     if b:
-        b = b.split('.')
+        b = Version(b)
     return a < b
 
 def max_version(a, b):
-    return '.'.join(max(a.split('.'), b.split('.')))
+    from logilab.common.changelog import Version
+    return str(max(Version(a), Version(b)))
 
 class ConfigurationProblem(object):
     """Each cube has its own list of dependencies on other cubes/versions.
