@@ -80,7 +80,8 @@ class Form(AppObject):
                  submitmsg=None, mainform=True, **kwargs):
         super(Form, self).__init__(req, rset=rset, row=row, col=col)
         self.fields = list(self.__class__._fields_)
-        self.add_hidden(u'__form_id', kwargs.pop('formvid', self.__regid__))
+        if mainform:
+            self.add_hidden(u'__form_id', kwargs.pop('formvid', self.__regid__))
         for key, val in kwargs.iteritems():
             if key in controller.NAV_FORM_PARAMETERS:
                 self.add_hidden(key, val)
