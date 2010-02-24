@@ -34,7 +34,7 @@ class MigrationCommandsTC(CubicWebTC):
     @classmethod
     def _refresh_repo(cls):
         super(MigrationCommandsTC, cls)._refresh_repo()
-        cls.repo.schema = cls.vreg.schema = deepcopy(cls.origschema)
+        cls.repo.set_schema(deepcopy(cls.origschema), resetvreg=False)
 
     def setUp(self):
         CubicWebTC.setUp(self)

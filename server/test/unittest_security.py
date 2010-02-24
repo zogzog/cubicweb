@@ -494,12 +494,13 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # needed to avoid check_perm error
         session.set_pool()
         # needed to remove rql expr granting update perm to the user
+        affaire_perms = self.schema['Affaire'].permissions.copy()
         self.schema['Affaire'].set_action_permissions('update', self.schema['Affaire'].get_groups('update'))
-        self.assertRaises(Unauthorized,
-                          self.schema['Affaire'].check_perm, session, 'update', eid=eid)
-        cu = cnx.cursor()
-        self.schema['Affaire'].set_action_permissions('read', ('users',))
         try:
+            self.assertRaises(Unauthorized,
+                              self.schema['Affaire'].check_perm, session, 'update', eid=eid)
+            cu = cnx.cursor()
+            self.schema['Affaire'].set_action_permissions('read', ('users',))
             aff = cu.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
             aff.fire_transition('abort')
             cnx.commit()
@@ -510,7 +511,9 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             # from the current state but Unauthorized if it exists but user can't pass it
             self.assertRaises(ValidationError, user.fire_transition, 'deactivate')
         finally:
-            self.schema['Affaire'].set_action_permissions('read', ('managers',))
+            # restore orig perms
+            for action, perms in affaire_perms.iteritems():
+                self.schema['Affaire'].set_action_permissions(action, perms)
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)

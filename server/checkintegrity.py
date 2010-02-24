@@ -111,6 +111,8 @@ def reindex_entities(schema, session, withpb=True):
             pb.update()
     # restore Entity.check
     Entity.check = _check
+    repo.config.disabled_hooks_categories.remove('metadata')
+    repo.config.disabled_hooks_categories.remove('integrity')
 
 
 def check_schema(schema, session, eids, fix=1):

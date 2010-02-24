@@ -9,6 +9,7 @@ import sys
 import os
 from os.path import dirname, join, abspath
 
+from logilab.common.modutils import cleanup_sys_modules
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.changelog import Version
 
@@ -26,6 +27,7 @@ CUSTOM_CUBES_DIR = abspath(join(dirname(__file__), 'data', 'cubes'))
 
 class CubicWebConfigurationTC(TestCase):
     def setUp(self):
+        cleanup_sys_modules([CUSTOM_CUBES_DIR, ApptestConfiguration.CUBES_DIR])
         self.config = ApptestConfiguration('data')
         self.config._cubes = ('email', 'file')
 

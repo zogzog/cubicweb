@@ -178,9 +178,11 @@ class EntityTC(CubicWebTC):
     def test_related_rql_base(self):
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
+        SubNote = self.vreg['etypes'].etype_class('SubNote')
         self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
+        SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
         p = self.request().create_entity('Personne', nom=u'pouet')
         self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
