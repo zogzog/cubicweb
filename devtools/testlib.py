@@ -75,6 +75,8 @@ def refresh_repo(repo, resetschema=False, resetvreg=False):
     repo.querier._rql_cache = {}
     for source in repo.sources:
         source.reset_caches()
+    if resetschema:
+        repo.set_schema(repo.config.load_schema(), resetvreg=resetvreg)
 
 
 # email handling, to test emails sent by an application ########################
@@ -143,6 +145,7 @@ class CubicWebTC(TestCase):
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
+    reset_schema = reset_vreg = False # reset schema / vreg between tests
 
     @classproperty
     def config(cls):
@@ -213,7 +216,7 @@ class CubicWebTC(TestCase):
 
     @classmethod
     def _refresh_repo(cls):
-        refresh_repo(cls.repo)
+        refresh_repo(cls.repo, cls.reset_schema, cls.reset_vreg)
 
     # global resources accessors ###############################################
 
