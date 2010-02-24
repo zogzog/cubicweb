@@ -29,6 +29,7 @@ class MigrationCommandsTC(CubicWebTC):
     @classmethod
     def init_config(cls, config):
         super(MigrationCommandsTC, cls).init_config(config)
+        # we have to read schema from the database to get eid for schema entities
         config._cubes = None
         cls.repo.fill_schema()
         cls.origschema = deepcopy(cls.repo.schema)
@@ -345,8 +346,6 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
         self.assertEquals(len(self._erqlexpr_rset('add', 'Affaire')), 1)
         # no change for rqlexpr to add and delete concerne relation
-        for rdef in self.schema['concerne'].rdefs.values():
-            print rdef, rdef.permissions
         self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
         self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:

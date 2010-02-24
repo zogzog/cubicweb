@@ -189,14 +189,12 @@ class EntityTC(CubicWebTC):
         # XXX
         self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA ORDERBY AA DESC '
-                          'WHERE E eid %(x)s, E evaluee X, '
-                          'X modification_date AA')
+                          'WHERE E eid %(x)s, E evaluee X, X modification_date AA')
 
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
         self.assertEquals(tag.related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
-                          'WHERE E eid %(x)s, E tags X, '
-                          'X modification_date AA')
+                          'WHERE E eid %(x)s, E tags X, X modification_date AA')
         self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
                           'Any X,AA,AB ORDERBY AA ASC '
                           'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '

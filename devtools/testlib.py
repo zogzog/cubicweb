@@ -71,8 +71,8 @@ def get_versions(self, checkversions=False):
     as key with their version as value, including cubicweb version. This is a
     public method, not requiring a session id.
 
-    replace Repository.get_versions by this method if you don't want versions
-    checking
+    replace Repository.get_versions by this method if you want to get versions
+    from code instead of from the database
     """
     vcconf = {'cubicweb': self.config.cubicweb_version()}
     self.config.bootstrap_cubes()

@@ -134,7 +134,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.execute('DELETE X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
         self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
         self.commit()
-        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', )))
+        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers',)))
         self.execute('SET X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
         self.commit()
         self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users',)))
