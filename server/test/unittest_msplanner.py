@@ -762,7 +762,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_has_text(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X WHERE X has_text "bla"',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system], None, {'E': 'table0.C0'}, []),
@@ -789,7 +789,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_has_text_limit_offset(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         # note: same as the above query but because of the subquery usage, the display differs (not printing solutions for each union)
         self._test('Any X LIMIT 10 OFFSET 10 WHERE X has_text "bla"',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
@@ -827,7 +827,7 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_security_user(self):
         """a guest user trying to see another user: EXISTS(X owned_by U) is automatically inserted"""
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X WHERE X login "bla"',
                    [('FetchStep',
                      [('Any X WHERE X login "bla", X is CWUser', [{'X': 'CWUser'}])],
@@ -838,7 +838,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_complex_has_text(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X WHERE X has_text "bla", X firstname "bla"',
                    [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
                      [self.ldap, self.system], None, {'X': 'table0.C0'}, []),
@@ -852,7 +852,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_complex_has_text_limit_offset(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X LIMIT 10 OFFSET 10 WHERE X has_text "bla", X firstname "bla"',
                    [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
                      [self.ldap, self.system], None, {'X': 'table1.C0'}, []),
@@ -869,7 +869,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_complex_aggregat(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system],  None, {'E': 'table1.C0'}, []),
@@ -914,7 +914,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_complex_aggregat2(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         X_ET_ALL_SOLS = []
         for s in X_ALL_SOLS:
             ets = {'ET': 'CWEType'}
@@ -978,7 +978,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_3sources(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X, XT WHERE X is Card, X owned_by U, X title XT, U login "syt"',
                    [('FetchStep',
                      [('Any X,XT WHERE X title XT, X is Card', [{'X': 'Card', 'XT': 'String'}])],
@@ -996,8 +996,7 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_security_3sources_identity(self):
         self.restore_orig_cwuser_security()
         # use a guest user
-        self.session = self._user_session()[1]
-        print self.session
+        self.session = self.user_groups_session('guests')
         self._test('Any X, XT WHERE X is Card, X owned_by U, X title XT, U login "syt"',
                    [('FetchStep',
                      [('Any X,XT WHERE X title XT, X is Card', [{'X': 'Card', 'XT': 'String'}])],
@@ -1011,7 +1010,7 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_security_3sources_identity_optional_var(self):
         self.restore_orig_cwuser_security()
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X,XT,U WHERE X is Card, X owned_by U?, X title XT, U login L',
                    [('FetchStep',
                      [('Any U,L WHERE U identity 5, U login L, U is CWUser',
@@ -1032,7 +1031,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_security_3sources_limit_offset(self):
         # use a guest user
-        self.session = self._user_session()[1]
+        self.session = self.user_groups_session('guests')
         self._test('Any X, XT LIMIT 10 OFFSET 10 WHERE X is Card, X owned_by U, X title XT, U login "syt"',
                    [('FetchStep',
                      [('Any X,XT WHERE X title XT, X is Card', [{'X': 'Card', 'XT': 'String'}])],
@@ -1668,7 +1667,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_update3(self):
-        anoneid = self._user_session()[1].user.eid
+        anoneid = self.user_groups_session('guests').user.eid
         # since we are adding a in_state relation for an entity in the system
         # source, states should only be searched in the system source as well
         self._test('SET X in_state S WHERE X eid %(x)s, S name "deactivated"',

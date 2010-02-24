@@ -78,7 +78,7 @@ class UtilsTC(BaseQuerierTC):
     def test_preprocess_security(self):
         plan = self._prepare_plan('Any ETN,COUNT(X) GROUPBY ETN '
                                   'WHERE X is ET, ET name ETN')
-        plan.session = self._user_session(('users',))[1]
+        plan.session = self.user_groups_session('users')
         union = plan.rqlst
         plan.preprocess(union)
         self.assertEquals(len(union.children), 1)
@@ -158,7 +158,7 @@ class UtilsTC(BaseQuerierTC):
 
     def test_preprocess_security_aggregat(self):
         plan = self._prepare_plan('Any MAX(X)')
-        plan.session = self._user_session(('users',))[1]
+        plan.session = self.user_groups_session('users')
         union = plan.rqlst
         plan.preprocess(union)
         self.assertEquals(len(union.children), 1)
@@ -928,7 +928,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 0, rset.rows)
 
     def test_delete_3(self):
-        u, s = self._user_session(('users',))
+        s = self.user_groups_session('users')
         peid, = self.o.execute(s, "INSERT Personne P: P nom 'toto'")[0]
         seid, = self.o.execute(s, "INSERT Societe S: S nom 'logilab'")[0]
         self.o.execute(s, "SET P travaille S")
@@ -959,7 +959,7 @@ class QuerierTC(BaseQuerierTC):
         (using cachekey on sql generation returned always the same query for an eid,
         whatever the relation)
         """
-        u, s = self._user_session(('users',))
+        s = self.user_groups_session('users')
         aeid, = self.o.execute(s, 'INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')[0]
         # XXX would be nice if the rql below was enough...
         #'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y'

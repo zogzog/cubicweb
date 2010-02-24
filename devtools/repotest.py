@@ -191,15 +191,14 @@ class BaseQuerierTC(TestCase):
         rqlst.solutions = remove_unused_solutions(rqlst, rqlst.solutions, {}, self.repo.schema)[0]
         return rqlst
 
-    def _user_session(self, groups=('guests',), ueid=None):
+    def user_groups_session(self, *groups):
+        """lightweight session using the current user with hi-jacked groups"""
         # use self.session.user.eid to get correct owned_by relation, unless explicit eid
-        if ueid is None:
-            ueid = self.session.user.eid
-        u = self.repo._build_user(self.session, ueid)
+        u = self.repo._build_user(self.session, self.session.user.eid)
         u._groups = set(groups)
         s = Session(u, self.repo)
         s._threaddata.pool = self.pool
-        return u, s
+        return s
 
     def execute(self, rql, args=None, eid_key=None, build_descr=True):
         return self.o.execute(self.session, rql, args, eid_key, build_descr)
