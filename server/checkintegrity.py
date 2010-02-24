@@ -64,7 +64,7 @@ def etype_fti_containers(eschema, _done=None):
     else:
         yield eschema
 
-def reindex_entities(schema, session):
+def reindex_entities(schema, session, withpb=True):
     """reindex all entities in the repository"""
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
@@ -92,20 +92,23 @@ def reindex_entities(schema, session):
             etypes.add(container)
     print 'Reindexing entities of type %s' % \
           ', '.join(sorted(str(e) for e in etypes))
-    pb = ProgressBar(len(etypes) + 1)
+    if withpb:
+        pb = ProgressBar(len(etypes) + 1)
     # first monkey patch Entity.check to disable validation
     from cubicweb.entity import Entity
     _check = Entity.check
     Entity.check = lambda self, creation=False: True
     # clear fti table first
     session.system_sql('DELETE FROM %s' % session.repo.system_source.dbhelper.fti_table)
-    pb.update()
+    if withpb:
+        pb.update()
     # reindex entities by generating rql queries which set all indexable
     # attribute to their current value
     for eschema in etypes:
         for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
             FTIndexEntityOp(session, entity=entity)
-        pb.update()
+        if withpb:
+            pb.update()
     # restore Entity.check
     Entity.check = _check
 
@@ -276,7 +279,7 @@ def check_metadata(schema, session, eids, fix=1):
                 print >> sys.stderr
 
 
-def check(repo, cnx, checks, reindex, fix):
+def check(repo, cnx, checks, reindex, fix, withpb=True):
     """check integrity of instance's repository,
     using given user and password to locally connect to the repository
     (no running cubicweb server needed)
@@ -297,5 +300,5 @@ def check(repo, cnx, checks, reindex, fix):
     if reindex:
         cnx.rollback()
         session.set_pool()
-        reindex_entities(repo.schema, session)
+        reindex_entities(repo.schema, session, withpb=withpb)
         cnx.commit()
