@@ -429,7 +429,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if rollback:
                 try:
                     session.pool.connection(self.uri).rollback()
-                    self.critical('transaction has been rollbacked')
+                    if self.repo.config.mode != 'test':
+                        self.critical('transaction has been rollbacked')
                 except:
                     pass
             raise
@@ -453,7 +454,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                               query, args, ex.args[0])
             try:
                 session.pool.connection(self.uri).rollback()
-                self.critical('transaction has been rollbacked')
+                if self.repo.config.mode != 'test':
+                    self.critical('transaction has been rollbacked')
             except:
                 pass
             raise
