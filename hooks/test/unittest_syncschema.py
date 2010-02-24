@@ -1,31 +1,11 @@
 from logilab.common.testlib import TestCase, unittest_main
+
+from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
-
-#################
-# <required  ?> #
-#################
-
-
-from datetime import datetime
-
-from cubicweb import (ConnectionError, ValidationError, AuthenticationError,
-                      BadConnectionId)
-from cubicweb.devtools.testlib import get_versions
-
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.repository import Repository
 
-orig_get_versions = Repository.get_versions
-#################
-# </required ?> #
-#################
 
-def setup_module(*args):
-    Repository.get_versions = get_versions
-
-def teardown_module(*args):
-    Repository.get_versions = orig_get_versions
-
+SCHEMA_EIDS = {}
 class SchemaModificationHooksTC(CubicWebTC):
 
     @classmethod

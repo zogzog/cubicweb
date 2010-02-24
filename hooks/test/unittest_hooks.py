@@ -9,22 +9,8 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from datetime import datetime
 
-from cubicweb import (ConnectionError, ValidationError, AuthenticationError,
-                      BadConnectionId)
-from cubicweb.devtools.testlib import CubicWebTC, get_versions
-
-from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.repository import Repository
-
-orig_get_versions = Repository.get_versions
-
-def setup_module(*args):
-    Repository.get_versions = get_versions
-
-def teardown_module(*args):
-    Repository.get_versions = orig_get_versions
-
-
+from cubicweb import ValidationError, AuthenticationError, BadConnectionId
+from cubicweb.devtools.testlib import CubicWebTC
 
 class CoreHooksTC(CubicWebTC):
 

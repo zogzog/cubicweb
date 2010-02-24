@@ -66,24 +66,7 @@ def unprotected_entities(schema, strict=False):
     return set(schema.entities()) - protected_entities
 
 
-def get_versions(self, checkversions=False):
-    """return the a dictionary containing cubes used by this instance
-    as key with their version as value, including cubicweb version. This is a
-    public method, not requiring a session id.
-
-    replace Repository.get_versions by this method if you want to get versions
-    from code instead of from the database
-    """
-    vcconf = {'cubicweb': self.config.cubicweb_version()}
-    self.config.bootstrap_cubes()
-    for pk in self.config.cubes():
-        version = self.config.cube_version(pk)
-        vcconf[pk] = version
-    self.config._cubes = None
-    return vcconf
-
-
-def refresh_repo(repo):
+def refresh_repo(repo, resetschema=False, resetvreg=False):
     devtools.reset_test_database(repo.config)
     for pool in repo.pools:
         pool.reconnect()

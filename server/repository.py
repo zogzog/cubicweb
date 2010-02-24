@@ -447,7 +447,8 @@ class Repository(object):
         public method, not requiring a session id.
         """
         versions = self.get_versions(not (self.config.creating
-                                          or self.config.repairing))
+                                          or self.config.repairing
+                                          or self.config.mode == 'test'))
         cubes = list(versions)
         cubes.remove('cubicweb')
         return cubes
