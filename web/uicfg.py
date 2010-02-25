@@ -251,7 +251,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
     _allowed_form_types = ('main', 'inlined', 'muledit')
     _allowed_values = {'main': ('attributes', 'inlined', 'relations',
                                 'metadata', 'hidden'),
-                       'inlined': ('attributes', 'hidden'),
+                       'inlined': ('attributes', 'inlined', 'hidden'),
                        'muledit': ('attributes', 'hidden'),
                        }
 
