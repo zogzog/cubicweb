@@ -112,7 +112,7 @@ class FieldsForm(form.Form):
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(
             self.form_renderer_id, self._cw,
-            rset=self.cw_rset, row=self.cw_row, col=self.cw_col)
+            rset=self.cw_rset, row=self.cw_row, col=self.cw_col or 0)
 
     formvalues = None
     def build_context(self, formvalues=None):
