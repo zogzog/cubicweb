@@ -175,8 +175,8 @@ class TreeViewItemView(EntityView):
             if treeid.startswith('throw_away'):
                 divtail = ''
             else:
-                divtail = """ onclick="asyncRemoteExec('node_clicked', '%s', '%s')" """ %\
-                    (treeid, entity.eid)
+                divtail = """ onclick="asyncRemoteExec('node_clicked', '%s', '%s')" """ % (
+                    treeid, entity.eid)
             w(u'<div class="%s"%s></div>' % (u' '.join(divclasses), divtail))
 
             # add empty <ul> because jquery's treeview plugin checks for

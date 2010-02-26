@@ -29,8 +29,8 @@ class NotificationHook(hook.Hook):
     category = 'notification'
 
     def select_view(self, vid, rset, row=0, col=0):
-        return self._cw.vreg['views'].select_or_none(vid, self._cw,
-                                                     rset=rset, row=0, col=0)
+        return self._cw.vreg['views'].select_or_none(vid, self._cw, rset=rset,
+                                                     row=row, col=col)
 
 
 class StatusChangeHook(NotificationHook):

@@ -85,6 +85,7 @@ def add_inline_relation_column(session, etype, rtype):
     session.transaction_data.setdefault('createdattrs', []).append(
         '%s.%s' % (etype, rtype))
 
+
 def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
@@ -1137,20 +1138,22 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
     def postcommit_event(self):
         session = self.session
         source = session.repo.system_source
-        to_reindex = session.transaction_data.get('fti_update_etypes',())
-        self.info('%i etypes need full text indexed reindexation', len(to_reindex))
+        to_reindex = session.transaction_data.get('fti_update_etypes', ())
+        self.info('%i etypes need full text indexed reindexation',
+                  len(to_reindex))
         schema = self.session.repo.vreg.schema
         for etype in to_reindex:
             rset = session.execute('Any X WHERE X is %s' % etype)
-            self.info('Reindexing full text index for %i entity of type %s', len(rset), etype)
+            self.info('Reindexing full text index for %i entity of type %s',
+                      len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
                 try:
-                  source.fti_unindex_entity(session, entity.eid)
-                  for container in entity.fti_containers():
-                      if still_fti or container is not entity:
-                          session.repo.index_entity(session, container)
-                except Exception, ex:
+                    source.fti_unindex_entity(session, entity.eid)
+                    for container in entity.fti_containers():
+                        if still_fti or container is not entity:
+                            session.repo.index_entity(session, container)
+                except Exception:
                     self.critical('Error while updating Full Text Index for'
                                   ' entity %s', entity.eid, exc_info=True)
         if len(to_reindex):

@@ -109,7 +109,7 @@ class _CalendarView(EntityView):
         self._cw.add_css('cubicweb.calendar.css')
         schedule = {}
         for row in xrange(len(self.cw_rset.rows)):
-            entity = self.cw_rset.get_entity(row,0)
+            entity = self.cw_rset.get_entity(row, 0)
             infos = u'<div class="event">'
             infos += self._cw.view(itemvid, self.cw_rset, row=row)
             infos += u'</div>'

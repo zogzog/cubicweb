@@ -94,7 +94,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
         #     datetime labels on tooltips is to insert an additional column
         #     cf. function onPlotHover in cubicweb.flot.js
         if self.timemode:
-            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x,y in plot]
+            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x, y in plot]
         return dumps(plot)
 
     def _render(self, req, width=500, height=400):

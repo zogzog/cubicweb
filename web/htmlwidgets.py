@@ -280,7 +280,7 @@ class SimpleTableModel(object):
         if value is None:
             return u''
         elif isinstance(value, int):
-            return u'%09d'%value
+            return u'%09d' % value
         else:
             return unicode(value)
 

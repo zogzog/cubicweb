@@ -109,7 +109,10 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
-class Unsupported(Exception): pass
+class Unsupported(Exception):
+    """raised when an rql expression can't be inserted in some rql query
+    because it create an unresolvable query (eg no solutions found)
+    """
 
 
 class RQLRewriter(object):
@@ -440,9 +443,9 @@ class RQLRewriter(object):
                 while argname in self.kwargs:
                     argname = select.allocate_varname()
                 # insert "U eid %(u)s"
-                var = select.get_variable(self.u_varname)
-                select.add_constant_restriction(select.get_variable(self.u_varname),
-                                                'eid', unicode(argname), 'Substitute')
+                select.add_constant_restriction(
+                    select.get_variable(self.u_varname),
+                    'eid', unicode(argname), 'Substitute')
                 self.kwargs[argname] = self.session.user.eid
             return self.u_varname
         key = (self.current_expr, self.varmap, vname)

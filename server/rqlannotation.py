@@ -130,7 +130,8 @@ def _annotate_select(annotator, rqlst):
 
 
 
-class CantSelectPrincipal(Exception): pass
+class CantSelectPrincipal(Exception):
+    """raised when no 'principal' variable can be found"""
 
 def _select_principal(sqlscope, relations, _sort=lambda x:x):
     """given a list of rqlst relations, select one which will be used to

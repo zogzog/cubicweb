@@ -271,7 +271,7 @@ class PartPlanInformation(object):
         for source in self._sourcesterms:
             print '-', source
             for term, sols in self._sourcesterms[source].items():
-                print '  -', term, id(term), ':' ,sols
+                print '  -', term, id(term), ':', sols
 
     def copy_solutions(self, solindices):
         return [self._solutions[solidx].copy() for solidx in solindices]
@@ -683,11 +683,11 @@ class PartPlanInformation(object):
                         # go to the next iteration directly!
                         continue
                     if not sourceterms:
-                         try:
-                             del self._sourcesterms[source]
-                         except KeyError:
-                             # XXX already cleaned
-                             pass
+                        try:
+                            del self._sourcesterms[source]
+                        except KeyError:
+                            # XXX already cleaned
+                            pass
                 # set of terms which should be additionaly selected when
                 # possible
                 needsel = set()

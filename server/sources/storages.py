@@ -62,7 +62,7 @@ class BytesFileSystemStorage(Storage):
             else:
                 fpath = self.new_fs_path(entity, attr)
                 # bytes storage used to store file's path
-                entity[attr]= Binary(fpath)
+                entity[attr] = Binary(fpath)
                 file(fpath, 'w').write(value.getvalue())
                 AddFileOp(entity._cw, filepath=fpath)
         # else entity[attr] is expected to be an already existant file path

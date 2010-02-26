@@ -402,7 +402,7 @@ class JSonController(Controller):
 
     @xhtmlize
     def js_reledit_form(self):
-        args = dict((x,self._cw.form[x])
+        args = dict((x, self._cw.form[x])
                     for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land

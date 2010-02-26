@@ -225,7 +225,7 @@ class Session(RequestSessionBase):
                 self.pgettext = pgettext
             except KeyError:
                 self._ = self.__ = unicode
-                self.pgettext = lambda x,y: y
+                self.pgettext = lambda x, y: y
         self.lang = language
 
     def change_property(self, prop, value):

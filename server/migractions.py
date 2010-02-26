@@ -155,7 +155,7 @@ class ServerMigrationHelper(MigrationHelper):
             else:
                 bkup = tarfile.open(backupfile, 'w|gz')
                 for filename in os.listdir(tmpdir):
-                    bkup.add(osp.join(tmpdir,filename), filename)
+                    bkup.add(osp.join(tmpdir, filename), filename)
                 bkup.close()
                 # call hooks
                 repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
@@ -731,7 +731,7 @@ class ServerMigrationHelper(MigrationHelper):
                         if (rschema.rdef(subjschema, objschema).infered
                             or (instschema.has_relation(rschema) and
                                 (subjschema, objschema) in instschema[rschema].rdefs)):
-                                continue
+                            continue
                         self.cmd_add_relation_definition(
                             subjschema.type, rschema.type, objschema.type)
         if auto:

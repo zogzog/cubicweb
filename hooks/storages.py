@@ -26,8 +26,9 @@ class PreUpdateEntityHook(BFSSHook):
     events = ('before_update_entity', )
 
     def __call__(self):
-        for attr in ETYPE_ATTR_STORAGE.get(self.entity.__regid__, ()):
-            ETYPE_ATTR_STORAGE[self.entity.__regid__][attr].entity_updated(self.entity, attr)
+        etype = self.entity.__regid__
+        for attr in ETYPE_ATTR_STORAGE.get(etype, ()):
+            ETYPE_ATTR_STORAGE[etype][attr].entity_updated(self.entity, attr)
 
 class PreDeleteEntityHook(BFSSHook):
     """"""
@@ -35,5 +36,6 @@ class PreDeleteEntityHook(BFSSHook):
     events = ('before_delete_entity', )
 
     def __call__(self):
-        for attr in ETYPE_ATTR_STORAGE.get(self.entity.__regid__, ()):
-            ETYPE_ATTR_STORAGE[self.entity.__regid__][attr].entity_deleted(self.entity, attr)
+        etype = self.entity.__regid__
+        for attr in ETYPE_ATTR_STORAGE.get(etype, ()):
+            ETYPE_ATTR_STORAGE[etype][attr].entity_deleted(self.entity, attr)

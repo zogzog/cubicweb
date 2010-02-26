@@ -122,7 +122,7 @@ class RegistryView(StartupView):
         self.w(u'<p>%s</p>\n' % ' - '.join('<a href="/_registry#%s">%s</a>'
                                            % (key, key) for key in keys))
         for key in keys:
-            self.w(u'<h2><a name="%s">%s</a></h2>' % (key,key))
+            self.w(u'<h2><a name="%s">%s</a></h2>' % (key, key))
             items = self._cw.vreg[key].items()
             if items:
                 self.w(u'<table><tbody>')

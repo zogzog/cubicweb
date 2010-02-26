@@ -158,7 +158,7 @@ class NextPrevNavigationComponent(EntityVComponent):
     context = 'navbottom'
     order = 10
     def call(self, view=None):
-        entity = self.cw_rset.get_entity(0,0)
+        entity = self.cw_rset.get_entity(0, 0)
         previous = entity.previous_entity()
         next = entity.next_entity()
         if previous or next:

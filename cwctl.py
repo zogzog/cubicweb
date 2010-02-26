@@ -17,8 +17,10 @@ from os import remove, listdir, system, pathsep
 try:
     from os import kill, getpgid
 except ImportError:
-    def kill(*args): pass
-    def getpgid(): pass
+    def kill(*args):
+        """win32 kill implementation"""
+    def getpgid():
+        """win32 getpgid implementation"""
 
 from os.path import exists, join, isfile, isdir, dirname, abspath
 
@@ -166,7 +168,7 @@ class InstanceCommandFork(InstanceCommand):
 
 # base commands ###############################################################
 
-def version_strictly_lower(a,b):
+def version_strictly_lower(a, b):
     from logilab.common.changelog import Version
     if a:
         a = Version(a)
@@ -228,11 +230,11 @@ class ConfigurationProblem(object):
             if hasattr(info,'__depends_cubes__'):
                 use = info.__depends_cubes__
                 if not isinstance(use, dict):
-                    use = dict((key,None) for key in use)
+                    use = dict((key, None) for key in use)
                     self.warnings.append('cube %s should define __depends_cubes__ as a dict not a list')
             else:
                 self.warnings.append('cube %s should define __depends_cubes__' % cube)
-                use = dict((key,None) for key in info.__use__)
+                use = dict((key, None) for key in info.__use__)
             for name, constraint in use.items():
                 self.constraints.setdefault(name,set())
                 if constraint:
