@@ -161,9 +161,9 @@ class Workflow(AnyEntity):
         execute = self._cw.unsafe_execute
         execute('SET X in_state S WHERE S eid %(s)s', {'s': todelstate.eid}, 's')
         execute('SET X from_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+                {'os': todelstate.eid, 'ns': replacement.eid}, 's')
         execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+                {'os': todelstate.eid, 'ns': replacement.eid}, 's')
         todelstate.delete()
 
 
@@ -219,7 +219,7 @@ class BaseTransition(AnyEntity):
         """
         if self.transition_of:
             return self.transition_of[0].rest_path(), {}
-        return super(Transition, self).after_deletion_path()
+        return super(BaseTransition, self).after_deletion_path()
 
     def set_permissions(self, requiredgroups=(), conditions=(), reset=True):
         """set or add (if `reset` is False) groups and conditions for this
@@ -330,7 +330,7 @@ class WorkflowTransition(BaseTransition):
         return result
 
     def clear_all_caches(self):
-        super(WorkflowableMixIn, self).clear_all_caches()
+        super(WorkflowTransition, self).clear_all_caches()
         clear_cache(self, 'exit_points')
 
 

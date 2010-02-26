@@ -19,10 +19,9 @@ class PreAddEntityHook(BFSSHook):
     #__select__ = Hook.__select__ & implements('Repository')
 
     def __call__(self):
-        for attr in ETYPE_ATTR_STORAGE.get(self.entity.__regid__, ()):
-            fpath = ETYPE_ATTR_STORAGE[self.entity.__regid__][attr].entity_added(self.entity, attr)
-            if fpath is not None:
-                AddFileOp(filepath=fpath)
+        etype = self.entity.__regid__
+        for attr in ETYPE_ATTR_STORAGE.get(etype, ()):
+            ETYPE_ATTR_STORAGE[etype][attr].entity_added(self.entity, attr)
 
 class PreUpdateEntityHook(BFSSHook):
     """"""

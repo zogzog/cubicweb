@@ -27,7 +27,7 @@ _MARKER = object()
 
 def _fake_property_value(self, name):
     try:
-        return super(dbapi.DBAPIRequest, self).property_value(name)
+        return super(DBAPIRequest, self).property_value(name)
     except KeyError:
         return ''
 

@@ -293,9 +293,6 @@ class ServerMigrationHelper(MigrationHelper):
             apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
         if osp.exists(apc):
             if self.config.free_wheel:
-                from cubicweb.server.hooks import setowner_after_add_entity
-                self.repo.hm.unregister_hook(setowner_after_add_entity,
-                                             'after_add_entity', '')
                 self.cmd_deactivate_verification_hooks()
             self.info('executing %s', apc)
             confirm = self.confirm
@@ -308,8 +305,6 @@ class ServerMigrationHelper(MigrationHelper):
                 self.confirm = confirm
                 self.execscript_confirm = execscript_confirm
                 if self.config.free_wheel:
-                    self.repo.hm.register_hook(setowner_after_add_entity,
-                                               'after_add_entity', '')
                     self.cmd_reactivate_verification_hooks()
 
     def install_custom_sql_scripts(self, directory, driver):
