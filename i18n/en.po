@@ -191,9 +191,6 @@ msgstr ""
 msgid "Any"
 msgstr ""
 
-msgid "Application"
-msgstr ""
-
 msgid "Attributes"
 msgstr ""
 
@@ -348,9 +345,6 @@ msgstr "Email addresses"
 msgid "Entities"
 msgstr ""
 
-msgid "Environment"
-msgstr ""
-
 msgid "ExternalUri"
 msgstr "External Uri"
 
@@ -373,6 +367,9 @@ msgid "From:"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "Instance"
 msgstr ""
 
 msgid "Int"
@@ -504,9 +501,6 @@ msgstr ""
 msgid "Repository"
 msgstr ""
 
-msgid "Request"
-msgstr ""
-
 #, python-format
 msgid "Schema %s"
 msgstr ""
@@ -515,9 +509,6 @@ msgid "Schema of the data model"
 msgstr ""
 
 msgid "Search for"
-msgstr ""
-
-msgid "Server"
 msgstr ""
 
 msgid "SizeConstraint"
@@ -658,6 +649,9 @@ msgid "Update permissions"
 msgstr ""
 
 msgid "Used by:"
+msgstr ""
+
+msgid "Web server"
 msgstr ""
 
 msgid "What's new?"
@@ -1481,6 +1475,12 @@ msgstr "condition of"
 
 msgid "condition_object"
 msgstr "condition of"
+
+msgid "config mode"
+msgstr ""
+
+msgid "config type"
+msgstr ""
 
 msgid "confirm password"
 msgstr ""
@@ -2376,9 +2376,6 @@ msgstr ""
 msgid "hide filter form"
 msgstr ""
 
-msgid "home"
-msgstr ""
-
 msgid ""
 "how to format date and time in the ui (\"man strftime\" for format "
 "description)"
@@ -2522,6 +2519,9 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr "inlined"
 
+msgid "instance home"
+msgstr ""
+
 msgid "instance schema"
 msgstr ""
 
@@ -2587,6 +2587,9 @@ msgid "language of the user interface"
 msgstr ""
 
 msgid "last connection date"
+msgstr ""
+
+msgid "last usage"
 msgstr ""
 
 msgid "last_login_time"
@@ -2840,6 +2843,9 @@ msgstr ""
 msgid "no related project"
 msgstr ""
 
+msgid "no repository sessions found"
+msgstr ""
+
 msgid "no selected entities"
 msgstr ""
 
@@ -2848,6 +2854,9 @@ msgid "no such entity type %s"
 msgstr ""
 
 msgid "no version information"
+msgstr ""
+
+msgid "no web sessions found"
 msgstr ""
 
 msgid "normal"
@@ -2884,6 +2893,12 @@ msgid "only select queries are authorized"
 msgstr ""
 
 msgid "open all"
+msgstr ""
+
+msgid "opened sessions"
+msgstr ""
+
+msgid "opened web sessions"
 msgstr ""
 
 msgid "order"
@@ -3134,6 +3149,9 @@ msgstr ""
 msgid "required field"
 msgstr ""
 
+msgid "resources usage"
+msgstr ""
+
 msgid ""
 "restriction part of a rql query. For entity rql expression, X and U are "
 "predefined respectivly to the current object and to the request user. For "
@@ -3238,9 +3256,6 @@ msgid "send email"
 msgstr ""
 
 msgid "september"
-msgstr ""
-
-msgid "server debug information"
 msgstr ""
 
 msgid "server information"
@@ -3790,6 +3805,9 @@ msgid "value associated to this key is not editable manually"
 msgstr ""
 
 msgid "vcard"
+msgstr ""
+
+msgid "versions configuration"
 msgstr ""
 
 msgid "view"

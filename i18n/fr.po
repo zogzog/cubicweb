@@ -198,9 +198,6 @@ msgstr "Permissions d'ajouter"
 msgid "Any"
 msgstr "N'importe"
 
-msgid "Application"
-msgstr "Application"
-
 msgid "Attributes"
 msgstr "Attributs"
 
@@ -355,9 +352,6 @@ msgstr "Adresses électroniques"
 msgid "Entities"
 msgstr "entités"
 
-msgid "Environment"
-msgstr "Environement"
-
 msgid "ExternalUri"
 msgstr "Uri externe"
 
@@ -381,6 +375,9 @@ msgstr "De :"
 
 msgid "Help"
 msgstr "Aide"
+
+msgid "Instance"
+msgstr "Instance"
 
 msgid "Int"
 msgstr "Nombre entier"
@@ -511,9 +508,6 @@ msgstr "Relations"
 msgid "Repository"
 msgstr "Entrepôt de données"
 
-msgid "Request"
-msgstr "Requête"
-
 #, python-format
 msgid "Schema %s"
 msgstr "Schéma %s"
@@ -523,9 +517,6 @@ msgstr "Schéma du modèle de données"
 
 msgid "Search for"
 msgstr "Rechercher"
-
-msgid "Server"
-msgstr "Serveur"
 
 msgid "SizeConstraint"
 msgstr "contrainte de taille"
@@ -666,6 +657,9 @@ msgstr "Permissions de modifier"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
+
+msgid "Web server"
+msgstr "Serveur web"
 
 msgid "What's new?"
 msgstr "Nouveautés"
@@ -1521,6 +1515,12 @@ msgstr "condition de"
 msgid "condition_object"
 msgstr "condition de"
 
+msgid "config mode"
+msgstr "mode de configuration"
+
+msgid "config type"
+msgstr "type de configuration"
+
 msgid "confirm password"
 msgstr "confirmer le mot de passe"
 
@@ -1690,7 +1690,8 @@ msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s update_permission "
 "RQLExpression)"
-msgstr "création d'une expression rql pour le droit de mise à jour de %(linkto)s"
+msgstr ""
+"création d'une expression rql pour le droit de mise à jour de %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
@@ -2450,9 +2451,6 @@ msgstr "aide"
 msgid "hide filter form"
 msgstr "cacher le filtre"
 
-msgid "home"
-msgstr "maison"
-
 msgid ""
 "how to format date and time in the ui (\"man strftime\" for format "
 "description)"
@@ -2605,6 +2603,9 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr "mise en ligne"
 
+msgid "instance home"
+msgstr "répertoire de l'instance"
+
 msgid "instance schema"
 msgstr "schéma de l'instance"
 
@@ -2676,6 +2677,9 @@ msgstr "langue pour l'interface utilisateur"
 
 msgid "last connection date"
 msgstr "dernière date de connexion"
+
+msgid "last usage"
+msgstr "dernier usage"
 
 msgid "last_login_time"
 msgstr "dernière date de connexion"
@@ -2935,6 +2939,9 @@ msgstr "aucun champ à éditer spécifié pour l'entité %s"
 msgid "no related project"
 msgstr "pas de projet rattaché"
 
+msgid "no repository sessions found"
+msgstr "aucune session trouvée"
+
 msgid "no selected entities"
 msgstr "pas d'entité sélectionnée"
 
@@ -2944,6 +2951,9 @@ msgstr "le type d'entité '%s' n'existe pas"
 
 msgid "no version information"
 msgstr "pas d'information de version"
+
+msgid "no web sessions found"
+msgstr "aucune session trouvée"
 
 msgid "normal"
 msgstr "normal"
@@ -2980,6 +2990,12 @@ msgstr "seules les requêtes de sélections sont autorisées"
 
 msgid "open all"
 msgstr "tout ouvrir"
+
+msgid "opened sessions"
+msgstr "sessions ouvertes"
+
+msgid "opened web sessions"
+msgstr "sessions web ouvertes"
 
 msgid "order"
 msgstr "ordre"
@@ -3230,6 +3246,9 @@ msgstr "attribut requis"
 msgid "required field"
 msgstr "champ requis"
 
+msgid "resources usage"
+msgstr "resources utilisées"
+
 msgid ""
 "restriction part of a rql query. For entity rql expression, X and U are "
 "predefined respectivly to the current object and to the request user. For "
@@ -3340,9 +3359,6 @@ msgstr "envoyer un courriel"
 
 msgid "september"
 msgstr "septembre"
-
-msgid "server debug information"
-msgstr "informations de déboguage serveur"
 
 msgid "server information"
 msgstr "informations serveur"
@@ -3830,9 +3846,9 @@ msgid ""
 "states in workflow's definitions. Transition without destination state will "
 "go back to the state from which we arrived to the current state."
 msgstr ""
-"utilisé dans une définition de processus pour ajouter une transition "
-"depuis un ou plusieurs états vers un état de destination. Une transition sans "
-"état de destination retournera à l'état précédent l'état courant."
+"utilisé dans une définition de processus pour ajouter une transition depuis "
+"un ou plusieurs états vers un état de destination. Une transition sans état "
+"de destination retournera à l'état précédent l'état courant."
 
 msgid "use_email"
 msgstr "adresse électronique"
@@ -3907,6 +3923,9 @@ msgstr "la valeur associée à cette clé n'est pas éditable manuellement"
 
 msgid "vcard"
 msgstr "vcard"
+
+msgid "versions configuration"
+msgstr "configuration de version"
 
 msgid "view"
 msgstr "voir"

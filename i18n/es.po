@@ -199,9 +199,6 @@ msgstr "Añadir autorizaciónes"
 msgid "Any"
 msgstr "Cualquiera"
 
-msgid "Application"
-msgstr "Aplicación"
-
 msgid "Attributes"
 msgstr "Atributos"
 
@@ -356,9 +353,6 @@ msgstr "Direcciones de Correo Electrónico"
 msgid "Entities"
 msgstr "Entidades"
 
-msgid "Environment"
-msgstr "Ambiente"
-
 msgid "ExternalUri"
 msgstr ""
 
@@ -381,6 +375,9 @@ msgid "From:"
 msgstr "De: "
 
 msgid "Help"
+msgstr ""
+
+msgid "Instance"
 msgstr ""
 
 msgid "Int"
@@ -512,9 +509,6 @@ msgstr "Relaciones"
 msgid "Repository"
 msgstr ""
 
-msgid "Request"
-msgstr "Petición"
-
 #, python-format
 msgid "Schema %s"
 msgstr "Esquema %s"
@@ -524,9 +518,6 @@ msgstr "Esquema del modelo de datos"
 
 msgid "Search for"
 msgstr "Buscar"
-
-msgid "Server"
-msgstr "Servidor"
 
 msgid "SizeConstraint"
 msgstr ""
@@ -667,6 +658,9 @@ msgstr "Autorización de modificar"
 
 msgid "Used by:"
 msgstr "Utilizado por :"
+
+msgid "Web server"
+msgstr ""
 
 msgid "What's new?"
 msgstr "Lo último en el sitio"
@@ -1512,6 +1506,12 @@ msgstr ""
 
 msgid "condition_object"
 msgstr "condición de"
+
+msgid "config mode"
+msgstr ""
+
+msgid "config type"
+msgstr ""
 
 msgid "confirm password"
 msgstr "Confirmar contraseña"
@@ -2426,9 +2426,6 @@ msgstr "Ayuda"
 msgid "hide filter form"
 msgstr "Esconder el filtro"
 
-msgid "home"
-msgstr "Inicio"
-
 msgid ""
 "how to format date and time in the ui (\"man strftime\" for format "
 "description)"
@@ -2581,6 +2578,9 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr ""
 
+msgid "instance home"
+msgstr ""
+
 msgid "instance schema"
 msgstr ""
 
@@ -2651,6 +2651,9 @@ msgstr "Idioma para la interface del usuario"
 
 msgid "last connection date"
 msgstr "Ultima fecha de conexión"
+
+msgid "last usage"
+msgstr ""
 
 msgid "last_login_time"
 msgstr "Ultima fecha de conexión"
@@ -2914,6 +2917,9 @@ msgstr ""
 msgid "no related project"
 msgstr "no hay proyecto relacionado"
 
+msgid "no repository sessions found"
+msgstr ""
+
 msgid "no selected entities"
 msgstr "no hay entidades seleccionadas"
 
@@ -2923,6 +2929,9 @@ msgstr "el tipo de entidad '%s' no existe"
 
 msgid "no version information"
 msgstr "no información de version"
+
+msgid "no web sessions found"
+msgstr ""
 
 msgid "normal"
 msgstr ""
@@ -2959,6 +2968,12 @@ msgstr "solo estan permitidas consultas de lectura"
 
 msgid "open all"
 msgstr "abrir todos"
+
+msgid "opened sessions"
+msgstr ""
+
+msgid "opened web sessions"
+msgstr ""
 
 msgid "order"
 msgstr "orden"
@@ -3207,6 +3222,9 @@ msgstr "Atributo requerido"
 msgid "required field"
 msgstr "Campo requerido"
 
+msgid "resources usage"
+msgstr ""
+
 msgid ""
 "restriction part of a rql query. For entity rql expression, X and U are "
 "predefined respectivly to the current object and to the request user. For "
@@ -3316,9 +3334,6 @@ msgstr "enviar email"
 
 msgid "september"
 msgstr "septiembre"
-
-msgid "server debug information"
-msgstr "server debug information"
 
 msgid "server information"
 msgstr "server information"
@@ -3879,6 +3894,9 @@ msgstr "el valor asociado a este elemento no es editable manualmente"
 msgid "vcard"
 msgstr "vcard"
 
+msgid "versions configuration"
+msgstr ""
+
 msgid "view"
 msgstr "ver"
 
@@ -3998,11 +4016,23 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "%s results matching query"
 #~ msgstr "%s resultados de la demanda"
 
+#~ msgid "Application"
+#~ msgstr "Aplicación"
+
 #~ msgid "Debug level set to %s"
 #~ msgstr "Nivel de debug puesto a %s"
 
+#~ msgid "Environment"
+#~ msgstr "Ambiente"
+
 #~ msgid "No query has been executed"
 #~ msgstr "Ninguna búsqueda ha sido ejecutada"
+
+#~ msgid "Request"
+#~ msgstr "Petición"
+
+#~ msgid "Server"
+#~ msgstr "Servidor"
 
 #~ msgid "There is no workflow defined for this entity."
 #~ msgstr "No hay workflow para este entidad"
@@ -4206,6 +4236,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "groups allowed to update entities of this type"
 #~ msgstr "Grupos autorizados a actualizar entidades de este tipo"
 
+#~ msgid "home"
+#~ msgstr "Inicio"
+
 #~ msgid "initial state for entities of this type"
 #~ msgstr "Estado inicial para las entidades de este tipo"
 
@@ -4287,6 +4320,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "rql expression allowing to update entities of this type"
 #~ msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
+
+#~ msgid "server debug information"
+#~ msgstr "server debug information"
 
 #~ msgid ""
 #~ "use to define a transition from one or multiple states to a destination "

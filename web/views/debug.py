@@ -25,41 +25,89 @@ def dict_to_html(w, dict):
         w(u'</ul>')
 
 
-class DebugView(StartupView):
-    __regid__ = 'debug'
+
+class ProcessInformationView(StartupView):
+    __regid__ = 'info'
     __select__ = none_rset() & match_user_groups('managers')
-    title = _('server debug information')
+
+    title = _('server information')
 
     def call(self, **kwargs):
         """display server information"""
+        req = self._cw
+        dtformat = req.property_value('ui.datetime-format')
+        _ = req._
         w = self.w
-        w(u'<h1>server sessions</h1>')
-        sessions = self._cw.cnx._repo._sessions.items()
-        if sessions:
-            w(u'<ul>')
-            for sid, session in sessions:
-                w(u'<li>%s  (last usage: %s)<br/>' % (xml_escape(str(session)),
-                                                      strftime('%Y-%m-%d %H:%M:%S',
-                                                               localtime(session.timestamp))))
-                dict_to_html(w, session.data)
-                w(u'</li>')
-            w(u'</ul>')
-        else:
-            w(u'<p>no server sessions found</p>')
+        # generic instance information
+        w(u'<h1>%s</h1>' % _('Instance'))
+        w(u'<table>')
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            _('config type'), self._cw.vreg.config.name))
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            _('config mode'), self._cw.vreg.config.mode))
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            _('instance home'), self._cw.vreg.config.apphome))
+        w(u'</table>')
+        vcconf = req.vreg.config.vc_config()
+        w(u'<h3>%s</h3>' % _('versions configuration'))
+        w(u'<table>')
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            'CubicWeb', vcconf.get('cubicweb', _('no version information'))))
+        for cube in sorted(self._cw.vreg.config.cubes()):
+            cubeversion = vcconf.get(cube, _('no version information'))
+            w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+                cube, cubeversion))
+        w(u'</table>')
+        # repository information
+        repo = req.vreg.config.repository(None)
+        w(u'<h1>%s</h1>' % _('Repository'))
+        w(u'<h3>%s</h3>' % _('resources usage'))
+        w(u'<table>')
+        stats = repo.stats()
+        for element in sorted(stats):
+            w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
+                   % (element, stats[element],
+                      element.endswith('percent') and '%' or '' ))
+        w(u'</table>')
+        if req.cnx._cnxtype == 'inmemory':
+            w(u'<h3>%s</h3>' % _('opened sessions'))
+            sessions = repo._sessions.values()
+            if sessions:
+                w(u'<ul>')
+                for session in sessions:
+                    w(u'<li>%s (%s: %s)<br/>' % (
+                        xml_escape(unicode(session)),
+                        _('last usage'),
+                        strftime(dtformat, localtime(session.timestamp))))
+                    dict_to_html(w, session.data)
+                    w(u'</li>')
+                w(u'</ul>')
+            else:
+                w(u'<p>%s</p>' % _('no repository sessions found'))
+        # web server information
+        w(u'<h1>%s</h1>' % _('Web server'))
+        w(u'<table>')
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            _('base url'), req.base_url()))
+        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
+            _('data directory url'), req.datadir_url))
+        w(u'</table>')
         from cubicweb.web.application import SESSION_MANAGER
-        w(u'<h1>web sessions</h1>')
         sessions = SESSION_MANAGER.current_sessions()
+        w(u'<h3>%s</h3>' % _('opened web sessions'))
         if sessions:
             w(u'<ul>')
             for session in sessions:
-                w(u'<li>%s (last usage: %s)<br/>' % (session.sessionid,
-                                                     strftime('%Y-%m-%d %H:%M:%S',
-                                                              localtime(session.last_usage_time))))
+                w(u'<li>%s (%s: %s)<br/>' % (
+                    session.sessionid,
+                    _('last usage'),
+                    strftime(dtformat, localtime(session.last_usage_time))))
                 dict_to_html(w, session.data)
                 w(u'</li>')
             w(u'</ul>')
         else:
-            w(u'<p>no web sessions found</p>')
+            w(u'<p>%s</p>' % _('no web sessions found'))
+
 
 
 class RegistryView(StartupView):

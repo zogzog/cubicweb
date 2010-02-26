@@ -383,7 +383,8 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
-    def stats(self):
+    def stats(self): # XXX restrict to managers session?
+        import threading
         results = {}
         for hits, misses, title in (
             (self.querier.cache_hit, self.querier.cache_miss, 'rqlt_st'),
@@ -392,10 +393,10 @@ class Repository(object):
             results['%s_cache_hit' % title] =  hits
             results['%s_cache_miss' % title] = misses
             results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
-
         results['sql_no_cache'] = self.system_source.no_cache
         results['nb_open_sessions'] = len(self._sessions)
-        results['nb_threads'] = len(self._running_threads)
+        results['nb_active_threads'] = threading.activeCount()
+        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
         results['available_pools'] = self._available_pools.qsize()
         return results
 

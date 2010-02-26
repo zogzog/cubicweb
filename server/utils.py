@@ -107,6 +107,9 @@ class LoopTask(object):
         self.func = auto_restart_func
         self.name = func.__name__
 
+    def __str__(self):
+        return '%s (%s seconds)' % (self.name, self.interval)
+
     def start(self):
         self._t = Timer(self.interval, self.func)
         self._t.start()
