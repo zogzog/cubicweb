@@ -71,9 +71,9 @@ class Session(RequestSessionBase):
         self._threads_in_transaction = set()
         self._closed = False
 
-    def __str__(self):
-        return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
-                                             self.id, id(self))
+    def __unicode__(self):
+        return '<%ssession %s (%s 0x%x)>' % (
+            self.cnxtype, unicode(self.user.login), self.id, id(self))
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
