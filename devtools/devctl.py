@@ -575,17 +575,16 @@ class NewCubeCommand(Command):
 class ExamineLogCommand(Command):
     """Examine a rql log file.
 
-    usage: python exlog.py < rql.log
-
     will print out the following table
 
       total execution time || number of occurences || rql query
 
     sorted by descending total execution time
 
-    chances are the lines at the top are the ones that will bring
-    the higher benefit after optimisation. Start there.
+    chances are the lines at the top are the ones that will bring the higher
+    benefit after optimisation. Start there.
     """
+    arguments = '< rql.log'
     name = 'exlog'
     options = (
         )
