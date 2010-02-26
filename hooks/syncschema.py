@@ -419,7 +419,7 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
         rdef = self.init_rdef(composite=entity.composite)
         schema = session.vreg.schema
         rtype = rdef.name
-        rschema = session.vreg.schema.rschema(rtype)
+        rschema = schema.rschema(rtype)
         # this have to be done before permissions setting
         if rschema.inlined:
             # need to add a column if the relation is inlined and if this is the
@@ -441,15 +441,15 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
             if not (rschema.subjects() or
                     rtype in session.transaction_data.get('createdtables', ())):
                 try:
-                    rschema = session.vreg.schema.rschema(rtype)
+                    rschema = schema.rschema(rtype)
                     tablesql = rschema2sql(rschema)
                 except KeyError:
                     # fake we add it to the schema now to get a correctly
                     # initialized schema but remove it before doing anything
                     # more dangerous...
-                    rschema = session.vreg.schema.add_relation_type(rdef)
+                    rschema = schema.add_relation_type(rdef)
                     tablesql = rschema2sql(rschema)
-                    session.vreg.schema.del_relation_type(rtype)
+                    schema.del_relation_type(rtype)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():

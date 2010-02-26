@@ -101,7 +101,7 @@ def generate_schema_pot(w, cubedir=None):
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libconfig=libconfig, cube=cube)
+    _generate_schema_pot(w, vreg, schema, libconfig=libconfig)
 
 
 def _generate_schema_pot(w, vreg, schema, libconfig=None):
@@ -213,7 +213,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
         add_msg(w, objid)
 
 
-def _iter_vreg_objids(vreg, done, prefix=None):
+def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:

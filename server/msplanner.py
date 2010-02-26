@@ -1027,7 +1027,7 @@ class MSPlanner(SSPlanner):
         plan.preprocess(rqlst)
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
-        steps = self._union_plan(plan, rqlst, ppis)
+        steps = self._union_plan(plan, ppis)
         if server.DEBUG & server.DBG_MS:
             from pprint import pprint
             for step in plan.steps:
@@ -1045,7 +1045,7 @@ class MSPlanner(SSPlanner):
             for sppi in sppis:
                 if sppi.needsplit or sppi.part_sources != ppi.part_sources:
                     temptable = 'T%s' % make_uid(id(subquery))
-                    sstep = self._union_plan(plan, subquery.query, sppis, temptable)[0]
+                    sstep = self._union_plan(plan, sppis, temptable)[0]
                     break
             else:
                 sstep = None
@@ -1056,7 +1056,7 @@ class MSPlanner(SSPlanner):
                 ppi.plan.add_step(sstep)
         return inputmap
 
-    def _union_plan(self, plan, union, ppis, temptable=None):
+    def _union_plan(self, plan, ppis, temptable=None):
         tosplit, cango, allsources = [], {}, set()
         for planinfo in ppis:
             if planinfo.needsplit:

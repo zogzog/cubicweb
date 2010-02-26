@@ -26,7 +26,7 @@ from cubicweb.server.ssplanner import add_types_restriction
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 
-def empty_rset(session, rql, args, rqlst=None):
+def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
     return ResultSet([], rql, args, rqlst=rqlst)
 
@@ -612,7 +612,7 @@ class QuerierHelper(object):
                 except UnknownEid:
                     # we want queries such as "Any X WHERE X eid 9999"
                     # return an empty result instead of raising UnknownEid
-                    return empty_rset(session, rql, args)
+                    return empty_rset(rql, args)
                 cachekey.append(etype)
                 # ensure eid is correctly typed in args
                 args[key] = typed_eid(args[key])
@@ -630,7 +630,7 @@ class QuerierHelper(object):
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999"
                 # return an empty result instead of raising UnknownEid
-                return empty_rset(session, rql, args, rqlst)
+                return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if not rqlst.TYPE == 'select':
