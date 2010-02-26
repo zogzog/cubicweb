@@ -352,9 +352,8 @@ class CwStats(View):
     __select__ = none_rset() & match_user_groups('users', 'managers')
 
     def call(self):
-        _ = self._cw._
         stats = self._cw.vreg.config.repository(None).stats()
         results = []
         for element in stats:
-            results.append('%s %s' % (element, stats[element]))
-        self.w(u"%s" % _('\n'.join(results)))
+            results.append(u'%s %s' % (element, stats[element]))
+        self.w(u'\n'.join(results))
