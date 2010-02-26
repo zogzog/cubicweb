@@ -130,6 +130,9 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
+msgid "(loading ...)"
+msgstr "(Cargando ...)"
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -2288,6 +2291,9 @@ msgstr "Seguir la liga"
 msgid "follow this link for more information on this %s"
 msgstr ""
 
+msgid "follow this link if javascript is deactivated"
+msgstr ""
+
 msgid "for_user"
 msgstr "Para el usuario"
 
@@ -2709,9 +2715,6 @@ msgstr ""
 
 msgid "list"
 msgstr "Lista"
-
-msgid "loading"
-msgstr "Cargando"
 
 msgid "log in"
 msgstr "Identificarse"
@@ -4253,6 +4256,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "link to each item in"
 #~ msgstr "ligar hacia cada elemento en"
+
+#~ msgid "loading"
+#~ msgstr "Cargando"
 
 #~ msgid "nothing to edit"
 #~ msgstr "nada que editar"

@@ -48,7 +48,10 @@ class LazyViewMixin(object):
             tabid or vid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
-              % (tabid or vid, self._cw._('loading')))
+              % (tabid or vid, self._cw._('(loading ...)')))
+        w(u'<noscript><p><a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
+          % (tabid or vid, xml_escape(self._cw.build_url(**urlparams)), xml_escape('%s (%s)') %
+             (tabid or vid, self._cw._('follow this link if javascript is deactivated'))))
         w(u'</div>')
         self._prepare_bindings(tabid or vid, reloadable)
 

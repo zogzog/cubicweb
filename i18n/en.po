@@ -125,6 +125,9 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
+msgid "(loading ...)"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -2238,6 +2241,9 @@ msgstr ""
 msgid "follow this link for more information on this %s"
 msgstr ""
 
+msgid "follow this link if javascript is deactivated"
+msgstr ""
+
 msgid "for_user"
 msgstr "for user"
 
@@ -2640,9 +2646,6 @@ msgid "link a workflow to one or more entity type"
 msgstr ""
 
 msgid "list"
-msgstr ""
-
-msgid "loading"
 msgstr ""
 
 msgid "log in"
