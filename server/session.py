@@ -314,7 +314,7 @@ class Session(RequestSessionBase):
             except KeyError:
                 pass
             pool.pool_reset()
-            self._threaddata.pool = None
+            del self._threaddata.pool
             # free pool once everything is done to avoid race-condition
             self.repo._free_pool(pool)
 
@@ -410,13 +410,13 @@ class Session(RequestSessionBase):
     @property
     def super_session(self):
         try:
-            csession = self._threaddata.childsession
+            csession = self.childsession
         except AttributeError:
             if isinstance(self, (ChildSession, InternalSession)):
                 csession = self
             else:
                 csession = ChildSession(self)
-            self._threaddata.childsession = csession
+            self.childsession = csession
         # need shared pool set
         self.set_pool(checkclosed=False)
         return csession
@@ -443,11 +443,24 @@ class Session(RequestSessionBase):
         rset = self._execute(self, rql, kwargs, eid_key, build_descr)
         return self.decorate_rset(rset, propagate)
 
+    def _clear_thread_data(self):
+        """remove everything from the thread local storage, except pool
+        which is explicitly removed by reset_pool, and mode which is set anyway
+        by _touch
+        """
+        store = self._threaddata
+        for name in ('commit_state', 'transaction_data', 'pending_operations',
+                     '_rewriter'):
+            try:
+                delattr(store, name)
+            except AttributeError:
+                pass
+
     def commit(self, reset_pool=True):
         """commit the current session's transaction"""
         if self.pool is None:
             assert not self.pending_operations
-            self.transaction_data.clear()
+            self._clear_thread_data()
             self._touch()
             self.debug('commit session %s done (no db activity)', self.id)
             return
@@ -501,10 +514,8 @@ class Session(RequestSessionBase):
                                   exc_info=sys.exc_info())
             self.info('%s session %s done', trstate, self.id)
         finally:
+            self._clear_thread_data()
             self._touch()
-            self.commit_state = None
-            self.pending_operations[:] = []
-            self.transaction_data.clear()
             if reset_pool:
                 self.reset_pool(ignoremode=True)
 
@@ -512,7 +523,7 @@ class Session(RequestSessionBase):
         """rollback the current session's transaction"""
         if self.pool is None:
             assert not self.pending_operations
-            self.transaction_data.clear()
+            self._clear_thread_data()
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
             return
@@ -527,9 +538,8 @@ class Session(RequestSessionBase):
             self.pool.rollback()
             self.debug('rollback for session %s done', self.id)
         finally:
+            self._clear_thread_data()
             self._touch()
-            self.pending_operations[:] = []
-            self.transaction_data.clear()
             if reset_pool:
                 self.reset_pool(ignoremode=True)
 
@@ -584,6 +594,7 @@ class Session(RequestSessionBase):
 
     @property
     def rql_rewriter(self):
+        # in thread local storage since the rewriter isn't thread safe
         try:
             return self._threaddata._rewriter
         except AttributeError:
