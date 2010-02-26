@@ -66,7 +66,7 @@ class ProcessInformationView(StartupView):
         stats = repo.stats()
         for element in sorted(stats):
             w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
-                   % (element, stats[element],
+                   % (element, xml_escame(unicode(stats[element])),
                       element.endswith('percent') and '%' or '' ))
         w(u'</table>')
         if req.cnx._cnxtype == 'inmemory':
