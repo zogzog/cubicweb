@@ -109,6 +109,11 @@ class ConnectionsPool(object):
         else:
             sources = (source,)
         for source in sources:
+            try:
+                # properly close existing connection if any
+                self.source_cnxs[source.uri][1].close()
+            except:
+                pass
             source.info('trying to reconnect')
             self.source_cnxs[source.uri] = (source, source.get_connection())
             self._cursors.pop(source.uri, None)
