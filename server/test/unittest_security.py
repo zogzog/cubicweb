@@ -30,7 +30,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         rqlst = self.repo.vreg.rqlhelper.parse(rql).children[0]
         origgroups = self.schema['Personne'].get_groups('read')
         self.schema['Personne'].set_action_permissions('read', ('users', 'managers'))
-        self.repo.vreg.rqlhelper.compute_solutions(rqlst)
+        self.repo.vreg.solutions(self.session, rqlst, None)
         solution = rqlst.solutions[0]
         check_read_access(self.schema, self.session.user, rqlst, solution)
         cnx = self.login('anon')
