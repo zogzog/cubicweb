@@ -205,6 +205,8 @@ class CookieSessionHandler(object):
         #      reopening. Is it actually a problem?
         self._update_last_login_time(req)
         args = req.form
+        for forminternal_key in ('__form_id', '__domid', '__errorurl'):
+            args.pop(forminternal_key, None)
         args['__message'] = req._('welcome %s !') % req.user.login
         if 'vid' in req.form:
             args['vid'] = req.form['vid']
@@ -379,7 +381,11 @@ class CubicWebPublisher(object):
                         'eidmap': req.data.get('eidmap', {})
                         }
             req.set_session_data(req.form['__errorurl'], forminfo)
-            raise Redirect(req.form['__errorurl'])
+            # XXX form session key / __error_url should be differentiated:
+            # session key is 'url + #<form dom id', though we usually don't want
+            # the browser to move to the form since it hides the global
+            # messages.
+            raise Redirect(req.form['__errorurl'].rsplit('#', 1)[0])
         self.error_handler(req, ex, tb=False)
 
     def error_handler(self, req, ex, tb=False):
@@ -389,6 +395,8 @@ class CubicWebPublisher(object):
         req.remove_header('Etag')
         req.message = None
         req.reset_headers()
+        if req.json_request:
+            raise RemoteCallFailed(unicode(ex))
         try:
             req.data['ex'] = ex
             if tb:

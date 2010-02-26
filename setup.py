@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""
+"""Generic Setup script, takes package info from __pkginfo__.py file
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -7,9 +7,6 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 # pylint: disable-msg=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
-#
-# Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -23,7 +20,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-""" Generic Setup script, takes package info from __pkginfo__.py file """
 
 import os
 import sys

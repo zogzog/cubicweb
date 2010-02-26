@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import cached, clear_cache, monkeypatch
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import  deprecated
 from logilab.common.modutils import cleanup_sys_modules
 

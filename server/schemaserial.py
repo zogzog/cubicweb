@@ -8,8 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 import os
-import sys
-import os
 from itertools import chain
 
 from logilab.common.shellutils import ProgressBar
@@ -284,23 +282,19 @@ def eschema_relations_values(eschema):
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-# XXX 2.47 migration
-HAS_FULLTEXT_CONTAINER = True
-
 def rschema_relations_values(rschema):
     values = _ervalues(rschema)
     values['final'] = rschema.final
     values['symmetric'] = rschema.symmetric
     values['inlined'] = rschema.inlined
-    if HAS_FULLTEXT_CONTAINER:
-        if isinstance(rschema.fulltext_container, str):
-            values['fulltext_container'] = unicode(rschema.fulltext_container)
-        else:
-            values['fulltext_container'] = rschema.fulltext_container
+    if isinstance(rschema.fulltext_container, str):
+        values['fulltext_container'] = unicode(rschema.fulltext_container)
+    else:
+        values['fulltext_container'] = rschema.fulltext_container
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-def _rdef_values(rschema, objtype, props):
+def _rdef_values(objtype, props):
     amap = {'order': 'ordernum'}
     values = {}
     for prop, default in schemamod.RelationDefinitionSchema.rproperty_defs(objtype).iteritems():
@@ -316,13 +310,13 @@ def _rdef_values(rschema, objtype, props):
         values[amap.get(prop, prop)] = value
     return values
 
-def nfrdef_relations_values(rschema, objtype, props):
-    values = _rdef_values(rschema, objtype, props)
+def nfrdef_relations_values(objtype, props):
+    values = _rdef_values(objtype, props)
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-def frdef_relations_values(rschema, objtype, props):
-    values = _rdef_values(rschema, objtype, props)
+def frdef_relations_values(objtype, props):
+    values = _rdef_values(objtype, props)
     default = values['default']
     del values['default']
     if default is not None:
@@ -435,7 +429,7 @@ _LOCATE_RDEF_RQL0 = 'X relation_type ER,X from_entity SE,X to_entity OE'
 _LOCATE_RDEF_RQL1 = 'SE name %(se)s,ER name %(rt)s,OE name %(oe)s'
 
 def frdef2rql(rschema, subjtype, objtype, props):
-    relations, values = frdef_relations_values(rschema, objtype, props)
+    relations, values = frdef_relations_values(objtype, props)
     relations.append(_LOCATE_RDEF_RQL0)
     values.update({'se': str(subjtype), 'rt': str(rschema), 'oe': str(objtype)})
     yield 'INSERT CWAttribute X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
@@ -443,7 +437,7 @@ def frdef2rql(rschema, subjtype, objtype, props):
         yield rql + ', EDEF is CWAttribute', values
 
 def nfrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = nfrdef_relations_values(rschema, objtype, props)
+    relations, values = nfrdef_relations_values(objtype, props)
     relations.append(_LOCATE_RDEF_RQL0)
     values.update({'se': str(subjtype), 'rt': str(rschema), 'oe': str(objtype)})
     yield 'INSERT CWRelation X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
@@ -472,7 +466,12 @@ def _erperms2rql(erschema, groupmap):
     and CWGroup entities
     """
     for action in erschema.ACTIONS:
-        for group_or_rqlexpr in erschema.action_permissions(action):
+        try:
+            grantedto = erschema.action_permissions(action)
+        except KeyError:
+            # may occurs when modifying persistent schema
+            continue
+        for group_or_rqlexpr in grantedto:
             if isinstance(group_or_rqlexpr, basestring):
                 # group
                 try:
@@ -505,14 +504,14 @@ def updaterdef2rql(rschema, subjtype=None, objtype=None, props=None):
     return __rdef2rql(genmap, rschema, subjtype, objtype, props)
 
 def updatefrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = frdef_relations_values(rschema, objtype, props)
+    relations, values = frdef_relations_values(objtype, props)
     values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
     yield 'SET %s WHERE %s, %s, X is CWAttribute' % (','.join(relations),
                                                      _LOCATE_RDEF_RQL0,
                                                      _LOCATE_RDEF_RQL1), values
 
 def updatenfrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = nfrdef_relations_values(rschema, objtype, props)
+    relations, values = nfrdef_relations_values(objtype, props)
     values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
     yield 'SET %s WHERE %s, %s, X is CWRelation' % (','.join(relations),
                                                     _LOCATE_RDEF_RQL0,

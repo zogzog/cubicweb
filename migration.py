@@ -193,7 +193,7 @@ class MigrationHelper(object):
 
         if `retry` is true the r[etry] answer may return 2
         """
-        possibleanswers = ['y','n']
+        possibleanswers = ['y', 'n']
         if abort:
             possibleanswers.append('abort')
         if shell:

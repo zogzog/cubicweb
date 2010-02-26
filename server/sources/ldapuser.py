@@ -210,11 +210,11 @@ directory (default to once a day).',
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
-                        rset = session.execute('EmailAddress X,A WHERE '
+                        rset = session.execute('EmailAddress A WHERE '
                                                'U use_email X, U eid %(u)s',
                                                {'u': eid})
                         ldapemailaddr = unicode(ldapemailaddr)
-                        for emaileid, emailaddr in rset:
+                        for emailaddr, in rset:
                             if emailaddr == ldapemailaddr:
                                 break
                         else:
@@ -448,12 +448,12 @@ directory (default to once a day).',
     def _auth_cram_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.cram_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_token)
 
     def _auth_digest_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.digest_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_token)
 
     def _auth_gssapi(self, conn, user, userpwd):
         # print XXX not proper sasl/gssapi

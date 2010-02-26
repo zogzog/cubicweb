@@ -91,7 +91,10 @@ class Field(object):
        optional fieldset to which this field belongs to
     :order:
        key used by automatic forms to sort fields
-
+    :ignore_req_params:
+       when true, this field won't consider value potentialy specified using
+       request's form parameters (eg you won't be able to specify a value using for
+       instance url like http://mywebsite.com/form?field=value)
     """
     # default widget associated to this class of fields. May be overriden per
     # instance
@@ -113,6 +116,7 @@ class Field(object):
     order = None
     value = _MARKER
     fallback_on_none_attribute = False
+    ignore_req_params = False
 
     def __init__(self, name=None, label=_MARKER, widget=None, **kwargs):
         for key, val in kwargs.items():
@@ -348,9 +352,9 @@ class Field(object):
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
         try:
-            return form.formvalues[self]
+            return form.formvalues[(self, form)]
         except KeyError:
-            value = form.formvalues[self] = self._process_form_value(form)
+            value = form.formvalues[(self, form)] = self._process_form_value(form)
             return value
 
     def _process_form_value(self, form):
@@ -413,12 +417,17 @@ class StringField(Field):
 
 class PasswordField(StringField):
     widget = fw.PasswordInput
+    def form_init(self, form):
+        if self.eidparam and form.edited_entity.has_eid():
+            # see below: value is probably set but we can't retreive it. Ensure
+            # the field isn't show as a required field on modification
+            self.required = False
 
     def typed_value(self, form, load_bytes=False):
         if self.eidparam:
             # no way to fetch actual password value with cw
             if form.edited_entity.has_eid():
-                return INTERNAL_FIELD_VALUE
+                return ''
             return self.initial_typed_value(form, load_bytes)
         return super(PasswordField, self).typed_value(form, load_bytes)
 
@@ -591,7 +600,7 @@ class EditableFileField(FileField):
             if data:
                 encoding = self.encoding(form)
                 try:
-                    form.formvalues[self] = unicode(data.getvalue(), encoding)
+                    form.formvalues[(self, form)] = unicode(data.getvalue(), encoding)
                 except UnicodeError:
                     pass
                 else:
@@ -811,7 +820,7 @@ class RelationField(Field):
             for field in form.root_form.fields_by_name('__linkto'):
                 if field.value in searchedvalues:
                     form.root_form.remove_field(field)
-            form.formvalues[self] = value
+            form.formvalues[(self, form)] = value
 
     def format_single_value(self, req, value):
         return value
@@ -819,13 +828,13 @@ class RelationField(Field):
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
         try:
-            return form.formvalues[self]
+            return form.formvalues[(self, form)]
         except KeyError:
             value = self._process_form_value(form)
             # if value is None, there are some remaining pending fields, we'll
             # have to recompute this later -> don't cache in formvalues
             if value is not None:
-                form.formvalues[self] = value
+                form.formvalues[(self, form)] = value
             return value
 
     def _process_form_value(self, form):

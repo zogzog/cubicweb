@@ -152,7 +152,7 @@ def tell(msg):
 
 def confirm(question):
     """A confirm function that asks for yes/no/abort and exits on abort."""
-    answer = shellutils.ASK.ask(question, ('Y','n','abort'), 'Y')
+    answer = shellutils.ASK.ask(question, ('Y', 'n', 'abort'), 'Y')
     if answer == 'abort':
         sys.exit(1)
     return answer == 'Y'
@@ -275,11 +275,12 @@ def alldigits(txt):
 
 def check_doubles(buckets):
     """Extract the keys that have more than one item in their bucket."""
-    return [(key, len(value)) for key,value in buckets.items() if len(value) > 1]
+    return [(k, len(v)) for k, v in buckets.items() if len(v) > 1]
 
 def check_doubles_not_none(buckets):
     """Extract the keys that have more than one item in their bucket."""
-    return [(key, len(value)) for key,value in buckets.items() if key is not None and len(value) > 1]
+    return [(k, len(v)) for k, v in buckets.items()
+            if k is not None and len(v) > 1]
 
 
 # object stores #################################################################
@@ -430,12 +431,14 @@ class RQLObjectStore(ObjectStore):
         return entity
 
     def _put(self, type, item):
-        query = ('INSERT %s X: ' % type) + ', '.join(['X %s %%(%s)s' % (key,key) for key in item])
+        query = ('INSERT %s X: ' % type) + ', '.join('X %s %%(%s)s' % (k, k)
+                                                     for k in item)
         return self.rql(query, item)[0][0]
 
     def relate(self, eid_from, rtype, eid_to):
         # if reverse relation is found, eids are exchanged
-        eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(eid_from, rtype, eid_to)
+        eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(
+            eid_from, rtype, eid_to)
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                   {'x': int(eid_from), 'y': int(eid_to)}, ('x', 'y'))
 
@@ -513,7 +516,7 @@ class CWImportController(object):
                   % (len(self.store.eids), len(self.store.types),
                      len(self.store.relations), nberrors))
         if self.errors:
-            if self.askerror==2 or (self.askerror and confirm('Display errors ?')):
+            if self.askerror == 2 or (self.askerror and confirm('Display errors ?')):
                 from pprint import pformat
                 for errkey, error in self.errors.items():
                     self.tell("\n%s (%s): %d\n" % (error[0], errkey, len(error[1])))

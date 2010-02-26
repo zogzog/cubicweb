@@ -85,10 +85,6 @@ class FormRenderer(AppObject):
         if self.display_progress_div:
             w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
         w(u'<fieldset>')
-        w(tags.input(type=u'hidden', name=u'__form_id',
-                     value=values.get('formvid', form.__regid__)))
-        if form.redirect_path:
-            w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
         self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
@@ -379,10 +375,6 @@ class EntityFormRenderer(BaseFormRenderer):
                                % self._cw._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
-
-    def _render_fields(self, fields, w, form):
-        if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
-            super(EntityFormRenderer, self)._render_fields(fields, w, form)
 
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:

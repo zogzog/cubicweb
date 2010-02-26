@@ -8,32 +8,23 @@ cubes development
 """
 __docformat__ = "restructuredtext en"
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 from datetime import datetime
-from os import mkdir, chdir, getcwd
+from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
-from copy import deepcopy
 from warnings import warn
-from tempfile import NamedTemporaryFile
-from subprocess import Popen
 
 from logilab.common import STD_BLACKLIST
-from logilab.common.modutils import get_module_files
-from logilab.common.textutils import splitstrip
-from logilab.common.shellutils import ASK
 from logilab.common.clcommands import register_commands, pop_arg
-
-from yams import schema2dot
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
 from cubicweb.toolsutils import Command, copy_skeleton, underline_title
-from cubicweb.schema import CONSTRAINTS
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
-from yams import BASE_TYPES
-from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
-                             WORKFLOW_TYPES, INTERNAL_TYPES)
 
 
 class DevConfiguration(ServerConfiguration, WebConfiguration):
@@ -110,13 +101,14 @@ def generate_schema_pot(w, cubedir=None):
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libconfig=libconfig, cube=cube)
+    _generate_schema_pot(w, vreg, schema, libconfig=libconfig)
 
 
-def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
+def _generate_schema_pot(w, vreg, schema, libconfig=None):
+    from copy import deepcopy
     from cubicweb.i18n import add_msg
     from cubicweb.web import uicfg
-    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES
+    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES, CONSTRAINTS
     no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
     w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
@@ -221,7 +213,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         add_msg(w, objid)
 
 
-def _iter_vreg_objids(vreg, done, prefix=None):
+def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:
@@ -236,21 +228,6 @@ def _iter_vreg_objids(vreg, done, prefix=None):
                     yield objid
                     done.add(objid)
                     break
-
-
-def defined_in_library(etype, rtype, tetype, role):
-    """return true if the given relation definition exists in cubicweb's library
-    """
-    if libschema is None:
-        return False
-    if role == 'subject':
-        subjtype, objtype = etype, tetype
-    else:
-        subjtype, objtype = tetype, etype
-    try:
-        return libschema.rschema(rtype).has_rdef(subjtype, objtype)
-    except KeyError:
-        return False
 
 
 LANGS = ('en', 'fr', 'es')
@@ -287,6 +264,7 @@ class UpdateCubicWebCatalogCommand(Command):
         import yams
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
+        from logilab.common.modutils import get_module_files
         from cubicweb.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
         potfiles = [join(I18NDIR, 'static-messages.pot')]
@@ -501,6 +479,7 @@ class NewCubeCommand(Command):
 
 
     def run(self, args):
+        from logilab.common.shellutils import ASK
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument (cube name) is expected")
         cubename, = args
@@ -558,6 +537,8 @@ class NewCubeCommand(Command):
         copy_skeleton(skeldir, cubedir, context)
 
     def _ask_for_dependancies(self):
+        from logilab.common.shellutils import ASK
+        from logilab.common.textutils import splitstrip
         includes = []
         for stdtype in ServerConfiguration.available_cubes():
             answer = ASK.ask("Depends on cube %s? " % stdtype,
@@ -575,17 +556,16 @@ class NewCubeCommand(Command):
 class ExamineLogCommand(Command):
     """Examine a rql log file.
 
-    usage: python exlog.py < rql.log
-
     will print out the following table
 
       total execution time || number of occurences || rql query
 
     sorted by descending total execution time
 
-    chances are the lines at the top are the ones that will bring
-    the higher benefit after optimisation. Start there.
+    chances are the lines at the top are the ones that will bring the higher
+    benefit after optimisation. Start there.
     """
+    arguments = '< rql.log'
     name = 'exlog'
     options = (
         )
@@ -662,7 +642,12 @@ class GenerateSchema(Command):
               ]
 
     def run(self, args):
+        from subprocess import Popen
+        from tempfile import NamedTemporaryFile
         from logilab.common.textutils import splitstrip
+        from yams import schema2dot, BASE_TYPES
+        from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
+                                     WORKFLOW_TYPES, INTERNAL_TYPES)
         cubes = splitstrip(pop_arg(args, 1))
         dev_conf = DevConfiguration(*cubes)
         schema = dev_conf.load_schema()

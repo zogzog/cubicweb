@@ -15,7 +15,7 @@ from datetime import date, datetime, timedelta
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached
-from logilab.common.date import datetime2ticks, ustrftime
+from logilab.common.date import datetime2ticks
 from logilab.common.compat import all
 
 from rql import parse, nodes
@@ -267,6 +267,7 @@ class AbstractFacet(AppObject):
     context = ''
     needs_update = False
     start_unfolded = True
+    cw_rset = None # ensure facets have a cw_rset attribute
 
     def __init__(self, req, rqlst=None, filtered_variable=None,
                  **kwargs):

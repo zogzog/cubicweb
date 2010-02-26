@@ -59,7 +59,6 @@ class SortedNavigation(NavigationComponent):
     nb_chars = 5
 
     def display_func(self, rset, col, attrname):
-        req = self._cw
         if attrname is not None:
             def index_display(row):
                 if not rset[row][col]: # outer join
@@ -159,7 +158,7 @@ class NextPrevNavigationComponent(EntityVComponent):
     context = 'navbottom'
     order = 10
     def call(self, view=None):
-        entity = self.cw_rset.get_entity(0,0)
+        entity = self.cw_rset.get_entity(0, 0)
         previous = entity.previous_entity()
         next = entity.next_entity()
         if previous or next:

@@ -1,6 +1,4 @@
 import os
-import os.path as osp
-import sys
 
 import win32serviceutil
 import win32service

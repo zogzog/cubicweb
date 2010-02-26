@@ -9,6 +9,7 @@ import sys
 import os
 from os.path import dirname, join, abspath
 
+from logilab.common.modutils import cleanup_sys_modules
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.changelog import Version
 
@@ -21,8 +22,12 @@ def unabsolutize(path):
             return '/'.join(parts[i+1:])
     raise Exception('duh? %s' % path)
 
+CUSTOM_CUBES_DIR = abspath(join(dirname(__file__), 'data', 'cubes'))
+
+
 class CubicWebConfigurationTC(TestCase):
     def setUp(self):
+        cleanup_sys_modules([CUSTOM_CUBES_DIR, ApptestConfiguration.CUBES_DIR])
         self.config = ApptestConfiguration('data')
         self.config._cubes = ('email', 'file')
 
@@ -86,16 +91,14 @@ class CubicWebConfigurationTC(TestCase):
         # make sure we don't import the email cube, but the stdlib email package
         import email
         self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
-        os.environ['CW_CUBES_PATH'] = join(dirname(__file__), 'data', 'cubes')
+        os.environ['CW_CUBES_PATH'] = CUSTOM_CUBES_DIR
         self.assertEquals(self.config.cubes_search_path(),
-                          [abspath(join(dirname(__file__), 'data', 'cubes')),
-                           self.config.CUBES_DIR])
-        os.environ['CW_CUBES_PATH'] = '%s%s%s%s%s' % (join(dirname(__file__), 'data', 'cubes'),
-                                                      os.pathsep, self.config.CUBES_DIR,
-                                                      os.pathsep, 'unexistant')
+                          [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])
+        os.environ['CW_CUBES_PATH'] = os.pathsep.join([
+            CUSTOM_CUBES_DIR, self.config.CUBES_DIR, 'unexistant'])
         # filter out unexistant and duplicates
         self.assertEquals(self.config.cubes_search_path(),
-                          [abspath(join(dirname(__file__), 'data', 'cubes')),
+                          [CUSTOM_CUBES_DIR,
                            self.config.CUBES_DIR])
         self.failUnless('mycube' in self.config.available_cubes())
         # test cubes python path
@@ -104,12 +107,12 @@ class CubicWebConfigurationTC(TestCase):
         self.assertEquals(cubes.__path__, self.config.cubes_search_path())
         # this import should succeed once path is adjusted
         from cubes import mycube
-        self.assertEquals(mycube.__path__, [abspath(join(dirname(__file__), 'data', 'cubes', 'mycube'))])
+        self.assertEquals(mycube.__path__, [join(CUSTOM_CUBES_DIR, 'mycube')])
         # file cube should be overriden by the one found in data/cubes
         sys.modules.pop('cubes.file', None)
         del cubes.file
         from cubes import file
-        self.assertEquals(file.__path__, [abspath(join(dirname(__file__), 'data', 'cubes', 'file'))])
+        self.assertEquals(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
 
 
 if __name__ == '__main__':

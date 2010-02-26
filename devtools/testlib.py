@@ -66,24 +66,7 @@ def unprotected_entities(schema, strict=False):
     return set(schema.entities()) - protected_entities
 
 
-def get_versions(self, checkversions=False):
-    """return the a dictionary containing cubes used by this instance
-    as key with their version as value, including cubicweb version. This is a
-    public method, not requiring a session id.
-
-    replace Repository.get_versions by this method if you don't want versions
-    checking
-    """
-    vcconf = {'cubicweb': self.config.cubicweb_version()}
-    self.config.bootstrap_cubes()
-    for pk in self.config.cubes():
-        version = self.config.cube_version(pk)
-        vcconf[pk] = version
-    self.config._cubes = None
-    return vcconf
-
-
-def refresh_repo(repo):
+def refresh_repo(repo, resetschema=False, resetvreg=False):
     devtools.reset_test_database(repo.config)
     for pool in repo.pools:
         pool.reconnect()
@@ -92,6 +75,8 @@ def refresh_repo(repo):
     repo.querier._rql_cache = {}
     for source in repo.sources:
         source.reset_caches()
+    if resetschema:
+        repo.set_schema(repo.config.load_schema(), resetvreg=resetvreg)
 
 
 # email handling, to test emails sent by an application ########################
@@ -160,6 +145,7 @@ class CubicWebTC(TestCase):
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
+    reset_schema = reset_vreg = False # reset schema / vreg between tests
 
     @classproperty
     def config(cls):
@@ -230,7 +216,7 @@ class CubicWebTC(TestCase):
 
     @classmethod
     def _refresh_repo(cls):
-        refresh_repo(cls.repo)
+        refresh_repo(cls.repo, cls.reset_schema, cls.reset_vreg)
 
     # global resources accessors ###############################################
 
@@ -488,7 +474,7 @@ class CubicWebTC(TestCase):
         Redirect exception
         """
         try:
-            res = callback(req)
+            callback(req)
         except Redirect, ex:
             try:
                 path, params = ex.location.split('?', 1)

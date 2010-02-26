@@ -1,4 +1,4 @@
-"""abstract controler classe for CubicWeb web client
+"""abstract controller classe for CubicWeb web client
 
 
 :organization: Logilab
@@ -8,9 +8,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-import datetime
-
-from cubicweb import typed_eid
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
@@ -124,6 +121,9 @@ class Controller(AppObject):
         else:
             self._cw.set_message(self._cw._('entity deleted'))
 
+    def validate_cache(self, view):
+        view.set_http_cache_headers()
+        self._cw.validate_cache()
 
     def reset(self):
         """reset form parameters and redirect to a view determinated by given

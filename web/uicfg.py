@@ -112,7 +112,6 @@ from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, register_rtag, _ensure_str_key)
 from cubicweb.schema import META_RTYPES
-from cubicweb.web import formwidgets
 
 
 # primary view configuration ##################################################
@@ -251,7 +250,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
     _allowed_form_types = ('main', 'inlined', 'muledit')
     _allowed_values = {'main': ('attributes', 'inlined', 'relations',
                                 'metadata', 'hidden'),
-                       'inlined': ('attributes', 'hidden'),
+                       'inlined': ('attributes', 'inlined', 'hidden'),
                        'muledit': ('attributes', 'hidden'),
                        }
 

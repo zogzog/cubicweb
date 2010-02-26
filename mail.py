@@ -8,7 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 from base64 import b64encode, b64decode
-from itertools import repeat
 from time import time
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText

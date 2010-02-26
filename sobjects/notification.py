@@ -11,7 +11,7 @@ _ = unicode
 from itertools import repeat
 
 from logilab.common.textutils import normalize_text
-from logilab.common.deprecation import class_renamed, deprecated
+from logilab.common.deprecation import class_renamed, class_moved, deprecated
 
 from cubicweb.selectors import yes
 from cubicweb.view import Component
@@ -183,7 +183,6 @@ url: %(url)s
                                   entity.eid, self.user_data['login'])
 
 
-from logilab.common.deprecation import class_renamed, class_moved, deprecated
 from cubicweb.hooks.notification import RenderAndSendNotificationView
 from cubicweb.mail import parse_message_id
 

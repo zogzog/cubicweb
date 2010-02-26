@@ -20,7 +20,7 @@ class CheckIntegrityTC(TestCase):
         sys.stderr = sys.stdout = StringIO()
         try:
             check(repo, cnx, ('entities', 'relations', 'text_index', 'metadata'),
-                  True, True)
+                  reindex=True, fix=True, withpb=False)
         finally:
             sys.stderr = sys.__stderr__
             sys.stdout = sys.__stdout__

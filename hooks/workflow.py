@@ -13,7 +13,6 @@ from cubicweb import RepositoryError, ValidationError
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import implements
 from cubicweb.server import hook
-from cubicweb.entities.wfobjs import WorkflowTransition
 
 
 def _change_state(session, x, oldstate, newstate):
@@ -52,7 +51,6 @@ class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
 
     def precommit_event(self):
-        session = self.session
         entity = self.entity
         autotrs = list(entity.possible_transitions('auto'))
         if autotrs:
@@ -232,7 +230,7 @@ class FireTransitionHook(WorkflowHook):
                     raise ValidationError(entity.eid, {'by_transition': msg})
             if entity.get('to_state'):
                 deststateeid = entity['to_state']
-                if not cowpowers and deststateeid != tr.destination().eid:
+                if not cowpowers and deststateeid != tr.destination(forentity).eid:
                     msg = session._("transition isn't allowed")
                     raise ValidationError(entity.eid, {'by_transition': msg})
                 if swtr is None:
@@ -241,7 +239,7 @@ class FireTransitionHook(WorkflowHook):
                         msg = session._("state doesn't belong to entity's workflow")
                         raise ValidationError(entity.eid, {'to_state': msg})
             else:
-                deststateeid = tr.destination().eid
+                deststateeid = tr.destination(forentity).eid
         # everything is ok, add missing information on the trinfo entity
         entity['from_state'] = fromstate.eid
         entity['to_state'] = deststateeid

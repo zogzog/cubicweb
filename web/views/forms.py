@@ -15,9 +15,7 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
-from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import StringField, relvoc_unrelated, guess_field
 
 
@@ -58,53 +56,19 @@ class FieldsForm(form.Form):
     """
     __regid__ = 'base'
 
-    internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
 
     # attributes overrideable by subclasses or through __init__
     needs_js = ('cubicweb.ajax.js', 'cubicweb.edition.js',)
     needs_css = ('cubicweb.form.css',)
-    domid = 'form'
     action = None
     onsubmit = "return freezeFormButtons('%(domid)s');"
     cssclass = None
     cssstyle = None
     cwtarget = None
     redirect_path = None
-    copy_nav_params = False
     form_buttons = None
     form_renderer_id = 'default'
     fieldsets_in_order = None
-
-    def __init__(self, req, rset=None, row=None, col=None,
-                 submitmsg=None, mainform=True,
-                 **kwargs):
-        super(FieldsForm, self).__init__(req, rset=rset, row=row, col=col)
-        self.fields = list(self.__class__._fields_)
-        for key, val in kwargs.items():
-            if key in NAV_FORM_PARAMETERS:
-                self.add_hidden(key, val)
-            elif hasattr(self.__class__, key) and not key[0] == '_':
-                setattr(self, key, val)
-            else:
-                self.cw_extra_kwargs[key] = val
-            # skip other parameters, usually given for selection
-            # (else write a custom class to handle them)
-        if mainform:
-            self.add_hidden('__errorurl', self.session_key())
-            self.add_hidden('__domid', self.domid)
-            self.restore_previous_post(self.session_key())
-
-        # XXX why do we need two different variables (mainform and copy_nav_params ?)
-        if self.copy_nav_params:
-            for param in NAV_FORM_PARAMETERS:
-                if not param in kwargs:
-                    value = req.form.get(param)
-                    if value:
-                        self.add_hidden(param, value)
-        if submitmsg is not None:
-            self.add_hidden('__message', submitmsg)
-        if 'domid' in kwargs:# session key changed
-            self.restore_previous_post(self.session_key())
 
     @property
     def needs_multipart(self):
@@ -113,6 +77,7 @@ class FieldsForm(form.Form):
 
     def add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
+        kwargs.setdefault('ignore_req_params', True)
         kwargs.setdefault('widget', fwdgs.HiddenInput)
         field = StringField(name=name, value=value, **kwargs)
         if 'id' in kwargs:
@@ -145,7 +110,7 @@ class FieldsForm(form.Form):
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(
             self.form_renderer_id, self._cw,
-            rset=self.cw_rset, row=self.cw_row, col=self.cw_col)
+            rset=self.cw_rset, row=self.cw_row, col=self.cw_col or 0)
 
     formvalues = None
     def build_context(self, formvalues=None):
@@ -177,6 +142,7 @@ class FieldsForm(form.Form):
         if renderer is None:
             renderer = self.default_renderer()
         return renderer.render(self, values)
+
 
 _AFF = uicfg.autoform_field
 _AFF_KWARGS = uicfg.autoform_field_kwargs
@@ -248,6 +214,8 @@ class EntityFieldsForm(FieldsForm):
         # entity primary view
         if self._cw.json_request and self.edited_entity.has_eid():
             return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
+        # XXX we should not consider some url parameters that may lead to
+        # different url after a validation error
         return '%s#%s' % (self._cw.url(), self.domid)
 
     def build_context(self, formvalues=None):
@@ -258,8 +226,7 @@ class EntityFieldsForm(FieldsForm):
         for field in self.fields:
             if field.eidparam:
                 edited.add(field.role_name())
-        self.add_hidden('_cw_edited_fields', u','.join(edited),
-                        eidparam=True)
+        self.add_hidden('_cw_edited_fields', u','.join(edited), eidparam=True)
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(

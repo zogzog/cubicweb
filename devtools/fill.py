@@ -142,7 +142,7 @@ title
 
     def generate_date(self, entity, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
-        base = date(randint(2000, 2004), randint(1, 12), randint(1, 28))
+        base = date(randint(2000, 2010), 1, 1) + timedelta(randint(1, 365))
         return self._constrained_generate(entity, attrname, base, timedelta(days=1), index)
 
     def generate_time(self, entity, attrname, index):

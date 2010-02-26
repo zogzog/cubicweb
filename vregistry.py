@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from os import listdir, stat
-from os.path import dirname, join, realpath, split, isdir, exists
+from os.path import dirname, join, realpath, isdir, exists
 from logging import getLogger
 from warnings import warn
 

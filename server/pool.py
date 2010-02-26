@@ -87,7 +87,7 @@ class ConnectionsPool(object):
         # implementation details of flying insert requires the system source
         # first
         yield self.source_cnxs['system'][0]
-        for uri, (source, cursor) in self.source_cnxs.items():
+        for uri, (source, cnx) in self.source_cnxs.items():
             if uri == 'system':
                 continue
             yield source
@@ -109,6 +109,11 @@ class ConnectionsPool(object):
         else:
             sources = (source,)
         for source in sources:
+            try:
+                # properly close existing connection if any
+                self.source_cnxs[source.uri][1].close()
+            except:
+                pass
             source.info('trying to reconnect')
             self.source_cnxs[source.uri] = (source, source.get_connection())
             self._cursors.pop(source.uri, None)

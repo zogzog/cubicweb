@@ -19,7 +19,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import Queue
-from os.path import join, exists
+from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
 
@@ -29,7 +29,7 @@ from logilab.common.compat import any
 from yams import BadSchemaDefinition
 from rql import RQLSyntaxError
 
-from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
@@ -101,14 +101,12 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # skip delete queries (only?) if session is an internal session. This is
-    # hooks responsability to ensure they do not violate relation's cardinality
-    if session.is_super_session:
+    # XXX now that rql in migraction default to unsafe_execute we don't want to
+    #     skip that for super session (though we can still skip it for internal
+    #     sessions). Also we should imo rely on the orm to first fetch existing
+    #     entity if any then delete it.
+    if session.is_internal_session:
         return
-    ensure_card_respected(session.unsafe_execute, session, eidfrom, rtype, eidto)
-
-
-def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
@@ -116,14 +114,28 @@ def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     # the web interface but may occurs during test or dbapi connection (though
     # not expected for this).  So: don't do it, we pretend to ensure repository
     # consistency.
+    #
+    # XXX we don't want read permissions to be applied but we want delete
+    # permission to be checked
+    rschema = session.repo.schema.rschema(rtype)
     if card[0] in '1?':
-        rschema = session.repo.schema.rschema(rtype)
-        if not rschema.inlined:
-            execute('DELETE X %s Y WHERE X eid %%(x)s,NOT Y eid %%(y)s' % rtype,
-                    {'x': eidfrom, 'y': eidto}, 'x')
+        if not rschema.inlined: # inlined relations will be implicitly deleted
+            rset = session.unsafe_execute('Any X,Y WHERE X %s Y, X eid %%(x)s, '
+                                          'NOT Y eid %%(y)s' % rtype,
+                                          {'x': eidfrom, 'y': eidto}, 'x')
+            if rset:
+                safe_delete_relation(session, rschema, *rset[0])
     if card[1] in '1?':
-        execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                {'x': eidfrom, 'y': eidto}, 'y')
+        rset = session.unsafe_execute('Any X,Y WHERE X %s Y, Y eid %%(y)s, '
+                                      'NOT X eid %%(x)s' % rtype,
+                                      {'x': eidfrom, 'y': eidto}, 'y')
+        if rset:
+            safe_delete_relation(session, rschema, *rset[0])
+
+def safe_delete_relation(session, rschema, subject, object):
+    if not rschema.has_perm(session, 'delete', fromeid=subject, toeid=object):
+        raise Unauthorized()
+    session.repo.glob_delete_relation(session, subject, rschema.type, object)
 
 
 class Repository(object):
@@ -316,8 +328,8 @@ class Repository(object):
             return self._available_pools.get(True, timeout=5)
         except Queue.Empty:
             raise Exception('no pool available after 5 secs, probably either a '
-                            'bug in code (to many uncommited/rollbacked '
-                            'connections) or to much load on the server (in '
+                            'bug in code (too many uncommited/rollbacked '
+                            'connections) or too much load on the server (in '
                             'which case you can try to set a bigger '
                             'connections pools size)')
 
@@ -370,6 +382,23 @@ class Repository(object):
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
+
+    def stats(self): # XXX restrict to managers session?
+        import threading
+        results = {}
+        for hits, misses, title in (
+            (self.querier.cache_hit, self.querier.cache_miss, 'rqlt_st'),
+            (self.system_source.cache_hit, self.system_source.cache_miss, 'sql'),
+            ):
+            results['%s_cache_hit' % title] =  hits
+            results['%s_cache_miss' % title] = misses
+            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
+        results['sql_no_cache'] = self.system_source.no_cache
+        results['nb_open_sessions'] = len(self._sessions)
+        results['nb_active_threads'] = threading.activeCount()
+        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
+        results['available_pools'] = self._available_pools.qsize()
+        return results
 
     def _login_from_email(self, login):
         session = self.internal_session()
@@ -435,7 +464,8 @@ class Repository(object):
         public method, not requiring a session id.
         """
         versions = self.get_versions(not (self.config.creating
-                                          or self.config.repairing))
+                                          or self.config.repairing
+                                          or self.config.mode == 'test'))
         cubes = list(versions)
         cubes.remove('cubicweb')
         return cubes

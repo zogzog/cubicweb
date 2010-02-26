@@ -215,7 +215,7 @@ class RepositoryTC(CubicWebTC):
                                if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
                                                  'creation_date', 'modification_date', 'cwuri',
                                                  'owned_by', 'created_by',
-                                                 'add_permission', 'delete_permission', 'read_permission')],
+                                                 'update_permission', 'read_permission')],
                               ['relation_type',
                                'from_entity', 'to_entity',
                                'in_basket', 'constrained_by', 

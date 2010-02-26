@@ -40,7 +40,6 @@ class _CalendarView(EntityView):
 
     def nav_header(self, date, smallshift=3, bigshift=9):
         """prints shortcut links to go to previous/next steps (month|week)"""
-        prev1 = next1 = prev2 = nex2 = date
         prev1 = previous_month(date, smallshift)
         next1 = next_month(date, smallshift)
         prev2 = previous_month(date, bigshift)
@@ -110,7 +109,7 @@ class _CalendarView(EntityView):
         self._cw.add_css('cubicweb.calendar.css')
         schedule = {}
         for row in xrange(len(self.cw_rset.rows)):
-            entity = self.cw_rset.get_entity(row,0)
+            entity = self.cw_rset.get_entity(row, 0)
             infos = u'<div class="event">'
             infos += self._cw.view(itemvid, self.cw_rset, row=row)
             infos += u'</div>'
@@ -137,11 +136,11 @@ class _CalendarView(EntityView):
         end = last_day(next_month(day, shift))
         return begin, end
 
-    def _build_ampm_cells(self, daynum, events):
+    def _build_ampm_cells(self, events):
         """create a view without any hourly details.
 
-        :param daynum: day of the built cell
-        :param events: dictionnary with all events classified by hours"""
+        :param events: dictionnary with all events classified by hours
+        """
         # split events according am/pm
         am_events = [event for e_time, e_list in events.iteritems()
                      if 0 <= e_time.hour < 12
@@ -318,7 +317,7 @@ class AMPMYearCalendarView(YearCalendarView):
             day = first_day + timedelta(daynum)
             events = schedule.get(day)
             if events:
-                current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(daynum, events))
+                current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(events))
             else:
                 current_row.append((AMPM_DAY % (daynum+1),
                                     AMPM_EMPTY % ("amCell", "am"),
@@ -387,7 +386,7 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
 
     def format_day_events(self, day, events):
         if events:
-            self.w(u'\n'.join(self._build_ampm_cells(day, events)))
+            self.w(u'\n'.join(self._build_ampm_cells(events)))
         else:
             self.w(u'%s %s'% (AMPM_EMPTY % ("amCell", "am"),
                               AMPM_EMPTY % ("pmCell", "pm")))
@@ -409,7 +408,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
             day = first_day + timedelta(daynum)
             events = schedule.get(day)
             if events:
-                current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(daynum, events))
+                current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(events))
             else:
                 current_row.append((AMPM_DAY % (daynum+1),
                                     AMPM_EMPTY % ("amCell", "am"),

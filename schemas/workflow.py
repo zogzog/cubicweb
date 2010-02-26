@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            ObjectRelation, RichString, String)
+                            RichString, String)
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
                               HOOKS_RTYPE_PERMS)
@@ -97,12 +97,13 @@ class BaseTransition(EntityType):
 
 class Transition(BaseTransition):
     """use to define a transition from one or multiple states to a destination
-    states in workflow's definitions.
+    states in workflow's definitions. Transition without destination state will
+    go back to the state from which we arrived to the current state.
     """
     __specializes_schema__ = True
 
     destination_state = SubjectRelation(
-        'State', cardinality='1*',
+        'State', cardinality='?*',
         constraints=[RQLConstraint('S transition_of WF, O state_of WF',
                                    msg=_('state and transition don\'t belong the the same workflow'))],
         description=_('destination state for this transition'))

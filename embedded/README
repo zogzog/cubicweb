@@ -1,7 +1,0 @@
-This directory contains extra libraries which are needed
-to make cubicweb work.
-
-The mx.DateTime python implementation is directly taken from
-the mx.DateTime distribution. The only modification is the
-strptime function which has been mocked using the standard
-``datetime`` module. (as provided by the python2.5's stdlib)

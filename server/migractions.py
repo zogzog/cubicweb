@@ -29,12 +29,11 @@ from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.adbh import get_adv_func_helper
 
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
-from cubicweb import AuthenticationError, ETYPE_NAME_MAP
+from cubicweb import AuthenticationError
 from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
@@ -156,7 +155,7 @@ class ServerMigrationHelper(MigrationHelper):
             else:
                 bkup = tarfile.open(backupfile, 'w|gz')
                 for filename in os.listdir(tmpdir):
-                    bkup.add(osp.join(tmpdir,filename), filename)
+                    bkup.add(osp.join(tmpdir, filename), filename)
                 bkup.close()
                 # call hooks
                 repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
@@ -170,7 +169,6 @@ class ServerMigrationHelper(MigrationHelper):
         # check
         if not osp.exists(backupfile):
             raise Exception("Backup file %s doesn't exist" % backupfile)
-            return
         if askconfirm and not self.confirm('Restore %s database from %s ?'
                                            % (self.config.appid, backupfile)):
             return
@@ -293,9 +291,6 @@ class ServerMigrationHelper(MigrationHelper):
             apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
         if osp.exists(apc):
             if self.config.free_wheel:
-                from cubicweb.server.hooks import setowner_after_add_entity
-                self.repo.hm.unregister_hook(setowner_after_add_entity,
-                                             'after_add_entity', '')
                 self.cmd_deactivate_verification_hooks()
             self.info('executing %s', apc)
             confirm = self.confirm
@@ -308,8 +303,6 @@ class ServerMigrationHelper(MigrationHelper):
                 self.confirm = confirm
                 self.execscript_confirm = execscript_confirm
                 if self.config.free_wheel:
-                    self.repo.hm.register_hook(setowner_after_add_entity,
-                                               'after_add_entity', '')
                     self.cmd_reactivate_verification_hooks()
 
     def install_custom_sql_scripts(self, directory, driver):
@@ -352,7 +345,7 @@ class ServerMigrationHelper(MigrationHelper):
                                             'T eid %%(x)s' % perm, {'x': teid}, 'x',
                                             ask_confirm=False):
                 if not gname in newgroups:
-                    if not confirm or self.confirm('remove %s permission of %s to %s?'
+                    if not confirm or self.confirm('Remove %s permission of %s to %s?'
                                                    % (action, erschema, gname)):
                         self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
                                      % (perm, teid),
@@ -360,7 +353,7 @@ class ServerMigrationHelper(MigrationHelper):
                 else:
                     newgroups.remove(gname)
             for gname in newgroups:
-                if not confirm or self.confirm('grant %s permission of %s to %s?'
+                if not confirm or self.confirm('Grant %s permission of %s to %s?'
                                                % (action, erschema, gname)):
                     self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
                                  % (perm, teid),
@@ -371,7 +364,7 @@ class ServerMigrationHelper(MigrationHelper):
                                                     'T eid %s' % (perm, teid),
                                                     ask_confirm=False):
                 if not expression in newexprs:
-                    if not confirm or self.confirm('remove %s expression for %s permission of %s?'
+                    if not confirm or self.confirm('Remove %s expression for %s permission of %s?'
                                                    % (expression, action, erschema)):
                         # deleting the relation will delete the expression entity
                         self.rqlexec('DELETE T %s E WHERE E eid %%(x)s, T eid %s'
@@ -381,7 +374,7 @@ class ServerMigrationHelper(MigrationHelper):
                     newexprs.pop(expression)
             for expression in newexprs.values():
                 expr = expression.expression
-                if not confirm or self.confirm('add %s expression for %s permission of %s?'
+                if not confirm or self.confirm('Add %s expression for %s permission of %s?'
                                                % (expr, action, erschema)):
                     self.rqlexec('INSERT RQLExpression X: X exprtype %%(exprtype)s, '
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
@@ -528,7 +521,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def checkpoint(self, ask_confirm=True):
         """checkpoint action"""
-        if not ask_confirm or self.confirm('commit now ?', shell=False):
+        if not ask_confirm or self.confirm('Commit now ?', shell=False):
             self.commit()
 
     def cmd_add_cube(self, cube, update_database=True):
@@ -664,7 +657,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.cmd_add_attribute(etype, newname, attrtype, commit=True)
         # skipp NULL values if the attribute is required
         rql = 'SET X %s VAL WHERE X is %s, X %s VAL' % (newname, etype, oldname)
-        card = eschema.rproperty(newname, 'cardinality')[0]
+        card = eschema.rdef(newname).cardinality[0]
         if card == '1':
             rql += ', NOT X %s NULL' % oldname
         self.rqlexec(rql, ask_confirm=self.verbosity>=2)
@@ -735,10 +728,10 @@ class ServerMigrationHelper(MigrationHelper):
                         elif role == 'object':
                             subjschema = tschema
                             objschema = spschema
-                        if (rschema.rproperty(subjschema, objschema, 'infered')
+                        if (rschema.rdef(subjschema, objschema).infered
                             or (instschema.has_relation(rschema) and
-                                instschema[rschema].has_rdef(subjschema, objschema))):
-                                continue
+                                (subjschema, objschema) in instschema[rschema].rdefs)):
+                            continue
                         self.cmd_add_relation_definition(
                             subjschema.type, rschema.type, objschema.type)
         if auto:
@@ -936,7 +929,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if syncprops:
                     self._synchronize_eschema(etype, syncperms=syncperms)
                 else:
-                    self._synchronize_permissions(self.fs_schema[etype], erschema.eid)
+                    self._synchronize_permissions(self.fs_schema[etype], etype.eid)
         if commit:
             self.commit()
 
@@ -973,7 +966,7 @@ class ServerMigrationHelper(MigrationHelper):
         you usually want to use sync_schema_props_perms instead.
         """
         oldvalue = None
-        for constr in self.repo.schema.eschema(etype).constraints(rtype):
+        for constr in self.repo.schema.eschema(etype).rdef(rtype).constraints:
             if isinstance(constr, SizeConstraint):
                 oldvalue = constr.max
         if oldvalue == size:
@@ -1146,13 +1139,13 @@ class ServerMigrationHelper(MigrationHelper):
         should only be used for low level stuff undoable with existing higher
         level actions
         """
-        if not ask_confirm or self.confirm('execute sql: %s ?' % sql):
+        if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             self.session.set_pool() # ensure pool is set
             try:
                 cu = self.session.system_sql(sql, args)
             except:
                 ex = sys.exc_info()[1]
-                if self.confirm('error: %s\nabort?' % ex):
+                if self.confirm('Error: %s\nabort?' % ex):
                     raise
                 return
             try:
@@ -1175,11 +1168,11 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = '%s (%s)' % (rql, kwargs)
             else:
                 msg = rql
-            if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
+            if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
                     res = execute(rql, kwargs, cachekey)
                 except Exception, ex:
-                    if self.confirm('error: %s\nabort?' % ex):
+                    if self.confirm('Error: %s\nabort?' % ex):
                         raise
         return res
 
@@ -1264,12 +1257,12 @@ class ForRqlIterator:
         else:
             msg = rql
         if self.ask_confirm:
-            if not self._h.confirm('execute rql: %s ?' % msg):
+            if not self._h.confirm('Execute rql: %s ?' % msg):
                 raise StopIteration
         try:
             rset = self._h._cw.execute(rql, kwargs)
         except Exception, ex:
-            if self._h.confirm('error: %s\nabort?' % ex):
+            if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:
                 raise StopIteration

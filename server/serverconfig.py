@@ -7,14 +7,12 @@
 """
 __docformat__ = "restructuredtext en"
 
-import os
 from os.path import join, exists
 
 from logilab.common.configuration import REQUIRED, Method, Configuration, \
      ini_format_section
 from logilab.common.decorators import wproperty, cached, clear_cache
 
-from cubicweb import CW_SOFTWARE_ROOT, RegistryNotFound
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
 from cubicweb.server import SOURCE_TYPES

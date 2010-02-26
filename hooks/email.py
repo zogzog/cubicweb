@@ -8,7 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb.server import hook
-from cubicweb.server.repository import ensure_card_respected
 
 from logilab.common.compat import any
 
@@ -27,11 +26,6 @@ class SetUseEmailRelationOp(hook.Operation):
 
     def precommit_event(self):
         if self.condition():
-            # we've to handle cardinaly by ourselves since we're using unsafe_execute
-            # but use session.execute and not session.unsafe_execute to check we
-            # can change the relation
-            ensure_card_respected(self.session.execute, self.session,
-                                  self.entity.eid, self.rtype, self.email.eid)
             self.session.unsafe_execute(
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
                 {'x': self.entity.eid, 'y': self.email.eid}, 'x')

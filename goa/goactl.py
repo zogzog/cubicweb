@@ -31,7 +31,6 @@ SLINK_DIRECTORIES = [
     (docutils.__path__[0], 'docutils'),
     (roman.__file__.replace('.pyc', '.py'), 'roman.py'),
 
-    (join(CW_SOFTWARE_ROOT, 'embedded', 'mx'), 'mx'),
     ('/usr/share/fckeditor/', 'fckeditor'),
 
     (join(CW_SOFTWARE_ROOT, 'web', 'data'), join('cubes', 'shared', 'data')),

@@ -7,16 +7,12 @@
 """
 __docformat__ = "restructuredtext en"
 
-import os
-import time
-
 from simplejson import dumps
 
-from logilab.common import flatten
 from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import make_uid, UStringIO
+from cubicweb.utils import UStringIO
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import multi_columns_rset
 from cubicweb.web.views import baseviews
@@ -98,7 +94,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
         #     datetime labels on tooltips is to insert an additional column
         #     cf. function onPlotHover in cubicweb.flot.js
         if self.timemode:
-            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x,y in plot]
+            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x, y in plot]
         return dumps(plot)
 
     def _render(self, req, width=500, height=400):

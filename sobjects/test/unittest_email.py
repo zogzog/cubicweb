@@ -46,10 +46,10 @@ class EmailAddressHooksTC(CubicWebTC):
         self.commit()
         cnx = self.login('toto')
         cu = cnx.cursor()
-        cu.execute('SET U primary_email E WHERE E eid %(e)s, U login "toto"',
-                   {'e': email1})
-        self.assertRaises(Unauthorized, cnx.commit)
-
+        self.assertRaises(Unauthorized,
+                          cu.execute, 'SET U primary_email E WHERE E eid %(e)s, U login "toto"',
+                          {'e': email1})
+        cnx.close()
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

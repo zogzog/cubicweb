@@ -96,10 +96,11 @@ class debugged(object):
 def create_user(session, login, pwd, *groups):
     # monkey patch this method if you want to customize admin/anon creation
     # (that maybe necessary if you change CWUser's schema)
-    session.create_entity('CWUser', login=login, upassword=pwd)
+    user = session.create_entity('CWUser', login=login, upassword=pwd)
     for group in groups:
-        session.execute('SET U in_group G WHERE G name %(group)s',
-                        {'group': group})
+        session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
+                        {'u': user.eid, 'group': group})
+    return user
 
 def init_repository(config, interactive=True, drop=False, vreg=None):
     """initialise a repository database by creating tables add filling them

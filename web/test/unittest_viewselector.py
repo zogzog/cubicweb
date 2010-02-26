@@ -67,9 +67,8 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
                              [('changelog', wdoc.ChangeLogView),
-                              ('debug', debug.DebugView),
                               ('index', startup.IndexView),
-                              ('info', management.ProcessInformationView),
+                              ('info', debug.ProcessInformationView),
                               ('manage', startup.ManageView),
                               ('owl', owl.OWLView),
                               ('propertiesform', cwproperties.CWPropertiesForm),

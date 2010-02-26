@@ -207,9 +207,9 @@ detach attached file
             upassword = PasswordField(eidparam=True, role='subject')
         form = PFForm(self.req, redirect_path='perdu.com', entity=self.entity)
         self.assertTextEquals(self._render_entity_field('upassword', form),
-                              '''<input id="upassword-subject:%(eid)s" name="upassword-subject:%(eid)s" tabindex="1" type="password" value="__cubicweb_internal_field__" />
+                              '''<input id="upassword-subject:%(eid)s" name="upassword-subject:%(eid)s" tabindex="1" type="password" value="" />
 <br/>
-<input name="upassword-subject-confirm:%(eid)s" tabindex="1" type="password" value="__cubicweb_internal_field__" />
+<input name="upassword-subject-confirm:%(eid)s" tabindex="1" type="password" value="" />
 &#160;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 

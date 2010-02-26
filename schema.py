@@ -15,15 +15,14 @@ from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.deprecation import deprecated
+from logilab.common.deprecation import deprecated, class_moved
 from logilab.common.graph import get_cycles
 from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
      RelationDefinitionSchema, PermissionMixIn
-from yams.constraints import (BaseConstraint, StaticVocabularyConstraint,
-                              FormatConstraint)
+from yams.constraints import BaseConstraint, FormatConstraint
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          obsolete as yobsolete, cleanup_sys_modules)
 
@@ -462,7 +461,6 @@ class CubicWebSchema(Schema):
     """set of entities and relations schema defining the possible data sets
     used in an application
 
-
     :type name: str
     :ivar name: name of the schema, usually the instance identifier
 
@@ -767,7 +765,7 @@ class RQLExpression(object):
                     rqlst.add_selected(objvar)
                 else:
                     colindex = selected.index(objvar.name)
-                found.append((action, objvar, colindex))
+                found.append((action, colindex))
                 # remove U eid %(u)s if U is not used in any other relation
                 uvrefs = rqlst.defined_vars['U'].references()
                 if len(uvrefs) == 1:
@@ -835,7 +833,7 @@ class RQLExpression(object):
             # check every special has_*_permission relation is satisfied
             get_eschema = session.vreg.schema.eschema
             try:
-                for eaction, var, col in has_perm_defs:
+                for eaction, col in has_perm_defs:
                     for i in xrange(len(rset)):
                         eschema = get_eschema(rset.description[i][col])
                         eschema.check_perm(session, eaction, eid=rset[i][col])
@@ -1092,6 +1090,12 @@ stmts.Select.set_statement_type = bw_set_statement_type
 # XXX deprecated
 
 from yams.buildobjs import RichString
+from yams.constraints import StaticVocabularyConstraint
+
+RichString = class_moved(RichString)
+
+StaticVocabularyConstraint = class_moved(StaticVocabularyConstraint)
+FormatConstraint = class_moved(FormatConstraint)
 
 PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
 PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)

@@ -1,11 +1,11 @@
 """SPARQL integration
 
 :organization: Logilab
-:copyright: 2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-v__docformat__ = "restructuredtext en"
+__docformat__ = "restructuredtext en"
 
 import rql
 from yams import xy
@@ -15,9 +15,9 @@ from lxml.builder import E
 
 from cubicweb.view import StartupView, AnyRsetView
 from cubicweb.web import Redirect, form, formfields, formwidgets as fwdgs
-from cubicweb.web.views import forms, urlrewrite
+from cubicweb.web.views import forms
 try:
-    from cubicweb.spa2rql import Sparql2rqlTranslator
+    from cubicweb.spa2rql import Sparql2rqlTranslator, UnsupportedQuery
 except ImportError:
     # fyzz not available (only a recommends)
     Sparql2rqlTranslator = None
@@ -45,7 +45,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
         if sparql:
             try:
                 qinfo = Sparql2rqlTranslator(self._cw.vreg.schema).translate(sparql)
-            except rql.TypeResolverException, ex:
+            except rql.TypeResolverException:
                 self.w(self._cw._('can not resolve entity types:') + u' ' + unicode('ex'))
             except UnsupportedQuery:
                 self.w(self._cw._('we are not yet ready to handle this query'))

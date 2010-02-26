@@ -24,7 +24,6 @@ from cubicweb.selectors import match_user_groups, non_final_entity
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
-from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
 

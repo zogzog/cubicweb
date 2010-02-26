@@ -30,13 +30,25 @@ MTIME = datetime.now() - timedelta(0, 10)
 repo2, cnx2 = init_test_database(config=ExternalSource1Configuration('data'))
 repo3, cnx3 = init_test_database(config=ExternalSource2Configuration('data'))
 
-# XXX, access existing connection, no pyro connection
+# hi-jacking
 from cubicweb.server.sources.pyrorql import PyroRQLSource
-PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
-# necessary since the repository is closing its initial connections pool though
-# we want to keep cnx2 valid
 from cubicweb.dbapi import Connection
-Connection.close = lambda x: None
+
+PyroRQLSource_get_connection = PyroRQLSource.get_connection
+Connection_close = Connection.close
+
+def setup_module(*args):
+    # hi-jack PyroRQLSource.get_connection to access existing connection (no
+    # pyro connection)
+    PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
+    # also necessary since the repository is closing its initial connections
+    # pool though we want to keep cnx2 valid
+    Connection.close = lambda x: None
+
+def teardown_module(*args):
+    PyroRQLSource.get_connection = PyroRQLSource_get_connection
+    Connection.close = Connection_close
+
 
 class TwoSourcesTC(CubicWebTC):
     config = TwoSourcesConfiguration('data')

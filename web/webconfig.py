@@ -11,7 +11,6 @@ _ = unicode
 import os
 from os.path import join, exists, split
 
-from logilab.common.configuration import Method
 from logilab.common.decorators import cached
 
 from cubicweb.toolsutils import read_config

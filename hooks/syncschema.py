@@ -18,7 +18,7 @@ from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
 from logilab.common.decorators import clear_cache
 
-from cubicweb import ValidationError, RepositoryError
+from cubicweb import ValidationError
 from cubicweb.selectors import implements
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS, display_name
 from cubicweb.server import hook, schemaserial as ss
@@ -84,6 +84,7 @@ def add_inline_relation_column(session, etype, rtype):
     session.info('added index on %s(%s)', table, column)
     session.transaction_data.setdefault('createdattrs', []).append(
         '%s.%s' % (etype, rtype))
+
 
 def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
@@ -418,7 +419,7 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
         rdef = self.init_rdef(composite=entity.composite)
         schema = session.vreg.schema
         rtype = rdef.name
-        rschema = session.vreg.schema.rschema(rtype)
+        rschema = schema.rschema(rtype)
         # this have to be done before permissions setting
         if rschema.inlined:
             # need to add a column if the relation is inlined and if this is the
@@ -440,15 +441,15 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
             if not (rschema.subjects() or
                     rtype in session.transaction_data.get('createdtables', ())):
                 try:
-                    rschema = session.vreg.schema.rschema(rtype)
+                    rschema = schema.rschema(rtype)
                     tablesql = rschema2sql(rschema)
                 except KeyError:
                     # fake we add it to the schema now to get a correctly
                     # initialized schema but remove it before doing anything
                     # more dangerous...
-                    rschema = session.vreg.schema.add_relation_type(rdef)
+                    rschema = schema.add_relation_type(rdef)
                     tablesql = rschema2sql(rschema)
-                    session.vreg.schema.del_relation_type(rtype)
+                    schema.del_relation_type(rtype)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():
@@ -485,6 +486,10 @@ class SourceDbRDefUpdate(hook.Operation):
             sql = adbh.sql_set_null_allowed(table, column, coltype,
                                             self.values['cardinality'][0] != '1')
             self.session.system_sql(sql)
+        if 'fulltextindexed' in self.values:
+            UpdateFTIndexOp(self.session)
+            self.session.transaction_data.setdefault('fti_update_etypes',
+                                                     set()).add(etype)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -690,7 +695,7 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.eid)
+            self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
         if hasattr(self, 'group_eid'):
@@ -717,7 +722,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
-            self.error('no schema for %s', self.eid)
+            self.warning('no schema for %s', self.eid)
             return
         if isinstance(erschema, RelationSchema): # XXX 3.6 migration
             return
@@ -935,18 +940,6 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
             SourceDbCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues,
                                   entity=entity)
 
-def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
-    errors = {}
-    # don't use getattr(entity, attr), we would get the modified value if any
-    for attr in ro_attrs:
-        if attr in entity.edited_attributes:
-            origval, newval = hook.entity_oldnewvalue(entity, attr)
-            if newval != origval:
-                errors[attr] = session._("can't change the %s attribute") % \
-                               display_name(session, attr)
-    if errors:
-        raise ValidationError(entity.eid, errors)
-
 
 class AfterDelRelationTypeHook(SyncSchemaHook):
     """before deleting a CWAttribute or CWRelation entity:
@@ -1133,6 +1126,41 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
             expr = self._cw.entity_from_eid(self.eidto).expression
             MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
                                    expr=expr)
+
+
+
+class UpdateFTIndexOp(hook.SingleLastOperation):
+    """operation to update full text indexation of entity whose schema change
+
+    We wait after the commit to as the schema in memory is only updated after the commit.
+    """
+
+    def postcommit_event(self):
+        session = self.session
+        source = session.repo.system_source
+        to_reindex = session.transaction_data.get('fti_update_etypes', ())
+        self.info('%i etypes need full text indexed reindexation',
+                  len(to_reindex))
+        schema = self.session.repo.vreg.schema
+        for etype in to_reindex:
+            rset = session.execute('Any X WHERE X is %s' % etype)
+            self.info('Reindexing full text index for %i entity of type %s',
+                      len(rset), etype)
+            still_fti = list(schema[etype].indexable_attributes())
+            for entity in rset.entities():
+                try:
+                    source.fti_unindex_entity(session, entity.eid)
+                    for container in entity.fti_containers():
+                        if still_fti or container is not entity:
+                            session.repo.index_entity(session, container)
+                except Exception:
+                    self.critical('Error while updating Full Text Index for'
+                                  ' entity %s', entity.eid, exc_info=True)
+        if len(to_reindex):
+            # Transaction have already been committed
+            session.pool.commit()
+
+
 
 
 # specializes synchronization hooks ############################################

@@ -7,6 +7,9 @@
 """
 __docformat__ = 'restructuredtext en'
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 import os
 
@@ -17,7 +20,6 @@ from logilab.common.shellutils import ASK
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.utils import ask_source_config
 from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
                                           SourceConfiguration)
 
@@ -132,6 +134,7 @@ class RepositoryCreateHandler(CommandHandler):
         """create an instance by copying files from the given cube and by
         asking information necessary to build required configuration files
         """
+        from cubicweb.server.utils import ask_source_config
         config = self.config
         print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
@@ -443,7 +446,6 @@ class ResetAdminPasswordCommand(Command):
 
     def run(self, args):
         """run the command with its specific arguments"""
-        from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
         from cubicweb.server.utils import crypt_password, manager_userpasswd
         appid = pop_arg(args, 1, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
@@ -455,13 +457,21 @@ class ResetAdminPasswordCommand(Command):
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
         cursor = cnx.cursor()
+        # check admin exists
+        cursor.execute("SELECT * FROM cw_CWUser WHERE cw_login=%(l)s",
+                       {'l': adminlogin})
+        if not cursor.fetchall():
+            print ("-> error: admin user %r specified in sources doesn't exist "
+                   "in the database" % adminlogin)
+            print "   fix your sources file before running this command"
+            cnx.close()
+            sys.exit(1)
+        # ask for a new password
         _, passwd = manager_userpasswd(adminlogin, confirm=True,
                                        passwdmsg='new password for %s' % adminlogin)
         try:
-            sqlexec("UPDATE %(sp)sCWUser SET %(sp)supassword='%(p)s' WHERE %(sp)slogin='%(l)s'"
-                    % {'sp': SQL_PREFIX,
-                       'p': crypt_password(passwd), 'l': adminlogin},
-                    cursor, withpb=False)
+            cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
+                           {'p': crypt_password(passwd), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
@@ -475,6 +485,7 @@ class ResetAdminPasswordCommand(Command):
         else:
             cnx.commit()
             print '-> password reset, sources file regenerated.'
+        cnx.close()
 
 
 class StartRepositoryCommand(Command):

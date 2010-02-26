@@ -17,7 +17,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
-                                specified_etype_implements, yes)
+                                specified_etype_implements, implements, yes)
 from cubicweb.view import EntityView
 from cubicweb import tags
 from cubicweb.web import uicfg, stdmsgs, eid_param, \
@@ -30,15 +30,13 @@ _pvdc = uicfg.primaryview_display_ctrl
 
 class DeleteConfForm(forms.CompositeForm):
     __regid__ = 'deleteconf'
-    __select__ = non_final_entity()
+    # XXX non_final_entity does not implement eclass_selector
+    __select__ = implements('Any')
 
     domid = 'deleteconf'
     copy_nav_params = True
     form_buttons = [fw.Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
                     fw.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
-    @property
-    def action(self):
-        return self._cw.build_url('edit')
 
     def __init__(self, *args, **kwargs):
         super(DeleteConfForm, self).__init__(*args, **kwargs)
@@ -98,12 +96,10 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self._cw.vreg['forms'].select('edition', self._cw, rset=entity.cw_rset,
-                                             row=entity.cw_row, col=entity.cw_col,
-                                             entity=entity,
+        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.render(formvid=u'edition'))
+        self.w(form.render())
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -236,18 +232,18 @@ class TableEditFormView(FormViewMixIn, EntityView):
         """a view to edit multiple entities of the same type the first column
         should be the eid
         """
-        #self.form_title(entity)
-        form = self._cw.vreg['forms'].select(self.__regid__, self._cw,
-                                             rset=self.cw_rset,
-                                             copy_nav_params=True)
         # XXX overriding formvid (eg __form_id) necessary to make work edition:
         # the edit controller try to select the form with no rset but
         # entity=entity, and use this form to edit the entity. So we want
         # edition form there but specifying formvid may have other undesired
-        # side effect. Maybe we should provide another variable optinally
+        # side effect. Maybe we should provide another variable optionally
         # telling which form the edit controller should select (eg difffers
         # between html generation / post handling form)
-        self.w(form.render(formvid='edition'))
+        form = self._cw.vreg['forms'].select(self.__regid__, self._cw,
+                                             rset=self.cw_rset,
+                                             copy_nav_params=True,
+                                             formvid='edition')
+        self.w(form.render())
 
 
 # click and edit handling ('reledit') ##########################################
@@ -307,7 +303,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         # compute value, checking perms, build form
         if rschema.final:
             form = self._build_form(entity, rtype, role, 'base', default, reload, lzone)
-            if not self.should_edit_attribute(entity, rschema, role, form):
+            if not self.should_edit_attribute(entity, rschema, form):
                 self.w(entity.printable_value(rtype))
                 return
             value = entity.printable_value(rtype) or default
@@ -330,14 +326,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.relation_form(lzone, value, form,
                            self._build_renderer(entity, rtype, role))
 
-    def should_edit_attribute(self, entity, rschema, role, form):
+    def should_edit_attribute(self, entity, rschema, form):
         rtype = str(rschema)
-        ttype = rschema.targets(entity.__regid__, role)[0]
-        afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
+        rdef = entity.e_schema.rdef(rtype)
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rtype, 'subject', rdef.object)
         if 'main_hidden' in afs or not entity.has_perm('update'):
             return False
+        if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
+            return False
         try:
-            form.field_by_name(rtype, role, entity.e_schema)
+            form.field_by_name(rtype, 'subject', entity.e_schema)
         except FieldNotFound:
             return False
         return True

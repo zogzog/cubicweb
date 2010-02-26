@@ -9,19 +9,10 @@ from os.path import join
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ConfigurationError
-from cubicweb.devtools.testlib import CubicWebTC, get_versions
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.repository import Repository
 from cubicweb.server.migractions import *
-
-orig_get_versions = Repository.get_versions
-
-def setup_module(*args):
-    Repository.get_versions = get_versions
-
-def teardown_module(*args):
-    Repository.get_versions = orig_get_versions
 
 
 class MigrationCommandsTC(CubicWebTC):
@@ -29,6 +20,7 @@ class MigrationCommandsTC(CubicWebTC):
     @classmethod
     def init_config(cls, config):
         super(MigrationCommandsTC, cls).init_config(config)
+        # we have to read schema from the database to get eid for schema entities
         config._cubes = None
         cls.repo.fill_schema()
         cls.origschema = deepcopy(cls.repo.schema)
@@ -42,7 +34,7 @@ class MigrationCommandsTC(CubicWebTC):
     @classmethod
     def _refresh_repo(cls):
         super(MigrationCommandsTC, cls)._refresh_repo()
-        cls.repo.schema = cls.vreg.schema = deepcopy(cls.origschema)
+        cls.repo.set_schema(deepcopy(cls.origschema), resetvreg=False)
 
     def setUp(self):
         CubicWebTC.setUp(self)
@@ -157,7 +149,7 @@ class MigrationCommandsTC(CubicWebTC):
                           sorted(str(e) for e in self.schema.entities() if not e.final))
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
-        for cstr in eschema.constraints('name'):
+        for cstr in eschema.rdef('name').constraints:
             self.failUnless(hasattr(cstr, 'eid'))
 
     def test_add_drop_entity_type(self):
@@ -281,7 +273,7 @@ class MigrationCommandsTC(CubicWebTC):
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
         cursor.set_pool()
-        nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
+        nbrqlexpr_start = cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0]
         migrschema['titre'].rdefs[('Personne', 'String')].order = 7
         migrschema['adel'].rdefs[('Personne', 'String')].order = 6
         migrschema['ass'].rdefs[('Personne', 'String')].order = 5
@@ -345,19 +337,22 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
         self.assertEquals(len(self._erqlexpr_rset('add', 'Affaire')), 1)
         # no change for rqlexpr to add and delete concerne relation
-        for rdef in self.schema['concerne'].rdefs.values():
-            print rdef, rdef.permissions
         self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
         self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:
-        #   * 8 deletion (2 in Affaire read + Societe + travaille + para rqlexprs)
+        #   * 7 rqlexprs deletion (2 in (Affaire read + Societe + travaille) + 1
+        #     in para attribute)
         #   * 1 update (Affaire update)
         #   * 2 new (Note add, ecrit_par add)
+        #   * 2 implicit new for attributes update_permission (Note.para, Personne.test)
         # remaining orphan rql expr which should be deleted at commit (composite relation)
-        self.assertEquals(len(cursor.execute('RQLExpression X WHERE NOT ET1 read_permission X, NOT ET2 add_permission X, '
-                                             'NOT ET3 delete_permission X, NOT ET4 update_permission X')), 8+1)
+        self.assertEquals(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, '
+                                         'NOT ET1 read_permission X, NOT ET2 add_permission X, '
+                                         'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
+                          7+1)
         # finally
-        self.assertEquals(len(cursor.execute('RQLExpression X')), nbrqlexpr_start + 1 + 2)
+        self.assertEquals(cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
+                          nbrqlexpr_start + 1 + 2 + 2)
 
         self.mh.rollback()
 

@@ -26,8 +26,6 @@ class XbelView(XMLView):
 
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
-        title = self.page_title()
-        url = self._cw.build_url(rql=self._cw.form.get('rql', ''))
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self._cw.encoding)
         self.w(u'<!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://www.python.org/topics/xml/dtds/xbel-1.0.dtd">')
         self.w(u'<xbel version="1.0">')

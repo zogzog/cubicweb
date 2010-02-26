@@ -44,7 +44,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb.cwvreg import CWRegistry, VRegistry
-from cubicweb.selectors import (objectify_selector, lltrace, match_search_state,
+from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
                                 implements)
 from cubicweb.appobject import AppObject
 
@@ -134,7 +134,7 @@ class rechain(object):
         return iter(chain(*self.iterators))
 
 
-class match_rtype(match_search_state):
+class match_rtype(ExpectedValueSelector):
     """accept if parameters specified as initializer arguments are specified
     in named arguments given to the selector
 
@@ -159,7 +159,7 @@ class match_rtype(match_search_state):
         return 1
 
 
-class match_rtype_sets(match_search_state):
+class match_rtype_sets(ExpectedValueSelector):
     """accept if parameters specified as initializer arguments are specified
     in named arguments given to the selector
     """

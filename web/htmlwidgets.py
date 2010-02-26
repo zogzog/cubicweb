@@ -15,7 +15,7 @@ import random
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
-from cubicweb.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.uilib import toggle_action, htmlescape
 from cubicweb.web import jsonize
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,
@@ -280,7 +280,7 @@ class SimpleTableModel(object):
         if value is None:
             return u''
         elif isinstance(value, int):
-            return u'%09d'%value
+            return u'%09d' % value
         else:
             return unicode(value)
 
@@ -316,7 +316,7 @@ class TableWidget(HTMLWidget):
             self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name))
         self.w(u'</tr>')
         self.w(u'</thead><tbody>')
-        for rowindex, row in enumerate(self.model.get_rows()):
+        for rowindex in xrange(len(self.model.get_rows())):
             klass = (rowindex%2==1) and 'odd' or 'even'
             self.w(u'<tr class="%s" %s>' % (klass, self.highlight))
             for column, sortvalue in self.itercols(rowindex):
@@ -373,14 +373,10 @@ class ProgressBarWidget(HTMLWidget):
         budget = self.budget
         if budget == 0:
             pourcent = 100
-            todo_pourcent = 0
         else:
             pourcent = done*100./budget
-            todo_pourcent = min(todo*100./budget, 100-pourcent)
-        bar_pourcent = pourcent
         if pourcent > 100.1:
             color = 'red'
-            bar_pourcent = 100
         elif todo+done > self.red_threshold*budget:
             color = 'red'
         elif todo+done > self.orange_threshold*budget:

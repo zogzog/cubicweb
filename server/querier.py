@@ -12,7 +12,7 @@ from itertools import repeat
 
 from logilab.common.cache import Cache
 from logilab.common.compat import any
-from rql import RQLHelper, RQLSyntaxError
+from rql import RQLSyntaxError
 from rql.stmts import Union, Select
 from rql.nodes import Relation, VariableRef, Constant, SubQuery
 
@@ -26,7 +26,7 @@ from cubicweb.server.ssplanner import add_types_restriction
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 
-def empty_rset(session, rql, args, rqlst=None):
+def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
     return ResultSet([], rql, args, rqlst=rqlst)
 
@@ -210,7 +210,6 @@ class ExecutionPlan(object):
             self.cache_key = None
 
     def _insert_security(self, union, noinvariant):
-        rh = self.rqlhelper
         for select in union.children[:]:
             for subquery in select.with_:
                 self._insert_security(subquery.query, noinvariant)
@@ -572,7 +571,7 @@ class QuerierHelper(object):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
-        * `rql` should be an unicode string or a plain ascii string
+        * `rql` should be an Unicode string or a plain ASCII string
         * `args` the optional parameters dictionary associated to the query
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty
@@ -580,17 +579,17 @@ class QuerierHelper(object):
         * `eid_key` must be both a key in args and a substitution in the rql
           query. It should be used to enhance cacheability of rql queries.
           It may be a tuple for keys in args.
-          eid_key must be providen in case where a eid substitution is providen
-          and resolve some ambiguity in the possible solutions infered for each
+          `eid_key` must be provided in cases where a eid substitution is provided
+          and resolves ambiguities in the possible solutions inferred for each
           variable in the query.
 
-        on INSERT queries, there will be on row with the eid of each inserted
+        on INSERT queries, there will be one row with the eid of each inserted
         entity
 
         result for DELETE and SET queries is undefined yet
 
         to maximize the rql parsing/analyzing cache performance, you should
-        always use substitute arguments in queries (eg avoid query such as
+        always use substitute arguments in queries (i.e. avoid query such as
         'Any X WHERE X eid 123'!)
         """
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
@@ -613,7 +612,7 @@ class QuerierHelper(object):
                 except UnknownEid:
                     # we want queries such as "Any X WHERE X eid 9999"
                     # return an empty result instead of raising UnknownEid
-                    return empty_rset(session, rql, args)
+                    return empty_rset(rql, args)
                 cachekey.append(etype)
                 # ensure eid is correctly typed in args
                 args[key] = typed_eid(args[key])
@@ -631,7 +630,7 @@ class QuerierHelper(object):
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999"
                 # return an empty result instead of raising UnknownEid
-                return empty_rset(session, rql, args, rqlst)
+                return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if not rqlst.TYPE == 'select':

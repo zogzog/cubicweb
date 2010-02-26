@@ -12,7 +12,6 @@ __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
 
-from logilab.common.compat import any
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
@@ -110,7 +109,10 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
-class Unsupported(Exception): pass
+class Unsupported(Exception):
+    """raised when an rql expression can't be inserted in some rql query
+    because it create an unresolvable query (eg no solutions found)
+    """
 
 
 class RQLRewriter(object):
@@ -291,7 +293,7 @@ class RQLRewriter(object):
     def snippet_subquery(self, varmap, transformedsnippet):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
-        selectvar, snippetvar = varmap
+        selectvar = varmap[0]
         subselect.append_selected(n.VariableRef(
             subselect.get_variable(selectvar)))
         aliases = [selectvar]
@@ -408,7 +410,7 @@ class RQLRewriter(object):
                 cardindex = 1
                 ttypes_func = rschema.subjects
                 rdef = lambda x, y: rschema.rdef(y, x)
-        except KeyError, ex:
+        except KeyError:
             # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
             return None
         # can't share neged relation or relations with different outer join
@@ -441,9 +443,9 @@ class RQLRewriter(object):
                 while argname in self.kwargs:
                     argname = select.allocate_varname()
                 # insert "U eid %(u)s"
-                var = select.get_variable(self.u_varname)
-                select.add_constant_restriction(select.get_variable(self.u_varname),
-                                                'eid', unicode(argname), 'Substitute')
+                select.add_constant_restriction(
+                    select.get_variable(self.u_varname),
+                    'eid', unicode(argname), 'Substitute')
                 self.kwargs[argname] = self.session.user.eid
             return self.u_varname
         key = (self.current_expr, self.varmap, vname)

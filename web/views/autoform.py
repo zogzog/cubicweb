@@ -169,13 +169,15 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     :attr etype: the entity type being created in the inline form
     """
     __regid__ = 'inline-creation'
-    __select__ = (match_kwargs('peid', 'rtype')
+    __select__ = (match_kwargs('peid', 'petype', 'rtype')
                   & specified_etype_implements('Any'))
+    _select_attrs = InlineEntityEditionFormView._select_attrs + ('petype',)
 
     @property
     def removejs(self):
         entity = self._entity()
-        card = entity.e_schema.rdef(self.rtype, neg_role(self.role)).role_cardinality(self.role)
+        rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), self.petype)
+        card= rdef.role_cardinality(self.role)
         # when one is adding an inline entity for a relation of a single card,
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link
@@ -207,7 +209,7 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
     :attr card: the cardinality of the relation according to role of `peid`
     """
     __regid__ = 'inline-addnew-link'
-    __select__ = (match_kwargs('peid', 'rtype')
+    __select__ = (match_kwargs('peid', 'petype', 'rtype')
                   & specified_etype_implements('Any'))
 
     _select_attrs = InlineEntityCreationFormView._select_attrs + ('card',)
@@ -218,8 +220,8 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
         divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
         self.w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
           % divid)
-        js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s')" % (
-            self.peid, self.etype, self.rtype, self.role, i18nctx)
+        js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s', '%s')" % (
+            self.peid, self.petype, self.etype, self.rtype, self.role, i18nctx)
         if self.pform.should_hide_add_new_relation_link(self.rtype, self.card):
             js = "toggleVisibility('%s'); %s" % (divid, js)
         __ = self._cw.pgettext
@@ -566,18 +568,18 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except f.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
+        if self.fieldsets_in_order:
+            fsio = list(self.fieldsets_in_order)
+        else:
+            fsio = [None]
+        self.fieldsets_in_order = fsio
+        # add fields for relation whose target should have an inline form
+        for formview in self.inlined_form_views():
+            field = self._inlined_form_view_field(formview)
+            self.fields.append(field)
+            if not field.fieldset in fsio:
+                fsio.append(field.fieldset)
         if self.formtype == 'main':
-            if self.fieldsets_in_order:
-                fsio = list(self.fieldsets_in_order)
-            else:
-                fsio = [None]
-            self.fieldsets_in_order = fsio
-            # add fields for relation whose target should have an inline form
-            for formview in self.inlined_form_views():
-                field = self._inlined_form_view_field(formview)
-                self.fields.append(field)
-                if not field.fieldset in fsio:
-                    fsio.append(field.fieldset)
             # add the generic relation field if necessary
             if entity.has_eid() and (
                 self.display_fields is None or
@@ -655,6 +657,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
             return self.display_fields
+        if self.edited_entity.has_eid() and not self.edited_entity.has_perm('update'):
+            return []
         # XXX we should simply put eid in the generated section, no?
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
             'attributes', 'update', strict) if rtype != 'eid']
@@ -706,8 +710,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 if self.should_display_add_new_relation_link(rschema, formviews, card):
                     addnewlink = self._cw.vreg['views'].select(
                         'inline-addnew-link', self._cw,
-                        etype=ttype, rtype=rschema, role=role,
-                        peid=self.edited_entity.eid, pform=self, card=card)
+                        etype=ttype, rtype=rschema, role=role, card=card,
+                        peid=self.edited_entity.eid,
+                        petype=self.edited_entity.e_schema, pform=self)
                     formviews.append(addnewlink)
                 allformviews += formviews
         return allformviews
@@ -767,7 +772,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         yield self._cw.vreg['views'].select('inline-creation', self._cw,
                                             etype=ttype, rtype=rschema, role=role,
-                                            peid=self.edited_entity.eid, pform=self)
+                                            peid=self.edited_entity.eid,
+                                            petype=self.edited_entity.e_schema,
+                                            pform=self)
 
 
 ## default form ui configuration ##############################################

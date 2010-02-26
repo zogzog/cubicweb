@@ -1,4 +1,4 @@
-from xml.etree.ElementTree import QName, fromstring
+from xml.etree.ElementTree import QName
 from pysixt.standard.xhtml_xslfo.transformer import XHTML2FOTransformer
 from pysixt.utils.xslfo.standard import cm
 from pysixt.utils.xslfo import SimplePageMaster
@@ -64,7 +64,7 @@ class ReportTransformer(XHTML2FOTransformer):
                              u'bottom': self.page_bmargin*cm,
                              u'left'  : self.page_lmargin*cm,
                              u'right' : self.page_rmargin*cm })
-        pm.add_peripheral_region(u"end",self.hf_height)
+        pm.add_peripheral_region(u"end", self.hf_height)
         dims = {}
         dims[u"bottom"] = self.hf_height + 0.25
         pm.set_main_region_margins(dims)
@@ -82,41 +82,39 @@ class ReportTransformer(XHTML2FOTransformer):
         props = { u"force-page-count": u"no-force",
                   u"initial-page-number": u"1",
                   u"format": u"1", }
-        self._output_properties(ps,props)
+        self._output_properties(ps, props)
 
         sc = self.create_staticcontent(ps, u"end")
         sc_bl = self.create_block(sc)
         attrs = { u"hyphenate": u"false", }
-        attrs[u"font-size"] = u"%.1fpt" %(self.font_size*0.7)
+        attrs[u"font-size"] = u"%.1fpt" % (self.font_size * 0.7)
         attrs[u"language"] = self.lang
         attrs[u"text-align"] = u"center"
-        self._output_properties(sc_bl,attrs)
+        self._output_properties(sc_bl, attrs)
         sc_bl.text = u"Page" + u" " # ### Should be localised!
         pn = self.create_pagenumber(sc_bl)
         pn.tail = u"/"
-        lpn = self.create_pagenumbercitation( sc_bl,
-                                              u"last-block-of-report-%d" % params[u"context_pos"]
-                                              )
+        self.create_pagenumbercitation(
+            sc_bl, u"last-block-of-report-%d" % params[u"context_pos"])
 
-
-        fl = self.create_flow(ps,u"body")
+        fl = self.create_flow(ps, u"body")
         bl = self.create_block(fl)
 
         # Sets on the highest block element the properties of the XHTML body
         # element. These properties (at the least the inheritable ones) will
         # be inherited by all the future FO elements.
-        bodies = list(self.in_tree.getiterator(QName(XHTML_NS,u"body")))
+        bodies = list(self.in_tree.getiterator(QName(XHTML_NS, u"body")))
         if len(bodies) > 0:
             attrs = self._extract_properties([bodies[0]])
         else:
             attrs = default_styles[u"body"].copy()
-        attrs[u"font-size"] = u"%.1fpt" %self.font_size
+        attrs[u"font-size"] = u"%.1fpt" % self.font_size
         attrs[u"language"] = self.lang
         self._output_properties(bl,attrs)
 
         # Processes the report content
-        self._copy_text(in_elt,bl)
-        self._process_nodes(in_elt.getchildren(),bl)
+        self._copy_text(in_elt, bl)
+        self._process_nodes(in_elt.getchildren(), bl)
 
         # Inserts an empty block at the end of the report in order to be able
         # to compute the last page number of this report.
@@ -130,7 +128,7 @@ class ReportTransformer(XHTML2FOTransformer):
         """
         Visit function called when starting the process of the input tree.
         """
-        content = [ d for d in self.in_tree.getiterator(QName(XHTML_NS,u"div"))
+        content = [ d for d in self.in_tree.getiterator(QName(XHTML_NS, u"div"))
                     if d.get(u"id") == self.section ]
         # Asks the process of the report elements with a specific visit
         # function

@@ -8,9 +8,9 @@
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb import ObjectNotFound, AuthenticationError
+from cubicweb import AuthenticationError
 from cubicweb.web import (NotFound, Redirect, DirectResponse, StatusResponse,
-                       ExplicitLogin)
+                          ExplicitLogin)
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.wsgi.request import CubicWebWsgiRequest
 

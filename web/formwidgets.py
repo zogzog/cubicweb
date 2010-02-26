@@ -59,21 +59,6 @@ class FieldWidget(object):
     def _render(self, form, field, renderer):
         raise NotImplementedError()
 
-    def typed_value(self, form, field):
-        """return field's *typed* value specified in:
-        3. extra form values given to render()
-        4. field's typed value
-        """
-        qname = field.input_name(form)
-        for key in (field, qname):
-            try:
-                return form.formvalues[key]
-            except KeyError:
-                continue
-        if field.name != qname and field.name in form.formvalues:
-            return form.formvalues[field.name]
-        return field.typed_value(form)
-
     def format_value(self, form, field, value):
         return field.format_value(form._cw, value)
 
@@ -97,21 +82,41 @@ class FieldWidget(object):
         return self.values(form, field), attrs
 
     def values(self, form, field):
-        qname = field.input_name(form, self.suffix)
-        if qname in form.form_previous_values:
-            values = form.form_previous_values[qname]
-        elif qname in form._cw.form:
-            values = form._cw.form[qname]
-        elif field.name != qname and field.name in form._cw.form:
-            # compat: accept attr=value in req.form to specify value of attr-subject
-            values = form._cw.form[field.name]
-        else:
+        values = None
+        if not field.ignore_req_params:
+            qname = field.input_name(form, self.suffix)
+            # value from a previous post that has raised a validation error
+            if qname in form.form_previous_values:
+                values = form.form_previous_values[qname]
+            # value specified using form parameters
+            elif qname in form._cw.form:
+                values = form._cw.form[qname]
+            elif field.name != qname and field.name in form._cw.form:
+                # XXX compat: accept attr=value in req.form to specify value of
+                # attr-subject
+                values = form._cw.form[field.name]
+        if values is None:
             values = self.typed_value(form, field)
             if values != INTERNAL_FIELD_VALUE:
                 values = self.format_value(form, field, values)
         if not isinstance(values, (tuple, list)):
             values = (values,)
         return values
+
+    def typed_value(self, form, field):
+        """return field's *typed* value specified in:
+        3. extra form values given to render()
+        4. field's typed value
+        """
+        qname = field.input_name(form)
+        for key in ((field, form), qname):
+            try:
+                return form.formvalues[key]
+            except KeyError:
+                continue
+        if field.name != qname and field.name in form.formvalues:
+            return form.formvalues[field.name]
+        return field.typed_value(form)
 
     def process_field_data(self, form, field):
         posted = form._cw.form
@@ -164,9 +169,9 @@ class PasswordInput(Input):
         assert self.suffix is None, 'suffix not supported'
         values, attrs = self.values_and_attributes(form, field)
         assert len(values) == 1
-        id = attrs.pop('id')
+        domid = attrs.pop('id')
         inputs = [tags.input(name=field.input_name(form),
-                             value=values[0], type=self.type, id=id, **attrs),
+                             value=values[0], type=self.type, id=domid, **attrs),
                   '<br/>',
                   tags.input(name=field.input_name(form, '-confirm'),
                              value=values[0], type=self.type, **attrs),

@@ -38,7 +38,6 @@ from rql.stmts import Union, Select
 from rql.nodes import (SortTerm, VariableRef, Constant, Function, Not,
                        Variable, ColumnAlias, Relation, SubQuery, Exists)
 
-from cubicweb import server
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import cleanup_solutions
 

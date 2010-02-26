@@ -172,7 +172,9 @@ class ViewController(Controller):
 
 def _validation_error(req, ex):
     req.cnx.rollback()
-    forminfo = req.get_session_data(req.form.get('__errorurl'), pop=True)
+    # XXX necessary to remove existant validation error?
+    # imo (syt), it's not necessary
+    req.get_session_data(req.form.get('__errorurl'), pop=True)
     foreid = ex.entity
     eidmap = req.data.get('eidmap', {})
     for var, eid in eidmap.items():
@@ -351,6 +353,7 @@ class JSonController(Controller):
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
+        self.validate_cache(view)
         return self._call_view(view)
 
     @xhtmlize
@@ -383,10 +386,10 @@ class JSonController(Controller):
 
     @check_pageid
     @xhtmlize
-    def js_inline_creation_form(self, peid, ttype, rtype, role, i18nctx):
+    def js_inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
         view = self._cw.vreg['views'].select('inline-creation', self._cw,
-                                         etype=ttype, peid=peid, rtype=rtype,
-                                         role=role)
+                                             etype=ttype, rtype=rtype, role=role,
+                                             peid=peid, petype=petype)
         return self._call_view(view, i18nctx=i18nctx)
 
     @jsonize
@@ -399,7 +402,7 @@ class JSonController(Controller):
 
     @xhtmlize
     def js_reledit_form(self):
-        args = dict((x,self._cw.form[x])
+        args = dict((x, self._cw.form[x])
                     for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land

@@ -12,7 +12,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
-from cubicweb.view import AnyRsetView, StartupView, EntityView
+from cubicweb.view import AnyRsetView, StartupView, EntityView, View
 from cubicweb.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
@@ -273,63 +273,17 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
     return binfo
 
 
-class ProcessInformationView(StartupView):
-    __regid__ = 'info'
+class CwStats(View):
+    """A textual stats output for monitoring tools such as munin """
+
+    __regid__ = 'processinfo'
+    content_type = 'text/txt'
+    templatable = False
     __select__ = none_rset() & match_user_groups('users', 'managers')
 
-    title = _('server information')
-
-    def call(self, **kwargs):
-        """display server information"""
-        vcconf = self._cw.vreg.config.vc_config()
-        req = self._cw
-        _ = req._
-        # display main information
-        self.w(u'<h3>%s</h3>' % _('Application'))
-        self.w(u'<table border="1">')
-        self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            'CubicWeb', vcconf.get('cubicweb', _('no version information'))))
-        for pkg in self._cw.vreg.config.cubes():
-            pkgversion = vcconf.get(pkg, _('no version information'))
-            self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-                pkg, pkgversion))
-        self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('home'), self._cw.vreg.config.apphome))
-        self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('base url'), req.base_url()))
-        self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('data directory url'), req.datadir_url))
-        self.w(u'</table>')
-        self.w(u'<br/>')
-        # environment and request and server information
-        try:
-            # need to remove our adapter and then modpython-apache wrapper...
-            env = req._areq._req.subprocess_env
-        except AttributeError:
-            return
-        self.w(u'<h3>%s</h3>' % _('Environment'))
-        self.w(u'<table border="1">')
-        for attr in env.keys():
-            self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, xml_escape(env[attr])))
-        self.w(u'</table>')
-        self.w(u'<h3>%s</h3>' % _('Request'))
-        self.w(u'<table border="1">')
-        for attr in ('filename', 'form', 'hostname', 'main', 'method',
-                     'path_info', 'protocol',
-                     'search_state', 'the_request', 'unparsed_uri', 'uri'):
-            val = getattr(req, attr)
-            self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, xml_escape(val)))
-        self.w(u'</table>')
-        server = req.server
-        self.w(u'<h3>%s</h3>' % _('Server'))
-        self.w(u'<table border="1">')
-        for attr in dir(server):
-            val = getattr(server, attr)
-            if attr.startswith('_') or callable(val):
-                continue
-            self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, xml_escape(val)))
-        self.w(u'</table>')
-
+    def call(self):
+        stats = self._cw.vreg.config.repository(None).stats()
+        results = []
+        for element in stats:
+            results.append(u'%s %s' % (element, stats[element]))
+        self.w(u'\n'.join(results))

@@ -82,7 +82,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
         if askconfirm:
             print
             print diffs
-            action = ASK.ask('Replace ?', ('N','y','q'), 'N')
+            action = ASK.ask('Replace ?', ('N', 'y', 'q'), 'N')
         else:
             action = 'y'
         if action == 'y':

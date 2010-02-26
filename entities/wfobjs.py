@@ -123,7 +123,7 @@ class Workflow(AnyEntity):
             self._cw.execute('SET S allowed_transition T '
                              'WHERE S eid %(s)s, T eid %(t)s',
                              {'s': state, 't': tr.eid}, ('s', 't'))
-        tr.set_transition_permissions(requiredgroups, conditions, reset=False)
+        tr.set_permissions(requiredgroups, conditions, reset=False)
         return tr
 
     def add_transition(self, name, fromstates, tostate=None,
@@ -161,9 +161,9 @@ class Workflow(AnyEntity):
         execute = self._cw.unsafe_execute
         execute('SET X in_state S WHERE S eid %(s)s', {'s': todelstate.eid}, 's')
         execute('SET X from_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+                {'os': todelstate.eid, 'ns': replacement.eid}, 's')
         execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': newstate.eid}, 's')
+                {'os': todelstate.eid, 'ns': replacement.eid}, 's')
         todelstate.delete()
 
 
@@ -219,10 +219,9 @@ class BaseTransition(AnyEntity):
         """
         if self.transition_of:
             return self.transition_of[0].rest_path(), {}
-        return super(Transition, self).after_deletion_path()
+        return super(BaseTransition, self).after_deletion_path()
 
-    def set_transition_permissions(self, requiredgroups=(), conditions=(),
-                                   reset=True):
+    def set_permissions(self, requiredgroups=(), conditions=(), reset=True):
         """set or add (if `reset` is False) groups and conditions for this
         transition
         """
@@ -251,13 +250,30 @@ class BaseTransition(AnyEntity):
                              'T condition X WHERE T eid %(x)s',kwargs, 'x')
         # XXX clear caches?
 
+    @deprecated('[3.6.1] use set_permission')
+    def set_transition_permissions(self, requiredgroups=(), conditions=(),
+                                   reset=True):
+        return self.set_permissions(requiredgroups, conditions, reset)
+
 
 class Transition(BaseTransition):
     """customized class for Transition entities"""
     __regid__ = 'Transition'
 
-    def destination(self):
-        return self.destination_state[0]
+    def destination(self, entity):
+        try:
+            return self.destination_state[0]
+        except IndexError:
+            return entity.latest_trinfo().previous_state
+
+    def potential_destinations(self):
+        try:
+            yield self.destination_state[0]
+        except IndexError:
+            for incomingstate in self.reverse_allowed_transition:
+                for tr in incomingstate.reverse_destination_state:
+                    for previousstate in tr.reverse_allowed_transition:
+                        yield previousstate
 
     def parent(self):
         return self.workflow
@@ -271,8 +287,11 @@ class WorkflowTransition(BaseTransition):
     def subwf(self):
         return self.subworkflow[0]
 
-    def destination(self):
+    def destination(self, entity):
         return self.subwf.initial
+
+    def potential_destinations(self):
+        yield self.subwf.initial
 
     def add_exit_point(self, fromstate, tostate):
         if hasattr(fromstate, 'eid'):
@@ -311,7 +330,7 @@ class WorkflowTransition(BaseTransition):
         return result
 
     def clear_all_caches(self):
-        super(WorkflowableMixIn, self).clear_all_caches()
+        super(WorkflowTransition, self).clear_all_caches()
         clear_cache(self, 'exit_points')
 
 
