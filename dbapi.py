@@ -31,11 +31,6 @@ def _fake_property_value(self, name):
     except KeyError:
         return ''
 
-def _fix_cls_attrs(reg, appobject):
-    appobject.vreg = reg.vreg
-    appobject.schema = reg.schema
-    appobject.config = reg.config
-
 def multiple_connections_fix():
     """some monkey patching necessary when an application has to deal with
     several connections to different repositories. It tries to hide buggy class
@@ -43,21 +38,6 @@ def multiple_connections_fix():
     registries.
     """
     defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
-    orig_select_best = defaultcls.orig_select_best = defaultcls._select_best
-    @monkeypatch(defaultcls)
-    def _select_best(self, appobjects, *args, **kwargs):
-        """return an instance of the most specific object according
-        to parameters
-
-        raise NoSelectableObject if no object apply
-        """
-        for appobjectcls in appobjects:
-            _fix_cls_attrs(self, appobjectcls)
-        selected = orig_select_best(self, appobjects, *args, **kwargs)
-        # redo the same thing on the instance so it won't use equivalent class
-        # attributes (which may change)
-        _fix_cls_attrs(self, selected)
-        return selected
 
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     orig_etype_class = etypescls.orig_etype_class = etypescls.etype_class
@@ -74,8 +54,6 @@ def multiple_connections_fix():
         return usercls
 
 def multiple_connections_unfix():
-    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
-    defaultcls.select_best = defaultcls.orig_select_best
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
