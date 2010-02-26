@@ -4,6 +4,9 @@ The CubicWeb swiss-knife.
 
 %s"""
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 from os import remove, listdir, system, pathsep
 try:

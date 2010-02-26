@@ -7,6 +7,9 @@
 """
 __docformat__ = 'restructuredtext en'
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 import os
 
@@ -17,7 +20,6 @@ from logilab.common.shellutils import ASK
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.utils import ask_source_config
 from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
                                           SourceConfiguration)
 
@@ -132,6 +134,7 @@ class RepositoryCreateHandler(CommandHandler):
         """create an instance by copying files from the given cube and by
         asking information necessary to build required configuration files
         """
+        from cubicweb.server.utils import ask_source_config
         config = self.config
         print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
