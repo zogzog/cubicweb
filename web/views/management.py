@@ -12,7 +12,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
-from cubicweb.view import AnyRsetView, StartupView, EntityView
+from cubicweb.view import AnyRsetView, StartupView, EntityView, View
 from cubicweb.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
@@ -301,6 +301,15 @@ class ProcessInformationView(StartupView):
             _('data directory url'), req.datadir_url))
         self.w(u'</table>')
         self.w(u'<br/>')
+        self.w(u'<h3>%s</h3>' % _('Repository'))
+        self.w(u'<table border="1">')
+        stats = self._cw.vreg.config.repository(None).stats()
+        for element in stats:
+            self.w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
+                   % (element, stats[element],
+                      element.endswith('percent') and '%' or '' ))
+        self.w(u'</table>')
+
         # environment and request and server information
         try:
             # need to remove our adapter and then modpython-apache wrapper...
@@ -333,3 +342,19 @@ class ProcessInformationView(StartupView):
                    % (attr, xml_escape(val)))
         self.w(u'</table>')
 
+
+class CwStats(View):
+    """A textual stats output for monitoring tools such as munin """
+
+    __regid__ = 'processinfo'
+    content_type = 'text/txt'
+    templatable = False
+    __select__ = none_rset() & match_user_groups('users', 'managers')
+
+    def call(self):
+        _ = self._cw._
+        stats = self._cw.vreg.config.repository(None).stats()
+        results = []
+        for element in stats:
+            results.append('%s %s' % (element, stats[element]))
+        self.w(u"%s" % _('\n'.join(results)))

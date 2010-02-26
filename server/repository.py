@@ -328,8 +328,8 @@ class Repository(object):
             return self._available_pools.get(True, timeout=5)
         except Queue.Empty:
             raise Exception('no pool available after 5 secs, probably either a '
-                            'bug in code (to many uncommited/rollbacked '
-                            'connections) or to much load on the server (in '
+                            'bug in code (too many uncommited/rollbacked '
+                            'connections) or too much load on the server (in '
                             'which case you can try to set a bigger '
                             'connections pools size)')
 
@@ -382,6 +382,22 @@ class Repository(object):
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
+
+    def stats(self):
+        results = {}
+        for hits, misses, title in (
+            (self.querier.cache_hit, self.querier.cache_miss, 'rqlt_st'),
+            (self.system_source.cache_hit, self.system_source.cache_miss, 'sql'),
+            ):
+            results['%s_cache_hit' % title] =  hits
+            results['%s_cache_miss' % title] = misses
+            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
+
+        results['sql_no_cache'] = self.system_source.no_cache
+        results['nb_open_sessions'] = len(self._sessions)
+        results['nb_threads'] = len(self._running_threads)
+        results['available_pools'] = self._available_pools.qsize()
+        return results
 
     def _login_from_email(self, login):
         session = self.internal_session()
