@@ -462,7 +462,6 @@ class CubicWebSchema(Schema):
     """set of entities and relations schema defining the possible data sets
     used in an application
 
-
     :type name: str
     :ivar name: name of the schema, usually the instance identifier
 

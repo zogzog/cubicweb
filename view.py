@@ -91,9 +91,9 @@ class View(AppObject):
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-    At instantiation time, the standard `req`, `rset`, and `cursor`
-    attributes are added and the `w` attribute will be set at rendering
-    time to a write function to use.
+    At instantiation time, the standard `_cw`, and `cw_rset` attributes are
+    added and the `w` attribute will be set at rendering time to a write
+    function to use.
     """
     __registry__ = 'views'
 
