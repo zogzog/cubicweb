@@ -509,6 +509,9 @@ msgstr ""
 msgid "Relations"
 msgstr "Relaciones"
 
+msgid "Repository"
+msgstr ""
+
 msgid "Request"
 msgstr "Petición"
 
@@ -940,20 +943,17 @@ msgstr "Agregar"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Agregar a los favoritos "
 
-msgid "add CWAttribute add_permission RQLExpression subject"
-msgstr ""
-
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "Restricción"
-
-msgid "add CWAttribute delete_permission RQLExpression subject"
-msgstr ""
 
 msgid "add CWAttribute read_permission RQLExpression subject"
 msgstr ""
 
 msgid "add CWAttribute relation_type CWRType object"
 msgstr "Definición de atributo"
+
+msgid "add CWAttribute update_permission RQLExpression subject"
+msgstr ""
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "Expresión RQL de agregación"
@@ -1057,10 +1057,6 @@ msgctxt "CWEType"
 msgid "add_permission"
 msgstr ""
 
-msgctxt "CWAttribute"
-msgid "add_permission"
-msgstr ""
-
 msgctxt "CWRelation"
 msgid "add_permission"
 msgstr ""
@@ -1105,9 +1101,6 @@ msgstr ""
 
 msgid "allow to set a specific workflow for an entity"
 msgstr ""
-
-msgid "allowed transition from this state"
-msgstr "transición autorizada desde este estado"
 
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
@@ -1610,32 +1603,6 @@ msgstr "Controla el orden de relaciones de la entidad sujeto"
 msgid "copy"
 msgstr "Copiar"
 
-msgid ""
-"core relation giving to a group the permission to add an entity or relation "
-"type"
-msgstr ""
-"Relación sistema que otorga a un grupo la autorización de agregar una "
-"entidad o una relación"
-
-msgid ""
-"core relation giving to a group the permission to delete an entity or "
-"relation type"
-msgstr ""
-"Relación sistema que otorga a un grupo la autorización de eliminar una "
-"entidad o relación"
-
-msgid ""
-"core relation giving to a group the permission to read an entity or relation "
-"type"
-msgstr ""
-"Relación sistema que otorga a un grupo la autorización de leer una entidad o "
-"una relación "
-
-msgid "core relation giving to a group the permission to update an entity type"
-msgstr ""
-"Relación sistema que otorga a un grupo la autorización de actualizar una "
-"entidad"
-
 msgid "core relation indicating a user's groups"
 msgstr ""
 "Relación sistema que indica los grupos a los cuales pertenece un usuario"
@@ -1708,16 +1675,12 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "Creación de una dirección electrónica para el usuario %(linkto)s"
 
 msgid ""
-"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
-msgstr ""
-
-msgid ""
-"creating RQLExpression (CWAttribute %(linkto)s delete_permission "
-"RQLExpression)"
-msgstr ""
-
-msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
+msgstr ""
+
+msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s update_permission "
+"RQLExpression)"
 msgstr ""
 
 msgid ""
@@ -1953,10 +1916,6 @@ msgid "delete_permission"
 msgstr "Autorización de eliminar"
 
 msgctxt "CWEType"
-msgid "delete_permission"
-msgstr ""
-
-msgctxt "CWAttribute"
 msgid "delete_permission"
 msgstr ""
 
@@ -2443,18 +2402,6 @@ msgstr "Grupo en el cual el usuario debe estar para poder pasar la transición"
 msgid "groups"
 msgstr "Grupos"
 
-msgid "groups allowed to add entities/relations of this type"
-msgstr "Grupos autorizados a agregar entidades/relaciones de este tipo"
-
-msgid "groups allowed to delete entities/relations of this type"
-msgstr "Grupos autorizados a eliminar entidades/relaciones de este tipo"
-
-msgid "groups allowed to read entities/relations of this type"
-msgstr "Grupos autorizados a leer entidades/relaciones de este tipo"
-
-msgid "groups allowed to update entities of this type"
-msgstr "Grupos autorizados a actualizar entidades de este tipo"
-
 msgid "groups grant permissions to the user"
 msgstr "Los grupos otorgan las autorizaciones al usuario"
 
@@ -2756,9 +2703,6 @@ msgstr ""
 
 msgid "link a workflow to one or more entity type"
 msgstr ""
-
-msgid "link to each item in"
-msgstr "ligar hacia cada elemento en"
 
 msgid "list"
 msgstr "Lista"
@@ -3279,18 +3223,6 @@ msgstr "Revertir cambios"
 
 msgid "right"
 msgstr "Derecha"
-
-msgid "rql expression allowing to add entities/relations of this type"
-msgstr "expresion RQL permitiendo agregar entidades/relaciones de este tipo"
-
-msgid "rql expression allowing to delete entities/relations of this type"
-msgstr "expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
-
-msgid "rql expression allowing to read entities/relations of this type"
-msgstr "expresion RQL permitiendo leer entidades/relaciones de este tipo"
-
-msgid "rql expression allowing to update entities of this type"
-msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
 
 msgid "rql expressions"
 msgstr "expresiones rql"
@@ -3833,6 +3765,10 @@ msgctxt "CWEType"
 msgid "update_permission"
 msgstr ""
 
+msgctxt "CWAttribute"
+msgid "update_permission"
+msgstr ""
+
 msgctxt "CWGroup"
 msgid "update_permission_object"
 msgstr ""
@@ -3863,10 +3799,9 @@ msgstr "utilizar plantillas de lenguaje"
 
 msgid ""
 "use to define a transition from one or multiple states to a destination "
-"states in workflow's definitions."
+"states in workflow's definitions. Transition without destination state will "
+"go back to the state from which we arrived to the current state."
 msgstr ""
-"utilizado para definir una transición desde uno o multiples estados hacia "
-"uno o varios estados destino en las definiciones del workflow"
 
 msgid "use_email"
 msgstr "correo electrónico"
@@ -4164,6 +4099,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ "Relación agregada %(rtype)s de %(frometype)s #%(fromeid)s hacia %(toetype)"
 #~ "s #%(toeid)s"
 
+#~ msgid "allowed transition from this state"
+#~ msgstr "transición autorizada desde este estado"
+
 #~ msgid "button_reset"
 #~ msgstr "Cancelar los cambios"
 
@@ -4175,6 +4113,33 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "copy edition"
 #~ msgstr "Edición de una copia"
+
+#~ msgid ""
+#~ "core relation giving to a group the permission to add an entity or "
+#~ "relation type"
+#~ msgstr ""
+#~ "Relación sistema que otorga a un grupo la autorización de agregar una "
+#~ "entidad o una relación"
+
+#~ msgid ""
+#~ "core relation giving to a group the permission to delete an entity or "
+#~ "relation type"
+#~ msgstr ""
+#~ "Relación sistema que otorga a un grupo la autorización de eliminar una "
+#~ "entidad o relación"
+
+#~ msgid ""
+#~ "core relation giving to a group the permission to read an entity or "
+#~ "relation type"
+#~ msgstr ""
+#~ "Relación sistema que otorga a un grupo la autorización de leer una "
+#~ "entidad o una relación "
+
+#~ msgid ""
+#~ "core relation giving to a group the permission to update an entity type"
+#~ msgstr ""
+#~ "Relación sistema que otorga a un grupo la autorización de actualizar una "
+#~ "entidad"
 
 #~ msgid ""
 #~ "creating RQLExpression (CWRType %(linkto)s add_permission RQLExpression)"
@@ -4229,6 +4194,18 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "entity types which may use this transition"
 #~ msgstr "Entidades que pueden utilizar esta transición"
 
+#~ msgid "groups allowed to add entities/relations of this type"
+#~ msgstr "Grupos autorizados a agregar entidades/relaciones de este tipo"
+
+#~ msgid "groups allowed to delete entities/relations of this type"
+#~ msgstr "Grupos autorizados a eliminar entidades/relaciones de este tipo"
+
+#~ msgid "groups allowed to read entities/relations of this type"
+#~ msgstr "Grupos autorizados a leer entidades/relaciones de este tipo"
+
+#~ msgid "groups allowed to update entities of this type"
+#~ msgstr "Grupos autorizados a actualizar entidades de este tipo"
+
 #~ msgid "initial state for entities of this type"
 #~ msgstr "Estado inicial para las entidades de este tipo"
 
@@ -4240,6 +4217,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "link a transition to one or more entity type"
 #~ msgstr "liga una transición a una o mas tipos de entidad"
+
+#~ msgid "link to each item in"
+#~ msgstr "ligar hacia cada elemento en"
 
 #~ msgid "nothing to edit"
 #~ msgstr "nada que editar"
@@ -4294,6 +4274,26 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "remove this Transition"
 #~ msgstr "Eliminar esta transición"
+
+#~ msgid "rql expression allowing to add entities/relations of this type"
+#~ msgstr "expresion RQL permitiendo agregar entidades/relaciones de este tipo"
+
+#~ msgid "rql expression allowing to delete entities/relations of this type"
+#~ msgstr ""
+#~ "expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
+
+#~ msgid "rql expression allowing to read entities/relations of this type"
+#~ msgstr "expresion RQL permitiendo leer entidades/relaciones de este tipo"
+
+#~ msgid "rql expression allowing to update entities of this type"
+#~ msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
+
+#~ msgid ""
+#~ "use to define a transition from one or multiple states to a destination "
+#~ "states in workflow's definitions."
+#~ msgstr ""
+#~ "utilizado para definir una transición desde uno o multiples estados hacia "
+#~ "uno o varios estados destino en las definiciones del workflow"
 
 #~ msgid ""
 #~ "user for which this property is applying. If this relation is not set, "

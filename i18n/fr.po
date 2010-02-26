@@ -508,6 +508,9 @@ msgstr "Contenu du registre"
 msgid "Relations"
 msgstr "Relations"
 
+msgid "Repository"
+msgstr "Entrepôt de données"
+
 msgid "Request"
 msgstr "Requête"
 
@@ -945,20 +948,17 @@ msgstr "ajouter"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
 
-msgid "add CWAttribute add_permission RQLExpression subject"
-msgstr "expression rql d'ajout"
-
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "contrainte"
-
-msgid "add CWAttribute delete_permission RQLExpression subject"
-msgstr "expression rql de suppression"
 
 msgid "add CWAttribute read_permission RQLExpression subject"
 msgstr "expression rql de lecture"
 
 msgid "add CWAttribute relation_type CWRType object"
 msgstr "définition d'attribut"
+
+msgid "add CWAttribute update_permission RQLExpression subject"
+msgstr "permission de mise à jour"
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "définir une expression RQL d'ajout"
@@ -1062,10 +1062,6 @@ msgctxt "CWEType"
 msgid "add_permission"
 msgstr "permission d'ajout"
 
-msgctxt "CWAttribute"
-msgid "add_permission"
-msgstr "permission d'ajout"
-
 msgctxt "CWRelation"
 msgid "add_permission"
 msgstr "permission d'ajout"
@@ -1112,9 +1108,6 @@ msgstr "alias"
 
 msgid "allow to set a specific workflow for an entity"
 msgstr "permet de spécifier un workflow donné pour une entité"
-
-msgid "allowed transition from this state"
-msgstr "transition autorisée depuis cet état"
 
 msgid "allowed transitions from this state"
 msgstr "transitions autorisées depuis cet état"
@@ -1619,32 +1612,6 @@ msgstr "contrôle l'ordre des relations de l'entité sujet"
 msgid "copy"
 msgstr "copier"
 
-msgid ""
-"core relation giving to a group the permission to add an entity or relation "
-"type"
-msgstr ""
-"relation système donnant à un groupe la permission d'ajouter une entité ou "
-"une relation"
-
-msgid ""
-"core relation giving to a group the permission to delete an entity or "
-"relation type"
-msgstr ""
-"relation système donnant à un group la permission de supprimer une entité ou "
-"une relation"
-
-msgid ""
-"core relation giving to a group the permission to read an entity or relation "
-"type"
-msgstr ""
-"relation système donnant à un group la permission de lire une entité ou une "
-"relation"
-
-msgid "core relation giving to a group the permission to update an entity type"
-msgstr ""
-"relation système donnant à un groupe la permission de mettre à jour une "
-"entityé"
-
 msgid "core relation indicating a user's groups"
 msgstr ""
 "relation système indiquant les groupes auxquels appartient l'utilisateur"
@@ -1717,18 +1684,13 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "création d'une adresse électronique pour l'utilisateur %(linkto)s"
 
 msgid ""
-"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
-msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
-
-msgid ""
-"creating RQLExpression (CWAttribute %(linkto)s delete_permission "
-"RQLExpression)"
-msgstr ""
-"création d'une expression rql pour le droit de suppression de %(linkto)s"
-
-msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
+
+msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s update_permission "
+"RQLExpression)"
+msgstr "création d'une expression rql pour le droit de mise à jour de %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
@@ -1928,8 +1890,8 @@ msgstr ""
 msgid "define a relation type, used to build the instance schema"
 msgstr "définit un type de relation"
 
-msgid "define a rql expression used to define vpermissions"
-msgstr ""
+msgid "define a rql expression used to define permissions"
+msgstr "définit une expression rql donnant une permission"
 
 msgid "define a schema constraint"
 msgstr "définit une contrainte de schema"
@@ -1969,10 +1931,6 @@ msgid "delete_permission"
 msgstr "permission de supprimer"
 
 msgctxt "CWEType"
-msgid "delete_permission"
-msgstr "permission de supprimer"
-
-msgctxt "CWAttribute"
 msgid "delete_permission"
 msgstr "permission de supprimer"
 
@@ -2468,18 +2426,6 @@ msgstr ""
 msgid "groups"
 msgstr "groupes"
 
-msgid "groups allowed to add entities/relations of this type"
-msgstr "groupes autorisés à ajouter des entités/relations de ce type"
-
-msgid "groups allowed to delete entities/relations of this type"
-msgstr "groupes autorisés à supprimer des entités/relations de ce type"
-
-msgid "groups allowed to read entities/relations of this type"
-msgstr "groupes autorisés à lire des entités/relations de ce type"
-
-msgid "groups allowed to update entities of this type"
-msgstr "groupes autorisés à mettre à jour les entités de ce type"
-
 msgid "groups grant permissions to the user"
 msgstr "les groupes donnent des permissions à l'utilisateur"
 
@@ -2782,9 +2728,6 @@ msgstr "lie une transition à un ou plusieurs workflow"
 
 msgid "link a workflow to one or more entity type"
 msgstr "lie un workflow à un ou plusieurs types d'entité"
-
-msgid "link to each item in"
-msgstr "lier vers chaque élément dans"
 
 msgid "list"
 msgstr "liste"
@@ -3304,22 +3247,6 @@ msgstr "annuler les changements"
 
 msgid "right"
 msgstr "droite"
-
-msgid "rql expression allowing to add entities/relations of this type"
-msgstr ""
-"expression RQL donnant le droit d'ajouter des entités/relations de ce type"
-
-msgid "rql expression allowing to delete entities/relations of this type"
-msgstr ""
-"expression RQL donnant le droit de supprimer des entités/relations de ce type"
-
-msgid "rql expression allowing to read entities/relations of this type"
-msgstr ""
-"expression RQL donnant le droit de lire des entités/relations de ce type"
-
-msgid "rql expression allowing to update entities of this type"
-msgstr ""
-"expression RQL donnant le droit de modifier des entités/relations de ce type"
 
 msgid "rql expressions"
 msgstr "conditions rql"
@@ -3866,6 +3793,10 @@ msgctxt "CWEType"
 msgid "update_permission"
 msgstr "permission de modifier"
 
+msgctxt "CWAttribute"
+msgid "update_permission"
+msgstr "permission de modifier"
+
 msgctxt "CWGroup"
 msgid "update_permission_object"
 msgstr "peut modifier"
@@ -3896,10 +3827,12 @@ msgstr "utiliser les langages de template"
 
 msgid ""
 "use to define a transition from one or multiple states to a destination "
-"states in workflow's definitions."
+"states in workflow's definitions. Transition without destination state will "
+"go back to the state from which we arrived to the current state."
 msgstr ""
-"utiliser dans une définition de processus pour ajouter une transition depuis "
-"un ou plusieurs états vers un état de destination."
+"utilisé dans une définition de processus pour ajouter une transition "
+"depuis un ou plusieurs états vers un état de destination. Une transition sans "
+"état de destination retournera à l'état précédent l'état courant."
 
 msgid "use_email"
 msgstr "adresse électronique"
@@ -4072,7 +4005,7 @@ msgstr "a pour workflow"
 
 #, python-format
 msgid "wrong query parameter line %s"
-msgstr ""
+msgstr "mauvais paramètre de requête ligne %s"
 
 msgid "xbel"
 msgstr "xbel"
