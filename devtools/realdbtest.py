@@ -1,4 +1,3 @@
-import logging
 from cubicweb import toolsutils
 from cubicweb.devtools import DEFAULT_SOURCES, BaseApptestConfiguration
 

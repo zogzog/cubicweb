@@ -18,7 +18,7 @@ from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
 from logilab.common.decorators import clear_cache
 
-from cubicweb import ValidationError, RepositoryError
+from cubicweb import ValidationError
 from cubicweb.selectors import implements
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS, display_name
 from cubicweb.server import hook, schemaserial as ss
@@ -938,18 +938,6 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
             MemSchemaCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues)
             SourceDbCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues,
                                   entity=entity)
-
-def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
-    errors = {}
-    # don't use getattr(entity, attr), we would get the modified value if any
-    for attr in ro_attrs:
-        if attr in entity.edited_attributes:
-            origval, newval = hook.entity_oldnewvalue(entity, attr)
-            if newval != origval:
-                errors[attr] = session._("can't change the %s attribute") % \
-                               display_name(session, attr)
-    if errors:
-        raise ValidationError(entity.eid, errors)
 
 
 class AfterDelRelationTypeHook(SyncSchemaHook):

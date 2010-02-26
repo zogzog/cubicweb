@@ -446,7 +446,6 @@ class ResetAdminPasswordCommand(Command):
 
     def run(self, args):
         """run the command with its specific arguments"""
-        from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
         from cubicweb.server.utils import crypt_password, manager_userpasswd
         appid = pop_arg(args, 1, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)

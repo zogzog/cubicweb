@@ -210,11 +210,11 @@ directory (default to once a day).',
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
-                        rset = session.execute('EmailAddress X,A WHERE '
+                        rset = session.execute('EmailAddress A WHERE '
                                                'U use_email X, U eid %(u)s',
                                                {'u': eid})
                         ldapemailaddr = unicode(ldapemailaddr)
-                        for emaileid, emailaddr in rset:
+                        for emailaddr, in rset:
                             if emailaddr == ldapemailaddr:
                                 break
                         else:

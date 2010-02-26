@@ -15,7 +15,7 @@ from datetime import date, datetime, timedelta
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached
-from logilab.common.date import datetime2ticks, ustrftime
+from logilab.common.date import datetime2ticks
 from logilab.common.compat import all
 
 from rql import parse, nodes

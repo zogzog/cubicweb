@@ -10,10 +10,8 @@ __docformat__ = "restructuredtext en"
 
 from itertools import chain
 
-from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
 
-from cubicweb import typed_eid
 from cubicweb.selectors import implements
 from cubicweb.interfaces import IEmailable, ITree
 

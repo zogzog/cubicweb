@@ -29,12 +29,11 @@ from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.adbh import get_adv_func_helper
 
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
-from cubicweb import AuthenticationError, ETYPE_NAME_MAP
+from cubicweb import AuthenticationError
 from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
@@ -170,7 +169,6 @@ class ServerMigrationHelper(MigrationHelper):
         # check
         if not osp.exists(backupfile):
             raise Exception("Backup file %s doesn't exist" % backupfile)
-            return
         if askconfirm and not self.confirm('Restore %s database from %s ?'
                                            % (self.config.appid, backupfile)):
             return

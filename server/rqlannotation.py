@@ -30,7 +30,7 @@ def _annotate_select(annotator, rqlst):
                     need_distinct = True
                     # XXX could mark as not invariant
                     break
-    for name, var in rqlst.defined_vars.items():
+    for var in rqlst.defined_vars.itervalues():
         stinfo = var.stinfo
         if stinfo.get('ftirels'):
             has_text_query = True
@@ -139,13 +139,11 @@ def _select_principal(sqlscope, relations, _sort=lambda x:x):
     """
     # _sort argument is there for test
     diffscope_rels = {}
-    has_same_scope_rel = False
     ored_rels = set()
     diffscope_rels = set()
     for rel in _sort(relations):
         # note: only eid and has_text among all final relations may be there
         if rel.r_type in ('eid', 'identity'):
-            has_same_scope_rel = rel.sqlscope is sqlscope
             continue
         if rel.ored(traverse_scope=True):
             ored_rels.add(rel)

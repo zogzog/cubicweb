@@ -14,8 +14,7 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
-from cubicweb import tags
-from cubicweb.web import stdmsgs, httpcache, formfields, controller
+from cubicweb.web import httpcache, formfields, controller
 
 
 class FormViewMixIn(object):

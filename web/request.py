@@ -135,7 +135,7 @@ class CubicWebRequestBase(DBAPIRequest):
                                             self.user.properties['ui.language'])
                     self.set_language(lang)
                     return
-                except KeyError, ex:
+                except KeyError:
                     pass
             if vreg.config['language-negociation']:
                 # 2. http negociated language
@@ -671,7 +671,7 @@ class CubicWebRequestBase(DBAPIRequest):
                     try:
                         scorekey, scoreval = score.split('=')
                         if scorekey == 'q': # XXX 'level'
-                            score = float(score[2:]) # remove 'q='
+                            score = float(scoreval)
                     except ValueError:
                         continue
             values.append((score, value))

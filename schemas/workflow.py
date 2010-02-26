@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            ObjectRelation, RichString, String)
+                            RichString, String)
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
                               HOOKS_RTYPE_PERMS)

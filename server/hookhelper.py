@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.deprecation import deprecated, class_moved
 
-from cubicweb import RepositoryError
 from cubicweb.server import hook
 
 @deprecated('[3.6] entity_oldnewvalue should be imported from cw.server.hook')

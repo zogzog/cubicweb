@@ -43,7 +43,7 @@ above by::
 __docformat__ = "restructuredtext en"
 
 import logging
-from warnings import warn, filterwarnings
+from warnings import warn
 
 from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
@@ -51,8 +51,7 @@ from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
 
-from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
-                      role, typed_eid)
+from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
 # even if not used, let yes here so it's importable through this module
 from cubicweb.appobject import Selector, objectify_selector, yes
 from cubicweb.vregistry import class_regid
@@ -163,7 +162,6 @@ class ImplementsMixIn(object):
     def score_interfaces(self, req, cls_or_inst, cls):
         score = 0
         etypesreg = req.vreg['etypes']
-        eschema = cls_or_inst.e_schema
         for iface in self.expected_ifaces:
             if isinstance(iface, basestring):
                 # entity type

@@ -15,9 +15,7 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
-from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import StringField, relvoc_unrelated, guess_field
 
 

@@ -19,7 +19,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import Queue
-from os.path import join, exists
+from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
 
@@ -29,7 +29,7 @@ from logilab.common.compat import any
 from yams import BadSchemaDefinition
 from rql import RQLSyntaxError
 
-from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,

@@ -474,7 +474,7 @@ class CubicWebTC(TestCase):
         Redirect exception
         """
         try:
-            res = callback(req)
+            callback(req)
         except Redirect, ex:
             try:
                 path, params = ex.location.split('?', 1)

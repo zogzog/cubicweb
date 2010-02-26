@@ -8,8 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 import os
-import sys
-import os
 from itertools import chain
 
 from logilab.common.shellutils import ProgressBar
@@ -284,19 +282,15 @@ def eschema_relations_values(eschema):
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-# XXX 2.47 migration
-HAS_FULLTEXT_CONTAINER = True
-
 def rschema_relations_values(rschema):
     values = _ervalues(rschema)
     values['final'] = rschema.final
     values['symmetric'] = rschema.symmetric
     values['inlined'] = rschema.inlined
-    if HAS_FULLTEXT_CONTAINER:
-        if isinstance(rschema.fulltext_container, str):
-            values['fulltext_container'] = unicode(rschema.fulltext_container)
-        else:
-            values['fulltext_container'] = rschema.fulltext_container
+    if isinstance(rschema.fulltext_container, str):
+        values['fulltext_container'] = unicode(rschema.fulltext_container)
+    else:
+        values['fulltext_container'] = rschema.fulltext_container
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 

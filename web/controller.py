@@ -8,9 +8,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-import datetime
-
-from cubicweb import typed_eid
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError

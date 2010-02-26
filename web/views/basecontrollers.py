@@ -172,7 +172,9 @@ class ViewController(Controller):
 
 def _validation_error(req, ex):
     req.cnx.rollback()
-    forminfo = req.get_session_data(req.form.get('__errorurl'), pop=True)
+    # XXX necessary to remove existant validation error?
+    # imo (syt), it's not necessary
+    req.get_session_data(req.form.get('__errorurl'), pop=True)
     foreid = ex.entity
     eidmap = req.data.get('eidmap', {})
     for var, eid in eidmap.items():

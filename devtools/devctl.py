@@ -13,7 +13,7 @@ __docformat__ = "restructuredtext en"
 # completion). So import locally in command helpers.
 import sys
 from datetime import datetime
-from os import mkdir, chdir, getcwd
+from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 from warnings import warn
 
@@ -228,21 +228,6 @@ def _iter_vreg_objids(vreg, done, prefix=None):
                     yield objid
                     done.add(objid)
                     break
-
-
-def defined_in_library(etype, rtype, tetype, role):
-    """return true if the given relation definition exists in cubicweb's library
-    """
-    if libschema is None:
-        return False
-    if role == 'subject':
-        subjtype, objtype = etype, tetype
-    else:
-        subjtype, objtype = tetype, etype
-    try:
-        return libschema.rschema(rtype).has_rdef(subjtype, objtype)
-    except KeyError:
-        return False
 
 
 LANGS = ('en', 'fr', 'es')

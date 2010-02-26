@@ -16,7 +16,9 @@ __docformat__ = "restructuredtext en"
 
 from os.path import join
 
-from cubicweb.web.webconfig import WebConfiguration, merge_options, Method
+from logilab.common.configuration import Method
+
+from cubicweb.web.webconfig import WebConfiguration, merge_options
 
 class TwistedConfiguration(WebConfiguration):
     """web instance (in a twisted web server) client of a RQL server"""

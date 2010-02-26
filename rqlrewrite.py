@@ -12,7 +12,6 @@ __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
 
-from logilab.common.compat import any
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
@@ -291,7 +290,7 @@ class RQLRewriter(object):
     def snippet_subquery(self, varmap, transformedsnippet):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
-        selectvar, snippetvar = varmap
+        selectvar = varmap[0]
         subselect.append_selected(n.VariableRef(
             subselect.get_variable(selectvar)))
         aliases = [selectvar]
@@ -408,7 +407,7 @@ class RQLRewriter(object):
                 cardindex = 1
                 ttypes_func = rschema.subjects
                 rdef = lambda x, y: rschema.rdef(y, x)
-        except KeyError, ex:
+        except KeyError:
             # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
             return None
         # can't share neged relation or relations with different outer join

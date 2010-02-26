@@ -1,7 +1,5 @@
 """hooks to handle attributes mapped to a custom storage
 """
-from os import unlink
-
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources.storages import ETYPE_ATTR_STORAGE
 
@@ -16,7 +14,6 @@ class PreAddEntityHook(BFSSHook):
     """"""
     __regid__ = 'bfss_add_entity'
     events = ('before_add_entity', )
-    #__select__ = Hook.__select__ & implements('Repository')
 
     def __call__(self):
         etype = self.entity.__regid__
@@ -27,7 +24,6 @@ class PreUpdateEntityHook(BFSSHook):
     """"""
     __regid__ = 'bfss_update_entity'
     events = ('before_update_entity', )
-    #__select__ = Hook.__select__ & implements('Repository')
 
     def __call__(self):
         for attr in ETYPE_ATTR_STORAGE.get(self.entity.__regid__, ()):
@@ -37,7 +33,6 @@ class PreDeleteEntityHook(BFSSHook):
     """"""
     __regid__ = 'bfss_delete_entity'
     events = ('before_delete_entity', )
-    #__select__ = Hook.__select__ & implements('Repository')
 
     def __call__(self):
         for attr in ETYPE_ATTR_STORAGE.get(self.entity.__regid__, ()):

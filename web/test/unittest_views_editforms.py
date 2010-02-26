@@ -35,9 +35,6 @@ class AutomaticEntityFormTC(CubicWebTC):
 
 
     def test_cwuser_relations_by_category(self):
-        #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():
-        #    if rtype == 'tags':
-        #        print rtype, role, stype, otype, ':', tag
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         # see custom configuration in views.cwuser
         self.assertEquals(rbc(e, 'main', 'attributes'),

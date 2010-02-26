@@ -13,11 +13,8 @@ import types
 from logging import getLogger
 from warnings import warn
 
-from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
-
-from cubicweb import Unauthorized, NoSelectableObject
 
 
 # selector base classes and operations ########################################

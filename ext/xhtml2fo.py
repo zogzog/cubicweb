@@ -1,4 +1,4 @@
-from xml.etree.ElementTree import QName, fromstring
+from xml.etree.ElementTree import QName
 from pysixt.standard.xhtml_xslfo.transformer import XHTML2FOTransformer
 from pysixt.utils.xslfo.standard import cm
 from pysixt.utils.xslfo import SimplePageMaster

@@ -12,17 +12,16 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import action, uicfg
-from cubicweb.web.views import primary
 
-uicfg.primaryview_section.tag_attribute(('CWUser', 'login'), 'hidden')
-
-uicfg.primaryview_section.tag_attribute(('CWGroup', 'name'), 'hidden')
-uicfg.primaryview_section.tag_subject_of(('CWGroup', 'read_permission', '*'), 'relations')
-uicfg.primaryview_section.tag_subject_of(('CWGroup', 'add_permission', '*'), 'relations')
-uicfg.primaryview_section.tag_subject_of(('CWGroup', 'delete_permission', '*'), 'relations')
-uicfg.primaryview_section.tag_subject_of(('CWGroup', 'update_permission', '*'), 'relations')
-uicfg.primaryview_section.tag_object_of(('*', 'in_group', 'CWGroup'), 'relations')
-uicfg.primaryview_section.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
+_pvs = uicfg.primaryview_section
+_pvs.tag_attribute(('CWUser', 'login'), 'hidden')
+_pvs.tag_attribute(('CWGroup', 'name'), 'hidden')
+_pvs.tag_subject_of(('CWGroup', 'read_permission', '*'), 'relations')
+_pvs.tag_subject_of(('CWGroup', 'add_permission', '*'), 'relations')
+_pvs.tag_subject_of(('CWGroup', 'delete_permission', '*'), 'relations')
+_pvs.tag_subject_of(('CWGroup', 'update_permission', '*'), 'relations')
+_pvs.tag_object_of(('*', 'in_group', 'CWGroup'), 'relations')
+_pvs.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
 
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'

@@ -40,7 +40,6 @@ class _CalendarView(EntityView):
 
     def nav_header(self, date, smallshift=3, bigshift=9):
         """prints shortcut links to go to previous/next steps (month|week)"""
-        prev1 = next1 = prev2 = nex2 = date
         prev1 = previous_month(date, smallshift)
         next1 = next_month(date, smallshift)
         prev2 = previous_month(date, bigshift)

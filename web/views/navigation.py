@@ -59,7 +59,6 @@ class SortedNavigation(NavigationComponent):
     nb_chars = 5
 
     def display_func(self, rset, col, attrname):
-        req = self._cw
         if attrname is not None:
             def index_display(row):
                 if not rset[row][col]: # outer join

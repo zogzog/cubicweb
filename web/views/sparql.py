@@ -15,7 +15,7 @@ from lxml.builder import E
 
 from cubicweb.view import StartupView, AnyRsetView
 from cubicweb.web import Redirect, form, formfields, formwidgets as fwdgs
-from cubicweb.web.views import forms, urlrewrite
+from cubicweb.web.views import forms
 try:
     from cubicweb.spa2rql import Sparql2rqlTranslator, UnsupportedQuery
 except ImportError:
@@ -45,7 +45,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
         if sparql:
             try:
                 qinfo = Sparql2rqlTranslator(self._cw.vreg.schema).translate(sparql)
-            except rql.TypeResolverException, ex:
+            except rql.TypeResolverException:
                 self.w(self._cw._('can not resolve entity types:') + u' ' + unicode('ex'))
             except UnsupportedQuery:
                 self.w(self._cw._('we are not yet ready to handle this query'))

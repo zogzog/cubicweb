@@ -13,7 +13,6 @@ from cubicweb import RepositoryError, ValidationError
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import implements
 from cubicweb.server import hook
-from cubicweb.entities.wfobjs import WorkflowTransition
 
 
 def _change_state(session, x, oldstate, newstate):
@@ -52,7 +51,6 @@ class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
 
     def precommit_event(self):
-        session = self.session
         entity = self.entity
         autotrs = list(entity.possible_transitions('auto'))
         if autotrs:

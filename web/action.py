@@ -10,7 +10,7 @@ _ = unicode
 
 from cubicweb import target
 from cubicweb.selectors import (partial_relation_possible, match_search_state,
-                                one_line_rset, yes)
+                                one_line_rset)
 from cubicweb.appobject import AppObject
 
 

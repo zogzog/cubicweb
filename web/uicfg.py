@@ -112,7 +112,6 @@ from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, register_rtag, _ensure_str_key)
 from cubicweb.schema import META_RTYPES
-from cubicweb.web import formwidgets
 
 
 # primary view configuration ##################################################

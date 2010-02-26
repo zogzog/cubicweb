@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.textutils import normalize_text
 
-from cubicweb import RegistryException
 from cubicweb.selectors import implements
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp

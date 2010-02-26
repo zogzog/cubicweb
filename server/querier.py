@@ -12,7 +12,7 @@ from itertools import repeat
 
 from logilab.common.cache import Cache
 from logilab.common.compat import any
-from rql import RQLHelper, RQLSyntaxError
+from rql import RQLSyntaxError
 from rql.stmts import Union, Select
 from rql.nodes import Relation, VariableRef, Constant, SubQuery
 
@@ -210,7 +210,6 @@ class ExecutionPlan(object):
             self.cache_key = None
 
     def _insert_security(self, union, noinvariant):
-        rh = self.rqlhelper
         for select in union.children[:]:
             for subquery in select.with_:
                 self._insert_security(subquery.query, noinvariant)
