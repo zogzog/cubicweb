@@ -1,8 +1,13 @@
-"""%%prog %s [options] %s
+"""the cubicweb-ctl tool, based on logilab.common.clcommands to
+provide a pluggable commands system.
 
-The CubicWeb swiss-knife.
 
-%s"""
+:organization: Logilab
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+__docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
@@ -979,7 +984,12 @@ register_commands((ListCommand,
 def run(args):
     """command line tool"""
     cwcfg.load_cwctl_plugins()
-    main_run(args, __doc__)
+    main_run(args, """%%prog %s [options] %s
+
+The CubicWeb swiss-knife.
+
+%s"""
+)
 
 if __name__ == '__main__':
     run(sys.argv[1:])
