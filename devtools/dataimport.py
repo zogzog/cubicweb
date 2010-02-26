@@ -432,7 +432,7 @@ class RQLObjectStore(ObjectStore):
 
     def _put(self, type, item):
         query = ('INSERT %s X: ' % type) + ', '.join('X %s %%(%s)s' % (k, k)
-                                                     for k in item])
+                                                     for k in item)
         return self.rql(query, item)[0][0]
 
     def relate(self, eid_from, rtype, eid_to):
