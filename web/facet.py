@@ -267,6 +267,7 @@ class AbstractFacet(AppObject):
     context = ''
     needs_update = False
     start_unfolded = True
+    cw_rset = None # ensure facets have a cw_rset attribute
 
     def __init__(self, req, rqlst=None, filtered_variable=None,
                  **kwargs):
