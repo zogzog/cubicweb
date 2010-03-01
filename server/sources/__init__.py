@@ -351,7 +351,7 @@ class AbstractSource(object):
         """update an entity in the source"""
         raise NotImplementedError()
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise NotImplementedError()
 
@@ -372,11 +372,15 @@ class AbstractSource(object):
     def create_eid(self, session):
         raise NotImplementedError()
 
-    def add_info(self, session, entity, source, extid=None):
+    def add_info(self, session, entity, source, extid):
         """add type and source info for an eid into the system table"""
         raise NotImplementedError()
 
-    def delete_info(self, session, eid, etype, uri, extid):
+    def update_info(self, session, entity, need_fti_update):
+        """mark entity as being modified, fulltext reindex if needed"""
+        raise NotImplementedError()
+
+    def delete_info(self, session, entity, uri, extid, attributes, relations):
         """delete system information on deletion of an entity by transfering
         record from the entities table to the deleted_entities table
         """

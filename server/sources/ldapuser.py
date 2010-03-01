@@ -476,7 +476,8 @@ directory (default to once a day).',
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
-                self.repo.delete_info(session, eid)
+                entity = session.entity_from_eid(eid, 'CWUser')
+                self.repo.delete_info(session, entity, self.uri, base)
                 self._cache.pop(base, None)
             return []
 ##         except ldap.REFERRAL, e:
@@ -554,7 +555,7 @@ directory (default to once a day).',
         """replace an entity in the source"""
         raise RepositoryError('this source is read only')
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise RepositoryError('this source is read only')
 

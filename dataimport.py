@@ -559,6 +559,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
         self.rql = session.unsafe_execute
+        # disable undoing
+        session.undo_actions = frozenset()
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():

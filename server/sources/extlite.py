@@ -225,15 +225,15 @@ repository.',
         """update an entity in the source"""
         raise NotImplementedError()
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source
 
         this is not deleting a file in the svn but deleting entities from the
         source. Main usage is to delete repository content when a Repository
         entity is deleted.
         """
-        attrs = {SQL_PREFIX + 'eid': eid}
-        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
+        attrs = {'cw_eid': entity.eid}
+        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
 
     def local_add_relation(self, session, subject, rtype, object):

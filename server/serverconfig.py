@@ -127,6 +127,20 @@ connections will have this number of opened connections.',
           'help': 'size of the parsed rql cache size.',
           'group': 'main', 'inputlevel': 1,
           }),
+        ('undo-support',
+         {'type' : 'string', 'default': '',
+          'help': 'string defining actions that will have undo support: \
+[C]reate [U]pdate [D]elete entities / [A]dd [R]emove relation. Leave it empty \
+for no undo support, set it to CUDAR for full undo support, or to DR for \
+support undoing of deletion only.',
+          'group': 'main', 'inputlevel': 1,
+          }),
+        ('keep-transaction-lifetime',
+         {'type' : 'int', 'default': 7,
+          'help': 'number of days during which transaction records should be \
+kept (hence undoable).',
+          'group': 'main', 'inputlevel': 1,
+          }),
         ('delay-full-text-indexation',
          {'type' : 'yn', 'default': False,
           'help': 'When full text indexation of entity has a too important cost'

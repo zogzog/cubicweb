@@ -605,3 +605,27 @@ class MailBugReportController(SendMailController):
         url = self._cw.build_url(__message=self._cw._('bug report sent'))
         raise Redirect(url)
 
+
+class UndoController(SendMailController):
+    __regid__ = 'undo'
+    __select__ = authenticated_user() & match_form_params('txuuid')
+
+    def publish(self, rset=None):
+        txuuid = self._cw.form['txuuid']
+        errors = self._cw.cnx.undo_transaction(txuuid)
+        if errors:
+            self.w(self._cw._('some errors occured:'))
+            self.wview('pyvalist', pyvalue=errors)
+        else:
+            self.redirect()
+
+    def redirect(self):
+        req = self._cw
+        breadcrumbs = req.get_session_data('breadcrumbs', None)
+        if breadcrumbs is not None and len(breadcrumbs) > 1:
+            url = req.rebuild_url(breadcrumbs[-2],
+                                  __message=req._('transaction undoed'))
+        else:
+            url = req.build_url(__message=req._('transaction undoed'))
+        raise Redirect(url)
+

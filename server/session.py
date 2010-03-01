@@ -12,18 +12,23 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 from time import time
+from uuid import uuid4
 
 from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid
+from cubicweb import Binary, UnknownEid, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
+
+NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
+NO_UNDO_TYPES.add('CWCache')
+# XXX rememberme,forgotpwd,apycot,vcsfile
 
 def is_final(rqlst, variable, args):
     # try to find if this is a final var or not
@@ -110,6 +115,7 @@ class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
     together
     """
+    is_internal_session = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
@@ -120,8 +126,14 @@ class Session(RequestSessionBase):
         self.cnxtype = cnxprops.cnxtype
         self.creation = time()
         self.timestamp = self.creation
-        self.is_internal_session = False
         self.default_mode = 'read'
+        # support undo for Create Update Delete entity / Add Remove relation
+        if repo.config.creating or repo.config.repairing or self.is_internal_session:
+            self.undo_actions = ()
+        else:
+            self.undo_actions = set(repo.config['undo-support'].upper())
+            if self.undo_actions - set('CUDAR'):
+                raise Exception('bad undo-support string in configuration')
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -334,7 +346,10 @@ class Session(RequestSessionBase):
         # so we can't rely on simply checking session.read_security, but
         # recalling the first transition from DEFAULT_SECURITY to something
         # else (False actually) is not perfect but should be enough
-        self._threaddata.dbapi_query = oldmode is self.DEFAULT_SECURITY
+        #
+        # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
+        self._threaddata.dbapi_query = (oldmode is self.DEFAULT_SECURITY
+                                        or activated is self.DEFAULT_SECURITY)
         return oldmode
 
     @property
@@ -689,6 +704,7 @@ class Session(RequestSessionBase):
                         self.critical('error while %sing', trstate,
                                       exc_info=sys.exc_info())
                 self.info('%s session %s done', trstate, self.id)
+                return self.transaction_uuid(set=False)
             finally:
                 self._clear_thread_data()
                 self._touch()
@@ -768,6 +784,27 @@ class Session(RequestSessionBase):
             self.pending_operations.append(operation)
         else:
             self.pending_operations.insert(index, operation)
+
+    # undo support ############################################################
+
+    def undoable_action(self, action, ertype):
+        return action in self.undo_actions and not ertype in NO_UNDO_TYPES
+        # XXX elif transaction on mark it partial
+
+    def transaction_uuid(self, set=True):
+        try:
+            return self.transaction_data['tx_uuid']
+        except KeyError:
+            if not set:
+                return
+            self.transaction_data['tx_uuid'] = uuid = uuid4().hex
+            self.repo.system_source.start_undoable_transaction(self, uuid)
+            return uuid
+
+    def transaction_inc_action_counter(self):
+        num = self.transaction_data.setdefault('tx_action_count', 0) + 1
+        self.transaction_data['tx_action_count'] = num
+        return num
 
     # querier helpers #########################################################
 
@@ -890,13 +927,13 @@ class Session(RequestSessionBase):
 
 class InternalSession(Session):
     """special session created internaly by the repository"""
+    is_internal_session = True
 
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
-        self.is_internal_session = True
         self.disable_hook_categories('integrity')
 
 

@@ -461,7 +461,7 @@ class Entity(AppObject, dict):
                    all(matching_groups(e.get_groups('read')) for e in targets):
                     yield rschema, 'subject'
 
-    def to_complete_attributes(self, skip_bytes=True):
+    def to_complete_attributes(self, skip_bytes=True, skip_pwd=True):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             # skip binary data by default
             if skip_bytes and attrschema.type == 'Bytes':
@@ -472,13 +472,13 @@ class Entity(AppObject, dict):
             # password retreival is blocked at the repository server level
             rdef = rschema.rdef(self.e_schema, attrschema)
             if not self._cw.user.matching_groups(rdef.get_groups('read')) \
-                   or attrschema.type == 'Password':
+                   or (attrschema.type == 'Password' and skip_pwd):
                 self[attr] = None
                 continue
             yield attr
 
     _cw_completed = False
-    def complete(self, attributes=None, skip_bytes=True):
+    def complete(self, attributes=None, skip_bytes=True, skip_pwd=True):
         """complete this entity by adding missing attributes (i.e. query the
         repository to fill the entity)
 
@@ -495,7 +495,7 @@ class Entity(AppObject, dict):
         V = varmaker.next()
         rql = ['WHERE %s eid %%(x)s' % V]
         selected = []
-        for attr in (attributes or self.to_complete_attributes(skip_bytes)):
+        for attr in (attributes or self.to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
             if self.has_key(attr):
                 continue

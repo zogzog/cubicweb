@@ -150,7 +150,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     schemasql = sqlschema(schema, driver)
     #skip_entities=[str(e) for e in schema.entities()
     #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute, pbtitle=_title)
+    sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()

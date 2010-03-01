@@ -385,14 +385,14 @@ class DataHelpersTC(CubicWebTC):
         entity.eid = -1
         entity.complete = lambda x: None
         self.session.set_pool()
-        self.repo.add_info(self.session, entity, self.repo.sources_by_uri['system'])
+        self.repo.add_info(self.session, entity, self.repo.system_source)
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
         self.assertIsInstance(data[0][3], datetime)
         data[0] = list(data[0])
         data[0][3] = None
         self.assertEquals(tuplify(data), [(-1, 'Personne', 'system', None, None)])
-        self.repo.delete_info(self.session, -1)
+        self.repo.delete_info(self.session, entity, 'system', None)
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()

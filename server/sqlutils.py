@@ -94,14 +94,15 @@ def sqlschema(schema, driver, text_index=True,
     w('')
     dbhelper = db.get_db_helper(driver)
     if text_index:
-        w(dbhelper.sql_init_fti())
+        w(dbhelper.sql_init_fti().replace(';', ';;'))
         w('')
     w(schema2sql(dbhelper, schema, prefix=SQL_PREFIX,
-                 skip_entities=skip_entities, skip_relations=skip_relations))
+                 skip_entities=skip_entities,
+                 skip_relations=skip_relations).replace(';', ';;'))
     if dbhelper.users_support and user:
         w('')
         w(sqlgrants(schema, driver, user, text_index, set_owner,
-                    skip_relations, skip_entities))
+                    skip_relations, skip_entities).replace(';', ';;'))
     return '\n'.join(output)
 
 

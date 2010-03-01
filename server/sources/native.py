@@ -11,8 +11,11 @@ Notes:
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
+from pickle import loads, dumps
 from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
@@ -24,12 +27,15 @@ from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin
 from logilab.database import get_db_helper
 
-from cubicweb import UnknownEid, AuthenticationError, Binary, server
+from cubicweb import UnknownEid, AuthenticationError, Binary, server, neg_role
+from cubicweb import transaction as tx
+from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
+from cubicweb.server.session import hooks_control
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -91,6 +97,35 @@ def _modified_sql(table, etypes):
         attr = 'dtime'
     return 'SELECT type, eid FROM %s WHERE %s AND %s > %%(time)s' % (
         table, restr, attr)
+
+
+def sql_or_clauses(sql, clauses):
+    select, restr = sql.split(' WHERE ', 1)
+    restrclauses = restr.split(' AND ')
+    for clause in clauses:
+        restrclauses.remove(clause)
+    if restrclauses:
+        restr = '%s AND (%s)' % (' AND '.join(restrclauses),
+                                 ' OR '.join(clauses))
+    else:
+        restr = '(%s)' % ' OR '.join(clauses)
+    return '%s WHERE %s' % (select, restr)
+
+
+class UndoException(Exception):
+    """something went wrong during undoing"""
+
+
+def _undo_check_relation_target(tentity, rdef, role):
+    """check linked entity has not been redirected for this relation"""
+    card = rdef.role_cardinality(role)
+    if card in '?1' and tentity.related(rdef.rtype, role):
+        raise UndoException(tentity._cw._(
+            "Can't restore %(role)s relation %(rtype)s to entity %(eid)s which "
+            "is already linked using this relation.")
+                            % {'role': neg_role(role),
+                               'rtype': rdef.rtype,
+                               'eid': tentity.eid})
 
 
 class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
@@ -370,33 +405,56 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
+        sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
+        if session.undoable_action('C', entity.__regid__):
+            self._record_tx_action(session, 'tx_entity_actions', 'C',
+                                   etype=entity.__regid__, eid=entity.eid)
 
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs,
-                                 [SQL_PREFIX + 'eid'])
+        if session.undoable_action('U', entity.__regid__):
+            changes = self._save_attrs(session, entity, attrs)
+            self._record_tx_action(session, 'tx_entity_actions', 'U',
+                                   etype=entity.__regid__, eid=entity.eid,
+                                   changes=self._binary(dumps(changes)))
+        sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, attrs,
+                                 ['cw_eid'])
         self.doexec(session, sql, attrs)
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
-        attrs = {SQL_PREFIX + 'eid': eid}
-        sql = self.sqlgen.delete(SQL_PREFIX + etype, attrs)
+        if session.undoable_action('D', entity.__regid__):
+            attrs = [SQL_PREFIX + r.type
+                     for r in entity.e_schema.subject_relations()
+                     if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
+            changes = self._save_attrs(session, entity, attrs)
+            self._record_tx_action(session, 'tx_entity_actions', 'D',
+                                   etype=entity.__regid__, eid=entity.eid,
+                                   changes=self._binary(dumps(changes)))
+        attrs = {'cw_eid': entity.eid}
+        sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
 
-    def add_relation(self, session, subject, rtype, object, inlined=False):
+    def _add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
         if inlined is False:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
         else: # used by data import
             etype = session.describe(subject)[0]
-            attrs = {SQL_PREFIX + 'eid': subject, SQL_PREFIX + rtype: object}
+            attrs = {'cw_eid': subject, SQL_PREFIX + rtype: object}
             sql = self.sqlgen.update(SQL_PREFIX + etype, attrs,
-                                     [SQL_PREFIX + 'eid'])
+                                     ['cw_eid'])
         self.doexec(session, sql, attrs)
+
+    def add_relation(self, session, subject, rtype, object, inlined=False):
+        """add a relation to the source"""
+        self._add_relation(session, subject, rtype, object, inlined)
+        if session.undoable_action('A', rtype):
+            self._record_tx_action(session, 'tx_relation_actions', 'A',
+                                   eid_from=subject, rtype=rtype, eid_to=object)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -411,6 +469,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
         self.doexec(session, sql, attrs)
+        if session.undoable_action('R', rtype):
+            self._record_tx_action(session, 'tx_relation_actions', 'R',
+                                   eid_from=subject, rtype=rtype, eid_to=object)
 
     def doexec(self, session, query, args=None, rollback=True):
         """Execute a query.
@@ -467,6 +528,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # short cut to method requiring advanced db helper usage ##################
 
+    def binary_to_str(self, value):
+        return self.dbhelper.dbapi_module.binary_to_str(value)
+
     def create_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
@@ -481,7 +545,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
         try:
-            res = session.system_sql(sql).fetchone()
+            res = self.doexec(session, sql).fetchone()
         except:
             assert session.pool, 'session has no pool set'
             raise UnknownEid(eid)
@@ -496,9 +560,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def extid2eid(self, session, source, extid):
         """get eid from an external id. Return None if no record found."""
         assert isinstance(extid, str)
-        cursor = session.system_sql('SELECT eid FROM entities WHERE '
-                                    'extid=%(x)s AND source=%(s)s',
-                                    {'x': b64encode(extid), 's': source.uri})
+        cursor = self.doexec(session,
+                             'SELECT eid FROM entities '
+                             'WHERE extid=%(x)s AND source=%(s)s',
+                             {'x': b64encode(extid), 's': source.uri})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -529,7 +594,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         finally:
             self._eid_creation_lock.release()
 
-    def add_info(self, session, entity, source, extid=None, complete=True):
+    def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
@@ -537,7 +602,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             extid = b64encode(extid)
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
-        session.system_sql(self.sqlgen.insert('entities', attrs), attrs)
+        self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
@@ -545,26 +610,28 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             FTIndexEntityOp(session, entity=entity)
 
     def update_info(self, session, entity, need_fti_update):
+        """mark entity as being modified, fulltext reindex if needed"""
         if self.do_fti and need_fti_update:
             # reindex the entity only if this query is updating at least
             # one indexable attribute
             FTIndexEntityOp(session, entity=entity)
         # update entities.mtime
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
-        session.system_sql(self.sqlgen.update('entities', attrs, ['eid']), attrs)
+        self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
-    def delete_info(self, session, eid, etype, uri, extid):
+    def delete_info(self, session, entity, uri, extid):
         """delete system information on deletion of an entity by transfering
         record from the entities table to the deleted_entities table
         """
-        attrs = {'eid': eid}
-        session.system_sql(self.sqlgen.delete('entities', attrs), attrs)
+        attrs = {'eid': entity.eid}
+        self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
         if extid is not None:
             assert isinstance(extid, str), type(extid)
             extid = b64encode(extid)
-        attrs = {'type': etype, 'eid': eid, 'extid': extid,
-                 'source': uri, 'dtime': datetime.now()}
-        session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)
+        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
+                 'source': uri, 'dtime': datetime.now(),
+                 }
+        self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
@@ -575,12 +642,314 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           deleted since the given timestamp
         """
         modsql = _modified_sql('entities', etypes)
-        cursor = session.system_sql(modsql, {'time': mtime})
+        cursor = self.doexec(session, modsql, {'time': mtime})
         modentities = cursor.fetchall()
         delsql = _modified_sql('deleted_entities', etypes)
-        cursor = session.system_sql(delsql, {'time': mtime})
+        cursor = self.doexec(session, delsql, {'time': mtime})
         delentities = cursor.fetchall()
         return modentities, delentities
+
+    # undo support #############################################################
+
+    def undoable_transactions(self, session, ueid=None, **actionfilters):
+        """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
+        # force filtering to session's user if not a manager
+        if not session.user.is_in_group('managers'):
+            ueid = session.user.eid
+        restr = {}
+        if ueid is not None:
+            restr['tx_user'] = ueid
+        sql = self.sqlgen.select('transactions', restr, ('tx_uuid', 'tx_time', 'tx_user'))
+        if actionfilters:
+            # we will need subqueries to filter transactions according to
+            # actions done
+            tearestr = {} # filters on the tx_entity_actions table
+            trarestr = {} # filters on the tx_relation_actions table
+            genrestr = {} # generic filters, appliyable to both table
+            # unless public explicitly set to false, we only consider public
+            # actions
+            if actionfilters.pop('public', True):
+                genrestr['txa_public'] = True
+            # put additional filters in trarestr and/or tearestr
+            for key, val in actionfilters.iteritems():
+                if key == 'etype':
+                    # filtering on etype implies filtering on entity actions
+                    # only, and with no eid specified
+                    assert actionfilters.get('action', 'C') in 'CUD'
+                    assert not 'eid' in actionfilters
+                    tearestr['etype'] = val
+                elif key == 'eid':
+                    # eid filter may apply to 'eid' of tx_entity_actions or to
+                    # 'eid_from' OR 'eid_to' of tx_relation_actions
+                    if actionfilters.get('action', 'C') in 'CUD':
+                        tearestr['eid'] = val
+                    if actionfilters.get('action', 'A') in 'AR':
+                        trarestr['eid_from'] = val
+                        trarestr['eid_to'] = val
+                elif key == 'action':
+                    if val in 'CUD':
+                        tearestr['txa_action'] = val
+                    else:
+                        assert val in 'AR'
+                        trarestr['txa_action'] = val
+                else:
+                    raise AssertionError('unknow filter %s' % key)
+            assert trarestr or tearestr, "can't only filter on 'public'"
+            subqsqls = []
+            # append subqueries to the original query, using EXISTS()
+            if trarestr or (genrestr and not tearestr):
+                trarestr.update(genrestr)
+                trasql = self.sqlgen.select('tx_relation_actions', trarestr, ('1',))
+                if 'eid_from' in trarestr:
+                    # replace AND by OR between eid_from/eid_to restriction
+                    trasql = sql_or_clauses(trasql, ['eid_from = %(eid_from)s',
+                                                     'eid_to = %(eid_to)s'])
+                trasql += ' AND transactions.tx_uuid=tx_relation_actions.tx_uuid'
+                subqsqls.append('EXISTS(%s)' % trasql)
+            if tearestr or (genrestr and not trarestr):
+                tearestr.update(genrestr)
+                teasql = self.sqlgen.select('tx_entity_actions', tearestr, ('1',))
+                teasql += ' AND transactions.tx_uuid=tx_entity_actions.tx_uuid'
+                subqsqls.append('EXISTS(%s)' % teasql)
+            if restr:
+                sql += ' AND %s' % ' OR '.join(subqsqls)
+            else:
+                sql += ' WHERE %s' % ' OR '.join(subqsqls)
+            restr.update(trarestr)
+            restr.update(tearestr)
+        # we want results ordered by transaction's time descendant
+        sql += ' ORDER BY tx_time DESC'
+        cu = self.doexec(session, sql, restr)
+        # turn results into transaction objects
+        return [tx.Transaction(*args) for args in cu.fetchall()]
+
+    def tx_info(self, session, txuuid):
+        """See :class:`cubicweb.dbapi.Connection.transaction_info`"""
+        return tx.Transaction(txuuid, *self._tx_info(session, txuuid))
+
+    def tx_actions(self, session, txuuid, public):
+        """See :class:`cubicweb.dbapi.Connection.transaction_actions`"""
+        self._tx_info(session, txuuid)
+        restr = {'tx_uuid': txuuid}
+        if public:
+            restr['txa_public'] = True
+        sql = self.sqlgen.select('tx_entity_actions', restr,
+                                 ('txa_action', 'txa_public', 'txa_order',
+                                  'etype', 'eid', 'changes'))
+        cu = self.doexec(session, sql, restr)
+        actions = [tx.EntityAction(a,p,o,et,e,c and loads(self.binary_to_str(c)))
+                   for a,p,o,et,e,c in cu.fetchall()]
+        sql = self.sqlgen.select('tx_relation_actions', restr,
+                                 ('txa_action', 'txa_public', 'txa_order',
+                                  'rtype', 'eid_from', 'eid_to'))
+        cu = self.doexec(session, sql, restr)
+        actions += [tx.RelationAction(*args) for args in cu.fetchall()]
+        return sorted(actions, key=lambda x: x.order)
+
+    def undo_transaction(self, session, txuuid):
+        """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
+        # set mode so pool isn't released subsquently until commit/rollback
+        session.mode = 'write'
+        errors = []
+        with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
+            for action in reversed(self.tx_actions(session, txuuid, False)):
+                undomethod = getattr(self, '_undo_%s' % action.action.lower())
+                errors += undomethod(session, action)
+        # remove the transactions record
+        self.doexec(session,
+                    "DELETE FROM transactions WHERE tx_uuid='%s'" % txuuid)
+        return errors
+
+    def start_undoable_transaction(self, session, uuid):
+        """session callback to insert a transaction record in the transactions
+        table when some undoable transaction is started
+        """
+        ueid = session.user.eid
+        attrs = {'tx_uuid': uuid, 'tx_user': ueid, 'tx_time': datetime.now()}
+        self.doexec(session, self.sqlgen.insert('transactions', attrs), attrs)
+
+    def _save_attrs(self, session, entity, attrs):
+        """return a pickleable dictionary containing current values for given
+        attributes of the entity
+        """
+        restr = {'cw_eid': entity.eid}
+        sql = self.sqlgen.select(SQL_PREFIX + entity.__regid__, restr, attrs)
+        cu = self.doexec(session, sql, restr)
+        values = dict(zip(attrs, cu.fetchone()))
+        # ensure backend specific binary are converted back to string
+        eschema = entity.e_schema
+        for column in attrs:
+            # [3:] remove 'cw_' prefix
+            attr = column[3:]
+            if not eschema.subjrels[attr].final:
+                continue
+            if eschema.destination(attr) in ('Password', 'Bytes'):
+                value = values[column]
+                if value is not None:
+                    values[column] = self.binary_to_str(value)
+        return values
+
+    def _record_tx_action(self, session, table, action, **kwargs):
+        """record a transaction action in the given table (either
+        'tx_entity_actions' or 'tx_relation_action')
+        """
+        kwargs['tx_uuid'] = session.transaction_uuid()
+        kwargs['txa_action'] = action
+        kwargs['txa_order'] = session.transaction_inc_action_counter()
+        kwargs['txa_public'] = session.running_dbapi_query
+        self.doexec(session, self.sqlgen.insert(table, kwargs), kwargs)
+
+    def _tx_info(self, session, txuuid):
+        """return transaction's time and user of the transaction with the given uuid.
+
+        raise `NoSuchTransaction` if there is no such transaction of if the
+        session's user isn't allowed to see it.
+        """
+        restr = {'tx_uuid': txuuid}
+        sql = self.sqlgen.select('transactions', restr, ('tx_time', 'tx_user'))
+        cu = self.doexec(session, sql, restr)
+        try:
+            time, ueid = cu.fetchone()
+        except TypeError:
+            raise tx.NoSuchTransaction()
+        if not (session.user.is_in_group('managers')
+                or session.user.eid == ueid):
+            raise tx.NoSuchTransaction()
+        return time, ueid
+
+    def _undo_d(self, session, action):
+        """undo an entity deletion"""
+        errors = []
+        err = errors.append
+        eid = action.eid
+        etype = action.etype
+        _ = session._
+        # get an entity instance
+        try:
+            entity = self.repo.vreg['etypes'].etype_class(etype)(session)
+        except Exception:
+            err("can't restore entity %s of type %s, type no more supported"
+                % (eid, etype))
+            return errors
+        # check for schema changes, entities linked through inlined relation
+        # still exists, rewrap binary values
+        eschema = entity.e_schema
+        getrschema = eschema.subjrels
+        for column, value in action.changes.items():
+            rtype = column[3:] # remove cw_ prefix
+            try:
+                rschema = getrschema[rtype]
+            except KeyError:
+                err(_("Can't restore relation %(rtype)s of entity %(eid)s, "
+                      "this relation does not exists anymore in the schema.")
+                    % {'rtype': rtype, 'eid': eid})
+            if not rschema.final:
+                assert value is None
+                    # try:
+                    #     tentity = session.entity_from_eid(eid)
+                    # except UnknownEid:
+                    #     err(_("Can't restore %(role)s relation %(rtype)s to "
+                    #           "entity %(eid)s which doesn't exist anymore.")
+                    #         % {'role': _('subject'),
+                    #            'rtype': _(rtype),
+                    #            'eid': eid})
+                    #     continue
+                    # rdef = rdefs[(eschema, tentity.__regid__)]
+                    # try:
+                    #     _undo_check_relation_target(tentity, rdef, 'object')
+                    # except UndoException, ex:
+                    #     err(unicode(ex))
+                    #     continue
+                    # if rschema.inlined:
+                    #     entity[rtype] = value
+                    # else:
+                    #     # restore relation where inlined changed since the deletion
+                    #     del action.changes[column]
+                    #     self._add_relation(session, subject, rtype, object)
+                    # # set related cache
+                    # session.update_rel_cache_add(eid, rtype, value,
+                    #                              rschema.symmetric)
+            elif eschema.destination(rtype) in ('Bytes', 'Password'):
+                action.changes[column] = self._binary(value)
+                entity[rtype] = Binary(value)
+            elif isinstance(value, str):
+                entity[rtype] = unicode(value, session.encoding, 'replace')
+            else:
+                entity[rtype] = value
+        entity.set_eid(eid)
+        entity.edited_attributes = set(entity)
+        entity.check()
+        self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
+        # restore the entity
+        action.changes['cw_eid'] = eid
+        sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
+        self.doexec(session, sql, action.changes)
+        # restore record in entities (will update fti if needed)
+        self.add_info(session, entity, self, None, True)
+        # remove record from deleted_entities
+        self.doexec(session, 'DELETE FROM deleted_entities WHERE eid=%s' % eid)
+        self.repo.hm.call_hooks('after_add_entity', session, entity=entity)
+        return errors
+
+    def _undo_r(self, session, action):
+        """undo a relation removal"""
+        errors = []
+        err = errors.append
+        _ = session._
+        subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
+        entities = []
+        for role, eid in (('subject', subj), ('object', obj)):
+            try:
+                entities.append(session.entity_from_eid(eid))
+            except UnknownEid:
+                err(_("Can't restore relation %(rtype)s, %(role)s entity %(eid)s"
+                      " doesn't exist anymore.")
+                    % {'role': _(role),
+                       'rtype': _(rtype),
+                       'eid': eid})
+        if not len(entities) == 2:
+            return errors
+        sentity, oentity = entities
+        try:
+            rschema = self.schema.rschema(rtype)
+            rdef = rschema.rdefs[(sentity.__regid__, oentity.__regid__)]
+        except KeyError:
+            err(_("Can't restore relation %(rtype)s between %(subj)s and "
+                  "%(obj)s, that relation does not exists anymore in the "
+                  "schema.")
+                % {'rtype': rtype,
+                   'subj': subj,
+                   'obj': obj})
+        else:
+            for role, entity in (('subject', sentity),
+                                 ('object', oentity)):
+                try:
+                    _undo_check_relation_target(entity, rdef, role)
+                except UndoException, ex:
+                    err(unicode(ex))
+                    continue
+        if not errors:
+            self.repo.hm.call_hooks('before_add_relation', session,
+                                    eidfrom=subj, rtype=rtype, eidto=obj)
+            # add relation in the database
+            self._add_relation(session, subj, rtype, obj, rschema.inlined)
+            # set related cache
+            session.update_rel_cache_add(subj, rtype, obj, rschema.symmetric)
+            self.repo.hm.call_hooks('after_add_relation', session,
+                                    eidfrom=subj, rtype=rtype, eidto=obj)
+        return errors
+
+    def _undo_c(self, session, action):
+        """undo an entity creation"""
+        return ['undoing of entity creation not yet supported.']
+
+    def _undo_u(self, session, action):
+        """undo an entity update"""
+        return ['undoing of entity updating not yet supported.']
+
+    def _undo_a(self, session, action):
+        """undo a relation addition"""
+        return ['undoing of relation addition not yet supported.']
 
     # full text index handling #################################################
 
@@ -650,7 +1019,7 @@ class FTIndexEntityOp(hook.LateOperation):
 
 def sql_schema(driver):
     helper = get_db_helper(driver)
-    tstamp_col_type = helper.TYPE_MAPPING['Datetime']
+    typemap = helper.TYPE_MAPPING
     schema = """
 /* Create the repository's system database */
 
@@ -662,10 +1031,10 @@ CREATE TABLE entities (
   source VARCHAR(64) NOT NULL,
   mtime %s NOT NULL,
   extid VARCHAR(256)
-);
-CREATE INDEX entities_type_idx ON entities(type);
-CREATE INDEX entities_mtime_idx ON entities(mtime);
-CREATE INDEX entities_extid_idx ON entities(extid);
+);;
+CREATE INDEX entities_type_idx ON entities(type);;
+CREATE INDEX entities_mtime_idx ON entities(mtime);;
+CREATE INDEX entities_extid_idx ON entities(extid);;
 
 CREATE TABLE deleted_entities (
   eid INTEGER PRIMARY KEY NOT NULL,
@@ -673,11 +1042,58 @@ CREATE TABLE deleted_entities (
   source VARCHAR(64) NOT NULL,
   dtime %s NOT NULL,
   extid VARCHAR(256)
-);
-CREATE INDEX deleted_entities_type_idx ON deleted_entities(type);
-CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime);
-CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid);
-""" % (helper.sql_create_sequence('entities_id_seq'), tstamp_col_type, tstamp_col_type)
+);;
+CREATE INDEX deleted_entities_type_idx ON deleted_entities(type);;
+CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime);;
+CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid);;
+
+CREATE TABLE transactions (
+  tx_uuid CHAR(32) PRIMARY KEY NOT NULL,
+  tx_user INTEGER NOT NULL,
+  tx_time %s NOT NULL
+);;
+CREATE INDEX transactions_tx_user_idx ON transactions(tx_user);;
+
+CREATE TABLE tx_entity_actions (
+  tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
+  txa_action CHAR(1) NOT NULL,
+  txa_public %s NOT NULL,
+  txa_order INTEGER,
+  eid INTEGER NOT NULL,
+  etype VARCHAR(64) NOT NULL,
+  changes %s
+);;
+CREATE INDEX tx_entity_actions_txa_action_idx ON tx_entity_actions(txa_action);;
+CREATE INDEX tx_entity_actions_txa_public_idx ON tx_entity_actions(txa_public);;
+CREATE INDEX tx_entity_actions_eid_idx ON tx_entity_actions(eid);;
+CREATE INDEX tx_entity_actions_etype_idx ON tx_entity_actions(etype);;
+
+CREATE TABLE tx_relation_actions (
+  tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
+  txa_action CHAR(1) NOT NULL,
+  txa_public %s NOT NULL,
+  txa_order INTEGER,
+  eid_from INTEGER NOT NULL,
+  eid_to INTEGER NOT NULL,
+  rtype VARCHAR(256) NOT NULL
+);;
+CREATE INDEX tx_relation_actions_txa_action_idx ON tx_relation_actions(txa_action);;
+CREATE INDEX tx_relation_actions_txa_public_idx ON tx_relation_actions(txa_public);;
+CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
+CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
+""" % (helper.sql_create_sequence('entities_id_seq').replace(';', ';;'),
+       typemap['Datetime'], typemap['Datetime'], typemap['Datetime'],
+       typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])
+    if helper.backend_name == 'sqlite':
+        # sqlite support the ON DELETE CASCADE syntax but do nothing
+        schema += '''
+CREATE TRIGGER fkd_transactions
+BEFORE DELETE ON transactions
+FOR EACH ROW BEGIN
+    DELETE FROM tx_entity_actions WHERE tx_uuid=OLD.tx_uuid;
+    DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
+END;;
+'''
     return schema
 
 
@@ -687,18 +1103,19 @@ def sql_drop_schema(driver):
 %s
 DROP TABLE entities;
 DROP TABLE deleted_entities;
+DROP TABLE transactions;
+DROP TABLE tx_entity_actions;
+DROP TABLE tx_relation_actions;
 """ % helper.sql_drop_sequence('entities_id_seq')
 
 
 def grant_schema(user, set_owner=True):
     result = ''
-    if set_owner:
-        result = 'ALTER TABLE entities OWNER TO %s;\n' % user
-        result += 'ALTER TABLE deleted_entities OWNER TO %s;\n' % user
-        result += 'ALTER TABLE entities_id_seq OWNER TO %s;\n' % user
-    result += 'GRANT ALL ON entities TO %s;\n' % user
-    result += 'GRANT ALL ON deleted_entities TO %s;\n' % user
-    result += 'GRANT ALL ON entities_id_seq TO %s;\n' % user
+    for table in ('entities', 'deleted_entities', 'entities_id_seq',
+                  'transactions', 'tx_entity_actions', 'tx_relation_actions'):
+        if set_owner:
+            result = 'ALTER TABLE %s OWNER TO %s;\n' % (table, user)
+        result += 'GRANT ALL ON %s TO %s;\n' % (table, user)
     return result
 
 

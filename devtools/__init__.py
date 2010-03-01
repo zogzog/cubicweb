@@ -106,8 +106,6 @@ class TestServerConfiguration(ServerConfiguration):
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
 
     anonymous_user = TwistedConfiguration.anonymous_user.im_func
 
@@ -123,6 +121,8 @@ class TestServerConfiguration(ServerConfiguration):
         super(TestServerConfiguration, self).load_configuration()
         self.global_set_option('anonymous-user', 'anon')
         self.global_set_option('anonymous-password', 'anon')
+        # no undo support in tests
+        self.global_set_option('undo-support', '')
 
     def main_config_file(self):
         """return instance's control configuration file"""

@@ -34,14 +34,15 @@ from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
-#  set of meta-relations available for every entity types
+# set of meta-relations available for every entity types
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
-SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state', 'wf_info_for'))
+SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state',
+                     'wf_info_for'))
 
-#  set of entity and relation types used to build the schema
+# set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'RQLExpression',
