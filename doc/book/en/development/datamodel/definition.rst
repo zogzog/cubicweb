@@ -266,8 +266,11 @@ The standard user groups
   This can only be used for the actions `update` and `delete` of an entity
   type.
 
-It is also possible to use specific groups if they are defined in the precreate
-of the cube (``migration/precreate.py``).
+It is also possible to use specific groups if they are defined in the
+precreate of the cube (``migration/precreate.py``). Defining groups in
+postcreate or even later makes them NOT available for security
+purposes (in this case, an `sync_schema_props_perms` command have to
+be issued in a CubicWeb shell).
 
 
 Use of RQL expression for write permissions
