@@ -10,14 +10,16 @@ _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, RichString, String, Boolean, Int)
-from cubicweb.schema import RQLConstraint
-from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
+from cubicweb.schema import (
+    RQLConstraint,
+    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS
+    )
 
 # not restricted since as "is" is handled as other relations, guests need
 # access to this
 class CWEType(EntityType):
     """define an entity type, used to build the instance schema"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
@@ -28,7 +30,7 @@ class CWEType(EntityType):
 
 class CWRType(EntityType):
     """define a relation type, used to build the instance schema"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
@@ -48,7 +50,7 @@ class CWAttribute(EntityType):
 
     used to build the instance schema
     """
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final TRUE')],
                                     composite='object')
@@ -85,7 +87,7 @@ class CWRelation(EntityType):
 
     used to build the instance schema
     """
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final FALSE')],
                                     composite='object')
@@ -116,7 +118,7 @@ class CWRelation(EntityType):
 # not restricted since it has to be read when checking allowed transitions
 class RQLExpression(EntityType):
     """define a rql expression used to define permissions"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     exprtype = String(required=True, vocabulary=['ERQLExpression', 'RRQLExpression'])
     mainvars = String(maxsize=8,
                       description=_('name of the main variables which should be '
@@ -134,14 +136,14 @@ class RQLExpression(EntityType):
 
 class CWConstraint(EntityType):
     """define a schema constraint"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     cstrtype = SubjectRelation('CWConstraintType', cardinality='1*')
     value = String(description=_('depends on the constraint type'))
 
 
 class CWConstraintType(EntityType):
     """define a schema constraint type"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
@@ -149,7 +151,7 @@ class CWConstraintType(EntityType):
 # not restricted since it has to be read when checking allowed transitions
 class CWGroup(EntityType):
     """define a CubicWeb users group"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
@@ -173,32 +175,32 @@ class CWProperty(EntityType):
 
 class relation_type(RelationType):
     """link a relation definition to its relation type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class from_entity(RelationType):
     """link a relation definition to its subject entity type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class to_entity(RelationType):
     """link a relation definition to its object entity type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class constrained_by(RelationType):
     """constraints applying on this relation"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class cstrtype(RelationType):
     """constraint factory"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 
 class read_permission_cwgroup(RelationDefinition):
     """groups allowed to read entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'read_permission'
     subject = ('CWEType', 'CWAttribute', 'CWRelation')
     object = 'CWGroup'
@@ -206,7 +208,7 @@ class read_permission_cwgroup(RelationDefinition):
 
 class add_permission_cwgroup(RelationDefinition):
     """groups allowed to add entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
     subject = ('CWEType', 'CWRelation')
     object = 'CWGroup'
@@ -214,7 +216,7 @@ class add_permission_cwgroup(RelationDefinition):
 
 class delete_permission_cwgroup(RelationDefinition):
     """groups allowed to delete entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'delete_permission'
     subject = ('CWEType', 'CWRelation')
     object = 'CWGroup'
@@ -222,7 +224,7 @@ class delete_permission_cwgroup(RelationDefinition):
 
 class update_permission_cwgroup(RelationDefinition):
     """groups allowed to update entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'update_permission'
     subject = ('CWEType', 'CWAttribute')
     object = 'CWGroup'
@@ -230,7 +232,7 @@ class update_permission_cwgroup(RelationDefinition):
 
 class read_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to read entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'read_permission'
     subject = ('CWEType', 'CWAttribute', 'CWRelation')
     object = 'RQLExpression'
@@ -239,7 +241,7 @@ class read_permission_rqlexpr(RelationDefinition):
 
 class add_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to add entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
     subject = ('CWEType', 'CWRelation')
     object = 'RQLExpression'
@@ -248,7 +250,7 @@ class add_permission_rqlexpr(RelationDefinition):
 
 class delete_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to delete entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'delete_permission'
     subject = ('CWEType', 'CWRelation')
     object = 'RQLExpression'
@@ -257,7 +259,7 @@ class delete_permission_rqlexpr(RelationDefinition):
 
 class update_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to update entities/relations of this type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'update_permission'
     subject = ('CWEType', 'CWAttribute')
     object = 'RQLExpression'

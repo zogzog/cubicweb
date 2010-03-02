@@ -10,9 +10,9 @@ _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
                             String, Datetime, Password)
-from cubicweb.schema import (RQLConstraint, WorkflowableEntityType,
-                             ERQLExpression, RRQLExpression)
-from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
+from cubicweb.schema import (
+    RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
+    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
 
 class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
@@ -85,7 +85,7 @@ class prefered_form(RelationType):
 
 class in_group(RelationType):
     """core relation indicating a user's groups"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class owned_by(RelationType):
     """core relation indicating owners of an entity. This relation
@@ -155,7 +155,7 @@ class for_user(RelationType):
 class CWPermission(EntityType):
     """entity type that may be used to construct some advanced security configuration
     """
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True, maxsize=100,
                   description=_('name or identifier of the permission'))
@@ -170,11 +170,11 @@ class require_permission(RelationType):
     """link a permission to the entity. This permission should be used in the
     security definition of the entity's type to be useful.
     """
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class require_group(RelationType):
     """used to grant a permission to a group"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 
 class ExternalUri(EntityType):

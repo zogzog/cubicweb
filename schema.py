@@ -63,6 +63,31 @@ ybo.RTYPE_PROPERTIES += ('eid',)
 ybo.RDEF_PROPERTIES += ('eid',)
 
 
+PUB_SYSTEM_ENTITY_PERMS = {
+    'read':   ('managers', 'users', 'guests',),
+    'add':    ('managers',),
+    'delete': ('managers',),
+    'update': ('managers',),
+    }
+PUB_SYSTEM_REL_PERMS = {
+    'read':   ('managers', 'users', 'guests',),
+    'add':    ('managers',),
+    'delete': ('managers',),
+    }
+PUB_SYSTEM_ATTR_PERMS = {
+    'read':   ('managers', 'users', 'guests',),
+    'update':    ('managers',),
+    }
+RO_REL_PERMS = {
+    'read':   ('managers', 'users', 'guests',),
+    'add':    (),
+    'delete': (),
+    }
+RO_ATTR_PERMS = {
+    'read':   ('managers', 'users', 'guests',),
+    'update': (),
+    }
+
 # XXX same algorithm as in reorder_cubes and probably other place,
 # may probably extract a generic function
 def order_eschemas(eschemas):
