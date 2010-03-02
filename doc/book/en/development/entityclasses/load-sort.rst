@@ -24,6 +24,7 @@ Loaded attributes and default sorting management
   on the name attribute): ::
 
    class MyEntity(AnyEntity):
+       __regid__ = 'MyEntity'
        fetch_attrs = ('modification_date', 'name')
 
        @classmethod
@@ -45,7 +46,7 @@ For example: ::
 
   class Transition(AnyEntity):
     """..."""
-    id = 'Transition'
+    __regid__ = 'Transition'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
 Indicates that for the entity type "Transition", you have to pre-load
