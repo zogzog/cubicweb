@@ -1082,8 +1082,16 @@ def vocabulary(self, entity=None, form=None):
         cw = entity._cw
     elif form is not None:
         cw = form._cw
-    if cw is not None and cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
-        return self.regular_formats + tuple(NEED_PERM_FORMATS)
+    if cw is not None:
+        if hasattr(cw, 'is_super_session'):
+            # cw is a server session
+            hasperm = cw.is_super_session or \
+                      not cw.vreg.config.is_hook_category_activated('integrity') or \
+                      cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
+        else:
+            hasperm = cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
+        if hasperm:
+            return self.regular_formats + tuple(NEED_PERM_FORMATS)
     return self.regular_formats
 
 # XXX monkey patch PyFileReader.import_erschema until bw_normalize_etype is
