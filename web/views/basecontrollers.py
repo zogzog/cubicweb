@@ -402,13 +402,23 @@ class JSonController(Controller):
 
     @xhtmlize
     def js_reledit_form(self):
+        req = self._cw
         args = dict((x, self._cw.form[x])
                     for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land
         args['default'] = self._cw.form['default_value']
         args['reload'] = simplejson.loads(args['reload'])
-        return entity.view('doreledit', **args)
+        rset = req.eid_rset(int(self._cw.form['eid']))
+        view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
+        stream = view.set_stream()
+        view.render(**args)
+        extresources = req.html_headers.getvalue(skiphead=True)
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n')
+            stream.write(extresources)
+            stream.write(u'</div>\n')
+        return stream.getvalue()
 
     @jsonize
     def js_i18n(self, msgids):
