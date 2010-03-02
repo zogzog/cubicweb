@@ -375,12 +375,12 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset)
         if extraargs is None:
             extraargs = {}
         else: # we receive unicode keys which is not supported by the **syntax
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
+        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset, **extraargs)
         extraargs = extraargs or {}
         return comp.render(**extraargs)
 
