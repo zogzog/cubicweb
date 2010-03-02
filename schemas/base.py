@@ -118,18 +118,21 @@ class created_by(RelationType):
 
 class creation_date(RelationType):
     """creation time of an entity"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'Datetime'
 
 class modification_date(RelationType):
     """latest modification time of an entity"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'Datetime'
 
 class cwuri(RelationType):
     """internal entity uri"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'String'

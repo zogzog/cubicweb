@@ -307,3 +307,13 @@ class specializes(RelationType):
     cardinality = '?*'
     subject = 'CWEType'
     object = 'CWEType'
+
+def post_build_callback(schema):
+    """set attributes permissions for schema/workflow entities"""
+    from cubicweb.schema import SCHEMA_TYPES, WORKFLOW_TYPES, META_RTYPES
+    for eschema in schema.entities():
+        if eschema in SCHEMA_TYPES or eschema in WORKFLOW_TYPES:
+            for rschema in eschema.subject_relations():
+                if rschema.final and not rschema in META_RTYPES:
+                    rdef = eschema.rdef(rschema)
+                    rdef.permissions = PUB_SYSTEM_ATTR_PERMS

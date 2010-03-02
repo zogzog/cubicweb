@@ -394,7 +394,8 @@ class CubicWebEntitySchema(EntitySchema):
         if need_has_text is None:
             need_has_text = may_need_has_text
         if need_has_text and not has_has_text and not deletion:
-            rdef = ybo.RelationDefinition(self.type, 'has_text', 'String')
+            rdef = ybo.RelationDefinition(self.type, 'has_text', 'String',
+                                          __permissions__=RO_ATTR_PERMS)
             self.schema.add_relation_def(rdef)
         elif not need_has_text and has_has_text:
             self.schema.del_relation_def(self.type, 'has_text', 'String')
@@ -516,9 +517,11 @@ class CubicWebSchema(Schema):
         if not eschema.final:
             # automatically add the eid relation to non final entity types
             rdef = ybo.RelationDefinition(eschema.type, 'eid', 'Int',
-                                          cardinality='11', uid=True)
+                                          cardinality='11', uid=True,
+                                          __permissions__=RO_ATTR_PERMS)
             self.add_relation_def(rdef)
-            rdef = ybo.RelationDefinition(eschema.type, 'identity', eschema.type)
+            rdef = ybo.RelationDefinition(eschema.type, 'identity', eschema.type,
+                                          __permissions__=RO_REL_PERMS)
             self.add_relation_def(rdef)
         self._eid_index[eschema.eid] = eschema
         return eschema
