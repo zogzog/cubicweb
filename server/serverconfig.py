@@ -185,6 +185,8 @@ and if not set, it will be choosen randomly',
     # check user's state at login time
     consider_user_state = True
 
+    # XXX hooks control stuff should probably be on the session, not on the config
+
     # hooks activation configuration
     # all hooks should be activated during normal execution
     disabled_hooks_categories = set()
@@ -232,9 +234,13 @@ and if not set, it will be choosen randomly',
 
     @classmethod
     def is_hook_activated(cls, hook):
+        return cls.is_hook_category_activated(hook.category)
+
+    @classmethod
+    def is_hook_category_activated(cls, category):
         if cls.hooks_mode is cls.DENY_ALL:
-            return hook.category in cls.enabled_hooks_categories
-        return hook.category not in cls.disabled_hooks_categories
+            return category in cls.enabled_hooks_categories
+        return category not in cls.disabled_hooks_categories
 
     # should some hooks be deactivated during [pre|post]create script execution
     free_wheel = False

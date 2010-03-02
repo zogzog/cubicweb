@@ -105,7 +105,8 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     #     skip that for super session (though we can still skip it for internal
     #     sessions). Also we should imo rely on the orm to first fetch existing
     #     entity if any then delete it.
-    if session.is_internal_session:
+    if session.is_internal_session \
+           or not session.vreg.config.is_hook_category_activated('integrity'):
         return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
