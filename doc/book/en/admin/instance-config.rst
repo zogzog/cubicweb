@@ -65,8 +65,8 @@ of configuration file.
      base-url = http://localhost/demo
      https-url = `https://localhost/demo`
 
-Setting up the web
-------------------
+Setting up the web client
+-------------------------
 :`web.embed-allowed`:
     regular expression matching sites which could be "embedded" in
     the site (controllers 'embed')
@@ -93,22 +93,26 @@ Pyro configuration for the instance
 -----------------------------------
 Web server side:
 
-:`pyro-client.pyro-instance-id`:
+:`pyro.pyro-instance-id`:
     pyro identifier of RQL server (e.g. the instance name)
 
 RQL server side:
 
-:`pyro-server.pyro-port`:
-    pyro port number. If none is specified, a port is assigned
+:`main.pyro-server`:
+    boolean to switch on/off pyro server-side
+
+:`pyro.pyro-host`:
+    pyro host:port number. If no port is specified, it is assigned
     automatically.
 
 RQL and web servers side:
 
-:`pyro-name-server.pyro-ns-host`:
+:`pyro.pyro-ns-host`:
     hostname hosting pyro server name. If no value is
     specified, it is located by a request from broadcast
-:`pyro-name-server.pyro-ns-group` [cubicweb]:
-    pyro group in which to save the instance
+
+:`pyro.pyro-ns-group`:
+    pyro group in which to save the instance (will default to 'cubicweb')
 
 
 Configuring e-mail

@@ -19,6 +19,7 @@ instances based on that framework.
    site-config
    multisources
    ldap
+   pyro
    gae
    additional-tips
 
