@@ -373,7 +373,7 @@ MySql configuration
 ```````````````````
 Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 
-    transaction-isolation = READ-COMMITTED
+    transaction-isolation=READ-COMMITTED
     default-storage-engine=INNODB
     default-character-set=utf8
     max_allowed_packet = 128M
@@ -381,6 +381,26 @@ Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 .. note::
     It is unclear whether mysql supports indexed string of arbitrary lenght or
     not.
+
+SQLServer configuration
+-----------------------
+
+As of this writing, sqlserver support is in progress. You should be
+able to connect, create a database and go quite far, but some of the
+generated SQL is still currently not accepted by the backend.
+
+The `source` configuration file may look like this (specific parts
+only are shown)::
+
+  [system]
+  db-driver=sqlserver2005
+  db-user=someuser
+  # database password not needed
+  #db-password=toto123
+  #db-create/init may ask for a pwd: just say anything
+  db-extra-arguments=Trusted_Connection
+  db-encoding=utf8
+
 
 Pyro configuration
 ------------------

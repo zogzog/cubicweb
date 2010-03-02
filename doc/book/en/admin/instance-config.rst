@@ -12,7 +12,8 @@ For example::
 
     /etc/cubicweb.d/myblog/all-in-one.conf
 
-It is a simple text file format INI. In the following description,
+It is a simple text file in the INI format
+(http://en.wikipedia.org/wiki/INI_file). In the following description,
 each option name is prefixed with its own section and followed by its
 default value if necessary, e.g. "`<section>.<option>` [value]."
 
