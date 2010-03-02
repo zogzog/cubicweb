@@ -132,9 +132,9 @@ class FormRenderer(AppObject):
             errors = form.remaining_errors()
             if errors:
                 if len(errors) > 1:
-                    templstr = '<li>%s</li>\n'
+                    templstr = u'<li>%s</li>\n'
                 else:
-                    templstr = '&#160;%s\n'
+                    templstr = u'&#160;%s\n'
                 for field, err in errors:
                     if field is None:
                         errormsg += templstr % err
