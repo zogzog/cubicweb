@@ -132,7 +132,7 @@ The python drivers for posgtresql are to be found there::
 Please be careful to select the right python (2.5) and postgres (8.4)
 versions.
 
-Pyro enable remote access to cubicweb repository instances. Get it
+Pyro enables remote access to cubicweb repository instances. Get it
 there::
 
   http://sourceforge.net/projects/pyro/files/
