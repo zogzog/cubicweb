@@ -44,6 +44,10 @@ makes it to maintain with real functions/classes/contexts without the need of
 learning a new dialect. By using Python, we use standard OOP techniques and
 this is a key factor in a robust application.
 
+The `cwtags` (http://www.cubicweb.org/project/cwtags) package can be
+used in cubes to help generate html from Python with more comfort than
+raw strings.
+
 Why do you use the LGPL license to prevent me from doing X ?
 ------------------------------------------------------------
 
@@ -88,19 +92,22 @@ like frameworks for several reasons.
    component). Google App Engine is yet another supported target for
    RQL.
 
-[copy answer from forum, explain why similar to sparql and why better
-  than django and SQL]
-
-which ajax library is CubicWeb using ?
+Which ajax library is CubicWeb using ?
 --------------------------------------
 
-[CubicWeb uses jQuery and adds a thin layer on top of that]
+CubicWeb uses jQuery and provides a few helpers on top of
+that. Additionally, some jQuery plugins are provided (some are
+provided in specific cubes).
 
 
 How is security implemented ?
 ------------------------------
 
-This is an example of how it works in our framework:
+The basis for security is a mapping from operations to groups or
+arbitrary RQL expressions. These mappings are scoped to entities and
+relations.
+
+This is an example for an Entity Type definition:
 
 .. sourcecode:: python
 
@@ -108,19 +115,23 @@ This is an example of how it works in our framework:
         """a version is defining the content of a particular project's
         release"""
         # definition of attributes is voluntarily missing
-        permissions = {'read': ('managers', 'users', 'guests',),
-                       'update': ('managers', 'logilab', 'owners',),
-                       'delete': ('managers', ),
-                       'add': ('managers', 'logilab',
-                               ERQLExpression('X version_of PROJ, U in_group G, '
-                                              'PROJ require_permission P, '
-                                              'P name "add_version", P require_group G'),)}
+        __permissions__ = {'read': ('managers', 'users', 'guests',),
+                           'update': ('managers', 'logilab', 'owners'),
+                           'delete': ('managers',),
+                           'add': ('managers', 'logilab',
+                                   ERQLExpression('X version_of PROJ, U in_group G, '
+                                                  'PROJ require_permission P, '
+                                                  'P name "add_version", P require_group G'),)}
 
 The above means that permission to read a Version is granted to any
 user that is part of one of the groups 'managers', 'users', 'guests'.
 The 'add' permission is granted to users in group 'managers' or
-'logilab' and to users in group G, if G is linked by a permission
+'logilab' or to users in group G, if G is linked by a permission
 entity named "add_version" to the version's project.
+
+An example for a Relation Definition (RelationType both defines a
+relation type and implicitly one relation definition, on which the
+permissions actually apply):
 
 .. sourcecode:: python
 
@@ -128,15 +139,18 @@ entity named "add_version" to the version's project.
         """link a version to its project. A version is necessarily linked
         to one and only one project. """
         # some lines voluntarily missing
-        permissions = {'read': ('managers', 'users', 'guests',),
-                       'delete': ('managers', ),
-                       'add': ('managers', 'logilab',
-                               RRQLExpression('O require_permission P, P name "add_version", '
-                               'U in_group G, P require_group G'),) }
+        __permissions__ = {'read': ('managers', 'users', 'guests',),
+                           'delete': ('managers', ),
+                           'add': ('managers', 'logilab',
+                                   RRQLExpression('O require_permission P, P name "add_version", '
+                                                  'U in_group G, P require_group G'),) }
+
+The main difference lies in the basic available operations (there is
+no 'update' operation) and the usage of an RRQLExpression (rql
+expression for a relation) instead of an ERQLExpression (rql
+expression for an entity).
 
 You can find additional information in the section :ref:`security`.
-
-[XXX what does the second example means in addition to the first one?]
 
 
 What is `Error while publishing rest text ...` ?
@@ -269,6 +283,8 @@ instance configuration file such as: ::
 
 Any change applied to configuration file requires to restart your
 instance.
+
+You can find additional information in the section :ref:`LDAP`.
 
 I get NoSelectableObject exceptions, how do I debug selectors ?
 ---------------------------------------------------------------
