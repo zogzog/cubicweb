@@ -1,18 +1,21 @@
 Form construction
 ------------------
-CubicWeb provides usual form/field/widget/renderer abstraction to provde
-some generic building blocks which will greatly help you in building forms
-properly integrated with |cubicweb| (coherent display, error handling, etc...)
 
-A form basically only hold a set of fields, and is bound to a renderer that is
-responsible to layout them. Each field is bound to a widget that will be used
-to fill in value(s) for that field.
+CubicWeb provides usual form/field/widget/renderer abstraction to
+provde some generic building blocks which will greatly help you in
+building forms properly integrated with CubicWeb (coherent display,
+error handling, etc...).
+
+A form basically only holds a set of fields, and has te be bound to a
+renderer which is responsible to layout them. Each field is bound to a
+widget that will be used to fill in value(s) for that field (at form
+generation time) and 'decode' (fetch and give a proper Python type to)
+values sent back by the browser.
 
 The Field class and basic fields
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: cubicweb.web.formfields.Field
-
 
 Existing field types are:
 
@@ -28,7 +31,6 @@ Existing field types are:
 .. autoclass:: cubicweb.web.formfields.DateTimeField
 .. autoclass:: cubicweb.web.formfields.TimeField
 .. autoclass:: cubicweb.web.formfields.RelationField
-.. XXX still necessary?
 .. autoclass:: cubicweb.web.formfields.CompoundField
 
 
@@ -57,9 +59,7 @@ Existing widget types are:
 .. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
 .. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
 
-.. XXX StaticFileAutoCompletionWidget, RestrictedAutoCompletionWidget, AddComboBoxWidget, IntervalWidget, HorizontalLayoutWidget
-
-The following classes, which are not proper widget (they are not associated to
+Other classes in this module, which are not proper widget (they are not associated to
 field) but are used as form controls, may also be useful: Button, SubmitButton,
 ResetButton, ImgButton,
 
@@ -68,4 +68,10 @@ Of course you can not use any widget with any field...
 
 Renderers
 ~~~~~~~~~
-XXX feed me
+
+.. autoclass:: cubicweb.web.views.formrenderers.BaseFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.HTableFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityCompositeFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
+

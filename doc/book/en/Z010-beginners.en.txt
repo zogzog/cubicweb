@@ -5,7 +5,7 @@
 Quick Installation of a *CubicWeb* instance
 ===========================================
 
-.. include:: C010-setup.en.txt
+# .. include:: C010-setup.en.txt
 .. include:: Z012-create-instance.en.txt
 
 
