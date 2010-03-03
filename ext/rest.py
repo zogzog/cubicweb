@@ -25,7 +25,7 @@ from logging import getLogger
 from os.path import join
 
 from docutils import statemachine, nodes, utils, io
-from docutils.core import publish_string
+from docutils.core import Publisher
 from docutils.parsers.rst import Parser, states, directives
 from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
@@ -197,6 +197,15 @@ class CubicWebReSTParser(Parser):
         self.finish_parse()
 
 
+# XXX docutils keep a ref on context, can't find a correct way to remove it
+class CWReSTPublisher(Publisher):
+    def __init__(self, context, settings, **kwargs):
+        Publisher.__init__(self, **kwargs)
+        self.set_components('standalone', 'restructuredtext', 'pseudoxml')
+        self.process_programmatic_settings(None, settings, None)
+        self.settings.context = context
+
+
 def rest_publish(context, data):
     """publish a string formatted as ReStructured Text to HTML
 
@@ -219,7 +228,7 @@ def rest_publish(context, data):
         # remove unprintable characters unauthorized in xml
         data = data.translate(ESC_CAR_TABLE)
     settings = {'input_encoding': encoding, 'output_encoding': 'unicode',
-                'warning_stream': StringIO(), 'context': context,
+                'warning_stream': StringIO(),
                 # dunno what's the max, severe is 4, and we never want a crash
                 # (though try/except may be a better option...)
                 'halt_level': 10,
@@ -234,9 +243,17 @@ def rest_publish(context, data):
     else:
         base_url = None
     try:
-        return publish_string(writer=Writer(base_url=base_url),
-                              parser=CubicWebReSTParser(), source=data,
-                              settings_overrides=settings)
+        pub = CWReSTPublisher(context, settings,
+                              parser=CubicWebReSTParser(),
+                              writer=Writer(base_url=base_url),
+                              source_class=io.StringInput,
+                              destination_class=io.StringOutput)
+        pub.set_source(data)
+        pub.set_destination()
+        res = pub.publish(enable_exit_status=None)
+        # necessary for proper garbage collection, else a ref is kept somewhere in docutils...
+        del pub.settings.context
+        return res
     except Exception:
         LOGGER.exception('error while publishing ReST text')
         if not isinstance(data, unicode):
