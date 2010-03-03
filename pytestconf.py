@@ -21,7 +21,7 @@ class CustomPyTester(PyTester):
 
 def clean_repo_test_cls(cls):
     if 'repo' in cls.__dict__:
-        if cls.repo.__dict__: # empty dict when already shutted down
+        if cls.repo._shutting_down:
             cls.repo.shutdown()
         del cls.repo
     for clsattr in ('cnx', '_orig_cnx', 'config', '_config', 'vreg', 'schema'):
