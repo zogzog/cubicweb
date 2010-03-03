@@ -92,14 +92,15 @@ def winclude_directive(name, arguments, options, content, lineno,
     in `docutils.parsers.rst.directives.misc`
     """
     context = state.document.settings.context
+    cw = context._cw
     source = state_machine.input_lines.source(
         lineno - state_machine.input_offset - 1)
     #source_dir = os.path.dirname(os.path.abspath(source))
     fid = arguments[0]
-    for lang in chain((context._cw.lang, context.vreg.property_value('ui.language')),
-                      context.config.available_languages()):
+    for lang in chain((cw.lang, cw.vreg.property_value('ui.language')),
+                      cw.vreg.config.available_languages()):
         rid = '%s_%s.rst' % (fid, lang)
-        resourcedir = context.config.locate_doc_file(rid)
+        resourcedir = cw.vreg.config.locate_doc_file(rid)
         if resourcedir:
             break
     else:
