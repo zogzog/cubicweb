@@ -358,6 +358,7 @@ class ExecutionPlan(object):
         self.preprocess(rqlst, security=False)
         return rqlst
 
+
 class InsertPlan(ExecutionPlan):
     """an execution model specific to the INSERT rql query
     """

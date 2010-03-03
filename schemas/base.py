@@ -212,6 +212,8 @@ class CWCache(EntityType):
 
     Also, checkout the AppObject.get_cache() method.
     """
+    # XXX only handle by hooks, shouldn't be readable/editable at all through
+    # the ui and so no permissions should be granted, no?
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),

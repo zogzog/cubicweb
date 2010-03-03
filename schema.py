@@ -50,8 +50,9 @@ SCHEMA_TYPES = set((
     ))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
-                         'WorkflowTransition', 'BaseTransition',
-                         'SubWorkflowExitPoint'))
+                      'WorkflowTransition', 'BaseTransition',
+                      'SubWorkflowExitPoint'))
+
 INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri'))
 
 
