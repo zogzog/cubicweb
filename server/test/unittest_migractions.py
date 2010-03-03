@@ -14,6 +14,11 @@ from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
+migrschema = None
+def teardown_module(*args):
+    global migrschema
+    del migrschema
+    del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
 
