@@ -22,9 +22,8 @@ from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import add_types_restriction
+from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 
-READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 
 def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
@@ -376,39 +375,6 @@ class InsertPlan(ExecutionPlan):
         self._r_subj_index = {}
         self._r_obj_index = {}
         self._expanded_r_defs = {}
-
-    def relation_definitions(self, rqlst, to_build):
-        """add constant values to entity def, mark variables to be selected
-        """
-        to_select = {}
-        for relation in rqlst.main_relations:
-            lhs, rhs = relation.get_variable_parts()
-            rtype = relation.r_type
-            if rtype in READ_ONLY_RTYPES:
-                raise QueryError("can't assign to %s" % rtype)
-            try:
-                edef = to_build[str(lhs)]
-            except KeyError:
-                # lhs var is not to build, should be selected and added as an
-                # object relation
-                edef = to_build[str(rhs)]
-                to_select.setdefault(edef, []).append((rtype, lhs, 1))
-            else:
-                if isinstance(rhs, Constant) and not rhs.uid:
-                    # add constant values to entity def
-                    value = rhs.eval(self.args)
-                    eschema = edef.e_schema
-                    attrtype = eschema.subjrels[rtype].objects(eschema)[0]
-                    if attrtype == 'Password' and isinstance(value, unicode):
-                        value = value.encode('UTF8')
-                    edef[rtype] = value
-                elif to_build.has_key(str(rhs)):
-                    # create a relation between two newly created variables
-                    self.add_relation_def((edef, rtype, to_build[rhs.name]))
-                else:
-                    to_select.setdefault(edef, []).append( (rtype, rhs, 0) )
-        return to_select
-
 
     def add_entity_def(self, edef):
         """add an entity definition to build"""

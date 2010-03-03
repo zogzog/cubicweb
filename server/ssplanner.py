@@ -10,11 +10,71 @@ __docformat__ = "restructuredtext en"
 from copy import copy
 
 from rql.stmts import Union, Select
-from rql.nodes import Constant
+from rql.nodes import Constant, Relation
 
 from cubicweb import QueryError, typed_eid
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.rqlrewrite import add_types_restriction
+
+READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
+
+_CONSTANT = object()
+_FROM_SUBSTEP = object()
+
+def _extract_const_attributes(plan, rqlst, to_build):
+    """add constant values to entity def, mark variables to be selected
+    """
+    to_select = {}
+    for relation in rqlst.main_relations:
+        lhs, rhs = relation.get_variable_parts()
+        rtype = relation.r_type
+        if rtype in READ_ONLY_RTYPES:
+            raise QueryError("can't assign to %s" % rtype)
+        try:
+            edef = to_build[str(lhs)]
+        except KeyError:
+            # lhs var is not to build, should be selected and added as an
+            # object relation
+            edef = to_build[str(rhs)]
+            to_select.setdefault(edef, []).append((rtype, lhs, 1))
+        else:
+            if isinstance(rhs, Constant) and not rhs.uid:
+                # add constant values to entity def
+                value = rhs.eval(plan.args)
+                eschema = edef.e_schema
+                attrtype = eschema.subjrels[rtype].objects(eschema)[0]
+                if attrtype == 'Password' and isinstance(value, unicode):
+                    value = value.encode('UTF8')
+                edef[rtype] = value
+            elif to_build.has_key(str(rhs)):
+                # create a relation between two newly created variables
+                plan.add_relation_def((edef, rtype, to_build[rhs.name]))
+            else:
+                to_select.setdefault(edef, []).append( (rtype, rhs, 0) )
+    return to_select
+
+def _extract_eid_consts(plan, rqlst):
+    """return a dict mapping rqlst variable object to their eid if specified in
+    the syntax tree
+    """
+    session = plan.session
+    eschema = session.vreg.schema.eschema
+    if rqlst.where is None:
+        return {}
+    eidconsts = {}
+    neweids = session.transaction_data.get('neweids', ())
+    for rel in rqlst.where.get_nodes(Relation):
+        if rel.r_type == 'eid' and not rel.neged(strict=True):
+            lhs, rhs = rel.get_variable_parts()
+            if isinstance(rhs, Constant):
+                eid = typed_eid(rhs.eval(plan.args))
+                # check read permission here since it may not be done by
+                # the generated select substep if not emited (eg nothing
+                # to be selected)
+                if eid not in neweids:
+                    eschema(session.describe(eid)[0]).check_perm(session, 'read')
+                eidconsts[lhs.variable] = eid
+    return eidconsts
 
 
 class SSPlanner(object):
@@ -56,34 +116,38 @@ class SSPlanner(object):
             to_build[var.name] = etype_class(etype)(session)
             plan.add_entity_def(to_build[var.name])
         # add constant values to entity def, mark variables to be selected
-        to_select = plan.relation_definitions(rqlst, to_build)
+        to_select = _extract_const_attributes(plan, rqlst, to_build)
         # add necessary steps to add relations and update attributes
         step = InsertStep(plan) # insert each entity and its relations
-        step.children += self._compute_relation_steps(plan, rqlst.solutions,
-                                                      rqlst.where, to_select)
+        step.children += self._compute_relation_steps(plan, rqlst, to_select)
         return (step,)
 
-    def _compute_relation_steps(self, plan, solutions, restriction, to_select):
+    def _compute_relation_steps(self, plan, rqlst, to_select):
         """handle the selection of relations for an insert query"""
+        eidconsts = _extract_eid_consts(plan, rqlst)
         for edef, rdefs in to_select.items():
             # create a select rql st to fetch needed data
             select = Select()
             eschema = edef.e_schema
-            for i in range(len(rdefs)):
-                rtype, term, reverse = rdefs[i]
-                select.append_selected(term.copy(select))
+            for i, (rtype, term, reverse) in enumerate(rdefs):
+                if getattr(term, 'variable', None) in eidconsts:
+                    value = eidconsts[term.variable]
+                else:
+                    select.append_selected(term.copy(select))
+                    value = _FROM_SUBSTEP
                 if reverse:
-                    rdefs[i] = rtype, RelationsStep.REVERSE_RELATION
+                    rdefs[i] = (rtype, InsertRelationsStep.REVERSE_RELATION, value)
                 else:
                     rschema = eschema.subjrels[rtype]
                     if rschema.final or rschema.inlined:
-                        rdefs[i] = rtype, RelationsStep.FINAL
+                        rdefs[i] = (rtype, InsertRelationsStep.FINAL, value)
                     else:
-                        rdefs[i] = rtype, RelationsStep.RELATION
-            if restriction is not None:
-                select.set_where(restriction.copy(select))
-            step = RelationsStep(plan, edef, rdefs)
-            step.children += self._select_plan(plan, select, solutions)
+                        rdefs[i] = (rtype, InsertRelationsStep.RELATION, value)
+            step = InsertRelationsStep(plan, edef, rdefs)
+            if select.selection:
+                if rqlst.where is not None:
+                    select.set_where(rqlst.where.copy(select))
+                step.children += self._select_plan(plan, select, rqlst.solutions)
             yield step
 
     def build_delete_plan(self, plan, rqlst):
@@ -127,37 +191,62 @@ class SSPlanner(object):
 
     def build_set_plan(self, plan, rqlst):
         """get an execution plan from an SET RQL query"""
-        select = Select()
-        # extract variables to add to the selection
-        selected_index = {}
-        index = 0
-        relations, attrrelations = [], []
         getrschema = self.schema.rschema
-        for relation in rqlst.main_relations:
+        select = Select()   # potential substep query
+        selectedidx = {}    # local state
+        attributes = set()  # edited attributes
+        updatedefs = []     # definition of update attributes/relations
+        selidx = residx = 0 # substep selection / resulting rset indexes
+        # search for eid const in the WHERE clause
+        eidconsts = _extract_eid_consts(plan, rqlst)
+        # build `updatedefs` describing things to update and add necessary
+        # variables to the substep selection
+        for i, relation in enumerate(rqlst.main_relations):
             if relation.r_type in VIRTUAL_RTYPES:
                 raise QueryError('can not assign to %r relation'
                                  % relation.r_type)
             lhs, rhs = relation.get_variable_parts()
-            if not lhs.as_string('utf-8') in selected_index:
-                select.append_selected(lhs.copy(select))
-                selected_index[lhs.as_string('utf-8')] = index
-                index += 1
-            if not rhs.as_string('utf-8') in selected_index:
-                select.append_selected(rhs.copy(select))
-                selected_index[rhs.as_string('utf-8')] = index
-                index += 1
-            rschema = getrschema(relation.r_type)
-            if rschema.final or rschema.inlined:
-                attrrelations.append(relation)
+            lhskey = lhs.as_string('utf-8')
+            if not lhskey in selectedidx:
+                if lhs.variable in eidconsts:
+                    eid = eidconsts[lhs.variable]
+                    lhsinfo = (_CONSTANT, eid, residx)
+                else:
+                    select.append_selected(lhs.copy(select))
+                    lhsinfo = (_FROM_SUBSTEP, selidx, residx)
+                    selidx += 1
+                residx += 1
+                selectedidx[lhskey] = lhsinfo
             else:
-                relations.append(relation)
-        # add step necessary to fetch all selected variables values
-        if rqlst.where is not None:
-            select.set_where(rqlst.where.copy(select))
-        # set distinct to avoid potential duplicate key error
-        select.distinct = True
-        step = UpdateStep(plan, attrrelations, relations, selected_index)
-        step.children += self._select_plan(plan, select, rqlst.solutions)
+                lhsinfo = selectedidx[lhskey][:-1] + (None,)
+            rhskey = rhs.as_string('utf-8')
+            if not rhskey in selectedidx:
+                if isinstance(rhs, Constant):
+                    rhsinfo = (_CONSTANT, rhs.eval(plan.args), residx)
+                elif getattr(rhs, 'variable', None) in eidconsts:
+                    eid = eidconsts[rhs.variable]
+                    rhsinfo = (_CONSTANT, eid, residx)
+                else:
+                    select.append_selected(rhs.copy(select))
+                    rhsinfo = (_FROM_SUBSTEP, selidx, residx)
+                    selidx += 1
+                residx += 1
+                selectedidx[rhskey] = rhsinfo
+            else:
+                rhsinfo = selectedidx[rhskey][:-1] + (None,)
+            rschema = getrschema(relation.r_type)
+            updatedefs.append( (lhsinfo, rhsinfo, rschema) )
+            if rschema.final or rschema.inlined:
+                attributes.add(relation.r_type)
+        # the update step
+        step = UpdateStep(plan, updatedefs, attributes)
+        # when necessary add substep to fetch yet unknown values
+        if select.selection:
+            if rqlst.where is not None:
+                select.set_where(rqlst.where.copy(select))
+            # set distinct to avoid potential duplicate key error
+            select.distinct = True
+            step.children += self._select_plan(plan, select, rqlst.solutions)
         return (step,)
 
     # internal methods ########################################################
@@ -308,7 +397,7 @@ class OneFetchStep(LimitOffsetMixIn, Step):
 
 # UPDATE/INSERT/DELETE steps ##################################################
 
-class RelationsStep(Step):
+class InsertRelationsStep(Step):
     """step consisting in adding attributes/relations to entity defs from a
     previous FetchStep
 
@@ -334,25 +423,30 @@ class RelationsStep(Step):
         """execute this step"""
         base_edef = self.edef
         edefs = []
-        result = self.execute_child()
+        if self.children:
+            result = self.execute_child()
+        else:
+            result = [[]]
         for row in result:
             # get a new entity definition for this row
             edef = copy(base_edef)
             # complete this entity def using row values
-            for i in range(len(self.rdefs)):
-                rtype, rorder = self.rdefs[i]
-                if rorder == RelationsStep.FINAL:
-                    edef[rtype] = row[i]
-                elif rorder == RelationsStep.RELATION:
-                    self.plan.add_relation_def( (edef, rtype, row[i]) )
-                    edef.querier_pending_relations[(rtype, 'subject')] = row[i]
+            index = 0
+            for rtype, rorder, value in self.rdefs:
+                if value is _FROM_SUBSTEP:
+                    value = row[index]
+                    index += 1
+                if rorder == InsertRelationsStep.FINAL:
+                    edef[rtype] = value
+                elif rorder == InsertRelationsStep.RELATION:
+                    self.plan.add_relation_def( (edef, rtype, value) )
+                    edef.querier_pending_relations[(rtype, 'subject')] = value
                 else:
-                    self.plan.add_relation_def( (row[i], rtype, edef) )
-                    edef.querier_pending_relations[(rtype, 'object')] = row[i]
+                    self.plan.add_relation_def( (value, rtype, edef) )
+                    edef.querier_pending_relations[(rtype, 'object')] = value
             edefs.append(edef)
         self.plan.substitute_entity_def(base_edef, edefs)
         return result
-
 
 class InsertStep(Step):
     """step consisting in inserting new entities / relations"""
@@ -360,7 +454,7 @@ class InsertStep(Step):
     def execute(self):
         """execute this step"""
         for step in self.children:
-            assert isinstance(step, RelationsStep)
+            assert isinstance(step, InsertRelationsStep)
             step.plan = self.plan
             step.execute()
         # insert entities first
@@ -408,40 +502,46 @@ class UpdateStep(Step):
     definitions and from results fetched in previous step
     """
 
-    def __init__(self, plan, attribute_relations, relations, selected_index):
+    def __init__(self, plan, updatedefs, attributes):
         Step.__init__(self, plan)
-        self.attribute_relations = attribute_relations
-        self.relations = relations
-        self.selected_index = selected_index
+        self.updatedefs = updatedefs
+        self.attributes = attributes
 
     def execute(self):
         """execute this step"""
-        plan = self.plan
         session = self.plan.session
         repo = session.repo
         edefs = {}
         # insert relations
-        attributes = set([relation.r_type for relation in self.attribute_relations])
-        result = self.execute_child()
-        for row in result:
-            for relation in self.attribute_relations:
-                lhs, rhs = relation.get_variable_parts()
-                eid = typed_eid(row[self.selected_index[str(lhs)]])
-                try:
-                    edef = edefs[eid]
-                except KeyError:
-                    edefs[eid] = edef = session.entity_from_eid(eid)
-                if isinstance(rhs, Constant):
-                    # add constant values to entity def
-                    value = rhs.eval(plan.args)
-                    edef[relation.r_type] = value
+        if self.children:
+            result = self.execute_child()
+        else:
+            result = [[]]
+        for i, row in enumerate(result):
+            newrow = []
+            for (lhsinfo, rhsinfo, rschema) in self.updatedefs:
+                lhsval = _handle_relterm(lhsinfo, row, newrow)
+                rhsval = _handle_relterm(rhsinfo, row, newrow)
+                if rschema.final or rschema.inlined:
+                    eid = typed_eid(lhsval)
+                    try:
+                        edef = edefs[eid]
+                    except KeyError:
+                        edefs[eid] = edef = session.entity_from_eid(eid)
+                    edef[str(rschema)] = rhsval
                 else:
-                    edef[relation.r_type] = row[self.selected_index[str(rhs)]]
-            for relation in self.relations:
-                subj = row[self.selected_index[str(relation.children[0])]]
-                obj = row[self.selected_index[str(relation.children[1])]]
-                repo.glob_add_relation(session, subj, relation.r_type, obj)
+                    repo.glob_add_relation(session, lhsval, str(rschema), rhsval)
+            result[i] = newrow
         # update entities
         for eid, edef in edefs.iteritems():
-            repo.glob_update_entity(session, edef, attributes)
+            repo.glob_update_entity(session, edef, self.attributes)
         return result
+
+def _handle_relterm(info, row, newrow):
+    if info[0] is _CONSTANT:
+        val = info[1]
+    else: # _FROM_SUBSTEP
+        val = row[info[1]]
+    if info[-1] is not None:
+        newrow.append(val)
+    return val
