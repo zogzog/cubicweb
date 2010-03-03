@@ -862,6 +862,14 @@ class QuerierTC(BaseQuerierTC):
         self.assert_(rset.rows)
         self.assertEquals(rset.description, [('Personne', 'Societe',)])
 
+    def test_insert_5bis(self):
+        peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        self.execute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X eid %(x)s",
+                     {'x': peid}, 'x')
+        rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto", X travaille Y')
+        self.assert_(rset.rows)
+        self.assertEquals(rset.description, [('Personne', 'Societe',)])
+
     def test_insert_6(self):
         self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto', X travaille Y")
         rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto", X travaille Y')
