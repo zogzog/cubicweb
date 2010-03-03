@@ -175,6 +175,7 @@ class BaseQuerierTC(TestCase):
         self.pool = self.session.set_pool()
         self.maxeid = self.get_max_eid()
         do_monkey_patch()
+        self._dumb_sessions = []
 
     def get_max_eid(self):
         return self.session.unsafe_execute('Any MAX(X)')[0][0]
@@ -186,6 +187,10 @@ class BaseQuerierTC(TestCase):
         self.session.rollback()
         self.cleanup()
         self.commit()
+        # properly close dumb sessions
+        for session in self._dumb_sessions:
+            session.rollback()
+            session.close()
         self.repo._free_pool(self.pool)
         assert self.session.user.eid != -1
 
@@ -223,6 +228,8 @@ class BaseQuerierTC(TestCase):
         u._groups = set(groups)
         s = Session(u, self.repo)
         s._threaddata.pool = self.pool
+        # register session to ensure it gets closed
+        self._dumb_sessions.append(s)
         return s
 
     def execute(self, rql, args=None, eid_key=None, build_descr=True):
@@ -248,6 +255,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
         do_monkey_patch()
+        self._dumb_sessions = [] # by hi-jacked parent setup
 
     def add_source(self, sourcecls, uri):
         self.sources.append(sourcecls(self.repo, self.o.schema,
@@ -262,6 +270,9 @@ class BasePlannerTC(BaseQuerierTC):
             del self.repo.sources_by_uri[source.uri]
             self.newsources -= 1
         undo_monkey_patch()
+        for session in self._dumb_sessions:
+            session._threaddata.pool = None
+            session.close()
 
     def _prepare_plan(self, rql, kwargs=None):
         rqlst = self.o.parse(rql, annotate=True)
