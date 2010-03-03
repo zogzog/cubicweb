@@ -25,10 +25,12 @@ import shutil
 import os.path as osp
 from datetime import datetime
 from glob import glob
+from copy import copy
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
+from logilab.common.testlib import mock_object
 
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
@@ -283,6 +285,11 @@ class ServerMigrationHelper(MigrationHelper):
         """cached group mapping"""
         return ss.group_mapping(self._cw)
 
+    @cached
+    def cstrtype_mapping(self):
+        """cached constraint types mapping"""
+        return ss.cstrtype_mapping(self._cw)
+
     def exec_event_script(self, event, cubepath=None, funcname=None,
                           *args, **kwargs):
         if cubepath:
@@ -400,13 +407,16 @@ class ServerMigrationHelper(MigrationHelper):
             return
         self._synchronized.add(rtype)
         rschema = self.fs_schema.rschema(rtype)
+        reporschema = self.repo.schema.rschema(rtype)
         if syncprops:
-            self.rqlexecall(ss.updaterschema2rql(rschema),
+            assert reporschema.eid, reporschema
+            self.rqlexecall(ss.updaterschema2rql(rschema, reporschema.eid),
                             ask_confirm=self.verbosity>=2)
         if syncrdefs:
-            reporschema = self.repo.schema.rschema(rtype)
             for subj, obj in rschema.rdefs:
                 if (subj, obj) not in reporschema.rdefs:
+                    continue
+                if rschema in VIRTUAL_RTYPES:
                     continue
                 self._synchronize_rdef_schema(subj, rschema, obj,
                                               syncprops=syncprops,
@@ -440,9 +450,11 @@ class ServerMigrationHelper(MigrationHelper):
                          'Y is CWEType, Y name %(y)s',
                          {'x': str(repoeschema), 'y': str(espschema)},
                          ask_confirm=False)
-        self.rqlexecall(ss.updateeschema2rql(eschema),
+        self.rqlexecall(ss.updateeschema2rql(eschema, repoeschema.eid),
                         ask_confirm=self.verbosity >= 2)
         for rschema, targettypes, role in eschema.relation_definitions(True):
+            if rschema in VIRTUAL_RTYPES:
+                continue
             if role == 'subject':
                 if not rschema in repoeschema.subject_relations():
                     continue
@@ -480,11 +492,11 @@ class ServerMigrationHelper(MigrationHelper):
         confirm = self.verbosity >= 2
         if syncprops:
             # properties
-            self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
-                            ask_confirm=confirm)
-            # constraints
             rdef = rschema.rdef(subjtype, objtype)
             repordef = reporschema.rdef(subjtype, objtype)
+            self.rqlexecall(ss.updaterdef2rql(rdef, repordef.eid),
+                            ask_confirm=confirm)
+            # constraints
             newconstraints = list(rdef.constraints)
             # 1. remove old constraints and update constraints of the same type
             # NOTE: don't use rschema.constraint_by_type because it may be
@@ -510,10 +522,10 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
                                  values, 'x', ask_confirm=confirm)
             # 2. add new constraints
-            for newcstr in newconstraints:
-                self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
-                                                  newcstr),
-                                ask_confirm=confirm)
+            cstrtype_map = self.cstrtype_mapping()
+            self.rqlexecall(ss.constraints2rql(cstrtype_map, newconstraints,
+                                               repordef.eid),
+                            ask_confirm=confirm)
         if syncperms and not rschema in VIRTUAL_RTYPES:
             self._synchronize_permissions(rdef, repordef.eid)
 
@@ -674,18 +686,23 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        if etype in instschema:
-            # XXX (syt) plz explain: if we're adding an entity type, it should
-            # not be there...
-            eschema = instschema[etype]
-            if eschema.final:
-                instschema.del_entity_type(etype)
-        else:
-            eschema = self.fs_schema.eschema(etype)
+        assert not etype in instschema
+        #     # XXX (syt) plz explain: if we're adding an entity type, it should
+        #     # not be there...
+        #     eschema = instschema[etype]
+        #     if eschema.final:
+        #         instschema.del_entity_type(etype)
+        # else:
+        eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
+        cstrtypemap = self.cstrtype_mapping()
         # register the entity into CWEType
-        self.rqlexecall(ss.eschema2rql(eschema, groupmap), ask_confirm=confirm)
+        try:
+            execute = self._cw.unsafe_execute
+        except AttributeError:
+            execute = self._cw.execute
+        ss.execschemarql(execute, eschema, ss.eschema2rql(eschema, groupmap))
         # add specializes relation if needed
         self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
         # register entity's attributes
@@ -698,9 +715,8 @@ class ServerMigrationHelper(MigrationHelper):
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
             # register relation definition
-            self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type,
-                                        groupmap=groupmap),
-                            ask_confirm=confirm)
+            rdef = self._get_rdef(rschema, eschema, eschema.destination(rschema))
+            ss.execschemarql(execute, rdef, ss.rdef2rql(rdef, cstrtypemap, groupmap),)
         # take care to newly introduced base class
         # XXX some part of this should probably be under the "if auto" block
         for spschema in eschema.specialized_by(recursive=False):
@@ -760,10 +776,12 @@ class ServerMigrationHelper(MigrationHelper):
                     # remember this two avoid adding twice non symmetric relation
                     # such as "Emailthread forked_from Emailthread"
                     added.append((etype, rschema.type, targettype))
-                    self.rqlexecall(ss.rdef2rql(rschema, etype, targettype,
-                                                groupmap=groupmap),
-                                    ask_confirm=confirm)
+                    rdef = self._get_rdef(rschema, eschema, targetschema)
+                    ss.execschemarql(execute, rdef,
+                                     ss.rdef2rql(rdef, cstrtypemap, groupmap))
             for rschema in eschema.object_relations():
+                if rschema.type in META_RTYPES:
+                    continue
                 rtypeadded = rschema.type in instschema or rschema.type in added
                 for targetschema in rschema.subjects(etype):
                     # ignore relations where the targeted type is not in the
@@ -781,9 +799,9 @@ class ServerMigrationHelper(MigrationHelper):
                     elif (targettype, rschema.type, etype) in added:
                         continue
                     # register relation definition
-                    self.rqlexecall(ss.rdef2rql(rschema, targettype, etype,
-                                                groupmap=groupmap),
-                                    ask_confirm=confirm)
+                    rdef = self._get_rdef(rschema, targetschema, eschema)
+                    ss.execschemarql(execute, rdef,
+                                     ss.rdef2rql(rdef, cstrtypemap, groupmap))
         if commit:
             self.commit()
 
@@ -822,15 +840,26 @@ class ServerMigrationHelper(MigrationHelper):
         committing depends on the `commit` argument value).
 
         """
+        reposchema = self.repo.schema
         rschema = self.fs_schema.rschema(rtype)
+        try:
+            execute = self._cw.unsafe_execute
+        except AttributeError:
+            execute = self._cw.execute
         # register the relation into CWRType and insert necessary relation
         # definitions
-        self.rqlexecall(ss.rschema2rql(rschema, addrdef=False),
-                        ask_confirm=self.verbosity>=2)
+        ss.execschemarql(execute, rschema, ss.rschema2rql(rschema, addrdef=False))
         if addrdef:
             self.commit()
-            self.rqlexecall(ss.rdef2rql(rschema, groupmap=self.group_mapping()),
-                            ask_confirm=self.verbosity>=2)
+            gmap = self.group_mapping()
+            cmap = self.cstrtype_mapping()
+            for rdef in rschema.rdefs.itervalues():
+                if not (reposchema.has_entity(rdef.subject)
+                        and reposchema.has_entity(rdef.object)):
+                    continue
+                self._set_rdef_eid(rdef)
+                ss.execschemarql(execute, rdef,
+                                 ss.rdef2rql(rdef, cmap, gmap))
             if rtype in META_RTYPES:
                 # if the relation is in META_RTYPES, ensure we're adding it for
                 # all entity types *in the persistent schema*, not only those in
@@ -839,15 +868,14 @@ class ServerMigrationHelper(MigrationHelper):
                     if not etype in self.fs_schema:
                         # get sample object type and rproperties
                         objtypes = rschema.objects()
-                        assert len(objtypes) == 1
+                        assert len(objtypes) == 1, objtypes
                         objtype = objtypes[0]
-                        props = rschema.rproperties(
-                            rschema.subjects(objtype)[0], objtype)
-                        assert props
-                        self.rqlexecall(ss.rdef2rql(rschema, etype, objtype, props,
-                                                    groupmap=self.group_mapping()),
-                                        ask_confirm=self.verbosity>=2)
-
+                        rdef = copy(rschema.rdef(rschema.subjects(objtype)[0], objtype))
+                        rdef.subject = etype
+                        rdef.rtype = self.repo.schema.rschema(rschema)
+                        rdef.object = self.repo.schema.rschema(objtype)
+                        ss.execschemarql(execute, rdef,
+                                         ss.rdef2rql(rdef, cmap, gmap))
         if commit:
             self.commit()
 
@@ -877,11 +905,27 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
-        self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype,
-                                    groupmap=self.group_mapping()),
-                        ask_confirm=self.verbosity>=2)
+        try:
+            execute = self._cw.unsafe_execute
+        except AttributeError:
+            execute = self._cw.execute
+        rdef = self._get_rdef(rschema, subjtype, objtype)
+        ss.execschemarql(execute, rdef,
+                         ss.rdef2rql(rdef, self.cstrtype_mapping(),
+                                     self.group_mapping()))
         if commit:
             self.commit()
+
+    def _get_rdef(self, rschema, subjtype, objtype):
+        return self._set_rdef_eid(rschema.rdefs[(subjtype, objtype)])
+
+    def _set_rdef_eid(self, rdef):
+        for attr in ('rtype', 'subject', 'object'):
+            schemaobj = getattr(rdef, attr)
+            if getattr(schemaobj, 'eid', None) is None:
+                schemaobj.eid =  self.repo.schema[schemaobj].eid
+                assert schemaobj.eid is not None
+        return rdef
 
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
         """unregister an existing relation definition"""

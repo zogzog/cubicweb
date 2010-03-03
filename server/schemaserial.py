@@ -50,6 +50,10 @@ def group_mapping(cursor, interactive=True):
                     continue
     return res
 
+def cstrtype_mapping(cursor):
+    """cached constraint types mapping"""
+    return dict(cursor.execute('Any T, X WHERE X is CWConstraintType, X name T'))
+
 # schema / perms deserialization ##############################################
 def deserialize_schema(schema, session):
     """return a schema according to information stored in an rql database
@@ -221,6 +225,7 @@ def serialize_schema(cursor, schema):
         pb = ProgressBar(pb_size, title=_title)
     else:
         pb = None
+    groupmap = group_mapping(cursor, interactive=False)
     # serialize all entity types, assuring CWEType is serialized first
     eschemas.remove(schema.eschema('CWEType'))
     eschemas.insert(0, schema.eschema('CWEType'))
@@ -229,9 +234,11 @@ def serialize_schema(cursor, schema):
         if pb is not None:
             pb.update()
     # serialize constraint types
+    cstrtypemap = {}
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        execute(rql, {'ct': unicode(cstrtype)}, build_descr=False)
+        cstrtypemap[cstrtype] = execute(rql, {'ct': unicode(cstrtype)},
+                                        build_descr=False)[0][0]
         if pb is not None:
             pb.update()
     # serialize relations
@@ -241,8 +248,15 @@ def serialize_schema(cursor, schema):
             if pb is not None:
                 pb.update()
             continue
-        for rql, kwargs in erschema2rql(schema[ertype], groupmap):
-            execute(rql, kwargs, build_descr=False)
+        execschemarql(execute, rschema, rschema2rql(rschema, addrdef=False))
+        if rschema.symmetric:
+            rdefs = [rdef for k, rdef in rschema.rdefs.iteritems()
+                     if (rdef.subject, rdef.object) == k]
+        else:
+            rdefs = rschema.rdefs.itervalues()
+        for rdef in rdefs:
+            execschemarql(execute, rdef,
+                          rdef2rql(rdef, cstrtypemap, groupmap))
         if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
@@ -252,6 +266,55 @@ def serialize_schema(cursor, schema):
     if not quiet:
         print
 
+
+# high level serialization functions
+
+def execschemarql(execute, schema, rqls):
+    for rql, kwargs in rqls:
+        kwargs['x'] = schema.eid
+        rset = execute(rql, kwargs, build_descr=False)
+        if schema.eid is None:
+            schema.eid = rset[0][0]
+        else:
+            assert rset
+
+def erschema2rql(erschema, groupmap):
+    if isinstance(erschema, schemamod.EntitySchema):
+        return eschema2rql(erschema, groupmap=groupmap)
+    return rschema2rql(erschema, groupmap=groupmap)
+
+def specialize2rql(schema):
+    for eschema in schema.entities():
+        if eschema.final:
+            continue
+        for rql, kwargs in eschemaspecialize2rql(eschema):
+            yield rql, kwargs
+
+# etype serialization
+
+def eschema2rql(eschema, groupmap=None):
+    """return a list of rql insert statements to enter an entity schema
+    in the database as an CWEType entity
+    """
+    relations, values = eschema_relations_values(eschema)
+    # NOTE: 'specializes' relation can't be inserted here since there's no
+    # way to make sure the parent type is inserted before the child type
+    yield 'INSERT CWEType X: %s' % ','.join(relations) , values
+    # entity permissions
+    if groupmap is not None:
+        for rql, args in _erperms2rql(eschema, groupmap):
+            yield rql, args
+
+def eschema_relations_values(eschema):
+    values = _ervalues(eschema)
+    relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
+    return relations, values
+
+def eschemaspecialize2rql(eschema):
+    specialized_type = eschema.specializes()
+    if specialized_type:
+        values = {'x': eschema.eid, 'et': specialized_type.eid}
+        yield 'SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s', values
 
 def _ervalues(erschema):
     try:
@@ -268,10 +331,23 @@ def _ervalues(erschema):
         'description': desc,
         }
 
-def eschema_relations_values(eschema):
-    values = _ervalues(eschema)
-    relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
-    return relations, values
+# rtype serialization
+
+def rschema2rql(rschema, cstrtypemap=None, addrdef=True, groupmap=None):
+    """return a list of rql insert statements to enter a relation schema
+    in the database as an CWRType entity
+    """
+    if rschema.type == 'has_text':
+        return
+    relations, values = rschema_relations_values(rschema)
+    yield 'INSERT CWRType X: %s' % ','.join(relations), values
+    if addrdef:
+        assert cstrtypemap
+        # sort for testing purpose
+        for rdef in sorted(rschema.rdefs.itervalues(),
+                           key=lambda x: (x.subject, x.object)):
+            for rql, values in rdef2rql(rdef, cstrtypemap, groupmap):
+                yield rql, values
 
 def rschema_relations_values(rschema):
     values = _ervalues(rschema)
@@ -285,169 +361,58 @@ def rschema_relations_values(rschema):
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-def _rdef_values(objtype, props):
-    amap = {'order': 'ordernum'}
+# rdef serialization
+
+def rdef2rql(rdef, cstrtypemap, groupmap=None):
+    # don't serialize infered relations
+    if rdef.infered:
+        return
+    relations, values = _rdef_values(rdef)
+    relations.append('X relation_type ER,X from_entity SE,X to_entity OE')
+    values.update({'se': rdef.subject.eid, 'rt': rdef.rtype.eid, 'oe': rdef.object.eid})
+    if rdef.final:
+        etype = 'CWAttribute'
+    else:
+        etype = 'CWRelation'
+    yield 'INSERT %s X: %s WHERE SE eid %%(se)s,ER eid %%(rt)s,OE eid %%(oe)s' % (
+        etype, ','.join(relations), ), values
+    for rql, values in constraints2rql(cstrtypemap, rdef.constraints):
+        yield rql, values
+    # no groupmap means "no security insertion"
+    if groupmap:
+        for rql, args in _erperms2rql(rdef, groupmap):
+            yield rql, args
+
+def _rdef_values(rdef):
+    amap = {'order': 'ordernum', 'default': 'defaultval'}
     values = {}
-    for prop, default in schemamod.RelationDefinitionSchema.rproperty_defs(objtype).iteritems():
+    for prop, default in rdef.rproperty_defs(rdef.object).iteritems():
         if prop in ('eid', 'constraints', 'uid', 'infered', 'permissions'):
             continue
-        value = props.get(prop, default)
+        value = getattr(rdef, prop)
+        # XXX type cast really necessary?
         if prop in ('indexed', 'fulltextindexed', 'internationalizable'):
             value = bool(value)
         elif prop == 'ordernum':
             value = int(value)
         elif isinstance(value, str):
             value = unicode(value)
+        if value is not None and prop == 'default':
+            if value is False:
+                value = u''
+            if not isinstance(value, unicode):
+                value = unicode(value)
         values[amap.get(prop, prop)] = value
-    return values
-
-def nfrdef_relations_values(objtype, props):
-    values = _rdef_values(objtype, props)
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-def frdef_relations_values(objtype, props):
-    values = _rdef_values(objtype, props)
-    default = values['default']
-    del values['default']
-    if default is not None:
-        if default is False:
-            default = u''
-        elif not isinstance(default, unicode):
-            default = unicode(default)
-    values['defaultval'] = default
-    relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
-    return relations, values
-
-
-def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None,
-               groupmap=None):
-    if subjtype is None:
-        assert objtype is None
-        assert props is None
-        targets = sorted(rschema.rdefs)
-    else:
-        assert not objtype is None
-        targets = [(subjtype, objtype)]
-    # relation schema
-    if rschema.final:
-        etype = 'CWAttribute'
-    else:
-        etype = 'CWRelation'
-    for subjtype, objtype in targets:
-        if props is None:
-            _props = rschema.rdef(subjtype, objtype)
-        else:
-            _props = props
-        # don't serialize infered relations
-        if _props.get('infered'):
-            continue
-        gen = genmap[rschema.final]
-        for rql, values in gen(rschema, subjtype, objtype, _props):
-            yield rql, values
-        # no groupmap means "no security insertion"
-        if groupmap:
-            for rql, args in _erperms2rql(_props, groupmap):
-                args['st'] = str(subjtype)
-                args['rt'] = str(rschema)
-                args['ot'] = str(objtype)
-                yield rql + 'X is %s, X from_entity ST, X to_entity OT, '\
-                      'X relation_type RT, RT name %%(rt)s, ST name %%(st)s, '\
-                      'OT name %%(ot)s' % etype, args
-
-
-def schema2rql(schema, skip=None, allow=None):
-    """return a list of rql insert statements to enter the schema in the
-    database as CWRType and CWEType entities
-    """
-    assert not (skip is not None and allow is not None), \
-           'can\'t use both skip and allow'
-    all = schema.entities() + schema.relations()
-    if skip is not None:
-        return chain(*[erschema2rql(schema[t]) for t in all if not t in skip])
-    elif allow is not None:
-        return chain(*[erschema2rql(schema[t]) for t in all if t in allow])
-    return chain(*[erschema2rql(schema[t]) for t in all])
-
-def erschema2rql(erschema, groupmap):
-    if isinstance(erschema, schemamod.EntitySchema):
-        return eschema2rql(erschema, groupmap=groupmap)
-    return rschema2rql(erschema, groupmap=groupmap)
-
-def eschema2rql(eschema, groupmap=None):
-    """return a list of rql insert statements to enter an entity schema
-    in the database as an CWEType entity
-    """
-    relations, values = eschema_relations_values(eschema)
-    # NOTE: 'specializes' relation can't be inserted here since there's no
-    # way to make sure the parent type is inserted before the child type
-    yield 'INSERT CWEType X: %s' % ','.join(relations) , values
-    # entity permissions
-    if groupmap is not None:
-        for rql, args in _erperms2rql(eschema, groupmap):
-            args['name'] = str(eschema)
-            yield rql + 'X is CWEType, X name %(name)s', args
-
-def specialize2rql(schema):
-    for eschema in schema.entities():
-        for rql, kwargs in eschemaspecialize2rql(eschema):
-            yield rql, kwargs
-
-def eschemaspecialize2rql(eschema):
-    specialized_type = eschema.specializes()
-    if specialized_type:
-        values = {'x': eschema.type, 'et': specialized_type.type}
-        yield 'SET X specializes ET WHERE X name %(x)s, ET name %(et)s', values
-
-def rschema2rql(rschema, addrdef=True, groupmap=None):
-    """return a list of rql insert statements to enter a relation schema
-    in the database as an CWRType entity
-    """
-    if rschema.type == 'has_text':
-        return
-    relations, values = rschema_relations_values(rschema)
-    yield 'INSERT CWRType X: %s' % ','.join(relations), values
-    if addrdef:
-        for rql, values in rdef2rql(rschema, groupmap=groupmap):
-            yield rql, values
-
-def rdef2rql(rschema, subjtype=None, objtype=None, props=None, groupmap=None):
-    genmap = {True: frdef2rql, False: nfrdef2rql}
-    return __rdef2rql(genmap, rschema, subjtype, objtype, props, groupmap)
-
-
-_LOCATE_RDEF_RQL0 = 'X relation_type ER,X from_entity SE,X to_entity OE'
-_LOCATE_RDEF_RQL1 = 'SE name %(se)s,ER name %(rt)s,OE name %(oe)s'
-
-def frdef2rql(rschema, subjtype, objtype, props):
-    relations, values = frdef_relations_values(objtype, props)
-    relations.append(_LOCATE_RDEF_RQL0)
-    values.update({'se': str(subjtype), 'rt': str(rschema), 'oe': str(objtype)})
-    yield 'INSERT CWAttribute X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
-    for rql, values in rdefrelations2rql(rschema, subjtype, objtype, props):
-        yield rql + ', EDEF is CWAttribute', values
-
-def nfrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = nfrdef_relations_values(objtype, props)
-    relations.append(_LOCATE_RDEF_RQL0)
-    values.update({'se': str(subjtype), 'rt': str(rschema), 'oe': str(objtype)})
-    yield 'INSERT CWRelation X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
-    for rql, values in rdefrelations2rql(rschema, subjtype, objtype, props):
-        yield rql + ', EDEF is CWRelation', values
-
-def rdefrelations2rql(rschema, subjtype, objtype, props):
-    iterators = []
-    for constraint in props.constraints:
-        iterators.append(constraint2rql(rschema, subjtype, objtype, constraint))
-    return chain(*iterators)
-
-def constraint2rql(rschema, subjtype, objtype, constraint):
-    values = {'ctname': unicode(constraint.type()),
-              'value': unicode(constraint.serialize()),
-              'rt': str(rschema), 'se': str(subjtype), 'oe': str(objtype)}
-    yield 'INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE \
-CT name %(ctname)s, EDEF relation_type ER, EDEF from_entity SE, EDEF to_entity OE, \
-ER name %(rt)s, SE name %(se)s, OE name %(oe)s', values
+def constraints2rql(cstrtypemap, constraints, rdefeid=None):
+    for constraint in constraints:
+        values = {'ct': cstrtypemap[constraint.type()],
+                  'value': unicode(constraint.serialize()),
+                  'x': rdefeid} # when not specified, will have to be set by the caller
+        yield 'INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE \
+CT eid %(ct)s, EDEF eid %(x)s', values
 
 
 def _erperms2rql(erschema, groupmap):
@@ -466,7 +431,7 @@ def _erperms2rql(erschema, groupmap):
             if isinstance(group_or_rqlexpr, basestring):
                 # group
                 try:
-                    yield ('SET X %s_permission Y WHERE Y eid %%(g)s, ' % action,
+                    yield ('SET X %s_permission Y WHERE Y eid %%(g)s, X eid %%(x)s' % action,
                            {'g': groupmap[group_or_rqlexpr]})
                 except KeyError:
                     continue
@@ -474,36 +439,24 @@ def _erperms2rql(erschema, groupmap):
                 # rqlexpr
                 rqlexpr = group_or_rqlexpr
                 yield ('INSERT RQLExpression E: E expression %%(e)s, E exprtype %%(t)s, '
-                       'E mainvars %%(v)s, X %s_permission E WHERE ' % action,
+                       'E mainvars %%(v)s, X %s_permission E WHERE X eid %%(x)s' % action,
                        {'e': unicode(rqlexpr.expression),
                         'v': unicode(rqlexpr.mainvars),
                         't': unicode(rqlexpr.__class__.__name__)})
 
+# update functions
 
-def updateeschema2rql(eschema):
+def updateeschema2rql(eschema, eid):
     relations, values = eschema_relations_values(eschema)
-    values['et'] = eschema.type
-    yield 'SET %s WHERE X is CWEType, X name %%(et)s' % ','.join(relations), values
+    values['x'] = eid
+    yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
 
-def updaterschema2rql(rschema):
+def updaterschema2rql(rschema, eid):
     relations, values = rschema_relations_values(rschema)
-    values['rt'] = rschema.type
-    yield 'SET %s WHERE X is CWRType, X name %%(rt)s' % ','.join(relations), values
+    values['x'] = eid
+    yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
 
-def updaterdef2rql(rschema, subjtype=None, objtype=None, props=None):
-    genmap = {True: updatefrdef2rql, False: updatenfrdef2rql}
-    return __rdef2rql(genmap, rschema, subjtype, objtype, props)
-
-def updatefrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = frdef_relations_values(objtype, props)
-    values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
-    yield 'SET %s WHERE %s, %s, X is CWAttribute' % (','.join(relations),
-                                                     _LOCATE_RDEF_RQL0,
-                                                     _LOCATE_RDEF_RQL1), values
-
-def updatenfrdef2rql(rschema, subjtype, objtype, props):
-    relations, values = nfrdef_relations_values(objtype, props)
-    values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
-    yield 'SET %s WHERE %s, %s, X is CWRelation' % (','.join(relations),
-                                                    _LOCATE_RDEF_RQL0,
-                                                    _LOCATE_RDEF_RQL1), values
+def updaterdef2rql(rdef, eid):
+    relations, values = _rdef_values(rdef)
+    values['x'] = eid
+    yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
