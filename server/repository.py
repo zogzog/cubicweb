@@ -349,6 +349,7 @@ class Repository(object):
         """called on server stop event to properly close opened sessions and
         connections
         """
+        assert not self._shutting_down, 'already shutting down'
         self._shutting_down = True
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
