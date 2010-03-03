@@ -47,6 +47,10 @@ LDAP server connection options:
 * data-cnx-password, password to use to open data connection to the
   ldap (eg used to respond to rql queries)
 
+If the LDAP server accepts anonymous binds, then it is possible to
+leave data-cnx-dn and data-cnx-password empty. This is, however, quite
+unlikely in practice.
+
 LDAP schema mapping:
 
 * user-base-dn, base DN to lookup for users
