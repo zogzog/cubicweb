@@ -62,6 +62,7 @@ class PrimaryView(EntityView):
         self.render_entity_attributes(entity)
         if self.main_related_section:
             self.render_entity_relations(entity)
+        self.content_navigation_components('navcontentbottom')
         self.w(u'</div>')
         # side boxes
         if boxes or hasattr(self, 'render_side_related'):
@@ -73,7 +74,6 @@ class PrimaryView(EntityView):
             self.render_side_boxes(boxes)
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
-        self.content_navigation_components('navcontentbottom')
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)

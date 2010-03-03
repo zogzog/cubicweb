@@ -61,12 +61,10 @@ class Controller(AppObject):
         self._edited_entity = None
 
     def publish(self, rset=None):
-        """publish the current request, with an option input rql string
-        (already processed if necessary)
-        """
+        """publish the current request, with an optional input rset"""
         raise NotImplementedError
 
-    # generic methods useful for concret implementations ######################
+    # generic methods useful for concrete implementations ######################
 
     def process_rql(self, rql):
         """execute rql if specified"""
@@ -102,6 +100,7 @@ class Controller(AppObject):
         if not self._edited_entity:
             self._edited_entity = entity
 
+    # XXX move to EditController (only customer)
     def delete_entities(self, eidtypes):
         """delete entities from the repository"""
         redirect_info = set()
@@ -125,6 +124,7 @@ class Controller(AppObject):
         view.set_http_cache_headers()
         self._cw.validate_cache()
 
+    # XXX is that used AT ALL ?
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters
@@ -141,6 +141,7 @@ class Controller(AppObject):
             self._return_to_original_view(newparams)
 
 
+    # XXX is that used AT ALL ?
     def _return_to_original_view(self, newparams):
         """validate-button case"""
         # transforms __redirect[*] parameters into regular form parameters
@@ -173,7 +174,7 @@ class Controller(AppObject):
         url = append_url_params(url, self._cw.form.get('__redirectparams'))
         raise Redirect(url)
 
-
+    # XXX is that used AT ALL ?
     def _return_to_edition_view(self, newparams):
         """apply-button case"""
         form = self._cw.form
@@ -197,6 +198,7 @@ class Controller(AppObject):
         raise Redirect(self._cw.build_url(path, **newparams))
 
 
+    # XXX is that used AT ALL ?
     def _return_to_lastpage(self, newparams):
         """cancel-button case: in this case we are always expecting to go back
         where we came from, and this is not easy. Currently we suppose that

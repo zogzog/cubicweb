@@ -170,8 +170,8 @@ Widgets.SuggestForm = defclass("SuggestForm", null, {
 function toggleTree(event) {
     var linode = jQuery(this);
     var url = linode.attr('cubicweb:loadurl');
-    linode.find('ul.placeholder').remove();
     if (url) {
+        linode.find('ul.placeholder').remove();
 	linode.loadxhtml(url, {callback: function(domnode) {
 	    linode.removeAttr('cubicweb:loadurl');
 	    jQuery(domnode).treeview({toggle: toggleTree,
