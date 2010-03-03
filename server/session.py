@@ -585,10 +585,10 @@ class Session(RequestSessionBase):
     def add_operation(self, operation, index=None):
         """add an observer"""
         assert self.commit_state != 'commit'
-        if index is not None:
-            self.pending_operations.insert(index, operation)
-        else:
+        if index is None:
             self.pending_operations.append(operation)
+        else:
+            self.pending_operations.insert(index, operation)
 
     # querier helpers #########################################################
 

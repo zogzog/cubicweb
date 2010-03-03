@@ -24,12 +24,13 @@ http://cvs.zope.org/Zope/lib/python/docutils/writers/Attic/html4zope.py?rev=1.1.
 
 __docformat__ = 'reStructuredText'
 
+import os
+
 from logilab.mtconverter import xml_escape
 
 from docutils import nodes
 from docutils.writers.html4css1 import Writer as CSS1Writer
 from docutils.writers.html4css1 import HTMLTranslator as CSS1HTMLTranslator
-import os
 
 default_level = int(os.environ.get('STX_DEFAULT_LEVEL', 3))
 
