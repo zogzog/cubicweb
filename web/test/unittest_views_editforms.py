@@ -43,13 +43,11 @@ class AutomaticEntityFormTC(CubicWebTC):
                            ('firstname', 'subject'),
                            ('surname', 'subject'),
                            ('in_group', 'subject'),
-                           ('eid', 'subject'),
                            ])
         self.assertListEquals(rbc(e, 'muledit', 'attributes'),
                               [('login', 'subject'),
                                ('upassword', 'subject'),
                                ('in_group', 'subject'),
-                               ('eid', 'subject'),
                                ])
         self.assertListEquals(rbc(e, 'main', 'metadata'),
                               [('last_login_time', 'subject'),
@@ -76,13 +74,10 @@ class AutomaticEntityFormTC(CubicWebTC):
         # owned_by is defined both as subject and object relations on CWUser
         self.assertListEquals(sorted(x for x in rbc(e, 'main', 'hidden')
                                      if x != ('tags', 'object')),
-                              sorted([('has_text', 'subject'),
-                                      ('identity', 'subject'),
-                                      ('for_user', 'object'),
+                              sorted([('for_user', 'object'),
                                       ('created_by', 'object'),
                                       ('wf_info_for', 'object'),
                                       ('owned_by', 'object'),
-                                      ('identity', 'object'),
                                       ]))
 
     def test_inlined_view(self):
@@ -106,11 +101,9 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ('test', 'subject'),
                                ('description', 'subject'),
                                ('salary', 'subject'),
-                               ('eid', 'subject')
                                ])
         self.assertListEquals(rbc(e, 'muledit', 'attributes'),
                               [('nom', 'subject'),
-                               ('eid', 'subject')
                                ])
         self.assertListEquals(rbc(e, 'main', 'metadata'),
                               [('creation_date', 'subject'),
@@ -124,10 +117,7 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ('connait', 'object')
                                ])
         self.assertListEquals(rbc(e, 'main', 'hidden'),
-                              [('has_text', 'subject'),
-                               ('identity', 'subject'),
-                               ('identity', 'object'),
-                               ])
+                              [])
 
     def test_edition_form(self):
         rset = self.execute('CWUser X LIMIT 1')
