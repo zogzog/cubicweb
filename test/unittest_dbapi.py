@@ -35,8 +35,8 @@ class DBAPITC(CubicWebTC):
         self.assertEquals(cnx.user(None).login, 'anon')
         self.assertEquals(cnx.describe(1), (u'CWGroup', u'system', None))
         self.restore_connection() # proper way to close cnx
-        self.assertRaises(ConnectionError, cnx.user, None)
-        self.assertRaises(ConnectionError, cnx.describe, 1)
+        self.assertRaises(ProgrammingError, cnx.user, None)
+        self.assertRaises(ProgrammingError, cnx.describe, 1)
 
     def test_session_data_api(self):
         cnx = self.login('anon')
@@ -64,9 +64,9 @@ class DBAPITC(CubicWebTC):
         cnx.set_shared_data('data', 4)
         self.assertEquals(cnx.get_shared_data('data'), 4)
         self.restore_connection() # proper way to close cnx
-        self.assertRaises(ConnectionError, cnx.check)
-        self.assertRaises(ConnectionError, cnx.set_shared_data, 'data', 0)
-        self.assertRaises(ConnectionError, cnx.get_shared_data, 'data')
+        self.assertRaises(ProgrammingError, cnx.check)
+        self.assertRaises(ProgrammingError, cnx.set_shared_data, 'data', 0)
+        self.assertRaises(ProgrammingError, cnx.get_shared_data, 'data')
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
