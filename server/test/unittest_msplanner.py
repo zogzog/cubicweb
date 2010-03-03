@@ -92,10 +92,10 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.add_source(FakeCardSource, 'cards')
 
     def tearDown(self):
-        super(BaseMSPlannerTC, self).tearDown()
         # restore hijacked security
         self.restore_orig_affaire_security()
         self.restore_orig_cwuser_security()
+        super(BaseMSPlannerTC, self).tearDown()
 
     def restore_orig_affaire_security(self):
         affreadperms = list(self.schema['Affaire'].permissions['read'])
