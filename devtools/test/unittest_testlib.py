@@ -9,8 +9,7 @@
 from cStringIO import StringIO
 from unittest import TestSuite
 
-
-from logilab.common.testlib import (TestCase, unittest_main, 
+from logilab.common.testlib import (TestCase, unittest_main,
                                     SkipAwareTextTestRunner)
 
 from cubicweb.devtools import htmlparser
