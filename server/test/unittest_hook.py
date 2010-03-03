@@ -69,6 +69,10 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 
+def teardown_module(*args):
+    global config, schema
+    del config, schema
+
 class AddAnyHook(hook.Hook):
     __regid__ = 'addany'
     category = 'cat1'

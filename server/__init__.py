@@ -200,6 +200,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     cnx.commit()
     cnx.close()
     session.close()
+    repo.shutdown()
     # restore initial configuration
     config.creating = False
     config.read_instance_schema = read_instance_schema

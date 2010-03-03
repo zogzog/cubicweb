@@ -48,7 +48,12 @@ def setup_module(*args):
 def teardown_module(*args):
     PyroRQLSource.get_connection = PyroRQLSource_get_connection
     Connection.close = Connection_close
-
+    global repo2, cnx2, repo3, cnx3
+    repo2.shutdown()
+    repo3.shutdown()
+    del repo2, cnx2, repo3, cnx3
+    #del TwoSourcesTC.config.vreg
+    #del TwoSourcesTC.config
 
 class TwoSourcesTC(CubicWebTC):
     config = TwoSourcesConfiguration('data')
@@ -130,7 +135,7 @@ class TwoSourcesTC(CubicWebTC):
         cu = cnx.cursor()
         rset = cu.execute('Any X WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
-        cnx.close()
+        Connection_close(cnx)
 
     def test_synchronization(self):
         cu = cnx2.cursor()

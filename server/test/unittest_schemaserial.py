@@ -15,6 +15,10 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = loader.load(config)
 
+def teardown_module(*args):
+    global schema, config, loader
+    del schema, config, loader
+
 from cubicweb.server.schemaserial import *
 from cubicweb.server.schemaserial import _erperms2rql as erperms2rql
 

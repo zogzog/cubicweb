@@ -12,6 +12,10 @@ from cubicweb.server.ssplanner import SSPlanner
 # keep cnx so it's not garbage collected and the associated session closed
 repo, cnx = init_test_database()
 
+def teardown_module(*args):
+    global repo, cnx
+    del repo, cnx
+
 class SSPlannerTC(BasePlannerTC):
     repo = repo
     _test = test_plan

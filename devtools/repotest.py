@@ -95,6 +95,31 @@ class DumbOrderedDict2(object):
     def __iter__(self):
         return iter(sorted(self.origdict, key=self.sortkey))
 
+def schema_eids_idx(schema):
+    """return a dictionary mapping schema types to their eids so we can reread
+    it from the fs instead of the db (too costly) between tests
+    """
+    schema_eids = {}
+    for x in schema.entities():
+        schema_eids[x] = x.eid
+    for x in schema.relations():
+        schema_eids[x] = x.eid
+        for rdef in x.rdefs.itervalues():
+            schema_eids[(rdef.subject, rdef.rtype, rdef.object)] = rdef.eid
+    return schema_eids
+
+def restore_schema_eids_idx(schema, schema_eids):
+    """rebuild schema eid index"""
+    for x in schema.entities():
+        x.eid = schema_eids[x]
+        schema._eid_index[x.eid] = x
+    for x in schema.relations():
+        x.eid = schema_eids[x]
+        schema._eid_index[x.eid] = x
+        for rdef in x.rdefs.itervalues():
+            rdef.eid = schema_eids[(rdef.subject, rdef.rtype, rdef.object)]
+            schema._eid_index[rdef.eid] = rdef
+
 
 from logilab.common.testlib import TestCase
 from rql import RQLHelper

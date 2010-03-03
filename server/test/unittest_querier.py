@@ -48,6 +48,11 @@ class MakeSchemaTC(TestCase):
 
 repo, cnx = init_test_database()
 
+def teardown_module(*args):
+    global repo, cnx
+    cnx.close()
+    repo.shutdown()
+    del repo, cnx
 
 
 class UtilsTC(BaseQuerierTC):

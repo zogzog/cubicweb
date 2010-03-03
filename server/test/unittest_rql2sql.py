@@ -37,6 +37,10 @@ schema['in_state'].inlined = True
 schema['state_of'].inlined = False
 schema['comments'].inlined = False
 
+def teardown_module(*args):
+    global config, schema
+    del config, schema
+
 PARSER = [
     (r"Personne P WHERE P nom 'Zig\'oto';",
      '''SELECT _P.cw_eid

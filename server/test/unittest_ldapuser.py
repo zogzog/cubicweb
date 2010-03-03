@@ -370,6 +370,11 @@ class GlobTrFuncTC(TestCase):
 LDAPUserSourceTC._init_repo()
 repo = LDAPUserSourceTC.repo
 
+def teardown_module(*args):
+    global repo
+    del repo
+    del RQL2LDAPFilterTC.schema
+
 class RQL2LDAPFilterTC(RQLGeneratorTC):
     schema = repo.schema
 
