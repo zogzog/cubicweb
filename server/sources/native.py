@@ -596,6 +596,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return False
 
     def index_entity(self, session, entity):
+        """create an operation to [re]index textual content of the given entity
+        on commit
+        """
         FTIndexEntityOp(session, entity=entity)
 
     def fti_unindex_entity(self, session, eid):
