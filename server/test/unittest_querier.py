@@ -1028,6 +1028,10 @@ class QuerierTC(BaseQuerierTC):
                       {'x': str(eid1), 'y': str(eid2)})
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
+        # test add of an existant relation but with NOT X rel Y protection
+        self.failIf(self.execute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s,"
+                                 "NOT X travaille Y",
+                                 {'x': str(eid1), 'y': str(eid2)}))
 
     def test_update_2ter(self):
         rset = self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")

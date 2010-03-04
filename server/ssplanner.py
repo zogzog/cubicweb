@@ -76,6 +76,38 @@ def _extract_eid_consts(plan, rqlst):
                 eidconsts[lhs.variable] = eid
     return eidconsts
 
+def _build_substep_query(select, origrqlst):
+    """Finalize substep select query that should be executed to get proper
+    selection of stuff to insert/update.
+
+    Return None when no query actually needed, else the given select node that
+    will be used as substep query.
+
+    When select has nothing selected, search in origrqlst for restriction that
+    should be considered.
+    """
+    if select.selection:
+        if origrqlst.where is not None:
+            select.set_where(origrqlst.where.copy(select))
+        return select
+    if origrqlst.where is None:
+        return
+    for rel in origrqlst.where.iget_nodes(Relation):
+        # search for a relation which is neither a type restriction (is) nor an
+        # eid specification (not neged eid with constant node
+        if rel.neged(strict=True) or not (
+            rel.is_types_restriction() or
+            (rel.r_type == 'eid'
+             and isinstance(rel.get_variable_parts()[1], Constant))):
+            break
+    else:
+        return
+    select.set_where(origrqlst.where.copy(select))
+    if not select.selection:
+        # no selection, append one randomly
+        select.append_selected(rel.children[0].copy(select))
+    return select
+
 
 class SSPlanner(object):
     """SingleSourcePlanner: build execution plan for rql queries
@@ -144,9 +176,8 @@ class SSPlanner(object):
                     else:
                         rdefs[i] = (rtype, InsertRelationsStep.RELATION, value)
             step = InsertRelationsStep(plan, edef, rdefs)
-            if select.selection:
-                if rqlst.where is not None:
-                    select.set_where(rqlst.where.copy(select))
+            select = _build_substep_query(select, rqlst)
+            if select is not None:
                 step.children += self._select_plan(plan, select, rqlst.solutions)
             yield step
 
@@ -241,9 +272,8 @@ class SSPlanner(object):
         # the update step
         step = UpdateStep(plan, updatedefs, attributes)
         # when necessary add substep to fetch yet unknown values
-        if select.selection:
-            if rqlst.where is not None:
-                select.set_where(rqlst.where.copy(select))
+        select = _build_substep_query(select, rqlst)
+        if select is not None:
             # set distinct to avoid potential duplicate key error
             select.distinct = True
             step.children += self._select_plan(plan, select, rqlst.solutions)
