@@ -186,6 +186,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     handler.install_custom_sql_scripts(join(CW_SOFTWARE_ROOT, 'schemas'), driver)
     for directory in reversed(config.cubes_path()):
         handler.install_custom_sql_scripts(join(directory, 'schema'), driver)
+    # serialize the schema
     initialize_schema(config, schema, handler)
     # yoo !
     cnx.commit()

@@ -51,10 +51,6 @@ def group_mapping(cursor, interactive=True):
     return res
 
 # schema / perms deserialization ##############################################
-OLD_SCHEMA_TYPES = frozenset(('EFRDef', 'ENFRDef', 'ERType', 'EEType',
-                              'EConstraintType', 'EConstraint', 'EGroup',
-                              'EUser', 'ECache', 'EPermission', 'EProperty'))
-
 def deserialize_schema(schema, session):
     """return a schema according to information stored in an rql database
     as CWRType and CWEType entities
@@ -90,12 +86,6 @@ def deserialize_schema(schema, session):
                                {'x': eid, 'n': netype})
             session.system_sql('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
                                {'x': etype, 'n': netype})
-            # XXX should be donne as well on sqlite based sources
-            if not etype in OLD_SCHEMA_TYPES and \
-               (getattr(dbhelper, 'case_sensitive', False)
-                or etype.lower() != netype.lower()):
-                session.system_sql('ALTER TABLE %s%s RENAME TO %s%s' % (
-                    sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))
             session.commit(False)
             try:
                 session.system_sql('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
@@ -182,6 +172,17 @@ def deserialize_ertype_permissions(session):
             res.setdefault(eid, {}).setdefault(action, []).append( (expr, mainvars, expreid) )
     return res
 
+def deserialize_rdef_constraints(session):
+    """return the list of relation definition's constraints as instances"""
+    res = {}
+    for rdefeid, ceid, ct, val in session.execute(
+        'Any E, X,TN,V WHERE E constrained_by X, X is CWConstraint, '
+        'X cstrtype T, T name TN, X value V', build_descr=False):
+        cstr = CONSTRAINTS[ct].deserialize(val)
+        cstr.eid = ceid
+        res.setdefault(rdefeid, []).append(cstr)
+    return res
+
 def set_perms(erschema, permsdict):
     """set permissions on the given erschema according to the permission
     definition dictionary as built by deserialize_ertype_permissions for a
@@ -202,21 +203,9 @@ def set_perms(erschema, permsdict):
             for p in somethings)
 
 
-def deserialize_rdef_constraints(session):
-    """return the list of relation definition's constraints as instances"""
-    res = {}
-    for rdefeid, ceid, ct, val in session.execute(
-        'Any E, X,TN,V WHERE E constrained_by X, X is CWConstraint, '
-        'X cstrtype T, T name TN, X value V', build_descr=False):
-        cstr = CONSTRAINTS[ct].deserialize(val)
-        cstr.eid = ceid
-        res.setdefault(rdefeid, []).append(cstr)
-    return res
-
-
 # schema / perms serialization ################################################
 
-def serialize_schema(cursor, schema, verbose=False):
+def serialize_schema(cursor, schema):
     """synchronize schema and permissions in the database according to
     current schema
     """
@@ -224,38 +213,40 @@ def serialize_schema(cursor, schema, verbose=False):
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
-    execute = cursor.execute
+    execute = cursor.unsafe_execute
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
-    if not verbose and not quiet:
+    if not quiet:
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
         pb = ProgressBar(pb_size, title=_title)
     else:
         pb = None
+    # serialize all entity types, assuring CWEType is serialized first
+    eschemas.remove(schema.eschema('CWEType'))
+    eschemas.insert(0, schema.eschema('CWEType'))
+    for eschema in eschemas:
+        execschemarql(execute, eschema, eschema2rql(eschema, groupmap))
+        if pb is not None:
+            pb.update()
+    # serialize constraint types
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        if verbose:
-            print rql
         execute(rql, {'ct': unicode(cstrtype)}, build_descr=False)
         if pb is not None:
             pb.update()
-    groupmap = group_mapping(cursor, interactive=False)
-    for ertype in aller:
-        # skip eid and has_text relations
-        if ertype in VIRTUAL_RTYPES:
+    # serialize relations
+    for rschema in schema.relations():
+        # skip virtual relations such as eid, has_text and identity
+        if rschema in VIRTUAL_RTYPES:
             if pb is not None:
                 pb.update()
             continue
         for rql, kwargs in erschema2rql(schema[ertype], groupmap):
-            if verbose:
-                print rql % kwargs
             execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
-        if verbose:
-            print rql % kwargs
-        execute(rql, kwargs, build_descr=False)
+        assert execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     if not quiet:

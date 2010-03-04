@@ -1,38 +1,25 @@
 """some utilities to define schema permissions
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from rql.utils import quote
-from cubicweb.schema import ERQLExpression, RRQLExpression
+from cubicweb.schema import RO_REL_PERMS, RO_ATTR_PERMS, \
+     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, \
+     ERQLExpression, RRQLExpression
 
 # permissions for "meta" entity type (readable by anyone, can only be
 # added/deleted by managers)
-META_ETYPE_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    ('managers',),
-    'delete': ('managers',),
-    'update': ('managers', 'owners',),
-    }
-
+META_ETYPE_PERMS = PUB_SYSTEM_ENTITY_PERMS # XXX deprecates
 # permissions for "meta" relation type (readable by anyone, can only be
 # added/deleted by managers)
-META_RTYPE_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    ('managers',),
-    'delete': ('managers',),
-    }
-
+META_RTYPE_PERMS = PUB_SYSTEM_REL_PERMS # XXX deprecates
 # permissions for relation type that should only set by hooks using unsafe
 # execute, readable by anyone
-HOOKS_RTYPE_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    (),
-    'delete': (),
-    }
+HOOKS_RTYPE_PERMS = RO_REL_PERMS # XXX deprecates
 
 def _perm(names):
     if isinstance(names, (list, tuple)):
