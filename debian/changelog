@@ -1,3 +1,9 @@
+cubicweb (3.6.1-2) unstable; urgency=low
+
+  * remove depends to python-elementtree (included in python>=2.5)
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Fri, 04 Mar 2010 14:43:01 +0100
+
 cubicweb (3.6.1-1) unstable; urgency=low
 
   * new upstream release
