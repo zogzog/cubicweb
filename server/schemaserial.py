@@ -223,8 +223,9 @@ def serialize_schema(cursor, schema):
         pb = ProgressBar(pb_size, title=_title)
     else:
         pb = None
-    # serialize all entity types, assuring CWEType is serialized first
-    groupmap = group_mapping(cursor)
+    groupmap = group_mapping(cursor, interactive=False)
+    # serialize all entity types, assuring CWEType is serialized first for proper
+    # is / is_instance_of insertion
     eschemas.remove(schema.eschema('CWEType'))
     eschemas.insert(0, schema.eschema('CWEType'))
     for eschema in eschemas:
