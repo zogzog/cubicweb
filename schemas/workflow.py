@@ -19,7 +19,7 @@ class Workflow(EntityType):
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
-    description = RichString(fulltextindexed=True, default_format='text/rest',
+    description = RichString(default_format='text/rest',
                              description=_('semantic description of this workflow'))
 
     workflow_of = SubjectRelation('CWEType', cardinality='+*',
@@ -53,7 +53,7 @@ class State(EntityType):
                   maxsize=256,
                   constraints=[RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N', 'Y',
                                                    _('workflow already have a state of that name'))])
-    description = RichString(fulltextindexed=True, default_format='text/rest',
+    description = RichString(default_format='text/rest',
                              description=_('semantic description of this state'))
 
     # XXX should be on BaseTransition w/ AND/OR selectors when we will
@@ -77,8 +77,7 @@ class BaseTransition(EntityType):
                   constraints=[RQLUniqueConstraint('S name N, S transition_of WF, Y transition_of WF, Y name N', 'Y',
                                                    _('workflow already have a transition of that name'))])
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
-    description = RichString(fulltextindexed=True,
-                         description=_('semantic description of this transition'))
+    description = RichString(description=_('semantic description of this transition'))
     condition = SubjectRelation('RQLExpression', cardinality='*?', composite='subject',
                                 description=_('a RQL expression which should return some results, '
                                               'else the transition won\'t be available. '

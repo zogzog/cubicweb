@@ -80,7 +80,7 @@ def reindex_entities(schema, session, withpb=True):
         cursor.execute(indexer.sql_init_fti())
     repo.config.disabled_hooks_categories.add('metadata')
     repo.config.disabled_hooks_categories.add('integrity')
-    repo.do_fti = True  # ensure full-text indexation is activated
+    repo.system_source.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():
         if eschema.final:

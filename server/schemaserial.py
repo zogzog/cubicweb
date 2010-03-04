@@ -228,7 +228,8 @@ def serialize_schema(cursor, schema):
     else:
         pb = None
     groupmap = group_mapping(cursor, interactive=False)
-    # serialize all entity types, assuring CWEType is serialized first
+    # serialize all entity types, assuring CWEType is serialized first for proper
+    # is / is_instance_of insertion
     eschemas.remove(schema.eschema('CWEType'))
     eschemas.insert(0, schema.eschema('CWEType'))
     for eschema in eschemas:

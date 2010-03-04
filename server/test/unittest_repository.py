@@ -26,7 +26,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
-
+from cubicweb.server.sources import native
 
 # start name server anyway, process will fail if already running
 os.system('pyro-ns >/dev/null 2>/dev/null &')
@@ -430,25 +430,39 @@ class FTITC(CubicWebTC):
         self.assertEquals(modified, [])
         self.assertEquals(deleted, [('Personne', eidp)])
 
-    def test_composite_entity(self):
+    def test_fulltext_container_entity(self):
         assert self.schema.rschema('use_email').fulltext_container == 'subject'
-        eid = self.request().create_entity('EmailAddress', address=u'toto@logilab.fr').eid
+        req = self.request()
+        toto = req.create_entity('EmailAddress', address=u'toto@logilab.fr')
         self.commit()
-        rset = self.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
-        self.assertEquals(rset.rows, [[eid]])
-        self.execute('SET X use_email Y WHERE X login "admin", Y eid %(y)s', {'y': eid})
-        self.commit()
-        rset = self.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
-        self.assertEquals(rset.rows, [[self.session.user.eid]])
-        self.execute('DELETE X use_email Y WHERE X login "admin", Y eid %(y)s', {'y': eid})
-        self.commit()
-        rset = self.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
         self.assertEquals(rset.rows, [])
-        eid = self.request().create_entity('EmailAddress', address=u'tutu@logilab.fr').eid
-        self.execute('SET X use_email Y WHERE X login "admin", Y eid %(y)s', {'y': eid})
+        req.user.set_relations(use_email=toto)
         self.commit()
-        rset = self.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
-        self.assertEquals(rset.rows, [[self.session.user.eid]])
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+        self.assertEquals(rset.rows, [[req.user.eid]])
+        req.execute('DELETE X use_email Y WHERE X login "admin", Y eid %(y)s',
+                    {'y': toto.eid})
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+        self.assertEquals(rset.rows, [])
+        tutu = req.create_entity('EmailAddress', address=u'tutu@logilab.fr')
+        req.user.set_relations(use_email=tutu)
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
+        self.assertEquals(rset.rows, [[req.user.eid]])
+        tutu.set_attributes(address=u'hip@logilab.fr')
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
+        self.assertEquals(rset.rows, [])
+        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'hip'})
+        self.assertEquals(rset.rows, [[req.user.eid]])
+
+    def test_no_uncessary_ftiindex_op(self):
+        req = self.request()
+        req.create_entity('Workflow', name=u'dummy workflow', description=u'huuuuu')
+        self.failIf(any(x for x in self.session.pending_operations
+                        if isinstance(x, native.FTIndexEntityOp)))
 
 
 class DBInitTC(CubicWebTC):

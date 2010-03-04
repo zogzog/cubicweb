@@ -469,17 +469,18 @@ class SourceDbRDefUpdate(hook.Operation):
     rschema = values = None # make pylint happy
 
     def precommit_event(self):
+        session = self.session
         etype = self.kobj[0]
         table = SQL_PREFIX + etype
         column = SQL_PREFIX + self.rschema.type
         if 'indexed' in self.values:
-            sysource = self.session.pool.source('system')
+            sysource = session.pool.source('system')
             if self.values['indexed']:
-                sysource.create_index(self.session, table, column)
+                sysource.create_index(session, table, column)
             else:
-                sysource.drop_index(self.session, table, column)
+                sysource.drop_index(session, table, column)
         if 'cardinality' in self.values and self.rschema.final:
-            adbh = self.session.pool.source('system').dbhelper
+            adbh = session.pool.source('system').dbhelper
             if not adbh.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
                 # no worry)
@@ -491,11 +492,17 @@ class SourceDbRDefUpdate(hook.Operation):
             # XXX check self.values['cardinality'][0] actually changed?
             notnull = self.values['cardinality'][0] != '1'
             sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
-            self.session.system_sql(sql)
+            session.system_sql(sql)
         if 'fulltextindexed' in self.values:
-            UpdateFTIndexOp(self.session)
-            self.session.transaction_data.setdefault('fti_update_etypes',
-                                                     set()).add(etype)
+            UpdateFTIndexOp(session)
+            session.transaction_data.setdefault(
+                'fti_update_etypes', set()).add(etype)
+        elif 'fulltext_container' in self.values:
+            ftiupdates = session.transaction_data.setdefault(
+                'fti_update_etypes', set())
+            ftiupdates.add(etype)
+            ftiupdates.add(self.kobj[1])
+            UpdateFTIndexOp(session)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -1161,7 +1168,8 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                     source.fti_unindex_entity(session, entity.eid)
                     for container in entity.fti_containers():
                         if still_fti or container is not entity:
-                            session.repo.index_entity(session, container)
+                            source.fti_unindex_entity(session, entity.eid)
+                            source.fti_index_entity(session, container)
                 except Exception:
                     self.critical('Error while updating Full Text Index for'
                                   ' entity %s', entity.eid, exc_info=True)

@@ -876,7 +876,6 @@ class Entity(AppObject, dict):
         _done.add(self.eid)
         containers = tuple(self.e_schema.fulltext_containers())
         if containers:
-            yielded = False
             for rschema, target in containers:
                 if target == 'object':
                     targets = getattr(self, rschema.type)
@@ -888,8 +887,6 @@ class Entity(AppObject, dict):
                     for container in entity.fti_containers(_done):
                         yield container
                         yielded = True
-            if not yielded:
-                yield self
         else:
             yield self
 
@@ -919,7 +916,6 @@ class Entity(AppObject, dict):
                 continue
             if value:
                 words += tokenize(value)
-
         for rschema, role in self.e_schema.fulltext_relations():
             if role == 'subject':
                 for entity in getattr(self, rschema.type):
