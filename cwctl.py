@@ -204,7 +204,7 @@ class ConfigurationProblem(object):
             # simplify constraints
             if versions:
                 for constraint in versions:
-                    op, ver = constraint.split()
+                    op, ver = constraint
                     if oper is None:
                         oper = op
                         version = ver
@@ -238,7 +238,12 @@ class ConfigurationProblem(object):
             for name, constraint in use.items():
                 self.constraints.setdefault(name,set())
                 if constraint:
-                    self.constraints[name].add(constraint)
+                    try:
+                        oper, version = constraint.split()
+                        self.constraints[name].add( (oper, version) )
+                    except:
+                        self.warnings.append('cube %s depends on %s but constraint badly formatted: %s'
+                                             % (cube, name, constraint))
                 self.reverse_constraints.setdefault(name, set()).add(cube)
 
 class ListCommand(Command):
