@@ -51,6 +51,7 @@ def group_mapping(cursor, interactive=True):
     return res
 
 # schema / perms deserialization ##############################################
+
 def deserialize_schema(schema, session):
     """return a schema according to information stored in an rql database
     as CWRType and CWEType entities
@@ -215,13 +216,15 @@ def serialize_schema(cursor, schema):
         print _title,
     execute = cursor.unsafe_execute
     eschemas = schema.entities()
-    aller = eschemas + schema.relations()
     if not quiet:
-        pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
+        pb_size = (len(eschemas + schema.relations())
+                   + len(CONSTRAINTS)
+                   + len([x for x in eschemas if x.specializes()]))
         pb = ProgressBar(pb_size, title=_title)
     else:
         pb = None
     # serialize all entity types, assuring CWEType is serialized first
+    groupmap = group_mapping(cursor)
     eschemas.remove(schema.eschema('CWEType'))
     eschemas.insert(0, schema.eschema('CWEType'))
     for eschema in eschemas:
@@ -242,12 +245,12 @@ def serialize_schema(cursor, schema):
             if pb is not None:
                 pb.update()
             continue
-        for rql, kwargs in erschema2rql(schema[ertype], groupmap):
+        for rql, kwargs in rschema2rql(rschema, groupmap):
             execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     for rql, kwargs in specialize2rql(schema):
-        assert execute(rql, kwargs, build_descr=False)
+        execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     if not quiet:
