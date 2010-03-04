@@ -225,7 +225,8 @@ def serialize_schema(cursor, schema):
     eschemas.remove(schema.eschema('CWEType'))
     eschemas.insert(0, schema.eschema('CWEType'))
     for eschema in eschemas:
-        execschemarql(execute, eschema, eschema2rql(eschema, groupmap))
+        for rql, kwargs in eschema2rql(eschema, groupmap):
+            execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
     # serialize constraint types
