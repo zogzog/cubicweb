@@ -26,11 +26,11 @@ def update_parser(parser):
     parser.add_option('-u', '--dbuser', dest='dbuser', action='store',
                       default=login, help="database user")
     parser.add_option('-w', '--dbpassword', dest='dbpassword', action='store',
-                      default=login, help="database name")
+                      default=login, help="database user's password")
     parser.add_option('-n', '--dbname', dest='dbname', action='store',
                       default=None, help="database name")
     parser.add_option('--euser', dest='euser', action='store',
-                      default=login, help="esuer name")
+                      default=login, help="euser name")
     parser.add_option('--epassword', dest='epassword', action='store',
                       default=login, help="euser's password' name")
     return parser
