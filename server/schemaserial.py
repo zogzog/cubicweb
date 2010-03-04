@@ -245,7 +245,7 @@ def serialize_schema(cursor, schema):
             if pb is not None:
                 pb.update()
             continue
-        for rql, kwargs in rschema2rql(rschema, groupmap):
+        for rql, kwargs in rschema2rql(rschema, groupmap=groupmap):
             execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
