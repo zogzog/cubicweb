@@ -104,7 +104,7 @@ class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
 class BreadCrumbView(EntityView):
     __regid__ = 'breadcrumbs'
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         desc = xml_escape(uilib.cut(entity.dc_description(), 50))
         # XXX remember camember : tags.a autoescapes !
@@ -115,7 +115,7 @@ class BreadCrumbView(EntityView):
 class BreadCrumbTextView(EntityView):
     __regid__ = 'breadcrumbtext'
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         textsize = self._cw.property_value('navigation.short-line-size')
         self.w(uilib.cut(entity.dc_title(), textsize))

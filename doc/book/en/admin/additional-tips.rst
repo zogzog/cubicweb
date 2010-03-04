@@ -28,7 +28,7 @@ make sure the following permissions are correct ::
 
 Simply use the pg_dump in a cron ::
 
-    pg_dump -Fc --username=cubicweb --no-owner --file=/var/lib/cubicweb/backup/<instance>-$(date '+%Y-%m-%d_%H:%M:%S').dump
+    su -c "pg_dump -Fc --username=cubicweb --no-owner" postgres > <your-instance>-$(date '+%Y-%m-%d_%H:%M:%S').dump
 
 **CubicWeb way**
 

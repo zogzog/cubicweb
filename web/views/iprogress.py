@@ -8,13 +8,15 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from math import floor
+
 from logilab.mtconverter import xml_escape
 
+from cubicweb.utils import make_uid
 from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
-from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 
 class ProgressTableView(EntityView):
@@ -182,11 +184,85 @@ class ProgressBarView(EntityView):
     title = _('progress bar')
     __select__ = implements(IProgress)
 
+    precision = 0.1
+    red_threshold = 1.1
+    orange_threshold = 1.05
+    yellow_threshold = 1
+
+    @classmethod
+    def overrun(cls, entity):
+        """overrun = done + todo - """
+        if entity.done + entity.todo > entity.revised_cost:
+            overrun = entity.done + entity.todo - entity.revised_cost
+        else:
+            overrun = 0
+        if overrun < cls.precision:
+            overrun = 0
+        return overrun
+
+    @classmethod
+    def overrun_percentage(cls, entity):
+        """pourcentage overrun = overrun / budget"""
+        if entity.revised_cost == 0:
+            return 0
+        else:
+            return cls.overrun(entity) * 100. / entity.revised_cost
+
     def cell_call(self, row, col):
         self._cw.add_css('cubicweb.iprogress.css')
         self._cw.add_js('cubicweb.iprogress.js')
         entity = self.cw_rset.get_entity(row, col)
-        widget = ProgressBarWidget(entity.done, entity.todo,
-                                   entity.revised_cost)
-        self.w(widget.render())
+        done = entity.done
+        todo = entity.todo
+        budget = entity.revised_cost
+        if budget == 0:
+            pourcent = 100
+        else:
+            pourcent = done*100./budget
+        if pourcent > 100.1:
+            color = 'red'
+        elif todo+done > self.red_threshold*budget:
+            color = 'red'
+        elif todo+done > self.orange_threshold*budget:
+            color = 'orange'
+        elif todo+done > self.yellow_threshold*budget:
+            color = 'yellow'
+        else:
+            color = 'green'
+        if pourcent < 0:
+            pourcent = 0
 
+        if floor(done) == done or done>100:
+            done_str = '%i' % done
+        else:
+            done_str = '%.1f' % done
+        if floor(budget) == budget or budget>100:
+            budget_str = '%i' % budget
+        else:
+            budget_str = '%.1f' % budget
+
+        title = u'%s/%s = %i%%' % (done_str, budget_str, pourcent)
+        short_title = title
+        if self.overrun_percentage(entity):
+            title += u' overrun +%sj (+%i%%)' % (self.overrun(entity),
+                                                 self.overrun_percentage(entity))
+            overrun = self.overrun(entity)
+            if floor(overrun) == overrun or overrun>100:
+                overrun_str = '%i' % overrun
+            else:
+                overrun_str = '%.1f' % overrun
+            short_title += u' +%s' % overrun_str
+        # write bars
+        maxi = max(done+todo, budget)
+        if maxi == 0:
+            maxi = 1
+
+        cid = make_uid('progress_bar')
+        self._cw.html_headers.add_onload('draw_progressbar("canvas%s", %i, %i, %i, "%s");' %
+                                         (cid,
+                                          int(100.*done/maxi), int(100.*(done+todo)/maxi),
+                                          int(100.*budget/maxi), color),
+                                         jsoncall=self._cw.json_request)
+        self.w(u'%s<br/>'
+               u'<canvas class="progressbar" id="canvas%s" width="100" height="10"></canvas>'
+               % (short_title.replace(' ','&nbsp;'), cid))

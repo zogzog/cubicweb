@@ -257,7 +257,7 @@ class QuerierTC(BaseQuerierTC):
         result, descr = rset.rows, rset.description
         self.assertEquals(descr[0][0], 'String')
         self.assertEquals(descr[0][1], 'Int')
-        self.assertEquals(result[0][0], 'RQLExpression') # XXX may change as schema evolve
+        self.assertEquals(result[0][0], 'CWRelation') # XXX may change as schema evolve
 
     def test_select_groupby_orderby(self):
         rset = self.execute('Any N GROUPBY N ORDERBY N WHERE X is CWGroup, X name N')
@@ -858,6 +858,14 @@ class QuerierTC(BaseQuerierTC):
     def test_insert_5(self):
         self.execute("INSERT Personne X: X nom 'bidule'")
         self.execute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X nom 'bidule'")
+        rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto", X travaille Y')
+        self.assert_(rset.rows)
+        self.assertEquals(rset.description, [('Personne', 'Societe',)])
+
+    def test_insert_5bis(self):
+        peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        self.execute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X eid %(x)s",
+                     {'x': peid}, 'x')
         rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto", X travaille Y')
         self.assert_(rset.rows)
         self.assertEquals(rset.description, [('Personne', 'Societe',)])

@@ -391,8 +391,9 @@ class HTMLPageHeader(View):
         self.w(u'<td id="lastcolumn">')
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
-        self.wview('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
-                   title=False, showmessage=False)
+        if self._cw.cnx.anonymous_connection:
+            self.wview('logform', rset=self.cw_rset, id='popupLoginBox',
+                       klass='hidden', title=False, showmessage=False)
 
     def state_header(self):
         state = self._cw.search_state

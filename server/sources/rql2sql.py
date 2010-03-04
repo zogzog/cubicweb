@@ -41,6 +41,8 @@ from rql.nodes import (SortTerm, VariableRef, Constant, Function, Not,
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import cleanup_solutions
 
+ColumnAlias._q_invariant = False # avoid to check for ColumnAlias / Variable
+
 def _new_var(select, varname):
     newvar = select.get_variable(varname)
     if not 'relations' in newvar.stinfo:
@@ -711,7 +713,7 @@ class SQLGenerator(object):
         return '%s=%s' % (lhssql, rhsvar.accept(self))
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
-        if termconst or isinstance(termvar, ColumnAlias) or not termvar._q_invariant:
+        if termconst or not termvar._q_invariant:
             termsql = termconst and termconst.accept(self) or termvar.accept(self)
             yield '%s.%s=%s' % (rid, relfield, termsql)
         elif termvar._q_invariant:

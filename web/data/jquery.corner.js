@@ -140,7 +140,7 @@ $.fn.corner = function(o) {
                         this.style.position = 'relative';
                     ds.position = 'absolute';
                     ds.bottom = ds.left = ds.padding = ds.margin = '0';
-                    if ($.browser.msie)
+                    if (($.browser.msie) && ($.browser.version < 8.0))
                         ds.setExpression('width', 'this.parentNode.offsetWidth');
                     else
                         ds.width = '100%';

@@ -186,6 +186,11 @@ class Form(AppObject):
         # deleting validation errors here breaks form reloading (errors are
         # no more available), they have to be deleted by application's publish
         # method on successful commit
+        if hasattr(self, '_form_previous_values'):
+            # XXX behaviour changed in 3.6.1, warn
+            warn('[3.6.1] restore_previous_post already called, remove this call',
+                 DeprecationWarning, stacklevel=2)
+            return
         forminfo = self._cw.get_session_data(sessionkey, pop=True)
         if forminfo:
             self._form_previous_values = forminfo['values']

@@ -797,7 +797,7 @@ class Entity(AppObject, dict):
             del self.__unique
         except AttributeError:
             pass
-    
+
     # raw edition utilities ###################################################
 
     def set_attributes(self, _cw_unsafe=False, **kwargs):

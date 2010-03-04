@@ -499,7 +499,7 @@ class Session(RequestSessionBase):
                         operation.handle_event('revert%s_event' % trstate)
                     # XXX use slice notation since self.pending_operations is a
                     # read-only property.
-                    self.pending_operations[:] = processed + self.pending_operations 
+                    self.pending_operations[:] = processed + self.pending_operations
                     self.rollback(reset_pool)
                     raise
             self.pool.commit()
