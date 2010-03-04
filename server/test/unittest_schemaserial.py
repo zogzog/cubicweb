@@ -149,7 +149,6 @@ class Perms2RQLTC(TestCase):
                                ('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 2}),
                                ('SET X add_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
                                ('SET X update_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
-                               ('SET X update_permission Y WHERE Y eid %(g)s, ', {'g': 3}),
                                ('SET X delete_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
                                ])
 
@@ -168,11 +167,6 @@ class Perms2RQLTC(TestCase):
                                ('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 1}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, ', {'g': 2}),
                                ('SET X update_permission Y WHERE Y eid %(g)s, ', {'g': 0}),
-                               ('INSERT RQLExpression E: '
-                                'E expression %(e)s, E exprtype %(t)s, E mainvars %(v)s, '
-                                'X update_permission E '
-                                'WHERE ', # completed by the outer function
-                                {'e': u'U has_update_permission X', 't': u'ERQLExpression', 'v': u'X'}),
                                ])
 
     #def test_perms2rql(self):
