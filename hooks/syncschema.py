@@ -1152,7 +1152,8 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                     source.fti_unindex_entity(session, entity.eid)
                     for container in entity.fti_containers():
                         if still_fti or container is not entity:
-                            session.repo.index_entity(session, container)
+                            source.fti_unindex_entity(session, entity.eid)
+                            source.fti_index_entity(session, container)
                 except Exception:
                     self.critical('Error while updating Full Text Index for'
                                   ' entity %s', entity.eid, exc_info=True)

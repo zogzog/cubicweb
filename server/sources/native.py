@@ -17,7 +17,9 @@ from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 
+from logilab.common.compat import any
 from logilab.common.cache import Cache
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
 from logilab.common.adbh import get_adv_func_helper
 from logilab.common.shellutils import getlogin
@@ -26,6 +28,7 @@ from indexer import get_indexer
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
+from cubicweb.server import hook
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
@@ -150,12 +153,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
                                              self.encoding, ATTR_MAP.copy())
         # full text index helper
-        self.indexer = get_indexer(self.dbdriver, self.encoding)
-        # advanced functionality helper
-        self.dbhelper.fti_uid_attr = self.indexer.uid_attr
-        self.dbhelper.fti_table = self.indexer.table
-        self.dbhelper.fti_restriction_sql = self.indexer.restriction_sql
-        self.dbhelper.fti_need_distinct_query = self.indexer.need_distinct
+        self.do_fti = not repo.config['delay-full-text-indexation']
+        if self.do_fti:
+            self.indexer = get_indexer(self.dbdriver, self.encoding)
+            # XXX should go away with logilab.db
+            self.dbhelper.fti_uid_attr = self.indexer.uid_attr
+            self.dbhelper.fti_table = self.indexer.table
+            self.dbhelper.fti_restriction_sql = self.indexer.restriction_sql
+            self.dbhelper.fti_need_distinct_query = self.indexer.need_distinct
         # sql queries cache
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
@@ -201,9 +206,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool = self.repo._get_pool()
         pool.pool_set()
         # check full text index availibility
-        if not self.indexer.has_fti_table(pool['system']):
-            self.error('no text index table')
-            self.indexer = None
+        if self.do_fti:
+            if not self.indexer.has_fti_table(pool['system']):
+                self.critical('no text index table')
+                self.do_fti = False
         pool.pool_reset()
         self.repo._free_pool(pool)
 
@@ -255,6 +261,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             pass # __init__
         for authentifier in self.authentifiers:
             authentifier.set_schema(self.schema)
+        clear_cache(self, 'need_fti_indexation')
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -524,7 +531,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         finally:
             self._eid_creation_lock.release()
 
-    def add_info(self, session, entity, source, extid=None):
+    def add_info(self, session, entity, source, extid=None, complete=True):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
@@ -533,6 +540,20 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
         session.system_sql(self.sqlgen.insert('entities', attrs), attrs)
+        # now we can update the full text index
+        if self.do_fti and self.need_fti_indexation(entity.__regid__):
+            if complete:
+                entity.complete(entity.e_schema.indexable_attributes())
+            FTIndexEntityOp(session, entity=entity)
+
+    def update_info(self, session, entity, need_fti_update):
+        if self.do_fti and need_fti_update:
+            # reindex the entity only if this query is updating at least
+            # one indexable attribute
+            FTIndexEntityOp(session, entity=entity)
+        # update entities.mtime
+        attrs = {'eid': entity.eid, 'mtime': datetime.now()}
+        session.system_sql(self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def delete_info(self, session, eid, etype, uri, extid):
         """delete system information on deletion of an entity by transfering
@@ -546,30 +567,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'type': etype, 'eid': eid, 'extid': extid,
                  'source': uri, 'dtime': datetime.now()}
         session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)
-
-    def fti_unindex_entity(self, session, eid):
-        """remove text content for entity with the given eid from the full text
-        index
-        """
-        try:
-            self.indexer.cursor_unindex_object(eid, session.pool['system'])
-        except Exception: # let KeyboardInterrupt / SystemExit propagate
-            if self.indexer is not None:
-                self.exception('error while unindexing %s', eid)
-
-    def fti_index_entity(self, session, entity):
-        """add text content of a created/modified entity to the full text index
-        """
-        self.debug('reindexing %r', entity.eid)
-        try:
-            self.indexer.cursor_reindex_object(entity.eid, entity,
-                                               session.pool['system'])
-        except Exception: # let KeyboardInterrupt / SystemExit propagate
-            if self.indexer is not None:
-                self.exception('error while reindexing %s', entity)
-        # update entities.mtime
-        attrs = {'eid': entity.eid, 'mtime': datetime.now()}
-        session.system_sql(self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
@@ -586,6 +583,68 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         cursor = session.system_sql(delsql, {'time': mtime})
         delentities = cursor.fetchall()
         return modentities, delentities
+
+    # full text index handling #################################################
+
+    @cached
+    def need_fti_indexation(self, etype):
+        eschema = self.schema.eschema(etype)
+        if any(eschema.indexable_attributes()):
+            return True
+        if any(eschema.fulltext_containers()):
+            return True
+        return False
+
+    def index_entity(self, session, entity):
+        FTIndexEntityOp(session, entity=entity)
+
+    def fti_unindex_entity(self, session, eid):
+        """remove text content for entity with the given eid from the full text
+        index
+        """
+        try:
+            self.indexer.cursor_unindex_object(eid, session.pool['system'])
+        except Exception: # let KeyboardInterrupt / SystemExit propagate
+            self.exception('error while unindexing %s', eid)
+
+    def fti_index_entity(self, session, entity):
+        """add text content of a created/modified entity to the full text index
+        """
+        self.debug('reindexing %r', entity.eid)
+        try:
+            # use cursor_index_object, not cursor_reindex_object since
+            # unindexing done in the FTIndexEntityOp
+            self.indexer.cursor_index_object(entity.eid, entity,
+                                             session.pool['system'])
+        except Exception: # let KeyboardInterrupt / SystemExit propagate
+            self.exception('error while reindexing %s', entity)
+
+
+class FTIndexEntityOp(hook.LateOperation):
+    """operation to delay entity full text indexation to commit
+
+    since fti indexing may trigger discovery of other entities, it should be
+    triggered on precommit, not commit, and this should be done after other
+    precommit operation which may add relations to the entity
+    """
+
+    def precommit_event(self):
+        session = self.session
+        entity = self.entity
+        if entity.eid in session.transaction_data.get('pendingeids', ()):
+            return # entity added and deleted in the same transaction
+        alreadydone = session.transaction_data.setdefault('indexedeids', set())
+        if entity.eid in alreadydone:
+            self.debug('skipping reindexation of %s, already done', entity.eid)
+            return
+        alreadydone.add(entity.eid)
+        source = session.repo.system_source
+        for container in entity.fti_containers():
+            source.fti_unindex_entity(session, container.eid)
+            source.fti_index_entity(session, container)
+
+    def commit_event(self):
+        pass
 
 
 def sql_schema(driver):

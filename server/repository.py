@@ -71,27 +71,6 @@ class CleanupEidTypeCacheOp(hook.SingleLastOperation):
             pass
 
 
-class FTIndexEntityOp(hook.LateOperation):
-    """operation to delay entity full text indexation to commit
-
-    since fti indexing may trigger discovery of other entities, it should be
-    triggered on precommit, not commit, and this should be done after other
-    precommit operation which may add relations to the entity
-    """
-
-    def precommit_event(self):
-        session = self.session
-        entity = self.entity
-        if entity.eid in session.transaction_data.get('pendingeids', ()):
-            return # entity added and deleted in the same transaction
-        session.repo.system_source.fti_unindex_entity(session, entity.eid)
-        for container in entity.fti_containers():
-            session.repo.index_entity(session, container)
-
-    def commit_event(self):
-        pass
-
-
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
 
@@ -133,6 +112,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
         if rset:
             safe_delete_relation(session, rschema, *rset[0])
 
+
 def safe_delete_relation(session, rschema, subject, object):
     if not rschema.has_perm(session, 'delete', fromeid=subject, toeid=object):
         raise Unauthorized()
@@ -164,8 +144,6 @@ class Repository(object):
         self.vreg.schema = self.schema # until actual schema is loaded...
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
-        # should we reindex in changes?
-        self.do_fti = not config['delay-full-text-indexation']
         # sources
         self.sources = []
         self.sources_by_uri = {}
@@ -777,7 +755,6 @@ class Repository(object):
     # data sources handling ###################################################
     # * correspondance between eid and (type, source)
     # * correspondance between eid and local id (i.e. specific to a given source)
-    # * searchable text indexes
 
     def type_and_source_from_eid(self, eid, session=None):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
@@ -904,14 +881,9 @@ class Repository(object):
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        self.system_source.add_info(session, entity, source, extid)
-        if complete:
-            entity.complete(entity.e_schema.indexable_attributes())
         new = session.transaction_data.setdefault('neweids', set())
         new.add(entity.eid)
-        # now we can update the full text index
-        if self.do_fti:
-            FTIndexEntityOp(session, entity=entity)
+        self.system_source.add_info(session, entity, source, extid, complete)
         CleanupEidTypeCacheOp(session)
 
     def delete_info(self, session, eid):
@@ -960,15 +932,6 @@ class Repository(object):
             # unsafe_execute since we suppose that if user can delete the entity,
             # he can delete all its relations without security checking
             session.unsafe_execute(rql, {'x': eid}, 'x', build_descr=False)
-
-    def index_entity(self, session, entity):
-        """full text index a modified entity"""
-        alreadydone = session.transaction_data.setdefault('indexedeids', set())
-        if entity.eid in alreadydone:
-            self.debug('skipping reindexation of %s, already done', entity.eid)
-            return
-        alreadydone.add(entity.eid)
-        self.system_source.fti_index_entity(session, entity)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1105,14 +1068,10 @@ class Repository(object):
             if not only_inline_rels:
                 self.hm.call_hooks('before_update_entity', session, entity=entity)
         source.update_entity(session, entity)
-        if not only_inline_rels:
-            if need_fti_update and self.do_fti:
-                # reindex the entity only if this query is updating at least
-                # one indexable attribute
-                FTIndexEntityOp(session, entity=entity)
-            if source.should_call_hooks:
-                self.hm.call_hooks('after_update_entity', session, entity=entity)
+        self.system_source.update_info(session, entity, need_fti_update)
         if source.should_call_hooks:
+            if not only_inline_rels:
+                self.hm.call_hooks('after_update_entity', session, entity=entity)
             for attr, value, prevvalue in relations:
                 # if the relation is already cached, update existant cache
                 relcache = entity.relation_cached(attr, 'subject')
