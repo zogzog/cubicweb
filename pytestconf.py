@@ -13,7 +13,12 @@ class CustomPyTester(PyTester):
             return super(CustomPyTester, self).testfile(filename, batchmode)
         finally:
             modname = splitext(split(filename)[1])[0]
-            for cls in vars(sys.modules[modname]).values():
+            try:
+                module = sys.modules[modname]
+            except KeyError:
+                # error during test module import
+                return
+            for cls in vars(module).values():
                 if getattr(cls, '__module__', None) != modname:
                     continue
                 clean_repo_test_cls(cls)
