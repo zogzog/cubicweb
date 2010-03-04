@@ -257,6 +257,26 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(rset.rows, [[aff2]])
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2}, 'x')
         self.assertEquals(rset.rows, [])
+        # test can't update an attribute of an entity that can't be readen
+        self.assertRaises(Unauthorized, cu.execute, 'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid}, 'x')
+
+
+    def test_entity_created_in_transaction(self):
+        affschema = self.schema['Affaire']
+        origperms = affschema.permissions['read']
+        affschema.set_action_permissions('read', affschema.permissions['add'])
+        try:
+            cnx = self.login('iaminusersgrouponly')
+            cu = cnx.cursor()
+            aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
+            # entity created in transaction are readable *by eid*
+            self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}, 'x'))
+            # XXX would be nice if it worked
+            rset = cu.execute("Affaire X WHERE X sujet 'cool'")
+            self.assertEquals(len(rset), 0)
+        finally:
+            affschema.set_action_permissions('read', origperms)
+            cnx.close()
 
     def test_read_erqlexpr_has_text1(self):
         aff1 = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]

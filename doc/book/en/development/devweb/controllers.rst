@@ -22,7 +22,7 @@ Browsing:
 
 * the JSon controller (web/views/basecontrollers.py) provides services
   for Ajax calls, typically using JSON as a serialization format for
-  input, and sometimes using either JSON or XML for output; 
+  input, and sometimes using either JSON or XML for output;
 
 * the Login/Logout controllers (web/views/basecontrollers.py) make
   effective user login or logout requests

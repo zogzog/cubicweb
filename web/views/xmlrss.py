@@ -188,10 +188,13 @@ class RSSItemView(EntityView):
         self.w(u'<guid isPermaLink="true">%s</guid>\n'
                % xml_escape(entity.absolute_url()))
         self.render_title_link(entity)
-        self._marker('description', entity.dc_description(format='text/html'))
+        self.render_description(entity)
         self._marker('dc:date', entity.dc_date(self.date_format))
         self.render_entity_creator(entity)
         self.w(u'</item>\n')
+
+    def render_description(self, entity):
+        self._marker('description', entity.dc_description(format='text/html'))
 
     def render_title_link(self, entity):
         self._marker('title', entity.dc_long_title())

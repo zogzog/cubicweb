@@ -61,7 +61,7 @@ release = cw.version
 today_fmt = '%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
-unused_docs = ['D070-modules-cbw-api.en',]
+unused_docs = []
 
 # List of directories, relative to source directories, that shouldn't be searched
 # for source files.

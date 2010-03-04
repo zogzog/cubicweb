@@ -88,7 +88,7 @@ Examples of views class
 .. sourcecode:: python
 
     class RSSView(XMLView):
-        id = 'rss'
+        __regid__ = 'rss'
         title = _('rss')
         templatable = False
         content_type = 'text/xml'
@@ -104,7 +104,7 @@ Examples of views class
         """view called by the edition view when the user asks
         to search for something to link to the edited eid
         """
-        id = 'search-associate'
+        __regid__ = 'search-associate'
         title = _('search for association')
         __select__ = one_line_rset() & match_search_state('linksearch') & implements('Any')
 
@@ -152,7 +152,7 @@ Let us now improve the primary view of a blog
  from cubicweb.web.views.primary import Primaryview
 
  class BlogPrimaryView(PrimaryView):
-     id = 'primary'
+     __regid__ = 'primary'
      __select__ = PrimaryView.__select__ & implements('Blog')
      rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
 
@@ -162,7 +162,7 @@ Let us now improve the primary view of a blog
              self.w(u'<p>%s</p>' % entry.view('inblogcontext'))
 
  class BlogEntryInBlogView(EntityView):
-     id = 'inblogcontext'
+     __regid__ = 'inblogcontext'
      __select__ = implements('BlogEntry')
 
      def cell_call(self, row, col):

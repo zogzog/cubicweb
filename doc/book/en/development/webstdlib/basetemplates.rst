@@ -130,7 +130,7 @@ table.
                                                     view=view, context=context))
         if boxes:
             for box in boxes:
-                if box.id == 'search_box':
+                if box.__regid__ == 'search_box':
                     box.dispatch(w=self.w, view=view)
 
 
@@ -159,7 +159,7 @@ TheMainTemplate
 .. _TheMainTemplate:
 
 TheMainTemplate is responsible for the general layout of the entire application.
-It defines the template of ``id = main`` that is used by the instance.
+It defines the template of ``__regid__ = main`` that is used by the instance.
 
 The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
 builds the page based on the following pattern:

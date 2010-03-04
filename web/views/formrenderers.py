@@ -44,6 +44,7 @@ class FormRenderer(AppObject):
     +--------------+--------------+
     | field1 label | field2 input |
     +--------------+--------------+
+
     +---------+
     | buttons |
     +---------+
@@ -131,9 +132,9 @@ class FormRenderer(AppObject):
             errors = form.remaining_errors()
             if errors:
                 if len(errors) > 1:
-                    templstr = '<li>%s</li>\n'
+                    templstr = u'<li>%s</li>\n'
                 else:
-                    templstr = '&#160;%s\n'
+                    templstr = u'&#160;%s\n'
                 for field, err in errors:
                     if field is None:
                         errormsg += templstr % err
@@ -168,7 +169,7 @@ class FormRenderer(AppObject):
         return tag + '>'
 
     def close_form(self, form, values):
-        """seem dump but important for consistency w/ close form, and necessary
+        """seems dumb but important for consistency w/ close form, and necessary
         for form renderers overriding open_form to use something else or more than
         and <form>
         """

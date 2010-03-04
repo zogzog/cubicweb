@@ -116,7 +116,7 @@ different cases. We are now about to go through it and cutomize entirely
 our application.
 
 TheMainTemplate is responsible for the general layout of the entire application.
-It defines the template of ``id = main`` that is used by the application. Is
+It defines the template of ``__regid__ = main`` that is used by the application. Is
 also defined in ``cubicweb/web/views/basetemplates.py`` another template that can
 be used based on TheMainTemplate called SimpleMainTemplate which does not have
 a top section.

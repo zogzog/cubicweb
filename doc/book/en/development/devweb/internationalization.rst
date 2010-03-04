@@ -30,7 +30,7 @@ marked in one of the following ways :
 
      class PrimaryView(EntityView):
          """the full view of an non final entity"""
-         id = 'primary'
+         __regid__ = 'primary'
          title = _('primary')
 
   OR
@@ -39,7 +39,7 @@ marked in one of the following ways :
 
      class NoResultView(EmptyRsetView):
          """default view when no result has been found"""
-         id = 'noresult'
+         __regid__ = 'noresult'
 
          def call(self, **kwargs):
              self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
