@@ -386,7 +386,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs, [SQL_PREFIX + 'eid'])
+        sql = self.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs,
+                                 [SQL_PREFIX + 'eid'])
         self.doexec(session, sql, attrs)
 
     def delete_entity(self, session, etype, eid):
@@ -395,10 +396,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.delete(SQL_PREFIX + etype, attrs)
         self.doexec(session, sql, attrs)
 
-    def add_relation(self, session, subject, rtype, object):
+    def add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
-        attrs = {'eid_from': subject, 'eid_to': object}
-        sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
+        if inlined is False:
+            attrs = {'eid_from': subject, 'eid_to': object}
+            sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
+        else: # used by data import
+            etype = session.describe(subject)[0]
+            attrs = {SQL_PREFIX + 'eid': subject, SQL_PREFIX + rtype: object}
+            sql = self.sqlgen.update(SQL_PREFIX + etype, attrs,
+                                     [SQL_PREFIX + 'eid'])
         self.doexec(session, sql, attrs)
 
     def delete_relation(self, session, subject, rtype, object):
