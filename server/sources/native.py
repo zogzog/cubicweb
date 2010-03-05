@@ -208,7 +208,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # check full text index availibility
         if self.do_fti:
             if not self.indexer.has_fti_table(pool['system']):
-                if not repo.config.creating:
+                if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
         pool.pool_reset()
