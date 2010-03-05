@@ -1575,8 +1575,14 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999998] = ('State', 'system', None)
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s, A concerne N',
                    [('InsertStep',
-                     [('InsertRelationsStep', [])]
-                     )],
+                     [('InsertRelationsStep',
+                       [('OneFetchStep',
+                         [('Any A WHERE A concerne 999999, A is Affaire',
+                           [{'A': 'Affaire'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                      ])
+                    ],
                    {'n': 999999, 's': 999998})
 
     def test_delete_relation1(self):
