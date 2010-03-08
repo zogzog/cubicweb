@@ -256,20 +256,40 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.execute('Any X WHERE X is_instance_of BaseTransition, X messageid "hop"')
 
     def test_change_fulltextindexed(self):
-        target = self.request().create_entity(u'EmailAddress', address=u'rick.roll@dance.com')
+        req = self.request()
+        target = req.create_entity(u'Email', messageid=u'1234',
+                                   subject=u'rick.roll@dance.com')
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text "rick.roll"')
+        self.assertIn(target.eid, [item[0] for item in rset])
+        assert req.execute('SET A fulltextindexed FALSE '
+                            'WHERE E is CWEType, E name "Email", A is CWAttribute,'
+                            'A from_entity E, A relation_type R, R name "subject"')
+        self.commit()
+        rset = req.execute('Any X Where X has_text "rick.roll"')
+        self.failIf(rset)
+        assert req.execute('SET A fulltextindexed TRUE '
+                           'WHERE A from_entity E, A relation_type R, '
+                           'E name "Email", R name "subject"')
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text "rick.roll"')
+        self.assertIn(target.eid, [item[0] for item in rset])
+
+    def test_change_fulltext_container(self):
+        req = self.request()
+        target = req.create_entity(u'EmailAddress', address=u'rick.roll@dance.com')
+        target.set_relations(reverse_use_email=req.user)
+        self.commit()
+        rset = req.execute('Any X WHERE X has_text "rick.roll"')
+        self.assertIn(req.user.eid, [item[0] for item in rset])
+        assert self.execute('SET R fulltext_container NULL '
+                            'WHERE R name "use_email"')
         self.commit()
         rset = self.execute('Any X Where X has_text "rick.roll"')
         self.assertIn(target.eid, [item[0] for item in rset])
-
-        assert self.execute('''SET A fulltextindexed False
-                        WHERE E is CWEType,
-                              E name "EmailAddress",
-                              A is CWAttribute,
-                              A from_entity E,
-                              A relation_type R,
-                              R name "address"
-                    ''')
+        assert self.execute('SET R fulltext_container "subject" '
+                            'WHERE R name "use_email"')
         self.commit()
-        rset = self.execute('Any X Where X has_text "rick.roll"')
-        self.assertNotIn(target.eid, [item[0] for item in rset])
+        rset = req.execute('Any X WHERE X has_text "rick.roll"')
+        self.assertIn(req.user.eid, [item[0] for item in rset])
 

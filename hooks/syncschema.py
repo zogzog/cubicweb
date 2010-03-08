@@ -227,15 +227,22 @@ class SourceDbCWETypeRename(hook.Operation):
 
 class SourceDbCWRTypeUpdate(hook.Operation):
     """actually update some properties of a relation definition"""
-    rschema = values = entity = None # make pylint happy
+    rschema = entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
         rschema = self.rschema
-        if rschema.final or not 'inlined' in self.values:
-            return # nothing to do
-        inlined = self.values['inlined']
         entity = self.entity
+        if 'fulltext_container' in entity.edited_attributes:
+            ftiupdates = session.transaction_data.setdefault(
+                'fti_update_etypes', set())
+            for subjtype, objtype in rschema.rdefs:
+                ftiupdates.add(subjtype)
+                ftiupdates.add(objtype)
+            UpdateFTIndexOp(session)
+        if rschema.final or not 'inlined' in entity.edited_attributes:
+            return # nothing to do
+        inlined = entity.inlined
         # check in-lining is necessary / possible
         if not entity.inlined_changed(inlined):
             return # nothing to do
@@ -497,12 +504,6 @@ class SourceDbRDefUpdate(hook.Operation):
             UpdateFTIndexOp(session)
             session.transaction_data.setdefault(
                 'fti_update_etypes', set()).add(etype)
-        elif 'fulltext_container' in self.values:
-            ftiupdates = session.transaction_data.setdefault(
-                'fti_update_etypes', set())
-            ftiupdates.add(etype)
-            ftiupdates.add(self.kobj[1])
-            UpdateFTIndexOp(session)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -946,15 +947,14 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
 
     def __call__(self):
         entity = self.entity
-        rschema = self._cw.vreg.schema.rschema(entity.name)
         newvalues = {}
-        for prop in ('meta', 'symmetric', 'inlined'):
-            if prop in entity:
+        for prop in ('symmetric', 'inlined', 'fulltext_container'):
+            if prop in entity.edited_attributes:
                 newvalues[prop] = entity[prop]
         if newvalues:
+            rschema = self._cw.vreg.schema.rschema(entity.name)
+            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, entity=entity)
             MemSchemaCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues)
-            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues,
-                                  entity=entity)
 
 
 class AfterDelRelationTypeHook(SyncSchemaHook):
@@ -1164,15 +1164,11 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                       len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
-                try:
-                    source.fti_unindex_entity(session, entity.eid)
-                    for container in entity.fti_containers():
-                        if still_fti or container is not entity:
-                            source.fti_unindex_entity(session, entity.eid)
-                            source.fti_index_entity(session, container)
-                except Exception:
-                    self.critical('Error while updating Full Text Index for'
-                                  ' entity %s', entity.eid, exc_info=True)
+                source.fti_unindex_entity(session, entity.eid)
+                for container in entity.fti_containers():
+                    if still_fti or container is not entity:
+                        source.fti_unindex_entity(session, entity.eid)
+                        source.fti_index_entity(session, container)
         if len(to_reindex):
             # Transaction have already been committed
             session.pool.commit()

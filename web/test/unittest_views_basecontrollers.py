@@ -489,7 +489,7 @@ class EmbedControllerTC(CubicWebTC):
         # fail if the controller API changes and if EmbedController is not
         # updated (which is what happened before this test)
         req = self.request()
-        req.form['url'] = 'http://intranet.logilab.fr/'
+        req.form['url'] = 'http://www.logilab.fr/'
         controller = self.vreg['controllers'].select('embed', req)
         result = controller.publish(rset=None)
 
