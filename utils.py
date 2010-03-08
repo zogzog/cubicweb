@@ -11,9 +11,12 @@ import sys
 import decimal
 import datetime
 import random
+from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
+
+_MARKER = object()
 
 # initialize random seed from current time
 random.seed()
@@ -166,15 +169,13 @@ class HTMLHead(UStringIO):
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
 
-    def add_onload(self, jscode, jsoncall=False):
-        if jsoncall:
-            self.add_post_inline_script(u"""jQuery(CubicWeb).bind('ajax-loaded', function(event) {
+    def add_onload(self, jscode, jsoncall=_MARKER):
+        if jsoncall is not _MARKER:
+            warn('[3.7] specifying jsoncall is not needed anymore',
+                 DeprecationWarning, stacklevel=2)
+        self.add_post_inline_script(u"""jQuery(CubicWeb).one('server-response', function(event) {
 %s
 });""" % jscode)
-        else:
-            self.add_post_inline_script(u"""jQuery(document).ready(function () {
- %s
- });""" % jscode)
 
 
     def add_js(self, jsfile):
