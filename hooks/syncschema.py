@@ -1155,15 +1155,11 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                       len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
-                try:
-                    source.fti_unindex_entity(session, entity.eid)
-                    for container in entity.fti_containers():
-                        if still_fti or container is not entity:
-                            source.fti_unindex_entity(session, entity.eid)
-                            source.fti_index_entity(session, container)
-                except Exception:
-                    self.critical('Error while updating Full Text Index for'
-                                  ' entity %s', entity.eid, exc_info=True)
+                source.fti_unindex_entity(session, entity.eid)
+                for container in entity.fti_containers():
+                    if still_fti or container is not entity:
+                        source.fti_unindex_entity(session, entity.eid)
+                        source.fti_index_entity(session, container)
         if len(to_reindex):
             # Transaction have already been committed
             session.pool.commit()
