@@ -20,12 +20,6 @@ class ConnectionWrapper(object):
         self.source = source
         self._cnx = None
 
-    @property
-    def logged_user(self):
-        if self._cnx is None:
-            self._cnx = self.source._sqlcnx
-        return self._cnx.logged_user
-
     def cursor(self):
         if self._cnx is None:
             self._cnx = self.source._sqlcnx

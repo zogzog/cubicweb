@@ -21,10 +21,8 @@ from logilab.common.compat import any
 from logilab.common.cache import Cache
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
-from logilab.common.adbh import get_adv_func_helper
 from logilab.common.shellutils import getlogin
-
-from indexer import get_indexer
+from logilab.db import get_db_helper
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
@@ -151,16 +149,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                                 *args, **kwargs)
         # sql generator
         self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
-                                             self.encoding, ATTR_MAP.copy())
+                                             ATTR_MAP.copy())
         # full text index helper
         self.do_fti = not repo.config['delay-full-text-indexation']
-        if self.do_fti:
-            self.indexer = get_indexer(self.dbdriver, self.encoding)
-            # XXX should go away with logilab.db
-            self.dbhelper.fti_uid_attr = self.indexer.uid_attr
-            self.dbhelper.fti_table = self.indexer.table
-            self.dbhelper.fti_restriction_sql = self.indexer.restriction_sql
-            self.dbhelper.fti_need_distinct_query = self.indexer.need_distinct
         # sql queries cache
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
@@ -207,7 +198,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool.pool_set()
         # check full text index availibility
         if self.do_fti:
-            if not self.indexer.has_fti_table(pool['system']):
+            if not self.dbhelper.has_fti_table(pool['system']):
                 if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
@@ -321,8 +312,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         assert isinstance(sql, basestring), repr(sql)
         try:
             cursor = self.doexec(session, sql, args)
-        except (self.dbapi_module.OperationalError,
-                self.dbapi_module.InterfaceError):
+        except (self.OperationalError, self.InterfaceError):
             # FIXME: better detection of deconnection pb
             self.info("request failed '%s' ... retry with a new cursor", sql)
             session.pool.reconnect(self)
@@ -342,7 +332,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             prefix='ON THE FLY temp data insertion into %s from' % table)
         # generate sql queries if we are able to do so
         sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
-        query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
+        query = 'INSERT INTO %s %s' % (table, sql.encode(self._dbencoding))
         self.doexec(session, query, self.merge_args(args, query_args))
 
     def manual_insert(self, results, table, session):
@@ -359,7 +349,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             row = tuple(row)
             for index, cell in enumerate(row):
                 if isinstance(cell, Binary):
-                    cell = self.binary(cell.getvalue())
+                    cell = self._binary(cell.getvalue())
                 kwargs[str(index)] = cell
             kwargs_list.append(kwargs)
         self.doexecmany(session, query, kwargs_list)
@@ -614,7 +604,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         index
         """
         try:
-            self.indexer.cursor_unindex_object(eid, session.pool['system'])
+            self.dbhelper.cursor_unindex_object(eid, session.pool['system'])
         except Exception: # let KeyboardInterrupt / SystemExit propagate
             self.exception('error while unindexing %s', eid)
 
@@ -625,8 +615,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp
-            self.indexer.cursor_index_object(entity.eid, entity,
-                                             session.pool['system'])
+            self.dbhelper.cursor_index_object(entity.eid, entity,
+                                              session.pool['system'])
         except Exception: # let KeyboardInterrupt / SystemExit propagate
             self.exception('error while reindexing %s', entity)
 
@@ -659,7 +649,7 @@ class FTIndexEntityOp(hook.LateOperation):
 
 
 def sql_schema(driver):
-    helper = get_adv_func_helper(driver)
+    helper = get_db_helper(driver)
     tstamp_col_type = helper.TYPE_MAPPING['Datetime']
     schema = """
 /* Create the repository's system database */
@@ -692,7 +682,7 @@ CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid);
 
 
 def sql_drop_schema(driver):
-    helper = get_adv_func_helper(driver)
+    helper = get_db_helper(driver)
     return """
 %s
 DROP TABLE entities;

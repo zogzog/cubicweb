@@ -70,13 +70,9 @@ def reindex_entities(schema, session, withpb=True):
     # to be updated due to the reindexation
     repo = session.repo
     cursor = session.pool['system']
-    if not repo.system_source.indexer.has_fti_table(cursor):
-        from indexer import get_indexer
+    if not repo.system_source.dbhelper.has_fti_table(cursor):
         print 'no text index table'
-        indexer = get_indexer(repo.system_source.dbdriver)
-        # XXX indexer.init_fti(cursor) once index 0.7 is out
-        indexer.init_extensions(cursor)
-        cursor.execute(indexer.sql_init_fti())
+        dbhelper.init_fti(cursor)
     repo.config.disabled_hooks_categories.add('metadata')
     repo.config.disabled_hooks_categories.add('integrity')
     repo.system_source.do_fti = True  # ensure full-text indexation is activated

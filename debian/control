@@ -33,7 +33,7 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-indexer (>= 0.6.1), python-psycopg2 | python-mysqldb | python-pysqlite2
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, python-psycopg2 | python-mysqldb | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.

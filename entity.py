@@ -894,12 +894,12 @@ class Entity(AppObject, dict):
         """used by the full text indexer to get words to index
 
         this method should only be used on the repository side since it depends
-        on the indexer package
+        on the logilab.db package
 
         :rtype: list
         :return: the list of indexable word of this entity
         """
-        from indexer.query_objects import tokenize
+        from logilab.db.fti import tokenize
         # take care to cases where we're modyfying the schema
         pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
         words = []

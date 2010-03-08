@@ -7,9 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.adbh import get_adv_func_helper
-
-from indexer import get_indexer
+from logilab.db import get_db_helper
 
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CubicWebVRegistry
@@ -200,12 +198,7 @@ class FakeRepo(object):
 
 
 class FakeSource(object):
-    dbhelper = get_adv_func_helper('sqlite')
-    indexer = get_indexer('sqlite', 'UTF8')
-    dbhelper.fti_uid_attr = indexer.uid_attr
-    dbhelper.fti_table = indexer.table
-    dbhelper.fti_restriction_sql = indexer.restriction_sql
-    dbhelper.fti_need_distinct_query = indexer.need_distinct
+    dbhelper = get_db_helper('sqlite')
     def __init__(self, uri):
         self.uri = uri
 

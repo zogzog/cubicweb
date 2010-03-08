@@ -92,9 +92,8 @@ class BytesFileSystemStorage(Storage):
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                                  attr, entity.__regid__, entity.eid))
-        dbmod = sysource.dbapi_module
-        return dbmod.process_value(cu.fetchone()[0], [None, dbmod.BINARY],
-                                   binarywrap=str)
+        return sysource._process_value(cu.fetchone()[0], [None, dbmod.BINARY],
+                                       binarywrap=str)
 
 
 class AddFileOp(Operation):
