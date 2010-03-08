@@ -231,7 +231,15 @@ class SourceDbCWRTypeUpdate(hook.Operation):
     def precommit_event(self):
         session = self.session
         rschema = self.rschema
-        if rschema.final or not 'inlined' in self.values:
+        entity = self.entity
+        if 'fulltext_container' in entity.edited_attributes:
+            ftiupdates = session.transaction_data.setdefault(
+                'fti_update_etypes', set())
+            for subjtype, objtype in rschema.rdefs:
+                ftiupdates.add(subjtype)
+                ftiupdates.add(objtype)
+            UpdateFTIndexOp(session)
+        if rschema.final or not 'inlined' in entity.edited_attributes:
             return # nothing to do
         inlined = self.values['inlined']
         entity = self.entity
@@ -491,12 +499,6 @@ class SourceDbRDefUpdate(hook.Operation):
             UpdateFTIndexOp(session)
             session.transaction_data.setdefault(
                 'fti_update_etypes', set()).add(etype)
-        elif 'fulltext_container' in self.values:
-            ftiupdates = session.transaction_data.setdefault(
-                'fti_update_etypes', set())
-            ftiupdates.add(etype)
-            ftiupdates.add(self.kobj[1])
-            UpdateFTIndexOp(session)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
