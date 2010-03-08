@@ -226,7 +226,7 @@ class SourceDbCWETypeRename(hook.Operation):
 
 class SourceDbCWRTypeUpdate(hook.Operation):
     """actually update some properties of a relation definition"""
-    rschema = values = entity = None # make pylint happy
+    rschema = entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -241,8 +241,7 @@ class SourceDbCWRTypeUpdate(hook.Operation):
             UpdateFTIndexOp(session)
         if rschema.final or not 'inlined' in entity.edited_attributes:
             return # nothing to do
-        inlined = self.values['inlined']
-        entity = self.entity
+        inlined = entity.inlined
         # check in-lining is necessary / possible
         if not entity.inlined_changed(inlined):
             return # nothing to do
@@ -939,15 +938,14 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
 
     def __call__(self):
         entity = self.entity
-        rschema = self._cw.vreg.schema.rschema(entity.name)
         newvalues = {}
-        for prop in ('meta', 'symmetric', 'inlined'):
-            if prop in entity:
+        for prop in ('symmetric', 'inlined', 'fulltext_container'):
+            if prop in entity.edited_attributes:
                 newvalues[prop] = entity[prop]
         if newvalues:
+            rschema = self._cw.vreg.schema.rschema(entity.name)
+            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, entity=entity)
             MemSchemaCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues)
-            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues,
-                                  entity=entity)
 
 
 class AfterDelRelationTypeHook(SyncSchemaHook):
