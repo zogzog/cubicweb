@@ -30,7 +30,7 @@ This package contains:
 
 web = 'http://www.cubicweb.org'
 ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
-pyversions = ['2.4', '2.5']
+pyversions = ['2.5', '2.6']
 
 classifiers = [
            'Environment :: Web Environment',

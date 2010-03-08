@@ -11,6 +11,7 @@ import sys
 import decimal
 import datetime
 import random
+from uuid import uuid4
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
@@ -18,28 +19,10 @@ from logilab.common.deprecation import deprecated
 # initialize random seed from current time
 random.seed()
 
-if sys.version_info[:2] < (2, 5):
-
-    from time import time
-    from md5 import md5
-    from random import randint
-
-    def make_uid(key):
-        """forge a unique identifier
-        XXX not that unique on win32
-        """
-        key = str(key)
-        msg = key + "%.10f" % time() + str(randint(0, 1000000))
-        return key + md5(msg).hexdigest()
-
-else:
-
-    from uuid import uuid4
-
-    def make_uid(key):
-        # remove dash, generated uid are used as identifier sometimes (sql table
-        # names at least)
-        return str(key) + str(uuid4()).replace('-', '')
+def make_uid(key):
+    # remove dash, generated uid are used as identifier sometimes (sql table
+    # names at least)
+    return str(key) + str(uuid4()).replace('-', '')
 
 
 def dump_class(cls, clsname):
