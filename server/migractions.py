@@ -1223,12 +1223,6 @@ class ServerMigrationHelper(MigrationHelper):
     def rqliter(self, rql, kwargs=None, ask_confirm=True):
         return ForRqlIterator(self, rql, None, ask_confirm)
 
-    def cmd_deactivate_verification_hooks(self):
-        self.config.disabled_hooks_categories.add('integrity')
-
-    def cmd_reactivate_verification_hooks(self):
-        self.config.disabled_hooks_categories.remove('integrity')
-
     # broken db commands ######################################################
 
     def cmd_change_attribute_type(self, etype, attr, newtype, commit=True):
@@ -1278,6 +1272,14 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec(sql)
         if commit:
             self.commit()
+
+    @deprecated("[3.7] use session.disable_hooks_category('integrity')")
+    def cmd_deactivate_verification_hooks(self):
+        self.session.disable_hooks_category('integrity')
+
+    @deprecated("[3.7] use session.enable_hooks_category('integrity')")
+    def cmd_reactivate_verification_hooks(self):
+        self.session.enable_hooks_category('integrity')
 
 
 class ForRqlIterator:

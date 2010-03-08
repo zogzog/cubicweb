@@ -32,7 +32,7 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     session.execute = session.unsafe_execute
     permsdict = ss.deserialize_ertype_permissions(session)
 
-    config.disabled_hooks_categories.add('integrity')
+    changes = session.disable_hooks_category.add('integrity')
     for rschema in repo.schema.relations():
         rpermsdict = permsdict.get(rschema.eid, {})
         for rdef in rschema.rdefs.values():
@@ -72,7 +72,8 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     for action in ('read', 'add', 'delete'):
         drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
         drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
-    config.disabled_hooks_categories.remove('integrity')
+    if changes:
+        session.enable_hooks_category.add(*changes)
 
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 

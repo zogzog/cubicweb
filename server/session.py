@@ -42,6 +42,37 @@ def _make_description(selected, args, solution):
     return description
 
 
+class hooks_control(object):
+    """context manager to control activated hooks categories.
+
+    If mode is session.`HOOKS_DENY_ALL`, given hooks categories will
+    be enabled.
+
+    If mode is session.`HOOKS_ALLOW_ALL`, given hooks categories will
+    be disabled.
+    """
+    def __init__(self, session, mode, *categories):
+        self.session = session
+        self.mode = mode
+        self.categories = categories
+
+    def __enter__(self):
+        self.oldmode = self.session.set_hooks_mode(self.mode)
+        if self.mode is self.session.HOOKS_DENY_ALL:
+            self.changes = self.session.enable_hooks_category(*self.categories)
+        else:
+            self.changes = self.session.disable_hooks_category(*self.categories)
+
+    def __exit__(self, exctype, exc, traceback):
+        if self.changes:
+            if self.mode is self.session.HOOKS_DENY_ALL:
+                self.session.disable_hooks_category(*self.changes)
+            else:
+                self.session.enable_hooks_category(*self.changes)
+        self.session.set_hooks_mode(self.oldmode)
+
+
+
 class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
     together
@@ -244,6 +275,78 @@ class Session(RequestSessionBase):
         objtype = self.describe(eidto)[0]
         rdef = rschema.rdef(subjtype, objtype)
         return rdef.get(rprop)
+
+    # hooks activation control #################################################
+    # all hooks should be activated during normal execution
+
+    HOOKS_ALLOW_ALL = object()
+    HOOKS_DENY_ALL = object()
+
+    @property
+    def hooks_mode(self):
+        return getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+
+    def set_hooks_mode(self, mode):
+        assert mode is self.HOOKS_ALLOW_ALL or mode is self.HOOKS_DENY_ALL
+        oldmode = getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+        self._threaddata.hooks_mode = mode
+        return oldmode
+
+    @property
+    def disabled_hooks_categories(self):
+        try:
+            return getattr(self._threaddata, 'disabled_hooks_cats')
+        except AttributeError:
+            cats = self._threaddata.disabled_hooks_cats = set()
+            return cats
+
+    @property
+    def enabled_hooks_categories(self):
+        try:
+            return getattr(self._threaddata, 'enabled_hooks_cats')
+        except AttributeError:
+            cats = self._threaddata.enabled_hooks_cats = set()
+            return cats
+
+    def disable_hooks_category(self, *categories):
+        changes = set()
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            enablecats = self.enabled_hooks_categories
+            for category in categories:
+                if category in enablecats:
+                    enablecats.remove(category)
+                    changes.add(category)
+        else:
+            disablecats = self.disabled_hooks_categories
+            for category in categories:
+                if category not in disablecats:
+                    disablecats.add(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def enable_hooks_category(self, *categories):
+        changes = set()
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            enablecats = self.enabled_hooks_categories
+            for category in categories:
+                if category not in enablecats:
+                    enablecats.add(category)
+                    changes.add(category)
+        else:
+            disablecats = self.disabled_hooks_categories
+            for category in categories:
+                if category in self.disabled_hooks_categories:
+                    disablecats.remove(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def is_hooks_category_activated(self, category):
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            return category in self.enabled_hooks_categories
+        return category not in self.disabled_hooks_categories
+
+    def is_hook_activated(self, hook):
+        return self.is_hooks_category_activated(hook.category)
 
     # connection management ###################################################
 
@@ -715,6 +818,21 @@ class ChildSession(Session):
     @property
     def super_session(self):
         return self
+
+    @property
+    def hooks_mode(self):
+        return self.parent_session.hooks_mode
+    def set_hooks_mode(self, mode):
+        return self.parent_session.set_hooks_mode(mode)
+
+    @property
+    def disabled_hooks_categories(self):
+        return self.parent_session.disabled_hooks_categories
+
+    @property
+    def enabled_hooks_categories(self):
+        return self.parent_session.enabled_hooks_categories
+
 
     def get_mode(self):
         return self.parent_session.mode

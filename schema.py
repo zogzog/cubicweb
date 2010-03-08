@@ -1087,7 +1087,7 @@ def vocabulary(self, entity=None, form=None):
         if hasattr(cw, 'is_super_session'):
             # cw is a server session
             hasperm = cw.is_super_session or \
-                      not cw.vreg.config.is_hook_category_activated('integrity') or \
+                      not cw.is_hooks_category_activated('integrity') or \
                       cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
         else:
             hasperm = cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)

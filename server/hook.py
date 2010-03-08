@@ -113,11 +113,8 @@ def match_event(cls, req, **kwargs):
 @lltrace
 def enabled_category(cls, req, **kwargs):
     if req is None:
-        # server startup / shutdown event
-        config = kwargs['repo'].config
-    else:
-        config = req.vreg.config
-    return config.is_hook_activated(cls)
+        return True # XXX how to deactivate server startup / shutdown event
+    return req.is_hook_activated(cls)
 
 @objectify_selector
 @lltrace

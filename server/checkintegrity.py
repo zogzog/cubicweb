@@ -73,8 +73,6 @@ def reindex_entities(schema, session, withpb=True):
     if not repo.system_source.dbhelper.has_fti_table(cursor):
         print 'no text index table'
         dbhelper.init_fti(cursor)
-    repo.config.disabled_hooks_categories.add('metadata')
-    repo.config.disabled_hooks_categories.add('integrity')
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():
@@ -90,9 +88,6 @@ def reindex_entities(schema, session, withpb=True):
     if withpb:
         pb = ProgressBar(len(etypes) + 1)
     # first monkey patch Entity.check to disable validation
-    from cubicweb.entity import Entity
-    _check = Entity.check
-    Entity.check = lambda self, creation=False: True
     # clear fti table first
     session.system_sql('DELETE FROM %s' % session.repo.system_source.dbhelper.fti_table)
     if withpb:
@@ -102,14 +97,9 @@ def reindex_entities(schema, session, withpb=True):
     source = repo.system_source
     for eschema in etypes:
         for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
-            source.fti_unindex_entity(session, entity.eid)
             source.fti_index_entity(session, entity)
         if withpb:
             pb.update()
-    # restore Entity.check
-    Entity.check = _check
-    repo.config.disabled_hooks_categories.remove('metadata')
-    repo.config.disabled_hooks_categories.remove('integrity')
 
 
 def check_schema(schema, session, eids, fix=1):
