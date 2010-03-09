@@ -281,7 +281,7 @@ class SchemaModificationHooksTC(CubicWebTC):
                             'WHERE E is CWEType, E name "Email", A is CWAttribute,'
                             'A from_entity E, A relation_type R, R name "subject"')
         self.commit()
-        rset = req.execute('Any X Where X has_text "rick.roll"')
+        rset = req.execute('Any X WHERE X has_text "rick.roll"')
         self.failIf(rset)
         assert req.execute('SET A fulltextindexed TRUE '
                            'WHERE A from_entity E, A relation_type R, '
@@ -300,7 +300,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         assert self.execute('SET R fulltext_container NULL '
                             'WHERE R name "use_email"')
         self.commit()
-        rset = self.execute('Any X Where X has_text "rick.roll"')
+        rset = self.execute('Any X WHERE X has_text "rick.roll"')
         self.assertIn(target.eid, [item[0] for item in rset])
         assert self.execute('SET R fulltext_container "subject" '
                             'WHERE R name "use_email"')
