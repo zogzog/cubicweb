@@ -49,13 +49,13 @@ of configuration file.
    and `https://localhost/demo` and actually running on port 8080, it
    takes to the http:::
 
-     RewriteCond %(REQUEST_URI) ^/demo
+     RewriteCond %{REQUEST_URI} ^/demo
      RewriteRule ^/demo$ /demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
 
    and for the https:::
 
-     RewriteCond %(REQUEST_URI) ^/ demo
+     RewriteCond %{REQUEST_URI} ^/ demo
      RewriteRule ^/demo$/demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
 
@@ -63,7 +63,7 @@ of configuration file.
    and we will file in the all-in-one.conf of the instance:::
 
      base-url = http://localhost/demo
-     https-url = `https://localhost/demo`
+     https-url = https://localhost/demo
 
 Setting up the web client
 -------------------------
