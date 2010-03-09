@@ -87,7 +87,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # XXX we should imo rely on the orm to first fetch existing entity if any
     # then delete it.
     if session.is_internal_session \
-           or not session.is_hooks_category_activated('integrity'):
+           or not session.is_hook_category_activated('integrity'):
         return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
@@ -983,7 +983,7 @@ class Repository(object):
             if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))
         entity.set_defaults()
-        if session.is_hooks_category_activated('integrity'):
+        if session.is_hook_category_activated('integrity'):
             entity.check(creation=True)
         source.add_entity(session, entity)
         if source.uri != 'system':
@@ -1031,7 +1031,7 @@ class Repository(object):
             print 'UPDATE entity', etype, entity.eid, \
                   dict(entity), edited_attributes
         entity.edited_attributes = edited_attributes
-        if session.is_hooks_category_activated('integrity'):
+        if session.is_hook_category_activated('integrity'):
             entity.check()
         eschema = entity.e_schema
         session.set_entity_cache(entity)

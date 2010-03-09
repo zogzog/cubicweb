@@ -61,16 +61,16 @@ class hooks_control(object):
     def __enter__(self):
         self.oldmode = self.session.set_hooks_mode(self.mode)
         if self.mode is self.session.HOOKS_DENY_ALL:
-            self.changes = self.session.enable_hooks_category(*self.categories)
+            self.changes = self.session.enable_hook_categories(*self.categories)
         else:
-            self.changes = self.session.disable_hooks_category(*self.categories)
+            self.changes = self.session.disable_hook_categories(*self.categories)
 
     def __exit__(self, exctype, exc, traceback):
         if self.changes:
             if self.mode is self.session.HOOKS_DENY_ALL:
-                self.session.disable_hooks_category(*self.changes)
+                self.session.disable_hook_categories(*self.changes)
             else:
-                self.session.enable_hooks_category(*self.changes)
+                self.session.enable_hook_categories(*self.changes)
         self.session.set_hooks_mode(self.oldmode)
 
 INDENT = ''
@@ -377,60 +377,76 @@ class Session(RequestSessionBase):
         return oldmode
 
     @property
-    def disabled_hooks_categories(self):
+    def disabled_hook_categories(self):
         try:
-            return getattr(self._threaddata, 'disabled_hooks_cats')
+            return getattr(self._threaddata, 'disabled_hook_cats')
         except AttributeError:
-            cats = self._threaddata.disabled_hooks_cats = set()
+            cats = self._threaddata.disabled_hook_cats = set()
             return cats
 
     @property
-    def enabled_hooks_categories(self):
+    def enabled_hook_categories(self):
         try:
-            return getattr(self._threaddata, 'enabled_hooks_cats')
+            return getattr(self._threaddata, 'enabled_hook_cats')
         except AttributeError:
-            cats = self._threaddata.enabled_hooks_cats = set()
+            cats = self._threaddata.enabled_hook_cats = set()
             return cats
 
-    def disable_hooks_category(self, *categories):
+    def disable_hook_categories(self, *categories):
+        """disable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
+        """
         changes = set()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enablecats = self.enabled_hooks_categories
+            enablecats = self.enabled_hook_categories
             for category in categories:
                 if category in enablecats:
                     enablecats.remove(category)
                     changes.add(category)
         else:
-            disablecats = self.disabled_hooks_categories
+            disablecats = self.disabled_hook_categories
             for category in categories:
                 if category not in disablecats:
                     disablecats.add(category)
                     changes.add(category)
         return tuple(changes)
 
-    def enable_hooks_category(self, *categories):
+    def enable_hook_categories(self, *categories):
+        """enable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
+        """
         changes = set()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enablecats = self.enabled_hooks_categories
+            enablecats = self.enabled_hook_categories
             for category in categories:
                 if category not in enablecats:
                     enablecats.add(category)
                     changes.add(category)
         else:
-            disablecats = self.disabled_hooks_categories
+            disablecats = self.disabled_hook_categories
             for category in categories:
-                if category in self.disabled_hooks_categories:
+                if category in self.disabled_hook_categories:
                     disablecats.remove(category)
                     changes.add(category)
         return tuple(changes)
 
-    def is_hooks_category_activated(self, category):
+    def is_hook_category_activated(self, category):
+        """return a boolean telling if the given category is currently activated
+        or not
+        """
         if self.hooks_mode is self.HOOKS_DENY_ALL:
-            return category in self.enabled_hooks_categories
-        return category not in self.disabled_hooks_categories
+            return category in self.enabled_hook_categories
+        return category not in self.disabled_hook_categories
 
     def is_hook_activated(self, hook):
-        return self.is_hooks_category_activated(hook.category)
+        """return a boolean telling if the given hook class is currently
+        activated or not
+        """
+        return self.is_hook_category_activated(hook.category)
 
     # connection management ###################################################
 
@@ -878,7 +894,7 @@ class InternalSession(Session):
         self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.is_internal_session = True
-        self.disable_hooks_category('integrity')
+        self.disable_hook_categories('integrity')
 
 
 class InternalManager(object):

@@ -109,12 +109,13 @@ class EntityUpdateHook(NotificationHook):
 
     def __call__(self):
         session = self._cw
-        if self.entity.eid in session.transaction_data.get('neweids', ()):
+        if session.added_in_transaction(self.entity.eid):
             return # entity is being created
         # then compute changes
         changes = session.transaction_data.setdefault('changes', {})
         thisentitychanges = changes.setdefault(self.entity.eid, set())
-        attrs = [k for k in self.entity.edited_attributes if not k in self.skip_attrs]
+        attrs = [k for k in self.entity.edited_attributes
+                 if not k in self.skip_attrs]
         if not attrs:
             return
         rqlsel, rqlrestr = [], ['X eid %(x)s']

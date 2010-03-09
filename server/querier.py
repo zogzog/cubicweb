@@ -599,16 +599,16 @@ class QuerierHelper(object):
             try:
                 self.solutions(session, rqlst, args)
             except UnknownEid:
-                # we want queries such as "Any X WHERE X eid 9999"
-                # return an empty result instead of raising UnknownEid
+                # we want queries such as "Any X WHERE X eid 9999" return an
+                # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if not rqlst.TYPE == 'select':
             if session.read_security:
                 check_no_password_selected(rqlst)
-            # write query, ensure session's mode is 'write' so connections
-            # won't be released until commit/rollback
+            # write query, ensure session's mode is 'write' so connections won't
+            # be released until commit/rollback
             session.mode = 'write'
             cachekey = None
         else:

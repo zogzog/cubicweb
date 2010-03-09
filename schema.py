@@ -1084,7 +1084,7 @@ def vocabulary(self, entity=None, form=None):
         if hasattr(cw, 'write_security'): # test it's a session and not a request
             # cw is a server session
             hasperm = not cw.write_security or \
-                      not cw.is_hooks_category_activated('integrity') or \
+                      not cw.is_hook_category_activated('integrity') or \
                       cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
         else:
             hasperm = cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)

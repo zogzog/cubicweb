@@ -130,16 +130,15 @@ class SupervisionEmailView(Component):
 
     def _relation_context(self, changedescr):
         session = self._cw
-        _ = session._cw._
         def describe(eid):
             try:
-                return _(session.describe(eid)[0]).lower()
+                return session._(session.describe(eid)[0]).lower()
             except UnknownEid:
                 # may occurs when an entity has been deleted from an external
                 # source and we're cleaning its relation
-                return _('unknown external entity')
+                return session._('unknown external entity')
         eidfrom, rtype, eidto = changedescr.eidfrom, changedescr.rtype, changedescr.eidto
-        return {'rtype': _(rtype),
+        return {'rtype': session._(rtype),
                 'eidfrom': eidfrom,
                 'frometype': describe(eidfrom),
                 'eidto': eidto,
