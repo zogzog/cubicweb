@@ -998,7 +998,7 @@ application_configuration = deprecated('use instance_configuration')(instance_co
 
 _EXT_REGISTERED = False
 def register_stored_procedures():
-    from logilab.db import FunctionDescr
+    from logilab.database import FunctionDescr
     from rql.utils import register_function, iter_funcnode_variables
 
     global _EXT_REGISTERED

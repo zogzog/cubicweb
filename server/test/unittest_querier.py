@@ -35,7 +35,7 @@ def init_sqlite_connexion(cnx):
 SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
 
 
-from logilab.db import _GenericAdvFuncHelper
+from logilab.database import _GenericAdvFuncHelper
 TYPEMAP = _GenericAdvFuncHelper.TYPE_MAPPING
 
 class MakeSchemaTC(TestCase):

@@ -6,8 +6,8 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from logilab.db import FunctionDescr
-from logilab.db.sqlite import register_sqlite_pyfunc
+from logilab.database import FunctionDescr
+from logilab.database.sqlite import register_sqlite_pyfunc
 from rql.utils import register_function
 
 try:

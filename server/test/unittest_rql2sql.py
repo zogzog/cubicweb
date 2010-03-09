@@ -1071,7 +1071,7 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.db import get_db_helper
+from logilab.database import get_db_helper
 
 class CWRQLTC(RQLGeneratorTC):
     schema = schema

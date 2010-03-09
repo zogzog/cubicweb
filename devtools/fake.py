@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.db import get_db_helper
+from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CubicWebVRegistry

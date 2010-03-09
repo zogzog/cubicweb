@@ -234,7 +234,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
 
 
 # sqlite'stored procedures have to be registered at connection opening time
-from logilab.db import SQL_CONNECT_HOOKS
+from logilab.database import SQL_CONNECT_HOOKS
 
 # add to this set relations which should have their add security checking done
 # *BEFORE* adding the actual relation (done after by default)

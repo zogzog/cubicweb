@@ -70,7 +70,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
         cnx.logged_user = user
     except AttributeError:
         # C object, __slots__
-        from logilab.db import _SimpleConnectionWrapper
+        from logilab.database import _SimpleConnectionWrapper
         cnx = _SimpleConnectionWrapper(cnx)
         cnx.logged_user = user
     return cnx
@@ -83,7 +83,7 @@ def system_source_cnx(source, dbms_system_base=False,
     create/drop the instance database)
     """
     if dbms_system_base:
-        from logilab.db import get_db_helper
+        from logilab.database import get_db_helper
         system_db = get_db_helper(source['db-driver']).system_database()
         return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
     return source_cnx(source, special_privs=special_privs, verbose=verbose)
@@ -93,7 +93,7 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
     or a database
     """
     import logilab.common as lgp
-    from logilab.db import get_db_helper
+    from logilab.database import get_db_helper
     lgp.USE_MX_DATETIME = False
     special_privs = ''
     driver = source['db-driver']
@@ -210,7 +210,7 @@ class RepositoryDeleteHandler(CommandHandler):
 
     def cleanup(self):
         """remove instance's configuration and database"""
-        from logilab.db import get_db_helper
+        from logilab.database import get_db_helper
         source = self.config.sources()['system']
         dbname = source['db-name']
         helper = get_db_helper(source['db-driver'])
@@ -293,7 +293,7 @@ class CreateInstanceDBCommand(Command):
         )
     def run(self, args):
         """run the command with its specific arguments"""
-        from logilab.db import get_db_helper
+        from logilab.database import get_db_helper
         verbose = self.get('verbose')
         automatic = self.get('automatic')
         appid = pop_arg(args, msg='No instance specified !')
