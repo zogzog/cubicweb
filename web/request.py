@@ -477,7 +477,7 @@ class CubicWebRequestBase(DBAPIRequest):
     # high level methods for HTML headers management ##########################
 
     def add_onload(self, jscode):
-        self.html_headers.add_onload(jscode, self.json_request)
+        self.html_headers.add_onload(jscode)
 
     def add_js(self, jsfiles, localfile=True):
         """specify a list of JS files to include in the HTML headers
