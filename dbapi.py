@@ -203,11 +203,6 @@ class DBAPIRequest(RequestSessionBase):
             self.pgettext = lambda x, y: y
         self.debug('request default language: %s', self.lang)
 
-    def decorate_rset(self, rset):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
-
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         return self.cnx.describe(eid)
@@ -659,11 +654,11 @@ class Cursor(object):
         Return values are not defined by the DB-API, but this here it returns a
         ResultSet object.
         """
-        self._res = res = self._repo.execute(self._sessid, operation,
-                                             parameters, eid_key, build_descr)
-        self.req.decorate_rset(res)
+        self._res = rset = self._repo.execute(self._sessid, operation,
+                                              parameters, eid_key, build_descr)
+        rset.req = self.req
         self._index = 0
-        return res
+        return rset
 
 
     def executemany(self, operation, seq_of_parameters):

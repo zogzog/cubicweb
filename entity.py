@@ -441,7 +441,8 @@ class Entity(AppObject, dict):
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
                          {'x': self.eid}, [(self.__regid__,)])
-        return self._cw.decorate_rset(rset)
+        rset.req = self._cw
+        return rset
 
     def to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
@@ -543,7 +544,7 @@ class Entity(AppObject, dict):
                 value = rset[i]
                 if value is None:
                     rrset = ResultSet([], rql, {'x': self.eid})
-                    self._cw.decorate_rset(rrset)
+                    rrset.req = self._cw
                 else:
                     rrset = self._cw.eid_rset(value)
                 self.set_related_cache(rtype, role, rrset)

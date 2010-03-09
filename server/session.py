@@ -611,15 +611,11 @@ class Session(RequestSessionBase):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
 
-    def decorate_rset(self, rset):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
-
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
         """db-api like method directly linked to the querier execute method"""
         rset = self._execute(self, rql, kwargs, eid_key, build_descr)
-        return self.decorate_rset(rset)
+        rset.req = self
+        return rset
 
     def _clear_thread_data(self):
         """remove everything from the thread local storage, except pool

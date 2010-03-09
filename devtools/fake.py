@@ -146,11 +146,6 @@ class FakeSession(RequestSessionBase):
     def system_sql(self, sql, args=None):
         pass
 
-    def decorate_rset(self, rset, propagate=False):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
-
     def set_entity_cache(self, entity):
         pass
 

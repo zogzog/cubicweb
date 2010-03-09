@@ -76,7 +76,8 @@ class RequestSessionBase(object):
         def get_entity(row, col=0, etype=etype, req=self, rset=rset):
             return req.vreg.etype_class(etype)(req, rset, row, col)
         rset.get_entity = get_entity
-        return self.decorate_rset(rset)
+        rset.req = self
+        return rset
 
     def eid_rset(self, eid, etype=None):
         """return a result set for the given eid without doing actual query
@@ -88,14 +89,17 @@ class RequestSessionBase(object):
             etype = self.describe(eid)[0]
         rset = ResultSet([(eid,)], 'Any X WHERE X eid %(x)s', {'x': eid},
                          [(etype,)])
-        return self.decorate_rset(rset)
+        rset.req = self
+        return rset
 
     def empty_rset(self):
         """return a result set for the given eid without doing actual query
         (we have the eid, we can suppose it exists and user has access to the
         entity)
         """
-        return self.decorate_rset(ResultSet([], 'Any X WHERE X eid -1'))
+        rset = ResultSet([], 'Any X WHERE X eid -1')
+        rset.req = self
+        return rset
 
     def entity_from_eid(self, eid, etype=None):
         """return an entity instance for the given eid. No query is done"""
@@ -385,10 +389,6 @@ class RequestSessionBase(object):
 
     def base_url(self):
         """return the root url of the instance"""
-        raise NotImplementedError
-
-    def decorate_rset(self, rset):
-        """add vreg/req (at least) attributes to the given result set """
         raise NotImplementedError
 
     def describe(self, eid):
