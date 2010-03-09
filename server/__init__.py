@@ -145,12 +145,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # can't skip entities table even if system source doesn't support them,
     # they are used sometimes by generated sql. Keeping them empty is much
     # simpler than fixing this...
-    if sqlcnx.logged_user != source['db-user']:
-        schemasql = sqlschema(schema, driver, user=source['db-user'])
-    else:
-        schemasql = sqlschema(schema, driver)
-        #skip_entities=[str(e) for e in schema.entities()
-        #               if not repo.system_source.support_entity(str(e))])
+    schemasql = sqlschema(schema, driver)
+    #skip_entities=[str(e) for e in schema.entities()
+    #               if not repo.system_source.support_entity(str(e))])
     sqlexec(schemasql, execute, pbtitle=_title)
     sqlcursor.close()
     sqlcnx.commit()

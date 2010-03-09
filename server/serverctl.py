@@ -63,9 +63,18 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             password = getpass('password: ')
     extra_args = source.get('db-extra-arguments')
     extra = extra_args and {'extra_args': extra_args} or {}
-    return get_connection(driver, dbhost, dbname, user, password=password,
-                          port=source.get('db-port'),
-                          **extra)
+    cnx = get_connection(driver, dbhost, dbname, user, password=password,
+                         port=source.get('db-port'),
+                         **extra)
+    if not hasattr(cnx, 'logged_user'): # XXX logilab.db compat
+        try:
+            cnx.logged_user = user
+        except AttributeError:
+            # C object, __slots__
+            from logilab.db import _SimpleConnectionWrapper
+            cnx = _SimpleConnectionWrapper(cnx)
+            cnx.logged_user = user
+    return cnx
 
 def system_source_cnx(source, dbms_system_base=False,
                       special_privs='CREATE/DROP DATABASE', verbose=True):

@@ -1068,7 +1068,7 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.common.adbh import ADV_FUNC_HELPER_DIRECTORY
+from logilab.common.adbh import get_adv_func_helper
 
 class CWRQLTC(RQLGeneratorTC):
     schema = schema
@@ -1103,7 +1103,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('postgres', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['postgres']
+        dbms_helper = get_adv_func_helper('postgres')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql
@@ -1406,7 +1406,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('sqlite', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['sqlite']
+        dbms_helper = get_adv_func_helper('sqlite')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql
@@ -1514,7 +1514,7 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('mysql', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['mysql']
+        dbms_helper = get_adv_func_helper('mysql')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql
