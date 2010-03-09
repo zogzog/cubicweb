@@ -27,7 +27,6 @@ class SupervisingTC(CubicWebTC):
 
 
     def test_supervision(self):
-        session = self.session
         # do some modification
         user = self.execute('INSERT CWUser X: X login "toto", X upassword "sosafe", X in_group G '
                             'WHERE G name "users"').get_entity(0, 0)
@@ -37,6 +36,7 @@ class SupervisingTC(CubicWebTC):
         self.execute('SET X content "duh?" WHERE X is Comment')
         self.execute('DELETE X comments Y WHERE Y is Card, Y title "une autre news !"')
         # check only one supervision email operation
+        session = self.session
         sentops = [op for op in session.pending_operations
                    if isinstance(op, SupervisionMailOp)]
         self.assertEquals(len(sentops), 1)
