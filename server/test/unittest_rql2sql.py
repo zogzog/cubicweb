@@ -1486,26 +1486,26 @@ HAVING COUNT(_T0.C0)>1'''),
     def test_has_text(self):
         for t in self._parse((
             ('Any X WHERE X has_text "toto tata"',
-             """SELECT appears0.uid
+             """SELECT DISTINCT appears0.uid
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
 
             ('Any X WHERE X has_text %(text)s',
-             """SELECT appears0.uid
+             """SELECT DISTINCT appears0.uid
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo'))"""),
 
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT _X.eid
+             """SELECT DISTINCT _X.eid
 FROM appears AS appears0, entities AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
 
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
-             """SELECT _X.cw_eid
+             """SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Basket AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-UNION ALL
-SELECT _X.cw_eid
+UNION
+SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 """),

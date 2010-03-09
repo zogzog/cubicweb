@@ -95,16 +95,16 @@ class HooksRegistry(CWRegistry):
 
 VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
 
-
+_MARKER = object()
 def entity_oldnewvalue(entity, attr):
     """returns the couple (old attr value, new attr value)
     NOTE: will only work in a before_update_entity hook
     """
     # get new value and remove from local dict to force a db query to
     # fetch old value
-    newvalue = entity.pop(attr, None)
+    newvalue = entity.pop(attr, _MARKER)
     oldvalue = getattr(entity, attr)
-    if newvalue is not None:
+    if newvalue is not _MARKER:
         entity[attr] = newvalue
     return oldvalue, newvalue
 

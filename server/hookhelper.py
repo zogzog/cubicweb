@@ -13,7 +13,6 @@ from cubicweb.server import hook
 
 @deprecated('[3.6] entity_oldnewvalue should be imported from cw.server.hook')
 def entity_oldnewvalue(entity, attr):
-    """return the "name" attribute of the entity with the given eid"""
     return hook.entity_oldnewvalue(entity, attr)
 
 @deprecated('[3.6] entity_name is deprecated, use entity.name')

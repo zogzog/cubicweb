@@ -15,38 +15,40 @@ from cubicweb.toolsutils import (Command, copy_skeleton, create_symlink,
                                  create_dir)
 from cubicweb.cwconfig import CubicWebConfiguration
 
-from logilab import common as lgc
-from logilab import constraint as lgcstr
-from logilab import mtconverter as lgmtc
-import rql, yams, yapps, simplejson, docutils, roman
 
-SLINK_DIRECTORIES = [
-    (lgc.__path__[0], 'logilab/common'),
-    (lgmtc.__path__[0], 'logilab/mtconverter'),
-    (lgcstr.__path__[0], 'logilab/constraint'),
-    (rql.__path__[0], 'rql'),
-    (simplejson.__path__[0], 'simplejson'),
-    (yams.__path__[0], 'yams'),
-    (yapps.__path__[0], 'yapps'),
-    (docutils.__path__[0], 'docutils'),
-    (roman.__file__.replace('.pyc', '.py'), 'roman.py'),
+def slink_directories():
+    import rql, yams, yapps, simplejson, docutils, roman
+    from logilab import common as lgc
+    from logilab import constraint as lgcstr
+    from logilab import mtconverter as lgmtc
+    dirs = [
+        (lgc.__path__[0], 'logilab/common'),
+        (lgmtc.__path__[0], 'logilab/mtconverter'),
+        (lgcstr.__path__[0], 'logilab/constraint'),
+        (rql.__path__[0], 'rql'),
+        (simplejson.__path__[0], 'simplejson'),
+        (yams.__path__[0], 'yams'),
+        (yapps.__path__[0], 'yapps'),
+        (docutils.__path__[0], 'docutils'),
+        (roman.__file__.replace('.pyc', '.py'), 'roman.py'),
 
-    ('/usr/share/fckeditor/', 'fckeditor'),
+        ('/usr/share/fckeditor/', 'fckeditor'),
 
-    (join(CW_SOFTWARE_ROOT, 'web', 'data'), join('cubes', 'shared', 'data')),
-    (join(CW_SOFTWARE_ROOT, 'web', 'wdoc'), join('cubes', 'shared', 'wdoc')),
-    (join(CW_SOFTWARE_ROOT, 'i18n'), join('cubes', 'shared', 'i18n')),
-    (join(CW_SOFTWARE_ROOT, 'goa', 'tools'), 'tools'),
-    (join(CW_SOFTWARE_ROOT, 'goa', 'bin'), 'bin'),
-    ]
+        (join(CW_SOFTWARE_ROOT, 'web', 'data'), join('cubes', 'shared', 'data')),
+        (join(CW_SOFTWARE_ROOT, 'web', 'wdoc'), join('cubes', 'shared', 'wdoc')),
+        (join(CW_SOFTWARE_ROOT, 'i18n'), join('cubes', 'shared', 'i18n')),
+        (join(CW_SOFTWARE_ROOT, 'goa', 'tools'), 'tools'),
+        (join(CW_SOFTWARE_ROOT, 'goa', 'bin'), 'bin'),
+        ]
 
-try:
-    import dateutil
-    import vobject
-    SLINK_DIRECTORIES.extend([ (dateutil.__path__[0], 'dateutil'),
-                               (vobject.__path__[0], 'vobject') ] )
-except ImportError:
-    pass
+    try:
+        import dateutil
+        import vobject
+        dirs.extend([ (dateutil.__path__[0], 'dateutil'),
+                      (vobject.__path__[0], 'vobject') ] )
+    except ImportError:
+        pass
+    return dirs
 
 COPY_CW_FILES = (
     '__init__.py',
@@ -194,7 +196,7 @@ class NewGoogleAppCommand(Command):
         copy_skeleton(join(CW_SOFTWARE_ROOT, 'goa', 'skel'),
                       appldir, context, askconfirm=True)
         # cubicweb core dependancies
-        for directory, subdirectory in SLINK_DIRECTORIES:
+        for directory, subdirectory in slink_directories():
             subdirectory = join(appldir, subdirectory)
             if not exists(split(subdirectory)[0]):
                 create_dir(split(subdirectory)[0])

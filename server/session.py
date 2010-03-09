@@ -280,9 +280,15 @@ class Session(RequestSessionBase):
         self.set_language(value)
 
     def deleted_in_transaction(self, eid):
+        """return True if the entity of the given eid is being deleted in the
+        current transaction
+        """
         return eid in self.transaction_data.get('pendingeids', ())
 
     def added_in_transaction(self, eid):
+        """return True if the entity of the given eid is being created in the
+        current transaction
+        """
         return eid in self.transaction_data.get('neweids', ())
 
     def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
