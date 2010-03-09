@@ -56,30 +56,21 @@ class CWRType(AnyEntity):
             return u'%s <<%s>>' % (self.dc_title(), ', '.join(stereotypes))
         return self.dc_title()
 
-    def inlined_changed(self, inlined):
-        """check inlining is necessary and possible:
-
-        * return False if nothing has changed
-        * raise ValidationError if inlining is'nt possible
-        * eventually return True
+    def check_inlined_allowed(self):
+        """check inlining is possible, raise ValidationError if not possible
         """
-        rschema = self._cw.vreg.schema.rschema(self.name)
-        if inlined == rschema.inlined:
-            return False
-        if inlined:
-            # don't use the persistent schema, we may miss cardinality changes
-            # in the same transaction
-            for rdef in self.reverse_relation_type:
-                card = rdef.cardinality[0]
-                if not card in '?1':
-                    rtype = self.name
-                    stype = rdef.stype
-                    otype = rdef.otype
-                    msg = self._cw._("can't set inlined=%(inlined)s, "
-                                     "%(stype)s %(rtype)s %(otype)s "
-                                     "has cardinality=%(card)s")
-                    raise ValidationError(self.eid, {'inlined': msg % locals()})
-        return True
+        # don't use the persistent schema, we may miss cardinality changes
+        # in the same transaction
+        for rdef in self.reverse_relation_type:
+            card = rdef.cardinality[0]
+            if not card in '?1':
+                rtype = self.name
+                stype = rdef.stype
+                otype = rdef.otype
+                msg = self._cw._("can't set inlined=%(inlined)s, "
+                                 "%(stype)s %(rtype)s %(otype)s "
+                                 "has cardinality=%(card)s")
+                raise ValidationError(self.eid, {'inlined': msg % locals()})
 
     def db_key_name(self):
         """XXX goa specific"""

@@ -226,25 +226,26 @@ class SourceDbCWETypeRename(hook.Operation):
 
 class SourceDbCWRTypeUpdate(hook.Operation):
     """actually update some properties of a relation definition"""
-    rschema = entity = None # make pylint happy
+    rschema = entity = values = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
         rschema = self.rschema
-        entity = self.entity
-        if 'fulltext_container' in entity.edited_attributes:
+        if rschema.final:
+            return
+        session = self.session
+        if 'fulltext_container' in self.values:
             ftiupdates = session.transaction_data.setdefault(
                 'fti_update_etypes', set())
             for subjtype, objtype in rschema.rdefs:
                 ftiupdates.add(subjtype)
                 ftiupdates.add(objtype)
             UpdateFTIndexOp(session)
-        if rschema.final or not 'inlined' in entity.edited_attributes:
+        if not 'inlined' in self.values:
             return # nothing to do
-        inlined = entity.inlined
+        inlined = self.values['inlined']
         # check in-lining is necessary / possible
-        if not entity.inlined_changed(inlined):
-            return # nothing to do
+        if inlined:
+            self.entity.check_inlined_allowed()
         # inlined changed, make necessary physical changes!
         sqlexec = self.session.system_sql
         rtype = rschema.type
@@ -925,26 +926,22 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
 
 class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
     """check name change, handle final"""
-    __regid__ = 'checkupdatecwrtype'
+    __regid__ = 'syncupdatecwrtype'
     events = ('before_update_entity',)
 
     def __call__(self):
-        check_valid_changes(self._cw, self.entity)
-
-
-class AfterUpdateCWRTypeHook(DelCWRTypeHook):
-    __regid__ = 'syncupdatecwrtype'
-    events = ('after_update_entity',)
-
-    def __call__(self):
         entity = self.entity
+        check_valid_changes(self._cw, entity)
         newvalues = {}
         for prop in ('symmetric', 'inlined', 'fulltext_container'):
             if prop in entity.edited_attributes:
-                newvalues[prop] = entity[prop]
+                old, new = hook.entity_oldnewvalue(entity, prop)
+                if old != new:
+                    newvalues[prop] = entity[prop]
         if newvalues:
             rschema = self._cw.vreg.schema.rschema(entity.name)
-            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, entity=entity)
+            SourceDbCWRTypeUpdate(self._cw, rschema=rschema, entity=entity,
+                                  values=newvalues)
             MemSchemaCWRTypeUpdate(self._cw, rschema=rschema, values=newvalues)
 
 
@@ -1024,8 +1021,8 @@ class AfterAddCWRelationHook(AfterAddCWAttributeHook):
 class AfterUpdateCWRDefHook(SyncSchemaHook):
     __regid__ = 'syncaddcwattribute'
     __select__ = SyncSchemaHook.__select__ & implements('CWAttribute',
-                                                               'CWRelation')
-    events = ('after_update_entity',)
+                                                        'CWRelation')
+    events = ('before_update_entity',)
 
     def __call__(self):
         entity = self.entity
@@ -1040,7 +1037,9 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
             if prop == 'order':
                 prop = 'ordernum'
             if prop in entity.edited_attributes:
-                newvalues[prop] = entity[prop]
+                old, new = hook.entity_oldnewvalue(entity, prop)
+                if old != new:
+                    newvalues[prop] = entity[prop]
         if newvalues:
             subjtype = entity.stype.name
             MemSchemaRDefUpdate(self._cw, kobj=(subjtype, desttype),
