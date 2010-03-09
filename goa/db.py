@@ -86,7 +86,7 @@ def rset_from_objs(req, objs, attrs=('eid',), rql=None, args=None):
                 entity = vreg.etype_class(eschema.type)(req, rset, i, j)
                 rset._get_entity_cache_ = {(i, j): entity}
     rset.rowcount = len(rows)
-    req.decorate_rset(rset)
+    rset.req = req
     return rset
 
 
