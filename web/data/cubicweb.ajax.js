@@ -92,12 +92,9 @@ function postAjaxLoad(node) {
        setFormsTarget(node);
     }
     loadDynamicFragments(node);
-    // XXX simulates document.ready, but the former
-    // only runs once, this one potentially many times
-    // we probably need to unbind the fired events
-    // When this is done, jquery.treeview.js (for instance)
-    // can be unpatched.
-    jQuery(CubicWeb).trigger('ajax-loaded');
+    // XXX [3.7] jQuery.one is now used instead jQuery.bind,
+    // jquery.treeview.js can be unpatched accordingly.
+    jQuery(CubicWeb).trigger('server-response', [true, node]);
 }
 
 /* cubicweb loadxhtml plugin to make jquery handle xhtml response

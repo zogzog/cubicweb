@@ -394,4 +394,13 @@ CubicWeb.provide = function(module) {
     }
 };
 
+jQuery(document).ready(function() {
+    jQuery(CubicWeb).trigger('server-response', [false, document]);
+});
+
+jQuery(CubicWeb).bind('ajax-loaded', function() {
+    log('[3.7] "ajax-loaded" event is deprecated, use "server-response" instead');
+    jQuery(CubicWeb).trigger('server-response', [false, document]);
+});
+
 CubicWeb.provide('python.js');
