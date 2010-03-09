@@ -6,6 +6,8 @@ security checking and data aggregation.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 from itertools import repeat
@@ -23,7 +25,7 @@ from cubicweb.rset import ResultSet
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
-
+from cubicweb.server.session import security_enabled
 
 def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
@@ -200,8 +202,11 @@ class ExecutionPlan(object):
         return rqlst to actually execute
         """
         noinvariant = set()
-        if security and not self.session.is_super_session:
-            self._insert_security(union, noinvariant)
+        if security and self.session.read_security:
+            # ensure security is turned of when security is inserted,
+            # else we may loop for ever...
+            with security_enabled(self.session, read=False):
+                self._insert_security(union, noinvariant)
         self.rqlhelper.simplify(union)
         self.sqlannotate(union)
         set_qdata(self.schema.rschema, union, noinvariant)
@@ -299,7 +304,6 @@ class ExecutionPlan(object):
 
         note: rqlst should not have been simplified at this point
         """
-        assert not self.session.is_super_session
         user = self.session.user
         schema = self.schema
         msgs = []
@@ -601,14 +605,14 @@ class QuerierHelper(object):
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if not rqlst.TYPE == 'select':
-            if not session.is_super_session:
+            if session.read_security:
                 check_no_password_selected(rqlst)
             # write query, ensure session's mode is 'write' so connections
             # won't be released until commit/rollback
             session.mode = 'write'
             cachekey = None
         else:
-            if not session.is_super_session:
+            if session.read_security:
                 for select in rqlst.children:
                     check_no_password_selected(select)
             # on select query, always copy the cached rqlst so we don't have to

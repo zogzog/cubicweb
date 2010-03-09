@@ -19,7 +19,7 @@ def eschema_eid(session, eschema):
     # eschema.eid is None if schema has been readen from the filesystem, not
     # from the database (eg during tests)
     if eschema.eid is None:
-        eschema.eid = session.unsafe_execute(
+        eschema.eid = session.execute(
             'Any X WHERE X is CWEType, X name %(name)s',
             {'name': str(eschema)})[0][0]
     return eschema.eid
@@ -103,18 +103,17 @@ class SetOwnershipHook(MetaDataHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        asession = self._cw.actual_session()
-        if not asession.is_internal_session:
-            self._cw.add_relation(self.entity.eid, 'owned_by', asession.user.eid)
-            _SetCreatorOp(asession, entity=self.entity)
+        if not self._cw.is_internal_session:
+            self._cw.add_relation(self.entity.eid, 'owned_by', self._cw.user.eid)
+            _SetCreatorOp(self._cw, entity=self.entity)
 
 
 class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
-        self.session.unsafe_execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
-                                    'NOT EXISTS(X owned_by U, X eid %(x)s)',
-                                    {'c': self.compositeeid, 'x': self.composedeid},
-                                    ('c', 'x'))
+        self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
+                             'NOT EXISTS(X owned_by U, X eid %(x)s)',
+                             {'c': self.compositeeid, 'x': self.composedeid},
+                             ('c', 'x'))
 
 
 class SyncCompositeOwner(MetaDataHook):

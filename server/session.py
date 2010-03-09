@@ -5,6 +5,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -71,6 +73,37 @@ class hooks_control(object):
                 self.session.enable_hooks_category(*self.changes)
         self.session.set_hooks_mode(self.oldmode)
 
+INDENT = ''
+class security_enabled(object):
+    """context manager to control security w/ session.execute, since by
+    default security is disabled on queries executed on the repository
+    side.
+    """
+    def __init__(self, session, read=None, write=None):
+        self.session = session
+        self.read = read
+        self.write = write
+
+    def __enter__(self):
+#        global INDENT
+        if self.read is not None:
+            self.oldread = self.session.set_read_security(self.read)
+#            print INDENT + 'read', self.read, self.oldread
+        if self.write is not None:
+            self.oldwrite = self.session.set_write_security(self.write)
+#            print INDENT + 'write', self.write, self.oldwrite
+#        INDENT += '  '
+
+    def __exit__(self, exctype, exc, traceback):
+#        global INDENT
+#        INDENT = INDENT[:-2]
+        if self.read is not None:
+            self.session.set_read_security(self.oldread)
+#            print INDENT + 'reset read to', self.oldread
+        if self.write is not None:
+            self.session.set_write_security(self.oldwrite)
+#            print INDENT + 'reset write to', self.oldwrite
+
 
 
 class Session(RequestSessionBase):
@@ -88,7 +121,6 @@ class Session(RequestSessionBase):
         self.creation = time()
         self.timestamp = self.creation
         self.is_internal_session = False
-        self.is_super_session = False
         self.default_mode = 'read'
         # short cut to querier .execute method
         self._execute = repo.querier.execute
@@ -109,18 +141,8 @@ class Session(RequestSessionBase):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        session._threaddata = self.actual_session()._threaddata
+        session._threaddata.pool = pool
         return session
-
-    def _super_call(self, __cb, *args, **kwargs):
-        if self.is_super_session:
-            __cb(self, *args, **kwargs)
-            return
-        self.is_super_session = True
-        try:
-            __cb(self, *args, **kwargs)
-        finally:
-            self.is_super_session = False
 
     def add_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to add a relation.
@@ -133,14 +155,13 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
-        if self.vreg.schema[rtype].inlined:
-            entity = self.entity_from_eid(fromeid)
-            entity[rtype] = toeid
-            self._super_call(self.repo.glob_update_entity,
-                             entity, set((rtype,)))
-        else:
-            self._super_call(self.repo.glob_add_relation,
-                             fromeid, rtype, toeid)
+        with security_enabled(self, False, False):
+            if self.vreg.schema[rtype].inlined:
+                entity = self.entity_from_eid(fromeid)
+                entity[rtype] = toeid
+                self.repo.glob_update_entity(self, entity, set((rtype,)))
+            else:
+                self.repo.glob_add_relation(self, fromeid, rtype, toeid)
 
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.
@@ -153,14 +174,13 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to delete.
         """
-        if self.vreg.schema[rtype].inlined:
-            entity = self.entity_from_eid(fromeid)
-            entity[rtype] = None
-            self._super_call(self.repo.glob_update_entity,
-                             entity, set((rtype,)))
-        else:
-            self._super_call(self.repo.glob_delete_relation,
-                             fromeid, rtype, toeid)
+        with security_enabled(self, False, False):
+            if self.vreg.schema[rtype].inlined:
+                entity = self.entity_from_eid(fromeid)
+                entity[rtype] = None
+                self.repo.glob_update_entity(self, entity, set((rtype,)))
+            else:
+                self.repo.glob_delete_relation(self, fromeid, rtype, toeid)
 
     # relations cache handling #################################################
 
@@ -229,10 +249,6 @@ class Session(RequestSessionBase):
 
     # resource accessors ######################################################
 
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
@@ -275,6 +291,74 @@ class Session(RequestSessionBase):
         objtype = self.describe(eidto)[0]
         rdef = rschema.rdef(subjtype, objtype)
         return rdef.get(rprop)
+
+    # security control #########################################################
+
+    DEFAULT_SECURITY = object() # evaluated to true by design
+
+    @property
+    def read_security(self):
+        """return a boolean telling if read security is activated or not"""
+        try:
+            return self._threaddata.read_security
+        except AttributeError:
+            self._threaddata.read_security = self.DEFAULT_SECURITY
+            return self._threaddata.read_security
+
+    def set_read_security(self, activated):
+        """[de]activate read security, returning the previous value set for
+        later restoration.
+
+        you should usually use the `security_enabled` context manager instead
+        of this to change security settings.
+        """
+        oldmode = self.read_security
+        self._threaddata.read_security = activated
+        # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
+        # issued on the session). This is tricky since we the execution model of
+        # a (write) user query is:
+        #
+        # repository.execute (security enabled)
+        #  \-> querier.execute
+        #       \-> repo.glob_xxx (add/update/delete entity/relation)
+        #            \-> deactivate security before calling hooks
+        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
+        #                      \-> potentially, other calls to querier.execute
+        #
+        # so we can't rely on simply checking session.read_security, but
+        # recalling the first transition from DEFAULT_SECURITY to something
+        # else (False actually) is not perfect but should be enough
+        self._threaddata.dbapi_query = oldmode is self.DEFAULT_SECURITY
+        return oldmode
+
+    @property
+    def write_security(self):
+        """return a boolean telling if write security is activated or not"""
+        try:
+            return self._threaddata.write_security
+        except:
+            self._threaddata.write_security = self.DEFAULT_SECURITY
+            return self._threaddata.write_security
+
+    def set_write_security(self, activated):
+        """[de]activate write security, returning the previous value set for
+        later restoration.
+
+        you should usually use the `security_enabled` context manager instead
+        of this to change security settings.
+        """
+        oldmode = self.write_security
+        self._threaddata.write_security = activated
+        return oldmode
+
+    @property
+    def running_dbapi_query(self):
+        """return a boolean telling if it's triggered by a db-api query or by
+        a session query.
+
+        To be used in hooks, else may have a wrong value.
+        """
+        return getattr(self._threaddata, 'dbapi_query', True)
 
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
@@ -505,46 +589,15 @@ class Session(RequestSessionBase):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
 
-    def decorate_rset(self, rset, propagate=False):
+    def decorate_rset(self, rset):
         rset.vreg = self.vreg
-        rset.req = propagate and self or self.actual_session()
+        rset.req = self
         return rset
 
-    @property
-    def super_session(self):
-        try:
-            csession = self.childsession
-        except AttributeError:
-            if isinstance(self, (ChildSession, InternalSession)):
-                csession = self
-            else:
-                csession = ChildSession(self)
-            self.childsession = csession
-        # need shared pool set
-        self.set_pool(checkclosed=False)
-        return csession
-
-    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                       propagate=False):
-        """like .execute but with security checking disabled (this method is
-        internal to the server, it's not part of the db-api)
-
-        if `propagate` is true, the super_session will be attached to the result
-        set instead of the parent session, hence further query done through
-        entities fetched from this result set will bypass security as well
-        """
-        return self.super_session.execute(rql, kwargs, eid_key, build_descr,
-                                          propagate)
-
-    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                propagate=False):
-        """db-api like method directly linked to the querier execute method
-
-        Becare that unlike actual cursor.execute, `build_descr` default to
-        false
-        """
+    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+        """db-api like method directly linked to the querier execute method"""
         rset = self._execute(self, rql, kwargs, eid_key, build_descr)
-        return self.decorate_rset(rset, propagate)
+        return self.decorate_rset(rset)
 
     def _clear_thread_data(self):
         """remove everything from the thread local storage, except pool
@@ -569,58 +622,60 @@ class Session(RequestSessionBase):
             return
         if self.commit_state:
             return
-        # on rollback, an operation should have the following state
-        # information:
-        # - processed by the precommit/commit event or not
-        # - if processed, is it the failed operation
-        try:
-            for trstate in ('precommit', 'commit'):
-                processed = []
-                self.commit_state = trstate
-                try:
-                    while self.pending_operations:
-                        operation = self.pending_operations.pop(0)
-                        operation.processed = trstate
-                        processed.append(operation)
+        # by default, operations are executed with security turned off
+        with security_enabled(self, False, False):
+            # on rollback, an operation should have the following state
+            # information:
+            # - processed by the precommit/commit event or not
+            # - if processed, is it the failed operation
+            try:
+                for trstate in ('precommit', 'commit'):
+                    processed = []
+                    self.commit_state = trstate
+                    try:
+                        while self.pending_operations:
+                            operation = self.pending_operations.pop(0)
+                            operation.processed = trstate
+                            processed.append(operation)
+                            operation.handle_event('%s_event' % trstate)
+                        self.pending_operations[:] = processed
+                        self.debug('%s session %s done', trstate, self.id)
+                    except:
+                        self.exception('error while %sing', trstate)
+                        # if error on [pre]commit:
+                        #
+                        # * set .failed = True on the operation causing the failure
+                        # * call revert<event>_event on processed operations
+                        # * call rollback_event on *all* operations
+                        #
+                        # that seems more natural than not calling rollback_event
+                        # for processed operations, and allow generic rollback
+                        # instead of having to implements rollback, revertprecommit
+                        # and revertcommit, that will be enough in mont case.
+                        operation.failed = True
+                        for operation in processed:
+                            operation.handle_event('revert%s_event' % trstate)
+                        # XXX use slice notation since self.pending_operations is a
+                        # read-only property.
+                        self.pending_operations[:] = processed + self.pending_operations
+                        self.rollback(reset_pool)
+                        raise
+                self.pool.commit()
+                self.commit_state = trstate = 'postcommit'
+                while self.pending_operations:
+                    operation = self.pending_operations.pop(0)
+                    operation.processed = trstate
+                    try:
                         operation.handle_event('%s_event' % trstate)
-                    self.pending_operations[:] = processed
-                    self.debug('%s session %s done', trstate, self.id)
-                except:
-                    self.exception('error while %sing', trstate)
-                    # if error on [pre]commit:
-                    #
-                    # * set .failed = True on the operation causing the failure
-                    # * call revert<event>_event on processed operations
-                    # * call rollback_event on *all* operations
-                    #
-                    # that seems more natural than not calling rollback_event
-                    # for processed operations, and allow generic rollback
-                    # instead of having to implements rollback, revertprecommit
-                    # and revertcommit, that will be enough in mont case.
-                    operation.failed = True
-                    for operation in processed:
-                        operation.handle_event('revert%s_event' % trstate)
-                    # XXX use slice notation since self.pending_operations is a
-                    # read-only property.
-                    self.pending_operations[:] = processed + self.pending_operations
-                    self.rollback(reset_pool)
-                    raise
-            self.pool.commit()
-            self.commit_state = trstate = 'postcommit'
-            while self.pending_operations:
-                operation = self.pending_operations.pop(0)
-                operation.processed = trstate
-                try:
-                    operation.handle_event('%s_event' % trstate)
-                except:
-                    self.critical('error while %sing', trstate,
-                                  exc_info=sys.exc_info())
-            self.info('%s session %s done', trstate, self.id)
-        finally:
-            self._clear_thread_data()
-            self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
+                    except:
+                        self.critical('error while %sing', trstate,
+                                      exc_info=sys.exc_info())
+                self.info('%s session %s done', trstate, self.id)
+            finally:
+                self._clear_thread_data()
+                self._touch()
+                if reset_pool:
+                    self.reset_pool(ignoremode=True)
 
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
@@ -630,21 +685,23 @@ class Session(RequestSessionBase):
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
             return
-        try:
-            while self.pending_operations:
-                try:
-                    operation = self.pending_operations.pop(0)
-                    operation.handle_event('rollback_event')
-                except:
-                    self.critical('rollback error', exc_info=sys.exc_info())
-                    continue
-            self.pool.rollback()
-            self.debug('rollback for session %s done', self.id)
-        finally:
-            self._clear_thread_data()
-            self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
+        # by default, operations are executed with security turned off
+        with security_enabled(self, False, False):
+            try:
+                while self.pending_operations:
+                    try:
+                        operation = self.pending_operations.pop(0)
+                        operation.handle_event('rollback_event')
+                    except:
+                        self.critical('rollback error', exc_info=sys.exc_info())
+                        continue
+                self.pool.rollback()
+                self.debug('rollback for session %s done', self.id)
+            finally:
+                self._clear_thread_data()
+                self._touch()
+                if reset_pool:
+                    self.reset_pool(ignoremode=True)
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
@@ -767,6 +824,25 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
+    @deprecated("[3.7] control security with session.[read|write]_security")
+    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
+                       propagate=False):
+        """like .execute but with security checking disabled (this method is
+        internal to the server, it's not part of the db-api)
+        """
+        return self.execute(rql, kwargs, eid_key, build_descr)
+
+    @property
+    @deprecated("[3.7] is_super_session is deprecated, test "
+                "session.read_security and or session.write_security")
+    def is_super_session(self):
+        return not self.read_security or not self.write_security
+
+    @deprecated("[3.7] session is actual session")
+    def actual_session(self):
+        """return the original parent session if any, else self"""
+        return self
+
     @property
     @deprecated("[3.6] use session.vreg.schema")
     def schema(self):
@@ -793,99 +869,6 @@ class Session(RequestSessionBase):
         return self.entity_from_eid(eid)
 
 
-class ChildSession(Session):
-    """child (or internal) session are used to hijack the security system
-    """
-    cnxtype = 'inmemory'
-
-    def __init__(self, parent_session):
-        self.id = None
-        self.is_internal_session = False
-        self.is_super_session = True
-        # session which has created this one
-        self.parent_session = parent_session
-        self.user = InternalManager()
-        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
-        self.repo = parent_session.repo
-        self.vreg = parent_session.vreg
-        self.data = parent_session.data
-        self.encoding = parent_session.encoding
-        self.lang = parent_session.lang
-        self._ = self.__ = parent_session._
-        # short cut to querier .execute method
-        self._execute = self.repo.querier.execute
-
-    @property
-    def super_session(self):
-        return self
-
-    @property
-    def hooks_mode(self):
-        return self.parent_session.hooks_mode
-    def set_hooks_mode(self, mode):
-        return self.parent_session.set_hooks_mode(mode)
-
-    @property
-    def disabled_hooks_categories(self):
-        return self.parent_session.disabled_hooks_categories
-
-    @property
-    def enabled_hooks_categories(self):
-        return self.parent_session.enabled_hooks_categories
-
-
-    def get_mode(self):
-        return self.parent_session.mode
-    def set_mode(self, value):
-        self.parent_session.set_mode(value)
-    mode = property(get_mode, set_mode)
-
-    def get_commit_state(self):
-        return self.parent_session.commit_state
-    def set_commit_state(self, value):
-        self.parent_session.set_commit_state(value)
-    commit_state = property(get_commit_state, set_commit_state)
-
-    @property
-    def pool(self):
-        return self.parent_session.pool
-    @property
-    def pending_operations(self):
-        return self.parent_session.pending_operations
-    @property
-    def transaction_data(self):
-        return self.parent_session.transaction_data
-
-    def set_pool(self):
-        """the session need a pool to execute some queries"""
-        self.parent_session.set_pool()
-
-    def reset_pool(self):
-        """the session has no longer using its pool, at least for some time
-        """
-        self.parent_session.reset_pool()
-
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self.parent_session
-
-    def commit(self, reset_pool=True):
-        """commit the current session's transaction"""
-        self.parent_session.commit(reset_pool)
-
-    def rollback(self, reset_pool=True):
-        """rollback the current session's transaction"""
-        self.parent_session.rollback(reset_pool)
-
-    def close(self):
-        """do not close pool on session close, since they are shared now"""
-        self.rollback()
-
-    def user_data(self):
-        """returns a dictionnary with this user's information"""
-        return self.parent_session.user_data()
-
-
 class InternalSession(Session):
     """special session created internaly by the repository"""
 
@@ -895,11 +878,7 @@ class InternalSession(Session):
         self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.is_internal_session = True
-        self.is_super_session = True
-
-    @property
-    def super_session(self):
-        return self
+        self.disable_hooks_category('integrity')
 
 
 class InternalManager(object):

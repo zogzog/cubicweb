@@ -6,6 +6,8 @@ is checked.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -15,6 +17,7 @@ from logilab.common.shellutils import ProgressBar
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.session import security_enabled
 
 def has_eid(sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
@@ -277,9 +280,10 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        for check in checks:
-            check_func = globals()['check_%s' % check]
-            check_func(repo.schema, session, eids_cache, fix=fix)
+        with security_enabled(session, read=False): # ensure no read security
+            for check in checks:
+                check_func = globals()['check_%s' % check]
+                check_func(repo.schema, session, eids_cache, fix=fix)
         if fix:
             cnx.commit()
         else:

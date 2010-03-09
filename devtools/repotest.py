@@ -178,9 +178,10 @@ class BaseQuerierTC(TestCase):
         self._dumb_sessions = []
 
     def get_max_eid(self):
-        return self.session.unsafe_execute('Any MAX(X)')[0][0]
+        return self.session.execute('Any MAX(X)')[0][0]
     def cleanup(self):
-        self.session.unsafe_execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
+        self.session.set_pool()
+        self.session.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
 
     def tearDown(self):
         undo_monkey_patch()

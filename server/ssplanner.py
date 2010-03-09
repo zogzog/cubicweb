@@ -63,6 +63,7 @@ def _extract_eid_consts(plan, rqlst):
         return {}
     eidconsts = {}
     neweids = session.transaction_data.get('neweids', ())
+    checkread = session.read_security
     for rel in rqlst.where.get_nodes(Relation):
         if rel.r_type == 'eid' and not rel.neged(strict=True):
             lhs, rhs = rel.get_variable_parts()
@@ -71,7 +72,7 @@ def _extract_eid_consts(plan, rqlst):
                 # check read permission here since it may not be done by
                 # the generated select substep if not emited (eg nothing
                 # to be selected)
-                if eid not in neweids:
+                if checkread and eid not in neweids:
                     eschema(session.describe(eid)[0]).check_perm(session, 'read')
                 eidconsts[lhs.variable] = eid
     return eidconsts

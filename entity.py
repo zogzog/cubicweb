@@ -20,6 +20,7 @@ from cubicweb import Unauthorized, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
+from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
 from cubicweb.rqlrewrite import RQLRewriter
 
@@ -531,8 +532,8 @@ class Entity(AppObject, dict):
             # if some outer join are included to fetch inlined relations
             rql = 'Any %s,%s %s' % (V, ','.join(var for attr, var in selected),
                                     ','.join(rql))
-            execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
-            rset = execute(rql, {'x': self.eid}, 'x', build_descr=False)[0]
+            rset = self._cw.execute(rql, {'x': self.eid}, 'x',
+                                    build_descr=False)[0]
             # handle attributes
             for i in xrange(1, lastattr):
                 self[str(selected[i-1][0])] = rset[i]
@@ -560,11 +561,8 @@ class Entity(AppObject, dict):
             if not self.is_saved():
                 return None
             rql = "Any A WHERE X eid %%(x)s, X %s A" % name
-            # XXX should we really use unsafe_execute here? I think so (syt),
-            # see #344874
-            execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
             try:
-                rset = execute(rql, {'x': self.eid}, 'x')
+                rset = self._cw.execute(rql, {'x': self.eid}, 'x')
             except Unauthorized:
                 self[name] = value = None
             else:
@@ -595,10 +593,7 @@ class Entity(AppObject, dict):
             pass
         assert self.has_eid()
         rql = self.related_rql(rtype, role)
-        # XXX should we really use unsafe_execute here? I think so (syt),
-        # see #344874
-        execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
-        rset = execute(rql, {'x': self.eid}, 'x')
+        rset = self._cw.execute(rql, {'x': self.eid}, 'x')
         self.set_related_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
@@ -800,8 +795,9 @@ class Entity(AppObject, dict):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, _cw_unsafe=False, **kwargs):
+    def set_attributes(self, **kwargs):
         assert kwargs
+        _check_cw_unsafe(kwargs)
         relations = []
         for key in kwargs:
             relations.append('X %s %%(%s)s' % (key, key))
@@ -809,25 +805,18 @@ class Entity(AppObject, dict):
         self.update(kwargs)
         # and now update the database
         kwargs['x'] = self.eid
-        if _cw_unsafe:
-            self._cw.unsafe_execute(
-                'SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs, 'x')
-        else:
-            self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                             kwargs, 'x')
+        self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
+                         kwargs, 'x')
 
-    def set_relations(self, _cw_unsafe=False, **kwargs):
+    def set_relations(self, **kwargs):
         """add relations to the given object. To set a relation where this entity
         is the object of the relation, use 'reverse_'<relation> as argument name.
 
         Values may be an entity, a list of entity, or None (meaning that all
         relations of the given type from or to this object should be deleted).
         """
-        if _cw_unsafe:
-            execute = self._cw.unsafe_execute
-        else:
-            execute = self._cw.execute
         # XXX update cache
+        _check_cw_unsafe(kwargs)
         for attr, values in kwargs.iteritems():
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
@@ -839,14 +828,14 @@ class Entity(AppObject, dict):
                 continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
-            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+            self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
-                    {'x': self.eid}, 'x')
+                             {'x': self.eid}, 'x')
 
-    def delete(self):
+    def delete(self, **kwargs):
         assert self.has_eid(), self.eid
         self._cw.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
-                         {'x': self.eid})
+                         {'x': self.eid}, **kwargs)
 
     # server side utilities ###################################################
 

@@ -801,7 +801,7 @@ class DelCWETypeHook(SyncSchemaHook):
         if name in CORE_ETYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete every entities of this type
-        self._cw.unsafe_execute('DELETE %s X' % name)
+        self._cw.execute('DELETE %s X' % name)
         DropTable(self._cw, table=SQL_PREFIX + name)
         MemSchemaCWETypeDel(self._cw, name)
 
@@ -986,7 +986,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             if not (subjschema.eid in pendings or objschema.eid in pendings):
                 session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
-        execute = session.unsafe_execute
+        execute = session.execute
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
                        'R eid %%(x)s' % rdeftype, {'x': self.eidto})
         lastrel = rset[0][0] == 0

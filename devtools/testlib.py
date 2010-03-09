@@ -228,7 +228,9 @@ class CubicWebTC(TestCase):
     @property
     def session(self):
         """return current server side session (using default manager account)"""
-        return self.repo._sessions[self.cnx.sessionid]
+        session = self.repo._sessions[self.cnx.sessionid]
+        session.set_pool()
+        return session
 
     @property
     def adminsession(self):

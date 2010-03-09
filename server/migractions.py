@@ -243,17 +243,26 @@ class ServerMigrationHelper(MigrationHelper):
     @property
     def session(self):
         if self.config is not None:
-            return self.repo._get_session(self.cnx.sessionid)
+            session = self.repo._get_session(self.cnx.sessionid)
+            if session.pool is None:
+                session.set_read_security(False)
+                session.set_write_security(False)
+            session.set_pool()
+            return session
         # no access to session on remote instance
         return None
 
     def commit(self):
         if hasattr(self, '_cnx'):
             self._cnx.commit()
+        if self.session:
+            self.session.set_pool()
 
     def rollback(self):
         if hasattr(self, '_cnx'):
             self._cnx.rollback()
+        if self.session:
+            self.session.set_pool()
 
     def rqlexecall(self, rqliter, cachekey=None, ask_confirm=True):
         for rql, kwargs in rqliter:
@@ -313,7 +322,6 @@ class ServerMigrationHelper(MigrationHelper):
                     self.cmd_reactivate_verification_hooks()
 
     def install_custom_sql_scripts(self, directory, driver):
-        self.session.set_pool() # ensure pool is set
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
                                                   '.%s.sql' % driver)
@@ -698,10 +706,7 @@ class ServerMigrationHelper(MigrationHelper):
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()
         # register the entity into CWEType
-        try:
-            execute = self._cw.unsafe_execute
-        except AttributeError:
-            execute = self._cw.execute
+        execute = self._cw.execute
         ss.execschemarql(execute, eschema, ss.eschema2rql(eschema, groupmap))
         # add specializes relation if needed
         self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
@@ -842,10 +847,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         reposchema = self.repo.schema
         rschema = self.fs_schema.rschema(rtype)
-        try:
-            execute = self._cw.unsafe_execute
-        except AttributeError:
-            execute = self._cw.execute
+        execute = self._cw.execute
         # register the relation into CWRType and insert necessary relation
         # definitions
         ss.execschemarql(execute, rschema, ss.rschema2rql(rschema, addrdef=False))
@@ -905,10 +907,7 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
-        try:
-            execute = self._cw.unsafe_execute
-        except AttributeError:
-            execute = self._cw.execute
+        execute = self._cw.execute
         rdef = self._get_rdef(rschema, subjtype, objtype)
         ss.execschemarql(execute, rdef,
                          ss.rdef2rql(rdef, self.cstrtype_mapping(),
@@ -1184,7 +1183,6 @@ class ServerMigrationHelper(MigrationHelper):
         level actions
         """
         if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
-            self.session.set_pool() # ensure pool is set
             try:
                 cu = self.session.system_sql(sql, args)
             except:
@@ -1203,10 +1201,7 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
-        try:
-            execute = self._cw.unsafe_execute
-        except AttributeError:
-            execute = self._cw.execute
+        execute = self._cw.execute
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)

@@ -15,6 +15,8 @@ repository mainly:
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -36,7 +38,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       typed_eid)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
-from cubicweb.server.session import Session, InternalSession
+from cubicweb.server.session import Session, InternalSession, security_enabled
 
 
 class CleanupEidTypeCacheOp(hook.SingleLastOperation):
@@ -80,10 +82,10 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # XXX now that rql in migraction default to unsafe_execute we don't want to
-    #     skip that for super session (though we can still skip it for internal
-    #     sessions). Also we should imo rely on the orm to first fetch existing
-    #     entity if any then delete it.
+    # skip that for internal session or if integrity explicitly disabled
+    #
+    # XXX we should imo rely on the orm to first fetch existing entity if any
+    # then delete it.
     if session.is_internal_session \
            or not session.is_hooks_category_activated('integrity'):
         return
@@ -100,23 +102,15 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     rschema = session.repo.schema.rschema(rtype)
     if card[0] in '1?':
         if not rschema.inlined: # inlined relations will be implicitly deleted
-            rset = session.unsafe_execute('Any X,Y WHERE X %s Y, X eid %%(x)s, '
-                                          'NOT Y eid %%(y)s' % rtype,
-                                          {'x': eidfrom, 'y': eidto}, 'x')
-            if rset:
-                safe_delete_relation(session, rschema, *rset[0])
+            with security_enabled(session, read=False):
+                session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                                'NOT Y eid %%(y)s' % rtype,
+                                {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        rset = session.unsafe_execute('Any X,Y WHERE X %s Y, Y eid %%(y)s, '
-                                      'NOT X eid %%(x)s' % rtype,
-                                      {'x': eidfrom, 'y': eidto}, 'y')
-        if rset:
-            safe_delete_relation(session, rschema, *rset[0])
-
-
-def safe_delete_relation(session, rschema, subject, object):
-    if not rschema.has_perm(session, 'delete', fromeid=subject, toeid=object):
-        raise Unauthorized()
-    session.repo.glob_delete_relation(session, subject, rschema.type, object)
+        with security_enabled(session, read=False):
+            session.execute('DELETE X %sY WHERE Y eid %%(y)s, '
+                            'NOT X eid %%(x)s' % rtype,
+                            {'x': eidfrom, 'y': eidto}, 'y')
 
 
 class Repository(object):
@@ -918,21 +912,22 @@ class Repository(object):
         rql = []
         eschema = self.schema.eschema(etype)
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
-        for rschema, targetschemas, x in eschema.relation_definitions():
-            rtype = rschema.type
-            if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
-                continue
-            var = '%s%s' % (rtype.upper(), x.upper())
-            if x == 'subject':
-                # don't skip inlined relation so they are regularly
-                # deleted and so hooks are correctly called
-                selection = 'X %s %s' % (rtype, var)
-            else:
-                selection = '%s %s X' % (var, rtype)
-            rql = 'DELETE %s WHERE X eid %%(x)s' % selection
-            # unsafe_execute since we suppose that if user can delete the entity,
-            # he can delete all its relations without security checking
-            session.unsafe_execute(rql, {'x': eid}, 'x', build_descr=False)
+        with security_enabled(session, read=False, write=False):
+            for rschema, targetschemas, x in eschema.relation_definitions():
+                rtype = rschema.type
+                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
+                    continue
+                var = '%s%s' % (rtype.upper(), x.upper())
+                if x == 'subject':
+                    # don't skip inlined relation so they are regularly
+                    # deleted and so hooks are correctly called
+                    selection = 'X %s %s' % (rtype, var)
+                else:
+                    selection = '%s %s X' % (var, rtype)
+                rql = 'DELETE %s WHERE X eid %%(x)s' % selection
+                # if user can delete the entity, he can delete all its relations
+                # without security checking
+                session.execute(rql, {'x': eid}, 'x', build_descr=False)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)

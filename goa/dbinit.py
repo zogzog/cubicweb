@@ -84,7 +84,7 @@ def fix_entities(schema):
             Put(gaeentity)
 
 def init_persistent_schema(ssession, schema):
-    execute = ssession.unsafe_execute
+    execute = ssession.execute
     rql = ('INSERT CWEType X: X name %(name)s, X description %(descr)s,'
            'X final FALSE')
     eschema = schema.eschema('CWEType')
@@ -96,7 +96,7 @@ def init_persistent_schema(ssession, schema):
                       'descr': unicode(eschema.description)})
 
 def insert_versions(ssession, config):
-    execute = ssession.unsafe_execute
+    execute = ssession.execute
     # insert versions
     execute('INSERT CWProperty X: X pkey %(pk)s, X value%(v)s',
             {'pk': u'system.version.cubicweb',

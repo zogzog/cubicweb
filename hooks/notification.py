@@ -103,7 +103,7 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
 class EntityUpdateHook(NotificationHook):
     __regid__ = 'notifentityupdated'
     __abstract__ = True # do not register by default
-
+    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
     events = ('before_update_entity',)
     skip_attrs = set()
 
@@ -111,8 +111,6 @@ class EntityUpdateHook(NotificationHook):
         session = self._cw
         if self.entity.eid in session.transaction_data.get('neweids', ()):
             return # entity is being created
-        if session.is_super_session:
-            return # ignore changes triggered by hooks
         # then compute changes
         changes = session.transaction_data.setdefault('changes', {})
         thisentitychanges = changes.setdefault(self.entity.eid, set())
@@ -125,7 +123,7 @@ class EntityUpdateHook(NotificationHook):
             rqlsel.append(var)
             rqlrestr.append('X %s %s' % (attr, var))
         rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
-        rset = session.unsafe_execute(rql, {'x': self.entity.eid}, 'x')
+        rset = session.execute(rql, {'x': self.entity.eid}, 'x')
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
             newvalue = self.entity[attr]
@@ -139,13 +137,11 @@ class EntityUpdateHook(NotificationHook):
 
 class SomethingChangedHook(NotificationHook):
     __regid__ = 'supervising'
+    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
     events = ('before_add_relation', 'before_delete_relation',
               'after_add_entity', 'before_update_entity')
 
     def __call__(self):
-        # XXX use proper selectors
-        if self._cw.is_super_session or self._cw.repo.config.repairing:
-            return # ignore changes triggered by hooks or maintainance shell
         dest = self._cw.vreg.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return

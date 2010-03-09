@@ -436,7 +436,7 @@ du :eid:`1:*ReST*`'''
 
     def test_complete_relation(self):
         session = self.session
-        eid = session.unsafe_execute(
+        eid = session.execute(
             'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
             'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
         trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')

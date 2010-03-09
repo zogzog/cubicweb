@@ -218,7 +218,7 @@ def serialize_schema(cursor, schema):
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
-    execute = cursor.unsafe_execute
+    execute = cursor.execute
     eschemas = schema.entities()
     if not quiet:
         pb_size = (len(eschemas + schema.relations())

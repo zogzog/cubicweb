@@ -22,6 +22,12 @@ ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
 
 
+def _check_cw_unsafe(kwargs):
+    if kwargs.pop('_cw_unsafe', False):
+        warn('[3.7] _cw_unsafe argument is deprecated, now unsafe by '
+             'default, control it using cw_[read|write]_security.',
+             DeprecationWarning, stacklevel=3)
+
 class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
@@ -110,19 +116,18 @@ class RequestSessionBase(object):
     # XXX move to CWEntityManager or even better as factory method (unclear
     # where yet...)
 
-    def create_entity(self, etype, _cw_unsafe=False, **kwargs):
+    def create_entity(self, etype, **kwargs):
         """add a new entity of the given type
 
         Example (in a shell session):
 
-        c = create_entity('Company', name=u'Logilab')
-        create_entity('Person', works_for=c, firstname=u'John', lastname=u'Doe')
+        >>> c = create_entity('Company', name=u'Logilab')
+        >>> create_entity('Person', firstname=u'John', lastname=u'Doe',
+        ...               works_for=c)
 
         """
-        if _cw_unsafe:
-            execute = self.unsafe_execute
-        else:
-            execute = self.execute
+        _check_cw_unsafe(kwargs)
+        execute = self.execute
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = set()
@@ -162,7 +167,7 @@ class RequestSessionBase(object):
                 restr = 'X %s Y' % attr
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
-                         {'x': created.eid}, 'x')
+                    {'x': created.eid}, 'x', build_descr=False)
         return created
 
     def ensure_ro_rql(self, rql):
@@ -281,7 +286,7 @@ class RequestSessionBase(object):
             userinfo['name'] = "cubicweb"
             userinfo['email'] = ""
             return userinfo
-        user = self.actual_session().user
+        user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
         userinfo['email'] = user.get_email()

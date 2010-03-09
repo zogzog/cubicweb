@@ -9,6 +9,7 @@ the user connected to a session
 __docformat__ = "restructuredtext en"
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import objectify_selector, lltrace
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
@@ -53,10 +54,17 @@ class _CheckRelationPermissionOp(hook.LateOperation):
         pass
 
 
+@objectify_selector
+@lltrace
+def write_security_enabled(cls, req, **kwargs):
+    if req is None or not req.write_security:
+        return 0
+    return 1
+
 class SecurityHook(hook.Hook):
     __abstract__ = True
     category = 'security'
-    __select__ = hook.Hook.__select__ & hook.regular_session()
+    __select__ = hook.Hook.__select__ & write_security_enabled()
 
 
 class AfterAddEntitySecurityHook(SecurityHook):

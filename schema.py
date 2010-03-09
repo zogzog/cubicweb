@@ -704,7 +704,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.unsafe_execute(rql, args, ck, build_descr=False)
+        return session.execute(rql, args, ck, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -830,13 +830,10 @@ class RQLExpression(object):
                 return True
             return False
         if keyarg is None:
-            # on the server side, use unsafe_execute, but this is not available
-            # on the client side (session is actually a request)
-            execute = getattr(session, 'unsafe_execute', session.execute)
             kwargs.setdefault('u', session.user.eid)
             cachekey = kwargs.keys()
             try:
-                rset = execute(rql, kwargs, cachekey, build_descr=True)
+                rset = session.execute(rql, kwargs, cachekey, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
@@ -1084,9 +1081,9 @@ def vocabulary(self, entity=None, form=None):
     elif form is not None:
         cw = form._cw
     if cw is not None:
-        if hasattr(cw, 'is_super_session'):
+        if hasattr(cw, 'write_security'): # test it's a session and not a request
             # cw is a server session
-            hasperm = cw.is_super_session or \
+            hasperm = not cw.write_security or \
                       not cw.is_hooks_category_activated('integrity') or \
                       cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
         else:

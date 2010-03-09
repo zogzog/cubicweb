@@ -116,17 +116,6 @@ class FakeRequest(CubicWebRequestBase):
     def validate_cache(self):
         pass
 
-    # session compatibility (in some test are using this class to test server
-    # side views...)
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
-    def unsafe_execute(self, *args, **kwargs):
-        """return the original parent session if any, else self"""
-        kwargs.pop('propagate', None)
-        return self.execute(*args, **kwargs)
-
 
 class FakeUser(object):
     login = 'toto'
@@ -136,18 +125,19 @@ class FakeUser(object):
 
 
 class FakeSession(RequestSessionBase):
+    read_security = write_security = True
+    set_read_security = set_write_security = lambda *args, **kwargs: None
+
     def __init__(self, repo=None, user=None):
         self.repo = repo
         self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
         self.pool = FakePool()
         self.user = user or FakeUser()
         self.is_internal_session = False
-        self.is_super_session = self.user.eid == -1
         self.transaction_data = {}
 
-    def execute(self, *args):
+    def execute(self, *args, **kwargs):
         pass
-    unsafe_execute = execute
 
     def commit(self, *args):
         self.transaction_data.clear()

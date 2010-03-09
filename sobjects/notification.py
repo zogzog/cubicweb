@@ -33,11 +33,9 @@ class RecipientsFinder(Component):
     def recipients(self):
         mode = self._cw.vreg.config['default-recipients-mode']
         if mode == 'users':
-            # use unsafe execute else we may don't have the right to see users
-            # to notify...
-            execute = self._cw.unsafe_execute
+            execute = self._cw.execute
             dests = [(u.get_email(), u.property_value('ui.language'))
-                     for u in execute(self.user_rql, build_descr=True, propagate=True).entities()]
+                     for u in execute(self.user_rql, build_descr=True).entities()]
         elif mode == 'default-dest-addrs':
             lang = self._cw.vreg.property_value('ui.language')
             dests = zip(self._cw.vreg.config['default-dest-addrs'], repeat(lang))
@@ -158,7 +156,8 @@ url: %(url)s
                 if not rdef.has_perm(self._cw, 'read', eid=self.cw_rset[0][0]):
                     continue
             # XXX suppose it's a subject relation...
-            elif not rschema.has_perm(self._cw, 'read', fromeid=self.cw_rset[0][0]): # XXX toeid
+            elif not rschema.has_perm(self._cw, 'read',
+                                      fromeid=self.cw_rset[0][0]):
                 continue
             if attr in self.no_detailed_change_attrs:
                 msg = _('%s updated') % _(attr)
