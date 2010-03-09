@@ -173,21 +173,29 @@ class SQLAdapterMixIn(object):
         return cnx
 
     def backup_to_file(self, backupfile):
-        for cmd in self.dbhelper.backup_commands(self.dbname, self.dbhost,
-                                                 self.dbuser, backupfile,
-                                                 dbport=self.dbport,
-                                                 keepownership=False):
+        for cmd in self.dbhelper.backup_commands(backupfile=backupfile,
+                                                 keepownership=False,
+                                                 dbname=self.dbname,
+                                                 dbhost=self.dbhost,
+                                                 dbuser=self.dbuser,
+                                                 dbport=self.dbport):
             if _run_command(cmd):
                 if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
-        for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
-                                                  self.dbuser, backupfile,
-                                                  self.encoding,
-                                                  dbport=self.dbport,
+        if 'dbencoding' in self.dbhelper.restore_commands.im_func.func_code.co_varnames:
+            kwargs = {'dbencoding': self.encoding}
+        else:
+            kwargs = {'encoding': self.encoding}
+        for cmd in self.dbhelper.restore_commands(backupfile=backupfile,
                                                   keepownership=False,
-                                                  drop=drop):
+                                                  drop=drop,
+                                                  dbname=self.dbname,
+                                                  dbhost=self.dbhost,
+                                                  dbuser=self.dbuser,
+                                                  dbport=self.dbport,
+                                                  **kwargs):
             if _run_command(cmd):
                 if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
