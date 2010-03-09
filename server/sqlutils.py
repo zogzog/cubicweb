@@ -11,7 +11,7 @@ import os
 import subprocess
 from datetime import datetime, date
 
-from logilab import db, common as lgc
+from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar
 from logilab.common.date import todate, todatetime
 from logilab.database.sqlgen import SQLGenerator
