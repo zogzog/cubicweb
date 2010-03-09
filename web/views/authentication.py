@@ -127,7 +127,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
     def _authenticate(self, req, login, authinfo):
         # remove possibly cached cursor coming from closed connection
-        clear_cache(req, 'cursor')
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=self.log_queries)
         try:
