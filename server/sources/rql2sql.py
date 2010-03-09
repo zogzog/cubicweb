@@ -341,6 +341,9 @@ class SQLGenerator(object):
                             }
         if not self.dbms_helper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
+        if self.dbms_helper.fti_need_distinct_query:
+            self.__union_sql = self.union_sql
+            self.union_sql = self.has_text_need_distinct_union_sql
         self._lock = threading.Lock()
         if attrmap is None:
             attrmap = {}
@@ -373,6 +376,12 @@ class SQLGenerator(object):
             return sql, self._query_attrs
         finally:
             self._lock.release()
+
+    def has_text_need_distinct_union_sql(self, union, needalias=False):
+        if getattr(union, 'has_text_query', False):
+            for select in union.children:
+                select.need_distinct = True
+        return self.__union_sql(union, needalias)
 
     def union_sql(self, union, needalias=False): # pylint: disable-msg=E0202
         if len(union.children) == 1:

@@ -149,9 +149,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.authentifiers = [LoginPasswordAuthentifier(self)]
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
-        # sql generator
-        self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
-                                             self.encoding, ATTR_MAP.copy())
         # full text index helper
         self.do_fti = not repo.config['delay-full-text-indexation']
         if self.do_fti:
@@ -161,6 +158,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.dbhelper.fti_table = self.indexer.table
             self.dbhelper.fti_restriction_sql = self.indexer.restriction_sql
             self.dbhelper.fti_need_distinct_query = self.indexer.need_distinct
+        else:
+            self.dbhelper.fti_need_distinct_query = False
+        # sql generator
+        self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
+                                             self.encoding, ATTR_MAP.copy())
         # sql queries cache
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
