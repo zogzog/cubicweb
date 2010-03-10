@@ -168,7 +168,7 @@ class HTMLHead(UStringIO):
 
     def add_onload(self, jscode, jsoncall=False):
         if jsoncall:
-            self.add_post_inline_script(u"""jQuery(CubicWeb).bind('ajax-loaded', function(event) {
+            self.add_post_inline_script(u"""jQuery(CubicWeb).one('ajax-loaded', function(event) {
 %s
 });""" % jscode)
         else:
