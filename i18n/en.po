@@ -369,6 +369,9 @@ msgstr "format constraint"
 msgid "From:"
 msgstr ""
 
+msgid "Garbage collection information"
+msgstr ""
+
 msgid "Help"
 msgstr ""
 
@@ -389,6 +392,12 @@ msgstr "interval constraint"
 
 msgid "Interval_plural"
 msgstr "Intervals"
+
+msgid "Looked up classes"
+msgstr ""
+
+msgid "Most referenced classes"
+msgstr ""
 
 msgid "New BaseTransition"
 msgstr "XXX"
@@ -647,6 +656,9 @@ msgstr "Transitions"
 
 msgid "UniqueConstraint"
 msgstr "unique constraint"
+
+msgid "Unreachable objects"
+msgstr ""
 
 msgid "Update permissions"
 msgstr ""
@@ -2715,6 +2727,9 @@ msgid "maximum number of related entities to display in the primary view"
 msgstr ""
 
 msgid "may"
+msgstr ""
+
+msgid "memory leak debugging"
 msgstr ""
 
 msgid "milestone"

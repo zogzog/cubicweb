@@ -136,7 +136,7 @@ class GCView(StartupView):
     """display garbage collector information"""
     __regid__ = 'gc'
     __select__ = StartupView.__select__ & match_user_groups('managers')
-    title = _('garbage')
+    title = _('memory leak debugging')
 
     def call(self, **kwargs):
         from cubicweb._gcdebug import gc_info

@@ -377,6 +377,9 @@ msgstr ""
 msgid "From:"
 msgstr "De: "
 
+msgid "Garbage collection information"
+msgstr ""
+
 msgid "Help"
 msgstr ""
 
@@ -397,6 +400,12 @@ msgstr ""
 
 msgid "Interval_plural"
 msgstr "Duraciones"
+
+msgid "Looked up classes"
+msgstr ""
+
+msgid "Most referenced classes"
+msgstr ""
 
 msgid "New BaseTransition"
 msgstr ""
@@ -654,6 +663,9 @@ msgid "Transition_plural"
 msgstr "Transiciones"
 
 msgid "UniqueConstraint"
+msgstr ""
+
+msgid "Unreachable objects"
 msgstr ""
 
 msgid "Update permissions"
@@ -2784,6 +2796,9 @@ msgstr "Numero maximo de entidades ligadas a mostrar en la vista primaria"
 
 msgid "may"
 msgstr "Mayo"
+
+msgid "memory leak debugging"
+msgstr ""
 
 msgid "milestone"
 msgstr "Milestone"
