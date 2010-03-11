@@ -27,13 +27,13 @@ def dict_to_html(w, dict):
 
 
 class ProcessInformationView(StartupView):
+    """display various web server /repository information"""
     __regid__ = 'info'
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('server information')
 
     def call(self, **kwargs):
-        """display server information"""
         req = self._cw
         dtformat = req.property_value('ui.datetime-format')
         _ = req._
@@ -111,24 +111,22 @@ class ProcessInformationView(StartupView):
 
 
 class RegistryView(StartupView):
+    """display vregistry content"""
     __regid__ = 'registry'
     __select__ = StartupView.__select__ & match_user_groups('managers')
     title = _('registry')
 
     def call(self, **kwargs):
-        """The default view representing the instance's management"""
         self.w(u'<h1>%s</h1>' % _("Registry's content"))
         keys = sorted(self._cw.vreg)
-        self.w(u'<p>%s</p>\n' % ' - '.join('<a href="/_registry#%s">%s</a>'
-                                           % (key, key) for key in keys))
+        url = self._cw.url()
+        self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
+                                           % (url, key, key) for key in keys))
         for key in keys:
-            self.w(u'<h2><a name="%s">%s</a></h2>' % (key, key))
-            items = self._cw.vreg[key].items()
-            if items:
-                self.w(u'<table><tbody>')
-                for key, value in sorted(items):
-                    self.w(u'<tr><td>%s</td><td>%s</td></tr>'
-                           % (key, xml_escape(repr(value))))
-                self.w(u'</tbody></table>\n')
+            self.w(u'<h2 id="%s">%s</h2>' % (key, key))
+            if self._cw.vreg[key]:
+                values = sorted(self._cw.vreg[key].iteritems())
+                self.wview('pyvaltable', pyvalue=[(key, xml_escape(repr(val)))
+                                                  for key, val in values])
             else:
                 self.w(u'<p>Empty</p>\n')
