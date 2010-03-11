@@ -287,7 +287,11 @@ class CubicWebRequestBase(DBAPIRequest):
             if breadcrumbs is None:
                 breadcrumbs = SizeConstrainedList(10)
                 self.set_session_data('breadcrumbs', breadcrumbs)
-            breadcrumbs.append(self.url())
+                breadcrumbs.append(self.url())
+            else:
+                url = self.url()
+                if breadcrumbs[-1] != url:
+                    breadcrumbs.append(url)
 
     def last_visited_page(self):
         breadcrumbs = self.get_session_data('breadcrumbs', None)
