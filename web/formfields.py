@@ -14,7 +14,6 @@ from datetime import datetime
 
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ustrftime
-from logilab.common.decorators import cached
 
 from yams.schema import KNOWN_METAATTRIBUTES
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
@@ -189,19 +188,28 @@ class Field(object):
         """return the widget instance associated to this field"""
         return self.widget
 
-    # cached is necessary else we get some pb on entity creation : entity.eid is
-    # modified from creation mark (eg 'X') to its actual eid (eg 123), and then
-    # `field.input_name()` won't return the right key anymore if not cached
-    # (first call to input_name done *before* eventual eid affectation).
-    @cached
     def input_name(self, form, suffix=None):
         """return 'qualified name' for this field"""
-        name = self.role_name()
-        if suffix is not None:
-            name += suffix
-        if self.eidparam:
-            return eid_param(name, form.edited_entity.eid)
-        return name
+        # caching is necessary else we get some pb on entity creation :
+        # entity.eid is modified from creation mark (eg 'X') to its actual eid
+        # (eg 123), and then `field.input_name()` won't return the right key
+        # anymore if not cached (first call to input_name done *before* eventual
+        # eid affectation).
+        #
+        # note that you should NOT use @cached else it will create a memory leak
+        # on persistent fields (eg created once for all on a form class) because
+        # of the 'form' appobject argument: the cache will keep growing as new
+        # form are created...
+        try:
+            return form.formvalues[(self, 'input_name')]
+        except KeyError:
+            name = self.role_name()
+            if suffix is not None:
+                name += suffix
+            if self.eidparam:
+                name = eid_param(name, form.edited_entity.eid)
+            form.formvalues[(self, 'input_name')] = name
+            return name
 
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
