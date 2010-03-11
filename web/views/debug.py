@@ -130,3 +130,40 @@ class RegistryView(StartupView):
                                                   for key, val in values])
             else:
                 self.w(u'<p>Empty</p>\n')
+
+
+class GCView(StartupView):
+    """display garbage collector information"""
+    __regid__ = 'gc'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    title = _('garbage')
+
+    def call(self, **kwargs):
+        from cubicweb._gcdebug import gc_info
+        from rql.stmts import Union
+        from cubicweb.appobject import AppObject
+        from cubicweb.rset import ResultSet
+        from cubicweb.dbapi import Connection, Cursor
+        from cubicweb.web.request import CubicWebRequestBase
+        lookupclasses = (AppObject,
+                         Union, ResultSet,
+                         Connection, Cursor,
+                         CubicWebRequestBase)
+        try:
+            from cubicweb.server.session import Session, ChildSession, InternalSession
+            lookupclasses += (InternalSession, ChildSession, Session)
+        except ImportError:
+            pass # no server part installed
+        self.w(u'<h1>%s</h1>' % _('Garbage collection information'))
+        counters, ocounters, garbage = gc_info(lookupclasses,
+                                               viewreferrersclasses=())
+        self.w(u'<h3>%s</h3>' % _('Looked up classes'))
+        values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
+        self.wview('pyvaltable', pyvalue=values)
+        self.w(u'<h3>%s</h3>' % _('Most referenced classes'))
+        values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)
+        self.wview('pyvaltable', pyvalue=values[:self._cw.form.get('nb', 20)])
+        if garbage:
+            self.w(u'<h3>%s</h3>' % _('Unreachable objects'))
+            values = sorted(xml_escape(repr(o) for o in garbage))
+            self.wview('pyvallist', pyvalue=values)
