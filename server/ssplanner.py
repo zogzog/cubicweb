@@ -5,6 +5,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 from copy import copy
@@ -15,6 +17,7 @@ from rql.nodes import Constant, Relation
 from cubicweb import QueryError, typed_eid
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.rqlrewrite import add_types_restriction
+from cubicweb.server.session import security_enabled
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 
@@ -58,12 +61,12 @@ def _extract_eid_consts(plan, rqlst):
     the syntax tree
     """
     session = plan.session
-    eschema = session.vreg.schema.eschema
     if rqlst.where is None:
         return {}
     eidconsts = {}
     neweids = session.transaction_data.get('neweids', ())
     checkread = session.read_security
+    eschema = session.vreg.schema.eschema
     for rel in rqlst.where.get_nodes(Relation):
         if rel.r_type == 'eid' and not rel.neged(strict=True):
             lhs, rhs = rel.get_variable_parts()
@@ -73,7 +76,9 @@ def _extract_eid_consts(plan, rqlst):
                 # the generated select substep if not emited (eg nothing
                 # to be selected)
                 if checkread and eid not in neweids:
-                    eschema(session.describe(eid)[0]).check_perm(session, 'read')
+                    with security_enabled(session, read=False):
+                        eschema(session.describe(eid)[0]).check_perm(
+                            session, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid
     return eidconsts
 
