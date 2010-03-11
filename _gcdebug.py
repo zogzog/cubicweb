@@ -22,7 +22,7 @@ def _get_counted_class(obj, classes):
 
 def gc_info(countclasses,
             ignoreclasses=IGNORE_CLASSES,
-            viewreferrersclasses=(), showobjs=False):
+            viewreferrersclasses=(), showobjs=False, maxlevel=1):
     gc.collect()
     gc.collect()
     counters = {}
@@ -45,7 +45,7 @@ def gc_info(countclasses,
             except KeyError:
                 ocounters[key] = 1
         if isinstance(obj, viewreferrersclasses):
-            print '   ', obj, referrers(obj, showobjs)
+            print '   ', obj, referrers(obj, showobjs, maxlevel)
     return counters, ocounters, gc.garbage
 
 
