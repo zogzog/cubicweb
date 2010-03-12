@@ -14,7 +14,6 @@ from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import role
-from cubicweb.utils import merge_dicts
 from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
@@ -116,8 +115,9 @@ class NavigationComponent(Component):
             del params[self.stop_param]
 
     def page_url(self, path, params, start, stop):
-        params = merge_dicts(params, {self.start_param : start,
-                                      self.stop_param : stop,})
+        params = dict(params)
+        params.update({self.start_param : start,
+                       self.stop_param : stop,})
         if path == 'json':
             rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
