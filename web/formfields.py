@@ -201,14 +201,14 @@ class Field(object):
         # of the 'form' appobject argument: the cache will keep growing as new
         # form are created...
         try:
-            return form.formvalues[(self, 'input_name')]
+            return form.formvalues[(self, 'input_name', suffix)]
         except KeyError:
             name = self.role_name()
             if suffix is not None:
                 name += suffix
             if self.eidparam:
                 name = eid_param(name, form.edited_entity.eid)
-            form.formvalues[(self, 'input_name')] = name
+            form.formvalues[(self, 'input_name', suffix)] = name
             return name
 
     def role_name(self):
