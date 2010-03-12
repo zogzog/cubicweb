@@ -604,6 +604,34 @@ class RestrictedAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'RestrictedSuggestField'
 
 
+class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
+    """remote autocomplete """
+    wdgtype = 'LazySuggestField'
+
+    def values_and_attributes(self, form, field):
+        self.add_media(form)
+
+        """override values_and_attributes to handle initial displayed values"""
+        values, attrs = super(LazyRestrictedAutoCompletionWidget, self).values_and_attributes(form, field)
+        assert len(values) == 1, "multiple selection is not supported yet by LazyWidget"
+        if not values[0]:
+            values = form.cw_extra_kwargs.get(field.name,'')
+            if not isinstance(values, (tuple, list)):
+                values = (values,)
+        try:
+            values = list(values)
+            values[0] = int(values[0])
+            attrs['cubicweb:initialvalue'] = values[0]
+            values = (self.display_value_for(form, values[0]),)
+        except (TypeError, ValueError):
+            pass
+        return values, attrs
+
+    def display_value_for(self, form, value):
+        entity =form._cw.entity_from_eid(value)
+        return entity.view('combobox')
+
+
 class AddComboBoxWidget(Select):
     def values_and_attributes(self, form, field):
         values, attrs = super(AddComboBoxWidget, self).values_and_attributes(form, field)

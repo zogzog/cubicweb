@@ -13,7 +13,7 @@ Notes:
 """
 __docformat__ = "restructuredtext en"
 
-from o_threading import Lock
+from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 
