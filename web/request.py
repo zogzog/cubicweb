@@ -311,7 +311,11 @@ class CubicWebRequestBase(DBAPIRequest):
             if breadcrumbs is None:
                 breadcrumbs = SizeConstrainedList(10)
                 self.set_session_data('breadcrumbs', breadcrumbs)
-            breadcrumbs.append(self.url())
+                breadcrumbs.append(self.url())
+            else:
+                url = self.url()
+                if breadcrumbs[-1] != url:
+                    breadcrumbs.append(url)
 
     def last_visited_page(self):
         breadcrumbs = self.get_session_data('breadcrumbs', None)
@@ -516,26 +520,33 @@ class CubicWebRequestBase(DBAPIRequest):
                 jsfile = self.datadir_url + jsfile
             self.html_headers.add_js(jsfile)
 
-    def add_css(self, cssfiles, media=u'all', localfile=True, ieonly=False):
+    def add_css(self, cssfiles, media=u'all', localfile=True, ieonly=False,
+                iespec=u'[if lt IE 8]'):
         """specify a CSS file to include in the HTML headers
         :param cssfiles: a CSS filename or a list of CSS filenames
         :param media: the CSS's media if necessary
         :param localfile: if True, the default data dir prefix is added to the
                           CSS filename
+        :param ieonly: True if this css is specific to IE
+        :param iespec: conditional expression that will be used around
+                       the css inclusion. cf:
+                       http://msdn.microsoft.com/en-us/library/ms537512(VS.85).aspx
         """
         if isinstance(cssfiles, basestring):
             cssfiles = (cssfiles,)
         if ieonly:
             if self.ie_browser():
+                extraargs = [iespec]
                 add_css = self.html_headers.add_ie_css
             else:
                 return # no need to do anything on non IE browsers
         else:
+            extraargs = []
             add_css = self.html_headers.add_css
         for cssfile in cssfiles:
             if localfile:
                 cssfile = self.datadir_url + cssfile
-            add_css(cssfile, media)
+            add_css(cssfile, media, *extraargs)
 
     def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
                                **extraparams):

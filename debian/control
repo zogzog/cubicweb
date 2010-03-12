@@ -16,7 +16,7 @@ Package: cubicweb
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-twisted (= ${source:Version})
-XB-Recommends: (postgresql, postgresql-plpython, postgresql-contrib) | mysql | sqlite3
+XB-Recommends: (postgresql, postgresql-plpython) | mysql | sqlite3
 Recommends: postgresql | mysql | sqlite3
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -33,7 +33,8 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, python-psycopg2 | python-mysqldb | python-pysqlite2
+# postgresql/mysql -client packages for backup/restore of non local database
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, (python-psycopg2, postgresql-client) | (python-mysqldb, mysql-client) | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.

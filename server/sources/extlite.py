@@ -87,11 +87,11 @@ repository.',
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
 
-    def backup(self, backupfile):
+    def backup(self, backupfile, confirm):
         """method called to create a backup of the source's data"""
         self.close_pool_connections()
         try:
-            self.sqladapter.backup_to_file(backupfile)
+            self.sqladapter.backup_to_file(backupfile, confirm)
         finally:
             self.open_pool_connections()
 

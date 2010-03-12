@@ -360,10 +360,15 @@ class Repository(object):
     def stats(self): # XXX restrict to managers session?
         import threading
         results = {}
-        for hits, misses, title in (
-            (self.querier.cache_hit, self.querier.cache_miss, 'rqlt_st'),
-            (self.system_source.cache_hit, self.system_source.cache_miss, 'sql'),
+        querier = self.querier
+        source = self.system_source
+        for size, maxsize, hits, misses, title in (
+            (len(querier._rql_cache), self.config['rql-cache-size'],
+            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
+            (len(source._cache), self.config['rql-cache-size'],
+            source.cache_hit, source.cache_miss, 'sql'),
             ):
+            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
             results['%s_cache_hit' % title] =  hits
             results['%s_cache_miss' % title] = misses
             results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)

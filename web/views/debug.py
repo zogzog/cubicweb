@@ -27,13 +27,13 @@ def dict_to_html(w, dict):
 
 
 class ProcessInformationView(StartupView):
+    """display various web server /repository information"""
     __regid__ = 'info'
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('server information')
 
     def call(self, **kwargs):
-        """display server information"""
         req = self._cw
         dtformat = req.property_value('ui.datetime-format')
         _ = req._
@@ -111,24 +111,59 @@ class ProcessInformationView(StartupView):
 
 
 class RegistryView(StartupView):
+    """display vregistry content"""
     __regid__ = 'registry'
     __select__ = StartupView.__select__ & match_user_groups('managers')
     title = _('registry')
 
     def call(self, **kwargs):
-        """The default view representing the instance's management"""
         self.w(u'<h1>%s</h1>' % _("Registry's content"))
         keys = sorted(self._cw.vreg)
-        self.w(u'<p>%s</p>\n' % ' - '.join('<a href="/_registry#%s">%s</a>'
-                                           % (key, key) for key in keys))
+        url = self._cw.url()
+        self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
+                                           % (url, key, key) for key in keys))
         for key in keys:
-            self.w(u'<h2><a name="%s">%s</a></h2>' % (key, key))
-            items = self._cw.vreg[key].items()
-            if items:
-                self.w(u'<table><tbody>')
-                for key, value in sorted(items):
-                    self.w(u'<tr><td>%s</td><td>%s</td></tr>'
-                           % (key, xml_escape(repr(value))))
-                self.w(u'</tbody></table>\n')
+            self.w(u'<h2 id="%s">%s</h2>' % (key, key))
+            if self._cw.vreg[key]:
+                values = sorted(self._cw.vreg[key].iteritems())
+                self.wview('pyvaltable', pyvalue=[(key, xml_escape(repr(val)))
+                                                  for key, val in values])
             else:
                 self.w(u'<p>Empty</p>\n')
+
+
+class GCView(StartupView):
+    """display garbage collector information"""
+    __regid__ = 'gc'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    title = _('memory leak debugging')
+
+    def call(self, **kwargs):
+        from cubicweb._gcdebug import gc_info
+        from rql.stmts import Union
+        from cubicweb.appobject import AppObject
+        from cubicweb.rset import ResultSet
+        from cubicweb.dbapi import Connection, Cursor
+        from cubicweb.web.request import CubicWebRequestBase
+        lookupclasses = (AppObject,
+                         Union, ResultSet,
+                         Connection, Cursor,
+                         CubicWebRequestBase)
+        try:
+            from cubicweb.server.session import Session, ChildSession, InternalSession
+            lookupclasses += (InternalSession, ChildSession, Session)
+        except ImportError:
+            pass # no server part installed
+        self.w(u'<h1>%s</h1>' % _('Garbage collection information'))
+        counters, ocounters, garbage = gc_info(lookupclasses,
+                                               viewreferrersclasses=())
+        self.w(u'<h3>%s</h3>' % _('Looked up classes'))
+        values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
+        self.wview('pyvaltable', pyvalue=values)
+        self.w(u'<h3>%s</h3>' % _('Most referenced classes'))
+        values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)
+        self.wview('pyvaltable', pyvalue=values[:self._cw.form.get('nb', 20)])
+        if garbage:
+            self.w(u'<h3>%s</h3>' % _('Unreachable objects'))
+            values = sorted(xml_escape(repr(o) for o in garbage))
+            self.wview('pyvallist', pyvalue=values)

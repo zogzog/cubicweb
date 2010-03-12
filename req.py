@@ -7,9 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
+from urlparse import urlsplit, urlunsplit
 from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
-from cgi import parse_qsl
+from cgi import parse_qs, parse_qsl
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -239,7 +240,7 @@ class RequestSessionBase(object):
     def build_url_params(self, **kwargs):
         """return encoded params to incorporate them in an URL"""
         args = []
-        for param, values in kwargs.items():
+        for param, values in kwargs.iteritems():
             if not isinstance(values, (list, tuple)):
                 values = (values,)
             for value in values:
@@ -278,6 +279,25 @@ class RequestSessionBase(object):
                 yield unicode(key, self.encoding), unicode(val, self.encoding)
             except UnicodeDecodeError: # might occurs on manually typed URLs
                 yield unicode(key, 'iso-8859-1'), unicode(val, 'iso-8859-1')
+
+
+    def rebuild_url(self, url, **newparams):
+        """return the given url with newparams inserted. If any new params
+        is already specified in the url, it's overriden by the new value
+
+        newparams may only be mono-valued.
+        """
+        if isinstance(url, unicode):
+            url = url.encode(self.encoding)
+        schema, netloc, path, query, fragment = urlsplit(url)
+        query = parse_qs(query)
+        # sort for testing predictability
+        for key, val in sorted(newparams.iteritems()):
+            query[key] = (self.url_quote(val),)
+        query = '&'.join(u'%s=%s' % (param, value)
+                         for param, values in query.items()
+                         for value in values)
+        return urlunsplit((schema, netloc, path, query, fragment))
 
     # bound user related methods ###############################################
 

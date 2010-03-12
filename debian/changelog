@@ -1,3 +1,18 @@
+cubicweb (3.6.2-2) unstable; urgency=low
+
+  * remove postgresql-contrib from cubicweb dependency (using tsearch
+    which is included with postgres >= 8.3)
+  * add postgresql-client | mysql-client to cubicweb-server dependencies, necessary
+    for dump/restore of database
+
+ --
+
+cubicweb (3.6.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 11 Mar 2010 19:49:04 +0100
+
 cubicweb (3.6.1-2) unstable; urgency=low
 
   * remove depends to python-elementtree (included in python>=2.5)

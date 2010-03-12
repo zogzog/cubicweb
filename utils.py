@@ -160,7 +160,6 @@ class HTMLHead(UStringIO):
             warn('[3.7] specifying jsoncall is not needed anymore',
                  DeprecationWarning, stacklevel=2)
         self.add_post_inline_script(u"""jQuery(CubicWeb).one('server-response', function(event) {
-%s
 });""" % jscode)
 
 
@@ -182,10 +181,10 @@ class HTMLHead(UStringIO):
         if (cssfile, media) not in self.cssfiles:
             self.cssfiles.append( (cssfile, media) )
 
-    def add_ie_css(self, cssfile, media='all'):
+    def add_ie_css(self, cssfile, media='all', iespec=u'[if lt IE 8]'):
         """registers some IE specific CSS"""
-        if (cssfile, media) not in self.ie_cssfiles:
-            self.ie_cssfiles.append( (cssfile, media) )
+        if (cssfile, media, iespec) not in self.ie_cssfiles:
+            self.ie_cssfiles.append( (cssfile, media, iespec) )
 
     def add_unload_pagedata(self):
         """registers onunload callback to clean page data on server"""
@@ -215,8 +214,8 @@ class HTMLHead(UStringIO):
               (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
         if self.ie_cssfiles:
-            w(u'<!--[if lt IE 8]>\n')
-            for cssfile, media in self.ie_cssfiles:
+            for cssfile, media, iespec in self.ie_cssfiles:
+                w(u'<!--%s>\n' % iespec)
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
                   (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')

@@ -741,6 +741,7 @@ class Session(RequestSessionBase):
                 self.error('thread %s still alive after 10 seconds, will close '
                            'session anyway', thread)
         self.rollback()
+        del self._threaddata
 
     # transaction data/operations management ##################################
 

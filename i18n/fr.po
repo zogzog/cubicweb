@@ -376,6 +376,9 @@ msgstr "contrainte de format"
 msgid "From:"
 msgstr "De :"
 
+msgid "Garbage collection information"
+msgstr "Information sur le ramasse-miette"
+
 msgid "Help"
 msgstr "Aide"
 
@@ -396,6 +399,12 @@ msgstr "contrainte d'interval"
 
 msgid "Interval_plural"
 msgstr "Durées"
+
+msgid "Looked up classes"
+msgstr "Classes recherchées"
+
+msgid "Most referenced classes"
+msgstr "Classes les plus référencées"
 
 msgid "New BaseTransition"
 msgstr "XXX"
@@ -654,6 +663,9 @@ msgstr "Transitions"
 
 msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
+
+msgid "Unreachable objects"
+msgstr "Objets inacessible"
 
 msgid "Update permissions"
 msgstr "Permissions de modifier"
@@ -2810,6 +2822,9 @@ msgstr "nombre maximum d'entités liées à afficher dans la vue primaire"
 
 msgid "may"
 msgstr "mai"
+
+msgid "memory leak debugging"
+msgstr "Déboguage des fuites de mémoire"
 
 msgid "milestone"
 msgstr "jalon"

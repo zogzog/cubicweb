@@ -456,16 +456,17 @@ class JQueryTimePicker(FieldWidget):
     needs_js = ('jquery.timePicker.js',)
     needs_css = ('jquery.timepicker.css',)
 
-    def __init__(self, timestr=None, timesteps=30, **kwargs):
+    def __init__(self, timestr=None, timesteps=30, separator=u':', **kwargs):
         super(JQueryTimePicker, self).__init__(**kwargs)
         self.timestr = timestr
         self.timesteps = timesteps
+        self.separator = separator
 
     def _render(self, form, field, renderer):
         req = form._cw
         domid = field.dom_id(form, self.suffix)
-        req.add_onload(u'jqNode("%s").timePicker({selectedTime: "%s", step: %s})' % (
-            domid, self.timestr, self.timesteps))
+        req.add_onload(u'jqNode("%s").timePicker({selectedTime: "%s", step: %s, separator: "%s"})' % (
+            domid, self.timestr, self.timesteps, self.separator))
         if self.timestr is None:
             value = self.values(form, field)[0]
         else:

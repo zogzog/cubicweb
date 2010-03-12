@@ -159,7 +159,7 @@ class SQLAdapterMixIn(object):
         """open and return a connection to the database"""
         return self.dbhelper.get_connection()
 
-    def backup_to_file(self, backupfile):
+    def backup_to_file(self, backupfile, confirm):
         for cmd in self.dbhelper.backup_commands(backupfile,
                                                  keepownership=False):
             if _run_command(cmd):

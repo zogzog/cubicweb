@@ -114,8 +114,11 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
                 login, authinfo = retreiver.authentication_information(req)
             except NoAuthInfo:
                 continue
-            cnx = self._authenticate(req, login, authinfo)
-            break
+            try:
+                cnx = self._authenticate(req, login, authinfo)
+                break
+            except ExplicitLogin:
+                continue # the next one may succeed
         else:
             raise ExplicitLogin()
         for retreiver_ in self.authinforetreivers:
@@ -124,7 +127,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
     def _authenticate(self, req, login, authinfo):
         # remove possibly cached cursor coming from closed connection
-        clear_cache(req, 'cursor')
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=self.log_queries)
         try:

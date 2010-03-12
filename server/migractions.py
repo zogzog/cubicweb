@@ -147,9 +147,9 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             for source in repo.sources:
                 try:
-                    source.backup(osp.join(tmpdir, source.uri))
-                except Exception, exc:
-                    print '-> error trying to backup %s [%s]' % (source.uri, exc)
+                    source.backup(osp.join(tmpdir, source.uri, self.confirm))
+                except Exception, ex:
+                    print '-> error trying to backup %s [%s]' % (source.uri, ex)
                     if not self.confirm('Continue anyway?', default='n'):
                         raise SystemExit(1)
                     else:
@@ -189,7 +189,6 @@ class ServerMigrationHelper(MigrationHelper):
             bkup = tarfile.open(backupfile, 'r|gz')
             bkup.extractall(path=tmpdir)
             bkup.close()
-
         self.config.open_connections_pools = False
         repo = self.repo_connect()
         for source in repo.sources:
