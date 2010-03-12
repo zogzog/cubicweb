@@ -329,7 +329,7 @@ class CreateInstanceDBCommand(Command):
                                            source['db-encoding'])
                 else:
                     helper.create_database(cursor, dbname,
-                                           encoding=source['db-encoding'])
+                                           dbencoding=source['db-encoding'])
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
@@ -337,7 +337,7 @@ class CreateInstanceDBCommand(Command):
                 raise
         cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose)
         cursor = cnx.cursor()
-        dbhelper.init_fti_extensions(cursor)
+        helper.init_fti_extensions(cursor)
         # postgres specific stuff
         if driver == 'postgres':
             # install plpythonu/plpgsql language if not installed by the cube
