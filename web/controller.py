@@ -87,26 +87,6 @@ class Controller(AppObject):
         if not self._edited_entity:
             self._edited_entity = entity
 
-    # XXX move to EditController (only customer)
-    def delete_entities(self, eidtypes):
-        """delete entities from the repository"""
-        redirect_info = set()
-        eidtypes = tuple(eidtypes)
-        for eid, etype in eidtypes:
-            entity = self._cw.entity_from_eid(eid, etype)
-            path, params = entity.after_deletion_path()
-            redirect_info.add( (path, tuple(params.iteritems())) )
-            entity.delete()
-        if len(redirect_info) > 1:
-            # In the face of ambiguity, refuse the temptation to guess.
-            self._after_deletion_path = 'view', ()
-        else:
-            self._after_deletion_path = iter(redirect_info).next()
-        if len(eidtypes) > 1:
-            self._cw.set_message(self._cw._('entities deleted'))
-        else:
-            self._cw.set_message(self._cw._('entity deleted'))
-
     def validate_cache(self, view):
         view.set_http_cache_headers()
         self._cw.validate_cache()
