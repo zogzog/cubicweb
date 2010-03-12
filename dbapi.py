@@ -237,7 +237,7 @@ class DBAPIRequest(RequestSessionBase):
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if self.cnx is None:
-            return None # before the connection has been established
+            return default # before the connection has been established
         return self.cnx.get_session_data(key, default, pop)
 
     def set_session_data(self, key, value):
