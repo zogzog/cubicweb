@@ -141,7 +141,7 @@ class Session(RequestSessionBase):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        session._threaddata.pool = pool
+        session._threaddata.pool = self.pool
         return session
 
     def add_relation(self, fromeid, rtype, toeid):
