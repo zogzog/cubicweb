@@ -22,10 +22,18 @@ _MARKER = object()
 # initialize random seed from current time
 random.seed()
 
-def make_uid(key):
-    # remove dash, generated uid are used as identifier sometimes (sql table
-    # names at least)
-    return str(key) + str(uuid4()).replace('-', '')
+def make_uid(key=None):
+    """Return a unique identifier string.
+
+    if specified, `key` is used to prefix the generated uid so it can be used
+    for instance as a DOM id or as sql table names.
+
+    See uuid.uuid4 documentation for the shape of the generated identifier, but
+    this is basicallly a 32 bits hexadecimal string.
+    """
+    if key is None:
+        return uuid4().hex
+    return str(key) + uuid4().hex
 
 
 def dump_class(cls, clsname):
