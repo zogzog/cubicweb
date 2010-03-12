@@ -17,9 +17,10 @@ import simplejson
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
-from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
+from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
+                      typed_eid)
 from cubicweb.utils import CubicWebJsonEncoder
-from cubicweb.selectors import yes, match_user_groups
+from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
@@ -548,7 +549,7 @@ class JSonController(Controller):
 
 class SendMailController(Controller):
     __regid__ = 'sendmail'
-    __select__ = match_user_groups('managers', 'users')
+    __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
@@ -596,7 +597,7 @@ class SendMailController(Controller):
 
 class MailBugReportController(SendMailController):
     __regid__ = 'reportbug'
-    __select__ = yes()
+    __select__ = match_form_params('description')
 
     def publish(self, rset=None):
         body = self._cw.form['description']
