@@ -148,6 +148,7 @@ class RSSView(XMLView):
     content_type = 'text/xml'
     http_cache_manager = httpcache.MaxAgeHTTPCacheManager
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+    item_vid = 'rssitem'
 
     def _open(self):
         req = self._cw
@@ -174,7 +175,7 @@ class RSSView(XMLView):
         self._close()
 
     def cell_call(self, row, col):
-        self.wview('rssitem', self.cw_rset, row=row, col=col)
+        self.wview(self.item_vid, self.cw_rset, row=row, col=col)
 
 
 class RSSItemView(EntityView):
