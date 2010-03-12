@@ -330,8 +330,13 @@ class CreateInstanceDBCommand(Command):
                     helper.create_database(cursor, dbname, source['db-user'],
                                            source['db-encoding'])
                 else:
-                    helper.create_database(cursor, dbname,
-                                           encoding=source['db-encoding'])
+                    try:
+                        helper.create_database(cursor, dbname,
+                                               encoding=source['db-encoding'])
+                    except TypeError:
+                        # logilab.database
+                        helper.create_database(cursor, dbname,
+                                               dbencoding=source['db-encoding'])
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
