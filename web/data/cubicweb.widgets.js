@@ -113,7 +113,62 @@ Widgets.RestrictedSuggestField = defclass('RestrictedSuggestField', [Widgets.Sug
     }
 
 });
+//remote version of RestrictedSuggestField
+Widgets.LazySuggestField = defclass('LazySuggestField', [Widgets.SuggestField], {
+    __init__: function(node, options) {
+	var self = this;
+	var multi = "no";
+	options = options || {};
+	options.max = 50;
+	options.delay = 50;
+	options.cacheLength=0;
+	options.mustMatch = true;
+        // multiple selection not supported yet (still need to formalize correctly
+        // initial values / display values)
+        var initialvalue = evalJSON(node.getAttribute('cubicweb:initialvalue') || 'null');
+        if (!initialvalue) {
+            initialvalue = node.value;
+        }
+        options = jQuery.extend({dataType: 'json',
+                                 multiple: (multi == "yes") ? true : false,
+                                 parse: this.parseResult
+                                }, options);
+        var dataurl = node.getAttribute('cubicweb:dataurl');
+        // remove 'name' from original input and add the hidden one that will
+        // store the actual value
+        var hidden = INPUT({'type': "hidden", 'name': node.name, 'value': initialvalue});
+        node.parentNode.appendChild(hidden);
+        jQuery(node).bind('result', {hinput: hidden, input:node}, self.hideRealValue)
+            .removeAttr('name').autocomplete(dataurl, options);
+    },
 
+
+    hideRealValue: function(evt, data, value) {
+	if (!value){
+	    value="";
+	}
+        evt.data.hinput.value = value;
+    },
+
+    /*
+     * @param data: a list of couple (value, label) to fill the suggestion list,
+     *              (returned by CW through AJAX)
+     */
+    parseResult: function(data) {
+        var parsed = [];
+        for (var i=0; i < data.length; i++) {
+                var value = ''+data[i][0]; // a string is required later by jquery.autocomplete.js
+                var label = data[i][1];
+                parsed[parsed.length] = {
+                    data: [label],
+                    value: value,
+                    result: label
+                };
+        };
+        return parsed;
+    }
+
+});
 
 /*
  * suggestform displays a suggest field and associated validate / cancel buttons
