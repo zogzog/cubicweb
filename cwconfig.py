@@ -217,7 +217,9 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
 
     if os.environ.get('APYCOT_ROOT'):
         mode = 'test'
-        if CWDEV:
+        # allow to test cubes within apycot using cubicweb not installed by
+        # apycot
+        if __file__.startswith(os.environ['APYCOT_ROOT']):
             CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
             # create __init__ file
             file(join(CUBES_DIR, '__init__.py'), 'w').close()
@@ -638,16 +640,18 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
 
     INSTANCES_DATA_DIR = None
-    if CubicWebNoAppConfiguration.mode == 'test':
+    if os.environ.get('APYCOT_ROOT'):
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
+        if not exists(REGISTRY_DIR):
+            os.makedirs(REGISTRY_DIR)
         RUNTIME_DIR = tempfile.gettempdir()
-        if CWDEV:
+        # allow to test cubes within apycot using cubicweb not installed by
+        # apycot
+        if __file__.startswith(os.environ['APYCOT_ROOT']):
             MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         else:
             MIGRATION_DIR = '/usr/share/cubicweb/migration/'
-        if not exists(REGISTRY_DIR):
-            os.makedirs(REGISTRY_DIR)
     else:
         if CubicWebNoAppConfiguration.mode == 'user':
             REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
