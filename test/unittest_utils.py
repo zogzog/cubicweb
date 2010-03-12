@@ -59,7 +59,7 @@ class SizeConstrainedListTC(TestCase):
             l.extend(extension)
             yield self.assertEquals, l, expected
 
-class JSONEncoerTests(TestCase):
+class JSONEncoderTC(TestCase):
     def setUp(self):
         if simplejson is None:
             self.skip('simplejson not available')
@@ -80,6 +80,7 @@ class JSONEncoerTests(TestCase):
 
     def test_encoding_unknown_stuff(self):
         self.assertEquals(self.encode(TestCase), 'null')
+
 
 if __name__ == '__main__':
     unittest_main()
