@@ -160,7 +160,7 @@ class HTMLHead(UStringIO):
             warn('[3.7] specifying jsoncall is not needed anymore',
                  DeprecationWarning, stacklevel=2)
         self.add_post_inline_script(u"""jQuery(CubicWeb).one('server-response', function(event) {
-});""" % jscode)
+%s});""" % jscode)
 
 
     def add_js(self, jsfile):
