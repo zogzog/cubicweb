@@ -393,7 +393,7 @@ class CubicWebPublisher(object):
         self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
-        req.message = None
+        req.reset_message()
         req.reset_headers()
         if req.json_request:
             raise RemoteCallFailed(unicode(ex))

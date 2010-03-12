@@ -8,6 +8,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.mtconverter import xml_escape
+
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
@@ -98,7 +100,7 @@ class Controller(AppObject):
         newparams = {}
         # sets message if needed
         if self._cw.message:
-            newparams['__message'] = self._cw.message
+            newparams['_cwmsgid'] = self._cw.set_redirect_message(self._cw.message)
         if self._cw.form.has_key('__action_apply'):
             self._return_to_edition_view(newparams)
         if self._cw.form.has_key('__action_cancel'):
@@ -120,10 +122,13 @@ class Controller(AppObject):
         elif '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
             path = self._cw.form['__redirectpath']
-            if self._edited_entity and path != self._edited_entity.rest_path():
-                # XXX may be here on modification? if yes the message should be
-                # modified where __createdpath is detected (cw.web.request)
-                newparams['__createdpath'] = self._edited_entity.rest_path()
+            if (self._edited_entity and path != self._edited_entity.rest_path()
+                and '_cwmsgid' in newparams):
+                # XXX may be here on modification?
+                msg = u'(<a href="%s">%s</a>)' % (
+                    xml_escape(self._edited_entity.absolute_url()),
+                    self._cw._('click here to see created entity'))
+                self._cw.append_to_redirect_message(msg)
         elif self._after_deletion_path:
             # else it should have been set during form processing
             path, params = self._after_deletion_path
@@ -149,7 +154,7 @@ class Controller(AppObject):
             path = 'view'
             newparams['rql'] = form['rql']
         else:
-            self.warning("the edited data seems inconsistent")
+            self.warning('the edited data seems inconsistent')
             path = 'view'
         # pick up the correction edition view
         if form.get('__form_id'):
