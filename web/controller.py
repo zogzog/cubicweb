@@ -91,7 +91,6 @@ class Controller(AppObject):
         view.set_http_cache_headers()
         self._cw.validate_cache()
 
-    # XXX is that used AT ALL ?
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters
@@ -107,8 +106,6 @@ class Controller(AppObject):
         else:
             self._return_to_original_view(newparams)
 
-
-    # XXX is that used AT ALL ?
     def _return_to_original_view(self, newparams):
         """validate-button case"""
         # transforms __redirect[*] parameters into regular form parameters
@@ -141,7 +138,6 @@ class Controller(AppObject):
         url = append_url_params(url, self._cw.form.get('__redirectparams'))
         raise Redirect(url)
 
-    # XXX is that used AT ALL ?
     def _return_to_edition_view(self, newparams):
         """apply-button case"""
         form = self._cw.form
@@ -165,7 +161,6 @@ class Controller(AppObject):
         raise Redirect(self._cw.build_url(path, **newparams))
 
 
-    # XXX is that used AT ALL ?
     def _return_to_lastpage(self, newparams):
         """cancel-button case: in this case we are always expecting to go back
         where we came from, and this is not easy. Currently we suppose that
