@@ -79,19 +79,6 @@ class Controller(AppObject):
                 self.cw_rset = pp.process_query(rql)
         return self.cw_rset
 
-    def check_expected_params(self, params):
-        """check that the given list of parameters are specified in the form
-        dictionary
-        """
-        missing = []
-        for param in params:
-            if not self._cw.form.get(param):
-                missing.append(param)
-        if missing:
-            raise RequestError('missing required parameter(s): %s'
-                               % ','.join(missing))
-
-
     def notify_edited(self, entity):
         """called by edit_entity() to notify which entity is edited"""
         # NOTE: we can't use entity.rest_path() at this point because
