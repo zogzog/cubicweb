@@ -172,7 +172,7 @@ class SQLAdapterMixIn(object):
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
 
-    def backup_to_file(self, backupfile):
+    def backup_to_file(self, backupfile, confirm):
         for cmd in self.dbhelper.backup_commands(backupfile=backupfile,
                                                  keepownership=False,
                                                  dbname=self.dbname,

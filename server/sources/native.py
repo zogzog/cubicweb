@@ -13,7 +13,7 @@ Notes:
 """
 __docformat__ = "restructuredtext en"
 
-from threading import Lock
+from o_threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 
@@ -216,11 +216,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool.pool_reset()
         self.repo._free_pool(pool)
 
-    def backup(self, backupfile):
+    def backup(self, backupfile, confirm):
         """method called to create a backup of the source's data"""
         self.close_pool_connections()
         try:
-            self.backup_to_file(backupfile)
+            self.backup_to_file(backupfile, confirm)
         finally:
             self.open_pool_connections()
 
