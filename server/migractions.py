@@ -147,7 +147,7 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             for source in repo.sources:
                 try:
-                    source.backup(osp.join(tmpdir, source.uri, self.confirm))
+                    source.backup(osp.join(tmpdir, source.uri), self.confirm)
                 except Exception, ex:
                     print '-> error trying to backup %s [%s]' % (source.uri, ex)
                     if not self.confirm('Continue anyway?', default='n'):
