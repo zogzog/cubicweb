@@ -185,7 +185,17 @@ class RQLRewriter(object):
                 vi['const'] = typed_eid(selectvar) # XXX gae
                 vi['rhs_rels'] = vi['lhs_rels'] = {}
             except ValueError:
-                vi['stinfo'] = sti = self.select.defined_vars[selectvar].stinfo
+                try:
+                    vi['stinfo'] = sti = self.select.defined_vars[selectvar].stinfo
+                except KeyError:
+                    # variable has been moved to a newly inserted subquery
+                    # we should insert snippet in that subquery
+                    subquery = self.select.aliases[selectvar].query
+                    assert len(subquery.children) == 1
+                    subselect = subquery.children[0]
+                    RQLRewriter(self.session).rewrite(subselect, [(varmap, rqlexprs)],
+                                                      subselect.solutions, self.kwargs)
+                    continue
                 if varexistsmap is None:
                     vi['rhs_rels'] = dict( (r.r_type, r) for r in sti['rhsrelations'])
                     vi['lhs_rels'] = dict( (r.r_type, r) for r in sti['relations']
