@@ -304,21 +304,33 @@ class RQLRewriter(object):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
         selectvar = varmap[0]
-        subselect.append_selected(n.VariableRef(
-            subselect.get_variable(selectvar)))
+        subselectvar = subselect.get_variable(selectvar)
+        subselect.append_selected(n.VariableRef(subselectvar))
+        snippetrqlst = n.Exists(transformedsnippet.copy(subselect))
         aliases = [selectvar]
-        subselect.add_restriction(transformedsnippet.copy(subselect))
         stinfo = self.varinfo['stinfo']
+        need_null_test = False
         for rel in stinfo['relations']:
             rschema = self.schema.rschema(rel.r_type)
             if rschema.final or (rschema.inlined and
-                                      not rel in stinfo['rhsrelations']):
-                self.select.remove_node(rel)
-                rel.children[0].name = selectvar
+                                 not rel in stinfo['rhsrelations']):
+                rel.children[0].name = selectvar # XXX explain why
                 subselect.add_restriction(rel.copy(subselect))
                 for vref in rel.children[1].iget_nodes(n.VariableRef):
                     subselect.append_selected(vref.copy(subselect))
                     aliases.append(vref.name)
+                self.select.remove_node(rel)
+                # when some inlined relation has to be copied in the subquery,
+                # we need to test that either value is NULL or that the snippet
+                # condition is satisfied
+                if rschema.inlined and rel.optional:
+                    need_null_test = True
+        if need_null_test:
+            snippetrqlst = n.Or(
+                n.make_relation(subselectvar, 'is', (None, None), n.Constant,
+                                operator='IS'),
+                snippetrqlst)
+        subselect.add_restriction(snippetrqlst)
         if self.u_varname:
             # generate an identifier for the substitution
             argname = subselect.allocate_varname()

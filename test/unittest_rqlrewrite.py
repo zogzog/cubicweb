@@ -123,7 +123,7 @@ class RQLRewriteTC(TestCase):
                              "EXISTS(2 in_state A, B in_group D, E require_state A, "
                              "E name 'read', E require_group D, A is State, D is CWGroup, E is CWPermission)")
 
-    def test_optional_var(self):
+    def test_optional_var_base(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Any A,C WHERE A documented_by C?')
@@ -131,15 +131,41 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              "Any A,C WHERE A documented_by C?, A is Affaire "
                              "WITH C BEING "
-                             "(Any C WHERE C in_state B, D in_group F, G require_state B, G name 'read', "
-                             "G require_group F, D eid %(A)s, C is Card)")
+                             "(Any C WHERE EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', "
+                             "G require_group F), D eid %(A)s, C is Card)")
         rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
         rewrite(rqlst, {('C', 'X'): (card_constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              "Any A,C,T WHERE A documented_by C?, A is Affaire "
                              "WITH C,T BEING "
-                             "(Any C,T WHERE C in_state B, D in_group F, G require_state B, G name 'read', "
-                             "G require_group F, C title T, D eid %(A)s, C is Card)")
+                             "(Any C,T WHERE C title T, EXISTS(C in_state B, D in_group F, "
+                             "G require_state B, G name 'read', G require_group F), "
+                             "D eid %(A)s, C is Card)")
+
+    def test_optional_var_inlined(self):
+        c1 = ('X require_permission P')
+        c2 = ('X inlined_card O, O require_permission P')
+        rqlst = parse('Any C,A,R WHERE A? inlined_card C, A ref R')
+        rewrite(rqlst, {('C', 'X'): (c1,),
+                        ('A', 'X'): (c2,),
+                        }, {})
+        # XXX suboptimal
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C,A,R WITH A,R,C BEING "
+                             "(Any A,R,C WHERE A ref R, A? inlined_card C, "
+                             "(A is NULL) OR (EXISTS(A inlined_card B, B require_permission D, "
+                             "B is Card, D is CWPermission)), "
+                             "A is Affaire, C is Card, EXISTS(C require_permission E, E is CWPermission))")
+
+    # def test_optional_var_inlined_has_perm(self):
+    #     c1 = ('X require_permission P')
+    #     c2 = ('X inlined_card O, U has_read_permission O')
+    #     rqlst = parse('Any C,A,R WHERE A? inlined_card C, A ref R')
+    #     rewrite(rqlst, {('C', 'X'): (c1,),
+    #                     ('A', 'X'): (c2,),
+    #                     }, {})
+    #     self.failUnlessEqual(rqlst.as_string(),
+    #                          "")
 
     def test_relation_optimization_1_lhs(self):
         # since Card in_state State as monovalued cardinality, the in_state
@@ -243,7 +269,7 @@ class RQLRewriteTC(TestCase):
         rewrite(rqlst, {('X', 'X'): (constraint,)}, {})
         # ambiguity are kept in the sub-query, no need to be resolved using OR
         self.failUnlessEqual(rqlst.as_string(),
-                             u"Any X,C WHERE X? documented_by C, C is Card WITH X BEING (Any X WHERE X concerne A, X is Affaire)")
+                             u"Any X,C WHERE X? documented_by C, C is Card WITH X BEING (Any X WHERE EXISTS(X concerne A), X is Affaire)")
 
 
     def test_rrqlexpr_nonexistant_subject_1(self):
