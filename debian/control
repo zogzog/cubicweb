@@ -78,7 +78,7 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.48.1), python-yams (>= 0.28.0), python-rql (>= 0.24.0), python-lxml
+Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.49.0), python-yams (>= 0.28.0), python-rql (>= 0.25.0), python-lxml
 Recommends: python-simpletal (>= 4.0), python-crypto
 Conflicts: cubicweb-core
 Replaces: cubicweb-core
