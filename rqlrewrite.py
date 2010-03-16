@@ -11,7 +11,7 @@ This is used for instance for read security checking in the repository.
 __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
-
+from yams import BadSchemaDefinition
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
@@ -317,6 +317,13 @@ class RQLRewriter(object):
                 rel.children[0].name = selectvar # XXX explain why
                 subselect.add_restriction(rel.copy(subselect))
                 for vref in rel.children[1].iget_nodes(n.VariableRef):
+                    if isinstance(vref.variable, n.ColumnAlias):
+                        # XXX could probably be handled by generating the subquery
+                        # into the detected subquery
+                        raise BadSchemaDefinition(
+                            "cant insert security because of usage two inlined "
+                            "relations in this query. You should probably at "
+                            "least uninline %s" % rel.r_type)
                     subselect.append_selected(vref.copy(subselect))
                     aliases.append(vref.name)
                 self.select.remove_node(rel)

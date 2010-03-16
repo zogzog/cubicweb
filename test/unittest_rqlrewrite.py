@@ -7,7 +7,7 @@
 """
 from logilab.common.testlib import unittest_main, TestCase
 from logilab.common.testlib import mock_object
-
+from yams import BadSchemaDefinition
 from rql import parse, nodes, RQLHelper
 
 from cubicweb import Unauthorized
@@ -166,6 +166,16 @@ class RQLRewriteTC(TestCase):
     #                     }, {})
     #     self.failUnlessEqual(rqlst.as_string(),
     #                          "")
+
+    def test_optional_var_inlined_imbricated_error(self):
+        c1 = ('X require_permission P')
+        c2 = ('X inlined_card O, O require_permission P')
+        rqlst = parse('Any C,A,R,A2,R2 WHERE A? inlined_card C, A ref R,A2? inlined_card C, A2 ref R2')
+        self.assertRaises(BadSchemaDefinition,
+                          rewrite, rqlst, {('C', 'X'): (c1,),
+                                           ('A', 'X'): (c2,),
+                                           ('A2', 'X'): (c2,),
+                                           }, {})
 
     def test_relation_optimization_1_lhs(self):
         # since Card in_state State as monovalued cardinality, the in_state
