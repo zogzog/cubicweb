@@ -300,10 +300,10 @@ have the python imaging library installed to use captcha)',
 
     def _init_base_url(self):
         # normalize base url(s)
-        baseurl = self['base-url']
+        baseurl = self['base-url'] or self.default_base_url()
         if baseurl and baseurl[-1] != '/':
             baseurl += '/'
-            self.global_set_option('base-url', baseurl)
+        self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
         if httpsurl and httpsurl[-1] != '/':
             httpsurl += '/'

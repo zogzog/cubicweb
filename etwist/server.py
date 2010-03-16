@@ -99,15 +99,11 @@ class CubicWebRootResource(resource.PostableResource):
     def __init__(self, config, debug=None):
         self.debugmode = debug
         self.config = config
-        self.base_url = config['base-url'] or config.default_base_url()
-        if self.base_url[-1] != '/':
-            self.base_url += '/'
-        self.https_url = config['https-url']
-        if self.https_url and self.https_url[-1] != '/':
-            self.https_url += '/'
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
         self.appli = CubicWebPublisher(config, debug=self.debugmode)
+        self.base_url = config['base-url']
+        self.https_url = config['https-url']
         self.versioned_datadir = 'data%s' % config.instance_md5_version()
 
     def init_publisher(self):
