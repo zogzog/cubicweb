@@ -9,10 +9,10 @@ class PyViewsTC(CubicWebTC):
         content = view.render(pyvalue=[[1, 'a'], [2, 'b']],
                               headers=['num', 'char'])
         self.assertEquals(content.strip(), '''<table class="listing">
-<tr><th>num</th><th>char</th></tr>
-<tr><td>1</td><td>a</td></tr>
+<thead><tr><th>num</th><th>char</th></tr>
+</thead><tbody><tr><td>1</td><td>a</td></tr>
 <tr><td>2</td><td>b</td></tr>
-</table>''')
+</tbody></table>''')
 
     def test_pyvallist(self):
         view = self.vreg['views'].select('pyvallist', self.request(),

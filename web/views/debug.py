@@ -119,7 +119,7 @@ class RegistryView(StartupView):
     def call(self, **kwargs):
         self.w(u'<h1>%s</h1>' % _("Registry's content"))
         keys = sorted(self._cw.vreg)
-        url = self._cw.url()
+        url = xml_escape(self._cw.url())
         self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
                                            % (url, key, key) for key in keys))
         for key in keys:
