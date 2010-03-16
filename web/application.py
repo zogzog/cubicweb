@@ -217,13 +217,13 @@ class CookieSessionHandler(object):
             path = 'view'
         raise Redirect(req.build_url(path, **args))
 
-    def logout(self, req):
+    def logout(self, req, goto_url):
         """logout from the instance by cleaning the session and raising
         `AuthenticationError`
         """
         self.session_manager.close_session(req.cnx)
         req.remove_cookie(req.get_cookie(), self.SESSION_VAR)
-        raise AuthenticationError()
+        raise AuthenticationError(url=goto_url)
 
 
 class CubicWebPublisher(object):

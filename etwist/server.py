@@ -246,21 +246,12 @@ class CubicWebRootResource(resource.PostableResource):
                                  headers=req.headers_out or None)
         except ExplicitLogin:  # must be before AuthenticationError
             return self.request_auth(req)
-        except AuthenticationError:
-            if self.config['auth-mode'] == 'cookie':
-                # in cookie mode redirecting to the index view is enough :
-                # either anonymous connection is allowed and the page will
-                # be displayed or we'll be redirected to the login form
-                msg = req._('you have been logged out')
-                if req.https:
-                    req._base_url =  self.base_url
-                    req.https = False
-                url = req.build_url('view', vid='index', __message=msg)
-                return self.redirect(req, url)
-            else:
-                # in http we have to request auth to flush current http auth
-                # information
-                return self.request_auth(req, loggedout=True)
+        except AuthenticationError, ex:
+            if self.config['auth-mode'] == 'cookie' and getattr(ex, 'url', None):
+                return self.redirect(req, ex.url)
+            # in http we have to request auth to flush current http auth
+            # information
+            return self.request_auth(req, loggedout=True)
         except Redirect, ex:
             return self.redirect(req, ex.location)
         # request may be referenced by "onetime callback", so clear its entity

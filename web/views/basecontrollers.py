@@ -17,7 +17,8 @@ import simplejson
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
-from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
+from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
+                      typed_eid)
 from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import yes, match_user_groups
 from cubicweb.mail import format_mail
@@ -82,8 +83,19 @@ class LogoutController(Controller):
 
     def publish(self, rset=None):
         """logout from the instance"""
-        return self.appli.session_handler.logout(self._cw)
+        return self.appli.session_handler.logout(self._cw, self.goto_url())
 
+    def goto_url(self):
+        # * in http auth mode, url will be ignored
+        # * in cookie mode redirecting to the index view is enough : either
+        #   anonymous connection is allowed and the page will be displayed or
+        #   we'll be redirected to the login form
+        msg = self._cw._('you have been logged out')
+        if self._cw.https:
+            # XXX hack to generate an url on the http version of the site
+            self._cw._base_url =  self._cw.vreg.config['base-url']
+            self._cw.https = False
+        return self._cw.build_url('view', vid='index', __message=msg)
 
 class ViewController(Controller):
     """standard entry point :
