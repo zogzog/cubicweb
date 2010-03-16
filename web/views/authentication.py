@@ -140,13 +140,13 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         # restore an anonymous connection if possible
         login, password = self.anoninfo
         if login:
-            return self._authenticate(req, login, {'password': password})
+            cnx = self._authenticate(req, login, {'password': password})
+            cnx.anonymous_connection = True
+            return cnx
         raise ExplicitLogin()
 
     def _init_cnx(self, cnx, login, authinfo):
         # decorate connection
-        if login == self.vreg.config.anonymous_user()[0]:
-            cnx.anonymous_connection = True
         cnx.vreg = self.vreg
         cnx.login = login
         cnx.authinfo = authinfo

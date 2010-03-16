@@ -510,7 +510,7 @@ class CubicWebTC(TestCase):
         req.cnx = None
         sh = self.app.session_handler
         authm = sh.session_manager.authmanager
-        authm.authinforetreivers[-1].anoninfo = self.vreg.config.anonymous_user()
+        authm.anoninfo = self.vreg.config.anonymous_user()
         # not properly cleaned between tests
         self.open_sessions = sh.session_manager._sessions = {}
         return req, origcnx
