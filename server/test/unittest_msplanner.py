@@ -1010,7 +1010,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         self.session = self.user_groups_session('guests')
         self._test('Any X,XT,U WHERE X is Card, X owned_by U?, X title XT, U login L',
                    [('FetchStep',
-                     [('Any U,L WHERE U identity 5, U login L, U is CWUser',
+                     [('Any U,L WHERE U login L, EXISTS(U identity 5), U is CWUser',
                        [{'L': 'String', u'U': 'CWUser'}])],
                      [self.system], {}, {'L': 'table0.C1', 'U': 'table0.C0', 'U.login': 'table0.C1'}, []),
                     ('FetchStep',

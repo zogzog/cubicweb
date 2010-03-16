@@ -456,8 +456,8 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         rset = cu.execute('CWUser X WHERE X eid %(x)s', {'x': anon.eid}, 'x')
         self.assertEquals(rset.rows, [[anon.eid]])
         # but can't modify it
-        self.assertRaises(Unauthorized,
-                          cu.execute, 'SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})
+        cu.execute('SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})
+        self.assertRaises(Unauthorized, cnx.commit)
 
     def test_in_group_relation(self):
         cnx = self.login('iaminusersgrouponly')
