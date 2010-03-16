@@ -34,7 +34,7 @@ Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
 # postgresql/mysql -client packages for backup/restore of non local database
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, (python-psycopg2, postgresql-client) | (python-mysqldb, mysql-client) | python-pysqlite2
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -43,6 +43,26 @@ Description: server part of the CubicWeb framework
  .
  This package provides the repository server part of the library and
  necessary shared data files such as the schema library.
+
+Package: cubicweb-postgresql-support
+Architecture: all
+# postgresql/mysql -client packages for backup/restore of non local database
+Depends: python-psycopg2, postgresql-client
+Description: postgres support for the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This virtual package provides dependancies to use postgres for the
+ cubicweb repository.
+
+Package: cubicweb-mysql-support
+Architecture: all
+# postgresql/mysql -client packages for backup/restore of non local database
+Depends: python-mysqldb, mysql-client
+Description: mysql support for the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This virtual package provides dependancies to use mysql for the
+ cubicweb repository.
 
 
 Package: cubicweb-twisted
