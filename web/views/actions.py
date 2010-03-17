@@ -8,6 +8,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from cubicweb.schema import display_name
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (EntitySelector, yes,
