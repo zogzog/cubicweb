@@ -132,7 +132,7 @@ class EntityUpdatedNotificationView(NotificationView):
       override call)
     """
     __abstract__ = True
-    id = 'notif_entity_updated'
+    __regid__ = 'notif_entity_updated'
     msgid_timestamp = False
     message = _('updated')
     no_detailed_change_attrs = ()
