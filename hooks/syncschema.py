@@ -544,7 +544,7 @@ class SourceDbCWConstraintAdd(hook.Operation):
 
 class SourceDbCWConstraintDel(hook.Operation):
     """actually remove a constraint of a relation definition"""
-    rtype = subjtype = objtype = None # make pylint happy
+    rtype = subjtype = None # make pylint happy
 
     def precommit_event(self):
         cstrtype = self.cstr.type()
