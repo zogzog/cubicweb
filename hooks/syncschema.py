@@ -187,11 +187,12 @@ class MemSchemaOperation(hook.Operation):
         # every schema operation is triggering a schema update
         MemSchemaNotifyChanges(session)
 
-    def prepare_constraints(self, subjtype, rtype, objtype):
-        rdef = rtype.rdef(subjtype, objtype)
-        constraints = rdef.constraints
-        self.constraints = list(constraints)
-        rdef.constraints = self.constraints
+    def prepare_constraints(self, rdef):
+        # if constraints is already a list, reuse it (we're updating multiple
+        # constraints of the same rdef in the same transactions
+        if not isinstance(rdef.constraints, list):
+            rdef.constraints = list(rdef.constraints)
+        self.constraints = rdef.constraints
 
 
 class MemSchemaEarlyOperation(MemSchemaOperation):
@@ -665,8 +666,8 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
             self.cancelled = True
             return
         rdef = self.session.vreg.schema.schema_by_eid(rdef.eid)
+        self.prepare_constraints(rdef)
         subjtype, rtype, objtype = rdef.as_triple()
-        self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
         self.cstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
         self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
@@ -688,7 +689,7 @@ class MemSchemaCWConstraintDel(MemSchemaOperation):
     """
     rtype = subjtype = objtype = None # make pylint happy
     def precommit_event(self):
-        self.prepare_constraints(self.subjtype, self.rtype, self.objtype)
+        self.prepare_constraints(self.rdef)
 
     def commit_event(self):
         self.constraints.remove(self.cstr)
@@ -1085,11 +1086,9 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
-            subjtype, rtype, objtype = rdef.as_triple()
-            SourceDbCWConstraintDel(self._cw, subjtype=subjtype, rtype=rtype,
-                                    objtype=objtype, cstr=cstr)
-            MemSchemaCWConstraintDel(self._cw, subjtype=subjtype, rtype=rtype,
-                                     objtype=objtype, cstr=cstr)
+            SourceDbCWConstraintDel(self._cw, cstr=cstr,
+                                    subjtype=rdef.subject, rtype=rdef.rtype)
+            MemSchemaCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
 
 
 # permissions synchronization hooks ############################################
