@@ -293,3 +293,17 @@ class SchemaModificationHooksTC(CubicWebTC):
         rset = req.execute('Any X WHERE X has_text "rick.roll"')
         self.assertIn(req.user.eid, [item[0] for item in rset])
 
+    def test_update_constraint(self):
+        rdef = self.schema['Transition'].rdef('type')
+        cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
+        if not getattr(cstr, 'eid', None):
+            self.skip('start me alone') # bug in schema reloading, constraint's eid not restored
+        self.execute('SET X value %(v)s WHERE X eid %(x)s',
+                     {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"}, 'x')
+        self.execute('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+                     'WHERE CT name %(ct)s, EDEF eid %(x)s',
+                     {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid}, 'x')
+        self.commit()
+        cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
+        self.assertEquals(cstr.values, (u'normal', u'auto', u'new'))
+        self.execute('INSERT Transition T: T name "hop", T type "new"')
