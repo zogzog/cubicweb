@@ -2,13 +2,13 @@ Configuring the generated interface
 -----------------------------------
 
 
-The "Relation tags" structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Relation tags
+~~~~~~~~~~~~~
 .. automodule:: cubicweb.rtags
-   :members:
 
 
-The `uicfg` module (:mod:`cubicweb.web.uicfg`)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``uicfg`` module
+~~~~~~~~~~~~~~~~~~
 .. automodule:: cubicweb.web.uicfg
-   :members:
+

@@ -1,9 +1,26 @@
-"""relation tags store
+#:organization: Logilab
+#:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+#:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+A RelationTag object is an object which allows to link a configuration information to a relation definition. For instance, the standard primary view uses a RelationTag object (uicfg.primaryview_section) to get the section to display relations.
+
+.. sourcecode:: python
+
+   # display ``entry_of`` relations in the ``relations`` section in the ``BlogEntry`` primary view
+   uicfg.primaryview_section.tag_subject_of(('BlogEntry', 'entry_of', '*'),
+                                             'relations')
+
+   # hide every relation ``entry_of`` in the ``Blog`` primary view
+   uicfg.primaryview_section.tag_object_of(('*', 'entry_of', 'Blog'), 'hidden')
+
+Three primitives are defined:
+   * ``tag_subject_of`` tag a relation in the subject's context
+   * ``tag_object_of`` tag a relation in the object's context
+   * ``tag_attribute`` shortcut for tag_subject_of
+
+
 """
 __docformat__ = "restructuredtext en"
 
