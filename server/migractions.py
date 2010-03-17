@@ -15,6 +15,8 @@ The following data actions are supported for now:
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -40,7 +42,7 @@ from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
-
+from cubicweb.server.session import hooks_control
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
     from cubicweb.server.utils import manager_userpasswd, ask_source_config
@@ -96,7 +98,9 @@ class ServerMigrationHelper(MigrationHelper):
                 self.backup_database()
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
-        super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
+        # disable notification during migration
+        with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'notification'):
+            super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
