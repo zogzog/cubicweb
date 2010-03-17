@@ -9,6 +9,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from simplejson import dumps
 
 from logilab.mtconverter import xml_escape

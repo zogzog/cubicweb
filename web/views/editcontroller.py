@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from rql.utils import rqlvar_maker
 
 from logilab.common.textutils import splitstrip
