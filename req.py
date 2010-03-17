@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from urlparse import urlsplit, urlunsplit
 from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
