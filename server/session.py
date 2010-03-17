@@ -153,7 +153,12 @@ class Session(RequestSessionBase):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        session._threaddata.pool = self.pool
+        threaddata = session._threaddata
+        threaddata.pool = self.pool
+        # everything in transaction_data should be copied back but the entity
+        # type cache we don't want to avoid security pb
+        threaddata.transaction_data = self.transaction_data.copy()
+        threaddata.transaction_data.pop('ecache', None)
         return session
 
     def add_relation(self, fromeid, rtype, toeid):
