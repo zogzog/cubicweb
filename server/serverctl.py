@@ -71,7 +71,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             cnx.logged_user = user
         except AttributeError:
             # C object, __slots__
-            from logilab.db import _SimpleConnectionWrapper
+            from logilab.database import _SimpleConnectionWrapper
             cnx = _SimpleConnectionWrapper(cnx)
             cnx.logged_user = user
     return cnx
