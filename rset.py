@@ -286,12 +286,14 @@ class ResultSet(object):
             newselect = stmts.Select()
             newselect.limit = limit
             newselect.offset = offset
-            aliases = [nodes.VariableRef(newselect.get_variable(vref.name, i))
-                       for i, vref in enumerate(rqlst.selection)]
+            aliases = [nodes.VariableRef(newselect.get_variable(chr(65+i), i))
+                       for i in xrange(len(rqlst.children[0].selection))]
+            for vref in aliases:
+                newselect.append_selected(nodes.VariableRef(vref.variable))
             newselect.set_with([nodes.SubQuery(aliases, rqlst)], check=False)
             newunion = stmts.Union()
             newunion.append(newselect)
-            rql = rqlst.as_string(kwargs=self.args)
+            rql = newunion.as_string(kwargs=self.args)
             rqlst.parent = None
         return rql
 
