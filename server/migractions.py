@@ -500,11 +500,13 @@ class ServerMigrationHelper(MigrationHelper):
         self._synchronized.add((subjtype, rschema, objtype))
         if rschema.symmetric:
             self._synchronized.add((objtype, rschema, subjtype))
+        rdef = rschema.rdef(subjtype, objtype)
+        if rdef.infered:
+            return # don't try to synchronize infered relation defs
+        repordef = reporschema.rdef(subjtype, objtype)
         confirm = self.verbosity >= 2
         if syncprops:
             # properties
-            rdef = rschema.rdef(subjtype, objtype)
-            repordef = reporschema.rdef(subjtype, objtype)
             self.rqlexecall(ss.updaterdef2rql(rdef, repordef.eid),
                             ask_confirm=confirm)
             # constraints
@@ -523,15 +525,13 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
                                  {'x': cstr.eid}, 'x',
                                  ask_confirm=confirm)
-                    self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
-                                 {'x': cstr.eid}, 'x',
-                                 ask_confirm=confirm)
                 else:
                     newconstraints.remove(newcstr)
-                    values = {'x': cstr.eid,
-                              'v': unicode(newcstr.serialize())}
-                    self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
-                                 values, 'x', ask_confirm=confirm)
+                    value = unicode(newcstr.serialize())
+                    if value != unicode(cstr.serialize()):
+                        self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
+                                     {'x': cstr.eid, 'v': value}, 'x',
+                                     ask_confirm=confirm)
             # 2. add new constraints
             cstrtype_map = self.cstrtype_mapping()
             self.rqlexecall(ss.constraints2rql(cstrtype_map, newconstraints,

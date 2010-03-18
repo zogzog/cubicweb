@@ -335,7 +335,8 @@ class Repository(object):
             self.info('waiting thread %s...', thread.name)
             thread.join()
             self.info('thread %s finished', thread.name)
-        self.hm.call_hooks('server_shutdown', repo=self)
+        if not (self.config.creating or self.config.repairing):
+            self.hm.call_hooks('server_shutdown', repo=self)
         self.close_sessions()
         while not self._available_pools.empty():
             pool = self._available_pools.get_nowait()
