@@ -35,7 +35,7 @@ from cubicweb.server import hook
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
-from cubicweb.server.session import hooks_control
+from cubicweb.server.session import hooks_control, security_enabled
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -752,9 +752,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         session.mode = 'write'
         errors = []
         with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
-            for action in reversed(self.tx_actions(session, txuuid, False)):
-                undomethod = getattr(self, '_undo_%s' % action.action.lower())
-                errors += undomethod(session, action)
+            with security_enabled(session, read=False):
+                for action in reversed(self.tx_actions(session, txuuid, False)):
+                    undomethod = getattr(self, '_undo_%s' % action.action.lower())
+                    errors += undomethod(session, action)
         # remove the transactions record
         self.doexec(session,
                     "DELETE FROM transactions WHERE tx_uuid='%s'" % txuuid)
