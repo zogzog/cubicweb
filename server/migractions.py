@@ -499,15 +499,13 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
                                  {'x': cstr.eid}, 'x',
                                  ask_confirm=confirm)
-                    self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
-                                 {'x': cstr.eid}, 'x',
-                                 ask_confirm=confirm)
                 else:
                     newconstraints.remove(newcstr)
-                    values = {'x': cstr.eid,
-                              'v': unicode(newcstr.serialize())}
-                    self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
-                                 values, 'x', ask_confirm=confirm)
+                    value = unicode(newcstr.serialize())
+                    if value != unicode(cstr.serialize()):
+                        self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
+                                     {'x': cstr.eid, 'v': value}, 'x',
+                                     ask_confirm=confirm)
             # 2. add new constraints
             for newcstr in newconstraints:
                 self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
