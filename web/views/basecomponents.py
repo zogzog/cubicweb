@@ -216,20 +216,6 @@ class EtypeRestrictionComponent(component.Component):
         self.w(u'</div>')
 
 
-class PdfViewComponent(component.EntityVComponent):
-    __regid__ = 'pdfview'
-
-    context = 'ctxtoolbar'
-
-    def cell_call(self, row, col, view):
-        entity = self.cw_rset.get_entity(row, col)
-        url = entity.absolute_url(vid=view.__regid__, __template='pdf-main-template')
-        iconurl = self._cw.build_url('data/pdf_icon.gif')
-        label = self._cw._('Download page as pdf')
-        self.w(u'<a href="%s" title="%s" class="toolbarButton"><img src="%s" alt="%s"/></a>' %
-               (xml_escape(url), label, iconurl, label))
-
-
 class MetaDataComponent(component.EntityVComponent):
     __regid__ = 'metadata'
     context = 'navbottom'

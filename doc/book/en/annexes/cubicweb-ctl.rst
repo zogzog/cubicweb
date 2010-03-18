@@ -104,7 +104,7 @@ Commands to maintain i18n catalogs
 * ``i18ninstance``, recompiles the messages catalogs of an instance.
   This is automatically done while upgrading.
 
-See also chapter :ref:`internationalisation`.
+See also chapter :ref:`internationalization`.
 
 Other commands
 --------------
@@ -119,4 +119,4 @@ the database initialization. As those are specific to the `datastore`,
 specific Google AppEgine database, they are not available for now
 in cubicweb-ctl, but they are available in the instance created.
 
-For more details, please see :ref:`gaecontents` .
+For more details, please see :ref:`GoogleAppEngineSource` .

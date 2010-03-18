@@ -7,7 +7,7 @@ the glue that tie views to the data model. Using them appropriately is an
 essential part of the construction of well behaved cubes.
 
 Of course you may have to write your own set of selectors as your needs grows and
-you get familiar with the framework (see :ref:CustomSelectors).
+you get familiar with the framework (see :ref:`CustomSelectors`).
 
 Here is a description of generic selectors provided by CubicWeb that should suit
 most of your needs.
@@ -86,4 +86,4 @@ Other selectors
 .. autoclass:: cubicweb.selectors.match_transition
 
 You'll also find some other (very) specific selectors hidden in other modules
-than :module:`cubicweb.selectors`.
+than :mod:`cubicweb.selectors`.

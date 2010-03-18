@@ -1,3 +1,5 @@
+.. _primary:
+
 The default 'primary' view (:mod:`cubicweb.web.views.primary`)
 ---------------------------------------------------------------
 

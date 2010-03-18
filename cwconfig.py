@@ -115,7 +115,7 @@ def configuration_cls(name):
 
 def possible_configurations(directory):
     """return a list of installed configurations in a directory
-    according to *-ctl files
+    according to \*-ctl files
     """
     return [name for name in ('repository', 'twisted', 'all-in-one')
             if exists(join(directory, '%s.conf' % name))]
@@ -918,7 +918,7 @@ the repository',
         """return available translation for an instance, by looking for
         compiled catalog
 
-        take *args to be usable as a vocabulary method
+        take \*args to be usable as a vocabulary method
         """
         from glob import glob
         yield 'en' # ensure 'en' is yielded even if no .mo found

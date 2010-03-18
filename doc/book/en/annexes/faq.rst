@@ -150,7 +150,7 @@ no 'update' operation) and the usage of an RRQLExpression (rql
 expression for a relation) instead of an ERQLExpression (rql
 expression for an entity).
 
-You can find additional information in the section :ref:`security`.
+You can find additional information in the section :ref:`securitymodel`.
 
 
 What is `Error while publishing rest text ...` ?
