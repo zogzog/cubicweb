@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION fspath(bigint, text, text) RETURNS bytea AS $$
             'SELECT X.cw_%s FROM cw_%s as X WHERE X.cw_eid=$1' % (args[2], args[1]),
             ['bigint'])
         SD[pkey] = plan
-    return plpy.execute(plan, [args[0]])[0]
+    return plpy.execute(plan, [args[0]])[0]['cw_' + args[2]]
 $$ LANGUAGE plpythonu
 /* WITH(ISCACHABLE) XXX does postgres handle caching of large data nicely */
 ;;
