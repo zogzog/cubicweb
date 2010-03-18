@@ -211,10 +211,10 @@ to safely fill (X)HTML elements from Python unicode strings.
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view called 'a_view' to all the entities
 of a result set only requires to have for each entity of this result set,
-an available view called 'a_view' which accepts the entity.
+an available view called 'a_view' which accepts the entity.**
 
-Instead of merely using type based dispatch, we do predicate dispatch
-which quite more powerful**
+**Instead of merely using type based dispatch, we do predicate dispatch
+which is quite more powerful.**
 
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.

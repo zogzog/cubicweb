@@ -76,12 +76,14 @@ class IProgress(Interface):
         """returns a dictionary describing progress/estimated cost of the
         version.
 
-        mandatory keys are (''estimated', 'done', 'todo')
-        optional keys are ('notestimated', 'notestimatedcorrected',
-                           'estimatedcorrected')
-       'noestimated' and 'notestimatedcorrected' should default to 0
-       'estimatedcorrected' should default to 'estimated'
-       """
+        - mandatory keys are (''estimated', 'done', 'todo')
+
+        - optional keys are ('notestimated', 'notestimatedcorrected',
+          'estimatedcorrected')
+
+        'noestimated' and 'notestimatedcorrected' should default to 0
+        'estimatedcorrected' should default to 'estimated'
+        """
 
     def finished(self):
         """returns True if status is finished"""

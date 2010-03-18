@@ -9,6 +9,6 @@ Relation tags
 
 
 The ``uicfg`` module
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 .. automodule:: cubicweb.web.uicfg
 

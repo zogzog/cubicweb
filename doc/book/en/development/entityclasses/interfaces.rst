@@ -53,7 +53,7 @@ implementation to help implement correct behaviour.
 Interfaces (and some implementations as mixins) defined in the library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: cubicweb.interface
+.. automodule:: cubicweb.interfaces
    :members:
 
 .. automodule:: cubicweb.mixins

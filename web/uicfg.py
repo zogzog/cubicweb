@@ -25,7 +25,7 @@ relations can be displayed (represented in pink in the image below):
    * relations
    * sideboxes
 
- .. image:: ../../images/primaryview_template.png
+.. image:: ../../images/primaryview_template.png
 
 
 **Attributes** can only be displayed in the attributes section (default behavior). They can also be hidden.

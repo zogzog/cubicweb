@@ -259,7 +259,7 @@ class HTableFormRenderer(FormRenderer):
     +--------------+--------------+---------+
     | field1 label | field2 label |         |
     +--------------+--------------+---------+
-    | field1 input | field2 input | buttons
+    | field1 input | field2 input | buttons |
     +--------------+--------------+---------+
     """
     __regid__ = 'htable'

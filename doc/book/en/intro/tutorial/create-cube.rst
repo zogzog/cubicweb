@@ -340,7 +340,7 @@ The view has a ``self.w()`` method that is used to output data, in our
 example HTML output.
 
 .. note::
-   You can find more details about views and selectors in :ref:`ViewDefinition`.
+   You can find more details about views and selectors in :ref:`Views`.
 
 
 .. _DefineEntities:
