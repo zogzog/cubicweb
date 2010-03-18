@@ -189,7 +189,7 @@ class MemSchemaOperation(hook.Operation):
 
     def prepare_constraints(self, rdef):
         # if constraints is already a list, reuse it (we're updating multiple
-        # constraints of the same rdef in the same transactions
+        # constraints of the same rdef in the same transactions)
         if not isinstance(rdef.constraints, list):
             rdef.constraints = list(rdef.constraints)
         self.constraints = rdef.constraints
@@ -667,9 +667,8 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
             return
         rdef = self.session.vreg.schema.schema_by_eid(rdef.eid)
         self.prepare_constraints(rdef)
-        subjtype, rtype, objtype = rdef.as_triple()
         cstrtype = self.entity.type
-        self.cstr = rtype.rdef(subjtype, objtype).constraint_by_type(cstrtype)
+        self.cstr = rdef.constraint_by_type(cstrtype)
         self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         self.newcstr.eid = self.entity.eid
 
