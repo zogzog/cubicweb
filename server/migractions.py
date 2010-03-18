@@ -269,7 +269,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def rqlexecall(self, rqliter, cachekey=None, ask_confirm=True):
         for rql, kwargs in rqliter:
-            self.rqlexec(rql, kwargs, cachekey, ask_confirm)
+            self.rqlexec(rql, kwargs, cachekey, ask_confirm=ask_confirm)
 
     @cached
     def _create_context(self):
@@ -1199,7 +1199,8 @@ class ServerMigrationHelper(MigrationHelper):
                 # no result to fetch
                 return
 
-    def rqlexec(self, rql, kwargs=None, cachekey=None, ask_confirm=True):
+    def rqlexec(self, rql, kwargs=None, cachekey=None, build_descr=True,
+                ask_confirm=True):
         """rql action"""
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
@@ -1212,7 +1213,7 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = rql
             if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
-                    res = execute(rql, kwargs, cachekey)
+                    res = execute(rql, kwargs, cachekey, build_descr=build_descr)
                 except Exception, ex:
                     if self.confirm('Error: %s\nabort?' % ex):
                         raise
