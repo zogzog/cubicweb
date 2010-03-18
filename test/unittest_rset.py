@@ -371,6 +371,18 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute(u'Any X WHERE X has_text %(text)s', {'text' : 'foo'})
         self.assertEquals(rset.searched_text(), 'foo')
 
+    def test_union_limited_rql(self):
+        rset = self.execute('(Any X,N WHERE X is Bookmark, X title N)'
+                            ' UNION '
+                            '(Any X,N WHERE X is CWGroup, X name N)')
+        rset.limit(2, 10, inplace=True)
+        self.assertEquals(rset.limited_rql(),
+                          'Any A,B LIMIT 2 OFFSET 10 '
+                          'WITH A,B BEING ('
+                          '(Any X,N WHERE X is Bookmark, X title N) '
+                          'UNION '
+                          '(Any X,N WHERE X is CWGroup, X name N)'
+                          ')')
 
 if __name__ == '__main__':
     unittest_main()
