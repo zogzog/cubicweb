@@ -7,17 +7,25 @@ it should only include low level schema changes
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
+from cubicweb.server.session import hooks_control
+from cubicweb.server import schemaserial as ss
 
 applcubicwebversion, cubicwebversion = versions_map['cubicweb']
 
-from cubicweb.server import schemaserial as ss
 def _add_relation_definition_no_perms(subjtype, rtype, objtype):
     rschema = fsschema.rschema(rtype)
-    for query, args in ss.rdef2rql(rschema, subjtype, objtype, groupmap=None):
-        rql(query, args, ask_confirm=False)
+    rdef = rschema.rdefs[(subjtype, objtype)]
+    rdef.rtype = schema.rschema(rtype)
+    rdef.subject = schema.eschema(subjtype)
+    rdef.object = schema.eschema(objtype)
+    ss.execschemarql(rql, rdef, ss.rdef2rql(rdef, CSTRMAP, groupmap=None))
     commit(ask_confirm=False)
 
 if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
+    CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
+                       ask_confirm=False))
     _add_relation_definition_no_perms('CWAttribute', 'update_permission', 'CWGroup')
     _add_relation_definition_no_perms('CWAttribute', 'update_permission', 'RQLExpression')
     rql('SET X update_permission Y WHERE X is CWAttribute, X add_permission Y')
@@ -27,66 +35,65 @@ if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     drop_relation_definition('CWAttribute', 'delete_permission', 'RQLExpression')
 
 elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
+    CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
+                       ask_confirm=False))
     session.set_pool()
     permsdict = ss.deserialize_ertype_permissions(session)
 
-    changes = session.disable_hook_categories.add('integrity')
-    for rschema in repo.schema.relations():
-        rpermsdict = permsdict.get(rschema.eid, {})
-        for rdef in rschema.rdefs.values():
-            for action in rdef.ACTIONS:
-                actperms = []
-                for something in rpermsdict.get(action == 'update' and 'add' or action, ()):
-                    if isinstance(something, tuple):
-                        actperms.append(rdef.rql_expression(*something))
-                    else: # group name
-                        actperms.append(something)
-                rdef.set_action_permissions(action, actperms)
-    for action in ('read', 'add', 'delete'):
-        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'CWGroup')
-        _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'RQLExpression')
-    for action in ('read', 'update'):
-        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'CWGroup')
-        _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'RQLExpression')
-    for action in ('read', 'add', 'delete'):
-        rql('SET X %s_permission Y WHERE X is CWRelation, '
-            'RT %s_permission Y, X relation_type RT, Y is CWGroup' % (action, action))
+    with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
+        for rschema in repo.schema.relations():
+            rpermsdict = permsdict.get(rschema.eid, {})
+            for rdef in rschema.rdefs.values():
+                for action in rdef.ACTIONS:
+                    actperms = []
+                    for something in rpermsdict.get(action == 'update' and 'add' or action, ()):
+                        if isinstance(something, tuple):
+                            actperms.append(rdef.rql_expression(*something))
+                        else: # group name
+                            actperms.append(something)
+                    rdef.set_action_permissions(action, actperms)
+        for action in ('read', 'add', 'delete'):
+            _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'CWGroup')
+            _add_relation_definition_no_perms('CWRelation', '%s_permission' % action, 'RQLExpression')
+        for action in ('read', 'update'):
+            _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'CWGroup')
+            _add_relation_definition_no_perms('CWAttribute', '%s_permission' % action, 'RQLExpression')
+        for action in ('read', 'add', 'delete'):
+            rql('SET X %s_permission Y WHERE X is CWRelation, '
+                'RT %s_permission Y, X relation_type RT, Y is CWGroup' % (action, action))
+            rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
+                'X %s_permission Y WHERE X is CWRelation, '
+                'X relation_type RT, RT %s_permission Y2, Y2 exprtype YET, '
+                'Y2 mainvars YMV, Y2 expression YEX' % (action, action))
+        rql('SET X read_permission Y WHERE X is CWAttribute, '
+            'RT read_permission Y, X relation_type RT, Y is CWGroup')
         rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
-            'X %s_permission Y WHERE X is CWRelation, '
-            'X relation_type RT, RT %s_permission Y2, Y2 exprtype YET, '
-            'Y2 mainvars YMV, Y2 expression YEX' % (action, action))
-    rql('SET X read_permission Y WHERE X is CWAttribute, '
-        'RT read_permission Y, X relation_type RT, Y is CWGroup')
-    rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
-        'X read_permission Y WHERE X is CWAttribute, '
-        'X relation_type RT, RT read_permission Y2, Y2 exprtype YET, '
-        'Y2 mainvars YMV, Y2 expression YEX')
-    rql('SET X update_permission Y WHERE X is CWAttribute, '
-        'RT add_permission Y, X relation_type RT, Y is CWGroup')
-    rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
-        'X update_permission Y WHERE X is CWAttribute, '
-        'X relation_type RT, RT add_permission Y2, Y2 exprtype YET, '
-        'Y2 mainvars YMV, Y2 expression YEX')
-    for action in ('read', 'add', 'delete'):
-        drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
-        drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
-    if changes:
-        session.enable_hook_categories.add(*changes)
+            'X read_permission Y WHERE X is CWAttribute, '
+            'X relation_type RT, RT read_permission Y2, Y2 exprtype YET, '
+            'Y2 mainvars YMV, Y2 expression YEX')
+        rql('SET X update_permission Y WHERE X is CWAttribute, '
+            'RT add_permission Y, X relation_type RT, Y is CWGroup')
+        rql('INSERT RQLExpression Y: Y exprtype YET, Y mainvars YMV, Y expression YEX, '
+            'X update_permission Y WHERE X is CWAttribute, '
+            'X relation_type RT, RT add_permission Y2, Y2 exprtype YET, '
+            'Y2 mainvars YMV, Y2 expression YEX')
+        for action in ('read', 'add', 'delete'):
+            drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
+            drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
 
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 
-    session.set_shared_data('do-not-insert-cwuri', True)
-    deactivate_verification_hooks()
-    add_relation_type('cwuri')
-    base_url = session.base_url()
-    for eid, in rql('Any X', ask_confirm=False):
-        type, source, extid = session.describe(eid)
-        if source == 'system':
-            rql('SET X cwuri %(u)s WHERE X eid %(x)s',
-                {'x': eid, 'u': base_url + u'eid/%s' % eid})
-    isession.commit()
-    reactivate_verification_hooks()
-    session.set_shared_data('do-not-insert-cwuri', False)
+    with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
+        session.set_shared_data('do-not-insert-cwuri', True)
+        add_relation_type('cwuri')
+        base_url = session.base_url()
+        for eid, in rql('Any X', ask_confirm=False):
+            type, source, extid = session.describe(eid)
+            if source == 'system':
+                rql('SET X cwuri %(u)s WHERE X eid %(x)s',
+                    {'x': eid, 'u': base_url + u'eid/%s' % eid})
+        isession.commit()
+        session.set_shared_data('do-not-insert-cwuri', False)
 
 if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     # check that migration is not doomed
