@@ -479,13 +479,13 @@ class ServerMigrationHelper(MigrationHelper):
         rdef = rschema.rdef(subjtype, objtype)
         if rdef.infered:
             return # don't try to synchronize infered relation defs
+        repordef = reporschema.rdef(subjtype, objtype)
         confirm = self.verbosity >= 2
         if syncprops:
             # properties
             self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
                             ask_confirm=confirm)
             # constraints
-            repordef = reporschema.rdef(subjtype, objtype)
             newconstraints = list(rdef.constraints)
             # 1. remove old constraints and update constraints of the same type
             # NOTE: don't use rschema.constraint_by_type because it may be
