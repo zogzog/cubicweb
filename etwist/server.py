@@ -11,7 +11,6 @@ import sys
 import os
 import select
 import errno
-import hotshot
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
@@ -113,8 +112,6 @@ class CubicWebRootResource(resource.PostableResource):
         if config.repo_method == 'inmemory':
             reactor.addSystemEventTrigger('before', 'shutdown',
                                           self.shutdown_event)
-            # monkey patch start_looping_task to get proper reactor integration
-            #self.appli.repo.__class__.start_looping_tasks = start_looping_tasks
             if config.pyro_enabled():
                 # if pyro is enabled, we have to register to the pyro name
                 # server, create a pyro daemon, and create a task to handle pyro
@@ -496,7 +493,7 @@ def run(config, debug):
     root_resource.start_service()
     logger.info('instance started on %s', root_resource.base_url)
     if config['profile']:
-        prof = hotshot.Profile(config['profile'])
-        prof.runcall(reactor.run)
+        import cProfile
+        cProfile.runctx('reactor.run()', globals(), locals(), config['profile'])
     else:
         reactor.run()
