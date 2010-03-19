@@ -321,8 +321,14 @@ class ExecutionPlan(object):
             for var in rqlst.defined_vars.itervalues():
                 for rel in var.stinfo['uidrels']:
                     const = rel.children[1].children[0]
-                    varkwargs[var.name] = typed_eid(const.eval(self.args))
-                    break
+                    try:
+                        varkwargs[var.name] = typed_eid(const.eval(self.args))
+                        break
+                    except AttributeError:
+                        #from rql.nodes import Function
+                        #assert isinstance(const, Function)
+                        # X eid IN(...)
+                        pass
         # dictionnary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
