@@ -312,9 +312,7 @@ class CubicWebVRegistry(VRegistry):
         """set instance'schema and load application objects"""
         self._set_schema(schema)
         # now we can load application's web objects
-        searchpath = self.config.vregistry_path()
-        self.reset(searchpath, force_reload=False)
-        self.register_objects(searchpath, force_reload=False)
+        self._reload(self.config.vregistry_path(), force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for eschema in self.schema.entities():
@@ -322,6 +320,14 @@ class CubicWebVRegistry(VRegistry):
             self.case_insensitive_etypes[etype.lower()] = etype
             clear_cache(eschema, 'ordered_relations')
             clear_cache(eschema, 'meta_attributes')
+
+    def _reload(self, path, force_reload):
+        CW_EVENT_MANAGER.emit('before-registry-reload')
+        # modification detected, reset and reload
+        self.reset(path, force_reload)
+        super(CubicWebVRegistry, self).register_objects(
+            path, force_reload, self.config.extrapath)
+        CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
         """set instance'schema"""
@@ -363,12 +369,7 @@ class CubicWebVRegistry(VRegistry):
             super(CubicWebVRegistry, self).register_objects(
                 path, force_reload, self.config.extrapath)
         except RegistryOutOfDate:
-            CW_EVENT_MANAGER.emit('before-registry-reload')
-            # modification detected, reset and reload
-            self.reset(path, force_reload)
-            super(CubicWebVRegistry, self).register_objects(
-                path, force_reload, self.config.extrapath)
-            CW_EVENT_MANAGER.emit('after-registry-reload')
+            self._reload(path, force_reload)
 
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:
