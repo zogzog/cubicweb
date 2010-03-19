@@ -60,7 +60,7 @@ class Entity(AppObject, dict):
     :cvar skip_copy_for: a list of relations that should be skipped when copying
                          this kind of entity. Note that some relations such
                          as composite relations or relations that have '?1' as object
-                         cardinality are always skipped. 
+                         cardinality are always skipped.
     """
     __registry__ = 'etypes'
     __select__ = yes()
@@ -225,6 +225,37 @@ class Entity(AppObject, dict):
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
+    def __setitem__(self, attr, value):
+        """override __setitem__ to update self.edited_attributes.
+
+        Typically, a before_update_hook could do::
+
+            entity['generated_attr'] = generated_value
+
+        and this way, edited_attributes will be updated accordingly
+        """
+        if attr == 'eid':
+            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
+                 DeprecationWarning, stacklevel=2)
+            self.eid = value
+        else:
+            super(Entity, self).__setitem__(attr, value)
+            if hasattr(self, 'edited_attributes'):
+                self.edited_attributes.add(attr)
+
+    def __getitem__(self, key):
+        if key == 'eid':
+            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
+                 DeprecationWarning, stacklevel=2)
+            return self.eid
+        return super(Entity, self).__getitem__(key)
+
+    def setdefault(self, key, default):
+        """override setdefault to update self.edited_attributes"""
+        super(Entity, self).setdefault(key, default)
+        if hasattr(self, 'edited_attributes'):
+            self.edited_attributes.add(key)
+
     def pre_add_hook(self):
         """hook called by the repository before doing anything to add the entity
         (before_add entity hooks have not been called yet). This give the
@@ -235,7 +266,7 @@ class Entity(AppObject, dict):
         return self
 
     def set_eid(self, eid):
-        self.eid = self['eid'] = eid
+        self.eid = eid
 
     def has_eid(self):
         """return True if the entity has an attributed eid (False
@@ -781,10 +812,6 @@ class Entity(AppObject, dict):
         haseid = 'eid' in self
         self._cw_completed = False
         self.clear()
-        # set eid if it was in, else we may get nasty error while editing this
-        # entity if it's bound to a repo session
-        if haseid:
-            self['eid'] = self.eid
         # clear relations cache
         for rschema, _, role in self.e_schema.relation_definitions():
             self.clear_related_cache(rschema.type, role)
@@ -858,7 +885,15 @@ class Entity(AppObject, dict):
             _ = unicode
         else:
             _ = self._cw._
-        self.e_schema.check(self, creation=creation, _=_)
+        if creation or not hasattr(self, 'edited_attributes'):
+            # on creations, we want to check all relations, especially
+            # required attributes
+            relations = None
+        else:
+            relations = [self._cw.vreg.schema.rschema(rtype)
+                         for rtype in self.edited_attributes]
+        self.e_schema.check(self, creation=creation, _=_,
+                            relations=relations)
 
     def fti_containers(self, _done=None):
         if _done is None:
@@ -932,8 +967,6 @@ class Attribute(object):
 
     def __set__(self, eobj, value):
         eobj[self._attrname] = value
-        if hasattr(eobj, 'edited_attributes'):
-            eobj.edited_attributes.add(self._attrname)
 
 class Relation(object):
     """descriptor that controls schema relation access"""

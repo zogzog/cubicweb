@@ -214,7 +214,8 @@ class SQLAdapterMixIn(object):
         """
         attrs = {}
         eschema = entity.e_schema
-        for attr, value in entity.items():
+        for attr in entity.edited_attributes:
+            value = entity[attr]
             rschema = eschema.subjrels[attr]
             if rschema.final:
                 atype = str(entity.e_schema.destination(attr))
@@ -236,6 +237,7 @@ class SQLAdapterMixIn(object):
                 elif isinstance(value, Binary):
                     value = self._binary(value.getvalue())
             attrs[SQL_PREFIX+str(attr)] = value
+        attrs[SQL_PREFIX+'eid'] = entity.eid
         return attrs
 
 
