@@ -219,11 +219,6 @@ class Repository(object):
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
         self.hm = self.vreg['hooks']
-        if not (config.creating or config.repairing):
-            # call instance level initialisation hooks
-            self.hm.call_hooks('server_startup', repo=self)
-            # register a task to cleanup expired session
-            self.looping_task(config['session-time']/3., self.clean_sessions)
 
     # internals ###############################################################
 
@@ -272,6 +267,11 @@ class Repository(object):
         self.set_schema(appschema)
 
     def start_looping_tasks(self):
+        if not (self.config.creating or self.config.repairing):
+            # call instance level initialisation hooks
+            self.hm.call_hooks('server_startup', repo=self)
+            # register a task to cleanup expired session
+            self.looping_task(self.config['session-time']/3., self.clean_sessions)
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
             self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)

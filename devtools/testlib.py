@@ -207,6 +207,7 @@ class CubicWebTC(TestCase):
     def _build_repo(cls):
         cls.repo, cls.cnx = devtools.init_test_database(config=cls.config)
         cls.init_config(cls.config)
+        cls.repo.hm.call_hooks('server_startup', repo=cls.repo)
         cls.vreg = cls.repo.vreg
         cls._orig_cnx = cls.cnx
         cls.config.repository = lambda x=None: cls.repo
