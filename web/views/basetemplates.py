@@ -270,7 +270,7 @@ class SimpleMainTemplate(TheMainTemplate):
 
 if can_do_pdf_conversion():
     try:
-      from xml.etree.cElementTree import ElementTree
+        from xml.etree.cElementTree import ElementTree
     except ImportError: #python2.4
         from elementtree import ElementTree
     from subprocess import Popen as sub

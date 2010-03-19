@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+import os
 import sys
 import decimal
 import datetime
@@ -271,31 +272,34 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
-def can_do_pdf_conversion(__answer=[None]):
-    """pdf conversion depends on
-    * pysixt (python package)
-    * fop 0.9x
-    """
-    if __answer[0] is not None:
-        return __answer[0]
+def _pdf_conversion_availability():
     try:
         import pysixt
     except ImportError:
-        __answer[0] = False
         return False
     from subprocess import Popen, STDOUT
-    import os
+    if not os.path.isfile('/usr/bin/fop'):
+        return False
     try:
         Popen(['/usr/bin/fop', '-q'],
               stdout=open(os.devnull, 'w'),
               stderr=STDOUT)
     except OSError, e:
-        print e
-        __answer[0] = False
+        getLogger('cubicweb').info('fop not usable (%s)', e)
         return False
-    __answer[0] = True
     return True
 
+def can_do_pdf_conversion(__answer_cache=[]):
+    """pdf conversion depends on
+    * pysixt (python package)
+    * fop 0.9x
+
+    NOTE: actual check is done by _pdf_conversion_availability and
+    result is cached
+    """
+    if not __answer_cache: # first time, not in cache
+        __answer_cache.append(_pdf_conversion_availability())
+    return __answer_cache[0]
 
 try:
     # may not be there if cubicweb-web not installed
