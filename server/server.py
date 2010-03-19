@@ -90,6 +90,7 @@ class RepositoryServer(object):
 
     def run(self, req_timeout=5.0):
         """enter the service loop"""
+        self.repo.start_looping_tasks()
         while self.quiting is None:
             try:
                 self.daemon.handleRequests(req_timeout)
