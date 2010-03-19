@@ -19,6 +19,7 @@ from pickle import loads, dumps
 from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
+from contextlib import contextmanager
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -191,6 +192,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
         self._eid_creation_lock = Lock()
+        # (etype, attr) / storage mapping
+        self._storages = {}
         # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
@@ -266,6 +269,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def unmap_attribute(self, etype, attr):
         self._rql_sqlgen.attr_map.pop('%s.%s' % (etype, attr), None)
+
+    def set_storage(self, etype, attr, storage):
+        storage_dict = self._storages.setdefault(etype, {})
+        storage_dict[attr] = storage
+        self.map_attribute(etype, attr, storage.sqlgen_callback)
+
+    def unset_storage(self, etype, attr):
+        self._storages[etype].pop(attr)
+        # if etype has no storage left, remove the entry
+        if not self._storages[etype]:
+            del self._storages[etype]
+        self.unmap_attribute(etype, attr)
 
     # ISource interface #######################################################
 
@@ -402,40 +417,63 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 except KeyError:
                     continue
 
+    @contextmanager
+    def _storage_handler(self, entity, event):
+        # 1/ memorize values as they are before the storage is called.
+        #    For instance, the BFSStorage will replace the `data`
+        #    binary value with a Binary containing the destination path
+        #    on the filesystem. To make the entity.data usage absolutely
+        #    transparent, we'll have to reset entity.data to its binary
+        #    value once the SQL query will be executed
+        orig_values = {}
+        etype = entity.__regid__
+        for attr, storage in self._storages.get(etype, {}).items():
+            if attr in entity.edited_attributes:
+                orig_values[attr] = entity[attr]
+                handler = getattr(storage, 'entity_%s' % event)
+                handler(entity, attr)
+        yield # 2/ execute the source's instructions
+        # 3/ restore original values
+        for attr, value in orig_values.items():
+            entity[attr] = value
+
     def add_entity(self, session, entity):
         """add a new entity to the source"""
-        attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
-        self.doexec(session, sql, attrs)
-        if session.undoable_action('C', entity.__regid__):
-            self._record_tx_action(session, 'tx_entity_actions', 'C',
-                                   etype=entity.__regid__, eid=entity.eid)
+        with self._storage_handler(entity, 'added'):
+            attrs = self.preprocess_entity(entity)
+            sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
+            self.doexec(session, sql, attrs)
+            if session.undoable_action('C', entity.__regid__):
+                self._record_tx_action(session, 'tx_entity_actions', 'C',
+                                       etype=entity.__regid__, eid=entity.eid)
 
     def update_entity(self, session, entity):
         """replace an entity in the source"""
-        attrs = self.preprocess_entity(entity)
-        if session.undoable_action('U', entity.__regid__):
-            changes = self._save_attrs(session, entity, attrs)
-            self._record_tx_action(session, 'tx_entity_actions', 'U',
-                                   etype=entity.__regid__, eid=entity.eid,
-                                   changes=self._binary(dumps(changes)))
-        sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, attrs,
-                                 ['cw_eid'])
-        self.doexec(session, sql, attrs)
+        with self._storage_handler(entity, 'updated'):
+            attrs = self.preprocess_entity(entity)
+            if session.undoable_action('U', entity.__regid__):
+                changes = self._save_attrs(session, entity, attrs)
+                self._record_tx_action(session, 'tx_entity_actions', 'U',
+                                       etype=entity.__regid__, eid=entity.eid,
+                                       changes=self._binary(dumps(changes)))
+            sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, attrs,
+                                     ['cw_eid'])
+            self.doexec(session, sql, attrs)
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
-        if session.undoable_action('D', entity.__regid__):
-            attrs = [SQL_PREFIX + r.type
-                     for r in entity.e_schema.subject_relations()
-                     if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
-            changes = self._save_attrs(session, entity, attrs)
-            self._record_tx_action(session, 'tx_entity_actions', 'D',
-                                   etype=entity.__regid__, eid=entity.eid,
-                                   changes=self._binary(dumps(changes)))
-        attrs = {'cw_eid': entity.eid}
-        sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
-        self.doexec(session, sql, attrs)
+        with self._storage_handler(entity, 'deleted'):
+            if session.undoable_action('D', entity.__regid__):
+                attrs = [SQL_PREFIX + r.type
+                         for r in entity.e_schema.subject_relations()
+                         if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
+                changes = self._save_attrs(session, entity, attrs)
+                self._record_tx_action(session, 'tx_entity_actions', 'D',
+                                       etype=entity.__regid__, eid=entity.eid,
+                                       changes=self._binary(dumps(changes)))
+            attrs = {'cw_eid': entity.eid}
+            sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
+            self.doexec(session, sql, attrs)
 
     def _add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""

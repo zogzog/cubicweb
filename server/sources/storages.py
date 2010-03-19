@@ -4,16 +4,11 @@ from os import unlink, path as osp
 from cubicweb import Binary
 from cubicweb.server.hook import Operation
 
-
-ETYPE_ATTR_STORAGE = {}
 def set_attribute_storage(repo, etype, attr, storage):
-    ETYPE_ATTR_STORAGE.setdefault(etype, {})[attr] = storage
-    repo.system_source.map_attribute(etype, attr, storage.sqlgen_callback)
+    repo.system_source.set_storage(etype, attr, storage)
 
 def unset_attribute_storage(repo, etype, attr):
-    ETYPE_ATTR_STORAGE.setdefault(etype, {}).pop(attr, None)
-    repo.system_source.unmap_attribute(etype, attr)
-
+    repo.system_source.unset_storage(etype, attr)
 
 class Storage(object):
     """abstract storage"""
