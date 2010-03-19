@@ -69,6 +69,7 @@ def check_read_access(schema, user, rqlst, solution):
                 rdef = rschema.rdef(solution[rel.children[0].name],
                                     solution[rel.children[1].children[0].name])
             if not user.matching_groups(rdef.get_groups('read')):
+                # XXX rqlexpr not allowed
                 raise Unauthorized('read', rel.r_type)
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
@@ -284,8 +285,7 @@ class ExecutionPlan(object):
                     myrqlst = select.copy(solutions=lchecksolutions)
                     myunion.append(myrqlst)
                     # in-place rewrite + annotation / simplification
-                    lcheckdef = [((varmap, 'X'), rqlexprs)
-                                 for varmap, rqlexprs in lcheckdef]
+                    lcheckdef = [((var, 'X'), rqlexprs) for var, rqlexprs in lcheckdef]
                     rewrite(myrqlst, lcheckdef, lchecksolutions, self.args)
                     add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
                 if () in localchecks:
