@@ -188,15 +188,35 @@ class ExecutionPlan(object):
 
         return rqlst to actually execute
         """
-        noinvariant = set()
+        cached = None
         if security and self.session.read_security:
             # ensure security is turned of when security is inserted,
             # else we may loop for ever...
-            with security_enabled(self.session, read=False):
-                self._insert_security(union, noinvariant)
-        self.rqlhelper.simplify(union)
-        self.sqlannotate(union)
-        set_qdata(self.schema.rschema, union, noinvariant)
+            if self.session.transaction_data.get('security-rqlst-cache'):
+                key = self.cache_key
+            else:
+                key = None
+            if key is not None and key in self.session.transaction_data:
+                cachedunion, args = self.session.transaction_data[key]
+                union.children[:] = []
+                for select in cachedunion.children:
+                    union.append(select)
+                union.has_text_query = cachedunion.has_text_query
+                args.update(self.args)
+                self.args = args
+                cached = True
+            else:
+                noinvariant = set()
+                with security_enabled(self.session, read=False):
+                    self._insert_security(union, noinvariant)
+                if key is not None:
+                    self.session.transaction_data[key] = (union, self.args)
+        else:
+            noinvariant = ()
+        if cached is None:
+            self.rqlhelper.simplify(union)
+            self.sqlannotate(union)
+            set_qdata(self.schema.rschema, union, noinvariant)
         if union.has_text_query:
             self.cache_key = None
 
