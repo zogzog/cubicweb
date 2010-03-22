@@ -473,7 +473,7 @@ class InsertRelationsStep(Step):
                     value = row[index]
                     index += 1
                 if rorder == InsertRelationsStep.FINAL:
-                    edef[rtype] = value
+                    edef.rql_set_value(rtype, value)
                 elif rorder == InsertRelationsStep.RELATION:
                     self.plan.add_relation_def( (edef, rtype, value) )
                     edef.querier_pending_relations[(rtype, 'subject')] = value
@@ -564,7 +564,7 @@ class UpdateStep(Step):
                         edef = edefs[eid]
                     except KeyError:
                         edefs[eid] = edef = session.entity_from_eid(eid)
-                    edef[str(rschema)] = rhsval
+                    edef.rql_set_value(str(rschema), rhsval)
                 else:
                     repo.glob_add_relation(session, lhsval, str(rschema), rhsval)
             result[i] = newrow

@@ -225,6 +225,13 @@ class Entity(AppObject, dict):
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
+    def __getitem__(self, key):
+        if key == 'eid':
+            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
+                 DeprecationWarning, stacklevel=2)
+            return self.eid
+        return super(Entity, self).__getitem__(key)
+
     def __setitem__(self, attr, value):
         """override __setitem__ to update self.edited_attributes.
 
@@ -242,19 +249,22 @@ class Entity(AppObject, dict):
             super(Entity, self).__setitem__(attr, value)
             if hasattr(self, 'edited_attributes'):
                 self.edited_attributes.add(attr)
+                self.skip_security_attributes.add(attr)
 
-    def __getitem__(self, key):
-        if key == 'eid':
-            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
-                 DeprecationWarning, stacklevel=2)
-            return self.eid
-        return super(Entity, self).__getitem__(key)
-
-    def setdefault(self, key, default):
+    def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
-        super(Entity, self).setdefault(key, default)
+        super(Entity, self).setdefault(attr, default)
         if hasattr(self, 'edited_attributes'):
-            self.edited_attributes.add(key)
+            self.edited_attributes.add(attr)
+            self.skip_security_attributes.add(attr)
+
+    def rql_set_value(self, attr, value):
+        """call by rql execution plan when some attribute is modified
+
+        don't use dict api in such case since we don't want attribute to be
+        added to skip_security_attributes.
+        """
+        super(Entity, self).__setitem__(attr, value)
 
     def pre_add_hook(self):
         """hook called by the repository before doing anything to add the entity
@@ -867,13 +877,19 @@ class Entity(AppObject, dict):
 
     # server side utilities ###################################################
 
+    @property
+    def skip_security_attributes(self):
+        try:
+            return self._skip_security_attributes
+        except:
+            self._skip_security_attributes = set()
+            return self._skip_security_attributes
+
     def set_defaults(self):
         """set default values according to the schema"""
-        self._default_set = set()
         for attr, value in self.e_schema.defaults():
             if not self.has_key(attr):
                 self[str(attr)] = value
-                self._default_set.add(attr)
 
     def check(self, creation=False):
         """check this entity against its schema. Only final relation
