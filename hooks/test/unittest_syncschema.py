@@ -322,3 +322,6 @@ class SchemaModificationHooksTC(CubicWebTC):
         cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
         self.assertEquals(cstr.values, (u'normal', u'auto', u'new'))
         self.execute('INSERT Transition T: T name "hop", T type "new"')
+
+if __name__ == '__main__':
+    unittest_main()
