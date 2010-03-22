@@ -35,8 +35,8 @@ function setPropValueWidget(varname, tabindex) {
  * this function is called when an AJAX form was generated to
  * make sure tabindex remains consistent
  */
-function reorderTabindex(start) {
-    var form = getNode('entityForm');
+function reorderTabindex(start, formid) {
+    var form = getNode(formid || 'entityForm');
     var inputTypes = ['INPUT', 'SELECT', 'TEXTAREA'];
     var tabindex = (start==null)?15:start;
     nodeWalkDepthFirst(form, function(elem) {
@@ -254,7 +254,7 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
         form.css('display', 'none');
         form.insertBefore(insertBefore).slideDown('fast');
         updateInlinedEntitiesCounters(rtype, role);
-        reorderTabindex();
+        reorderTabindex(null, $(insertBefore).closest('form')[0]);
         jQuery(CubicWeb).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
         // the form enctype to multipart/form-data
