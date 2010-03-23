@@ -263,8 +263,8 @@ class Select(FieldWidget):
     """<select>, for field having a specific vocabulary"""
     vocabulary_widget = True
 
-    def __init__(self, attrs=None, multiple=False):
-        super(Select, self).__init__(attrs)
+    def __init__(self, attrs=None, multiple=False, **kwargs):
+        super(Select, self).__init__(attrs, **kwargs)
         self._multiple = multiple
 
     def render(self, form, field, renderer):
