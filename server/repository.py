@@ -975,7 +975,11 @@ class Repository(object):
         # init edited_attributes before calling before_add_entity hooks
         entity._is_saved = False # entity has an eid but is not yet saved
         entity.edited_attributes = set(entity)
-        entity = entity.pre_add_hook()
+        entity_ = entity.pre_add_hook()
+        # XXX kill that transmutation feature !
+        if not entity_ is entity:
+            entity.__class__ = entity_.__class__
+            entity.__dict__.update(entity_.__dict__)
         eschema = entity.e_schema
         etype = str(eschema)
         source = self.locate_etype_source(etype)
