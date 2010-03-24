@@ -112,12 +112,12 @@ class EntityUpdateHook(NotificationHook):
         if session.added_in_transaction(self.entity.eid):
             return # entity is being created
         # then compute changes
-        changes = session.transaction_data.setdefault('changes', {})
-        thisentitychanges = changes.setdefault(self.entity.eid, set())
         attrs = [k for k in self.entity.edited_attributes
                  if not k in self.skip_attrs]
         if not attrs:
             return
+        changes = session.transaction_data.setdefault('changes', {})
+        thisentitychanges = changes.setdefault(self.entity.eid, set())
         rqlsel, rqlrestr = [], ['X eid %(x)s']
         for i, attr in enumerate(attrs):
             var = chr(65+i)
