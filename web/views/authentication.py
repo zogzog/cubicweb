@@ -10,17 +10,56 @@ __docformat__ = "restructuredtext en"
 from logilab.common.decorators import clear_cache
 
 from cubicweb import AuthenticationError, BadConnectionId
+from cubicweb.view import Component
 from cubicweb.dbapi import repo_connect, ConnectionProperties
 from cubicweb.web import ExplicitLogin, InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
+
+class NoAuthInfo(Exception): pass
+
+
+class WebAuthInfoRetreiver(Component):
+    __registry__ = 'webauth'
+    order = None
+
+    def authentication_information(self, req):
+        """retreive authentication information from the given request, raise
+        NoAuthInfo if expected information is not found.
+        """
+        raise NotImplementedError()
+
+    def authenticated(self, req, cnx, retreiver):
+        """callback when return authentication information have opened a
+        repository connection successfully
+        """
+        pass
+
+
+class LoginPasswordRetreiver(WebAuthInfoRetreiver):
+    __regid__ = 'loginpwdauth'
+    order = 10
+
+    def authentication_information(self, req):
+        """retreive authentication information from the given request, raise
+        NoAuthInfo if expected information is not found.
+        """
+        login, password = req.get_authorization()
+        if not login:
+            raise NoAuthInfo()
+        return login, {'password': password}
 
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
 
-    def __init__(self):
-        self.repo = self.config.repository(self.vreg)
-        self.log_queries = self.config['query-log-file']
+    def __init__(self, vreg):
+        super(RepositoryAuthenticationManager, self).__init__(vreg)
+        self.repo = vreg.config.repository(vreg)
+        self.log_queries = vreg.config['query-log-file']
+        self.authinforetreivers = sorted(vreg['webauth'].possible_objects(vreg),
+                                    key=lambda x: x.order)
+        assert self.authinforetreivers
+        self.anoninfo = vreg.config.anonymous_user()
 
     def validate_session(self, req, session):
         """check session validity, and return eventually hijacked session
@@ -45,8 +84,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         except BadConnectionId:
             # check if a connection should be automatically restablished
             if (login is None or login == cnx.login):
-                login, password = cnx.login, cnx.password
-                cnx = self.authenticate(req, login, password)
+                cnx = self._authenticate(req, cnx.login, cnx.authinfo)
                 user = cnx.user(req)
                 # backport session's data
                 cnx.data = session.data
@@ -56,7 +94,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         req.set_connection(cnx, user)
         return cnx
 
-    def authenticate(self, req, _login=None, _password=None):
+    def authenticate(self, req):
         """authenticate user and return corresponding user object
 
         :raise ExplicitLogin: if authentication is required (no authentication
@@ -66,42 +104,50 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         returning a session instance instead of the user. This is expected by
         the InMemoryRepositorySessionManager.
         """
-        if _login is not None:
-            login, password = _login, _password
+        for retreiver in self.authinforetreivers:
+            try:
+                login, authinfo = retreiver.authentication_information(req)
+            except NoAuthInfo:
+                continue
+            try:
+                cnx = self._authenticate(req, login, authinfo)
+            except ExplicitLogin:
+                continue # the next one may succeed
+            for retreiver_ in self.authinforetreivers:
+                retreiver_.authenticated(req, cnx, retreiver)
+            break
         else:
-            login, password = req.get_authorization()
-        if not login:
-            # No session and no login -> try anonymous
-            login, password = self.vreg.config.anonymous_user()
-            if not login: # anonymous not authorized
-                raise ExplicitLogin()
-        # remove possibly cached cursor coming from closed connection
-        clear_cache(req, 'cursor')
+            # false if no authentication info found, eg this is not an
+            # authentication failure
+            if 'login' in locals():
+                req.set_message(req._('authentication failure'))
+            cnx = self._open_anonymous_connection(req)
+        return cnx
+
+    def _authenticate(self, req, login, authinfo):
         cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=self.log_queries)
         try:
-            cnx = repo_connect(self.repo, login, password, cnxprops=cnxprops)
+            cnx = repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
         except AuthenticationError:
-            req.set_message(req._('authentication failure'))
-            # restore an anonymous connection if possible
-            anonlogin, anonpassword = self.vreg.config.anonymous_user()
-            if anonlogin and anonlogin != login:
-                cnx = repo_connect(self.repo, anonlogin, anonpassword,
-                                   cnxprops=cnxprops)
-                self._init_cnx(cnx, anonlogin, anonpassword)
-            else:
-                raise ExplicitLogin()
-        else:
-            self._init_cnx(cnx, login, password)
+            raise ExplicitLogin()
+        self._init_cnx(cnx, login, authinfo)
         # associate the connection to the current request
         req.set_connection(cnx)
         return cnx
 
-    def _init_cnx(self, cnx, login, password):
-        # decorate connection
-        if login == self.vreg.config.anonymous_user()[0]:
+    def _open_anonymous_connection(self, req):
+        # restore an anonymous connection if possible
+        login, password = self.anoninfo
+        if login:
+            cnx = self._authenticate(req, login, {'password': password})
             cnx.anonymous_connection = True
+            return cnx
+        raise ExplicitLogin()
+
+    def _init_cnx(self, cnx, login, authinfo):
+        # decorate connection
         cnx.vreg = self.vreg
         cnx.login = login
-        cnx.password = password
+        cnx.authinfo = authinfo
 

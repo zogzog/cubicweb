@@ -17,7 +17,6 @@ recursive-include etwist *.xml *.html
 recursive-include i18n *.pot *.po
 recursive-include schemas *.py *.sql.*
 
-recursive-include common/test/data *
 recursive-include entities/test/data *
 recursive-include sobjects/test/data *
 recursive-include server/test/data *

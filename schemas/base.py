@@ -9,14 +9,14 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            String, Boolean, Datetime, Password)
-from cubicweb.schema import (RQLConstraint, WorkflowableEntityType,
-                             ERQLExpression, RRQLExpression)
-from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
+                            String, Datetime, Password)
+from cubicweb.schema import (
+    RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
+    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
 
 class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', ERQLExpression('X identity U')),
         'add':    ('managers',),
         'delete': ('managers',),
@@ -42,7 +42,7 @@ class CWUser(WorkflowableEntityType):
 
 class EmailAddress(EntityType):
     """an electronic mail address associated to a short alias"""
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',), # XXX if P use_email X, U has_read_permission P
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners', ERQLExpression('P use_email X, U has_update_permission P')),
@@ -59,7 +59,7 @@ to indicate which is the preferred form.'))
 
 class use_email(RelationType):
     """ """
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
@@ -68,12 +68,12 @@ class use_email(RelationType):
 
 class primary_email(RelationType):
     """the prefered email"""
-    permissions = use_email.permissions
+    __permissions__ = use_email.__permissions__
 
 class prefered_form(RelationType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
-        # XXX should have update permissions on both subject and object,
+        # XXX should have update __permissions__ on both subject and object,
         #     though by doing this we will probably have no way to add
         #     this relation in the web ui. The easiest way to acheive this
         #     is probably to be able to have "U has_update_permission O" as
@@ -85,13 +85,13 @@ class prefered_form(RelationType):
 
 class in_group(RelationType):
     """core relation indicating a user's groups"""
-    permissions = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class owned_by(RelationType):
     """core relation indicating owners of an entity. This relation
     implicitly put the owner into the owners group for the entity
     """
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('S owned_by U'),),
         'delete': ('managers', RRQLExpression('S owned_by U'),),
@@ -104,7 +104,7 @@ class owned_by(RelationType):
 
 class created_by(RelationType):
     """core relation indicating the original creator of an entity"""
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),
         'delete': ('managers',),
@@ -118,63 +118,47 @@ class created_by(RelationType):
 
 class creation_date(RelationType):
     """creation time of an entity"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'Datetime'
 
 class modification_date(RelationType):
     """latest modification time of an entity"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'Datetime'
 
 class cwuri(RelationType):
     """internal entity uri"""
+    __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'String'
 
 
-class CWProperty(EntityType):
-    """used for cubicweb configuration. Once a property has been created you
-    can't change the key.
-    """
-    permissions = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers', 'users',),
-        'update': ('managers', 'owners',),
-        'delete': ('managers', 'owners',),
-        }
-    # key is a reserved word for mysql
-    pkey = String(required=True, internationalizable=True, maxsize=256,
-                  description=_('defines what\'s the property is applied for. '
-                                'You must select this first to be able to set '
-                                'value'))
-    value = String(internationalizable=True, maxsize=256)
-
-    for_user = SubjectRelation('CWUser', cardinality='?*', composite='object',
-                               description=_('user for which this property is '
-                                             'applying. If this relation is not '
-                                             'set, the property is considered as'
-                                             ' a global property'))
-
-
+# XXX find a better relation name
 class for_user(RelationType):
     """link a property to the user which want this property customization. Unless
     you're a site manager, this relation will be handled automatically.
     """
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),
         'delete': ('managers',),
         }
     inlined = True
+    subject = 'CWProperty'
+    object = 'CWUser'
+    composite = 'object'
+    cardinality = '?*'
 
 
 class CWPermission(EntityType):
     """entity type that may be used to construct some advanced security configuration
     """
-    permissions = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True, maxsize=100,
                   description=_('name or identifier of the permission'))
@@ -189,19 +173,11 @@ class require_permission(RelationType):
     """link a permission to the entity. This permission should be used in the
     security definition of the entity's type to be useful.
     """
-    permissions = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers',),
-        'delete': ('managers',),
-        }
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class require_group(RelationType):
     """used to grant a permission to a group"""
-    permissions = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers',),
-        'delete': ('managers',),
-        }
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 
 class ExternalUri(EntityType):
@@ -213,17 +189,16 @@ class same_as(RelationType):
     """generic relation to specify that an external entity represent the same
     object as a local one:
        http://www.w3.org/TR/owl-ref/#sameAs-def
-
-    NOTE: You'll have to explicitly declare which entity types can have a
-    same_as relation
     """
-    permissions = {
+    #NOTE: You'll have to explicitly declare which entity types can have a
+    #same_as relation
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users'),
         'delete': ('managers', 'owners'),
         }
     cardinality = '*1'
-    symetric = True
+    symmetric = True
     # NOTE: the 'object = ExternalUri' declaration will still be mandatory
     #       in the cube's schema.
     object = 'ExternalUri'
@@ -237,7 +212,9 @@ class CWCache(EntityType):
 
     Also, checkout the AppObject.get_cache() method.
     """
-    permissions = {
+    # XXX only handle by hooks, shouldn't be readable/editable at all through
+    # the ui and so no permissions should be granted, no?
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),
         'update': ('managers', 'users',), # XXX
@@ -253,10 +230,10 @@ class CWCache(EntityType):
 
 class identical_to(RelationType):
     """identical to"""
-    symetric = True
-    permissions = {
+    symmetric = True
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
-        # XXX should have update permissions on both subject and object,
+        # XXX should have update __permissions__ on both subject and object,
         #     though by doing this we will probably have no way to add
         #     this relation in the web ui. The easiest way to acheive this
         #     is probably to be able to have "U has_update_permission O" as
@@ -268,8 +245,8 @@ class identical_to(RelationType):
 
 class see_also(RelationType):
     """generic relation to link one entity to another"""
-    symetric = True
-    permissions = {
+    symmetric = True
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),

@@ -16,7 +16,7 @@ VCARD_PHONE_TYPES = {'home': 'HOME', 'office': 'WORK', 'mobile': 'CELL', 'fax': 
 
 class VCardCWUserView(EntityView):
     """export a person information as a vcard"""
-    id = 'vcard'
+    __regid__ = 'vcard'
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'
@@ -24,11 +24,11 @@ class VCardCWUserView(EntityView):
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""
-        self.req.set_content_type(self.content_type, filename='vcard.vcf')
+        self._cw.set_content_type(self.content_type, filename='vcard.vcf')
 
     def cell_call(self, row, col):
         self.vcard_header()
-        self.vcard_content(self.complete_entity(row, col))
+        self.vcard_content(self.cw_rset.complete_entity(row, col))
         self.vcard_footer()
 
     def vcard_header(self):

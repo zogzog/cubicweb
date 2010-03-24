@@ -19,7 +19,7 @@ from cubicweb.web.views import forms, formrenderers
 
 
 class SendEmailAction(action.Action):
-    id = 'sendemail'
+    __regid__ = 'sendemail'
     # XXX should check email is set as well
     __select__ = (action.Action.__select__ & implements(IEmailable)
                   & match_user_groups('managers', 'users'))
@@ -29,18 +29,25 @@ class SendEmailAction(action.Action):
 
     def url(self):
         params = {'vid': 'massmailing', '__force_display': 1}
-        if self.req.form.has_key('rql'):
-            params['rql'] = self.req.form['rql']
-        return self.build_url(self.req.relative_path(includeparams=False),
-                              **params)
+        if self._cw.form.has_key('rql'):
+            params['rql'] = self._cw.form['rql']
+        return self._cw.build_url(self._cw.relative_path(includeparams=False),
+                                  **params)
 
+
+def recipient_vocabulary(form, field):
+    vocab = [(entity.get_email(), entity.eid) for entity in form.cw_rset.entities()]
+    return [(label, value) for label, value in vocab if label]
 
 class MassMailingForm(forms.FieldsForm):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
 
     sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
-                            label=_('From:'))
-    recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'))
+                            label=_('From:'),
+                            value=lambda f: '%s <%s>' % (f._cw.user.dc_title(), f._cw.user.get_email()))
+    recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'),
+                               choices=recipient_vocabulary,
+                               value= lambda f: [entity.eid for entity in f.cw_rset.entities() if entity.get_email()])
     subject = ff.StringField(label=_('Subject:'), max_length=256)
     mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                                 inputid='mailbody'))
@@ -49,25 +56,17 @@ class MassMailingForm(forms.FieldsForm):
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",
                               stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
-    form_renderer_id = id
+    form_renderer_id = __regid__
 
-    def form_field_vocabulary(self, field):
-        if field.name == 'recipient':
-            vocab = [(entity.get_email(), entity.eid) for entity in self.rset.entities()]
-            return [(label, value) for label, value in vocab if label]
-        return super(MassMailingForm, self).form_field_vocabulary(field)
-
-    def form_field_value(self, field, values):
-        if field.name == 'recipient':
-            return [entity.eid for entity in self.rset.entities() if entity.get_email()]
-        elif field.name == 'mailbody':
-            field.widget.attrs['cubicweb:variables'] = ','.join(self.get_allowed_substitutions())
-        return super(MassMailingForm, self).form_field_value(field, values)
+    def __init__(self, *args, **kwargs):
+        super(MassMailingForm, self).__init__(*args, **kwargs)
+        field = self.field_by_name('mailbody')
+        field.widget.attrs['cubicweb:variables'] = ','.join(self.get_allowed_substitutions())
 
     def get_allowed_substitutions(self):
         attrs = []
-        for coltype in self.rset.column_types(0):
-            eclass = self.vreg['etypes'].etype_class(coltype)
+        for coltype in self.cw_rset.column_types(0):
+            eclass = self._cw.vreg['etypes'].etype_class(coltype)
             attrs.append(eclass.allowed_massmail_keys())
         return sorted(reduce(operator.and_, attrs))
 
@@ -75,13 +74,13 @@ class MassMailingForm(forms.FieldsForm):
         insertLink = u'<a href="javascript: insertText(\'%%(%s)s\', \'emailarea\');">%%(%s)s</a>'
         substs = (u'<div class="substitution">%s</div>' % (insertLink % (subst, subst))
                   for subst in self.get_allowed_substitutions())
-        helpmsg = self.req._('You can use any of the following substitutions in your text')
+        helpmsg = self._cw._('You can use any of the following substitutions in your text')
         return u'<div id="substitutions"><span>%s</span>%s</div>' % (
             helpmsg, u'\n'.join(substs))
 
 
 class MassMailingFormRenderer(formrenderers.FormRenderer):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
     button_bar_class = u'toolbar'
 
     def _render_fields(self, fields, w, form):
@@ -117,14 +116,14 @@ class MassMailingFormRenderer(formrenderers.FormRenderer):
         pass
 
 class MassMailingFormView(form.FormViewMixIn, EntityView):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
     __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
     def call(self):
-        req = self.req
+        req = self._cw
         req.add_js('cubicweb.widgets.js', 'cubicweb.massmailing.js')
         req.add_css('cubicweb.mailform.css')
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
-        form = self.vreg['forms'].select('massmailing', self.req, rset=self.rset,
-                                action='sendmail', domid='sendmail')
-        self.w(form.render(formvalues=dict(sender=from_addr)))
+        form = self._cw.vreg['forms'].select('massmailing', self._cw, rset=self.cw_rset,
+                                             action='sendmail', domid='sendmail')
+        self.w(form.render())

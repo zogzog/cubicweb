@@ -8,42 +8,44 @@ cubes development
 """
 __docformat__ = "restructuredtext en"
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 from datetime import datetime
-from os import mkdir, chdir, getcwd
+from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
-from copy import deepcopy
 from warnings import warn
 
 from logilab.common import STD_BLACKLIST
-from logilab.common.modutils import get_module_files
-from logilab.common.textutils import splitstrip
-from logilab.common.shellutils import ASK
-from logilab.common.clcommands import register_commands
+from logilab.common.clcommands import register_commands, pop_arg
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb import (CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage,
-                      underline_title)
-from cubicweb.schema import CONSTRAINTS
-from cubicweb.toolsutils import Command, copy_skeleton
+from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
+from cubicweb.toolsutils import Command, copy_skeleton, underline_title
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
-class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
-    """dummy config to get full library schema and entities"""
+
+class DevConfiguration(ServerConfiguration, WebConfiguration):
+    """dummy config to get full library schema and appobjects for
+    a cube or for cubicweb (without a home)
+    """
     creating = True
-    cubicweb_appobject_path = ServerConfiguration.cubicweb_appobject_path | WebConfiguration.cubicweb_appobject_path
-    cube_appobject_path = ServerConfiguration.cube_appobject_path | WebConfiguration.cube_appobject_path
+    cleanup_interface_sobjects = False
 
-    def __init__(self, cube):
-        super(DevCubeConfiguration, self).__init__(cube)
-        if cube is None:
-            self._cubes = ()
+    cubicweb_appobject_path = (ServerConfiguration.cubicweb_appobject_path
+                               | WebConfiguration.cubicweb_appobject_path)
+    cube_appobject_path = (ServerConfiguration.cube_appobject_path
+                           | WebConfiguration.cube_appobject_path)
+
+    def __init__(self, *cubes):
+        super(DevConfiguration, self).__init__(cubes and cubes[0] or None)
+        if cubes:
+            self._cubes = self.reorder_cubes(
+                self.expand_cubes(cubes, with_recommends=True))
         else:
-            self._cubes = self.reorder_cubes(self.expand_cubes(self.my_cubes(cube)))
-
-    def my_cubes(self, cube):
-        return (cube,) + self.cube_dependencies(cube) + self.cube_recommends(cube)
+            self._cubes = ()
 
     @property
     def apphome(self):
@@ -54,16 +56,6 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
         pass
     def load_configuration(self):
         pass
-
-
-class DevDepConfiguration(DevCubeConfiguration):
-    """configuration to use to generate cubicweb po files or to use as "library" configuration
-    to filter out message ids from cubicweb and dependencies of a cube
-    """
-
-    def my_cubes(self, cube):
-        return self.cube_dependencies(cube) + self.cube_recommends(cube)
-
     def default_log_file(self):
         return None
 
@@ -94,28 +86,29 @@ def generate_schema_pot(w, cubedir=None):
     should be marked using '_' and extracted using xgettext
     """
     from cubicweb.cwvreg import CubicWebVRegistry
-    cube = cubedir and split(cubedir)[-1]
-    libconfig = DevDepConfiguration(cube)
-    libconfig.cleanup_interface_sobjects = False
-    cleanup_sys_modules(libconfig)
     if cubedir:
-        config = DevCubeConfiguration(cube)
-        config.cleanup_interface_sobjects = False
+        cube = split(cubedir)[-1]
+        config = DevConfiguration(cube)
+        depcubes = list(config._cubes)
+        depcubes.remove(cube)
+        libconfig = DevConfiguration(*depcubes)
     else:
-        config = libconfig
-        libconfig = None
+        config = DevConfiguration()
+        cube = libconfig = None
+    cleanup_sys_modules(config)
     schema = config.load_schema(remove_unused_rtypes=False)
     vreg = CubicWebVRegistry(config)
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libconfig=libconfig, cube=cube)
+    _generate_schema_pot(w, vreg, schema, libconfig=libconfig)
 
 
-def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
-    from cubicweb.common.i18n import add_msg
+def _generate_schema_pot(w, vreg, schema, libconfig=None):
+    from copy import deepcopy
+    from cubicweb.i18n import add_msg
     from cubicweb.web import uicfg
-    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES
+    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES, CONSTRAINTS
     no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
     w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
@@ -125,19 +118,19 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     if libconfig is not None:
         from cubicweb.cwvreg import CubicWebVRegistry, clear_rtag_objects
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        rinlined = deepcopy(uicfg.autoform_is_inlined)
+        afs = deepcopy(uicfg.autoform_section)
         appearsin_addmenu = deepcopy(uicfg.actionbox_appearsin_addmenu)
         clear_rtag_objects()
         cleanup_sys_modules(libconfig)
         libvreg = CubicWebVRegistry(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
-        librinlined = uicfg.autoform_is_inlined
+        libafs = uicfg.autoform_section
         libappearsin_addmenu = uicfg.actionbox_appearsin_addmenu
         # prefill vregdone set
         list(_iter_vreg_objids(libvreg, vregdone))
     else:
         libschema = {}
-        rinlined = uicfg.autoform_is_inlined
+        afs = uicfg.autoform_section
         appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
@@ -156,15 +149,17 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         if eschema.final:
             continue
         for rschema, targetschemas, role in eschema.relation_definitions(True):
+            if rschema.final:
+                continue
             for tschema in targetschemas:
-                if rinlined.etype_get(eschema, rschema, role, tschema) and \
+                fsections = afs.etype_get(eschema, rschema, role, tschema)
+                if 'main_inlined' in fsections and \
                        (libconfig is None or not
-                        librinlined.etype_get(eschema, rschema, role, tschema)):
+                        'main_inlined' in libafs.etype_get(
+                            eschema, rschema, role, tschema)):
                     add_msg(w, 'add a %s' % tschema,
                             'inlined:%s.%s.%s' % (etype, rschema, role))
-                    add_msg(w, 'remove this %s' % tschema,
-                            'inlined:%s.%s.%s' % (etype, rschema, role))
-                    add_msg(w, 'This %s' % tschema,
+                    add_msg(w, str(tschema),
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                 if appearsin_addmenu.etype_get(eschema, rschema, role, tschema) and \
                        (libconfig is None or not
@@ -184,7 +179,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             # XXX also generate "creating ...' messages for actions in the
             # addrelated submenu
     w('# subject and object forms for each relation type\n')
-    w('# (no object form for final or symetric relation types)\n')
+    w('# (no object form for final or symmetric relation types)\n')
     w('\n')
     for rschema in sorted(schema.relations()):
         rtype = rschema.type
@@ -204,7 +199,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
-        if not (schema.rschema(rtype).final or rschema.symetric):
+        if not (schema.rschema(rtype).final or rschema.symmetric):
             if rschema not in no_context_rtypes:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():
@@ -217,32 +212,22 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         add_msg(w, '%s_description' % objid)
         add_msg(w, objid)
 
-def _iter_vreg_objids(vreg, done, prefix=None):
+
+def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:
-                objid = '%s_%s' % (reg, obj.id)
+                objid = '%s_%s' % (reg, obj.__regid__)
                 if objid in done:
                     break
-                if obj.property_defs:
+                try: # XXX < 3.6 bw compat
+                    pdefs = obj.property_defs
+                except AttributeError:
+                    pdefs = getattr(obj, 'cw_property_defs', {})
+                if pdefs:
                     yield objid
                     done.add(objid)
                     break
-
-
-def defined_in_library(etype, rtype, tetype, role):
-    """return true if the given relation definition exists in cubicweb's library
-    """
-    if libschema is None:
-        return False
-    if role == 'subject':
-        subjtype, objtype = etype, tetype
-    else:
-        subjtype, objtype = tetype, etype
-    try:
-        return libschema.rschema(rtype).has_rdef(subjtype, objtype)
-    except KeyError:
-        return False
 
 
 LANGS = ('en', 'fr', 'es')
@@ -279,7 +264,8 @@ class UpdateCubicWebCatalogCommand(Command):
         import yams
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
-        from cubicweb.common.i18n import extract_from_tal, execute
+        from logilab.common.modutils import get_module_files
+        from cubicweb.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
         potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
@@ -340,9 +326,10 @@ class UpdateTemplateCatalogCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
-            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in args]
+            cubes = [DevConfiguration.cube_dir(cube) for cube in args]
         else:
-            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in DevCubeConfiguration.available_cubes()]
+            cubes = [DevConfiguration.cube_dir(cube)
+                     for cube in DevConfiguration.available_cubes()]
             cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
@@ -372,7 +359,7 @@ def update_cube_catalogs(cubedir):
     import tempfile
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
-    from cubicweb.common.i18n import extract_from_tal, execute
+    from cubicweb.i18n import extract_from_tal, execute
     toedit = []
     cube = basename(normpath(cubedir))
     tempdir = tempfile.mkdtemp()
@@ -435,17 +422,18 @@ def update_cube_catalogs(cubedir):
     return toedit
 
 
-class LiveServerCommand(Command):
-    """Run a server from within a cube directory.
-    """
-    name = 'live-server'
-    arguments = ''
-    options = ()
+# XXX totally broken, fix it
+# class LiveServerCommand(Command):
+#     """Run a server from within a cube directory.
+#     """
+#     name = 'live-server'
+#     arguments = ''
+#     options = ()
 
-    def run(self, args):
-        """run the command with its specific arguments"""
-        from cubicweb.devtools.livetest import runserver
-        runserver()
+#     def run(self, args):
+#         """run the command with its specific arguments"""
+#         from cubicweb.devtools.livetest import runserver
+#         runserver()
 
 
 class NewCubeCommand(Command):
@@ -491,6 +479,7 @@ class NewCubeCommand(Command):
 
 
     def run(self, args):
+        from logilab.common.shellutils import ASK
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument (cube name) is expected")
         cubename, = args
@@ -548,6 +537,8 @@ class NewCubeCommand(Command):
         copy_skeleton(skeldir, cubedir, context)
 
     def _ask_for_dependancies(self):
+        from logilab.common.shellutils import ASK
+        from logilab.common.textutils import splitstrip
         includes = []
         for stdtype in ServerConfiguration.available_cubes():
             answer = ASK.ask("Depends on cube %s? " % stdtype,
@@ -565,17 +556,16 @@ class NewCubeCommand(Command):
 class ExamineLogCommand(Command):
     """Examine a rql log file.
 
-    usage: python exlog.py < rql.log
-
     will print out the following table
 
       total execution time || number of occurences || rql query
 
     sorted by descending total execution time
 
-    chances are the lines at the top are the ones that will bring
-    the higher benefit after optimisation. Start there.
+    chances are the lines at the top are the ones that will bring the higher
+    benefit after optimisation. Start there.
     """
+    arguments = '< rql.log'
     name = 'exlog'
     options = (
         )
@@ -617,9 +607,72 @@ class ExamineLogCommand(Command):
         for clocktime, cputime, occ, rql in stat:
             print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime, cputime, occ, rql)
 
+
+class GenerateSchema(Command):
+    """Generate schema image for the given cube"""
+    name = "schema"
+    arguments = '<cube>'
+    options = [('output-file', {'type':'file', 'default': None,
+                 'metavar': '<file>', 'short':'o', 'help':'output image file',
+                 'input':False}),
+               ('viewer', {'type': 'string', 'default':None,
+                'short': "d", 'metavar':'<cmd>',
+                 'help':'command use to view the generated file (empty for none)'}
+               ),
+               ('show-meta', {'action': 'store_true', 'default':False,
+                'short': "m", 'metavar': "<yN>",
+                 'help':'include meta and internal entities in schema'}
+               ),
+               ('show-workflow', {'action': 'store_true', 'default':False,
+                'short': "w", 'metavar': "<yN>",
+                'help':'include workflow entities in schema'}
+               ),
+               ('show-cw-user', {'action': 'store_true', 'default':False,
+                'metavar': "<yN>",
+                'help':'include cubicweb user entities in schema'}
+               ),
+               ('exclude-type', {'type':'string', 'default':'',
+                'short': "x", 'metavar': "<types>",
+                 'help':'coma separated list of entity types to remove from view'}
+               ),
+               ('include-type', {'type':'string', 'default':'',
+                'short': "i", 'metavar': "<types>",
+                 'help':'coma separated list of entity types to include in view'}
+               ),
+              ]
+
+    def run(self, args):
+        from subprocess import Popen
+        from tempfile import NamedTemporaryFile
+        from logilab.common.textutils import splitstrip
+        from yams import schema2dot, BASE_TYPES
+        from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
+                                     WORKFLOW_TYPES, INTERNAL_TYPES)
+        cubes = splitstrip(pop_arg(args, 1))
+        dev_conf = DevConfiguration(*cubes)
+        schema = dev_conf.load_schema()
+        out, viewer = self['output-file'], self['viewer']
+        if out is None:
+            tmp_file = NamedTemporaryFile(suffix=".svg")
+            out = tmp_file.name
+        skiptypes = BASE_TYPES | SCHEMA_TYPES
+        if not self['show-meta']:
+            skiptypes |=  META_RTYPES | SYSTEM_RTYPES | INTERNAL_TYPES
+        if not self['show-workflow']:
+            skiptypes |= WORKFLOW_TYPES
+        if not self['show-cw-user']:
+            skiptypes |= set(('CWUser', 'CWGroup', 'EmailAddress'))
+        skiptypes |= set(self['exclude-type'].split(','))
+        skiptypes -= set(self['include-type'].split(','))
+        schema2dot.schema2dot(schema, out, skiptypes=skiptypes)
+        if viewer:
+            p = Popen((viewer, out))
+            p.wait()
+
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
-                   LiveServerCommand,
+                   #LiveServerCommand,
                    NewCubeCommand,
                    ExamineLogCommand,
+                   GenerateSchema,
                    ))

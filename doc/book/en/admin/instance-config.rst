@@ -12,7 +12,8 @@ For example::
 
     /etc/cubicweb.d/myblog/all-in-one.conf
 
-It is a simple text file format INI. In the following description,
+It is a simple text file in the INI format
+(http://en.wikipedia.org/wiki/INI_file). In the following description,
 each option name is prefixed with its own section and followed by its
 default value if necessary, e.g. "`<section>.<option>` [value]."
 
@@ -48,13 +49,13 @@ of configuration file.
    and `https://localhost/demo` and actually running on port 8080, it
    takes to the http:::
 
-     RewriteCond %(REQUEST_URI) ^/demo
+     RewriteCond %{REQUEST_URI} ^/demo
      RewriteRule ^/demo$ /demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
 
    and for the https:::
 
-     RewriteCond %(REQUEST_URI) ^/ demo
+     RewriteCond %{REQUEST_URI} ^/ demo
      RewriteRule ^/demo$/demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
 
@@ -62,10 +63,10 @@ of configuration file.
    and we will file in the all-in-one.conf of the instance:::
 
      base-url = http://localhost/demo
-     https-url = `https://localhost/demo`
+     https-url = https://localhost/demo
 
-Setting up the web
-------------------
+Setting up the web client
+-------------------------
 :`web.embed-allowed`:
     regular expression matching sites which could be "embedded" in
     the site (controllers 'embed')
@@ -92,22 +93,26 @@ Pyro configuration for the instance
 -----------------------------------
 Web server side:
 
-:`pyro-client.pyro-instance-id`:
+:`pyro.pyro-instance-id`:
     pyro identifier of RQL server (e.g. the instance name)
 
 RQL server side:
 
-:`pyro-server.pyro-port`:
-    pyro port number. If none is specified, a port is assigned
+:`main.pyro-server`:
+    boolean to switch on/off pyro server-side
+
+:`pyro.pyro-host`:
+    pyro host:port number. If no port is specified, it is assigned
     automatically.
 
 RQL and web servers side:
 
-:`pyro-name-server.pyro-ns-host`:
+:`pyro.pyro-ns-host`:
     hostname hosting pyro server name. If no value is
     specified, it is located by a request from broadcast
-:`pyro-name-server.pyro-ns-group` [cubicweb]:
-    pyro group in which to save the instance
+
+:`pyro.pyro-ns-group`:
+    pyro group in which to save the instance (will default to 'cubicweb')
 
 
 Configuring e-mail

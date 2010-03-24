@@ -1,21 +1,19 @@
 # coding: utf-8
-"""unit tests for module cubicweb.common.utils
+"""unit tests for module cubicweb.utils
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-#from __future__ import with_statement
+
+from urlparse import urlsplit
+
+from rql import parse
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb.selectors import traced_selection
-
-from urlparse import urlsplit
-from rql import parse
-
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.rset import NotAnEntity, ResultSet, attr_desc_iterator
 
 
@@ -55,7 +53,7 @@ class AttrDescIteratorTC(TestCase):
 
 
 
-class ResultSetTC(EnvBasedTC):
+class ResultSetTC(CubicWebTC):
 
     def setUp(self):
         super(ResultSetTC, self).setUp()
@@ -100,12 +98,12 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         self.assertEquals(rs.limit(2).rows, [[12000, 'adim'], [13000, 'syt']])
         rs2 = rs.limit(2, offset=1)
         self.assertEquals(rs2.rows, [[13000, 'syt'], [14000, 'nico']])
-        self.assertEquals(rs2.get_entity(0, 0).row, 0)
+        self.assertEquals(rs2.get_entity(0, 0).cw_row, 0)
         self.assertEquals(rs.limit(2, offset=2).rows, [[14000, 'nico']])
         self.assertEquals(rs.limit(2, offset=3).rows, [])
 
@@ -115,7 +113,7 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
         def test_filter(entity):
             return entity.login != 'nico'
 
@@ -140,7 +138,7 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         rs2 = rs.sorted_rset(lambda e:e['login'])
         self.assertEquals(len(rs2), 3)
@@ -170,7 +168,7 @@ class ResultSetTC(EnvBasedTC):
                        'D created_by U, D title T',
                        description=[['CWUser', 'String', 'String']] * 5)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         rsets = rs.split_rset(lambda e:e['login'])
         self.assertEquals(len(rsets), 3)
@@ -212,7 +210,7 @@ class ResultSetTC(EnvBasedTC):
         self.assert_(rqlst1 is rqlst2)
 
     def test_get_entity_simple(self):
-        self.add_entity('CWUser', login=u'adim', upassword='adim',
+        self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                         surname=u'di mascio', firstname=u'adrien')
         e = self.entity('Any X,T WHERE X login "adim", X surname T')
         self.assertEquals(e['surname'], 'di mascio')
@@ -224,21 +222,21 @@ class ResultSetTC(EnvBasedTC):
         self.assertEquals(pprelcachedict(e._related_cache), [])
 
     def test_get_entity_advanced(self):
-        self.add_entity('Bookmark', title=u'zou', path=u'/view')
+        self.request().create_entity('Bookmark', title=u'zou', path=u'/view')
         self.execute('SET X bookmarked_by Y WHERE X is Bookmark, Y login "anon"')
         rset = self.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
         e = rset.get_entity(0, 0)
-        self.assertEquals(e.row, 0)
-        self.assertEquals(e.col, 0)
+        self.assertEquals(e.cw_row, 0)
+        self.assertEquals(e.cw_col, 0)
         self.assertEquals(e['title'], 'zou')
         self.assertRaises(KeyError, e.__getitem__, 'path')
         self.assertEquals(e.view('text'), 'zou')
         self.assertEquals(pprelcachedict(e._related_cache), [])
 
         e = rset.get_entity(0, 1)
-        self.assertEquals(e.row, 0)
-        self.assertEquals(e.col, 1)
+        self.assertEquals(e.cw_row, 0)
+        self.assertEquals(e.cw_col, 1)
         self.assertEquals(e['login'], 'anon')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
         self.assertEquals(pprelcachedict(e._related_cache),
@@ -262,7 +260,7 @@ class ResultSetTC(EnvBasedTC):
                           [('in_state_subject', [seid])])
 
     def test_get_entity_advanced_prefilled_cache(self):
-        e = self.add_entity('Bookmark', title=u'zou', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'zou', path=u'path')
         self.commit()
         rset = self.execute('Any X,U,S,XT,UL,SN WHERE X created_by U, U in_state S, '
                             'X title XT, S name SN, U login UL, X eid %s' % e.eid)
@@ -295,7 +293,7 @@ class ResultSetTC(EnvBasedTC):
 
 
     def test_get_entity_union(self):
-        e = self.add_entity('Bookmark', title=u'manger', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'manger', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is Bookmark, X title N)'
                             ' UNION '
@@ -304,20 +302,20 @@ class ResultSetTC(EnvBasedTC):
                     ('Bookmark', 'manger'), ('CWGroup', 'owners'),
                     ('CWGroup', 'users'))
         for entity in rset.entities(): # test get_entity for each row actually
-            etype, n = expected[entity.row]
-            self.assertEquals(entity.id, etype)
+            etype, n = expected[entity.cw_row]
+            self.assertEquals(entity.__regid__, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
             self.assertEquals(entity[attr], n)
 
     def test_related_entity_optional(self):
-        e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any B,U,L WHERE B bookmarked_by U?, U login L')
         entity, rtype = rset.related_entity(0, 2)
         self.assertEquals(entity, None)
         self.assertEquals(rtype, None)
 
     def test_related_entity_union_subquery(self):
-        e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
@@ -326,7 +324,7 @@ class ResultSetTC(EnvBasedTC):
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
         entity, rtype = rset.related_entity(1, 1)
-        self.assertEquals(entity.id, 'CWGroup')
+        self.assertEquals(entity.__regid__, 'CWGroup')
         self.assertEquals(rtype, 'name')
         #
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '
@@ -344,6 +342,14 @@ class ResultSetTC(EnvBasedTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
+
+    def test_related_entity_trap_subquery(self):
+        req = self.request()
+        req.create_entity('Bookmark', title=u'test bookmark', path=u'')
+        self.execute('SET B bookmarked_by U WHERE U login "admin"')
+        rset = self.execute('Any B,T,L WHERE B bookmarked_by U, U login L '
+                            'WITH B,T BEING (Any B,T WHERE B is Bookmark, B title T)')
+        rset.related_entity(0, 2)
 
     def test_entities(self):
         rset = self.execute('Any U,G WHERE U in_group G')
@@ -365,6 +371,18 @@ class ResultSetTC(EnvBasedTC):
         rset = self.execute(u'Any X WHERE X has_text %(text)s', {'text' : 'foo'})
         self.assertEquals(rset.searched_text(), 'foo')
 
+    def test_union_limited_rql(self):
+        rset = self.execute('(Any X,N WHERE X is Bookmark, X title N)'
+                            ' UNION '
+                            '(Any X,N WHERE X is CWGroup, X name N)')
+        rset.limit(2, 10, inplace=True)
+        self.assertEquals(rset.limited_rql(),
+                          'Any A,B LIMIT 2 OFFSET 10 '
+                          'WITH A,B BEING ('
+                          '(Any X,N WHERE X is Bookmark, X title N) '
+                          'UNION '
+                          '(Any X,N WHERE X is CWGroup, X name N)'
+                          ')')
 
 if __name__ == '__main__':
     unittest_main()

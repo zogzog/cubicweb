@@ -6,13 +6,13 @@ Aperçu rapide de `CubicWeb`
 ===========================
 
 `CubicWeb` nous permet de développer des instances d'applications web
-basées sur un ou plusieurs `cube`. 
+basées sur un ou plusieurs `cube`.
 
-Ce à quoi nous réferrons en parlant de `cube` est un modèle définissant 
-des types de données et des vues. Un `cube` est un composant re-utilisable 
+Ce à quoi nous réferrons en parlant de `cube` est un modèle définissant
+des types de données et des vues. Un `cube` est un composant re-utilisable
 regroupé avec d'autres cubes sur le système de fichiers.
 
-Un `instance` réferre à une installation spécifique d'un ou plusieurs cubes 
+Un `instance` réferre à une installation spécifique d'un ou plusieurs cubes
 où sont regroupés tous les fichiers de configuration de l'application web finale.
 
 Dans ce document, nous allons vous montrer comment créer un cube et l'utiliser
@@ -32,7 +32,7 @@ Cela va créer dans ``/path/to/forest/cubes`` une répertoire contenant ::
   |
   |-- data/
   |   |-- cubes.blog.css
-  |   |-- cubes.blog.js  
+  |   |-- cubes.blog.js
   |   |-- external_resources
   |
   |-- debian/
@@ -77,7 +77,7 @@ Cela va créer dans ``/path/to/forest/cubes`` une répertoire contenant ::
   |-- views.py
 
 Toute modification apportée à votre modele de données devra
-etre effectué dans ce répertoire. 
+etre effectué dans ce répertoire.
 
 
 
@@ -102,17 +102,17 @@ Votre modele de données est défini dans le fichier ``schema.py`` de votre cube
     title = String(required=True, fulltextindexed=True, maxsize=256)
     publish_date = Date(default='TODAY')
     content = String(required=True, fulltextindexed=True)
-    entry_of = SubjectRelation('Blog', cardinality='?*') 
+    entry_of = SubjectRelation('Blog', cardinality='?*')
 
-Un ``Blog`` a un titre et une description. Le titre est une chaîne 
+Un ``Blog`` a un titre et une description. Le titre est une chaîne
 de caractères requise par la classe parente EntityType et ne doit
-pas excéder 50 caractères. La description est une chaîne de 
+pas excéder 50 caractères. La description est une chaîne de
 caractères sans contraintes.
 
 Une ``BlogEntry`` a un titre, une date de publication et du texte
-étant son contenu. Le titre est une chaîne de caractères qui ne 
+étant son contenu. Le titre est une chaîne de caractères qui ne
 doit pas excéder 100 caractères. La date de publication est de type Date et a
-pour valeur par défaut TODAY, ce qui signifie que lorsqu'une 
+pour valeur par défaut TODAY, ce qui signifie que lorsqu'une
 ``BlogEntry`` sera créée, sa date de publication sera la date
 courante a moins de modifier ce champ. Le texte est une chaîne de
 caractères qui sera indexée en plein texte et sans contraintes.
@@ -121,7 +121,7 @@ Une ``BlogEntry`` a aussi une relation nommée ``entry_of`` qui la
 relie à un ``Blog``. La cardinalité ``?*`` signifie que BlogEntry
 peut faire partie de zero a un Blog (``?`` signifie `zero ou un`) et
 qu'un Blog peut avoir une infinité de BlogEntry (``*`` signifie
-`n'importe quel nombre incluant zero`). 
+`n'importe quel nombre incluant zero`).
 Par soucis de complétude, nous rappellerons que ``+`` signifie
 `un ou plus`.
 
@@ -130,7 +130,7 @@ Créez votre instance
 --------------------
 
 ::
-  
+
   cubicweb-ctl create blog blogdemo
 
 Cette commande va créer un répertoire ``~/etc/cubicweb.d/blogdemo``
@@ -150,7 +150,7 @@ Lancez votre application en exécutant : ::
 Vous pouvez à présent accéder  à votre application web vous permettant de
 créer des blogs et d'y poster des messages en visitant l'URL http://localhost:8080/.
 Un premier formulaire d'authentification va vous être proposé. Par défaut,
-l'application n'autorisera pas d'utilisateur anonyme à accéder a votre 
+l'application n'autorisera pas d'utilisateur anonyme à accéder a votre
 application. Vous devrez donc utiliser l'utilisateur administrateur que
 vous aurez crée lors de l'initialisation de votre base de données via
 ``cubicweb-ctl create``.
@@ -166,7 +166,7 @@ application et créer des entités. Bravo !
 
 Rappelez-vous que pour le moment, tout a été géré par la plate-forme
 `CubicWeb` et que la seule chose qui a été fournie est le schéma de
-données. 
+données.
 
 Créons des entités
 ------------------
@@ -186,7 +186,7 @@ puis validez le formulaire d'édition en cliquant sur le bouton
    :alt: from to create blog
 
 En cliquant sur le logo situé dans le coin gauche de la fenêtre,
-vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez 
+vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez
 sur le lien Blog, vous devriez voir la liste des entités Blog, en particulier
 celui que vous venez juste de créer ``Tech-Blog``.
 
@@ -212,7 +212,7 @@ Revenons sur la page d'accueil et cliquons sur `[+]` à droite du lien
 un peut de texte avant de ``Valider``. Vous venez d'ajouter un article
 sans avoir précisé à quel Blog il appartenait. Dans la colonne de gauche
 se trouve une boite intitulé ``actions``, cliquez sur le menu ``modifier``.
-Vous êtes de retour sur le formulaire d'édition de l'article que vous 
+Vous êtes de retour sur le formulaire d'édition de l'article que vous
 venez de créer, à ceci près que ce formulaire a maintenant une nouvelle
 section intitulée ``ajouter relation``. Choisissez ``entry_of`` dans ce menu,
 cela va faire apparaitre une deuxième menu déroulant dans lequel vous
@@ -225,7 +225,7 @@ Vous auriez pu aussi, au moment où vous avez crée votre article, sélectionner
    :alt: editing a blog entry to add a relation to a blog
 
 Validez vos modifications en cliquant sur ``Valider``. L'entité article
-qui est listée contient maintenant un lien vers le Blog auquel il 
+qui est listée contient maintenant un lien vers le Blog auquel il
 appartient, ``MyLife``.
 
 .. image:: images/cbw-detail-one-blogentry.fr.png
@@ -248,7 +248,7 @@ Le principe de sélection des vues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Une vue est une classe Python qui inclut:
-  
+
   - un identifiant (tous les objets dans `CubicWeb` sont listés
     dans un registre et cet identifiant est utilisé comme la clé)
 
@@ -262,32 +262,32 @@ Une vue est appliquée sur un `result set` qui représente l'ensemble
 des entités que nous cherchons à appliquer. `CubicWeb` utilise un
 sélecteur qui permet de calculer un score et d'identifier la vue
 la plus adaptée au `result set` que nous voulons afficher. La librarie
-standard des sélecteurs se trouve dans ``cubicweb.common.selector`` 
-et une librairie des méthodes utilisées pour calculer les scores 
+standard des sélecteurs se trouve dans ``cubicweb.common.selector``
+et une librairie des méthodes utilisées pour calculer les scores
 est dans ``cubicweb.vregistry.vreq``.
 
 
 Il est possible de définir plusieurs vues ayant le meme identifiant
-et d'y associer des sélecteurs et des filtres afin de permettre à 
-l'application de s'adapter au mieux aux données que nous avons 
+et d'y associer des sélecteurs et des filtres afin de permettre à
+l'application de s'adapter au mieux aux données que nous avons
 besoin d'afficher. Nous verrons cela plus en détails dans :ref:`DefinitionVues`.
 
 On peut citer l'exemple de la vue nommée ``primary`` qui est celle utilisée
-pour visualiser une entité seule. Nous allons vous montrer comment modifier 
+pour visualiser une entité seule. Nous allons vous montrer comment modifier
 cette vue.
 
 Modification des vues
 ~~~~~~~~~~~~~~~~~~~~~
 Si vous souhaitez modifier la manière dont est rendue un article (`Blogentry`),
-vous devez surcharger la vue ``primary`` définie dans le module ``views`` de 
+vous devez surcharger la vue ``primary`` définie dans le module ``views`` de
 votre cube, ``cubes/blog/views.py``.
 
 Nous pourrions par exemple ajouter devant la date de publication un préfixe
 indiquant que la date visualisée est la date de publication.
 
-Pour cela appliquez les modifications suivantes: 
+Pour cela appliquez les modifications suivantes:
 
-:: 
+::
 
   from cubicweb.web.views import baseviews
 
@@ -303,13 +303,13 @@ Pour cela appliquez les modifications suivantes:
         return entity.view('reledit', rtype='content_format')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
 
         # display entity attributes with prefixes
         self.w(u'<h1>%s</h1>' % entity.title)
         self.w(u'<p>published on %s</p>' % entity.publish_date.strftime('%Y-%m-%d'))
         self.w(u'<p>%s</p>' % entity.content)
-        
+
         # display relations
         siderelations = []
         if self.main_related_section:
@@ -329,10 +329,10 @@ Nous pouvons voir que la date de publication est préfixée comme souhaitée.
 
 
 
-Le code que nous avons modifié définit une vue primaire pour une entité de 
-type `BlogEntry`. 
+Le code que nous avons modifié définit une vue primaire pour une entité de
+type `BlogEntry`.
 
-Etant donné que les vues sont appliquées sur des `result sets` et que 
+Etant donné que les vues sont appliquées sur des `result sets` et que
 les `result sets` peuvent être des tableaux de données, il est indispensable
 de récupérer l'entité selon ses coordonnées (row,col).
 

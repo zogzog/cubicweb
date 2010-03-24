@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache, copy_cache
 
-from rql import nodes
+from rql import nodes, stmts
 
 from cubicweb import NotAnEntity
 
@@ -83,7 +83,7 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg['actions'].possible_vobjects(
+            actions = self.vreg['actions'].poss_visible_objects(
                 self.req, rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
@@ -243,14 +243,59 @@ class ResultSet(object):
                 rset = mapping[key]
             rset.rows.append(self.rows[idx])
             rset.description.append(self.description[idx])
-
-
         for rset in result:
             rset.rowcount = len(rset.rows)
         if return_dict:
             return mapping
         else:
             return result
+
+    def limited_rql(self):
+        """return a printable rql for the result set associated to the object,
+        with limit/offset correctly set according to maximum page size and
+        currently displayed page when necessary
+        """
+        # try to get page boundaries from the navigation component
+        # XXX we should probably not have a ref to this component here (eg in
+        #     cubicweb)
+        nav = self.vreg['components'].select_or_none('navigation', self.req,
+                                                     rset=self)
+        if nav:
+            start, stop = nav.page_boundaries()
+            rql = self._limit_offset_rql(stop - start, start)
+        # result set may have be limited manually in which case navigation won't
+        # apply
+        elif self.limited:
+            rql = self._limit_offset_rql(*self.limited)
+        # navigation component doesn't apply and rset has not been limited, no
+        # need to limit query
+        else:
+            rql = self.printable_rql()
+        return rql
+
+    def _limit_offset_rql(self, limit, offset):
+        rqlst = self.syntax_tree()
+        if len(rqlst.children) == 1:
+            select = rqlst.children[0]
+            olimit, ooffset = select.limit, select.offset
+            select.limit, select.offset = limit, offset
+            rql = rqlst.as_string(kwargs=self.args)
+            # restore original limit/offset
+            select.limit, select.offset = olimit, ooffset
+        else:
+            newselect = stmts.Select()
+            newselect.limit = limit
+            newselect.offset = offset
+            aliases = [nodes.VariableRef(newselect.get_variable(chr(65+i), i))
+                       for i in xrange(len(rqlst.children[0].selection))]
+            for vref in aliases:
+                newselect.append_selected(nodes.VariableRef(vref.variable))
+            newselect.set_with([nodes.SubQuery(aliases, rqlst)], check=False)
+            newunion = stmts.Union()
+            newunion.append(newselect)
+            rql = newunion.as_string(kwargs=self.args)
+            rqlst.parent = None
+        return rql
 
     def limit(self, limit, offset=0, inplace=False):
         """limit the result set to the given number of rows optionaly starting
@@ -282,9 +327,9 @@ class ResultSet(object):
             # we also have to fix/remove from the request entity cache entities
             # which get a wrong rset reference by this limit call
             for entity in self.req.cached_entities():
-                if entity.rset is self:
-                    if offset <= entity.row < stop:
-                        entity.row = entity.row - offset
+                if entity.cw_rset is self:
+                    if offset <= entity.cw_row < stop:
+                        entity.cw_row = entity.cw_row - offset
                     else:
                         self.req.drop_entity_cache(entity.eid)
         else:
@@ -321,8 +366,16 @@ class ResultSet(object):
             if self.rows[i][col] is not None:
                 yield self.get_entity(i, col)
 
+    def complete_entity(self, row, col=0, skip_bytes=True):
+        """short cut to get an completed entity instance for a particular
+        row (all instance's attributes have been fetched)
+        """
+        entity = self.get_entity(row, col)
+        entity.complete(skip_bytes=skip_bytes)
+        return entity
+
     @cached
-    def get_entity(self, row, col=None):
+    def get_entity(self, row, col):
         """special method for query retreiving a single entity, returns a
         partially initialized Entity instance.
 
@@ -336,11 +389,6 @@ class ResultSet(object):
 
         :return: the partially initialized `Entity` instance
         """
-        if col is None:
-            from warnings import warn
-            msg = 'col parameter will become mandatory in future version'
-            warn(msg, DeprecationWarning, stacklevel=3)
-            col = 0
         etype = self.description[row][col]
         try:
             eschema = self.vreg.schema.eschema(etype)
@@ -374,16 +422,17 @@ class ResultSet(object):
         #     new attributes found in this resultset ?
         try:
             entity = req.entity_cache(eid)
-            if entity.rset is None:
-                # entity has no rset set, this means entity has been cached by
-                # the repository (req is a repository session) which had no rset
-                # info. Add id.
-                entity.rset = self
-                entity.row = row
-                entity.col = col
-            return entity
         except KeyError:
             pass
+        else:
+            if entity.cw_rset is None:
+                # entity has no rset set, this means entity has been created by
+                # the querier (req is a repository session) and so jas no rset
+                # info. Add it.
+                entity.cw_rset = self
+                entity.cw_row = row
+                entity.cw_col = col
+            return entity
         # build entity instance
         etype = self.description[row][col]
         entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
@@ -403,25 +452,22 @@ class ResultSet(object):
                 select = rqlst
             # take care, due to outer join support, we may find None
             # values for non final relation
-            for i, attr, x in attr_desc_iterator(select, col):
+            for i, attr, role in attr_desc_iterator(select, col):
                 outerselidx = rqlst.subquery_selection_index(select, i)
                 if outerselidx is None:
                     continue
-                if x == 'subject':
+                if role == 'subject':
                     rschema = eschema.subjrels[attr]
                     if rschema.final:
                         entity[attr] = rowvalues[outerselidx]
                         continue
-                    tetype = rschema.objects(etype)[0]
-                    card = rschema.rproperty(etype, tetype, 'cardinality')[0]
                 else:
                     rschema = eschema.objrels[attr]
-                    tetype = rschema.subjects(etype)[0]
-                    card = rschema.rproperty(tetype, etype, 'cardinality')[1]
+                rdef = eschema.rdef(attr, role)
                 # only keep value if it can't be multivalued
-                if card in '1?':
+                if rdef.role_cardinality(role) in '1?':
                     if rowvalues[outerselidx] is None:
-                        if x == 'subject':
+                        if role == 'subject':
                             rql = 'Any Y WHERE X %s Y, X eid %s'
                         else:
                             rql = 'Any Y WHERE Y %s X, X eid %s'
@@ -429,7 +475,7 @@ class ResultSet(object):
                         req.decorate_rset(rrset)
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
-                    entity.set_related_cache(attr, x, rrset)
+                    entity.set_related_cache(attr, role, rrset)
         return entity
 
     @cached
@@ -481,26 +527,45 @@ class ResultSet(object):
             result[-1][1] = i
         return result
 
+    def _locate_query_params(self, rqlst, row, col):
+        locate_query_col = col
+        etype = self.description[row][col]
+        # final type, find a better one to locate the correct subquery
+        # (ambiguous if possible)
+        eschema = self.vreg.schema.eschema
+        if eschema(etype).final:
+            for select in rqlst.children:
+                try:
+                    myvar = select.selection[col].variable
+                except AttributeError:
+                    # not a variable
+                    continue
+                for i in xrange(len(select.selection)):
+                    if i == col:
+                        continue
+                    coletype = self.description[row][i]
+                    # None description possible on column resulting from an outer join
+                    if coletype is None or eschema(coletype).final:
+                        continue
+                    try:
+                        ivar = select.selection[i].variable
+                    except AttributeError:
+                        # not a variable
+                        continue
+                    # check variables don't comes from a subquery or are both
+                    # coming from the same subquery
+                    if getattr(ivar, 'query', None) is getattr(myvar, 'query', None):
+                        etype = coletype
+                        locate_query_col = i
+                        if len(self.column_types(i)) > 1:
+                            return etype, locate_query_col
+        return etype, locate_query_col
+
     @cached
     def related_entity(self, row, col):
         """try to get the related entity to extract format information if any"""
-        locate_query_col = col
         rqlst = self.syntax_tree()
-        etype = self.description[row][col]
-        if self.vreg.schema.eschema(etype).final:
-            # final type, find a better one to locate the correct subquery
-            # (ambiguous if possible)
-            for i in xrange(len(rqlst.children[0].selection)):
-                if i == col:
-                    continue
-                coletype = self.description[row][i]
-                if coletype is None:
-                    continue
-                if not self.vreg.schema.eschema(coletype).final:
-                    etype = coletype
-                    locate_query_col = i
-                    if len(self.column_types(i)) > 1:
-                        break
+        etype, locate_query_col = self._locate_query_params(rqlst, row, col)
         # UNION query, find the subquery from which this entity has been found
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
         col = rqlst.subquery_selection_index(select, col)

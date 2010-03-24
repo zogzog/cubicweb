@@ -45,25 +45,25 @@ login component such as follows : ::
           """build the top menu with authentification info and the rql box"""
           self.w(u'<table id="header"><tr>\n')
           self.w(u'<td id="firstcolumn">')
-          self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+          self._cw.vreg.select_component('logo', self._cw, self.cw_rset).dispatch(w=self.w)
           self.w(u'</td>\n')
           # appliname and breadcrumbs
           self.w(u'<td id="headtext">')
-          comp = self.vreg.select_component('appliname', self.req, self.rset)
+          comp = self._cw.vreg.select_component('appliname', self._cw, self.cw_rset)
           if comp and comp.propval('visible'):
               comp.dispatch(w=self.w)
-          comp = self.vreg.select_component('breadcrumbs', self.req, self.rset, view=view)
+          comp = self._cw.vreg.select_component('breadcrumbs', self._cw, self.cw_rset, view=view)
           if comp and comp.propval('visible'):
               comp.dispatch(w=self.w, view=view)
           self.w(u'</td>')
           # logged user and help
           #self.w(u'<td>\n')
-          #comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
+          #comp = self._cw.vreg.select_component('loggeduserlink', self._cw, self.cw_rset)
           #comp.dispatch(w=self.w)
           #self.w(u'</td><td>')
 
           self.w(u'<td>')
-          helpcomp = self.vreg.select_component('help', self.req, self.rset)
+          helpcomp = self._cw.vreg.select_component('help', self._cw, self.cw_rset)
           if helpcomp: # may not be available if Card is not defined in the schema
               helpcomp.dispatch(w=self.w)
           self.w(u'</td>')
@@ -71,7 +71,7 @@ login component such as follows : ::
           self.w(u'<td id="lastcolumn">')
           self.w(u'</td>\n')
           self.w(u'</tr></table>\n')
-          self.template('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
+          self.template('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
                         title=False, message=False)
 
 
@@ -90,21 +90,21 @@ table.
         """build the top menu with authentification info and the rql box"""
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td id="firstcolumn">')
-        self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+        self._cw.vreg.select_component('logo', self._cw, self.cw_rset).dispatch(w=self.w)
         self.w(u'</td>\n')
         # appliname and breadcrumbs
         self.w(u'<td id="headtext">')
-        comp = self.vreg.select_component('appliname', self.req, self.rset)
+        comp = self._cw.vreg.select_component('appliname', self._cw, self.cw_rset)
         if comp and comp.propval('visible'):
             comp.dispatch(w=self.w)
-        comp = self.vreg.select_component('breadcrumbs', self.req, self.rset, view=view)
+        comp = self._cw.vreg.select_component('breadcrumbs', self._cw, self.cw_rset, view=view)
         if comp and comp.propval('visible'):
             comp.dispatch(w=self.w, view=view)
         self.w(u'</td>')
 
         # logged user and help
         #self.w(u'<td>\n')
-        #comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
+        #comp = self._cw.vreg.select_component('loggeduserlink', self._cw, self.cw_rset)
         #comp.dispatch(w=self.w)
         #self.w(u'</td><td>')
 
@@ -114,7 +114,7 @@ table.
         self.w(u'</td>')
 
         self.w(u'<td>')
-        helpcomp = self.vreg.select_component('help', self.req, self.rset)
+        helpcomp = self._cw.vreg.select_component('help', self._cw, self.cw_rset)
         if helpcomp: # may not be available if Card is not defined in the schema
             helpcomp.dispatch(w=self.w)
         self.w(u'</td>')
@@ -122,15 +122,15 @@ table.
         self.w(u'<td id="lastcolumn">')
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
-        self.template('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
+        self.template('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
                       title=False, message=False)
 
     def get_searchbox(self, view, context):
-        boxes = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
-                                                 view=view, context=context))
+        boxes = list(self._cw.vreg.poss_visible_objects('boxes', self._cw, self.cw_rset,
+                                                    view=view, context=context))
         if boxes:
             for box in boxes:
-                if box.id == 'search_box':
+                if box.__regid__ == 'search_box':
                     box.dispatch(w=self.w, view=view)
 
 
@@ -159,7 +159,7 @@ TheMainTemplate
 .. _TheMainTemplate:
 
 TheMainTemplate is responsible for the general layout of the entire application.
-It defines the template of ``id = main`` that is used by the instance.
+It defines the template of ``__regid__ = main`` that is used by the instance.
 
 The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
 builds the page based on the following pattern:

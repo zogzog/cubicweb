@@ -8,13 +8,15 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from math import floor
+
 from logilab.mtconverter import xml_escape
 
+from cubicweb.utils import make_uid
 from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
-from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 
 class ProgressTableView(EntityView):
@@ -34,7 +36,7 @@ class ProgressTableView(EntityView):
     header_for_COLNAME methods allow to customize header's label
     """
 
-    id = 'progress_table_view'
+    __regid__ = 'progress_table_view'
     title = _('task progression')
     __select__ = implements(IMileStone)
 
@@ -45,21 +47,21 @@ class ProgressTableView(EntityView):
 
     def call(self, columns=None):
         """displays all versions in a table"""
-        self.req.add_css('cubicweb.iprogress.css')
-        _ = self.req._
+        self._cw.add_css('cubicweb.iprogress.css')
+        _ = self._cw._
         self.columns = columns or self.columns
-        ecls = self.vreg['etypes'].etype_class(self.rset.description[0][0])
+        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
         self.w(u'<table class="progress">')
         self.table_header(ecls)
         self.w(u'<tbody>')
-        for row in xrange(self.rset.rowcount):
+        for row in xrange(self.cw_rset.rowcount):
             self.cell_call(row=row, col=0)
         self.w(u'</tbody>')
         self.w(u'</table>')
 
     def cell_call(self, row, col):
-        _ = self.req._
-        entity = self.entity(row, col)
+        _ = self._cw._
+        entity = self.cw_rset.get_entity(row, col)
         infos = {}
         for col in self.columns:
             meth = getattr(self, 'build_%s_cell' % col, None)
@@ -83,16 +85,16 @@ class ProgressTableView(EntityView):
 
     def header_for_project(self, ecls):
         """use entity's parent type as label"""
-        return display_name(self.req, ecls.parent_type)
+        return display_name(self._cw, ecls.parent_type)
 
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
-        return display_name(self.req, ecls.id)
+        return display_name(self._cw, ecls.__regid__)
 
     def table_header(self, ecls):
         """builds the table's header"""
         self.w(u'<thead><tr>')
-        _ = self.req._
+        _ = self._cw._
         for column in self.columns:
             meth = getattr(self, 'header_for_%s' % column, None)
             if meth:
@@ -109,7 +111,7 @@ class ProgressTableView(EntityView):
         project = entity.get_main_task()
         if project:
             return project.view('incontext')
-        return self.req._('no related project')
+        return self._cw._('no related project')
 
     def build_milestone_cell(self, entity):
         """``milestone`` column cell renderer"""
@@ -117,16 +119,16 @@ class ProgressTableView(EntityView):
 
     def build_state_cell(self, entity):
         """``state`` column cell renderer"""
-        return xml_escape(self.req._(entity.state))
+        return xml_escape(self._cw._(entity.state))
 
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""
         if entity.finished():
-            return self.format_date(entity.completion_date())
-        formated_date = self.format_date(entity.initial_prevision_date())
+            return self._cw.format_date(entity.completion_date())
+        formated_date = self._cw.format_date(entity.initial_prevision_date())
         if entity.in_progress():
-            eta_date = self.format_date(entity.eta_date())
-            _ = self.req._
+            eta_date = self._cw.format_date(entity.eta_date())
+            _ = self._cw._
             if formated_date:
                 formated_date += u' (%s %s)' % (_('expected:'), eta_date)
             else:
@@ -139,7 +141,7 @@ class ProgressTableView(EntityView):
 
     def build_cost_cell(self, entity):
         """``cost`` column cell renderer"""
-        _ = self.req._
+        _ = self._cw._
         pinfo = entity.progress_info()
         totalcost = pinfo.get('estimatedcorrected', pinfo['estimated'])
         missing = pinfo.get('notestimatedcorrected', pinfo.get('notestimated', 0))
@@ -156,20 +158,18 @@ class ProgressTableView(EntityView):
 
     def build_progress_cell(self, entity):
         """``progress`` column cell renderer"""
-        progress =  u'<div class="progress_data">%s (%.2f%%)</div>' % (
-            entity.done, entity.progress())
-        return progress + entity.view('progressbar')
+        return entity.view('progressbar')
 
 
 class InContextProgressTableView(ProgressTableView):
     """this views redirects to ``progress_table_view`` but removes
     the ``project`` column
     """
-    id = 'ic_progress_table_view'
+    __regid__ = 'ic_progress_table_view'
 
     def call(self, columns=None):
-        view = self.vreg['views'].select('progress_table_view', self.req,
-                                         rset=self.rset)
+        view = self._cw.vreg['views'].select('progress_table_view', self._cw,
+                                         rset=self.cw_rset)
         columns = list(columns or view.columns)
         try:
             columns.remove('project')
@@ -180,14 +180,89 @@ class InContextProgressTableView(ProgressTableView):
 
 class ProgressBarView(EntityView):
     """displays a progress bar"""
-    id = 'progressbar'
+    __regid__ = 'progressbar'
     title = _('progress bar')
     __select__ = implements(IProgress)
 
-    def cell_call(self, row, col):
-        self.req.add_css('cubicweb.iprogress.css')
-        entity = self.entity(row, col)
-        widget = ProgressBarWidget(entity.done, entity.todo,
-                                   entity.revised_cost)
-        self.w(widget.render())
+    precision = 0.1
+    red_threshold = 1.1
+    orange_threshold = 1.05
+    yellow_threshold = 1
 
+    @classmethod
+    def overrun(cls, entity):
+        """overrun = done + todo - """
+        if entity.done + entity.todo > entity.revised_cost:
+            overrun = entity.done + entity.todo - entity.revised_cost
+        else:
+            overrun = 0
+        if overrun < cls.precision:
+            overrun = 0
+        return overrun
+
+    @classmethod
+    def overrun_percentage(cls, entity):
+        """pourcentage overrun = overrun / budget"""
+        if entity.revised_cost == 0:
+            return 0
+        else:
+            return cls.overrun(entity) * 100. / entity.revised_cost
+
+    def cell_call(self, row, col):
+        self._cw.add_css('cubicweb.iprogress.css')
+        self._cw.add_js('cubicweb.iprogress.js')
+        entity = self.cw_rset.get_entity(row, col)
+        done = entity.done
+        todo = entity.todo
+        budget = entity.revised_cost
+        if budget == 0:
+            pourcent = 100
+        else:
+            pourcent = done*100./budget
+        if pourcent > 100.1:
+            color = 'red'
+        elif todo+done > self.red_threshold*budget:
+            color = 'red'
+        elif todo+done > self.orange_threshold*budget:
+            color = 'orange'
+        elif todo+done > self.yellow_threshold*budget:
+            color = 'yellow'
+        else:
+            color = 'green'
+        if pourcent < 0:
+            pourcent = 0
+
+        if floor(done) == done or done>100:
+            done_str = '%i' % done
+        else:
+            done_str = '%.1f' % done
+        if floor(budget) == budget or budget>100:
+            budget_str = '%i' % budget
+        else:
+            budget_str = '%.1f' % budget
+
+        title = u'%s/%s = %i%%' % (done_str, budget_str, pourcent)
+        short_title = title
+        if self.overrun_percentage(entity):
+            title += u' overrun +%sj (+%i%%)' % (self.overrun(entity),
+                                                 self.overrun_percentage(entity))
+            overrun = self.overrun(entity)
+            if floor(overrun) == overrun or overrun>100:
+                overrun_str = '%i' % overrun
+            else:
+                overrun_str = '%.1f' % overrun
+            short_title += u' +%s' % overrun_str
+        # write bars
+        maxi = max(done+todo, budget)
+        if maxi == 0:
+            maxi = 1
+
+        cid = make_uid('progress_bar')
+        self._cw.html_headers.add_onload('draw_progressbar("canvas%s", %i, %i, %i, "%s");' %
+                                         (cid,
+                                          int(100.*done/maxi), int(100.*(done+todo)/maxi),
+                                          int(100.*budget/maxi), color),
+                                         jsoncall=self._cw.json_request)
+        self.w(u'%s<br/>'
+               u'<canvas class="progressbar" id="canvas%s" width="100" height="10"></canvas>'
+               % (short_title.replace(' ','&nbsp;'), cid))

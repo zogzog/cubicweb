@@ -13,7 +13,7 @@ from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(WorkflowableEntityType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers',
                    ERQLExpression('X owned_by U'), ERQLExpression('X concerne S?, S owned_by U')),
         'add':    ('managers', ERQLExpression('X concerne S, S owned_by U')),
@@ -39,7 +39,7 @@ class Affaire(WorkflowableEntityType):
 
 
 class Societe(EntityType):
-    permissions = {
+    __permissions__ = {
         'read': ('managers', 'users', 'guests'),
         'update': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
         'delete': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
@@ -118,33 +118,32 @@ class ecrit_par(RelationType):
     inlined = True
 
 class connait(RelationType):
-    symetric = True
+    symmetric = True
 
 class concerne(RelationType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
 
 class travaille(RelationType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
 
 class para(RelationType):
-    permissions = {
+    __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers', ERQLExpression('X in_state S, S name "todo"')),
-        'delete': ('managers', ERQLExpression('X in_state S, S name "todo"')),
+        'update': ('managers', ERQLExpression('X in_state S, S name "todo"')),
         }
 
 class test(RelationType):
-    permissions = {'read': ('managers', 'users', 'guests'),
-                   'delete': ('managers',),
-                   'add': ('managers',)}
+    __permissions__ = {'read': ('managers', 'users', 'guests'),
+                       'update': ('managers',),
+                       }
 
 class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')

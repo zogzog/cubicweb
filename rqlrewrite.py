@@ -12,7 +12,6 @@ __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
 
-from logilab.common.compat import any
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
@@ -110,7 +109,10 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
-class Unsupported(Exception): pass
+class Unsupported(Exception):
+    """raised when an rql expression can't be inserted in some rql query
+    because it create an unresolvable query (eg no solutions found)
+    """
 
 
 class RQLRewriter(object):
@@ -291,7 +293,7 @@ class RQLRewriter(object):
     def snippet_subquery(self, varmap, transformedsnippet):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
-        selectvar, snippetvar = varmap
+        selectvar = varmap[0]
         subselect.append_selected(n.VariableRef(
             subselect.get_variable(selectvar)))
         aliases = [selectvar]
@@ -402,13 +404,13 @@ class RQLRewriter(object):
                 orel = self.varinfo['lhs_rels'][sniprel.r_type]
                 cardindex = 0
                 ttypes_func = rschema.objects
-                rprop = rschema.rproperty
+                rdef = rschema.rdef
             else: # target == 'subject':
                 orel = self.varinfo['rhs_rels'][sniprel.r_type]
                 cardindex = 1
                 ttypes_func = rschema.subjects
-                rprop = lambda x, y, z: rschema.rproperty(y, x, z)
-        except KeyError, ex:
+                rdef = lambda x, y: rschema.rdef(y, x)
+        except KeyError:
             # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
             return None
         # can't share neged relation or relations with different outer join
@@ -419,7 +421,7 @@ class RQLRewriter(object):
         # variable from the original query
         for etype in self.varinfo['stinfo']['possibletypes']:
             for ttype in ttypes_func(etype):
-                if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':
+                if rdef(etype, ttype).cardinality[cardindex] in '+*':
                     return None
         return orel
 
@@ -441,9 +443,9 @@ class RQLRewriter(object):
                 while argname in self.kwargs:
                     argname = select.allocate_varname()
                 # insert "U eid %(u)s"
-                var = select.get_variable(self.u_varname)
-                select.add_constant_restriction(select.get_variable(self.u_varname),
-                                                'eid', unicode(argname), 'Substitute')
+                select.add_constant_restriction(
+                    select.get_variable(self.u_varname),
+                    'eid', unicode(argname), 'Substitute')
                 self.kwargs[argname] = self.session.user.eid
             return self.u_varname
         key = (self.current_expr, self.varmap, vname)

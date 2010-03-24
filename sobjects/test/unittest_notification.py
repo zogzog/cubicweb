@@ -9,9 +9,9 @@
 from socket import gethostname
 
 from logilab.common.testlib import unittest_main, TestCase
-from cubicweb.devtools.apptest import EnvBasedTC, MAILBOX
+from cubicweb.devtools.testlib import CubicWebTC, MAILBOX
 
-from cubicweb.common.mail import construct_message_id, parse_message_id
+from cubicweb.mail import construct_message_id, parse_message_id
 
 class MessageIdTC(TestCase):
     def test_base(self):
@@ -48,7 +48,7 @@ class MessageIdTC(TestCase):
             self.assertNotEquals(msgid1, '<@testapp.%s>' % gethostname())
 
 
-class RecipientsFinderTC(EnvBasedTC):
+class RecipientsFinderTC(CubicWebTC):
     def test(self):
         urset = self.execute('CWUser X WHERE X login "admin"')
         self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
@@ -67,12 +67,11 @@ class RecipientsFinderTC(EnvBasedTC):
         self.assertEquals(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
 
 
-class StatusChangeViewsTC(EnvBasedTC):
+class StatusChangeViewsTC(CubicWebTC):
 
     def test_status_change_view(self):
-        req = self.session()
-        u = self.create_user('toto', req=req)#, commit=False) XXX in cw 3.6, and remove set_pool
-        req.set_pool()
+        req = self.request()
+        u = self.create_user('toto', req=req)
         u.fire_transition('deactivate', comment=u'yeah')
         self.failIf(MAILBOX)
         self.commit()

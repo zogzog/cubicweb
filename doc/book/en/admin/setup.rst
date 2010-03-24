@@ -53,6 +53,8 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "ap
 
 .. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
 
+.. _SourceInstallation:
+
 Install from source
 ```````````````````
 
@@ -82,6 +84,8 @@ if you do not intend to develop the framework itself.
 Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
 
 Make sure you have installed the dependencies (see appendixes for the list).
+
+.. _WindowsInstallation:
 
 Windows installation
 ````````````````````
@@ -128,7 +132,7 @@ The python drivers for posgtresql are to be found there::
 Please be careful to select the right python (2.5) and postgres (8.4)
 versions.
 
-Pyro enable remote access to cubicweb repository instances. Get it
+Pyro enables remote access to cubicweb repository instances. Get it
 there::
 
   http://sourceforge.net/projects/pyro/files/
@@ -369,7 +373,7 @@ MySql configuration
 ```````````````````
 Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 
-    transaction-isolation = READ-COMMITTED
+    transaction-isolation=READ-COMMITTED
     default-storage-engine=INNODB
     default-character-set=utf8
     max_allowed_packet = 128M
@@ -377,6 +381,26 @@ Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 .. note::
     It is unclear whether mysql supports indexed string of arbitrary lenght or
     not.
+
+SQLServer configuration
+-----------------------
+
+As of this writing, sqlserver support is in progress. You should be
+able to connect, create a database and go quite far, but some of the
+generated SQL is still currently not accepted by the backend.
+
+The `source` configuration file may look like this (specific parts
+only are shown)::
+
+  [system]
+  db-driver=sqlserver2005
+  db-user=someuser
+  # database password not needed
+  #db-password=toto123
+  #db-create/init may ask for a pwd: just say anything
+  db-extra-arguments=Trusted_Connection
+  db-encoding=utf8
+
 
 Pyro configuration
 ------------------

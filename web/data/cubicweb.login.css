@@ -1,7 +1,7 @@
 /* styles for the login popup and login form
  *
  *  :organization: Logilab
- *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -11,8 +11,11 @@ div#popupLoginBox {
   right: 0px;
   width: 26em;
   padding: 0px 1px 1px;
-  font-weight: bold;
   background: #E4EAD8;
+}
+
+div#popupLoginBox label{
+  font-weight: bold;
 }
 
 div#popupLoginBox div#loginContent {
@@ -72,12 +75,16 @@ div#loginBox div#loginContent form {
  }
 
 #loginContent input.data {
-  width:12em;
+  width: 12em;
 }
 
-input.loginButton {
+.loginButton {
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
   margin: 2px 0px 0px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
+}
+
+#loginContent .formButtonBar {
+  float: right;
 }

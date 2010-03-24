@@ -24,7 +24,7 @@ def mangle_email(address):
     return '%s at %s' % (name, host.replace('.', ' dot '))
 
 class EmailAddress(AnyEntity):
-    id = 'EmailAddress'
+    __regid__ = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
 
     def dc_title(self):
@@ -51,7 +51,7 @@ class EmailAddress(AnyEntity):
         if not ('sender' in subjrels and 'recipients' in subjrels):
             return
         rql = 'DISTINCT Any X, S, D ORDERBY D DESC WHERE X sender Y or X recipients Y, X subject S, X date D, Y eid %(y)s'
-        rset = self.req.execute(rql, {'y': self.eid}, 'y')
+        rset = self._cw.execute(rql, {'y': self.eid}, 'y')
         if skipeids is None:
             skipeids = set()
         for i in xrange(len(rset)):
@@ -62,7 +62,7 @@ class EmailAddress(AnyEntity):
             yield rset.get_entity(i, 0)
 
     def display_address(self):
-        if self.vreg.config['mangle-emails']:
+        if self._cw.vreg.config['mangle-emails']:
             return mangle_email(self.address)
         return self.address
 
@@ -82,23 +82,38 @@ class EmailAddress(AnyEntity):
         return super(EmailAddress, self).after_deletion_path()
 
 
-from logilab.common.deprecation import class_renamed
-Emailaddress = class_renamed('Emailaddress', EmailAddress)
-Emailaddress.id = 'Emailaddress'
+class Bookmark(AnyEntity):
+    """customized class for Bookmark entities"""
+    __regid__ = 'Bookmark'
+    fetch_attrs, fetch_order = fetch_config(['title', 'path'])
+
+    def actual_url(self):
+        url = self._cw.build_url(self.path)
+        if self.title:
+            urlparts = list(urlsplit(url))
+            if urlparts[3]:
+                urlparts[3] += '&vtitle=%s' % self._cw.url_quote(self.title)
+            else:
+                urlparts[3] = 'vtitle=%s' % self._cw.url_quote(self.title)
+            url = urlunsplit(urlparts)
+        return url
+
+    def action_url(self):
+        return self.absolute_url() + '/follow'
 
 
 class CWProperty(AnyEntity):
-    id = 'CWProperty'
+    __regid__ = 'CWProperty'
 
     fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
     rest_attr = 'pkey'
 
     def typed_value(self):
-        return self.vreg.typed_value(self.pkey, self.value)
+        return self._cw.vreg.typed_value(self.pkey, self.value)
 
     def dc_description(self, format='text/plain'):
         try:
-            return self.req._(self.vreg.property_info(self.pkey)['help'])
+            return self._cw._(self._cw.vreg.property_info(self.pkey)['help'])
         except UnknownProperty:
             return u''
 
@@ -109,33 +124,13 @@ class CWProperty(AnyEntity):
         return 'view', {}
 
 
-class Bookmark(AnyEntity):
-    """customized class for Bookmark entities"""
-    id = 'Bookmark'
-    fetch_attrs, fetch_order = fetch_config(['title', 'path'])
-
-    def actual_url(self):
-        url = self.req.build_url(self.path)
-        if self.title:
-            urlparts = list(urlsplit(url))
-            if urlparts[3]:
-                urlparts[3] += '&vtitle=%s' % self.req.url_quote(self.title)
-            else:
-                urlparts[3] = 'vtitle=%s' % self.req.url_quote(self.title)
-            url = urlunsplit(urlparts)
-        return url
-
-    def action_url(self):
-        return self.absolute_url() + '/follow'
-
-
 class CWCache(AnyEntity):
     """Cache"""
-    id = 'CWCache'
+    __regid__ = 'CWCache'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):
-        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
+        self._cw.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
                          {'t': datetime.now(), 'x': self.eid}, 'x')
 
     def valid(self, date):

@@ -82,7 +82,7 @@ def vid_from_rset(req, rset, schema):
                 return 'primary'
             return 'outofcontext-search'
         if len(rset.column_types(0)) == 1:
-            return 'adaptedlist'
+            return 'sameetypelist'
         return 'list'
     return 'table'
 
@@ -110,7 +110,7 @@ class TmpFileViewMixin(object):
         self.cell_call()
 
     def cell_call(self, row=0, col=0):
-        self.row, self.col = row, col # in case one needs it
+        self.cw_row, self.cw_col = row, col # in case one needs it
         fd, tmpfile = tempfile.mkstemp('.png')
         os.close(fd)
         self._generate(tmpfile)

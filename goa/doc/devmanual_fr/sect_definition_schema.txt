@@ -168,7 +168,7 @@ partagés par toutes les définitions de relation de ce type) sont :
   à la relation. Cela se limite donc aux relations dont la cardinalité
   sujet->relation->objet vaut 0..1 ('?') ou 1..1 ('1')
 
-* `symetric` : booléen indiquant que la relation est symétrique, i.e. "X relation
+* `symmetric` : booléen indiquant que la relation est symétrique, i.e. "X relation
    Y" implique "Y relation X"
 
 Dans le cas de définitions de relations simultanée, `sujet` et `object` peuvent

@@ -38,9 +38,10 @@ from rql.stmts import Union, Select
 from rql.nodes import (SortTerm, VariableRef, Constant, Function, Not,
                        Variable, ColumnAlias, Relation, SubQuery, Exists)
 
-from cubicweb import server
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import cleanup_solutions
+
+ColumnAlias._q_invariant = False # avoid to check for ColumnAlias / Variable
 
 def _new_var(select, varname):
     newvar = select.get_variable(varname)
@@ -340,6 +341,9 @@ class SQLGenerator(object):
                             }
         if not self.dbms_helper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
+        if self.dbms_helper.fti_need_distinct_query:
+            self.__union_sql = self.union_sql
+            self.union_sql = self.has_text_need_distinct_union_sql
         self._lock = threading.Lock()
         if attrmap is None:
             attrmap = {}
@@ -372,6 +376,12 @@ class SQLGenerator(object):
             return sql, self._query_attrs
         finally:
             self._lock.release()
+
+    def has_text_need_distinct_union_sql(self, union, needalias=False):
+        if getattr(union, 'has_text_query', False):
+            for select in union.children:
+                select.need_distinct = True
+        return self.__union_sql(union, needalias)
 
     def union_sql(self, union, needalias=False): # pylint: disable-msg=E0202
         if len(union.children) == 1:
@@ -712,7 +722,7 @@ class SQLGenerator(object):
         return '%s=%s' % (lhssql, rhsvar.accept(self))
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
-        if termconst or isinstance(termvar, ColumnAlias) or not termvar._q_invariant:
+        if termconst or not termvar._q_invariant:
             termsql = termconst and termconst.accept(self) or termvar.accept(self)
             yield '%s.%s=%s' % (rid, relfield, termsql)
         elif termvar._q_invariant:
@@ -742,7 +752,7 @@ class SQLGenerator(object):
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
         sql = ' AND '.join(sqls)
-        if rschema.symetric:
+        if rschema.symmetric:
             sql = '(%s OR %s)' % (sql, switch_relation_field(sql))
         return sql
 

@@ -7,13 +7,13 @@
 """
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools._apptest import FakeRequest
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.fake import FakeRequest
 
 from cubicweb.web.views.urlrewrite import SimpleReqRewriter, SchemaBasedRewriter, rgx, rgx_action
 
 
-class UrlRewriteTC(TestCase):
+class UrlRewriteTC(CubicWebTC):
 
     def test_auto_extend_rules(self):
         class Rewriter(SimpleReqRewriter):
@@ -39,7 +39,8 @@ class UrlRewriteTC(TestCase):
             ('/notfound', dict(vid='404')),
             ('/error', dict(vid='error')),
             ('/sparql', dict(vid='sparql')),
-            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'eschema'}),
+            ('/processinfo', dict(vid='processinfo')),
+            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'primary'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
             ('/doc/?$', dict(fid='main', vid='wdoc')),
@@ -64,8 +65,8 @@ class UrlRewriteTC(TestCase):
 
     def test_basic_transformation(self):
         """test simple string-based rewrite"""
-        rewriter = SimpleReqRewriter()
         req = FakeRequest()
+        rewriter = SimpleReqRewriter(req)
         self.assertRaises(KeyError, rewriter.rewrite, req, '/view?vid=whatever')
         self.assertEquals(req.form, {})
         rewriter.rewrite(req, '/index')
@@ -73,8 +74,8 @@ class UrlRewriteTC(TestCase):
 
     def test_regexp_transformation(self):
         """test regexp-based rewrite"""
-        rewriter = SimpleReqRewriter()
         req = FakeRequest()
+        rewriter = SimpleReqRewriter(req)
         rewriter.rewrite(req, '/add/Task')
         self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
         req = FakeRequest()
@@ -84,7 +85,7 @@ class UrlRewriteTC(TestCase):
 
 
 
-class RgxActionRewriteTC(EnvBasedTC):
+class RgxActionRewriteTC(CubicWebTC):
 
     def setup_database(self):
         self.p1 = self.create_user(u'user1')
@@ -100,8 +101,8 @@ class RgxActionRewriteTC(EnvBasedTC):
                                                                              transforms={'sn' : unicode.capitalize,
                                                                                          'fn' : unicode.lower,})),
                 ]
-        rewriter = TestSchemaBasedRewriter()
         req = self.request()
+        rewriter = TestSchemaBasedRewriter(req)
         pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][0], self.p1.eid)
@@ -125,8 +126,8 @@ class RgxActionRewriteTC(EnvBasedTC):
                 ),
                 ]
 
-        rewriter = Rewriter()
         req = self.request()
+        rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
         self.assertEquals(rset.rql, RQL1)
         self.assertEquals(req.form, {'vid' : "baseindex"})
@@ -159,8 +160,8 @@ class RgxActionRewriteTC(EnvBasedTC):
                 ),
                 ]
 
-        rewriter = Rewriter()
         req = self.request()
+        rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
         self.assertEquals(rset.rql, RQL2)
         self.assertEquals(req.form, {'vid' : "index"})

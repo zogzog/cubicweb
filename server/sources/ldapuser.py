@@ -210,11 +210,11 @@ directory (default to once a day).',
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
-                        rset = session.execute('EmailAddress X,A WHERE '
+                        rset = session.execute('EmailAddress A WHERE '
                                                'U use_email X, U eid %(u)s',
                                                {'u': eid})
                         ldapemailaddr = unicode(ldapemailaddr)
-                        for emaileid, emailaddr in rset:
+                        for emailaddr, in rset:
                             if emailaddr == ldapemailaddr:
                                 break
                         else:
@@ -237,14 +237,15 @@ directory (default to once a day).',
             self._connect()
         return ConnectionWrapper(self._conn)
 
-    def authenticate(self, session, login, password):
+    def authenticate(self, session, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have
         to fetch the salt first
         """
-        assert login, 'no login!'
+        if password is None:
+            raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
         searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
                              for o in self.user_classes])
@@ -447,12 +448,12 @@ directory (default to once a day).',
     def _auth_cram_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.cram_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_token)
 
     def _auth_digest_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.digest_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_token)
 
     def _auth_gssapi(self, conn, user, userpwd):
         # print XXX not proper sasl/gssapi

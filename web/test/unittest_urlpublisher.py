@@ -11,26 +11,26 @@ import re
 
 from logilab.common.testlib import unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb.devtools._apptest import FakeRequest
-
 from cubicweb.rset import ResultSet
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import NotFound, Redirect
 from cubicweb.web.views.urlrewrite import SimpleReqRewriter
 
 
-class URLPublisherTC(EnvBasedTC):
+class URLPublisherTC(CubicWebTC):
     """test suite for QSPreProcessor"""
 
     def setup_database(self):
         self.create_user(u'ÿsaÿe')
-        b = self.add_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
-        c = self.add_entity('Tag', name=u'yo') # take care: Tag's name normalized to lower case
+        req = self.request()
+        b = req.create_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
+        c = req.create_entity('Tag', name=u'yo') # take care: Tag's name normalized to lower case
         self.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s', {'c':c.eid, 'b':b.eid}, 'b')
 
     def process(self, url):
         req = self.req = self.request()
-        return self.env.app.url_resolver.process(req, url)
+        return self.app.url_resolver.process(req, url)
 
     def test_raw_path(self):
         """tests raw path resolution'"""

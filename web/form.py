@@ -7,18 +7,19 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.common.decorators import iclassmethod
+from logilab.common.deprecation import deprecated
 
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
-from cubicweb.common import tags
-from cubicweb.web import stdmsgs, httpcache, formfields
+from cubicweb.web import httpcache, formfields, controller
 
 
 class FormViewMixIn(object):
     """abstract form view mix-in"""
     category = 'form'
-    controller = 'edit'
     http_cache_manager = httpcache.NoHTTPCacheManager
     add_to_breadcrumbs = False
 
@@ -35,158 +36,6 @@ class FormViewMixIn(object):
         so we don't want them to be listed by appli.possible_views
         """
         return False
-
-
-# XXX should disappear
-class FormMixIn(object):
-    """abstract form mix-in
-    XXX: you should inherit from this FIRST (obscure pb with super call)
-    """
-    force_session_key = None
-
-    def session_key(self):
-        """return the key that may be used to store / retreive data about a
-        previous post which failed because of a validation error
-        """
-        if self.force_session_key is None:
-            return '%s#%s' % (self.req.url(), self.domid)
-        return self.force_session_key
-
-    def restore_previous_post(self, sessionkey):
-        # get validation session data which may have been previously set.
-        # deleting validation errors here breaks form reloading (errors are
-        # no more available), they have to be deleted by application's publish
-        # method on successful commit
-        forminfo = self.req.get_session_data(sessionkey, pop=True)
-        if forminfo:
-            # XXX remove req.data assigment once cw.web.widget is killed
-            self.req.data['formvalues'] = self._form_previous_values = forminfo['values']
-            self.req.data['formerrors'] = self._form_valerror = forminfo['errors']
-            self.req.data['displayederrors'] = self.form_displayed_errors = set()
-            # if some validation error occured on entity creation, we have to
-            # get the original variable name from its attributed eid
-            foreid = self.form_valerror.entity
-            for var, eid in forminfo['eidmap'].items():
-                if foreid == eid:
-                    self.form_valerror.eid = var
-                    break
-            else:
-                self.form_valerror.eid = foreid
-        else:
-            self._form_previous_values = {}
-            self._form_valerror = None
-
-    @property
-    def form_previous_values(self):
-        if self.parent_form is None:
-            return self._form_previous_values
-        return self.parent_form.form_previous_values
-
-    @property
-    def form_valerror(self):
-        if self.parent_form is None:
-            return self._form_valerror
-        return self.parent_form.form_valerror
-
-    # XXX deprecated with new form system. Should disappear
-
-    domid = 'entityForm'
-    category = 'form'
-    controller = 'edit'
-    http_cache_manager = httpcache.NoHTTPCacheManager
-    add_to_breadcrumbs = False
-
-    def html_headers(self):
-        """return a list of html headers (eg something to be inserted between
-        <head> and </head> of the returned page
-
-        by default forms are neither indexed nor followed
-        """
-        return [NOINDEX, NOFOLLOW]
-
-    def linkable(self):
-        """override since forms are usually linked by an action,
-        so we don't want them to be listed by appli.possible_views
-        """
-        return False
-
-
-    def button(self, label, klass='validateButton', tabindex=None, **kwargs):
-        if tabindex is None:
-            tabindex = self.req.next_tabindex()
-        return tags.input(value=label, klass=klass, **kwargs)
-
-    def action_button(self, label, onclick=None, __action=None, **kwargs):
-        if onclick is None:
-            onclick = "postForm('__action_%s', \'%s\', \'%s\')" % (
-                __action, label, self.domid)
-        return self.button(label, onclick=onclick, **kwargs)
-
-    def button_ok(self, label=None, type='submit', name='defaultsubmit',
-                  **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
-        return self.button(label, name=name, type=type, **kwargs)
-
-    def button_apply(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
-        return self.action_button(label, __action='apply', type=type, **kwargs)
-
-    def button_delete(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
-        return self.action_button(label, __action='delete', type=type, **kwargs)
-
-    def button_cancel(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return self.action_button(label, __action='cancel', type=type, **kwargs)
-
-    def button_reset(self, label=None, type='reset', name='__action_cancel',
-                     **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return self.button(label, type=type, **kwargs)
-
-    def need_multipart(self, entity, categories=('primary', 'secondary')):
-        """return a boolean indicating if form's enctype should be multipart
-        """
-        for rschema, _, x in entity.relations_by_category(categories):
-            if entity.get_widget(rschema, x).need_multipart:
-                return True
-        # let's find if any of our inlined entities needs multipart
-        for rschema, targettypes, x in entity.relations_by_category('inlineview'):
-            assert len(targettypes) == 1, \
-                   "I'm not able to deal with several targets and inlineview"
-            ttype = targettypes[0]
-            inlined_entity = self.vreg.etype_class(ttype)(self.req, None, None)
-            for irschema, _, x in inlined_entity.relations_by_category(categories):
-                if inlined_entity.get_widget(irschema, x).need_multipart:
-                    return True
-        return False
-
-    def error_message(self):
-        """return formatted error message
-
-        This method should be called once inlined field errors has been consumed
-        """
-        errex = self.req.data.get('formerrors') or self.form_valerror
-        # get extra errors
-        if errex is not None:
-            errormsg = self.req._('please correct the following errors:')
-            displayed = self.req.data.get('displayederrors') or self.form_displayed_errors
-            errors = sorted((field, err) for field, err in errex.errors.items()
-                            if not field in displayed)
-            if errors:
-                if len(errors) > 1:
-                    templstr = '<li>%s</li>\n'
-                else:
-                    templstr = '&#160;%s\n'
-                for field, err in errors:
-                    if field is None:
-                        errormsg += templstr % err
-                    else:
-                        errormsg += templstr % '%s: %s' % (self.req._(field), err)
-                if len(errors) > 1:
-                    errormsg = '<ul>%s</ul>' % errormsg
-            return u'<div class="errorMessage">%s</div>' % errormsg
-        return u''
 
 
 ###############################################################################
@@ -215,11 +64,47 @@ class FieldNotFound(Exception):
     found
     """
 
-class Form(FormMixIn, AppObject):
+class Form(AppObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
 
+    internal_fields = ('__errorurl',) + controller.NAV_FORM_PARAMETERS
+
     parent_form = None
+    force_session_key = None
+    domid = 'form'
+    copy_nav_params = False
+
+    def __init__(self, req, rset=None, row=None, col=None,
+                 submitmsg=None, mainform=True, **kwargs):
+        super(Form, self).__init__(req, rset=rset, row=row, col=col)
+        self.fields = list(self.__class__._fields_)
+        if mainform:
+            self.add_hidden(u'__form_id', kwargs.pop('formvid', self.__regid__))
+        for key, val in kwargs.iteritems():
+            if key in controller.NAV_FORM_PARAMETERS:
+                self.add_hidden(key, val)
+            elif key == 'redirect_path':
+                self.add_hidden(u'__redirectpath', val)
+            elif hasattr(self.__class__, key) and not key[0] == '_':
+                setattr(self, key, val)
+            else:
+                self.cw_extra_kwargs[key] = val
+            # skip other parameters, usually given for selection
+            # (else write a custom class to handle them)
+        if mainform:
+            self.add_hidden(u'__errorurl', self.session_key())
+            self.add_hidden(u'__domid', self.domid)
+            self.restore_previous_post(self.session_key())
+        # XXX why do we need two different variables (mainform and copy_nav_params ?)
+        if self.copy_nav_params:
+            for param in controller.NAV_FORM_PARAMETERS:
+                if not param in kwargs:
+                    value = req.form.get(param)
+                    if value:
+                        self.add_hidden(param, value)
+        if submitmsg is not None:
+            self.add_hidden(u'__message', submitmsg)
 
     @property
     def root_form(self):
@@ -227,6 +112,20 @@ class Form(FormMixIn, AppObject):
         if self.parent_form is None:
             return self
         return self.parent_form.root_form
+
+    @property
+    def form_valerror(self):
+        """the validation error exception if any"""
+        if self.parent_form is None:
+            return self._form_valerror
+        return self.parent_form.form_valerror
+
+    @property
+    def form_previous_values(self):
+        """previously posted values (on validation error)"""
+        if self.parent_form is None:
+            return self._form_previous_values
+        return self.parent_form.form_previous_values
 
     @iclassmethod
     def _fieldsattr(cls_or_self):
@@ -237,17 +136,17 @@ class Form(FormMixIn, AppObject):
         return fields
 
     @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject'):
+    def field_by_name(cls_or_self, name, role=None):
         """return field with the given name and role.
         Raise FieldNotFound if the field can't be found.
         """
         for field in cls_or_self._fieldsattr():
             if field.name == name and field.role == role:
                 return field
-        raise FieldNotFound(name)
+        raise FieldNotFound(name, role)
 
     @iclassmethod
-    def fields_by_name(cls_or_self, name, role='subject'):
+    def fields_by_name(cls_or_self, name, role=None):
         """return a list of fields with the given name and role"""
         return [field for field in cls_or_self._fieldsattr()
                 if field.name == name and field.role == role]
@@ -273,3 +172,64 @@ class Form(FormMixIn, AppObject):
         field = cls_or_self.field_by_name(name, role)
         fields = cls_or_self._fieldsattr()
         fields.insert(fields.index(field)+1, new_field)
+
+    def session_key(self):
+        """return the key that may be used to store / retreive data about a
+        previous post which failed because of a validation error
+        """
+        if self.force_session_key is None:
+            return '%s#%s' % (self._cw.url(), self.domid)
+        return self.force_session_key
+
+    def restore_previous_post(self, sessionkey):
+        # get validation session data which may have been previously set.
+        # deleting validation errors here breaks form reloading (errors are
+        # no more available), they have to be deleted by application's publish
+        # method on successful commit
+        if hasattr(self, '_form_previous_values'):
+            # XXX behaviour changed in 3.6.1, warn
+            warn('[3.6.1] restore_previous_post already called, remove this call',
+                 DeprecationWarning, stacklevel=2)
+            return
+        forminfo = self._cw.get_session_data(sessionkey, pop=True)
+        if forminfo:
+            self._form_previous_values = forminfo['values']
+            self._form_valerror = forminfo['error']
+            # if some validation error occured on entity creation, we have to
+            # get the original variable name from its attributed eid
+            foreid = self.form_valerror.entity
+            for var, eid in forminfo['eidmap'].items():
+                if foreid == eid:
+                    self.form_valerror.eid = var
+                    break
+            else:
+                self.form_valerror.eid = foreid
+        else:
+            self._form_previous_values = {}
+            self._form_valerror = None
+
+    def field_error(self, field):
+        """return field's error if specified in current validation exception"""
+        if self.form_valerror:
+            if field.eidparam and self.edited_entity.eid != self.form_valerror.eid:
+                return None
+            try:
+                return self.form_valerror.errors.pop(field.role_name())
+            except KeyError:
+                if field.role and field.name in self.form_valerror:
+                    warn('%s: errors key of attribute/relation should be suffixed by "-<role>"'
+                         % self.form_valerror.__class__, DeprecationWarning)
+                    return self.form_valerror.errors.pop(field.name)
+        return None
+
+    def remaining_errors(self):
+        return sorted(self.form_valerror.errors.items())
+
+    @deprecated('[3.6] use form.field_error and/or new renderer.render_error method')
+    def form_field_error(self, field):
+        """return validation error for widget's field, if any"""
+        err = self.field_error(field)
+        if err:
+            return u'<span class="error">%s</span>' % err
+        return u''
+

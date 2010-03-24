@@ -12,9 +12,9 @@ from itertools import repeat
 
 from logilab.common.cache import Cache
 from logilab.common.compat import any
-from rql import RQLHelper, RQLSyntaxError
+from rql import RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import (Relation, VariableRef, Constant, SubQuery)
+from rql.nodes import Relation, VariableRef, Constant, SubQuery
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -26,7 +26,7 @@ from cubicweb.server.ssplanner import add_types_restriction
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 
-def empty_rset(session, rql, args, rqlst=None):
+def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
     return ResultSet([], rql, args, rqlst=rqlst)
 
@@ -71,14 +71,23 @@ def check_read_access(schema, user, rqlst, solution):
             # XXX has_text may have specific perm ?
             if rel.r_type in READ_ONLY_RTYPES:
                 continue
-            if not schema.rschema(rel.r_type).has_access(user, 'read'):
+            rschema = schema.rschema(rel.r_type)
+            if rschema.final:
+                eschema = schema.eschema(solution[rel.children[0].name])
+                rdef = eschema.rdef(rschema)
+            else:
+                rdef = rschema.rdef(solution[rel.children[0].name],
+                                    solution[rel.children[1].children[0].name])
+            if not user.matching_groups(rdef.get_groups('read')):
                 raise Unauthorized('read', rel.r_type)
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
     for varname in rqlst.defined_vars:
         etype = solution[varname]
         eschema = schema.eschema(etype)
-        if not eschema.has_access(user, 'read'):
+        if eschema.final:
+            continue
+        if not user.matching_groups(eschema.get_groups('read')):
             erqlexprs = eschema.get_rqlexprs('read')
             if not erqlexprs:
                 ex = Unauthorized('read', etype)
@@ -201,7 +210,6 @@ class ExecutionPlan(object):
             self.cache_key = None
 
     def _insert_security(self, union, noinvariant):
-        rh = self.rqlhelper
         for select in union.children[:]:
             for subquery in select.with_:
                 self._insert_security(subquery.query, noinvariant)
@@ -349,6 +357,7 @@ class ExecutionPlan(object):
         self.rqlhelper.annotate(rqlst)
         self.preprocess(rqlst, security=False)
         return rqlst
+
 
 class InsertPlan(ExecutionPlan):
     """an execution model specific to the INSERT rql query
@@ -563,7 +572,7 @@ class QuerierHelper(object):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
-        * `rql` should be an unicode string or a plain ascii string
+        * `rql` should be an Unicode string or a plain ASCII string
         * `args` the optional parameters dictionary associated to the query
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty
@@ -571,17 +580,17 @@ class QuerierHelper(object):
         * `eid_key` must be both a key in args and a substitution in the rql
           query. It should be used to enhance cacheability of rql queries.
           It may be a tuple for keys in args.
-          eid_key must be providen in case where a eid substitution is providen
-          and resolve some ambiguity in the possible solutions infered for each
+          `eid_key` must be provided in cases where a eid substitution is provided
+          and resolves ambiguities in the possible solutions inferred for each
           variable in the query.
 
-        on INSERT queries, there will be on row with the eid of each inserted
+        on INSERT queries, there will be one row with the eid of each inserted
         entity
 
         result for DELETE and SET queries is undefined yet
 
         to maximize the rql parsing/analyzing cache performance, you should
-        always use substitute arguments in queries (eg avoid query such as
+        always use substitute arguments in queries (i.e. avoid query such as
         'Any X WHERE X eid 123'!)
         """
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
@@ -604,7 +613,7 @@ class QuerierHelper(object):
                 except UnknownEid:
                     # we want queries such as "Any X WHERE X eid 9999"
                     # return an empty result instead of raising UnknownEid
-                    return empty_rset(session, rql, args)
+                    return empty_rset(rql, args)
                 cachekey.append(etype)
                 # ensure eid is correctly typed in args
                 args[key] = typed_eid(args[key])
@@ -622,7 +631,7 @@ class QuerierHelper(object):
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999"
                 # return an empty result instead of raising UnknownEid
-                return empty_rset(session, rql, args, rqlst)
+                return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if not rqlst.TYPE == 'select':
@@ -653,11 +662,18 @@ class QuerierHelper(object):
             # since it's actually realy only needed there (other relations
             # security is done *before* actual changes, and add/update entity
             # security is done after changes but in an operation, and exception
-            # generated in operation's events  properly generate a rollback on
+            # generated in operation's events properly generate a rollback on
             # the session). Even though, this is done here for a better
             # consistency: getting an Unauthorized exception means the
             # transaction has been rollbacked
-            session.rollback()
+            #
+            # notes:
+            # * we should not reset the pool here, since we don't want the
+            #   session to loose its pool during processing
+            # * don't rollback if we're in the commit process, will be handled
+            #   by the session
+            if session.commit_state is None:
+                session.rollback(reset_pool=False)
             raise
         # build a description for the results if necessary
         descr = ()

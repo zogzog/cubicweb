@@ -13,14 +13,14 @@ from cubicweb.devtools import init_test_database
 
 from cubicweb.server.checkintegrity import check
 
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 class CheckIntegrityTC(TestCase):
     def test(self):
         sys.stderr = sys.stdout = StringIO()
         try:
             check(repo, cnx, ('entities', 'relations', 'text_index', 'metadata'),
-                  True, True)
+                  reindex=True, fix=True, withpb=False)
         finally:
             sys.stderr = sys.__stderr__
             sys.stdout = sys.__stdout__

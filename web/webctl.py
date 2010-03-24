@@ -8,8 +8,7 @@ web configuration
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import underline_title
-from cubicweb.toolsutils import CommandHandler
+from cubicweb.toolsutils import CommandHandler, underline_title
 from logilab.common.shellutils import ASK
 
 class WebCreateHandler(CommandHandler):

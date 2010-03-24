@@ -1,25 +1,35 @@
-"""%%prog %s [options] %s
+"""the cubicweb-ctl tool, based on logilab.common.clcommands to
+provide a pluggable commands system.
 
-CubicWeb main instances controller.
+
+:organization: Logilab
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
-%s"""
+"""
+__docformat__ = "restructuredtext en"
 
+# *ctl module should limit the number of import to be imported as quickly as
+# possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
+# completion). So import locally in command helpers.
 import sys
 from os import remove, listdir, system, pathsep
 try:
     from os import kill, getpgid
 except ImportError:
-    def kill(*args): pass
-    def getpgid(): pass
+    def kill(*args):
+        """win32 kill implementation"""
+    def getpgid():
+        """win32 getpgid implementation"""
 
 from os.path import exists, join, isfile, isdir, dirname, abspath
 
 from logilab.common.clcommands import register_commands, pop_arg
 from logilab.common.shellutils import ASK
 
-from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, underline_title
+from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
-from cubicweb.toolsutils import Command, main_run,  rm, create_dir
+from cubicweb.toolsutils import Command, main_run, rm, create_dir, underline_title
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -158,6 +168,84 @@ class InstanceCommandFork(InstanceCommand):
 
 # base commands ###############################################################
 
+def version_strictly_lower(a, b):
+    from logilab.common.changelog import Version
+    if a:
+        a = Version(a)
+    if b:
+        b = Version(b)
+    return a < b
+
+def max_version(a, b):
+    from logilab.common.changelog import Version
+    return str(max(Version(a), Version(b)))
+
+class ConfigurationProblem(object):
+    """Each cube has its own list of dependencies on other cubes/versions.
+
+    The ConfigurationProblem is used to record the loaded cubes, then to detect
+    inconsistencies in their dependencies.
+
+    See configuration management on wikipedia for litterature.
+    """
+
+    def __init__(self):
+        self.cubes = {}
+
+    def add_cube(self, name, info):
+        self.cubes[name] = info
+
+    def solve(self):
+        self.warnings = []
+        self.errors = []
+        self.read_constraints()
+        for cube, versions in sorted(self.constraints.items()):
+            oper, version = None, None
+            # simplify constraints
+            if versions:
+                for constraint in versions:
+                    op, ver = constraint
+                    if oper is None:
+                        oper = op
+                        version = ver
+                    elif op == '>=' and oper == '>=':
+                        version = max_version(ver, version)
+                    else:
+                        print 'unable to handle this case', oper, version, op, ver
+            # "solve" constraint satisfaction problem
+            if cube not in self.cubes:
+                self.errors.append( ('add', cube, version) )
+            elif versions:
+                lower_strict = version_strictly_lower(self.cubes[cube].version, version)
+                if oper in ('>=','='):
+                    if lower_strict:
+                        self.errors.append( ('update', cube, version) )
+                else:
+                    print 'unknown operator', oper
+
+    def read_constraints(self):
+        self.constraints = {}
+        self.reverse_constraints = {}
+        for cube, info in self.cubes.items():
+            if hasattr(info,'__depends_cubes__'):
+                use = info.__depends_cubes__
+                if not isinstance(use, dict):
+                    use = dict((key, None) for key in use)
+                    self.warnings.append('cube %s should define __depends_cubes__ as a dict not a list')
+            else:
+                self.warnings.append('cube %s should define __depends_cubes__' % cube)
+                use = dict((key, None) for key in info.__use__)
+            for name, constraint in use.items():
+                self.constraints.setdefault(name,set())
+                if constraint:
+                    try:
+                        oper, version = constraint.split()
+                        self.constraints[name].add( (oper, version) )
+                    except:
+                        self.warnings.append('cube %s depends on %s but constraint badly formatted: %s'
+                                             % (cube, name, constraint))
+                self.reverse_constraints.setdefault(name, set()).add(cube)
+
 class ListCommand(Command):
     """List configurations, cubes and instances.
 
@@ -185,6 +273,7 @@ class ListCommand(Command):
                     continue
                 print '   ', line
         print
+        cfgpb = ConfigurationProblem()
         try:
             cubesdir = pathsep.join(cwcfg.cubes_search_path())
             namesize = max(len(x) for x in cwcfg.available_cubes())
@@ -200,6 +289,7 @@ class ListCommand(Command):
                 try:
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
+                    cfgpb.add_cube(cube, tinfo)
                 except ConfigurationError:
                     tinfo = None
                     tversion = '[missing cube information]'
@@ -235,7 +325,21 @@ class ListCommand(Command):
         else:
             print 'No instance available in %s' % regdir
         print
-
+        # configuration management problem solving
+        cfgpb.solve()
+        if cfgpb.warnings:
+            print 'Warnings:\n', '\n'.join('* '+txt for txt in cfgpb.warnings)
+        if cfgpb.errors:
+            print 'Errors:'
+            for op, cube, version in cfgpb.errors:
+                if op == 'add':
+                    print '* cube', cube,
+                    if version:
+                        print ' version', version,
+                    print 'is not installed, but required by %s' % ' '.join(cfgpb.reverse_constraints[cube])
+                else:
+                    print '* cube %s version %s is installed, but version %s is required by (%s)' % (
+                        cube, cfgpb.cubes[cube].version, version, ', '.join(cfgpb.reverse_constraints[cube]))
 
 class CreateInstanceCommand(Command):
     """Create an instance from a cube. This is an unified
@@ -297,14 +401,18 @@ repository and the web server.',
         # create the registry directory for this instance
         print '\n'+underline_title('Creating the instance %s' % appid)
         create_dir(config.apphome)
-        # load site_cubicweb from the cubes dir (if any)
-        config.load_site_cubicweb()
         # cubicweb-ctl configuration
         print '\n'+underline_title('Configuring the instance (%s.conf)' % configname)
         config.input_config('main', self.config.config_level)
         # configuration'specific stuff
         print
         helper.bootstrap(cubes, self.config.config_level)
+        # input for cubes specific options
+        for section in set(sect.lower() for sect, opt, optdict in config.all_options()
+                           if optdict.get('inputlevel') <= self.config.config_level):
+            if section not in ('main', 'email', 'pyro'):
+                print '\n' + underline_title('%s options' % section)
+                config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
         self._handle_win32(config, appid)
@@ -312,7 +420,7 @@ repository and the web server.',
         # handle i18n files structure
         # in the first cube given
         print '-> preparing i18n catalogs'
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
         errors = config.i18ncompile(langs)
         if errors:
@@ -690,7 +798,7 @@ given, appropriate sources for migration will be automatically selected \
         # * install new languages
         # * recompile catalogs
         # in the first componant given
-        from cubicweb.common import i18n
+        from cubicweb import i18n
         templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
         errors = config.i18ncompile(langs)
@@ -883,7 +991,12 @@ register_commands((ListCommand,
 def run(args):
     """command line tool"""
     cwcfg.load_cwctl_plugins()
-    main_run(args, __doc__)
+    main_run(args, """%%prog %s [options] %s
+
+The CubicWeb swiss-knife.
+
+%s"""
+)
 
 if __name__ == '__main__':
     run(sys.argv[1:])

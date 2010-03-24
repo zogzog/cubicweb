@@ -27,7 +27,7 @@ CubicWeb javascript api
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Javascript resources are typically loaded on demand, from views. The
-request object (available as self.req from most application objects,
+request object (available as self._cw from most application objects,
 for instance views and entities objects) has a few methods to do that:
 
 * `add_js(self, jsfiles, localfile=True)` which takes a sequence of

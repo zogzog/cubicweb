@@ -56,7 +56,7 @@ class IWorkflowable(Interface):
 class IProgress(Interface):
     """something that has a cost, a state and a progression
 
-    Take a look at cubicweb.common.mixins.ProgressMixIn for some
+    Take a look at cubicweb.mixins.ProgressMixIn for some
     default implementations
     """
 
@@ -76,12 +76,14 @@ class IProgress(Interface):
         """returns a dictionary describing progress/estimated cost of the
         version.
 
-        mandatory keys are (''estimated', 'done', 'todo')
-        optional keys are ('notestimated', 'notestimatedcorrected',
-                           'estimatedcorrected')
-       'noestimated' and 'notestimatedcorrected' should default to 0
-       'estimatedcorrected' should default to 'estimated'
-       """
+        - mandatory keys are (''estimated', 'done', 'todo')
+
+        - optional keys are ('notestimated', 'notestimatedcorrected',
+          'estimatedcorrected')
+
+        'noestimated' and 'notestimatedcorrected' should default to 0
+        'estimatedcorrected' should default to 'estimated'
+        """
 
     def finished(self):
         """returns True if status is finished"""

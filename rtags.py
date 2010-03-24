@@ -1,9 +1,26 @@
-"""relation tags store
+#:organization: Logilab
+#:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+#:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+A RelationTag object is an object which allows to link a configuration information to a relation definition. For instance, the standard primary view uses a RelationTag object (uicfg.primaryview_section) to get the section to display relations.
+
+.. sourcecode:: python
+
+   # display ``entry_of`` relations in the ``relations`` section in the ``BlogEntry`` primary view
+   uicfg.primaryview_section.tag_subject_of(('BlogEntry', 'entry_of', '*'),
+                                             'relations')
+
+   # hide every relation ``entry_of`` in the ``Blog`` primary view
+   uicfg.primaryview_section.tag_object_of(('*', 'entry_of', 'Blog'), 'hidden')
+
+Three primitives are defined:
+   * ``tag_subject_of`` tag a relation in the subject's context
+   * ``tag_object_of`` tag a relation in the object's context
+   * ``tag_attribute`` shortcut for tag_subject_of
+
+
 """
 __docformat__ = "restructuredtext en"
 
@@ -15,6 +32,9 @@ RTAGS = []
 def register_rtag(rtag):
     RTAGS.append(rtag)
 
+def _ensure_str_key(key):
+    return tuple(str(k) for k in key)
+
 class RelationTags(object):
     """a tag store for full relation definitions :
 
@@ -25,12 +45,14 @@ class RelationTags(object):
     This class associates a single tag to each key.
     """
     _allowed_values = None
+    _initfunc = None
     def __init__(self, name=None, initfunc=None, allowed_values=None):
         self._name = name or '<unknown>'
         self._tagdefs = {}
         if allowed_values is not None:
             self._allowed_values = allowed_values
-        self._initfunc = initfunc
+        if initfunc is not None:
+            self._initfunc = initfunc
         register_rtag(self)
 
     def __repr__(self):
@@ -45,22 +67,22 @@ class RelationTags(object):
         self._tagdefs.clear()
 
     def _get_keys(self, stype, rtype, otype, tagged):
-        keys = [(rtype, tagged, '*', '*'),
-                (rtype, tagged, '*', otype),
-                (rtype, tagged, stype, '*'),
-                (rtype, tagged, stype, otype)]
+        keys = [('*', rtype, '*', tagged),
+                ('*', rtype, otype, tagged),
+                (stype, rtype, '*', tagged),
+                (stype, rtype, otype, tagged)]
         if stype == '*' or otype == '*':
-            keys.remove((rtype, tagged, '*', '*'))
+            keys.remove( ('*', rtype, '*', tagged) )
             if stype == '*':
-                keys.remove((rtype, tagged, '*', otype))
+                keys.remove( ('*', rtype, otype, tagged) )
             if otype == '*':
-                keys.remove((rtype, tagged, stype, '*'))
+                keys.remove( (stype, rtype, '*', tagged) )
         return keys
 
     def init(self, schema, check=True):
         # XXX check existing keys against schema
         if check:
-            for (rtype, tagged, stype, otype), value in self._tagdefs.items():
+            for (stype, rtype, otype, tagged), value in self._tagdefs.items():
                 for ertype in (stype, rtype, otype):
                     if ertype != '*' and not ertype in schema:
                         self.warning('removing rtag %s: %s, %s undefined in schema',
@@ -68,51 +90,52 @@ class RelationTags(object):
                         self.del_rtag(stype, rtype, otype, tagged)
                         break
         if self._initfunc is not None:
-            for eschema in schema.entities():
-                for rschema, tschemas, role in eschema.relation_definitions(True):
-                    for tschema in tschemas:
-                        if role == 'subject':
-                            sschema, oschema = eschema, tschema
-                        else:
-                            sschema, oschema = tschema, eschema
-                        self._initfunc(self, sschema, rschema, oschema, role)
+            self.apply(schema, self._initfunc)
+
+    def apply(self, schema, func):
+        for eschema in schema.entities():
+            for rschema, tschemas, role in eschema.relation_definitions(True):
+                for tschema in tschemas:
+                    if role == 'subject':
+                        sschema, oschema = eschema, tschema
+                    else:
+                        sschema, oschema = tschema, eschema
+                    func(self, sschema, rschema, oschema, role)
 
     # rtag declaration api ####################################################
 
-    def tag_attribute(self, key, tag):
+    def tag_attribute(self, key, *args, **kwargs):
         key = list(key)
         key.append('*')
-        self.tag_subject_of(key, tag)
+        key.append('subject')
+        self.tag_relation(key, *args, **kwargs)
 
-    def tag_subject_of(self, key, tag):
+    def tag_subject_of(self, key, *args, **kwargs):
         key = list(key)
         key.append('subject')
-        self.tag_relation(key, tag)
+        self.tag_relation(key, *args, **kwargs)
 
-    def tag_object_of(self, key, tag):
+    def tag_object_of(self, key, *args, **kwargs):
         key = list(key)
         key.append('object')
-        self.tag_relation(key, tag)
+        self.tag_relation(key, *args, **kwargs)
 
     def tag_relation(self, key, tag):
-        #if isinstance(key, basestring):
-        #    stype, rtype, otype = key.split()
-        #else:
-        stype, rtype, otype, tagged = [str(k) for k in key]
+        assert len(key) == 4, 'bad key: %s' % list(key)
         if self._allowed_values is not None:
             assert tag in self._allowed_values, \
                    '%r is not an allowed tag (should be in %s)' % (
                 tag, self._allowed_values)
-        self._tagdefs[(rtype, tagged, stype, otype)] = tag
+        self._tagdefs[_ensure_str_key(key)] = tag
         return tag
 
     # rtag runtime api ########################################################
 
-    def del_rtag(self, stype, rtype, otype, tagged):
-        del self._tagdefs[(rtype, tagged, stype, otype)]
+    def del_rtag(self, *key):
+        del self._tagdefs[key]
 
-    def get(self, stype, rtype, otype, tagged):
-        for key in reversed(self._get_keys(stype, rtype, otype, tagged)):
+    def get(self, *key):
+        for key in reversed(self._get_keys(*key)):
             try:
                 return self._tagdefs[key]
             except KeyError:
@@ -132,8 +155,7 @@ class RelationTagsSet(RelationTags):
     tag_container_cls = set
 
     def tag_relation(self, key, tag):
-        stype, rtype, otype, tagged = [str(k) for k in key]
-        rtags = self._tagdefs.setdefault((rtype, tagged, stype, otype),
+        rtags = self._tagdefs.setdefault(_ensure_str_key(key),
                                          self.tag_container_cls())
         rtags.add(tag)
         return rtags
@@ -153,24 +175,24 @@ class RelationTagsDict(RelationTagsSet):
     tag_container_cls = dict
 
     def tag_relation(self, key, tag):
-        stype, rtype, otype, tagged = [str(k) for k in key]
+        key = _ensure_str_key(key)
         try:
-            rtags = self._tagdefs[(rtype, tagged, stype, otype)]
+            rtags = self._tagdefs[key]
             rtags.update(tag)
             return rtags
         except KeyError:
-            self._tagdefs[(rtype, tagged, stype, otype)] = tag
+            self._tagdefs[key] = tag
             return tag
 
     def setdefault(self, key, tagkey, tagvalue):
-        stype, rtype, otype, tagged = [str(k) for k in key]
+        key = _ensure_str_key(key)
         try:
-            rtags = self._tagdefs[(rtype, tagged, stype, otype)]
+            rtags = self._tagdefs[key]
             rtags.setdefault(tagkey, tagvalue)
             return rtags
         except KeyError:
-            self._tagdefs[(rtype, tagged, stype, otype)] = {tagkey: tagvalue}
-            return self._tagdefs[(rtype, tagged, stype, otype)]
+            self._tagdefs[key] = {tagkey: tagvalue}
+            return self._tagdefs[key]
 
 
 class RelationTagsBool(RelationTags):

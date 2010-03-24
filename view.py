@@ -21,7 +21,6 @@ from rql import nodes
 
 from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
-from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.schema import display_name
@@ -92,12 +91,11 @@ class View(AppObject):
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-    At instantiation time, the standard `req`, `rset`, and `cursor`
-    attributes are added and the `w` attribute will be set at rendering
-    time to a write function to use.
+    At instantiation time, the standard `_cw`, and `cw_rset` attributes are
+    added and the `w` attribute will be set at rendering time to a write
+    function to use.
     """
     __registry__ = 'views'
-    registered = require_group_compat(AppObject.registered)
 
     templatable = True
     # content_type = 'application/xhtml+xml' # text/xhtml'
@@ -119,12 +117,12 @@ class View(AppObject):
         return True
 
     def __init__(self, req=None, rset=None, **kwargs):
-        super(View, self).__init__(req, rset, **kwargs)
+        super(View, self).__init__(req, rset=rset, **kwargs)
         self.w = None
 
     @property
     def content_type(self):
-        return self.req.html_content_type()
+        return self._cw.html_content_type()
 
     def set_stream(self, w=None):
         if self.w is not None:
@@ -167,7 +165,20 @@ class View(AppObject):
         if stream is not None:
             return self._stream.getvalue()
 
-    dispatch = deprecated('.dispatch is deprecated, use .render')(render)
+    def tal_render(self, template, variables):
+        """render a precompiled page template with variables in the given
+        dictionary as context
+        """
+        from cubicweb.ext.tal import CubicWebContext
+        context = CubicWebContext()
+        context.update({'self': self, 'rset': self.cw_rset, '_' : self._cw._,
+                        'req': self._cw, 'user': self._cw.user})
+        context.update(variables)
+        output = UStringIO()
+        template.expand(context, output)
+        return output.getvalue()
+
+    dispatch = deprecated('[3.4] .dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
     # rset item
@@ -180,15 +191,15 @@ class View(AppObject):
 
         Views applicable on None result sets have to override this method
         """
-        rset = self.rset
+        rset = self.cw_rset
         if rset is None:
-            raise NotImplementedError, self
+            raise NotImplementedError, (self, "an rset is required")
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
         # XXX propagate self.extra_kwars?
         for i in xrange(len(rset)):
             if wrap:
                 self.w(u'<div class="section">')
-            self.wview(self.id, rset, row=i, **kwargs)
+            self.wview(self.__regid__, rset, row=i, **kwargs)
             if wrap:
                 self.w(u"</div>")
 
@@ -206,23 +217,23 @@ class View(AppObject):
         return True
 
     def is_primary(self):
-        return self.extra_kwargs.get('is_primary', self.id == 'primary')
+        return self.cw_extra_kwargs.get('is_primary', self.__regid__ == 'primary')
 
     def url(self):
         """return the url associated with this view. Should not be
         necessary for non linkable views, but a default implementation
         is provided anyway.
         """
-        rset = self.rset
+        rset = self.cw_rset
         if rset is None:
-            return self.build_url('view', vid=self.id)
+            return self._cw.build_url('view', vid=self.__regid__)
         coltypes = rset.column_types(0)
         if len(coltypes) == 1:
             etype = iter(coltypes).next()
-            if not self.schema.eschema(etype).final:
+            if not self._cw.vreg.schema.eschema(etype).final:
                 if len(rset) == 1:
                     entity = rset.get_entity(0, 0)
-                    return entity.absolute_url(vid=self.id)
+                    return entity.absolute_url(vid=self.__regid__)
             # don't want to generate /<etype> url if there is some restriction
             # on something else than the entity type
             restr = rset.syntax_tree().children[0].where
@@ -232,25 +243,25 @@ class View(AppObject):
             norestriction = (isinstance(restr, nodes.Relation) and
                              restr.is_types_restriction())
             if norestriction:
-                return self.build_url(etype.lower(), vid=self.id)
-        return self.build_url('view', rql=rset.printable_rql(), vid=self.id)
+                return self._cw.build_url(etype.lower(), vid=self.__regid__)
+        return self._cw.build_url('view', rql=rset.printable_rql(), vid=self.__regid__)
 
     def set_request_content_type(self):
         """set the content type returned by this view"""
-        self.req.set_content_type(self.content_type)
+        self._cw.set_content_type(self.content_type)
 
     # view utilities ##########################################################
 
     def wview(self, __vid, rset=None, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
-        self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
+        self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
 
     # XXX Template bw compat
-    template = deprecated('.template is deprecated, use .view')(wview)
+    template = deprecated('[3.4] .template is deprecated, use .view')(wview)
 
     def whead(self, data):
-        self.req.html_headers.write(data)
+        self._cw.html_headers.write(data)
 
     def wdata(self, data):
         """simple helper that escapes `data` and writes into `self.w`"""
@@ -268,34 +279,34 @@ class View(AppObject):
         """returns a title according to the result set - used for the
         title in the HTML header
         """
-        vtitle = self.req.form.get('vtitle')
+        vtitle = self._cw.form.get('vtitle')
         if vtitle:
-            return self.req._(vtitle)
+            return self._cw._(vtitle)
         # class defined title will only be used if the resulting title doesn't
         # seem clear enough
         vtitle = getattr(self, 'title', None) or u''
         if vtitle:
-            vtitle = self.req._(vtitle)
-        rset = self.rset
+            vtitle = self._cw._(vtitle)
+        rset = self.cw_rset
         if rset and rset.rowcount:
             if rset.rowcount == 1:
                 try:
-                    entity = self.complete_entity(0)
+                    entity = rset.complete_entity(0, 0)
                     # use long_title to get context information if any
                     clabel = entity.dc_long_title()
                 except NotAnEntity:
-                    clabel = display_name(self.req, rset.description[0][0])
+                    clabel = display_name(self._cw, rset.description[0][0])
                     clabel = u'%s (%s)' % (clabel, vtitle)
             else :
                 etypes = rset.column_types(0)
                 if len(etypes) == 1:
                     etype = iter(etypes).next()
-                    clabel = display_name(self.req, etype, 'plural')
+                    clabel = display_name(self._cw, etype, 'plural')
                 else :
                     clabel = u'#[*] (%s)' % vtitle
         else:
             clabel = vtitle
-        return u'%s (%s)' % (clabel, self.req.property_value('ui.site-title'))
+        return u'%s (%s)' % (clabel, self._cw.property_value('ui.site-title'))
 
     def output_url_builder( self, name, url, args ):
         self.w(u'<script language="JavaScript"><!--\n' \
@@ -310,8 +321,8 @@ class View(AppObject):
         self.w('}\n-->\n</script>\n')
 
     def create_url(self, etype, **kwargs):
-        """return the url of the entity creation form for a given entity type"""
-        return self.req.build_url('add/%s' % etype, **kwargs)
+        """ return the url of the entity creation form for a given entity type"""
+        return self._cw.build_url('add/%s' % etype, **kwargs)
 
     def field(self, label, value, row=True, show_label=True, w=None, tr=True, table=False):
         """read-only field"""
@@ -323,7 +334,7 @@ class View(AppObject):
             w(u'<div class="entityfield">')
         if show_label and label:
             if tr:
-                label = display_name(self.req, label)
+                label = display_name(self._cw, label)
             if table:
                 w(u'<th>%s</th>' % label)
             else:
@@ -343,8 +354,6 @@ class View(AppObject):
 class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)"""
     __select__ = non_final_entity()
-    registered = accepts_compat(View.registered)
-
     category = 'entityview'
 
 
@@ -353,7 +362,6 @@ class StartupView(View):
     displayed (so they can always be displayed !)
     """
     __select__ = none_rset()
-    registered = require_group_compat(View.registered)
 
     category = 'startupview'
 
@@ -375,7 +383,7 @@ class EntityStartupView(EntityView):
     default_rql = None
 
     def __init__(self, req, rset=None, **kwargs):
-        super(EntityStartupView, self).__init__(req, rset, **kwargs)
+        super(EntityStartupView, self).__init__(req, rset=rset, **kwargs)
         if rset is None:
             # this instance is not in the "entityview" category
             self.category = 'startupview'
@@ -388,11 +396,11 @@ class EntityStartupView(EntityView):
         """override call to execute rql returned by the .startup_rql method if
         necessary
         """
-        if self.rset is None:
-            self.rset = self.req.execute(self.startup_rql())
-        rset = self.rset
+        rset = self.cw_rset
+        if rset is None:
+            rset = self.cw_rset = self._cw.execute(self.startup_rql())
         for i in xrange(len(rset)):
-            self.wview(self.id, rset, row=i, **kwargs)
+            self.wview(self.__regid__, rset, row=i, **kwargs)
 
 
 class AnyRsetView(View):
@@ -403,18 +411,18 @@ class AnyRsetView(View):
 
     def columns_labels(self, mainindex=0, tr=True):
         if tr:
-            translate = lambda val, req=self.req: display_name(req, val)
+            translate = lambda val, req=self._cw: display_name(req, val)
         else:
             translate = lambda val: val
         # XXX [0] because of missing Union support
-        rqlstdescr = self.rset.syntax_tree().get_description(mainindex,
-                                                             translate)[0]
+        rqlstdescr = self.cw_rset.syntax_tree().get_description(mainindex,
+                                                                translate)[0]
         labels = []
         for colindex, label in enumerate(rqlstdescr):
             # compute column header
             if label == 'Any': # find a better label
                 label = ','.join(translate(et)
-                                 for et in self.rset.column_types(colindex))
+                                 for et in self.cw_rset.column_types(colindex))
             labels.append(label)
         return labels
 
@@ -426,11 +434,10 @@ class MainTemplate(View):
     There is usually at least a regular main template and a simple fallback
     one to display error if the first one failed
     """
-    registered = require_group_compat(View.registered)
 
     @property
     def doctype(self):
-        if self.req.xhtml_browser():
+        if self._cw.xhtml_browser():
             return STRICT_DOCTYPE
         return STRICT_DOCTYPE_NOEXT
 
@@ -441,7 +448,7 @@ class MainTemplate(View):
             if self.binary:
                 self._stream = stream = StringIO()
             else:
-                self._stream = stream = HTMLStream(self.req)
+                self._stream = stream = HTMLStream(self._cw)
             w = stream.write
         else:
             stream = None
@@ -466,16 +473,16 @@ class ReloadableMixIn(object):
         """register the given user callback and return an url to call it ready to be
         inserted in html
         """
-        self.req.add_js('cubicweb.ajax.js')
+        self._cw.add_js('cubicweb.ajax.js')
         if nonify:
             _cb = cb
             def cb(*args):
                 _cb(*args)
-        cbname = self.req.register_onetime_callback(cb, *args)
+        cbname = self._cw.register_onetime_callback(cb, *args)
         return self.build_js(cbname, xml_escape(msg or ''))
 
     def build_update_js_call(self, cbname, msg):
-        rql = self.rset.printable_rql()
+        rql = self.cw_rset.printable_rql()
         return "javascript:userCallbackThenUpdateUI('%s', '%s', %s, %s, '%s', '%s')" % (
             cbname, self.id, dumps(rql), dumps(msg),
             self.__registry__, self.div_id())
@@ -493,12 +500,12 @@ class Component(ReloadableMixIn, View):
     """base class for components"""
     __registry__ = 'components'
     __select__ = yes()
-    property_defs = {}
 
     # XXX huummm, much probably useless
     htmlclass = 'mainRelated'
     def div_class(self):
-        return '%s %s' % (self.htmlclass, self.id)
-    # XXX a generic '%s%s' % (self.id, self.__registry__.capitalize()) would probably be nicer
+        return '%s %s' % (self.htmlclass, self.__regid__)
+
+    # XXX a generic '%s%s' % (self.__regid__, self.__registry__.capitalize()) would probably be nicer
     def div_id(self):
-        return '%sComponent' % self.id
+        return '%sComponent' % self.__regid__

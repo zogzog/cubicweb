@@ -11,10 +11,10 @@ _ = unicode
 from datetime import datetime, date, timedelta
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import strptime, date_range, todate, todatetime
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.utils import strptime, date_range, todate, todatetime
 from cubicweb.view import EntityView
 
 
@@ -44,12 +44,12 @@ try:
         content_type = 'text/calendar'
         title = _('iCalendar')
         templatable = False
-        id = 'ical'
+        __regid__ = 'ical'
 
         def call(self):
             ical = iCalendar()
-            for i in range(len(self.rset.rows)):
-                task = self.complete_entity(i)
+            for i in range(len(self.cw_rset.rows)):
+                task = self.cw_rset.complete_entity(i, 0)
                 event = ical.add('vevent')
                 event.add('summary').value = task.dc_title()
                 event.add('description').value = task.dc_description()
@@ -60,7 +60,7 @@ try:
 
             buff = ical.serialize()
             if not isinstance(buff, unicode):
-                buff = unicode(buff, self.req.encoding)
+                buff = unicode(buff, self._cw.encoding)
             self.w(buff)
 
 except ImportError:
@@ -71,7 +71,7 @@ class hCalView(EntityView):
 
     Does apply to ICalendarable compatible entities
     """
-    id = 'hcal'
+    __regid__ = 'hcal'
     __select__ = implements(ICalendarable)
     paginable = False
     title = _('hCalendar')
@@ -79,34 +79,34 @@ class hCalView(EntityView):
 
     def call(self):
         self.w(u'<div class="hcalendar">')
-        for i in range(len(self.rset.rows)):
-            task = self.complete_entity(i)
+        for i in range(len(self.cw_rset.rows)):
+            task = self.cw_rset.complete_entity(i, 0)
             self.w(u'<div class="vevent">')
             self.w(u'<h3 class="summary">%s</h3>' % xml_escape(task.dc_title()))
             self.w(u'<div class="description">%s</div>'
                    % task.dc_description(format='text/html'))
             if task.start:
-                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self.format_date(task.start)))
+                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self._cw.format_date(task.start)))
             if task.stop:
-                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self.format_date(task.stop)))
+                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self._cw.format_date(task.stop)))
             self.w(u'</div>')
         self.w(u'</div>')
 
 
 class CalendarItemView(EntityView):
-    id = 'calendaritem'
+    __regid__ = 'calendaritem'
 
     def cell_call(self, row, col, dates=False):
-        task = self.complete_entity(row)
+        task = self.cw_rset.complete_entity(row, 0)
         task.view('oneline', w=self.w)
         if dates:
             if task.start and task.stop:
-                self.w('<br/>' % self.req._('from %(date)s' % {'date': self.format_date(task.start)}))
-                self.w('<br/>' % self.req._('to %(date)s' % {'date': self.format_date(task.stop)}))
-                self.w('<br/>to %s'%self.format_date(task.stop))
+                self.w('<br/>' % self._cw._('from %(date)s' % {'date': self._cw.format_date(task.start)}))
+                self.w('<br/>' % self._cw._('to %(date)s' % {'date': self._cw.format_date(task.stop)}))
+                self.w('<br/>to %s'%self._cw.format_date(task.stop))
 
 class CalendarLargeItemView(CalendarItemView):
-    id = 'calendarlargeitem'
+    __regid__ = 'calendarlargeitem'
 
 
 class _TaskEntry(object):
@@ -129,23 +129,23 @@ class _TaskEntry(object):
 
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
-    id = 'onemonthcal'
+    __regid__ = 'onemonthcal'
     __select__ = implements(ICalendarable)
     paginable = False
     title = _('one month')
 
     def call(self):
-        self.req.add_js('cubicweb.ajax.js')
-        self.req.add_css('cubicweb.calendar.css')
+        self._cw.add_js('cubicweb.ajax.js')
+        self._cw.add_css('cubicweb.calendar.css')
         # XXX: restrict courses directy with RQL
         _today =  datetime.today()
 
-        if 'year' in self.req.form:
-            year = int(self.req.form['year'])
+        if 'year' in self._cw.form:
+            year = int(self._cw.form['year'])
         else:
             year = _today.year
-        if 'month' in self.req.form:
-            month = int(self.req.form['month'])
+        if 'month' in self._cw.form:
+            month = int(self._cw.form['month'])
         else:
             month = _today.month
 
@@ -155,14 +155,16 @@ class OneMonthCal(EntityView):
             last_day_of_month = date(year + 1, 1, 1) - timedelta(1)
         else:
             last_day_of_month = date(year, month + 1, 1) - timedelta(1)
-        lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday())
+        # date range exclude last day so we should at least add one day, hence
+        # the 7
+        lastday = last_day_of_month + timedelta(7 - last_day_of_month.weekday())
         month_dates = list(date_range(firstday, lastday))
         dates = {}
         task_max = 0
-        for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row, 0)
-            if len(self.rset[row]) > 1 and self.rset.description[row][1] == 'CWUser':
-                user = self.rset.get_entity(row, 1)
+        for row in xrange(self.cw_rset.rowcount):
+            task = self.cw_rset.get_entity(row, 0)
+            if len(self.cw_rset[row]) > 1 and self.cw_rset.description[row][1] == 'CWUser':
+                user = self.cw_rset.get_entity(row, 1)
             else:
                 user = None
             the_dates = []
@@ -244,13 +246,12 @@ class OneMonthCal(EntityView):
         prevlink, nextlink = self._prevnext_links(curdate)  # XXX
         self.w(u'<tr><th><a href="%s">&lt;&lt;</a></th><th colspan="5">%s %s</th>'
                u'<th><a href="%s">&gt;&gt;</a></th></tr>' %
-               (xml_escape(prevlink), self.req._(curdate.strftime('%B').lower()),
+               (xml_escape(prevlink), self._cw._(curdate.strftime('%B').lower()),
                 curdate.year, xml_escape(nextlink)))
 
         # output header
         self.w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' %
-               tuple(self.req._(day) for day in WEEKDAYS))
-
+               tuple(self._cw._(day) for day in WEEKDAYS))
         # build calendar
         for mdate, task_rows in zip(month_dates, days):
             if mdate.weekday() == 0:
@@ -263,11 +264,11 @@ class OneMonthCal(EntityView):
     def _prevnext_links(self, curdate):
         prevdate = curdate - timedelta(31)
         nextdate = curdate + timedelta(31)
-        rql = self.rset.printable_rql()
-        prevlink = self.req.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
+        rql = self.cw_rset.printable_rql()
+        prevlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
                                                    year=prevdate.year,
                                                    month=prevdate.month)
-        nextlink = self.req.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
+        nextlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
                                                    year=nextdate.year,
                                                    month=nextdate.month)
         return prevlink, nextlink
@@ -283,16 +284,16 @@ class OneMonthCal(EntityView):
         self.w(u'<div class="calCellTitle%s">' % classes)
         self.w(u'<div class="day">%s</div>' % celldate.day)
 
-        if len(self.rset.column_types(0)) == 1:
-            etype = list(self.rset.column_types(0))[0]
-            url = self.build_url(vid='creation', etype=etype,
-                                 schedule=True,
-                                 start=self.format_date(celldate), stop=self.format_date(celldate),
-                                 __redirectrql=self.rset.printable_rql(),
-                                 __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
-                                 __redirectvid=self.id
-                                 )
-            self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (xml_escape(url), self.req._(u'add')))
+        if len(self.cw_rset.column_types(0)) == 1:
+            etype = list(self.cw_rset.column_types(0))[0]
+            url = self._cw.build_url(vid='creation', etype=etype,
+                                     schedule=True,
+                                     start=self._cw.format_date(celldate), stop=self._cw.format_date(celldate),
+                                     __redirectrql=self.cw_rset.printable_rql(),
+                                     __redirectparams=self._cw.build_url_params(year=curdate.year, month=curmonth),
+                                     __redirectvid=self.__regid__
+                                     )
+            self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (xml_escape(url), self._cw._(u'add')))
             self.w(u'&#160;')
         self.w(u'</div>')
         self.w(u'<div class="cellContent">')
@@ -302,9 +303,9 @@ class OneMonthCal(EntityView):
                 self.w(u'<div class="task %s">' % task_descr.color)
                 task.view('calendaritem', w=self.w )
                 url = task.absolute_url(vid='edition',
-                                        __redirectrql=self.rset.printable_rql(),
-                                        __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
-                                        __redirectvid=self.id
+                                        __redirectrql=self.cw_rset.printable_rql(),
+                                        __redirectparams=self._cw.build_url_params(year=curdate.year, month=curmonth),
+                                        __redirectvid=self.__regid__
                                         )
 
                 self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % xml_escape(url))
@@ -320,22 +321,22 @@ class OneMonthCal(EntityView):
 
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
-    id = 'oneweekcal'
+    __regid__ = 'oneweekcal'
     __select__ = implements(ICalendarable)
     paginable = False
     title = _('one week')
 
     def call(self):
-        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.calendar.js') )
-        self.req.add_css('cubicweb.calendar.css')
+        self._cw.add_js( ('cubicweb.ajax.js', 'cubicweb.calendar.js') )
+        self._cw.add_css('cubicweb.calendar.css')
         # XXX: restrict directly with RQL
         _today =  datetime.today()
-        if 'year' in self.req.form:
-            year = int(self.req.form['year'])
+        if 'year' in self._cw.form:
+            year = int(self._cw.form['year'])
         else:
             year = _today.year
-        if 'week' in self.req.form:
-            week = int(self.req.form['week'])
+        if 'week' in self._cw.form:
+            week = int(self._cw.form['week'])
         else:
             week = _today.isocalendar()[1]
         # week - 1 since we get week number > 0 while we want it to start from 0
@@ -348,8 +349,8 @@ class OneWeekCal(EntityView):
         colors = [ "col%x" % i for i in range(12) ]
         next_color_index = 0
         done_tasks = []
-        for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row, 0)
+        for row in xrange(self.cw_rset.rowcount):
+            task = self.cw_rset.get_entity(row, 0)
             if task in done_tasks:
                 continue
             done_tasks.append(task)
@@ -389,7 +390,7 @@ class OneWeekCal(EntityView):
         self.w(u'<th><a href="%s">&lt;&lt;</a></th><th colspan="5">%s %s %s</th>'
                u'<th><a href="%s">&gt;&gt;</a></th></tr>' %
                (xml_escape(prevlink), first_day_of_week.year,
-                self.req._(u'week'), first_day_of_week.isocalendar()[1],
+                self._cw._(u'week'), first_day_of_week.isocalendar()[1],
                 xml_escape(nextlink)))
 
         # output header
@@ -399,9 +400,9 @@ class OneWeekCal(EntityView):
         for i, day in enumerate(WEEKDAYS):
             wdate = first_day_of_week + timedelta(i)
             if wdate.isocalendar() == _today.isocalendar():
-                self.w(u'<th class="today">%s<br/>%s</th>' % (self.req._(day), self.format_date(wdate)))
+                self.w(u'<th class="today">%s<br/>%s</th>' % (self._cw._(day), self._cw.format_date(wdate)))
             else:
-                self.w(u'<th>%s<br/>%s</th>' % (self.req._(day), self.format_date(wdate)))
+                self.w(u'<th>%s<br/>%s</th>' % (self._cw._(day), self._cw.format_date(wdate)))
         self.w(u'</tr>')
 
         # build week calendar
@@ -420,14 +421,14 @@ class OneWeekCal(EntityView):
             if wdate.isocalendar() == _today.isocalendar():
                 classes = " today"
             self.w(u'<td class="column %s" id="%s">' % (classes, day))
-            if len(self.rset.column_types(0)) == 1:
-                etype = list(self.rset.column_types(0))[0]
-                url = self.build_url(vid='creation', etype=etype,
-                                     schedule=True,
-                                     __redirectrql=self.rset.printable_rql(),
-                                     __redirectparams=self.req.build_url_params(year=year, week=week),
-                                     __redirectvid=self.id
-                                     )
+            if len(self.cw_rset.column_types(0)) == 1:
+                etype = list(self.cw_rset.column_types(0))[0]
+                url = self._cw.build_url(vid='creation', etype=etype,
+                                         schedule=True,
+                                         __redirectrql=self.cw_rset.printable_rql(),
+                                         __redirectparams=self._cw.build_url_params(year=year, week=week),
+                                         __redirectvid=self.__regid__
+                                         )
                 extra = ' ondblclick="addCalendarItem(event, hmin=8, hmax=20, year=%s, month=%s, day=%s, duration=2, baseurl=\'%s\')"' % (
                     wdate.year, wdate.month, wdate.day, xml_escape(url))
             else:
@@ -496,9 +497,9 @@ class OneWeekCal(EntityView):
                        (task_desc.color, style))
             task.view('calendaritem', dates=False, w=self.w)
             url = task.absolute_url(vid='edition',
-                                    __redirectrql=self.rset.printable_rql(),
-                                    __redirectparams=self.req.build_url_params(year=date.year, week=date.isocalendar()[1]),
-                                    __redirectvid=self.id
+                                    __redirectrql=self.cw_rset.printable_rql(),
+                                    __redirectparams=self._cw.build_url_params(year=date.year, week=date.isocalendar()[1]),
+                                    __redirectvid=self.__regid__
                                  )
 
             self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % xml_escape(url))
@@ -520,11 +521,11 @@ class OneWeekCal(EntityView):
     def _prevnext_links(self, curdate):
         prevdate = curdate - timedelta(7)
         nextdate = curdate + timedelta(7)
-        rql = self.rset.printable_rql()
-        prevlink = self.req.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
+        rql = self.cw_rset.printable_rql()
+        prevlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
                                                    year=prevdate.year,
                                                    week=prevdate.isocalendar()[1])
-        nextlink = self.req.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
+        nextlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
                                                    year=nextdate.year,
                                                    week=nextdate.isocalendar()[1])
         return prevlink, nextlink

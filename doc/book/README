@@ -9,6 +9,8 @@ Part
 Chapter
 =======
 
+.. _Level1AnchorForLaterReference:
+
 Level 1 section
 ---------------
 
@@ -24,15 +26,11 @@ Level 3 section
 
 
 inline directives:
-  :file:
-  :envvar:
-  :command:
+  :file:`directory/file`
+  :envvar:`AN_ENV_VARIABLE`
+  :command:`command --option arguments`
 
   :ref:, :mod:
-
-
-XXX
-* lien vers cw.cwconfig.CW_CUBES_PATH par ex.
 
 
 .. sourcecode:: python
@@ -40,4 +38,17 @@ XXX
    class SomePythonCode:
      ...
 
-.. XXX a comment
+.. XXX a comment, wont be rendered
+
+
+a [foot note]_
+
+.. [foot note] the foot note content
+
+
+
+XXX
+* lien vers cw.cwconfig.CW_CUBES_PATH par ex.
+
+
+automodule, autofunction, automethod, autofunction

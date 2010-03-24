@@ -11,28 +11,33 @@ from cubicweb.view import View
 from cubicweb.selectors import match_kwargs
 
 class PyValTableView(View):
-    id = 'pyvaltable'
+    __regid__ = 'pyvaltable'
     __select__ = match_kwargs('pyvalue')
 
     def call(self, pyvalue, headers=None):
         if headers is None:
-            headers = self.req.form.get('headers')
-        self.w(u'<table class="listing">\n')
+            headers = self._cw.form.get('headers')
+        w = self.w
+        w(u'<table class="listing">\n')
         if headers:
-            self.w(u'<tr>')
+            w(u'<thead>')
+            w(u'<tr>')
             for header in headers:
-                self.w(u'<th>%s</th>' % header)
-            self.w(u'</tr>\n')
+                w(u'<th>%s</th>' % header)
+            w(u'</tr>\n')
+            w(u'</thead>')
+        w(u'<tbody>')
         for row in pyvalue:
-            self.w(u'<tr>')
+            w(u'<tr>')
             for cell in row:
-                self.w(u'<td>%s</td>' % cell)
-            self.w(u'</tr>\n')
-        self.w(u'</table>\n')
+                w(u'<td>%s</td>' % cell)
+            w(u'</tr>\n')
+        w(u'</tbody>')
+        w(u'</table>\n')
 
 
 class PyValListView(View):
-    id = 'pyvallist'
+    __regid__ = 'pyvallist'
     __select__ = match_kwargs('pyvalue')
 
     def call(self, pyvalue):

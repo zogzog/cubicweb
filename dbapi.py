@@ -19,21 +19,17 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
-from cubicweb import cwvreg, cwconfig
+from cubicweb import ETYPE_NAME_MAP, ConnectionError, cwvreg, cwconfig
+from cubicweb.req import RequestSessionBase
+
 
 _MARKER = object()
 
 def _fake_property_value(self, name):
     try:
-        return super(dbapi.DBAPIRequest, self).property_value(name)
+        return super(DBAPIRequest, self).property_value(name)
     except KeyError:
         return ''
-
-def _fix_cls_attrs(reg, appobject):
-    appobject.vreg = reg.vreg
-    appobject.schema = reg.schema
-    appobject.config = reg.config
 
 def multiple_connections_fix():
     """some monkey patching necessary when an application has to deal with
@@ -42,21 +38,6 @@ def multiple_connections_fix():
     registries.
     """
     defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
-    orig_select_best = defaultcls.orig_select_best = defaultcls.select_best
-    @monkeypatch(defaultcls)
-    def select_best(self, appobjects, *args, **kwargs):
-        """return an instance of the most specific object according
-        to parameters
-
-        raise NoSelectableObject if no object apply
-        """
-        for appobjectcls in appobjects:
-            _fix_cls_attrs(self, appobjectcls)
-        selected = orig_select_best(self, appobjects, *args, **kwargs)
-        # redo the same thing on the instance so it won't use equivalent class
-        # attributes (which may change)
-        _fix_cls_attrs(self, selected)
-        return selected
 
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     orig_etype_class = etypescls.orig_etype_class = etypescls.etype_class
@@ -73,8 +54,6 @@ def multiple_connections_fix():
         return usercls
 
 def multiple_connections_unfix():
-    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
-    defaultcls.select_best = defaultcls.orig_select_best
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
@@ -110,20 +89,21 @@ def get_repository(method, database=None, config=None, vreg=None):
         except Exception, ex:
             raise ConnectionError(str(ex))
 
-def repo_connect(repo, login, password, cnxprops=None):
+def repo_connect(repo, login, **kwargs):
     """Constructor to create a new connection to the CubicWeb repository.
 
     Returns a Connection instance.
     """
-    cnxprops = cnxprops or ConnectionProperties('inmemory')
-    cnxid = repo.connect(unicode(login), password, cnxprops=cnxprops)
-    cnx = Connection(repo, cnxid, cnxprops)
-    if cnxprops.cnxtype == 'inmemory':
+    if not 'cnxprops' in kwargs:
+        kwargs['cnxprops'] = ConnectionProperties('inmemory')
+    cnxid = repo.connect(unicode(login), **kwargs)
+    cnx = Connection(repo, cnxid, kwargs['cnxprops'])
+    if kwargs['cnxprops'].cnxtype == 'inmemory':
         cnx.vreg = repo.vreg
     return cnx
 
-def connect(database=None, login=None, password=None, host=None, group=None,
-            cnxprops=None, setvreg=True, mulcnx=True, initlog=True):
+def connect(database=None, login=None, host=None, group=None,
+            cnxprops=None, setvreg=True, mulcnx=True, initlog=True, **kwargs):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
@@ -153,11 +133,11 @@ def connect(database=None, login=None, password=None, host=None, group=None,
         vreg.set_schema(schema)
     else:
         vreg = None
-    cnx = repo_connect(repo, login, password, cnxprops)
+    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     cnx.vreg = vreg
     return cnx
 
-def in_memory_cnx(config, login, password):
+def in_memory_cnx(config, login, **kwargs):
     """usefull method for testing and scripting to get a dbapi.Connection
     object connected to an in-memory repository instance
     """
@@ -170,11 +150,11 @@ def in_memory_cnx(config, login, password):
     repo = get_repository('inmemory', config=config, vreg=vreg)
     # connection to the CubicWeb repository
     cnxprops = ConnectionProperties('inmemory')
-    cnx = repo_connect(repo, login, password, cnxprops=cnxprops)
+    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     return repo, cnx
 
 
-class DBAPIRequest(RequestSessionMixIn):
+class DBAPIRequest(RequestSessionBase):
 
     def __init__(self, vreg, cnx=None):
         super(DBAPIRequest, self).__init__(vreg)
@@ -220,7 +200,7 @@ class DBAPIRequest(RequestSessionMixIn):
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
-            self.pgettext = lambda x,y: y
+            self.pgettext = lambda x, y: y
         self.debug('request default language: %s', self.lang)
 
     def decorate_rset(self, rset):
@@ -261,6 +241,8 @@ class DBAPIRequest(RequestSessionMixIn):
 
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
+        if self.cnx is None:
+            return None # before the connection has been established
         return self.cnx.get_session_data(key, default, pop)
 
     def set_session_data(self, key, value):

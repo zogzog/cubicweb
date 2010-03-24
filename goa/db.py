@@ -35,7 +35,8 @@ from copy import deepcopy
 
 from logilab.common.decorators import cached, iclassmethod
 
-from cubicweb import RequestSessionMixIn, Binary, entities
+from cubicweb import Binary, entities
+from cubicweb.req import RequestSessionBase
 from cubicweb.rset import ResultSet
 from cubicweb.entity import metaentity
 from cubicweb.server.utils import crypt_password
@@ -92,7 +93,7 @@ def rset_from_objs(req, objs, attrs=('eid',), rql=None, args=None):
 def needrequest(wrapped):
     def wrapper(cls, *args, **kwargs):
         req = kwargs.pop('req', None)
-        if req is None and args and isinstance(args[0], RequestSessionMixIn):
+        if req is None and args and isinstance(args[0], RequestSessionBase):
             args = list(args)
             req = args.pop(0)
         if req is None:
@@ -155,7 +156,7 @@ class Model(entities.AnyEntity):
         #
         # Entity prototype:
         #   __init__(self, req, rset, row=None, col=0)
-        if args and isinstance(args[0], RequestSessionMixIn) or 'req' in kwargs:
+        if args and isinstance(args[0], RequestSessionBase) or 'req' in kwargs:
             super(Model, self).__init__(*args, **kwargs)
             self._gaeinitargs = None
         else:
@@ -274,7 +275,7 @@ class Model(entities.AnyEntity):
 
     def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
-        return self.vreg[__registry]render(vid, self.req, rset=self.rset,
+        return self.vreg[__registry].render(vid, self.req, rset=self.rset,
                                            row=self.row, col=self.col, **kwargs)
 
     @classmethod

@@ -21,7 +21,7 @@ from yams.reader import PyFileReader
 from cubicweb.schema import (
     CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
     RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
-    ERQLExpression, RRQLExpression,
+    RQLExpression, ERQLExpression, RRQLExpression,
     normalize_expression, order_eschemas, guess_rrqlexpr_mainvars)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 
@@ -46,7 +46,7 @@ CONCERNE_PERMISSIONS = {
 schema = CubicWebSchema('Test Schema')
 enote = schema.add_entity_type(EntityType('Note'))
 eaffaire = schema.add_entity_type(EntityType('Affaire'))
-eperson = schema.add_entity_type(EntityType('Personne', permissions=PERSONNE_PERMISSIONS))
+eperson = schema.add_entity_type(EntityType('Personne', __permissions__=PERSONNE_PERMISSIONS))
 esociete = schema.add_entity_type(EntityType('Societe'))
 
 RELS = (
@@ -75,12 +75,13 @@ done = {}
 for rel in RELS:
     _from, _type, _to = rel.split()
     if not _type.lower() in done:
-        if _type == 'concerne':
-            schema.add_relation_type(RelationType(_type, permissions=CONCERNE_PERMISSIONS))
-        else:
-            schema.add_relation_type(RelationType(_type))
+        schema.add_relation_type(RelationType(_type))
         done[_type.lower()] = True
-    schema.add_relation_def(RelationDefinition(_from, _type, _to))
+    if _type == 'concerne':
+        schema.add_relation_def(RelationDefinition(_from, _type, _to,
+                                                   __permissions__=CONCERNE_PERMISSIONS))
+    else:
+        schema.add_relation_def(RelationDefinition(_from, _type, _to))
 
 class CubicWebSchemaTC(TestCase):
 
@@ -108,23 +109,21 @@ class CubicWebSchemaTC(TestCase):
         self.assertEqual(schema.rschema('concerne').type, 'concerne')
 
     def test_entity_perms(self):
-        eperson.set_default_groups()
         self.assertEqual(eperson.get_groups('read'), set(('managers', 'users', 'guests')))
         self.assertEqual(eperson.get_groups('update'), set(('managers', 'owners',)))
         self.assertEqual(eperson.get_groups('delete'), set(('managers', 'owners')))
         self.assertEqual(eperson.get_groups('add'), set(('managers',)))
         self.assertEqual([str(e) for e in eperson.get_rqlexprs('add')],
                          ['Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s'])
-        eperson.set_groups('read', ('managers',))
+        eperson.set_action_permissions('read', ('managers',))
         self.assertEqual(eperson.get_groups('read'), set(('managers',)))
 
     def test_relation_perms(self):
-        rconcerne = schema.rschema('concerne')
-        rconcerne.set_default_groups()
+        rconcerne = schema.rschema('concerne').rdef('Personne', 'Societe')
         self.assertEqual(rconcerne.get_groups('read'), set(('managers', 'users', 'guests')))
         self.assertEqual(rconcerne.get_groups('delete'), set(('managers',)))
         self.assertEqual(rconcerne.get_groups('add'), set(('managers', )))
-        rconcerne.set_groups('read', ('managers',))
+        rconcerne.set_action_permissions('read', ('managers',))
         self.assertEqual(rconcerne.get_groups('read'), set(('managers',)))
         self.assertEqual([str(e) for e in rconcerne.get_rqlexprs('add')],
                          ['Any S,U WHERE U has_update_permission S, S eid %(s)s, U eid %(u)s'])
@@ -204,7 +203,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'read_permission', 'relation_type', 'require_group',
 
-                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symetric', 'synopsis',
+                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
@@ -229,9 +228,9 @@ class SchemaReaderClassTest(TestCase):
         self.assertListEquals(rels, ['bookmarked_by', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
         rschema = schema.rschema('relation_type')
-        properties = rschema.rproperties('CWAttribute', 'CWRType')
-        self.assertEquals(properties['cardinality'], '1*')
-        constraints = properties['constraints']
+        properties = rschema.rdef('CWAttribute', 'CWRType')
+        self.assertEquals(properties.cardinality, '1*')
+        constraints = properties.constraints
         self.failUnlessEqual(len(constraints), 1, constraints)
         constraint = constraints[0]
         self.failUnless(isinstance(constraint, RQLConstraint))
@@ -248,6 +247,7 @@ class BadSchemaRQLExprTC(TestCase):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
         self.loader.loaded_files = []
+        self.loader.post_build_callbacks = []
         self.loader._pyreader = PyFileReader(self.loader)
 
     def _test(self, schemafile, msg):
@@ -257,16 +257,16 @@ class BadSchemaRQLExprTC(TestCase):
         self.assertEquals(str(ex), msg)
 
     def test_rrqlexpr_on_etype(self):
-        self._test('rrqlexpr_on_eetype.py', "can't use RRQLExpression on an entity type, use an ERQLExpression (ToTo)")
+        self._test('rrqlexpr_on_eetype.py', "can't use RRQLExpression on ToTo, use an ERQLExpression")
 
     def test_erqlexpr_on_rtype(self):
-        self._test('erqlexpr_on_ertype.py', "can't use ERQLExpression on a relation type, use a RRQLExpression (toto)")
+        self._test('erqlexpr_on_ertype.py', "can't use ERQLExpression on relation ToTo toto TuTu, use a RRQLExpression")
 
     def test_rqlexpr_on_rtype_read(self):
-        self._test('rqlexpr_on_ertype_read.py', "can't use rql expression for read permission of a relation type (toto)")
+        self._test('rqlexpr_on_ertype_read.py', "can't use rql expression for read permission of relation ToTo toto TuTu")
 
     def test_rrqlexpr_on_attr(self):
-        self._test('rrqlexpr_on_attr.py', "can't use RRQLExpression on a final relation type (eg attribute relation), use an ERQLExpression (attr)")
+        self._test('rrqlexpr_on_attr.py', "can't use RRQLExpression on attribute ToTo.attr[String], use an ERQLExpression")
 
 
 class NormalizeExpressionTC(TestCase):
@@ -275,10 +275,16 @@ class NormalizeExpressionTC(TestCase):
         self.assertEquals(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
                                                'X bla Y, Y blur Z, Z zigoulou X')
 
+class RQLExpressionTC(TestCase):
+    def test_comparison(self):
+        self.assertEquals(ERQLExpression('X is CWUser', 'X', 0), ERQLExpression('X is CWUser', 'X', 0))
+        self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0), ERQLExpression('X is CWGroup', 'X', 0))
+
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
         mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
         self.assertEquals(mainvars, 'O')
+
 
 if __name__ == '__main__':
     unittest_main()

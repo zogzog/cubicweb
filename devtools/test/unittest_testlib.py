@@ -10,11 +10,11 @@ from cStringIO import StringIO
 from unittest import TestSuite
 
 
-from logilab.common.testlib import (TestCase, unittest_main, mock_object,
+from logilab.common.testlib import (TestCase, unittest_main, 
                                     SkipAwareTextTestRunner)
-from cubicweb.devtools import htmlparser
 
-from cubicweb.devtools.testlib import WebTest, EnvBasedTC
+from cubicweb.devtools import htmlparser
+from cubicweb.devtools.testlib import CubicWebTC
 
 class WebTestTC(TestCase):
 
@@ -23,10 +23,10 @@ class WebTestTC(TestCase):
         self.runner = SkipAwareTextTestRunner(stream=output)
 
     def test_error_raised(self):
-        class MyWebTest(WebTest):
+        class MyWebTest(CubicWebTC):
 
             def test_error_view(self):
-                self.add_entity('Bug', title=u"bt")
+                self.request().create_entity('Bug', title=u"bt")
                 self.view('raising', self.execute('Bug B'), template=None)
 
             def test_correct_view(self):
@@ -37,17 +37,6 @@ class WebTestTC(TestCase):
         self.assertEquals(result.testsRun, 2)
         self.assertEquals(len(result.errors), 0)
         self.assertEquals(len(result.failures), 1)
-
-
-class TestLibTC(EnvBasedTC):
-    def test_add_entity_with_relation(self):
-        bug = self.add_entity(u'Bug', title=u"toto")
-        self.add_entity(u'Bug', title=u"tata", identical_to=bug)
-
-        rset = self.execute('Any BA WHERE BA is Bug, BA title "toto"')
-        self.assertEquals(len(rset), 1)
-        bug = tuple(rset.entities())[0]
-        self.assertEquals(bug.identical_to[0].title, "tata")
 
 
 

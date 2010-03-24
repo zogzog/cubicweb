@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from os import listdir, stat
-from os.path import dirname, join, realpath, split, isdir, exists
+from os.path import dirname, join, realpath, isdir, exists
 from logging import getLogger
 from warnings import warn
 
@@ -54,6 +54,21 @@ def _toload_info(path, extrapath, _toload=None):
     return _toload
 
 
+def classid(cls):
+    """returns a unique identifier for an appobject class"""
+    return '%s.%s' % (cls.__module__, cls.__name__)
+
+def class_regid(cls):
+    """returns a unique identifier for an appobject class"""
+    if 'id' in cls.__dict__:
+        warn('[3.6] %s.%s: id is deprecated, use __regid__'
+             % (cls.__module__, cls.__name__), DeprecationWarning)
+        cls.__regid__ = cls.id
+    if hasattr(cls, 'id') and not isinstance(cls.id, property):
+        return cls.id
+    return cls.__regid__
+
+
 class Registry(dict):
 
     def __init__(self, config):
@@ -69,32 +84,33 @@ class Registry(dict):
         except KeyError:
             raise ObjectNotFound(name), None, sys.exc_info()[-1]
 
+    def initialization_completed(self):
+        for appobjects in self.itervalues():
+            for appobjectcls in appobjects:
+                appobjectcls.__registered__(self)
+
     def register(self, obj, oid=None, clear=False):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
-        oid = oid or obj.id
+        oid = oid or class_regid(obj)
         assert oid
         if clear:
             appobjects = self[oid] =  []
         else:
             appobjects = self.setdefault(oid, [])
-        # registered() is technically a classmethod but is not declared
-        # as such because we need to compose registered in some cases
-        appobject = obj.registered.im_func(obj, self)
-        assert not appobject in appobjects, \
-               'object %s is already registered' % appobject
-        assert callable(appobject.__select__), appobject
-        appobjects.append(appobject)
+        assert not obj in appobjects, \
+               'object %s is already registered' % obj
+        appobjects.append(obj)
 
     def register_and_replace(self, obj, replaced):
         # XXXFIXME this is a duplication of unregister()
         # remove register_and_replace in favor of unregister + register
         # or simplify by calling unregister then register here
-        if hasattr(replaced, 'classid'):
-            replaced = replaced.classid()
-        registered_objs = self.get(obj.id, ())
+        if not isinstance(replaced, basestring):
+            replaced = classid(replaced)
+        registered_objs = self.get(class_regid(obj), ())
         for index, registered in enumerate(registered_objs):
-            if registered.classid() == replaced:
+            if classid(registered) == replaced:
                 del registered_objs[index]
                 break
         else:
@@ -103,16 +119,17 @@ class Registry(dict):
         self.register(obj)
 
     def unregister(self, obj):
-        oid = obj.classid()
-        for registered in self.get(obj.id, ()):
+        clsid = classid(obj)
+        oid = class_regid(obj)
+        for registered in self.get(oid, ()):
             # use classid() to compare classes because vreg will probably
             # have its own version of the class, loaded through execfile
-            if registered.classid() == oid:
-                self[obj.id].remove(registered)
+            if classid(registered) == clsid:
+                self[oid].remove(registered)
                 break
         else:
             self.warning('can\'t remove %s, no id %s in the registry',
-                         oid, obj.id)
+                         clsid, oid)
 
     def all_objects(self):
         """return a list containing all objects in this registry.
@@ -142,9 +159,9 @@ class Registry(dict):
         raise `ObjectNotFound` if not object with id <oid> in <registry>
         raise `NoSelectableObject` if not object apply
         """
-        return self.select_best(self[oid], *args, **kwargs)
+        return self._select_best(self[oid], *args, **kwargs)
 
-    def select_object(self, oid, *args, **kwargs):
+    def select_or_none(self, oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context, or None if no object applies.
         """
@@ -152,6 +169,8 @@ class Registry(dict):
             return self.select(oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
+    select_object = deprecated('[3.6] use select_or_none instead of select_object'
+                               )(select_or_none)
 
     def possible_objects(self, *args, **kwargs):
         """return an iterator on possible objects in this registry for the given
@@ -159,11 +178,11 @@ class Registry(dict):
         """
         for appobjects in self.itervalues():
             try:
-                yield self.select_best(appobjects, *args, **kwargs)
+                yield self._select_best(appobjects, *args, **kwargs)
             except NoSelectableObject:
                 continue
 
-    def select_best(self, appobjects, *args, **kwargs):
+    def _select_best(self, appobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
 
@@ -194,6 +213,8 @@ class Registry(dict):
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
 
+    select_best = deprecated('[3.6] select_best is now private')(_select_best)
+
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -222,7 +243,7 @@ class VRegistry(dict):
 
     # dynamic selection methods ################################################
 
-    @deprecated('use vreg[registry].object_by_id(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].object_by_id(oid, *args, **kwargs)')
     def object_by_id(self, registry, oid, *args, **kwargs):
         """return object in <registry>.<oid>
 
@@ -231,7 +252,7 @@ class VRegistry(dict):
         """
         return self[registry].object_by_id(oid)
 
-    @deprecated('use vreg[registry].select(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].select(oid, *args, **kwargs)')
     def select(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context
@@ -241,14 +262,14 @@ class VRegistry(dict):
         """
         return self[registry].select(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].select_object(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].select_or_none(oid, *args, **kwargs)')
     def select_object(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context, or None if no object apply
         """
-        return self[registry].select_object(oid, *args, **kwargs)
+        return self[registry].select_or_none(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].possible_objects(*args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].possible_objects(*args, **kwargs)')
     def possible_objects(self, registry, *args, **kwargs):
         """return an iterator on possible objects in <registry> for the given
         context
@@ -282,7 +303,7 @@ class VRegistry(dict):
             try:
                 if obj.__module__ != modname or obj in butclasses:
                     continue
-                oid = obj.id
+                oid = class_regid(obj)
                 registryname = obj.__registry__
             except AttributeError:
                 continue
@@ -300,8 +321,8 @@ class VRegistry(dict):
         except AttributeError:
             vname = obj.__class__.__name__
         self.debug('registered appobject %s in registry %s with id %s',
-                   vname, registryname, oid or obj.id)
-        self._loadedmods[obj.__module__]['%s.%s' % (obj.__module__, oid)] = obj
+                   vname, registryname, oid or class_regid(obj))
+        self._loadedmods[obj.__module__][classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
         self[registryname or obj.__registry__].unregister(obj)
@@ -338,7 +359,13 @@ class VRegistry(dict):
         for filepath, modname in filemods:
             if self.load_file(filepath, modname, force_reload):
                 change = True
+        if change:
+            self.initialization_completed()
         return change
+
+    def initialization_completed(self):
+        for regname, reg in self.iteritems():
+            reg.initialization_completed()
 
     def load_file(self, filepath, modname, force_reload=False):
         """load app objects from a python file"""
@@ -378,54 +405,49 @@ class VRegistry(dict):
                 if objname.startswith('_'):
                     continue
                 self._load_ancestors_then_object(module.__name__, obj)
-        self.debug('loaded %s', module)
 
-    def _load_ancestors_then_object(self, modname, obj):
+    def _load_ancestors_then_object(self, modname, appobjectcls):
+        """handle automatic appobject class registration:
+
+        - first ensure parent classes are already registered
+
+        - class with __abstract__ == True in their local dictionnary or
+          with a name starting starting by an underscore are not registered
+
+        - appobject class needs to have __registry__ and __regid__ attributes
+          set to a non empty string to be registered.
+        """
         # imported classes
-        objmodname = getattr(obj, '__module__', None)
+        objmodname = getattr(appobjectcls, '__module__', None)
         if objmodname != modname:
             if objmodname in self._toloadmods:
                 self.load_file(self._toloadmods[objmodname], objmodname)
             return
         # skip non registerable object
         try:
-            if not issubclass(obj, AppObject):
+            if not issubclass(appobjectcls, AppObject):
                 return
         except TypeError:
             return
-        objname = '%s.%s' % (modname, obj.__name__)
-        if objname in self._loadedmods[modname]:
+        clsid = classid(appobjectcls)
+        if clsid in self._loadedmods[modname]:
             return
-        self._loadedmods[modname][objname] = obj
-        for parent in obj.__bases__:
+        self._loadedmods[modname][clsid] = appobjectcls
+        for parent in appobjectcls.__bases__:
             self._load_ancestors_then_object(modname, parent)
-        self.load_object(obj)
-
-    def load_object(self, obj):
+        if (appobjectcls.__dict__.get('__abstract__')
+            or appobjectcls.__name__[0] == '_'
+            or not appobjectcls.__registry__
+            or not class_regid(appobjectcls)):
+            return
         try:
-            self.register_appobject_class(obj)
+            self.register(appobjectcls)
         except Exception, ex:
             if self.config.mode in ('test', 'dev'):
                 raise
-            self.exception('appobject %s registration failed: %s', obj, ex)
+            self.exception('appobject %s registration failed: %s',
+                           appobjectcls, ex)
 
-    # old automatic registration XXX deprecated ###############################
-
-    def register_appobject_class(self, cls):
-        """handle appobject class registration
-
-        appobject class with __abstract__ == True in their local dictionnary or
-        with a name starting starting by an underscore are not registered.
-        Also a appobject class needs to have __registry__ and id attributes set
-        to a non empty string to be registered.
-        """
-        if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
-            or not cls.__registry__ or not cls.id):
-            return
-        regname = cls.__registry__
-        if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
-            return
-        self.register(cls)
 
 # init logging
 set_log_methods(VRegistry, getLogger('cubicweb.vreg'))
@@ -436,11 +458,11 @@ set_log_methods(Registry, getLogger('cubicweb.registry'))
 
 from cubicweb.appobject import objectify_selector, AndSelector, OrSelector, Selector
 
-objectify_selector = deprecated('objectify_selector has been moved to appobject module')(objectify_selector)
+objectify_selector = deprecated('[3.4] objectify_selector has been moved to appobject module')(objectify_selector)
 
 Selector = class_moved(Selector)
 
-@deprecated('use & operator (binary and)')
+@deprecated('[3.4] use & operator (binary and)')
 def chainall(*selectors, **kwargs):
     """return a selector chaining given selectors. If one of
     the selectors fail, selection will fail, else the returned score
@@ -453,7 +475,7 @@ def chainall(*selectors, **kwargs):
         selector.__name__ = kwargs['name']
     return selector
 
-@deprecated('use | operator (binary or)')
+@deprecated('[3.4] use | operator (binary or)')
 def chainfirst(*selectors, **kwargs):
     """return a selector chaining given selectors. If all
     the selectors fail, selection will fail, else the returned score

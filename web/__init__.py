@@ -11,10 +11,10 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from simplejson import dumps
+from urllib import quote as urlquote
 
 from logilab.common.deprecation import deprecated
 
-from urllib import quote as urlquote
 from cubicweb.web._exceptions import *
 from cubicweb.utils import CubicWebJsonEncoder
 
@@ -57,7 +57,7 @@ def jsonize(function):
             return json_dumps(repr(value))
     return newfunc
 
-@deprecated('use req.build_ajax_replace_url() instead')
+@deprecated('[3.4] use req.build_ajax_replace_url() instead')
 def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
     """builds a replacePageChunk-like url
     >>> ajax_replace_url('foo', 'Person P')

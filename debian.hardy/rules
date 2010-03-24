@@ -33,7 +33,6 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_clean
 	dh_installdirs
 
-	#python setup.py install_lib --no-compile --install-dir=debian/cubicweb-common/usr/lib/python2.4/site-packages/
 	python setup.py -q install --no-compile --prefix=debian/tmp/usr
 
 	# Put all the python library and data in cubicweb-common
@@ -41,17 +40,15 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_install -vi
 	# cwctl in the cubicweb-ctl package
 	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/cwctl.py
-	# hercule in the cubicweb-client package
-	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/hercule.py
 
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/server/test
+	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/hooks/test
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/sobjects/test
 	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/site-packages/cubicweb/web/test
 	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/site-packages/cubicweb/etwist/test
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/ext/test
-	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/common/test
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/entities/test
 
 	# cubes directory must be managed as a valid python module

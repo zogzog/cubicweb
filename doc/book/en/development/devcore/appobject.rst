@@ -25,7 +25,7 @@ the *subclasses*:
 
 We also find on instances, the following attributes:
 
-* `req`, `Request` instance
+* ._cw`, `Request` instance
 * `rset`, the *result set* associated to the object if necessary
 
 :URL handling:

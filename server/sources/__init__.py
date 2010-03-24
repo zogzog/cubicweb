@@ -291,7 +291,7 @@ class AbstractSource(object):
         """
         pass
 
-    def authenticate(self, session, login, password):
+    def authenticate(self, session, login, **kwargs):
         """if the source support CWUser entity type, it should implements
         this method which should return CWUser eid for the given login/password
         if this account is defined in this source and valid login / password is
@@ -382,6 +382,22 @@ class AbstractSource(object):
         """
         raise NotImplementedError()
 
+    def modified_entities(self, session, etypes, mtime):
+        """return a 2-uple:
+        * list of (etype, eid) of entities of the given types which have been
+          modified since the given timestamp (actually entities whose full text
+          index content has changed)
+        * list of (etype, eid) of entities of the given types which have been
+          deleted since the given timestamp
+        """
+        raise NotImplementedError()
+
+    def index_entity(self, session, entity):
+        """create an operation to [re]index textual content of the given entity
+        on commit
+        """
+        raise NotImplementedError()
+
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
         index
@@ -390,16 +406,6 @@ class AbstractSource(object):
 
     def fti_index_entity(self, session, entity):
         """add text content of a created/modified entity to the full text index
-        """
-        raise NotImplementedError()
-
-    def modified_entities(self, session, etypes, mtime):
-        """return a 2-uple:
-        * list of (etype, eid) of entities of the given types which have been
-          modified since the given timestamp (actually entities whose full text
-          index content has changed)
-        * list of (etype, eid) of entities of the given types which have been
-          deleted since the given timestamp
         """
         raise NotImplementedError()
 

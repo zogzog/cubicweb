@@ -23,14 +23,14 @@ def _annotate_select(annotator, rqlst):
     has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
-        if getrschema(rel.r_type).symetric and not rel.neged(strict=True):
+        if getrschema(rel.r_type).symmetric and not rel.neged(strict=True):
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
                 if not stinfo['constnode'] and stinfo['selected']:
                     need_distinct = True
                     # XXX could mark as not invariant
                     break
-    for name, var in rqlst.defined_vars.items():
+    for var in rqlst.defined_vars.itervalues():
         stinfo = var.stinfo
         if stinfo.get('ftirels'):
             has_text_query = True
@@ -105,7 +105,7 @@ def _annotate_select(annotator, rqlst):
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
                         break
-                elif rschema.symetric and stinfo['selected']:
+                elif rschema.symmetric and stinfo['selected']:
                     break
             joins.add(rel)
         else:
@@ -130,7 +130,8 @@ def _annotate_select(annotator, rqlst):
 
 
 
-class CantSelectPrincipal(Exception): pass
+class CantSelectPrincipal(Exception):
+    """raised when no 'principal' variable can be found"""
 
 def _select_principal(sqlscope, relations, _sort=lambda x:x):
     """given a list of rqlst relations, select one which will be used to
@@ -139,13 +140,11 @@ def _select_principal(sqlscope, relations, _sort=lambda x:x):
     """
     # _sort argument is there for test
     diffscope_rels = {}
-    has_same_scope_rel = False
     ored_rels = set()
     diffscope_rels = set()
     for rel in _sort(relations):
         # note: only eid and has_text among all final relations may be there
         if rel.r_type in ('eid', 'identity'):
-            has_same_scope_rel = rel.sqlscope is sqlscope
             continue
         if rel.ored(traverse_scope=True):
             ored_rels.add(rel)

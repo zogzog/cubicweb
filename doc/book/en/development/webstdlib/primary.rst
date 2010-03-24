@@ -1,3 +1,5 @@
+.. _primary:
+
 The default 'primary' view (:mod:`cubicweb.web.views.primary`)
 ---------------------------------------------------------------
 
@@ -5,6 +7,13 @@ The primary view of an entity is the view called by default when a single
 entity is in the result set and needs to be displayed.
 
 This view is supposed to render a maximum of informations about the entity.
+
+Beware when overriding this top level `cell_call` in a primary because
+you will loose a bunch of functionnality that automatically comes with
+it : `in-context` boxes, related boxes, some navigation, some
+displaying of the metadata, etc. It might be interresting to
+understand the implementation fo the `cell_call` to override specifics
+bits of it.
 
 Rendering methods and attributes for ``PrimaryView``
 ----------------------------------------------------
@@ -20,7 +29,7 @@ its rendering method
 
     class PrimaryView(EntityView):
         """the full view of an non final entity"""
-        id = 'primary'
+        __regid__ = 'primary'
         title = _('primary')
         show_attr_label = True
         show_rel_label = True
@@ -33,7 +42,7 @@ its rendering method
 
     def cell_call(self, row, col):
         self.row = row
-        self.maxrelated = self.req.property_value('navigation.related-limit')
+        self.maxrelated = self._cw.property_value('navigation.related-limit')
         entity = self.complete_entity(row, col)
         self.render_entity(entity)
 

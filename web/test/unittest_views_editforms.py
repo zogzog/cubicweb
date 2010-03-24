@@ -7,42 +7,49 @@
 """
 from logilab.common.testlib import unittest_main, mock_object
 from logilab.common.compat import any
-from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb.devtools.testlib import WebTest
-from cubicweb.web.views.autoform import AutomaticEntityForm as AEF
-from cubicweb.web.formwidgets import AutoCompletionWidget
-def rbc(entity, category):
-    return [(rschema.type, x) for rschema, tschemas, x in AEF.erelations_by_category(entity, category)]
 
-class AutomaticEntityFormTC(EnvBasedTC):
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.web import uicfg
+from cubicweb.web.formwidgets import AutoCompletionWidget
+
+AFFK = uicfg.autoform_field_kwargs
+AFS = uicfg.autoform_section
+
+def rbc(entity, formtype, section):
+    if section in ('attributes', 'metadata', 'hidden'):
+        permission = 'update'
+    else:
+        permission = 'add'
+    return [(rschema.type, x) for rschema, tschemas, x in AFS.relations_by_section(entity, formtype, section, permission)]
+
+class AutomaticEntityFormTC(CubicWebTC):
 
     def test_custom_widget(self):
-        AEF.rfields_kwargs.tag_subject_of(('CWUser', 'login', '*'),
-                                          {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
+        AFFK.tag_subject_of(('CWUser', 'login', '*'),
+                            {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
         form = self.vreg['forms'].select('edition', self.request(),
                                          entity=self.user())
-        field = form.field_by_name('login')
+        field = form.field_by_name('login', 'subject')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AEF.rfields_kwargs.del_rtag('CWUser', 'login', '*', 'subject')
+        AFFK.del_rtag('CWUser', 'login', '*', 'subject')
 
 
     def test_cwuser_relations_by_category(self):
-        #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():
-        #    if rtype == 'tags':
-        #        print rtype, role, stype, otype, ':', tag
-        e = self.etype_instance('CWUser')
+        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         # see custom configuration in views.cwuser
-        self.assertEquals(rbc(e, 'primary'),
+        self.assertEquals(rbc(e, 'main', 'attributes'),
                           [('login', 'subject'),
                            ('upassword', 'subject'),
+                           ('firstname', 'subject'),
+                           ('surname', 'subject'),
                            ('in_group', 'subject'),
-                           ('eid', 'subject'),
                            ])
-        self.assertListEquals(rbc(e, 'secondary'),
-                              [('firstname', 'subject'),
-                               ('surname', 'subject')
+        self.assertListEquals(rbc(e, 'muledit', 'attributes'),
+                              [('login', 'subject'),
+                               ('upassword', 'subject'),
+                               ('in_group', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'metadata'),
+        self.assertListEquals(rbc(e, 'main', 'metadata'),
                               [('last_login_time', 'subject'),
                                ('modification_date', 'subject'),
                                ('created_by', 'subject'),
@@ -51,40 +58,38 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('owned_by', 'subject'),
                                ('bookmarked_by', 'object'),
                                ])
-        self.assertListEquals(rbc(e, 'generic'),
+        # XXX skip 'tags' relation here and in the hidden category because
+        # of some test interdependancy when pytest is launched on whole cw
+        # (appears here while expected in hidden
+        self.assertListEquals([x for x in rbc(e, 'main', 'relations')
+                               if x != ('tags', 'object')],
                               [('primary_email', 'subject'),
                                ('custom_workflow', 'subject'),
                                ('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])
-        # owned_by is defined both as subject and object relations on CWUser
-        self.assertListEquals(rbc(e, 'generated'),
+        self.assertListEquals(rbc(e, 'main', 'inlined'),
                               [('use_email', 'subject'),
-                               ('in_state', 'subject'),
-                               ('is', 'subject'),
-                               ('is_instance_of', 'subject'),
-                               ('has_text', 'subject'),
-                               ('identity', 'subject'),
-                               ('tags', 'object'),
-                               ('for_user', 'object'),
-                               ('created_by', 'object'),
-                               ('wf_info_for', 'object'),
-                               ('owned_by', 'object'),
-                               ('identity', 'object'),
                                ])
+        # owned_by is defined both as subject and object relations on CWUser
+        self.assertListEquals(sorted(x for x in rbc(e, 'main', 'hidden')
+                                     if x != ('tags', 'object')),
+                              sorted([('for_user', 'object'),
+                                      ('created_by', 'object'),
+                                      ('wf_info_for', 'object'),
+                                      ('owned_by', 'object'),
+                                      ]))
 
     def test_inlined_view(self):
-        self.failUnless(AEF.rinlined.etype_get('CWUser', 'use_email', 'subject'))
-        self.failIf(AEF.rinlined.etype_get('CWUser', 'primary_email', 'subject'))
+        self.failUnless('main_inlined' in AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
+        self.failIf('main_inlined' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
+        self.failUnless('main_relations' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
 
     def test_personne_relations_by_category(self):
-        e = self.etype_instance('Personne')
-        self.assertListEquals(rbc(e, 'primary'),
+        e = self.vreg['etypes'].etype_class('Personne')(self.request())
+        self.assertListEquals(rbc(e, 'main', 'attributes'),
                               [('nom', 'subject'),
-                               ('eid', 'subject')
-                               ])
-        self.assertListEquals(rbc(e, 'secondary'),
-                              [('prenom', 'subject'),
+                               ('prenom', 'subject'),
                                ('sexe', 'subject'),
                                ('promo', 'subject'),
                                ('titre', 'subject'),
@@ -95,26 +100,24 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('datenaiss', 'subject'),
                                ('test', 'subject'),
                                ('description', 'subject'),
-                               ('salary', 'subject')
+                               ('salary', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'metadata'),
+        self.assertListEquals(rbc(e, 'muledit', 'attributes'),
+                              [('nom', 'subject'),
+                               ])
+        self.assertListEquals(rbc(e, 'main', 'metadata'),
                               [('creation_date', 'subject'),
                                ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
                                ('created_by', 'subject'),
                                ('owned_by', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'generic'),
+        self.assertListEquals(rbc(e, 'main', 'relations'),
                               [('travaille', 'subject'),
                                ('connait', 'object')
                                ])
-        self.assertListEquals(rbc(e, 'generated'),
-                              [('is', 'subject'),
-                               ('has_text', 'subject'),
-                               ('identity', 'subject'),
-                               ('is_instance_of', 'subject'),
-                               ('identity', 'object'),
-                               ])
+        self.assertListEquals(rbc(e, 'main', 'hidden'),
+                              [])
 
     def test_edition_form(self):
         rset = self.execute('CWUser X LIMIT 1')
@@ -126,7 +129,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
         self.failIf(any(f for f in form.fields if f is None))
 
 
-class FormViewsTC(WebTest):
+class FormViewsTC(CubicWebTC):
     def test_delete_conf_formview(self):
         rset = self.execute('CWGroup X')
         self.view('deleteconf', rset, template=None).source
@@ -154,14 +157,14 @@ class FormViewsTC(WebTest):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         rset = self.execute('CWUser X LIMIT 1')
         self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
-                  peid=geid, role='object', template=None, i18nctx='',
-                  pform=MOCKPFORM).source
+                  peid=geid, role='object', i18nctx='', pform=MOCKPFORM,
+                  template=None).source
 
     def test_automatic_inline_creation_formview(self):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         self.view('inline-creation', None, etype='CWUser', rtype='in_group',
-                  peid=geid, template=None, i18nctx='', role='object',
-                  pform=MOCKPFORM).source
+                  peid=geid, petype='CWGroup', i18nctx='', role='object', pform=MOCKPFORM,
+                  template=None)
 
 MOCKPFORM = mock_object(form_previous_values={}, form_valerror=None)
 

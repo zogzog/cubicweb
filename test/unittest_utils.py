@@ -1,4 +1,4 @@
-"""unit tests for module cubicweb.common.utils
+"""unit tests for module cubicweb.utils
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -6,14 +6,18 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from logilab.common.testlib import TestCase, unittest_main
-
-import simplejson
+import re
 import decimal
 import datetime
 
-from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, CubicWebJsonEncoder
+from logilab.common.testlib import TestCase, unittest_main
+from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList
 
+try:
+    import simplejson
+    from cubicweb.utils import CubicWebJsonEncoder
+except ImportError:
+    simplejson = None
 
 class MakeUidTC(TestCase):
     def test_1(self):
@@ -26,6 +30,9 @@ class MakeUidTC(TestCase):
             uid = make_uid('xyz')
             if uid in d:
                 self.fail(len(d))
+            if re.match('\d', uid):
+                self.fail('make_uid must not return something begining with '
+                          'some numeric character, got %s' % uid)
             d.add(uid)
 
 
@@ -52,7 +59,10 @@ class SizeConstrainedListTC(TestCase):
             l.extend(extension)
             yield self.assertEquals, l, expected
 
-class JSONEncoerTests(TestCase):
+class JSONEncoderTC(TestCase):
+    def setUp(self):
+        if simplejson is None:
+            self.skip('simplejson not available')
 
     def encode(self, value):
         return simplejson.dumps(value, cls=CubicWebJsonEncoder)
@@ -70,6 +80,7 @@ class JSONEncoerTests(TestCase):
 
     def test_encoding_unknown_stuff(self):
         self.assertEquals(self.encode(TestCase), 'null')
+
 
 if __name__ == '__main__':
     unittest_main()

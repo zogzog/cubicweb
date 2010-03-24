@@ -15,7 +15,7 @@ selection principle which makes *CubicWeb* web interface very flexible.
 A `View` is an object applied to another object such as an entity.
 
 Basic class for views
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Class `View` (`cubicweb.view`)
 `````````````````````````````````````
@@ -34,11 +34,11 @@ subclasses may be parametrized using the following class attributes:
     * the `category` attribute may be used in the interface to regroup related
       objects together
 
-At instantiation time, the standard `req` and `rset` attributes are
+At instantiation time, the standard `_cw` and `cw_rset` attributes are
 added and the `w` attribute will be set at rendering time.
 
 A view writes to its output stream thanks to its attribute `w` (an
-`UStreamIO`).
+`UStreamIO`, except for binary views).
 
 The basic interface for views is as follows (remember that the result set has a
 tabular structure with rows and columns, hence cells):
@@ -88,7 +88,7 @@ Examples of views class
 .. sourcecode:: python
 
     class RSSView(XMLView):
-        id = 'rss'
+        __regid__ = 'rss'
         title = _('rss')
         templatable = False
         content_type = 'text/xml'
@@ -104,13 +104,13 @@ Examples of views class
         """view called by the edition view when the user asks
         to search for something to link to the edited eid
         """
-        id = 'search-associate'
+        __regid__ = 'search-associate'
         title = _('search for association')
         __select__ = one_line_rset() & match_search_state('linksearch') & implements('Any')
 
 
 Example of view customization and creation
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
@@ -152,21 +152,21 @@ Let us now improve the primary view of a blog
  from cubicweb.web.views.primary import Primaryview
 
  class BlogPrimaryView(PrimaryView):
-     id = 'primary'
+     __regid__ = 'primary'
      __select__ = PrimaryView.__select__ & implements('Blog')
      rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
 
      def render_entity_relations(self, entity):
-         rset = self.req.execute(self.rql, {'b' : entity.eid})
+         rset = self._cw.execute(self.rql, {'b' : entity.eid})
          for entry in rset.entities():
              self.w(u'<p>%s</p>' % entry.view('inblogcontext'))
 
  class BlogEntryInBlogView(EntityView):
-     'inblogcontext'
+     __regid__ = 'inblogcontext'
      __select__ = implements('BlogEntry')
 
      def cell_call(self, row, col):
-         entity = self.rset.get_entity(row, col)
+         entity = self.cw_rset.get_entity(row, col)
          self.w(u'<a href="%s" title="%s">%s</a>' %
                 entity.absolute_url(),
                 xml_escape(entity.content[:50]),
@@ -211,10 +211,10 @@ to safely fill (X)HTML elements from Python unicode strings.
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view called 'a_view' to all the entities
 of a result set only requires to have for each entity of this result set,
-an available view called 'a_view' which accepts the entity.
+an available view called 'a_view' which accepts the entity.**
 
-Instead of merely using type based dispatch, we do predicate dispatch
-which quite more powerful**
+**Instead of merely using type based dispatch, we do predicate dispatch
+which is quite more powerful.**
 
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.
@@ -252,8 +252,8 @@ and show that ajax comes for free.
 [FILLME]
 
 
-XML views, binaries...
-----------------------
+XML views, binaries views...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For views generating other formats than HTML (an image generated dynamically
 for example), and which can not simply be included in the HTML page generated

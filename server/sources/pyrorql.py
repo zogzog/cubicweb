@@ -182,6 +182,7 @@ repository (default to 5 minutes).',
         self._query_cache.clear()
         repo = self.repo
         session = repo.internal_session()
+        source = repo.system_source
         try:
             for etype, extid in modified:
                 try:
@@ -191,7 +192,7 @@ repository (default to 5 minutes).',
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)
                         entity.complete(entity.e_schema.indexable_attributes())
-                        repo.index_entity(session, entity)
+                        source.index_entity(session, entity)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)

@@ -7,121 +7,36 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import xml_escape
-
-import locale
+import os
 import sys
 import decimal
-import datetime as pydatetime
-from md5 import md5
-from datetime import datetime, timedelta, date
-from time import time
-from random import randint, seed
-from calendar import monthrange, timegm
+import datetime
+import random
+
+from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import deprecated
 
 # initialize random seed from current time
-seed()
-try:
-    strptime = datetime.strptime
-except AttributeError: # py < 2.5
-    from time import strptime as time_strptime
-    def strptime(value, format):
-        return datetime(*time_strptime(value, format)[:6])
-
-def todate(somedate):
-    """return a date from a date (leaving unchanged) or a datetime"""
-    if isinstance(somedate, datetime):
-        return date(somedate.year, somedate.month, somedate.day)
-    assert isinstance(somedate, date), repr(somedate)
-    return somedate
-
-def todatetime(somedate):
-    """return a date from a date (leaving unchanged) or a datetime"""
-    # take care, datetime is a subclass of date
-    if isinstance(somedate, datetime):
-        return somedate
-    assert isinstance(somedate, date), repr(somedate)
-    return datetime(somedate.year, somedate.month, somedate.day)
-
-def datetime2ticks(date):
-    return timegm(date.timetuple()) * 1000
-
-ONEDAY = timedelta(days=1)
-ONEWEEK = timedelta(days=7)
-
-def days_in_month(date_):
-    return monthrange(date_.year, date_.month)[1]
-
-def days_in_year(date_):
-    feb = pydatetime.date(date_.year, 2, 1)
-    if days_in_month(feb) == 29:
-        return 366
-    else:
-        return 365
-
-def previous_month(date_, nbmonth=1):
-    while nbmonth:
-        date_ = first_day(date_) - ONEDAY
-        nbmonth -= 1
-    return date_
-
-def next_month(date_, nbmonth=1):
-    while nbmonth:
-        date_ = last_day(date_) + ONEDAY
-        nbmonth -= 1
-    return date_
-
-def first_day(date_):
-    return date(date_.year, date_.month, 1)
-
-def last_day(date_):
-    return date(date_.year, date_.month, days_in_month(date_))
-
-def date_range(begin, end, incday=None, incmonth=None):
-    """yields each date between begin and end
-    :param begin: the start date
-    :param end: the end date
-    :param incr: the step to use to iterate over dates. Default is
-                 one day.
-    :param include: None (means no exclusion) or a function taking a
-                    date as parameter, and returning True if the date
-                    should be included.
-    """
-    assert not (incday and incmonth)
-    begin = todate(begin)
-    end = todate(end)
-    if incmonth:
-        while begin < end:
-            begin = next_month(begin, incmonth)
-            yield begin
-    else:
-        if not incday:
-            incr = ONEDAY
-        else:
-            incr = timedelta(incday)
-        while begin <= end:
-           yield begin
-           begin += incr
-
-def ustrftime(date, fmt='%Y-%m-%d'):
-    """like strftime, but returns a unicode string instead of an encoded
-    string which' may be problematic with localized date.
-
-    encoding is guessed by locale.getpreferredencoding()
-    """
-    # date format may depend on the locale
-    encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
-    return unicode(date.strftime(str(fmt)), encoding)
-
+random.seed()
 
 if sys.version_info[:2] < (2, 5):
+
+    from time import time
+    from md5 import md5
+    from random import randint
+
     def make_uid(key):
         """forge a unique identifier
-        not that unique on win32"""
-        msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
-        return md5(msg).hexdigest()
+        XXX not that unique on win32
+        """
+        key = str(key)
+        msg = key + "%.10f" % time() + str(randint(0, 1000000))
+        return key + md5(msg).hexdigest()
+
 else:
+
     from uuid import uuid4
+
     def make_uid(key):
         # remove dash, generated uid are used as identifier sometimes (sql table
         # names at least)
@@ -254,7 +169,7 @@ class HTMLHead(UStringIO):
 
     def add_onload(self, jscode, jsoncall=False):
         if jsoncall:
-            self.add_post_inline_script(u"""jQuery(CubicWeb).bind('ajax-loaded', function(event) {
+            self.add_post_inline_script(u"""jQuery(CubicWeb).one('ajax-loaded', function(event) {
 %s
 });""" % jscode)
         else:
@@ -281,10 +196,10 @@ class HTMLHead(UStringIO):
         if (cssfile, media) not in self.cssfiles:
             self.cssfiles.append( (cssfile, media) )
 
-    def add_ie_css(self, cssfile, media='all'):
+    def add_ie_css(self, cssfile, media='all', iespec=u'[if lt IE 8]'):
         """registers some IE specific CSS"""
-        if (cssfile, media) not in self.ie_cssfiles:
-            self.ie_cssfiles.append( (cssfile, media) )
+        if (cssfile, media, iespec) not in self.ie_cssfiles:
+            self.ie_cssfiles.append( (cssfile, media, iespec) )
 
     def add_unload_pagedata(self):
         """registers onunload callback to clean page data on server"""
@@ -314,8 +229,8 @@ class HTMLHead(UStringIO):
               (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
         if self.ie_cssfiles:
-            w(u'<!--[if lt IE 8]>\n')
-            for cssfile, media in self.ie_cssfiles:
+            for cssfile, media, iespec in self.ie_cssfiles:
+                w(u'<!--%s>\n' % iespec)
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
                   (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
@@ -371,30 +286,34 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
-def can_do_pdf_conversion(__answer=[None]):
-    """pdf conversion depends on
-    * pysixt (python package)
-    * fop 0.9x
-    """
-    if __answer[0] is not None:
-        return __answer[0]
+def _pdf_conversion_availability():
     try:
         import pysixt
     except ImportError:
-        __answer[0] = False
         return False
     from subprocess import Popen, STDOUT
-    import os
+    if not os.path.isfile('/usr/bin/fop'):
+        return False
     try:
         Popen(['/usr/bin/fop', '-q'],
               stdout=open(os.devnull, 'w'),
               stderr=STDOUT)
     except OSError, e:
-        print e
-        __answer[0] = False
+        getLogger('cubicweb').info('fop not usable (%s)', e)
         return False
-    __answer[0] = True
     return True
+
+def can_do_pdf_conversion(__answer_cache=[]):
+    """pdf conversion depends on
+    * pysixt (python package)
+    * fop 0.9x
+
+    NOTE: actual check is done by _pdf_conversion_availability and
+    result is cached
+    """
+    if not __answer_cache: # first time, not in cache
+        __answer_cache.append(_pdf_conversion_availability())
+    return __answer_cache[0]
 
 try:
     # may not be there if cubicweb-web not installed
@@ -406,13 +325,13 @@ else:
     class CubicWebJsonEncoder(JSONEncoder):
         """define a simplejson encoder to be able to encode yams std types"""
         def default(self, obj):
-            if isinstance(obj, pydatetime.datetime):
+            if isinstance(obj, datetime.datetime):
                 return obj.strftime('%Y/%m/%d %H:%M:%S')
-            elif isinstance(obj, pydatetime.date):
+            elif isinstance(obj, datetime.date):
                 return obj.strftime('%Y/%m/%d')
-            elif isinstance(obj, pydatetime.time):
+            elif isinstance(obj, datetime.time):
                 return obj.strftime('%H:%M:%S')
-            elif isinstance(obj, pydatetime.timedelta):
+            elif isinstance(obj, datetime.timedelta):
                 return (obj.days * 24 * 60 * 60) + obj.seconds
             elif isinstance(obj, decimal.Decimal):
                 return float(obj)
@@ -422,3 +341,12 @@ else:
                 # we never ever want to fail because of an unknown type,
                 # just return None in those cases.
                 return None
+
+from logilab.common import date
+_THIS_MOD_NS = globals()
+for funcname in ('date_range', 'todate', 'todatetime', 'datetime2ticks',
+                 'days_in_month', 'days_in_year', 'previous_month',
+                 'next_month', 'first_day', 'last_day', 'ustrftime',
+                 'strptime'):
+    msg = '[3.6] %s has been moved to logilab.common.date' % funcname
+    _THIS_MOD_NS[funcname] = deprecated(msg)(getattr(date, funcname))

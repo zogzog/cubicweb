@@ -24,7 +24,6 @@ from cubicweb.selectors import match_user_groups, non_final_entity
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
-from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
 
@@ -33,27 +32,27 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    id = 'edit_box'
+    __regid__ = 'edit_box'
     __select__ = BoxTemplate.__select__ & non_final_entity()
 
     title = _('actions')
     order = 2
 
     def call(self, view=None, **kwargs):
-        _ = self.req._
+        _ = self._cw._
         title = _(self.title)
-        if self.rset:
-            etypes = self.rset.column_types(0)
+        if self.cw_rset:
+            etypes = self.cw_rset.column_types(0)
             if len(etypes) == 1:
-                plural = self.rset.rowcount > 1 and 'plural' or ''
-                etypelabel = display_name(self.req, iter(etypes).next(), plural)
+                plural = self.cw_rset.rowcount > 1 and 'plural' or ''
+                etypelabel = display_name(self._cw, iter(etypes).next(), plural)
                 title = u'%s - %s' % (title, etypelabel.lower())
-        box = BoxWidget(title, self.id, _class="greyBoxFrame")
+        box = BoxWidget(title, self.__regid__, _class="greyBoxFrame")
         self._menus_in_order = []
         self._menus_by_id = {}
         # build list of actions
-        actions = self.vreg['actions'].possible_actions(self.req, self.rset,
-                                                        view=view)
+        actions = self._cw.vreg['actions'].possible_actions(self._cw, self.cw_rset,
+                                                            view=view)
         other_menu = self._get_menu('moreactions', _('more actions'))
         for category, defaultmenu in (('mainactions', box),
                                       ('moreactions', other_menu),
@@ -86,7 +85,7 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
             return self._menus_by_id[id]
         except KeyError:
             if title is None:
-                title = self.req._(id)
+                title = self._cw._(id)
             self._menus_by_id[id] = menu = BoxMenu(title)
             menu.label_prefix = label_prefix
             self._menus_in_order.append(menu)
@@ -107,7 +106,7 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
 
 class SearchBox(BoxTemplate):
     """display a box with a simple search form"""
-    id = 'search_box'
+    __regid__ = 'search_box'
 
     visible = True # enabled by default
     title = _('search')
@@ -123,7 +122,7 @@ class SearchBox(BoxTemplate):
 </form>"""
 
     def call(self, view=None, **kwargs):
-        req = self.req
+        req = self._cw
         if req.form.pop('__fromsearchbox', None):
             rql = req.form.get('rql', '')
         else:
@@ -131,7 +130,7 @@ class SearchBox(BoxTemplate):
         form = self.formdef % (req.build_url('view'), req.next_tabindex(),
                                xml_escape(rql), req.next_tabindex())
         title = u"""<span onclick="javascript: toggleVisibility('rqlinput')">%s</span>""" % req._(self.title)
-        box = BoxWidget(title, self.id, _class="searchBoxFrame", islist=False, escape=False)
+        box = BoxWidget(title, self.__regid__, _class="searchBoxFrame", islist=False, escape=False)
         box.append(BoxHtml(form))
         box.render(self.w)
 
@@ -140,7 +139,7 @@ class SearchBox(BoxTemplate):
 
 class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
-    id = 'possible_views_box'
+    __regid__ = 'possible_views_box'
     __select__ = BoxTemplate.__select__ & match_user_groups('users', 'managers')
 
     visible = False
@@ -148,9 +147,9 @@ class PossibleViewsBox(BoxTemplate):
     order = 10
 
     def call(self, **kwargs):
-        box = BoxWidget(self.req._(self.title), self.id)
-        views = [v for v in self.vreg['views'].possible_views(self.req,
-                                                              rset=self.rset)
+        box = BoxWidget(self._cw._(self.title), self.__regid__)
+        views = [v for v in self._cw.vreg['views'].possible_views(self._cw,
+                                                              rset=self.cw_rset)
                  if v.category != 'startupview']
         for category, views in self.sort_actions(views):
             menu = BoxMenu(category)
@@ -163,14 +162,14 @@ class PossibleViewsBox(BoxTemplate):
 
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
-    id = 'startup_views_box'
+    __regid__ = 'startup_views_box'
     visible = False # disabled by default
     title = _('startup views')
     order = 70
 
     def call(self, **kwargs):
-        box = BoxWidget(self.req._(self.title), self.id)
-        for view in self.vreg['views'].possible_views(self.req, None):
+        box = BoxWidget(self._cw._(self.title), self.__regid__)
+        for view in self._cw.vreg['views'].possible_views(self._cw, None):
             if view.category == 'startupview':
                 box.append(self.box_action(view))
 
@@ -182,7 +181,7 @@ class StartupViewsBox(BoxTemplate):
 
 class SideBoxView(EntityView):
     """helper view class to display some entities in a sidebox"""
-    id = 'sidebox'
+    __regid__ = 'sidebox'
 
     def call(self, boxclass='sideBox', title=u''):
         """display a list of entities by calling their <item_vid> view"""
@@ -190,19 +189,19 @@ class SideBoxView(EntityView):
             self.w(u'<div class="sideBoxTitle"><span>%s</span></div>' % title)
         self.w(u'<div class="%s"><div class="sideBoxBody">' % boxclass)
         # if not too much entities, show them all in a list
-        maxrelated = self.req.property_value('navigation.related-limit')
-        if self.rset.rowcount <= maxrelated:
-            if len(self.rset) == 1:
-                self.wview('incontext', self.rset, row=0)
-            elif 1 < len(self.rset) < 5:
-                self.wview('csv', self.rset)
+        maxrelated = self._cw.property_value('navigation.related-limit')
+        if self.cw_rset.rowcount <= maxrelated:
+            if len(self.cw_rset) == 1:
+                self.wview('incontext', self.cw_rset, row=0)
+            elif 1 < len(self.cw_rset) < 5:
+                self.wview('csv', self.cw_rset)
             else:
-                self.wview('simplelist', self.rset)
+                self.wview('simplelist', self.cw_rset)
         # else show links to display related entities
         else:
-            self.rset.limit(maxrelated)
-            rql = self.rset.printable_rql(encoded=False)
-            self.wview('simplelist', self.rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
-                                               self.req._('see them all')))
+            self.cw_rset.limit(maxrelated)
+            rql = self.cw_rset.printable_rql(encoded=False)
+            self.wview('simplelist', self.cw_rset)
+            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
+                                               self._cw._('see them all')))
         self.w(u'</div>\n</div>\n')

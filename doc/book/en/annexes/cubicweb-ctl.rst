@@ -22,45 +22,71 @@ To view the help menu on specific command ::
 
   cubicweb-ctl <command> --help
 
-Command to create a cube
-------------------------
+Listing available cubes and instance
+-------------------------------------
 
-* ``newcube``, create a new cube on the file system based on the name
-  given in the parameters. This command create a cube from a skeleton
-  that includes default files required for debian packaging.
+* ``list``, provides a list of the available configuration, cubes
+  and instances.
 
 
-Command to create an instance
------------------------------
-* ``create``, creates the files for the instance configuration
+Creation of a new cube
+-----------------------
+
+Create your new cube cube ::
+
+   cubicweb-ctl newcube
+
+This will create a new cube in
+``/path/to/forest/cubicweb/cubes/<mycube>`` for a Mercurial forest
+installation, or in ``/usr/share/cubicweb/cubes`` for a debian
+packages installation.
+
+Create an instance
+-------------------
+
+You must ensure `~/cubicweb.d/` exists prior to this. On windows, the
+'~' part will probably expand to 'Documents and Settings/user'.
+
+To create an instance from an existing cube, execute the following
+command ::
+
+   cubicweb-ctl create <cube_name> <instance_name>
+
+This command will create the configuration files of an instance in
+``~/etc/cubicweb.d/<instance_name>``.
+
+The tool ``cubicweb-ctl`` executes the command ``db-create`` and
+``db-init`` when you run ``create`` so that you can complete an
+instance creation in a single command. But of course it is possible
+to issue these separate commands separately, at a later stage.
+
+Command to create/initialize an instance database
+-------------------------------------------------
+
 * ``db-create``, creates the system database of an instance (tables and
   extensions only)
 * ``db-init``, initializes the system database of an instance
   (schema, groups, users, workflows...)
 
-By default, those three commandes are encapsulated in ``create`` so
-that they can be executed consecutively.
-
-Command to create an instance for Google AppEngine datastore source
--------------------------------------------------------------------
-* ``newgapp``, creates the configuration files for an instance
-
-This command needs to be followed by the commands responsible for
-the database initialization. As those are specific to the `datastore`,
-specific Google AppEgine database, they are not available for now
-in cubicweb-ctl, but they are available in the instance created.
-
-For more details, please see :ref:`gaecontents` .
-
 Commands to control instances
 -----------------------------
+
 * ``start``, starts one or more or all instances
+
+of special interest::
+
+  start -D
+
+will start in debug mode (under windows, starting without -D will not
+work; you need instead to setup your instance as a service).
+
 * ``stop``, stops one or more or all instances
 * ``restart``, restarts one or more or all instances
-* ``status``, returns the status of the instance
+* ``status``, returns the status of the instance(s)
 
 Commands to maintain instances
 ------------------------------
+
 * ``upgrade``, launches the existing instances migration when a new version
   of *CubicWeb* or the cubes installed is available
 * ``shell``, opens a migration shell for manual maintenance of the instance
@@ -78,45 +104,19 @@ Commands to maintain i18n catalogs
 * ``i18ninstance``, recompiles the messages catalogs of an instance.
   This is automatically done while upgrading.
 
-See also chapter :ref:`internationalisation`.
+See also chapter :ref:`internationalization`.
 
 Other commands
 --------------
-* ``list``, provides a list of the available configuration, cubes
-  and instances.
 * ``delete``, deletes an instance (configuration files and database)
 
+Command to create an instance for Google AppEngine datastore source
+-------------------------------------------------------------------
+* ``newgapp``, creates the configuration files for an instance
 
-Create an instance from an existing cube
-````````````````````````````````````````
+This command needs to be followed by the commands responsible for
+the database initialization. As those are specific to the `datastore`,
+specific Google AppEgine database, they are not available for now
+in cubicweb-ctl, but they are available in the instance created.
 
-To create an instance from an existing cube, execute the following
-command ::
-
-   cubicweb-ctl create <cube_name> <instance_name>
-
-This command will create the configuration files of an instance in
-``~/etc/cubicweb.d/<instance_name>``.
-The tool ``cubicweb-ctl`` allows you to execute the command ``db-create``
-and ``db-init`` when you run ``create`` so that you can complete an
-instance creation in a single command.
-
-If you decide not to execut those commands while ``cubicweb-ctl create``,
-then you will have to execute them seperately(``cubicweb-ctl db-create``,
-``cubicweb-ctl db-init`` ) otherwise your installation will not be complete
-and you will not be able to launch your instance.
-
-
-Creation of an instance from a new cube
-```````````````````````````````````````
-
-Create first your new cube cube ::
-
-   cubicweb-ctl newcube <mycube>
-
-This will create a new cube in ``/path/to/forest/cubicweb/cubes/<mycube>``
-for a Mercurial forest installation, or in ``/usr/share/cubicweb/cubes``
-for a debian packages installation, and then create an instance as
-explained just above.
-
-
+For more details, please see :ref:`GoogleAppEngineSource` .

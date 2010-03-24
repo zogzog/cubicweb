@@ -1,7 +1,7 @@
-/* -*- sql -*- 
+/* -*- sql -*-
 
-   postgres specific registered procedures, 
-   require the plpgsql language installed 
+   postgres specific registered procedures,
+   require the plpgsql language installed
 
 */
 

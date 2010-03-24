@@ -1,29 +1,77 @@
 Form construction
 ------------------
 
-Forms
-~~~~~
-XXX feed me
-:Vocabulary control on relations:
+CubicWeb provides usual form/field/widget/renderer abstraction to
+provde some generic building blocks which will greatly help you in
+building forms properly integrated with CubicWeb (coherent display,
+error handling, etc...).
 
-  * `vocabulary(rtype, x='subject', limit=None)`, called by the
-    editing views, it returns a list of couples (label, eid) of entities
-    that could be related to the entity by the relation `rtype`
-  * `subject_relation_vocabulary(rtype, limit=None)`, called internally
-    by  `vocabulary` in the case of a subject relation
-  * `object_relation_vocabulary(rtype, limit=None)`, called internally
-    by  `vocabulary` in the case of an object relation
-  * `relation_vocabulary(rtype, targettype, x, limit=None)`, called
-    internally by `subject_relation_vocabulary` and `object_relation_vocabulary`
+A form basically only holds a set of fields, and has te be bound to a
+renderer which is responsible to layout them. Each field is bound to a
+widget that will be used to fill in value(s) for that field (at form
+generation time) and 'decode' (fetch and give a proper Python type to)
+values sent back by the browser.
 
-Fields
-~~~~~~
-XXX feed me
+The Field class and basic fields
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: cubicweb.web.formfields.Field
+
+Existing field types are:
+
+.. autoclass:: cubicweb.web.formfields.StringField
+.. autoclass:: cubicweb.web.formfields.PasswordField
+.. autoclass:: cubicweb.web.formfields.RichTextField
+.. autoclass:: cubicweb.web.formfields.FileField
+.. autoclass:: cubicweb.web.formfields.EditableFileField
+.. autoclass:: cubicweb.web.formfields.IntField
+.. autoclass:: cubicweb.web.formfields.BooleanField
+.. autoclass:: cubicweb.web.formfields.FloatField
+.. autoclass:: cubicweb.web.formfields.DateField
+.. autoclass:: cubicweb.web.formfields.DateTimeField
+.. autoclass:: cubicweb.web.formfields.TimeField
+.. autoclass:: cubicweb.web.formfields.RelationField
+.. autoclass:: cubicweb.web.formfields.CompoundField
+
 
 Widgets
 ~~~~~~~
-XXX feed me
+Base class for widget is :class:cubicweb.web.formwidgets.FieldWidget class.
+
+Existing widget types are:
+
+.. autoclass:: cubicweb.web.formwidgets.HiddenInput
+.. autoclass:: cubicweb.web.formwidgets.TextInput
+.. autoclass:: cubicweb.web.formwidgets.PasswordInput
+.. autoclass:: cubicweb.web.formwidgets.PasswordSingleInput
+.. autoclass:: cubicweb.web.formwidgets.FileInput
+.. autoclass:: cubicweb.web.formwidgets.ButtonInput
+.. autoclass:: cubicweb.web.formwidgets.TextArea
+.. autoclass:: cubicweb.web.formwidgets.FCKEditor
+.. autoclass:: cubicweb.web.formwidgets.Select
+.. autoclass:: cubicweb.web.formwidgets.CheckBox
+.. autoclass:: cubicweb.web.formwidgets.Radio
+.. autoclass:: cubicweb.web.formwidgets.DateTimePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryDateTimePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryDatePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryTimePicker
+.. autoclass:: cubicweb.web.formwidgets.AjaxWidget
+.. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
+.. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
+
+Other classes in this module, which are not proper widget (they are not associated to
+field) but are used as form controls, may also be useful: Button, SubmitButton,
+ResetButton, ImgButton,
+
+
+Of course you can not use any widget with any field...
 
 Renderers
 ~~~~~~~~~
-XXX feed me
+
+.. autoclass:: cubicweb.web.views.formrenderers.BaseFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.HTableFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityCompositeFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
+

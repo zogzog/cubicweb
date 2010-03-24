@@ -11,7 +11,7 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.testlib import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formwidgets import PasswordInput, TextArea, Select, Radio
 from cubicweb.web.formfields import *
 from cubicweb.web.views.forms import EntityFieldsForm
@@ -46,7 +46,6 @@ class GuessFieldTC(TestCase):
         description_format_field = guess_field(schema['State'], schema['description_format'], skip_meta_attr=False)
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
-        self.assertEquals(description_format_field.initial(None), 'text/rest')
 
 #         wikiid_field = guess_field(schema['State'], schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)
@@ -92,9 +91,10 @@ class GuessFieldTC(TestCase):
 
     def test_constraints_priority(self):
         salesterm_field = guess_field(schema['Salesterm'], schema['reason'])
-        constraints = schema['reason'].rproperty('Salesterm', 'String', 'constraints')
+        constraints = schema['reason'].rdef('Salesterm', 'String').constraints
         self.assertEquals([c.__class__ for c in constraints],
                           [SizeConstraint, StaticVocabularyConstraint])
+        self.assertIsInstance(salesterm_field, StringField)
         self.assertIsInstance(salesterm_field.widget, Select)
 
 
@@ -102,9 +102,8 @@ class GuessFieldTC(TestCase):
         field = guess_field(schema['CWAttribute'], schema['indexed'])
         self.assertIsInstance(field, BooleanField)
         self.assertEquals(field.required, False)
-        self.assertEquals(field.initial(None), None)
         self.assertIsInstance(field.widget, Radio)
-        self.assertEquals(field.vocabulary(mock(req=mock(_=unicode))),
+        self.assertEquals(field.vocabulary(mock(_cw=mock(_=unicode))),
                           [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):
@@ -115,21 +114,21 @@ class GuessFieldTC(TestCase):
                           [(u'maybe', '1'), (u'no', '')])
 
 
-class MoreFieldsTC(EnvBasedTC):
+class MoreFieldsTC(CubicWebTC):
     def test_rtf_format_field(self):
         req = self.request()
         req.use_fckeditor = lambda: False
-        e = self.etype_instance('State')
+        e = self.vreg['etypes'].etype_class('State')(req)
         form = EntityFieldsForm(req, entity=e)
         description_field = guess_field(schema['State'], schema['description'])
         description_format_field = description_field.get_format_field(form)
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
         # unlike below, initial is bound to form.form_field_format
-        self.assertEquals(description_format_field.initial(form), 'text/html')
+        self.assertEquals(description_format_field.value(form), 'text/html')
         self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
-        self.assertEquals(description_format_field.initial(form), 'text/rest')
+        self.assertEquals(description_format_field.value(form), 'text/rest')
 
 
 class UtilsTC(TestCase):

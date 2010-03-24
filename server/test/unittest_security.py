@@ -4,23 +4,23 @@
 import sys
 
 from logilab.common.testlib import unittest_main, TestCase
-from cubicweb.devtools.apptest import RepositoryBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import Unauthorized, ValidationError
 from cubicweb.server.querier import check_read_access
 
-class BaseSecurityTC(RepositoryBasedTC):
+class BaseSecurityTC(CubicWebTC):
 
     def setUp(self):
-        RepositoryBasedTC.setUp(self)
+        CubicWebTC.setUp(self)
         self.create_user('iaminusersgrouponly')
-        self.readoriggroups = self.schema['Personne'].get_groups('read')
-        self.addoriggroups = self.schema['Personne'].get_groups('add')
+        self.readoriggroups = self.schema['Personne'].permissions['read']
+        self.addoriggroups = self.schema['Personne'].permissions['add']
 
     def tearDown(self):
-        RepositoryBasedTC.tearDown(self)
-        self.schema['Personne'].set_groups('read', self.readoriggroups)
-        self.schema['Personne'].set_groups('add', self.addoriggroups)
+        CubicWebTC.tearDown(self)
+        self.schema['Personne'].set_action_permissions('read', self.readoriggroups)
+        self.schema['Personne'].set_action_permissions('add', self.addoriggroups)
 
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
@@ -29,15 +29,15 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         rql = u'Personne U where U nom "managers"'
         rqlst = self.repo.vreg.rqlhelper.parse(rql).children[0]
         origgroups = self.schema['Personne'].get_groups('read')
-        self.schema['Personne'].set_groups('read', ('users', 'managers'))
-        self.repo.vreg.rqlhelper.compute_solutions(rqlst)
+        self.schema['Personne'].set_action_permissions('read', ('users', 'managers'))
+        self.repo.vreg.solutions(self.session, rqlst, None)
         solution = rqlst.solutions[0]
         check_read_access(self.schema, self.session.user, rqlst, solution)
         cnx = self.login('anon')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
                           check_read_access,
-                          self.schema, cnx.user(self.current_session()), rqlst, solution)
+                          self.schema, cnx.user(self.session), rqlst, solution)
         self.assertRaises(Unauthorized, cu.execute, rql)
 
     def test_upassword_not_selectable(self):
@@ -96,8 +96,8 @@ class SecurityTC(BaseSecurityTC):
     def test_update_security_2(self):
         cnx = self.login('anon')
         cu = cnx.cursor()
-        self.repo.schema['Personne'].set_groups('read', ('users', 'managers'))
-        self.repo.schema['Personne'].set_groups('add', ('guests', 'users', 'managers'))
+        self.repo.schema['Personne'].set_action_permissions('read', ('users', 'managers'))
+        self.repo.schema['Personne'].set_action_permissions('add', ('guests', 'users', 'managers'))
         self.assertRaises(Unauthorized, cu.execute, "SET X nom 'bidulechouette' WHERE X is Personne")
         #self.assertRaises(Unauthorized, cnx.commit)
         # test nothing has actually been inserted
@@ -165,7 +165,7 @@ class SecurityTC(BaseSecurityTC):
 
     def test_insert_relation_rql_permission(self):
         cnx = self.login('iaminusersgrouponly')
-        session = self.current_session()
+        session = self.session
         cu = cnx.cursor(session)
         cu.execute("SET A concerne S WHERE A is Affaire, S is Societe")
         # should raise Unauthorized since user don't own S
@@ -177,7 +177,7 @@ class SecurityTC(BaseSecurityTC):
         ent = rset.get_entity(0, 0)
         session.set_pool() # necessary
         self.assertRaises(Unauthorized,
-                          ent.e_schema.check_perm, session, 'update', ent.eid)
+                          ent.e_schema.check_perm, session, 'update', eid=ent.eid)
         self.assertRaises(Unauthorized,
                           cu.execute, "SET P travaille S WHERE P is Personne, S is Societe")
         # test nothing has actually been inserted:
@@ -210,17 +210,17 @@ class SecurityTC(BaseSecurityTC):
 
 
     def test_user_can_change_its_upassword(self):
-        ueid = self.create_user('user')
+        ueid = self.create_user('user').eid
         cnx = self.login('user')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
                    {'x': ueid, 'passwd': 'newpwd'}, 'x')
         cnx.commit()
         cnx.close()
-        cnx = self.login('user', 'newpwd')
+        cnx = self.login('user', password='newpwd')
 
     def test_user_cant_change_other_upassword(self):
-        ueid = self.create_user('otheruser')
+        ueid = self.create_user('otheruser').eid
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
@@ -230,7 +230,7 @@ class SecurityTC(BaseSecurityTC):
     # read security test
 
     def test_read_base(self):
-        self.schema['Personne'].set_groups('read', ('users', 'managers'))
+        self.schema['Personne'].set_action_permissions('read', ('users', 'managers'))
         cnx = self.login('anon')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
@@ -257,6 +257,26 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(rset.rows, [[aff2]])
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2}, 'x')
         self.assertEquals(rset.rows, [])
+        # test can't update an attribute of an entity that can't be readen
+        self.assertRaises(Unauthorized, cu.execute, 'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid}, 'x')
+
+
+    def test_entity_created_in_transaction(self):
+        affschema = self.schema['Affaire']
+        origperms = affschema.permissions['read']
+        affschema.set_action_permissions('read', affschema.permissions['add'])
+        try:
+            cnx = self.login('iaminusersgrouponly')
+            cu = cnx.cursor()
+            aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
+            # entity created in transaction are readable *by eid*
+            self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}, 'x'))
+            # XXX would be nice if it worked
+            rset = cu.execute("Affaire X WHERE X sujet 'cool'")
+            self.assertEquals(len(rset), 0)
+        finally:
+            affschema.set_action_permissions('read', origperms)
+            cnx.close()
 
     def test_read_erqlexpr_has_text1(self):
         aff1 = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -281,7 +301,7 @@ class SecurityTC(BaseSecurityTC):
         self.execute("INSERT Personne X: X nom 'bidule'")
         self.execute("INSERT Societe X: X nom 'bidule'")
         self.commit()
-        self.schema['Personne'].set_groups('read', ('managers',))
+        self.schema['Personne'].set_action_permissions('read', ('managers',))
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         rset = cu.execute('Any N WHERE N has_text "bidule"')
@@ -293,7 +313,7 @@ class SecurityTC(BaseSecurityTC):
         self.execute("INSERT Personne X: X nom 'bidule'")
         self.execute("INSERT Societe X: X nom 'bidule'")
         self.commit()
-        self.schema['Personne'].set_groups('read', ('managers',))
+        self.schema['Personne'].set_action_permissions('read', ('managers',))
         cnx = self.login('anon')
         cu = cnx.cursor()
         rset = cu.execute('Any N,U WHERE N has_text "bidule", N owned_by U?')
@@ -371,8 +391,8 @@ class SecurityTC(BaseSecurityTC):
 
     def test_attribute_read_security(self):
         # anon not allowed to see users'login, but they can see users
-        self.repo.schema['CWUser'].set_groups('read', ('guests', 'users', 'managers'))
-        self.repo.schema['login'].set_groups('read', ('users', 'managers'))
+        self.repo.schema['CWUser'].set_action_permissions('read', ('guests', 'users', 'managers'))
+        self.repo.schema['CWUser'].rdef('login').set_action_permissions('read', ('users', 'managers'))
         cnx = self.login('anon')
         cu = cnx.cursor()
         rset = cu.execute('CWUser X')
@@ -415,7 +435,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_users_and_groups_non_readable_by_guests(self):
         cnx = self.login('anon')
-        anon = cnx.user(self.current_session())
+        anon = cnx.user(self.session)
         cu = cnx.cursor()
         # anonymous user can only read itself
         rset = cu.execute('Any L WHERE X owned_by U, U login L')
@@ -425,7 +445,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # anonymous user can read groups (necessary to check allowed transitions for instance)
         self.assert_(cu.execute('CWGroup X'))
         # should only be able to read the anonymous user, not another one
-        origuser = self.session.user
+        origuser = self.adminsession.user
         self.assertRaises(Unauthorized,
                           cu.execute, 'CWUser X WHERE X eid %(x)s', {'x': origuser.eid}, 'x')
         # nothing selected, nothing updated, no exception raised
@@ -461,7 +481,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.commit()
         cnx = self.login('anon')
         cu = cnx.cursor()
-        anoneid = self.current_session().user.eid
+        anoneid = self.session.user.eid
         self.assertEquals(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
                                      'B bookmarked_by U, U eid %s' % anoneid).rows,
                           [['index', '?vid=index']])
@@ -490,27 +510,30 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         eid = self.execute('INSERT Affaire X: X ref "ARCT01"')[0][0]
         self.commit()
         cnx = self.login('iaminusersgrouponly')
-        session = self.current_session()
+        session = self.session
         # needed to avoid check_perm error
         session.set_pool()
         # needed to remove rql expr granting update perm to the user
-        self.schema['Affaire'].set_rqlexprs('update', ())
-        self.assertRaises(Unauthorized,
-                          self.schema['Affaire'].check_perm, session, 'update', eid)
-        cu = cnx.cursor()
-        self.schema['Affaire'].set_groups('read', ('users',))
+        affaire_perms = self.schema['Affaire'].permissions.copy()
+        self.schema['Affaire'].set_action_permissions('update', self.schema['Affaire'].get_groups('update'))
         try:
+            self.assertRaises(Unauthorized,
+                              self.schema['Affaire'].check_perm, session, 'update', eid=eid)
+            cu = cnx.cursor()
+            self.schema['Affaire'].set_action_permissions('read', ('users',))
             aff = cu.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
             aff.fire_transition('abort')
             cnx.commit()
             # though changing a user state (even logged user) is reserved to managers
-            user = cnx.user(self.current_session())
+            user = cnx.user(self.session)
             # XXX wether it should raise Unauthorized or ValidationError is not clear
             # the best would probably ValidationError if the transition doesn't exist
             # from the current state but Unauthorized if it exists but user can't pass it
             self.assertRaises(ValidationError, user.fire_transition, 'deactivate')
         finally:
-            self.schema['Affaire'].set_groups('read', ('managers',))
+            # restore orig perms
+            for action, perms in affaire_perms.iteritems():
+                self.schema['Affaire'].set_action_permissions(action, perms)
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)

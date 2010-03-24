@@ -23,10 +23,10 @@ schema:
 The two other entity types defined in the schema are `Visit` and `Agency` but we
 can also guess from the above that this application uses the two cubes
 `comment`_ and
-`addressbook`_ (remember, cubicweb is only a game where you assemble cubes !). 
+`addressbook`_ (remember, cubicweb is only a game where you assemble cubes !).
 
 While we know that just defining the schema in enough to have a full, usable,
-(testable !) application, we also know that every application needs to be 
+(testable !) application, we also know that every application needs to be
 customized to fulfill the needs it was built for. So in this case, what we
 needed most was some custom filters that would let us restrict searches
 according
@@ -36,9 +36,9 @@ easy:
 
 .. sourcecode:: python
 
-  class PostalCodeFacet(RelationFacet): 
-      id = 'postalcode-facet'             # every registered class must have an id
-      __select__ = implements('Office')   # this facet should only be selected when 
+  class PostalCodeFacet(RelationFacet):
+      __regid__ = 'postalcode-facet'             # every registered class must have an id
+      __select__ = implements('Office')   # this facet should only be selected when
                                           # visualizing offices
       rtype = 'has_address'               # this facet is a filter on the entity linked to
                                           # the office thrhough the relation
@@ -57,18 +57,18 @@ Now, here is the code to define a filter based on the `surface` attribute of the
 .. sourcecode:: python
 
   class SurfaceFacet(AttributeFacet):
-      id = 'surface-facet'              # every registered class must have an id
-      __select__ = implements('Office') # this facet should only be selected when 
+      __regid__ = 'surface-facet'              # every registered class must have an id
+      __select__ = implements('Office') # this facet should only be selected when
                                         # visualizing offices
-      rtype = 'surface'                 # the filter's key is the attribute "surface" 
-      comparator = '>='                 # override the default value of operator since 
+      rtype = 'surface'                 # the filter's key is the attribute "surface"
+      comparator = '>='                 # override the default value of operator since
                                         # we want to filter according to a
-                                        # minimal 
+                                        # minimal
                                         # value, not an exact one
 
       def rset_vocabulary(self, ___):
           """override the default vocabulary method since we want to hard-code
-          our threshold values. 
+          our threshold values.
           Not overriding would generate a filter box with all existing surfaces
           defined in the database.
           """
@@ -93,7 +93,7 @@ define restrictions `filters`_ really as easily as possible.
 We've just added two new kind of facets in CubicWeb :
 
 - The **RangeFacet** which displays a slider using `jquery`_
-  to choose a lower bound and an upper bound. The **RangeWidget** 
+  to choose a lower bound and an upper bound. The **RangeWidget**
   works with either numerical values or date values
 
 - The **HasRelationFacet** which displays a simple checkbox and
@@ -103,7 +103,7 @@ We've just added two new kind of facets in CubicWeb :
 .. image :: http://www.cubicweb.org/Image/343498?vid=download
 
 
-Here's an example of code that defines a facet to filter 
+Here's an example of code that defines a facet to filter
 musical works according to their composition date:
 
 .. sourcecode:: python
@@ -111,8 +111,8 @@ musical works according to their composition date:
     class CompositionDateFacet(DateRangeFacet):
         # 1. make sure this facet is displayed only on Track selection
         __select__ = DateRangeFacet.__select__ & implements('Track')
-        # 2. give the facet an id (required by CubicWeb)
-        id = 'compdate-facet'
+        # 2. give the facet an id required by CubicWeb)
+        __regid__ = 'compdate-facet'
         # 3. specify the attribute name that actually stores the date in the DB
         rtype = 'composition_date'
 

@@ -30,7 +30,7 @@ DBG_SQL = 2   # executed sql
 DBG_REPO = 4  # repository events
 DBG_MS = 8    # multi-sources
 DBG_MORE = 16 # more verbosity
-
+DBG_ALL = 1 + 2 + 4 + 8 + 16
 # current debug mode
 DEBUG = 0
 
@@ -93,6 +93,15 @@ class debugged(object):
 
 # database initialization ######################################################
 
+def create_user(session, login, pwd, *groups):
+    # monkey patch this method if you want to customize admin/anon creation
+    # (that maybe necessary if you change CWUser's schema)
+    user = session.create_entity('CWUser', login=login, upassword=pwd)
+    for group in groups:
+        session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
+                        {'u': user.eid, 'group': group})
+    return user
+
 def init_repository(config, interactive=True, drop=False, vreg=None):
     """initialise a repository database by creating tables add filling them
     with the minimal set of entities (ie at least the schema, base groups and
@@ -136,12 +145,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # can't skip entities table even if system source doesn't support them,
     # they are used sometimes by generated sql. Keeping them empty is much
     # simpler than fixing this...
-    if sqlcnx.logged_user != source['db-user']:
-        schemasql = sqlschema(schema, driver, user=source['db-user'])
-    else:
-        schemasql = sqlschema(schema, driver)
-        #skip_entities=[str(e) for e in schema.entities()
-        #               if not repo.system_source.support_entity(str(e))])
+    schemasql = sqlschema(schema, driver)
+    #skip_entities=[str(e) for e in schema.entities()
+    #               if not repo.system_source.support_entity(str(e))])
     sqlexec(schemasql, execute, pbtitle=_title)
     sqlcursor.close()
     sqlcnx.commit()
@@ -161,13 +167,11 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     for group in sorted(BASE_GROUPS):
         session.execute('INSERT CWGroup X: X name %(name)s',
                         {'name': unicode(group)})
-    session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
-                    {'login': login, 'pwd': pwd})
-    session.execute('SET U in_group G WHERE G name "managers"')
+    create_user(session, login, pwd, 'managers')
     session.commit()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, login, pwd)
+    repo, cnx = in_memory_cnx(config, login, password=pwd)
     # trigger vreg initialisation of entity classes
     config.cubicweb_appobject_path = set(('entities',))
     config.cube_appobject_path = set(('entities',))
@@ -179,6 +183,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     handler.install_custom_sql_scripts(join(CW_SOFTWARE_ROOT, 'schemas'), driver)
     for directory in reversed(config.cubes_path()):
         handler.install_custom_sql_scripts(join(directory, 'schema'), driver)
+    # serialize the schema
     initialize_schema(config, schema, handler)
     # yoo !
     cnx.commit()
@@ -203,6 +208,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
+    # deactivate every hooks but those responsible to set metadata
+    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
+    oldmode = config.set_hooks_mode(config.DENY_ALL)
+    changes = config.enable_hook_category('metadata')
     paths = [p for p in config.cubes_path() + [config.apphome]
              if exists(join(p, 'migration'))]
     # execute cubicweb's pre<event> script
@@ -218,6 +227,10 @@ def initialize_schema(config, schema, mhandler, event='create'):
     # execute cubes'post<event> script if any
     for path in reversed(paths):
         mhandler.exec_event_script('post%s' % event, path)
+    # restore hooks config
+    if changes:
+        config.disable_hook_category(changes)
+    config.set_hooks_mode(oldmode)
 
 
 # sqlite'stored procedures have to be registered at connexion opening time

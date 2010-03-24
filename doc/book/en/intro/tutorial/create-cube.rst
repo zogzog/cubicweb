@@ -1,5 +1,44 @@
 .. -*- coding: utf-8 -*-
 
+
+.. _Steps:
+
+Steps for creating your cube
+----------------------------
+
+The following steps will help you to create and customize a new cube.
+
+1. :ref:`CreateYourCube`
+
+Create the directory to hold the code of your cube. The most important files that will be useful to customize your newly created cube are:
+  * schema.py: contains the data model
+  * views.py: contains your custom views
+  * entities.py: contains XXX 
+
+The detailed structure of the code directory is described in :ref:`cubelayout`.
+
+2. :ref:`DefineDataModel`
+
+Define the data model of your application.
+
+3. :ref:`ExploreYourInstance`
+
+Create, run, and explore an instance of your cube.
+
+4. :ref:`DefineViews`
+
+Customize the views of your data: how and which part of your data are showed. 
+
+Note: views don't concern the look'n'feel or design of the site. For that, you should use CSS instead, and default CSS or your new cube are located in 'blog/data/'.
+
+
+5. :ref:`DefineEntities`
+
+Define your own entities to add useful functions when you manipulate your data, especially when you write view.
+
+
+.. _CreateYourCube:
+
 Create your cube
 ----------------
 
@@ -16,6 +55,23 @@ This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
 installation, ``/usr/share/cubicweb/cubes`` for debian packages installation)
 a directory named ``blog`` reflecting the structure described in :ref:`Concepts`.
 
+
+For packages installation, you can still create new cubes in your home directory using the following configuration. Let's say you want to develop your new cubes in `~src/cubes`, then set the following environment variables:
+::
+
+  CW_CUBES_PATH=~/src/cubes
+  CW_MODE=user
+
+and then create your new cube using:
+::
+
+  cubicweb-ctl newcube --directory=~/src/cubes blog
+
+
+
+
+
+
 .. _DefineDataModel:
 
 Define your data model
@@ -26,7 +82,9 @@ It defines the type of content your application will handle.
 
 The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
-::
+.. sourcecode:: python
+
+  from yams.buildobjs import EntityType, String, SubjectRelation, Date
 
   class Blog(EntityType):
     title = String(maxsize=50, required=True)
@@ -38,6 +96,8 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
     content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*')
 
+The first step is the import of the EntityType (generic class for entity and 
+attributes that will be used in both Blog and BlogEntry entities. 
 
 A Blog has a title and a description. The title is a string that is
 required and must be less than 50 characters.  The
@@ -57,18 +117,26 @@ have any number of BlogEntry (``*`` means `any number including
 zero`). For completeness, remember that ``+`` means `one or more`.
 
 
+.. _ExploreYourInstance:
+
+Create and explore your instance
+--------------------------------
+.. _CreateYourInstance:
+
 Create your instance
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 To use this cube as an instance and create a new instance named ``blogdemo``, do::
 
   cubicweb-ctl create blog blogdemo
 
-
 This command will create the corresponding database and initialize it.
 
+
+.. _WelcomeToYourWebInstance:
+
 Welcome to your web instance
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Start your instance in debug mode with the following command: ::
 
@@ -94,14 +162,15 @@ and create entities.
 Please notice that so far, the *CubicWeb* framework managed all aspects of
 the web application based on the schema provided at the beginning.
 
+.. _AddEntities:
 
 Add entities
-------------
+~~~~~~~~~~~~
 
 We will now add entities in our web application.
 
 Add a Blog
-~~~~~~~~~~
+**********
 
 Let us create a few of these entities. Click on the `[+]` at the left of the
 link Blog on the home page. Call this new Blog ``Tech-blog`` and type in
@@ -132,7 +201,7 @@ has two items.
    :alt: displaying a list of two blogs
 
 Add a BlogEntry
-~~~~~~~~~~~~~~~
+***************
 
 Get back to the home page and click on [+] at the left of the link
 BlogEntry. Call this new entry ``Hello World`` and type in some text
@@ -245,7 +314,7 @@ To do so, please apply the following changes:
   from cubicweb.web.views import primary
 
   class BlogEntryPrimaryView(primary.PrimaryView):
-    __select__ = implements('BlogEntry')
+      __select__ = implements('BlogEntry')
 
       def render_entity_attributes(self, entity):
           self.w(u'<p>published on %s</p>' %
@@ -271,6 +340,91 @@ The view has a ``self.w()`` method that is used to output data, in our
 example HTML output.
 
 .. note::
-   You can find more details about views and selectors in :ref:`ViewDefinition`.
+   You can find more details about views and selectors in :ref:`Views`.
 
+
+.. _DefineEntities:
+
+Write entities to add logic in your data
+----------------------------------------
+
+By default, CubicWeb provides a default entity for each data type defined in the schema. 
+A default entity mainly contains the attributes defined in the data model. 
+
+You can redefine each entity to provide additional functions to help you write your views. 
+
+.. sourcecode:: python
+
+    from cubicweb.entities import AnyEntity
+
+    class BlogEntry(AnyEntity):
+        """customized class for BlogEntry entities"""
+    	__regid__ = 'BlogEntry'
+    	__implements__ = AnyEntity.__implements__ 
+
+        def display_cw_logo(self):
+            if 'CW' in self.title:
+                return True
+            else:	
+                return False
+
+Customizing an entity requires that your entity:
+ - inherits from ``cubicweb.entities`` or any subclass
+ - defines a ``__regid__`` linked to the corresponding data type of your schema
+ - implements the base class by explicitly using ``__implements__``.
+
+We implemented here a function ``display_cw_logo`` which tests if the blog entry title contains 'CW'.
+This function can then be used when you customize your views. For instance, you can modify your previous ``views.py`` as follows:
+
+.. sourcecode:: python
+
+ class BlogEntryPrimaryView(primary.PrimaryView):
+     __select__ = implements('BlogEntry')
+
+     ...
+
+     def render_entity_title(self, entity):
+	 if entity.display_cw_logo():
+	     self.w(u'<image src="http://www.cubicweb.org/doc/en/_static/cubicweb.png"/>')
+	 super(BlogEntryPrimaryView, self).render_entity_title(entity)
+
+Then each blog entry whose title contains 'CW' is shown with the CubicWeb logo in front of it.
+
+.. _UpdatingSchemaAndSynchronisingInstance:
+
+Updating the schema and synchronising the instance
+--------------------------------------------------
+
+While developping your cube, you may want to update your data model. Let's say you
+want to add a ``category`` attribute in the ``Blog`` data type. This is called a migration.
+
+The required steps are:
+1. modify the file ``schema.py``. The ``Blog`` class looks now like this:
+
+.. sourcecode:: python
+
+ class Blog(EntityType):
+   title = String(maxsize=50, required=True)
+   description = String()
+   category = String(required=True, vocabulary=(_('Professional'), _('Personal')), default='Personal')
+
+2. stop your ``blogdemo`` instance
+
+3. start the cubicweb shell for your instance by running the following command:
+
+.. sourcecode:: bash
+
+  cubicweb-ctl shell blogdemo
+
+4. in the shell, execute:
+
+.. sourcecode:: python
+
+ add_attribute('Blog', 'category')
+
+5. you can restart your instance, modify a blog entity and check that the new attribute 
+``category`` has been added.
+
+Of course, you may also want to add relations, entity types, ... See :ref:`migration`
+for a list of all available migration commands.
 

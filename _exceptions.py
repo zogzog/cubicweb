@@ -20,7 +20,7 @@ class CubicWebException(Exception):
             if self.args:
                 return self.msg % tuple(self.args)
             return self.msg
-        return ' '.join(str(arg) for arg in self.args)
+        return ' '.join(unicode(arg) for arg in self.args)
 
 
 class ConfigurationError(CubicWebException):
@@ -49,7 +49,11 @@ class ConnectionError(RepositoryError):
 
 class AuthenticationError(ConnectionError):
     """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
+    a connection failed
+    """
+    def __init__(self, *args, **kwargs):
+        super(AuthenticationError, self).__init__(*args)
+        self.__dict__.update(kwargs)
 
 class BadConnectionId(ConnectionError):
     """raised when a bad connection id is given or when an attempt to establish

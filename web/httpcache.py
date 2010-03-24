@@ -18,8 +18,8 @@ class NoHTTPCacheManager(object):
     """default cache manager: set no-cache cache control policy"""
     def __init__(self, view):
         self.view = view
-        self.req = view.req
-        self.rset = view.rset
+        self.req = view._cw
+        self.cw_rset = view.cw_rset
 
     def set_headers(self):
         self.req.set_header('Cache-control', 'no-cache')
@@ -43,7 +43,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     """
 
     def etag(self):
-        return self.view.id + '/' + ','.join(sorted(self.req.user.groups))
+        return self.view.__regid__ + '/' + ','.join(sorted(self.req.user.groups))
 
     def max_age(self):
         # 0 to actually force revalidation
@@ -79,12 +79,12 @@ class EntityHTTPCacheManager(EtagHTTPCacheManager):
       with a modification time to consider) using the `last_modified` method
     """
     def etag(self):
-        if self.rset is None or len(self.rset) == 0: # entity startup view for instance
+        if self.cw_rset is None or len(self.cw_rset) == 0: # entity startup view for instance
             return super(EntityHTTPCacheManager, self).etag()
-        if len(self.rset) > 1:
+        if len(self.cw_rset) > 1:
             raise NoEtag()
         etag = super(EntityHTTPCacheManager, self).etag()
-        eid = self.rset[0][0]
+        eid = self.cw_rset[0][0]
         if self.req.user.owns(eid):
             etag += ',owners'
         return str(eid) + '/' + etag
@@ -116,7 +116,7 @@ def last_modified(self):
     # XXX check view module's file modification time in dev mod ?
     ctime = datetime.utcnow()
     if self.cache_max_age:
-        mtime = self.req.header_if_modified_since()
+        mtime = self._cw.header_if_modified_since()
         if mtime:
             tdelta = (ctime - mtime)
             if tdelta.days * 24*60*60 + tdelta.seconds <= self.cache_max_age:

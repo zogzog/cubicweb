@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import cached, clear_cache, monkeypatch
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import  deprecated
 from logilab.common.modutils import cleanup_sys_modules
 
@@ -18,7 +18,7 @@ from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
                       RegistryOutOfDate, CW_EVENT_MANAGER, onevent)
 from cubicweb.utils import dump_class
-from cubicweb.vregistry import VRegistry, Registry
+from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
 
 
@@ -58,14 +58,7 @@ class CWRegistry(Registry):
     def schema(self):
         return self.vreg.schema
 
-    def initialization_completed(self):
-        # call vreg_initialization_completed on appobjects and print
-        # registry content
-        for appobjects in self.itervalues():
-            for appobject in appobjects:
-                # XXX kill vreg_initialization_completed
-                appobject.vreg_initialization_completed()
-
+    @deprecated('[3.6] select object, then use obj.render()')
     def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
                **kwargs):
         """Select object with the given id (`__oid`) then render it.  If the
@@ -90,20 +83,22 @@ class CWRegistry(Registry):
             obj = self.select(__fallback_oid, req, rset=rset, **initargs)
         return obj.render(**kwargs)
 
+    @deprecated('[3.6] use select_or_none and test for obj.cw_propval("visible")')
     def select_vobject(self, oid, *args, **kwargs):
-        selected = self.select_object(oid, *args, **kwargs)
-        if selected and selected.propval('visible'):
+        selected = self.select_or_none(oid, *args, **kwargs)
+        if selected and selected.cw_propval('visible'):
             return selected
         return None
 
-    def possible_vobjects(self, *args, **kwargs):
+    def poss_visible_objects(self, *args, **kwargs):
         """return an ordered list of possible app objects in a given registry,
         supposing they support the 'visible' and 'order' properties (as most
         visualizable objects)
         """
         return sorted([x for x in self.possible_objects(*args, **kwargs)
-                       if x.propval('visible')],
-                      key=lambda x: x.propval('order'))
+                       if x.cw_propval('visible')],
+                      key=lambda x: x.cw_propval('order'))
+    possible_vobjects = deprecated('[3.6] use poss_visible_objects()')(poss_visible_objects)
 
 
 VRegistry.REGISTRY_FACTORY[None] = CWRegistry
@@ -117,15 +112,25 @@ class ETypeRegistry(CWRegistry):
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
         clear_cache(self, 'etype_class')
+        clear_cache(self, 'parent_classes')
 
     def register(self, obj, **kwargs):
-        oid = kwargs.get('oid') or obj.id
+        oid = kwargs.get('oid') or class_regid(obj)
         if oid != 'Any' and not oid in self.schema:
             self.error('don\'t register %s, %s type not defined in the '
-                       'schema', obj, obj.id)
+                       'schema', obj, oid)
             return
         kwargs['clear'] = True
         super(ETypeRegistry, self).register(obj, **kwargs)
+
+    @cached
+    def parent_classes(self, etype):
+        if etype == 'Any':
+            return [self.etype_class('Any')]
+        eschema = self.schema.eschema(etype)
+        parents = [self.etype_class(e.type) for e in eschema.ancestors()]
+        parents.append(self.etype_class('Any'))
+        return parents
 
     @cached
     def etype_class(self, etype):
@@ -138,42 +143,42 @@ class ETypeRegistry(CWRegistry):
         """
         etype = str(etype)
         if etype == 'Any':
-            return self.select('Any', 'Any')
+            objects = self['Any']
+            assert len(objects) == 1, objects
+            return objects[0]
         eschema = self.schema.eschema(etype)
         baseschemas = [eschema] + eschema.ancestors()
         # browse ancestors from most specific to most generic and try to find an
         # associated custom entity class
-        cls = None
         for baseschema in baseschemas:
             try:
                 btype = ETYPE_NAME_MAP[baseschema]
             except KeyError:
                 btype = str(baseschema)
-            if cls is None:
-                try:
-                    objects = self[btype]
-                    assert len(objects) == 1, objects
-                    if btype == etype:
-                        cls = objects[0]
-                    else:
-                        cls = self.etype_class(btype)
-                except ObjectNotFound:
-                    continue
-            else:
-                # ensure parent classes are built first
-                self.etype_class(btype)
-        if cls is None:
+            try:
+                objects = self[btype]
+                assert len(objects) == 1, objects
+                if btype == etype:
+                    cls = objects[0]
+                else:
+                    # recurse to ensure issubclass(etype_class('Child'),
+                    #                              etype_class('Parent'))
+                    cls = self.etype_class(btype)
+                break
+            except ObjectNotFound:
+                pass
+        else:
             # no entity class for any of the ancestors, fallback to the default
             # one
             objects = self['Any']
             assert len(objects) == 1, objects
             cls = objects[0]
-        # make a copy event if cls.id == etype, else we may have pb for client
-        # application using multiple connections to different repositories (eg
-        # shingouz)
+        # make a copy event if cls.__regid__ == etype, else we may have pb for
+        # client application using multiple connections to different
+        # repositories (eg shingouz)
         cls = dump_class(cls, etype)
-        cls.id = etype
-        cls.__initialize__()
+        cls.__regid__ = etype
+        cls.__initialize__(self.schema)
         return cls
 
 VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
@@ -181,12 +186,13 @@ VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
 
 class ViewsRegistry(CWRegistry):
 
-    def main_template(self, req, oid='main-template', **kwargs):
+    def main_template(self, req, oid='main-template', rset=None, **kwargs):
         """display query by calling the given template (default to main),
         and returning the output as a string instead of requiring the [w]rite
         method as argument
         """
-        res = self.render(oid, req, **kwargs)
+        obj = self.select(oid, req, rset=rset, **kwargs)
+        res = obj.render(**kwargs)
         if isinstance(res, unicode):
             return res.encode(req.encoding)
         assert isinstance(res, str)
@@ -201,7 +207,7 @@ class ViewsRegistry(CWRegistry):
             if vid[0] == '_':
                 continue
             try:
-                view = self.select_best(views, req, rset=rset, **kwargs)
+                view = self._select_best(views, req, rset=rset, **kwargs)
                 if view.linkable():
                     yield view
             except NoSelectableObject:
@@ -217,7 +223,7 @@ class ActionsRegistry(CWRegistry):
 
     def possible_actions(self, req, rset=None, **kwargs):
         if rset is None:
-            actions = self.possible_vobjects(req, rset=rset, **kwargs)
+            actions = self.poss_visible_objects(req, rset=rset, **kwargs)
         else:
             actions = rset.possible_actions(**kwargs) # cached implementation
         result = {}
@@ -334,7 +340,7 @@ class CubicWebVRegistry(VRegistry):
 
     def register_if_interface_found(self, obj, ifaces, **kwargs):
         """register an object but remove it if no entity class implements one of
-        the given interfaces
+        the given interfaces at the end of the registration process
         """
         self.register(obj, **kwargs)
         if not isinstance(ifaces,  (tuple, list)):
@@ -354,35 +360,23 @@ class CubicWebVRegistry(VRegistry):
         if force_reload is None:
             force_reload = self.config.debugmode
         try:
-            self._register_objects(path, force_reload)
+            super(CubicWebVRegistry, self).register_objects(
+                path, force_reload, self.config.extrapath)
         except RegistryOutOfDate:
             CW_EVENT_MANAGER.emit('before-registry-reload')
             # modification detected, reset and reload
             self.reset(path, force_reload)
-            self._register_objects(path, force_reload)
+            super(CubicWebVRegistry, self).register_objects(
+                path, force_reload, self.config.extrapath)
             CW_EVENT_MANAGER.emit('after-registry-reload')
 
-    def _register_objects(self, path, force_reload=None):
-        """overriden to remove objects requiring a missing interface"""
-        extrapath = {}
-        for cubesdir in self.config.cubes_search_path():
-            if cubesdir != self.config.CUBES_DIR:
-                extrapath[cubesdir] = 'cubes'
-        if super(CubicWebVRegistry, self).register_objects(path, force_reload,
-                                                          extrapath):
-            self.initialization_completed()
-            # don't check rtags if we don't want to cleanup_interface_sobjects
-            for rtag in RTAGS:
-                rtag.init(self.schema,
-                          check=self.config.cleanup_interface_sobjects)
-
     def initialization_completed(self):
-        for regname, reg in self.iteritems():
-            self.debug('available in registry %s: %s', regname, sorted(reg))
-            reg.initialization_completed()
-            for appobjects in reg.itervalues():
-                for appobjectcls in appobjects:
-                    appobjectcls.register_properties()
+        """cw specific code once vreg initialization is completed:
+
+        * remove objects requiring a missing interface, unless
+          config.cleanup_interface_sobjects is false
+        * init rtags
+        """
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
@@ -409,6 +403,11 @@ class CubicWebVRegistry(VRegistry):
         # clear needs_iface so we don't try to remove some not-anymore-in
         # objects on automatic reloading
         self._needs_iface.clear()
+        super(CubicWebVRegistry, self).initialization_completed()
+        for rtag in RTAGS:
+            # don't check rtags if we don't want to cleanup_interface_sobjects
+            rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
+
 
     # rql parsing utilities ####################################################
 
@@ -469,7 +468,7 @@ class CubicWebVRegistry(VRegistry):
         try:
             return self['propertyvalues'][key]
         except KeyError:
-            return self['propertydefs'][key]['default']
+            return self.property_info(key)['default']
 
     def typed_value(self, key, value):
         """value is an unicode string, return it correctly typed. Let potential

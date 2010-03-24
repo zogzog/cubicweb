@@ -1,6 +1,6 @@
 """html widgets
 
-those are in cubicweb.common since we need to know available widgets at schema
+those are in cubicweb since we need to know available widgets at schema
 serialization time
 
 :organization: Logilab
@@ -9,10 +9,13 @@ serialization time
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from math import floor
+import random
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
-from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.uilib import toggle_action, htmlescape
 from cubicweb.web import jsonize
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,
@@ -277,7 +280,7 @@ class SimpleTableModel(object):
         if value is None:
             return u''
         elif isinstance(value, int):
-            return u'%09d'%value
+            return u'%09d' % value
         else:
             return unicode(value)
 
@@ -288,8 +291,8 @@ class TableWidget(HTMLWidget):
 
     When using remember to include the required css and js with:
 
-    self.req.add_js('jquery.tablesorter.js')
-    self.req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+    self._cw.add_js('jquery.tablesorter.js')
+    self._cw.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
     """
     highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
                 "onmouseout=\"removeElementClass(this, 'highlighted');\""
@@ -313,7 +316,7 @@ class TableWidget(HTMLWidget):
             self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name))
         self.w(u'</tr>')
         self.w(u'</thead><tbody>')
-        for rowindex, row in enumerate(self.model.get_rows()):
+        for rowindex in xrange(len(self.model.get_rows())):
             klass = (rowindex%2==1) and 'odd' or 'even'
             self.w(u'<tr class="%s" %s>' % (klass, self.highlight))
             for column, sortvalue in self.itercols(rowindex):
@@ -332,30 +335,4 @@ class TableWidget(HTMLWidget):
         for column in self.columns:
             yield column, self.model.sortvalue(rowindex, column.rset_sortcol)
 
-
-class ProgressBarWidget(HTMLWidget):
-    """display a progress bar widget"""
-    def __init__(self, done, todo, total):
-        self.done = done
-        self.todo = todo
-        self.total = total
-
-    def _render(self):
-        try:
-            percent = self.done*100./self.total
-        except ZeroDivisionError:
-            percent = 0
-        real_percent = percent
-        if percent > 100 :
-            color = 'done'
-            percent = 100
-        elif self.todo + self.done > self.total :
-            color = 'overpassed'
-        else:
-            color = 'inprogress'
-        if percent < 0:
-            percent = 0
-        self.w(u'<div class="progressbarback" title="%i %%">' % real_percent)
-        self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, percent))
-        self.w(u'</div>')
 

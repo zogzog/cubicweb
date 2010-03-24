@@ -1,4 +1,5 @@
 debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/server/ usr/lib/PY_VERSION/site-packages/cubicweb
+debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/hooks/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/schemas/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/share/cubicweb/migration/ usr/share/cubicweb/

@@ -28,6 +28,9 @@ from logilab.common.shellutils import ASK
 from cubicweb import warning
 from cubicweb import ConfigurationError, ExecutionError
 
+def underline_title(title, car='-'):
+    return title+'\n'+(car*len(title))
+
 def iter_dir(directory, condition_file=None, ignore=()):
     """iterate on a directory"""
     for sub in listdir(directory):
@@ -79,7 +82,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
         if askconfirm:
             print
             print diffs
-            action = ASK.ask('Replace ?', ('N','y','q'), 'N')
+            action = ASK.ask('Replace ?', ('N', 'y', 'q'), 'N')
         else:
             action = 'y'
         if action == 'y':
@@ -248,7 +251,7 @@ class Command(BaseCommand):
 def main_run(args, doc):
     """command line tool"""
     try:
-        base_main_run(args, doc)
+        base_main_run(args, doc, copyright=None)
     except ConfigurationError, err:
         print 'ERROR: ', err
         sys.exit(1)

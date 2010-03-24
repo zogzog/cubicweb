@@ -15,11 +15,13 @@ from smtplib import SMTP
 import simplejson
 
 from logilab.common.decorators import cached
+from logilab.common.date import strptime
 
-from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
-from cubicweb.utils import strptime, CubicWebJsonEncoder
+from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
+                      typed_eid)
+from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.common.mail import format_mail
+from cubicweb.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
@@ -36,7 +38,7 @@ def jsonize(func):
     results
     """
     def wrapper(self, *args, **kwargs):
-        self.req.set_content_type('application/json')
+        self._cw.set_content_type('application/json')
         return json_dumps(func(self, *args, **kwargs))
     wrapper.__name__ = func.__name__
     return wrapper
@@ -44,9 +46,9 @@ def jsonize(func):
 def xhtmlize(func):
     """decorator to sets correct content_type and calls `xmlize` on results"""
     def wrapper(self, *args, **kwargs):
-        self.req.set_content_type(self.req.html_content_type())
+        self._cw.set_content_type(self._cw.html_content_type())
         result = func(self, *args, **kwargs)
-        return ''.join((self.req.document_surrounding_div(), result.strip(),
+        return ''.join((self._cw.document_surrounding_div(), result.strip(),
                         u'</div>'))
     wrapper.__name__ = func.__name__
     return wrapper
@@ -56,40 +58,51 @@ def check_pageid(func):
     user's session data
     """
     def wrapper(self, *args, **kwargs):
-        data = self.req.get_session_data(self.req.pageid)
+        data = self._cw.get_session_data(self._cw.pageid)
         if data is None:
-            raise RemoteCallFailed(self.req._('pageid-not-found'))
+            raise RemoteCallFailed(self._cw._('pageid-not-found'))
         return func(self, *args, **kwargs)
     return wrapper
 
 
 class LoginController(Controller):
-    id = 'login'
+    __regid__ = 'login'
 
     def publish(self, rset=None):
         """log in the instance"""
-        if self.config['auth-mode'] == 'http':
+        if self._cw.vreg.config['auth-mode'] == 'http':
             # HTTP authentication
             raise ExplicitLogin()
         else:
             # Cookie authentication
-            return self.appli.need_login_content(self.req)
+            return self.appli.need_login_content(self._cw)
 
 
 class LogoutController(Controller):
-    id = 'logout'
+    __regid__ = 'logout'
 
     def publish(self, rset=None):
         """logout from the instance"""
-        return self.appli.session_handler.logout(self.req)
+        return self.appli.session_handler.logout(self._cw, self.goto_url())
 
+    def goto_url(self):
+        # * in http auth mode, url will be ignored
+        # * in cookie mode redirecting to the index view is enough : either
+        #   anonymous connection is allowed and the page will be displayed or
+        #   we'll be redirected to the login form
+        msg = self._cw._('you have been logged out')
+        if self._cw.https:
+            # XXX hack to generate an url on the http version of the site
+            self._cw._base_url =  self._cw.vreg.config['base-url']
+            self._cw.https = False
+        return self._cw.build_url('view', vid='index', __message=msg)
 
 class ViewController(Controller):
     """standard entry point :
     - build result set
     - select and call main template
     """
-    id = 'view'
+    __regid__ = 'view'
     template = 'main-template'
 
     def publish(self, rset=None):
@@ -97,12 +110,12 @@ class ViewController(Controller):
         view, rset = self._select_view_and_rset(rset)
         self.add_to_breadcrumbs(view)
         self.validate_cache(view)
-        template = self.appli.main_template_id(self.req)
-        return self.vreg['views'].main_template(self.req, template,
+        template = self.appli.main_template_id(self._cw)
+        return self._cw.vreg['views'].main_template(self._cw, template,
                                                 rset=rset, view=view)
 
     def _select_view_and_rset(self, rset):
-        req = self.req
+        req = self._cw
         if rset is None and not hasattr(req, '_rql_processed'):
             req._rql_processed = True
             rset = self.process_rql(req.form.get('rql'))
@@ -116,14 +129,14 @@ class ViewController(Controller):
             except Exception, ex:
                 self.exception('while handling __method')
                 req.set_message(req._("error while handling __method: %s") % req._(ex))
-        vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
+        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
         try:
-            view = self.vreg['views'].select(vid, req, rset=rset)
+            view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except ObjectNotFound:
             self.warning("the view %s could not be found", vid)
             req.set_message(req._("The view %s could not be found") % vid)
-            vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg['views'].select(vid, req, rset=rset)
+            vid = vid_from_rset(req, rset, self._cw.vreg.schema)
+            view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             if rset:
                 req.set_message(req._("The view %s can not be applied to this query") % vid)
@@ -131,8 +144,8 @@ class ViewController(Controller):
                 req.set_message(req._("You have no access to this view or it can not "
                                       "be used to display the current data."))
             self.warning("the view %s can not be applied to this query", vid)
-            vid = req.form.get('fallbackvid') or vid_from_rset(req, rset, self.schema)
-            view = self.vreg['views'].select(vid, req, rset=rset)
+            vid = req.form.get('fallbackvid') or vid_from_rset(req, rset, req.vreg.schema)
+            view = req.vreg['views'].select(vid, req, rset=rset)
         return view, rset
 
     def add_to_breadcrumbs(self, view):
@@ -140,7 +153,11 @@ class ViewController(Controller):
         # specifies explicitly it should not be added to breadcrumb or the
         # view is a binary view
         if view.add_to_breadcrumbs and not view.binary:
-            self.req.update_breadcrumbs()
+            self._cw.update_breadcrumbs()
+
+    def validate_cache(self, view):
+        view.set_http_cache_headers()
+        self._cw.validate_cache()
 
     def execute_linkto(self, eid=None):
         """XXX __linkto parameter may cause security issue
@@ -148,7 +165,7 @@ class ViewController(Controller):
         defined here since custom application controller inheriting from this
         one use this method?
         """
-        req = self.req
+        req = self._cw
         if not '__linkto' in req.form:
             return
         if eid is None:
@@ -167,7 +184,9 @@ class ViewController(Controller):
 
 def _validation_error(req, ex):
     req.cnx.rollback()
-    forminfo = req.get_session_data(req.form.get('__errorurl'), pop=True)
+    # XXX necessary to remove existant validation error?
+    # imo (syt), it's not necessary
+    req.get_session_data(req.form.get('__errorurl'), pop=True)
     foreid = ex.entity
     eidmap = req.data.get('eidmap', {})
     for var, eid in eidmap.items():
@@ -210,13 +229,13 @@ def _validate_form(req, vreg):
 
 
 class FormValidatorController(Controller):
-    id = 'validateform'
+    __regid__ = 'validateform'
 
     def response(self, domid, status, args, entity):
-        callback = str(self.req.form.get('__onsuccess', 'null'))
-        errback = str(self.req.form.get('__onfailure', 'null'))
-        cbargs = str(self.req.form.get('__cbargs', 'null'))
-        self.req.set_content_type('text/html')
+        callback = str(self._cw.form.get('__onsuccess', 'null'))
+        errback = str(self._cw.form.get('__onfailure', 'null'))
+        cbargs = str(self._cw.form.get('__cbargs', 'null'))
+        self._cw.set_content_type('text/html')
         jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
  wp = window.parent;
@@ -224,17 +243,17 @@ class FormValidatorController(Controller):
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
 
     def publish(self, rset=None):
-        self.req.json_request = True
+        self._cw.json_request = True
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
-        status, args, entity = _validate_form(self.req, self.vreg)
-        domid = self.req.form.get('__domid', 'entityForm').encode(
-            self.req.encoding)
+        status, args, entity = _validate_form(self._cw, self._cw.vreg)
+        domid = self._cw.form.get('__domid', 'entityForm').encode(
+            self._cw.encoding)
         return self.response(domid, status, args, entity)
 
 
 class JSonController(Controller):
-    id = 'json'
+    __regid__ = 'json'
 
     def publish(self, rset=None):
         """call js_* methods. Expected form keys:
@@ -245,16 +264,16 @@ class JSonController(Controller):
         note: it's the responsability of js_* methods to set the correct
         response content type
         """
-        self.req.json_request = True
+        self._cw.json_request = True
         try:
-            fname = self.req.form['fname']
+            fname = self._cw.form['fname']
             func = getattr(self, 'js_%s' % fname)
         except KeyError:
             raise RemoteCallFailed('no method specified')
         except AttributeError:
             raise RemoteCallFailed('no %s method' % fname)
         # no <arg> attribute means the callback takes no argument
-        args = self.req.form.get('arg', ())
+        args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
             args = (args,)
         args = [simplejson.loads(arg) for arg in args]
@@ -272,7 +291,7 @@ class JSonController(Controller):
             return ''
         # get unicode on @htmlize methods, encoded string on @jsonize methods
         elif isinstance(result, unicode):
-            return result.encode(self.req.encoding)
+            return result.encode(self._cw.encoding)
         return result
 
     def _rebuild_posted_form(self, names, values, action=None):
@@ -298,16 +317,16 @@ class JSonController(Controller):
     def _exec(self, rql, args=None, eidkey=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
         if rocheck:
-            self.ensure_ro_rql(rql)
+            self._cw.ensure_ro_rql(rql)
         try:
-            return self.req.execute(rql, args, eidkey)
+            return self._cw.execute(rql, args, eidkey)
         except Exception, ex:
             self.exception("error in _exec(rql=%s): %s", rql, ex)
             return None
         return None
 
     def _call_view(self, view, **kwargs):
-        req = self.req
+        req = self._cw
         divid = req.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
         stream = view.set_stream()
@@ -315,7 +334,7 @@ class JSonController(Controller):
             if divid == 'pageContent':
                 # mimick main template behaviour
                 stream.write(u'<div id="pageContent">')
-                vtitle = self.req.form.get('vtitle')
+                vtitle = self._cw.form.get('vtitle')
                 if vtitle:
                     stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             view.paginate()
@@ -334,31 +353,31 @@ class JSonController(Controller):
     @xhtmlize
     def js_view(self):
         # XXX try to use the page-content template
-        req = self.req
+        req = self._cw
         rql = req.form.get('rql')
         if rql:
             rset = self._exec(rql)
         else:
             rset = None
-        vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
+        vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
         try:
-            view = self.vreg['views'].select(vid, req, rset=rset)
+            view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
-            view = self.vreg['views'].select(vid, req, rset=rset)
+            view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
         return self._call_view(view)
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
         """specific method for CWProperty handling"""
-        entity = self.vreg['etypes'].etype_class('CWProperty')(self.req)
+        entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
         entity.eid = varname
         entity['pkey'] = propkey
-        form = self.vreg['forms'].select('edition', self.req, entity=entity)
+        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
         form.build_context()
         vfield = form.field_by_name('value')
-        renderer = FormRenderer(self.req)
+        renderer = FormRenderer(self._cw)
         return vfield.render(form, renderer, tabindex=tabindex) \
                + renderer.render_help(form, vfield)
 
@@ -368,21 +387,28 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        comp = self.vreg[registry].select(compid, self.req, rset=rset)
         if extraargs is None:
             extraargs = {}
         else: # we receive unicode keys which is not supported by the **syntax
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
+        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset, **extraargs)
         extraargs = extraargs or {}
-        return comp.render(**extraargs)
+        stream = comp.set_stream()
+        comp.render(**extraargs)
+        extresources = self._cw.html_headers.getvalue(skiphead=True)
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n')
+            stream.write(extresources)
+            stream.write(u'</div>\n')
+        return stream.getvalue()
 
     @check_pageid
     @xhtmlize
-    def js_inline_creation_form(self, peid, ttype, rtype, role, i18nctx):
-        view = self.vreg['views'].select('inline-creation', self.req,
-                                         etype=ttype, peid=peid, rtype=rtype,
-                                         role=role)
+    def js_inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
+        view = self._cw.vreg['views'].select('inline-creation', self._cw,
+                                             etype=ttype, rtype=rtype, role=role,
+                                             peid=peid, petype=petype)
         return self._call_view(view, i18nctx=i18nctx)
 
     @jsonize
@@ -390,68 +416,78 @@ class JSonController(Controller):
         return self.validate_form(action, names, values)
 
     def validate_form(self, action, names, values):
-        self.req.form = self._rebuild_posted_form(names, values, action)
-        return _validate_form(self.req, self.vreg)
+        self._cw.form = self._rebuild_posted_form(names, values, action)
+        return _validate_form(self._cw, self._cw.vreg)
 
     @xhtmlize
     def js_reledit_form(self):
-        args = dict((x,self.req.form[x])
+        req = self._cw
+        args = dict((x, self._cw.form[x])
                     for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
-        entity = self.req.entity_from_eid(int(self.req.form['eid']))
+        entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land
-        args['default'] = self.req.form['default_value']
+        args['default'] = self._cw.form['default_value']
         args['reload'] = simplejson.loads(args['reload'])
-        return entity.view('doreledit', **args)
+        rset = req.eid_rset(int(self._cw.form['eid']))
+        view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
+        stream = view.set_stream()
+        view.render(**args)
+        extresources = req.html_headers.getvalue(skiphead=True)
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n')
+            stream.write(extresources)
+            stream.write(u'</div>\n')
+        return stream.getvalue()
 
     @jsonize
     def js_i18n(self, msgids):
         """returns the translation of `msgid`"""
-        return [self.req._(msgid) for msgid in msgids]
+        return [self._cw._(msgid) for msgid in msgids]
 
     @jsonize
     def js_format_date(self, strdate):
         """returns the formatted date for `msgid`"""
         date = strptime(strdate, '%Y-%m-%d %H:%M:%S')
-        return self.format_date(date)
+        return self._cw.format_date(date)
 
     @jsonize
     def js_external_resource(self, resource):
         """returns the URL of the external resource named `resource`"""
-        return self.req.external_resource(resource)
+        return self._cw.external_resource(resource)
 
     @check_pageid
     @jsonize
     def js_user_callback(self, cbname):
-        page_data = self.req.get_session_data(self.req.pageid, {})
+        page_data = self._cw.get_session_data(self._cw.pageid, {})
         try:
             cb = page_data[cbname]
         except KeyError:
             return None
-        return cb(self.req)
+        return cb(self._cw)
 
     if HAS_SEARCH_RESTRICTION:
         @jsonize
         def js_filter_build_rql(self, names, values):
             form = self._rebuild_posted_form(names, values)
-            self.req.form = form
-            builder = FilterRQLBuilder(self.req)
+            self._cw.form = form
+            builder = FilterRQLBuilder(self._cw)
             return builder.build_rql()
 
         @jsonize
         def js_filter_select_content(self, facetids, rql):
-            rqlst = self.vreg.parse(self.req, rql) # XXX Union unsupported yet
+            rqlst = self._cw.vreg.parse(self._cw, rql) # XXX Union unsupported yet
             mainvar = prepare_facets_rqlst(rqlst)[0]
             update_map = {}
             for facetid in facetids:
-                facet = get_facet(self.req, facetid, rqlst.children[0], mainvar)
+                facet = get_facet(self._cw, facetid, rqlst.children[0], mainvar)
                 update_map[facetid] = facet.possible_values()
             return update_map
 
     def js_unregister_user_callback(self, cbname):
-        self.req.unregister_callback(self.req.pageid, cbname)
+        self._cw.unregister_callback(self._cw.pageid, cbname)
 
     def js_unload_page_data(self):
-        self.req.del_session_data(self.req.pageid)
+        self._cw.del_session_data(self._cw.pageid)
 
     def js_cancel_edition(self, errorurl):
         """cancelling edition from javascript
@@ -460,21 +496,21 @@ class JSonController(Controller):
           - errorurl
           - pending insertions / deletions
         """
-        self.req.cancel_edition(errorurl)
+        self._cw.cancel_edition(errorurl)
 
     def js_delete_bookmark(self, beid):
         rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
-        self.req.execute(rql, {'b': typed_eid(beid), 'u' : self.req.user.eid})
+        self._cw.execute(rql, {'b': typed_eid(beid), 'u' : self._cw.user.eid})
 
     def js_node_clicked(self, treeid, nodeeid):
         """add/remove eid in treestate cookie"""
         from cubicweb.web.views.treeview import treecookiename
-        cookies = self.req.get_cookie()
+        cookies = self._cw.get_cookie()
         statename = treecookiename(treeid)
         treestate = cookies.get(statename)
         if treestate is None:
             cookies[statename] = nodeeid
-            self.req.set_cookie(cookies, statename)
+            self._cw.set_cookie(cookies, statename)
         else:
             marked = set(filter(None, treestate.value.split(';')))
             if nodeeid in marked:
@@ -482,29 +518,29 @@ class JSonController(Controller):
             else:
                 marked.add(nodeeid)
             cookies[statename] = ';'.join(marked)
-            self.req.set_cookie(cookies, statename)
+            self._cw.set_cookie(cookies, statename)
 
     @jsonize
     def js_set_cookie(self, cookiename, cookievalue):
         # XXX we should consider jQuery.Cookie
         cookiename, cookievalue = str(cookiename), str(cookievalue)
-        cookies = self.req.get_cookie()
+        cookies = self._cw.get_cookie()
         cookies[cookiename] = cookievalue
-        self.req.set_cookie(cookies, cookiename)
+        self._cw.set_cookie(cookies, cookiename)
 
     # relations edition stuff ##################################################
 
     def _add_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        pendings = self.req.get_session_data(key, set())
+        pendings = self._cw.get_session_data(key, set())
         pendings.add( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        self.req.set_session_data(key, pendings)
+        self._cw.set_session_data(key, pendings)
 
     def _remove_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        pendings = self.req.get_session_data(key)
+        pendings = self._cw.get_session_data(key)
         pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        self.req.set_session_data(key, pendings)
+        self._cw.set_session_data(key, pendings)
 
     def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
         self._remove_pending(eidfrom, rel, eidto, 'insert')
@@ -523,67 +559,67 @@ class JSonController(Controller):
     @jsonize
     def js_add_and_link_new_entity(self, etype_to, rel, eid_to, etype_from, value_from):
         # create a new entity
-        eid_from = self.req.execute('INSERT %s T : T name "%s"' % ( etype_from, value_from ))[0][0]
+        eid_from = self._cw.execute('INSERT %s T : T name "%s"' % ( etype_from, value_from ))[0][0]
         # link the new entity to the main entity
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
 
 
 class SendMailController(Controller):
-    id = 'sendmail'
+    __regid__ = 'sendmail'
     __select__ = match_user_groups('managers', 'users')
 
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
-        eids = self.req.form['recipient']
+        eids = self._cw.form['recipient']
         # make sure we have a list even though only one recipient was specified
         if isinstance(eids, basestring):
             eids = (eids,)
         rql = 'Any X WHERE X eid in (%s)' % (','.join(eids))
-        rset = self.req.execute(rql)
+        rset = self._cw.execute(rql)
         for entity in rset.entities():
             yield entity
 
     @property
     @cached
     def smtp(self):
-        mailhost, port = self.config['smtp-host'], self.config['smtp-port']
+        mailhost, port = self._cw.config['smtp-host'], self._cw.config['smtp-port']
         try:
             return SMTP(mailhost, port)
         except Exception, ex:
             self.exception("can't connect to smtp server %s:%s (%s)",
                              mailhost, port, ex)
-            url = self.build_url(__message=self.req._('could not connect to the SMTP server'))
+            url = self._cw.build_url(__message=self._cw._('could not connect to the SMTP server'))
             raise Redirect(url)
 
     def sendmail(self, recipient, subject, body):
-        helo_addr = '%s <%s>' % (self.config['sender-name'],
-                                 self.config['sender-addr'])
-        msg = format_mail({'email' : self.req.user.get_email(),
-                           'name' : self.req.user.dc_title(),},
+        helo_addr = '%s <%s>' % (self._cw.config['sender-name'],
+                                 self._cw.config['sender-addr'])
+        msg = format_mail({'email' : self._cw.user.get_email(),
+                           'name' : self._cw.user.dc_title(),},
                           [recipient], body, subject)
         self.smtp.sendmail(helo_addr, [recipient], msg.as_string())
 
     def publish(self, rset=None):
         # XXX this allows users with access to an cubicweb instance to use it as
         # a mail relay
-        body = self.req.form['mailbody']
-        subject = self.req.form['subject']
+        body = self._cw.form['mailbody']
+        subject = self._cw.form['subject']
         for recipient in self.recipients():
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)
-        # breadcrumbs = self.req.get_session_data('breadcrumbs', None)
-        url = self.build_url(__message=self.req._('emails successfully sent'))
+        # breadcrumbs = self._cw.get_session_data('breadcrumbs', None)
+        url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
         raise Redirect(url)
 
 
 class MailBugReportController(SendMailController):
-    id = 'reportbug'
+    __regid__ = 'reportbug'
     __select__ = yes()
 
     def publish(self, rset=None):
-        body = self.req.form['description']
-        self.sendmail(self.config['submit-mail'], _('%s error report') % self.config.appid, body)
-        url = self.build_url(__message=self.req._('bug report sent'))
+        body = self._cw.form['description']
+        self.sendmail(self._cw.config['submit-mail'], _('%s error report') % self._cw.config.appid, body)
+        url = self._cw.build_url(__message=self._cw._('bug report sent'))
         raise Redirect(url)
 

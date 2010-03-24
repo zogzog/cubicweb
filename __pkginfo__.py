@@ -7,7 +7,7 @@ software
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (3, 5, 12)
+numversion = (3, 6, 3)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
@@ -48,7 +48,6 @@ import glob
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
 include_dirs = [join('test', 'data'),
-                join('common', 'test', 'data'),
                 join('server', 'test', 'data'),
                 join('web', 'test', 'data'),
                 join('devtools', 'test', 'data'),

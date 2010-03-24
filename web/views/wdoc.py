@@ -13,12 +13,12 @@ from bisect import bisect_right
 from datetime import date
 
 from logilab.common.changelog import ChangeLog
+from logilab.common.date import strptime, todate
 from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.selectors import match_form_params, yes
 from cubicweb.view import StartupView
-from cubicweb.utils import strptime, todate
-from cubicweb.common.uilib import rest_publish
+from cubicweb.uilib import rest_publish
 from cubicweb.web import NotFound, action
 _ = unicode
 
@@ -86,20 +86,21 @@ def subsections(node):
 
 class InlineHelpView(StartupView):
     __select__ = match_form_params('fid')
-    id = 'wdoc'
+    __regid__ = 'wdoc'
     title = _('site documentation')
 
     def call(self):
-        fid = self.req.form['fid']
-        for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
-                          self.config.available_languages()):
+        fid = self._cw.form['fid']
+        vreg = self._cw.vreg
+        for lang in chain((self._cw.lang, vreg.property_value('ui.language')),
+                          vreg.config.available_languages()):
             rid = '%s_%s.rst' % (fid, lang)
-            resourcedir = self.config.locate_doc_file(rid)
+            resourcedir = vreg.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:
             raise NotFound
-        self.tocindex = build_toc(self.config)
+        self.tocindex = build_toc(vreg.config)
         try:
             node = self.tocindex[fid]
         except KeyError:
@@ -107,7 +108,7 @@ class InlineHelpView(StartupView):
         else:
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
-            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))
+            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self._cw.lang)))
         data = open(join(resourcedir, rid)).read()
         self.w(rest_publish(self, data))
         if node is not None:
@@ -116,7 +117,7 @@ class InlineHelpView(StartupView):
             self.navigation_links(node)
 
     def navigation_links(self, node):
-        req = self.req
+        req = self._cw
         parent = node.parent
         if parent is None:
             return
@@ -138,10 +139,10 @@ class InlineHelpView(StartupView):
     def navsection(self, node, navtype):
         htmlclass, imgpath, msgid = self.navinfo[navtype]
         self.w(u'<span class="%s">' % htmlclass)
-        self.w(u'%s : ' % self.req._(msgid))
+        self.w(u'%s : ' % self._cw._(msgid))
         self.w(u'<a href="%s">%s</a>' % (
-            self.req.build_url('doc/'+node.attrib['resource']),
-            title_for_lang(node, self.req.lang)))
+            self._cw.build_url('doc/'+node.attrib['resource']),
+            title_for_lang(node, self._cw.lang)))
         self.w(u'</span>\n')
 
     def subsections_links(self, node, first=True):
@@ -153,8 +154,8 @@ class InlineHelpView(StartupView):
         self.w(u'<ul class="docsum">')
         for child in sub:
             self.w(u'<li><a href="%s">%s</a>' % (
-                self.req.build_url('doc/'+child.attrib['resource']),
-                title_for_lang(child, self.req.lang)))
+                self._cw.build_url('doc/'+child.attrib['resource']),
+                title_for_lang(child, self._cw.lang)))
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
@@ -162,18 +163,18 @@ class InlineHelpView(StartupView):
 
 
 class InlineHelpImageView(StartupView):
-    id = 'wdocimages'
+    __regid__ = 'wdocimages'
     __select__ = match_form_params('fid')
     binary = True
     templatable = False
     content_type = 'image/png'
 
     def call(self):
-        fid = self.req.form['fid']
-        for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
-                          self.config.available_languages()):
+        fid = self._cw.form['fid']
+        for lang in chain((self._cw.lang, self._cw.vreg.property_value('ui.language')),
+                          self._cw.vreg.config.available_languages()):
             rid = join('images', '%s_%s.png' % (fid, lang))
-            resourcedir = self.config.locate_doc_file(rid)
+            resourcedir = self._cw.vreg.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:
@@ -182,18 +183,18 @@ class InlineHelpImageView(StartupView):
 
 
 class ChangeLogView(StartupView):
-    id = 'changelog'
+    __regid__ = 'changelog'
     title = _('What\'s new?')
     maxentries = 25
 
     def call(self):
-        rid = 'ChangeLog_%s' % (self.req.lang)
+        rid = 'ChangeLog_%s' % (self._cw.lang)
         allentries = []
-        title = self.req._(self.title)
+        title = self._cw._(self.title)
         restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
         w = restdata.append
         today = date.today()
-        for fpath in self.config.locate_all_files(rid):
+        for fpath in self._cw.vreg.config.locate_all_files(rid):
             cl = ChangeLog(fpath)
             encoding = 'utf-8'
             # additional content may be found in title
@@ -223,7 +224,7 @@ class ChangeLogView(StartupView):
         i = 0
         for edate, messages in reversed(allentries):
             if latestdate != edate:
-                fdate = self.format_date(edate)
+                fdate = self._cw.format_date(edate)
                 w(u'\n%s' % fdate)
                 w('~' * len(fdate))
                 latestdate = edate
@@ -237,7 +238,7 @@ class ChangeLogView(StartupView):
 
 
 class HelpAction(action.Action):
-    id = 'help'
+    __regid__ = 'help'
     __select__ = yes()
 
     category = 'footer'
@@ -245,10 +246,10 @@ class HelpAction(action.Action):
     title = _('Help')
 
     def url(self):
-        return self.req.build_url('doc/main')
+        return self._cw.build_url('doc/main')
 
 class ChangeLogAction(action.Action):
-    id = 'changelog'
+    __regid__ = 'changelog'
     __select__ = yes()
 
     category = 'footer'
@@ -256,11 +257,11 @@ class ChangeLogAction(action.Action):
     title = ChangeLogView.title
 
     def url(self):
-        return self.req.build_url('changelog')
+        return self._cw.build_url('changelog')
 
 
 class AboutAction(action.Action):
-    id = 'about'
+    __regid__ = 'about'
     __select__ = yes()
 
     category = 'footer'
@@ -268,5 +269,5 @@ class AboutAction(action.Action):
     title = _('about this site')
 
     def url(self):
-        return self.req.build_url('doc/about')
+        return self._cw.build_url('doc/about')
 

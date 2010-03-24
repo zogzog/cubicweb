@@ -15,31 +15,31 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import nonempty_rset, match_form_params
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, AnyRsetView
-from cubicweb.common import tags
-from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb import tags
+from cubicweb.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                       PopupBoxMenu, BoxLink)
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):
-    id = 'table'
+    __regid__ = 'table'
     title = _('table')
     finalview = 'final'
 
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
                     hidden=True):
-        rqlst = self.rset.syntax_tree()
+        rqlst = self.cw_rset.syntax_tree()
         # union not yet supported
         if len(rqlst.children) != 1:
             return ()
-        rqlst.save_state()
-        mainvar, baserql = prepare_facets_rqlst(rqlst, self.rset.args)
-        wdgs = [facet.get_widget() for facet in self.vreg['facets'].possible_vobjects(
-            self.req, rset=self.rset, context='tablefilter',
+        rqlst = rqlst.copy()
+        self._cw.vreg.rqlhelper.annotate(rqlst)
+        mainvar, baserql = prepare_facets_rqlst(rqlst, self.cw_rset.args)
+        wdgs = [facet.get_widget() for facet in self._cw.vreg['facets'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, rqlst=rqlst.children[0], context='tablefilter',
             filtered_variable=mainvar)]
         wdgs = [wdg for wdg in wdgs if wdg is not None]
-        rqlst.recover()
         if wdgs:
             self._generate_form(divid, baserql, wdgs, hidden,
                                vidargs={'displaycols': displaycols,
@@ -52,8 +52,8 @@ class TableView(AnyRsetView):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
         """
-        self.req.add_css('cubicweb.facets.css')
-        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
+        self._cw.add_css('cubicweb.facets.css')
+        self._cw.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         self.w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
@@ -61,7 +61,7 @@ class TableView(AnyRsetView):
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
         self.w(u'<input type="hidden" name="fromformfilter" value="1" />')
-        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets),
+        filter_hiddens(self.w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
                        baserql=baserql)
         self.w(u'<table class="filter">\n')
         self.w(u'<tr>\n')
@@ -78,8 +78,8 @@ class TableView(AnyRsetView):
         """returns the index of the first non-attribute variable among the RQL
         selected variables
         """
-        eschema = self.vreg.schema.eschema
-        for i, etype in enumerate(self.rset.description[0]):
+        eschema = self._cw.vreg.schema.eschema
+        for i, etype in enumerate(self.cw_rset.description[0]):
             try:
                 if not eschema(etype).final:
                     return i
@@ -89,10 +89,10 @@ class TableView(AnyRsetView):
 
     def displaycols(self, displaycols):
         if displaycols is None:
-            if 'displaycols' in self.req.form:
-                displaycols = [int(idx) for idx in self.req.form['displaycols']]
+            if 'displaycols' in self._cw.form:
+                displaycols = [int(idx) for idx in self._cw.form['displaycols']]
             else:
-                displaycols = range(len(self.rset.syntax_tree().children[0].selection))
+                displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
         return displaycols
 
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
@@ -105,7 +105,7 @@ class TableView(AnyRsetView):
         :param displayfilter: filter that selects rows to display
         :param headers: columns' titles
         """
-        req = self.req
+        req = self._cw
         req.add_js('jquery.tablesorter.js')
         req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
         # compute label first  since the filter form may remove some necessary
@@ -116,7 +116,7 @@ class TableView(AnyRsetView):
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.rset))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.cw_rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False
@@ -145,7 +145,7 @@ class TableView(AnyRsetView):
             actions += self.show_hide_actions(divid, True)
         self.w(u'<div id="%s"' % divid)
         if displayactions:
-            actionsbycat = self.vreg['actions'].possible_actions(req, self.rset)
+            actionsbycat = self._cw.vreg['actions'].possible_actions(req, self.cw_rset)
             for action in actionsbycat.get('mainactions', ()):
                 for action in action.actual_actions():
                     actions.append( (action.url(), req._(action.title),
@@ -166,13 +166,12 @@ class TableView(AnyRsetView):
         if not fromformfilter:
             self.w(u'</div>\n')
 
-
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
                              for what in ('Form', 'Show', 'Hide', 'Actions'))
         showhide = 'javascript:' + showhide
-        showlabel = self.req._('show filter form')
-        hidelabel = self.req._('hide filter form')
+        showlabel = self._cw._('show filter form')
+        hidelabel = self._cw._('hide filter form')
         if currentlydisplayed:
             return [(showhide, showlabel, 'hidden', '%sShow' % divid),
                     (showhide, hidelabel, None, '%sHide' % divid)]
@@ -181,8 +180,8 @@ class TableView(AnyRsetView):
 
     def render_actions(self, divid, actions):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = tags.img(src=self.req.external_resource('PUCE_DOWN'),
-                         alt=xml_escape(self.req._('action(s) on this selection')))
+        label = tags.img(src=self._cw.external_resource('PUCE_DOWN'),
+                         alt=xml_escape(self._cw._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)
         box.append(menu)
@@ -194,6 +193,7 @@ class TableView(AnyRsetView):
     def get_columns(self, computed_labels, displaycols, headers, subvid,
                     cellvids, cellattrs, mainindex):
         columns = []
+        eschema = self._cw.vreg.schema.eschema
         for colindex, label in enumerate(computed_labels):
             if colindex not in displaycols:
                 continue
@@ -201,14 +201,14 @@ class TableView(AnyRsetView):
             if headers is not None:
                 label = headers[displaycols.index(colindex)]
             if colindex == mainindex:
-                label += ' (%s)' % self.rset.rowcount
+                label += ' (%s)' % self.cw_rset.rowcount
             column = TableColumn(label, colindex)
-            coltype = self.rset.description[0][colindex]
+            coltype = self.cw_rset.description[0][colindex]
             # compute column cell view (if coltype is None, it's a left outer
             # join, use the default non final subvid)
             if cellvids and colindex in cellvids:
                 column.append_renderer(cellvids[colindex], colindex)
-            elif coltype is not None and self.schema.eschema(coltype).final:
+            elif coltype is not None and eschema(coltype).final:
                 column.append_renderer(self.finalview, colindex)
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
@@ -221,10 +221,10 @@ class TableView(AnyRsetView):
 
 
     def render_cell(self, cellvid, row, col, w):
-        self.view('cell', self.rset, row=row, col=col, cellvid=cellvid, w=w)
+        self._cw.view('cell', self.cw_rset, row=row, col=col, cellvid=cellvid, w=w)
 
     def get_rows(self):
-        return self.rset
+        return self.cw_rset
 
     @htmlescape
     @jsonize
@@ -233,46 +233,45 @@ class TableView(AnyRsetView):
         # XXX it might be interesting to try to limit value's
         #     length as much as possible (e.g. by returning the 10
         #     first characters of a string)
-        val = self.rset[row][col]
+        val = self.cw_rset[row][col]
         if val is None:
             return u''
-        etype = self.rset.description[row][col]
-        if self.schema.eschema(etype).final:
-            entity, rtype = self.rset.related_entity(row, col)
+        etype = self.cw_rset.description[row][col]
+        if self._cw.vreg.schema.eschema(etype).final:
+            entity, rtype = self.cw_rset.related_entity(row, col)
             if entity is None:
                 return val # remove_html_tags() ?
             return entity.sortvalue(rtype)
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         return entity.sortvalue()
 
 
 class EditableTableView(TableView):
-    id = 'editable-table'
+    __regid__ = 'editable-table'
     finalview = 'editable-final'
     title = _('editable-table')
 
 
 class CellView(EntityView):
+    __regid__ = 'cell'
     __select__ = nonempty_rset()
-
-    id = 'cell'
 
     def cell_call(self, row, col, cellvid=None):
         """
         :param row, col: indexes locating the cell value in view's result set
         :param cellvid: cell view (defaults to 'outofcontext')
         """
-        etype, val = self.rset.description[row][col], self.rset[row][col]
-        if val is not None and not self.schema.eschema(etype).final:
-            e = self.rset.get_entity(row, col)
+        etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
+        if val is not None and not self._cw.vreg.schema.eschema(etype).final:
+            e = self.cw_rset.get_entity(row, col)
             e.view(cellvid or 'outofcontext', w=self.w)
         elif val is None:
             # This is usually caused by a left outer join and in that case,
             # regular views will most certainly fail if they don't have
             # a real eid
-            self.wview('final', self.rset, row=row, col=col)
+            self.wview('final', self.cw_rset, row=row, col=col)
         else:
-            self.wview(cellvid or 'final', self.rset, 'null', row=row, col=col)
+            self.wview(cellvid or 'final', self.cw_rset, 'null', row=row, col=col)
 
 
 class InitialTableView(TableView):
@@ -287,7 +286,7 @@ class InitialTableView(TableView):
     * the actual query (`actualrql` form parameter) whose results will be
       displayed with default restrictions set
     """
-    id = 'initialtable'
+    __regid__ = 'initialtable'
     __select__ = nonempty_rset() & match_form_params('actualrql')
     # should not be displayed in possible view since it expects some specific
     # parameters
@@ -296,17 +295,17 @@ class InitialTableView(TableView):
     def call(self, title=None, subvid=None, headers=None, divid=None,
              displaycols=None, displayactions=None, mainindex=None):
         """Dumps a table displaying a composite query"""
-        actrql = self.req.form['actualrql']
-        self.ensure_ro_rql(actrql)
+        actrql = self._cw.form['actualrql']
+        self._cw.ensure_ro_rql(actrql)
         displaycols = self.displaycols(displaycols)
-        if displayactions is None and 'displayactions' in self.req.form:
+        if displayactions is None and 'displayactions' in self._cw.form:
             displayactions = True
-        if divid is None and 'divid' in self.req.form:
-            divid = self.req.form['divid']
+        if divid is None and 'divid' in self._cw.form:
+            divid = self._cw.form['divid']
         self.w(u'<div class="section">')
-        if not title and 'title' in self.req.form:
+        if not title and 'title' in self._cw.form:
             # pop title so it's not displayed by the table view as well
-            title = self.req.form.pop('title')
+            title = self._cw.form.pop('title')
         if title:
             self.w(u'<h2>%s</h2>\n' % title)
         if mainindex is None:
@@ -315,15 +314,15 @@ class InitialTableView(TableView):
             actions = self.form_filter(divid, displaycols, displayactions, True)
         else:
             actions = ()
-        if not subvid and 'subvid' in self.req.form:
-            subvid = self.req.form.pop('subvid')
-        self.view('table', self.req.execute(actrql),
-                  'noresult', w=self.w, displayfilter=False, subvid=subvid,
-                  displayactions=displayactions, displaycols=displaycols,
-                  actions=actions, headers=headers, divid=divid)
+        if not subvid and 'subvid' in self._cw.form:
+            subvid = self._cw.form.pop('subvid')
+        self._cw.view('table', self._cw.execute(actrql),
+                      'noresult', w=self.w, displayfilter=False, subvid=subvid,
+                      displayactions=displayactions, displaycols=displaycols,
+                      actions=actions, headers=headers, divid=divid)
         self.w(u'</div>\n')
 
 
 class EditableInitialTableTableView(InitialTableView):
-    id = 'editable-initialtable'
+    __regid__ = 'editable-initialtable'
     finalview = 'editable-final'

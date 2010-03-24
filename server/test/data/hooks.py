@@ -5,27 +5,31 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.server.hooksmanager import SystemHook
+from cubicweb.server.hook import Hook
 
 CALLED_EVENTS = {}
 
-class StartupHook(SystemHook):
+class StartupHook(Hook):
+    __regid__ = 'mystartup'
     events = ('server_startup',)
-    def call(self, repo):
+    def __call__(self):
         CALLED_EVENTS['server_startup'] = True
 
-class ShutdownHook(SystemHook):
+class ShutdownHook(Hook):
+    __regid__ = 'myshutdown'
     events = ('server_shutdown',)
-    def call(self, repo):
+    def __call__(self):
         CALLED_EVENTS['server_shutdown'] = True
 
 
-class LoginHook(SystemHook):
+class LoginHook(Hook):
+    __regid__ = 'mylogin'
     events = ('session_open',)
-    def call(self, session):
-        CALLED_EVENTS['session_open'] = session.user.login
+    def __call__(self):
+        CALLED_EVENTS['session_open'] = self._cw.user.login
 
-class LogoutHook(SystemHook):
+class LogoutHook(Hook):
+    __regid__ = 'mylogout'
     events = ('session_close',)
-    def call(self, session):
-        CALLED_EVENTS['session_close'] = session.user.login
+    def __call__(self):
+        CALLED_EVENTS['session_close'] = self._cw.user.login

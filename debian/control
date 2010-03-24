@@ -15,8 +15,8 @@ XS-Python-Version: >= 2.4, << 2.6
 Package: cubicweb
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-twisted (= ${source:Version}), cubicweb-client (= ${source:Version})
-XB-Recommends: (postgresql, postgresql-plpython, postgresql-contrib) | mysql | sqlite3
+Depends: ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-twisted (= ${source:Version})
+XB-Recommends: (postgresql, postgresql-plpython) | mysql | sqlite3
 Recommends: postgresql | mysql | sqlite3
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -33,7 +33,8 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-indexer (>= 0.6.1), python-psycopg2 | python-mysqldb | python-pysqlite2
+# postgresql/mysql -client packages for backup/restore of non local database
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-indexer (>= 0.6.1), cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -42,6 +43,26 @@ Description: server part of the CubicWeb framework
  .
  This package provides the repository server part of the library and
  necessary shared data files such as the schema library.
+
+Package: cubicweb-postgresql-support
+Architecture: all
+# postgresql-client packages for backup/restore of non local database
+Depends: python-psycopg2, postgresql-client
+Description: postgres support for the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This virtual package provides dependancies to use postgres for the
+ cubicweb repository.
+
+Package: cubicweb-mysql-support
+Architecture: all
+# mysql-client packages for backup/restore of non local database
+Depends: python-mysqldb, mysql-client
+Description: mysql support for the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This virtual package provides dependancies to use mysql for the
+ cubicweb repository.
 
 
 Package: cubicweb-twisted
@@ -62,8 +83,8 @@ Description: twisted-based web interface for the CubicWeb framework
 Package: cubicweb-web
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), python-simplejson (>= 1.3), python-elementtree
-Recommends: python-docutils, python-vobject, fckeditor, python-fyzz, python-pysixt, fop
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), python-simplejson (>= 1.3)
+Recommends: python-docutils, python-vobject, fckeditor, python-fyzz, python-pysixt, fop, python-imaging
 Description: web interface library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -77,8 +98,8 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.46.0), python-yams (>= 0.25.0), python-rql (>= 0.22.3), python-lxml
-Recommends: python-simpletal (>= 4.0)
+Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.6.0), python-logilab-common (>= 0.48.1), python-yams (>= 0.28.0), python-rql (>= 0.24.0), python-lxml
+Recommends: python-simpletal (>= 4.0), python-crypto
 Conflicts: cubicweb-core
 Replaces: cubicweb-core
 Description: common library for the CubicWeb framework
@@ -98,17 +119,6 @@ Description: tool to manage the CubicWeb framework
  This package provides a control script to manage (create, upgrade, start,
  stop, etc) CubicWeb applications. It also include the init.d script
  to automatically start and stop CubicWeb applications on boot or shutdown.
-
-
-Package: cubicweb-client
-Architecture: all
-XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, cubicweb-ctl (= ${source:Version}), pyro
-Description: RQL command line client for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides a RQL (Relation Query Language) command line client using
- pyro to connect to a repository server.
 
 
 Package: cubicweb-dev

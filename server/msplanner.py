@@ -90,7 +90,6 @@ from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.ssplanner import (SSPlanner, OneFetchStep,
                                        add_types_restriction)
 from cubicweb.server.mssteps import *
-from cubicweb.server.sources import AbstractSource
 
 Variable._ms_table_key = lambda x: x.name
 Relation._ms_table_key = lambda x: x.r_type
@@ -272,7 +271,7 @@ class PartPlanInformation(object):
         for source in self._sourcesterms:
             print '-', source
             for term, sols in self._sourcesterms[source].items():
-                print '  -', term, id(term), ':' ,sols
+                print '  -', term, id(term), ':', sols
 
     def copy_solutions(self, solindices):
         return [self._solutions[solidx].copy() for solidx in solindices]
@@ -465,7 +464,7 @@ class PartPlanInformation(object):
                     try:
                         lhsv = self._extern_term(lhs, termssources, inserted)
                         rhsv = self._extern_term(rhs, termssources, inserted)
-                    except KeyError, ex:
+                    except KeyError:
                         continue
                     self._remove_term_sources(lhsv, rel, rhsv, termssources)
                     self._remove_term_sources(rhsv, rel, lhsv, termssources)
@@ -684,11 +683,11 @@ class PartPlanInformation(object):
                         # go to the next iteration directly!
                         continue
                     if not sourceterms:
-                         try:
-                             del self._sourcesterms[source]
-                         except KeyError:
-                             # XXX already cleaned
-                             pass
+                        try:
+                            del self._sourcesterms[source]
+                        except KeyError:
+                            # XXX already cleaned
+                            pass
                 # set of terms which should be additionaly selected when
                 # possible
                 needsel = set()
@@ -857,7 +856,6 @@ class PartPlanInformation(object):
         terms = [term]
         sources = sorted(sources)
         sourcesterms = self._sourcesterms
-        nbunlinked = 1
         linkedterms = self._linkedterms
         # term has to belong to the same scope if there is more
         # than the system source remaining
@@ -873,7 +871,7 @@ class PartPlanInformation(object):
         for source in sources:
             cross_rels.update(self._crossrelations.get(source, {}))
         exclude = {}
-        for rel, crossvars in cross_rels.iteritems():
+        for crossvars in cross_rels.itervalues():
             vars = [t for t in crossvars if isinstance(t, Variable)]
             try:
                 exclude[vars[0]] = vars[1]
@@ -897,7 +895,6 @@ class PartPlanInformation(object):
             modified = False
             for term in candidates[:]:
                 if isinstance(term, Constant):
-                    relation = term.relation()
                     if sorted(set(x[0] for x in self._term_sources(term))) != sources:
                         continue
                     terms.append(term)
@@ -1023,12 +1020,6 @@ class MSPlanner(SSPlanner):
         if server.DEBUG & server.DBG_MS:
             print '-'*80
             print 'PLANNING', rqlst
-        for select in rqlst.children:
-            if len(select.solutions) > 1:
-                hasmultiplesols = True
-                break
-        else:
-            hasmultiplesols = False
         # preprocess deals with security insertion and returns a new syntax tree
         # which have to be executed to fulfill the query: according
         # to permissions for variable's type, different rql queries may have to
@@ -1036,7 +1027,7 @@ class MSPlanner(SSPlanner):
         plan.preprocess(rqlst)
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
-        steps = self._union_plan(plan, rqlst, ppis)
+        steps = self._union_plan(plan, ppis)
         if server.DEBUG & server.DBG_MS:
             from pprint import pprint
             for step in plan.steps:
@@ -1054,7 +1045,7 @@ class MSPlanner(SSPlanner):
             for sppi in sppis:
                 if sppi.needsplit or sppi.part_sources != ppi.part_sources:
                     temptable = 'T%s' % make_uid(id(subquery))
-                    sstep = self._union_plan(plan, subquery.query, sppis, temptable)[0]
+                    sstep = self._union_plan(plan, sppis, temptable)[0]
                     break
             else:
                 sstep = None
@@ -1065,7 +1056,7 @@ class MSPlanner(SSPlanner):
                 ppi.plan.add_step(sstep)
         return inputmap
 
-    def _union_plan(self, plan, union, ppis, temptable=None):
+    def _union_plan(self, plan, ppis, temptable=None):
         tosplit, cango, allsources = [], {}, set()
         for planinfo in ppis:
             if planinfo.needsplit:
@@ -1191,7 +1182,7 @@ class MSPlanner(SSPlanner):
                                             for step in steps
                                             for select in step.union.children):
                 if temptable:
-                    step = IntersectFetchStep(plan)
+                    step = IntersectFetchStep(plan) # XXX not implemented
                 else:
                     step = IntersectStep(plan)
             else:

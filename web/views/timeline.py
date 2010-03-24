@@ -24,7 +24,7 @@ class TimelineJsonView(EntityView):
     NOTE: work in progress (image_url, bubbleUrl and so on
     should be properties of entity classes or subviews)
     """
-    id = 'timeline-json'
+    __regid__ = 'timeline-json'
     binary = True
     templatable = False
     content_type = 'application/json'
@@ -34,7 +34,7 @@ class TimelineJsonView(EntityView):
 
     def call(self):
         events = []
-        for entity in self.rset.entities():
+        for entity in self.cw_rset.entities():
             event = self.build_event(entity)
             if event is not None:
                 events.append(event)
@@ -86,9 +86,9 @@ class TimelineViewMixIn(object):
                'cubicweb.timeline-ext.js', 'cubicweb.ajax.js')
 
     def render_url(self, loadurl, tlunit=None):
-        tlunit = tlunit or self.req.form.get('tlunit')
-        self.req.add_js(self.jsfiles)
-        self.req.add_css('timeline-bundle.css')
+        tlunit = tlunit or self._cw.form.get('tlunit')
+        self._cw.add_js(self.jsfiles)
+        self._cw.add_css('timeline-bundle.css')
         if tlunit:
             additional = u' cubicweb:tlunit="%s"' % tlunit
         else:
@@ -102,14 +102,14 @@ class TimelineViewMixIn(object):
 
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
-    id = 'timeline'
+    __regid__ = 'timeline'
     title = _('timeline')
     __select__ = implements(ICalendarable)
     paginable = False
     def call(self, tlunit=None):
-        self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)
-        rql = self.rset.printable_rql()
-        loadurl = self.build_url(rql=rql, vid='timeline-json')
+        self._cw.html_headers.define_var('Timeline_urlPrefix', self._cw.datadir_url)
+        rql = self.cw_rset.printable_rql()
+        loadurl = self._cw.build_url(rql=rql, vid='timeline-json')
         self.render_url(loadurl, tlunit)
 
 
@@ -117,7 +117,7 @@ class StaticTimelineView(TimelineViewMixIn, StartupView):
     """similar to `TimelineView` but loads data from a static
     JSON file instead of one after a RQL query.
     """
-    id = 'static-timeline'
+    __regid__ = 'static-timeline'
 
     def call(self, loadurl, tlunit=None, wdgclass=None):
         self.widget_class = wdgclass or self.widget_class

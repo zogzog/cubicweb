@@ -34,6 +34,7 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 schema['in_state'].inlined = True
+schema['state_of'].inlined = False
 schema['comments'].inlined = False
 
 PARSER = [
@@ -358,10 +359,6 @@ ORDER BY 1'''),
     ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
      '''SELECT DISTINCT _X.cw_eid, rel_read_permission0.eid_to
 FROM cw_CWEType AS _X, read_permission_relation AS rel_read_permission0
-WHERE _X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=_X.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, rel_read_permission0.eid_to
-FROM cw_CWRType AS _X, read_permission_relation AS rel_read_permission0
 WHERE _X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=_X.cw_eid)'''),
 
     # no distinct, Y can't be invariant
@@ -372,14 +369,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read
 UNION ALL
 SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # DISTINCT but NEGED exists, can't be invariant
@@ -390,14 +379,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # should generate the same query as above
@@ -408,14 +389,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION
-SELECT DISTINCT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     # neged relation, can't be inveriant
@@ -426,14 +399,6 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM 
 UNION ALL
 SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWGroup AS _Y, cw_CWRType AS _X
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
-UNION ALL
-SELECT _X.cw_eid, _Y.cw_eid
-FROM cw_CWRType AS _X, cw_RQLExpression AS _Y
 WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
 
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N, X is IN (Basket, Folder, Tag);',
@@ -1103,7 +1068,7 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.common.adbh import ADV_FUNC_HELPER_DIRECTORY
+from logilab.common.adbh import get_adv_func_helper
 
 class CWRQLTC(RQLGeneratorTC):
     schema = schema
@@ -1138,7 +1103,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('postgres', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['postgres']
+        dbms_helper = get_adv_func_helper('postgres')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql
@@ -1360,7 +1325,7 @@ GROUP BY _ET.cw_name'''),
         rqlst = self._prepare(rql)
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
-    def test_symetric(self):
+    def test_symmetric(self):
         for t in self._parse(SYMETRIC):
             yield t
 
@@ -1441,7 +1406,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('sqlite', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['sqlite']
+        dbms_helper = get_adv_func_helper('sqlite')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql
@@ -1516,26 +1481,26 @@ HAVING COUNT(_T0.C0)>1'''),
     def test_has_text(self):
         for t in self._parse((
             ('Any X WHERE X has_text "toto tata"',
-             """SELECT appears0.uid
+             """SELECT DISTINCT appears0.uid
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
 
             ('Any X WHERE X has_text %(text)s',
-             """SELECT appears0.uid
+             """SELECT DISTINCT appears0.uid
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo'))"""),
 
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT _X.eid
+             """SELECT DISTINCT _X.eid
 FROM appears AS appears0, entities AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
 
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
-             """SELECT _X.cw_eid
+             """SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Basket AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-UNION ALL
-SELECT _X.cw_eid
+UNION
+SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 """),
@@ -1549,7 +1514,7 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         indexer = get_indexer('mysql', 'utf8')
-        dbms_helper = ADV_FUNC_HELPER_DIRECTORY['mysql']
+        dbms_helper = get_adv_func_helper('mysql')
         dbms_helper.fti_uid_attr = indexer.uid_attr
         dbms_helper.fti_table = indexer.table
         dbms_helper.fti_restriction_sql = indexer.restriction_sql

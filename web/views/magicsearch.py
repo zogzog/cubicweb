@@ -11,11 +11,12 @@ __docformat__ = "restructuredtext en"
 
 import re
 from logging import getLogger
+from warnings import warn
 
 from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, typed_eid
 from cubicweb.view import Component
 
 LOGGER = getLogger('cubicweb.magicsearch')
@@ -135,20 +136,20 @@ def trmap(config, schema, lang):
 
 class BaseQueryProcessor(Component):
     __abstract__ = True
-    id = 'magicsearch_processor'
+    __regid__ = 'magicsearch_processor'
     # set something if you want explicit component search facility for the
     # component
     name = None
 
-    def process_query(self, uquery, req):
-        args = self.preprocess_query(uquery, req)
+    def process_query(self, uquery):
+        args = self.preprocess_query(uquery)
         try:
-            return req.execute(*args)
+            return self._cw.execute(*args)
         finally:
             # rollback necessary to avoid leaving the connection in a bad state
-            req.cnx.rollback()
+            self._cw.cnx.rollback()
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         raise NotImplementedError()
 
 
@@ -160,7 +161,7 @@ class DoNotPreprocess(BaseQueryProcessor):
     """
     name = 'rql'
     priority = 0
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         return uquery,
 
 
@@ -169,11 +170,12 @@ class QueryTranslator(BaseQueryProcessor):
     and attributes
     """
     priority = 2
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         rqlst = parse(uquery, print_errors=False)
-        schema = self.vreg.schema
+        schema = self._cw.vreg.schema
         # rql syntax tree will be modified in place if necessary
-        translate_rql_tree(rqlst, trmap(self.config, schema, req.lang), schema)
+        translate_rql_tree(rqlst, trmap(self._cw.vreg.config, schema, self._cw.lang),
+                           schema)
         return rqlst.as_string(),
 
 
@@ -184,10 +186,9 @@ class QSPreProcessor(BaseQueryProcessor):
     """
     priority = 4
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         """try to get rql from an unicode query string"""
         args = None
-        self.req = req
         try:
             # Process as if there was a quoted part
             args = self._quoted_words_query(uquery)
@@ -210,7 +211,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         etype = word.capitalize()
         try:
-            return trmap(self.config, self.vreg.schema, self.req.lang)[etype]
+            return trmap(self._cw.vreg.config, self._cw.vreg.schema, self._cw.lang)[etype]
         except KeyError:
             raise BadRQLQuery('%s is not a valid entity name' % etype)
 
@@ -222,7 +223,7 @@ class QSPreProcessor(BaseQueryProcessor):
         # Need to convert from unicode to string (could be whatever)
         rtype = word.lower()
         # Find the entity name as stored in the DB
-        translations = trmap(self.config, self.vreg.schema, self.req.lang)
+        translations = trmap(self._cw.vreg.config, self._cw.vreg.schema, self._cw.lang)
         try:
             translations = translations[rtype]
         except KeyError:
@@ -239,7 +240,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         # if this is an integer, then directly go to eid
         try:
-            eid = int(word)
+            eid = typed_eid(word)
             return 'Any X WHERE X eid %(x)s', {'x': eid}, 'x'
         except ValueError:
             etype = self._get_entity_type(word)
@@ -249,9 +250,9 @@ class QSPreProcessor(BaseQueryProcessor):
         searchop = ''
         if '%' in searchstr:
             if rtype:
-                possible_etypes = self.schema.rschema(rtype).objects(etype)
+                possible_etypes = self._cw.vreg.schema.rschema(rtype).objects(etype)
             else:
-                possible_etypes = [self.schema.eschema(etype)]
+                possible_etypes = [self._cw.vreg.schema.eschema(etype)]
             if searchattr or len(possible_etypes) == 1:
                 searchattr = searchattr or possible_etypes[0].main_attribute()
                 searchop = 'LIKE '
@@ -275,10 +276,10 @@ class QSPreProcessor(BaseQueryProcessor):
         """Specific process for three words query (case (3) of preprocess_rql)
         """
         etype = self._get_entity_type(word1)
-        eschema = self.schema.eschema(etype)
+        eschema = self._cw.vreg.schema.eschema(etype)
         rtype = self._get_attribute_name(word2, eschema)
         # expand shortcut if rtype is a non final relation
-        if not self.schema.rschema(rtype).final:
+        if not self._cw.vreg.schema.rschema(rtype).final:
             return self._expand_shortcut(etype, rtype, word3)
         if '%' in word3:
             searchop = 'LIKE '
@@ -336,28 +337,28 @@ class FullTextTranslator(BaseQueryProcessor):
     priority = 10
     name = 'text'
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         """suppose it's a plain text query"""
         return 'Any X WHERE X has_text %(text)s', {'text': uquery}
 
 
 
 class MagicSearchComponent(Component):
-    id  = 'magicsearch'
+    __regid__  = 'magicsearch'
     def __init__(self, req, rset=None):
-        super(MagicSearchComponent, self).__init__(req, rset)
+        super(MagicSearchComponent, self).__init__(req, rset=rset)
         processors = []
         self.by_name = {}
-        for processorcls in self.vreg['components']['magicsearch_processor']:
+        for processorcls in self._cw.vreg['components']['magicsearch_processor']:
             # instantiation needed
-            processor = processorcls()
+            processor = processorcls(self._cw)
             processors.append(processor)
             if processor.name is not None:
                 assert not processor.name in self.by_name
                 self.by_name[processor.name.lower()] = processor
         self.processors = sorted(processors, key=lambda x: x.priority)
 
-    def process_query(self, uquery, req):
+    def process_query(self, uquery):
         assert isinstance(uquery, unicode)
         try:
             procname, query = uquery.split(':', 1)
@@ -368,7 +369,15 @@ class MagicSearchComponent(Component):
             unauthorized = None
             for proc in self.processors:
                 try:
-                    return proc.process_query(uquery, req)
+                    try:
+                        return proc.process_query(uquery)
+                    except TypeError, exc: # cw 3.5 compat
+                        print "EXC", exc
+                        warn("[3.6] %s.%s.process_query() should now accept uquery "
+                             "as unique argument, use self._cw instead of req"
+                             % (proc.__module__, proc.__class__.__name__),
+                             DeprecationWarning)
+                        return proc.process_query(uquery, self._cw)
                 # FIXME : we don't want to catch any exception type here !
                 except (RQLSyntaxError, BadRQLQuery):
                     pass
@@ -381,6 +390,6 @@ class MagicSearchComponent(Component):
             if unauthorized:
                 raise unauthorized
         else:
-            # let exception propagate
-            return proc.process_query(uquery, req)
-        raise BadRQLQuery(req._('sorry, the server is unable to handle this query'))
+            # explicitly specified processor: don't try to catch the exception
+            return proc.process_query(uquery)
+        raise BadRQLQuery(self._cw._('sorry, the server is unable to handle this query'))

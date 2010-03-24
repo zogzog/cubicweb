@@ -16,15 +16,15 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 
 class CWEType(AnyEntity):
-    id = 'CWEType'
+    __regid__ = 'CWEType'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return u'%s (%s)' % (self.name, self.req._(self.name))
+        return u'%s (%s)' % (self.name, self._cw._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
-        _ = self.req._
+        _ = self._cw._
         if self.final:
             stereotypes.append(_('final'))
         if stereotypes:
@@ -37,17 +37,17 @@ class CWEType(AnyEntity):
 
 
 class CWRType(AnyEntity):
-    id = 'CWRType'
+    __regid__ = 'CWRType'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return u'%s (%s)' % (self.name, self.req._(self.name))
+        return u'%s (%s)' % (self.name, self._cw._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
-        _ = self.req._
-        if self.symetric:
-            stereotypes.append(_('symetric'))
+        _ = self._cw._
+        if self.symmetric:
+            stereotypes.append(_('symmetric'))
         if self.inlined:
             stereotypes.append(_('inlined'))
         if self.final:
@@ -56,30 +56,21 @@ class CWRType(AnyEntity):
             return u'%s <<%s>>' % (self.dc_title(), ', '.join(stereotypes))
         return self.dc_title()
 
-    def inlined_changed(self, inlined):
-        """check inlining is necessary and possible:
-
-        * return False if nothing has changed
-        * raise ValidationError if inlining is'nt possible
-        * eventually return True
+    def check_inlined_allowed(self):
+        """check inlining is possible, raise ValidationError if not possible
         """
-        rschema = self.schema.rschema(self.name)
-        if inlined == rschema.inlined:
-            return False
-        if inlined:
-            # don't use the persistent schema, we may miss cardinality changes
-            # in the same transaction
-            for rdef in self.reverse_relation_type:
-                card = rdef.cardinality[0]
-                if not card in '?1':
-                    rtype = self.name
-                    stype = rdef.stype
-                    otype = rdef.otype
-                    msg = self.req._("can't set inlined=%(inlined)s, "
-                                     "%(stype)s %(rtype)s %(otype)s "
-                                     "has cardinality=%(card)s")
-                    raise ValidationError(self.eid, {'inlined': msg % locals()})
-        return True
+        # don't use the persistent schema, we may miss cardinality changes
+        # in the same transaction
+        for rdef in self.reverse_relation_type:
+            card = rdef.cardinality[0]
+            if not card in '?1':
+                rtype = self.name
+                stype = rdef.stype
+                otype = rdef.otype
+                msg = self._cw._("can't set inlined=%(inlined)s, "
+                                 "%(stype)s %(rtype)s %(otype)s "
+                                 "has cardinality=%(card)s")
+                raise ValidationError(self.eid, {'inlined': msg % locals()})
 
     def db_key_name(self):
         """XXX goa specific"""
@@ -87,7 +78,7 @@ class CWRType(AnyEntity):
 
 
 class CWRelation(AnyEntity):
-    id = 'CWRelation'
+    __regid__ = 'CWRelation'
     fetch_attrs = fetch_config(['cardinality'])[0]
 
     def dc_title(self):
@@ -130,7 +121,7 @@ class CWRelation(AnyEntity):
 
 
 class CWAttribute(CWRelation):
-    id = 'CWAttribute'
+    __regid__ = 'CWAttribute'
 
     def dc_long_title(self):
         card = self.cardinality
@@ -144,7 +135,7 @@ class CWAttribute(CWRelation):
 
 
 class CWConstraint(AnyEntity):
-    id = 'CWConstraint'
+    __regid__ = 'CWConstraint'
     fetch_attrs, fetch_order = fetch_config(['value'])
 
     def dc_title(self):
@@ -164,7 +155,7 @@ class CWConstraint(AnyEntity):
 
 
 class RQLExpression(AnyEntity):
-    id = 'RQLExpression'
+    __regid__ = 'RQLExpression'
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
     def dc_title(self):
@@ -198,13 +189,13 @@ class RQLExpression(AnyEntity):
 
 
 class CWPermission(AnyEntity):
-    id = 'CWPermission'
+    __regid__ = 'CWPermission'
     fetch_attrs, fetch_order = fetch_config(['name', 'label'])
 
     def dc_title(self):
         if self.label:
-            return '%s (%s)' % (self.req._(self.name), self.label)
-        return self.req._(self.name)
+            return '%s (%s)' % (self._cw._(self.name), self.label)
+        return self._cw._(self.name)
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect

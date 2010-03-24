@@ -8,9 +8,9 @@
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb import ObjectNotFound, AuthenticationError
+from cubicweb import AuthenticationError
 from cubicweb.web import (NotFound, Redirect, DirectResponse, StatusResponse,
-                       ExplicitLogin)
+                          ExplicitLogin)
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.wsgi.request import CubicWebWsgiRequest
 
@@ -97,7 +97,7 @@ class CubicWebWSGIApplication(object):
 #         assert self.base_url[-1] == '/'
 #         self.https_url = config['https-url']
 #         assert not self.https_url or self.https_url[-1] == '/'
-        self.url_rewriter = self.appli.vreg.select_object('components', 'urlrewriter')
+        self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
 
     def _render(self, req):
         """this function performs the actual rendering
