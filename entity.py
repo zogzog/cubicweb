@@ -249,7 +249,10 @@ class Entity(AppObject, dict):
             self.eid = value
         else:
             super(Entity, self).__setitem__(attr, value)
-            if hasattr(self, 'edited_attributes'):
+            # don't add attribute into skip_security if already in edited
+            # attributes, else we may accidentaly skip a desired security check
+            if hasattr(self, 'edited_attributes') and \
+                   attr not in self.edited_attributes:
                 self.edited_attributes.add(attr)
                 self.skip_security_attributes.add(attr)
 
@@ -276,7 +279,10 @@ class Entity(AppObject, dict):
     def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
         super(Entity, self).setdefault(attr, default)
-        if hasattr(self, 'edited_attributes'):
+        # don't add attribute into skip_security if already in edited
+        # attributes, else we may accidentaly skip a desired security check
+        if hasattr(self, 'edited_attributes') and \
+               attr not in self.edited_attributes:
             self.edited_attributes.add(attr)
             self.skip_security_attributes.add(attr)
 
