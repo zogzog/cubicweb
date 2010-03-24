@@ -92,7 +92,7 @@ class SupervisionEmailView(Component):
         return self._cw._('[%s supervision] changes summary') % self._cw.vreg.config.appid
 
     def call(self, changes):
-        user = self._cw.actual_session().user
+        user = self._cw.user
         self.w(self._cw._('user %s has made the following change(s):\n\n')
                % user.login)
         for event, changedescr in filter_changes(changes):
@@ -129,17 +129,16 @@ class SupervisionEmailView(Component):
         self.w(u'  %s' % entity.absolute_url())
 
     def _relation_context(self, changedescr):
-        _ = self._cw._
-        session = self._cw.actual_session()
+        session = self._cw
         def describe(eid):
             try:
-                return _(session.describe(eid)[0]).lower()
+                return session._(session.describe(eid)[0]).lower()
             except UnknownEid:
                 # may occurs when an entity has been deleted from an external
                 # source and we're cleaning its relation
-                return _('unknown external entity')
+                return session._('unknown external entity')
         eidfrom, rtype, eidto = changedescr.eidfrom, changedescr.rtype, changedescr.eidto
-        return {'rtype': _(rtype),
+        return {'rtype': session._(rtype),
                 'eidfrom': eidfrom,
                 'frometype': describe(eidfrom),
                 'eidto': eidto,

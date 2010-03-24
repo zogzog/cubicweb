@@ -14,6 +14,11 @@ from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
+migrschema = None
+def teardown_module(*args):
+    global migrschema
+    del migrschema
+    del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
 
@@ -35,6 +40,13 @@ class MigrationCommandsTC(CubicWebTC):
     def _refresh_repo(cls):
         super(MigrationCommandsTC, cls)._refresh_repo()
         cls.repo.set_schema(deepcopy(cls.origschema), resetvreg=False)
+        # reset migration schema eids
+        for eschema in migrschema.entities():
+            eschema.eid = None
+        for rschema in migrschema.relations():
+            rschema.eid = None
+            for rdef in rschema.rdefs.values():
+                rdef.eid = None
 
     def setUp(self):
         CubicWebTC.setUp(self)
@@ -43,7 +55,6 @@ class MigrationCommandsTC(CubicWebTC):
                                         interactive=False)
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
-
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)

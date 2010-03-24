@@ -33,6 +33,8 @@ Session hooks (eg session_open, session_close) have no special attribute.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -47,7 +49,7 @@ from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
                                 implements)
 from cubicweb.appobject import AppObject
-
+from cubicweb.server.session import security_enabled
 
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
                       'before_update_entity', 'after_update_entity',
@@ -76,13 +78,20 @@ class HooksRegistry(CWRegistry):
                     event, obj.__module__, obj.__name__))
         super(HooksRegistry, self).register(obj, **kwargs)
 
-    def call_hooks(self, event, req=None, **kwargs):
+    def call_hooks(self, event, session=None, **kwargs):
         kwargs['event'] = event
-        for hook in sorted(self.possible_objects(req, **kwargs), key=lambda x: x.order):
-            if hook.enabled:
+        if session is None:
+            for hook in sorted(self.possible_objects(session, **kwargs),
+                               key=lambda x: x.order):
                 hook()
-            else:
-                warn('[3.6] %s: enabled is deprecated' % hook.__class__)
+        else:
+            # by default, hooks are executed with security turned off
+            with security_enabled(session, read=False):
+                hooks = sorted(self.possible_objects(session, **kwargs),
+                               key=lambda x: x.order)
+                with security_enabled(session, write=False):
+                    for hook in hooks:
+                        hook()
 
 VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
 
@@ -104,6 +113,14 @@ def entity_oldnewvalue(entity, attr):
 
 @objectify_selector
 @lltrace
+def _bw_is_enabled(cls, req, **kwargs):
+    if cls.enabled:
+        return 1
+    warn('[3.6] %s: enabled is deprecated' % cls)
+    return 0
+
+@objectify_selector
+@lltrace
 def match_event(cls, req, **kwargs):
     if kwargs.get('event') in cls.events:
         return 1
@@ -113,19 +130,15 @@ def match_event(cls, req, **kwargs):
 @lltrace
 def enabled_category(cls, req, **kwargs):
     if req is None:
-        # server startup / shutdown event
-        config = kwargs['repo'].config
-    else:
-        config = req.vreg.config
-    return config.is_hook_activated(cls)
+        return True # XXX how to deactivate server startup / shutdown event
+    return req.is_hook_activated(cls)
 
 @objectify_selector
 @lltrace
-def regular_session(cls, req, **kwargs):
-    if req is None or req.is_super_session:
-        return 0
-    return 1
-
+def from_dbapi_query(cls, req, **kwargs):
+    if req.running_dbapi_query:
+        return 1
+    return 0
 
 class rechain(object):
     def __init__(self, *iterators):
@@ -178,7 +191,7 @@ class match_rtype_sets(ExpectedValueSelector):
 
 class Hook(AppObject):
     __registry__ = 'hooks'
-    __select__ = match_event() & enabled_category()
+    __select__ = match_event() & enabled_category() & _bw_is_enabled()
     # set this in derivated classes
     events = None
     category = None
@@ -263,7 +276,7 @@ class PropagateSubjectRelationHook(Hook):
         else:
             assert self.rtype in self.object_relations
             meid, seid = self.eidto, self.eidfrom
-        self._cw.unsafe_execute(
+        self._cw.execute(
             'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
             % (self.main_rtype, self.main_rtype, self.main_rtype),
             {'x': meid, 'e': seid}, ('x', 'e'))
@@ -281,7 +294,7 @@ class PropagateSubjectRelationAddHook(Hook):
 
     def __call__(self):
         eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
-        execute = self._cw.unsafe_execute
+        execute = self._cw.execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
@@ -306,7 +319,7 @@ class PropagateSubjectRelationDelHook(Hook):
 
     def __call__(self):
         eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
-        execute = self._cw.unsafe_execute
+        execute = self._cw.execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
@@ -510,6 +523,6 @@ class SendMailOp(SingleLastOperation):
 
 class RQLPrecommitOperation(Operation):
     def precommit_event(self):
-        execute = self.session.unsafe_execute
+        execute = self.session.execute
         for rql in self.rqls:
             execute(*rql)

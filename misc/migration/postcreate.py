@@ -42,8 +42,8 @@ if hasattr(config, 'anonymous_user'):
 
 # need this since we already have at least one user in the database (the default admin)
 for user in rql('Any X WHERE X is CWUser').entities():
-    session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                           {'x': user.eid, 's': activated.eid}, 'x')
+    rql('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
+        {'x': user.eid, 's': activated.eid}, 'x')
 
 # on interactive mode, ask for level 0 persistent options
 if interactive_mode:

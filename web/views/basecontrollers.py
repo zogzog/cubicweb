@@ -20,7 +20,7 @@ from logilab.common.date import strptime
 from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
                       typed_eid)
 from cubicweb.utils import CubicWebJsonEncoder
-from cubicweb.selectors import yes, match_user_groups
+from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
@@ -567,7 +567,7 @@ class JSonController(Controller):
 
 class SendMailController(Controller):
     __regid__ = 'sendmail'
-    __select__ = match_user_groups('managers', 'users')
+    __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
@@ -615,11 +615,35 @@ class SendMailController(Controller):
 
 class MailBugReportController(SendMailController):
     __regid__ = 'reportbug'
-    __select__ = yes()
+    __select__ = match_form_params('description')
 
     def publish(self, rset=None):
         body = self._cw.form['description']
         self.sendmail(self._cw.config['submit-mail'], _('%s error report') % self._cw.config.appid, body)
         url = self._cw.build_url(__message=self._cw._('bug report sent'))
+        raise Redirect(url)
+
+
+class UndoController(SendMailController):
+    __regid__ = 'undo'
+    __select__ = authenticated_user() & match_form_params('txuuid')
+
+    def publish(self, rset=None):
+        txuuid = self._cw.form['txuuid']
+        errors = self._cw.cnx.undo_transaction(txuuid)
+        if errors:
+            self.w(self._cw._('some errors occured:'))
+            self.wview('pyvalist', pyvalue=errors)
+        else:
+            self.redirect()
+
+    def redirect(self):
+        req = self._cw
+        breadcrumbs = req.get_session_data('breadcrumbs', None)
+        if breadcrumbs is not None and len(breadcrumbs) > 1:
+            url = req.rebuild_url(breadcrumbs[-2],
+                                  __message=req._('transaction undoed'))
+        else:
+            url = req.build_url(__message=req._('transaction undoed'))
         raise Redirect(url)
 

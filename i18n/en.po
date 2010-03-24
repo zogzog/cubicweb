@@ -308,6 +308,30 @@ msgstr "User"
 msgid "CWUser_plural"
 msgstr "Users"
 
+#, python-format
+msgid ""
+"Can't restore %(role)s relation %(rtype)s to entity %(eid)s which is already "
+"linked using this relation."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s between %(subj)s and %(obj)s, that relation "
+"does not exists anymore in the schema."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exists anymore in the schema."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
+"anymore."
+msgstr ""
+
 msgid "Date"
 msgstr "Date"
 
@@ -2107,7 +2131,13 @@ msgstr ""
 msgid "entity created"
 msgstr ""
 
+msgid "entity creation"
+msgstr ""
+
 msgid "entity deleted"
+msgstr ""
+
+msgid "entity deletion"
 msgstr ""
 
 msgid "entity edited"
@@ -2128,6 +2158,9 @@ msgid ""
 msgstr ""
 
 msgid "entity types which may use this workflow"
+msgstr ""
+
+msgid "entity update"
 msgstr ""
 
 msgid "error while embedding page"
@@ -3099,6 +3132,12 @@ msgstr ""
 msgid "relation %(relname)s of %(ent)s"
 msgstr ""
 
+msgid "relation add"
+msgstr ""
+
+msgid "relation removal"
+msgstr ""
+
 msgid "relation_type"
 msgstr "relation type"
 
@@ -3311,6 +3350,9 @@ msgid "site title"
 msgstr ""
 
 msgid "site-wide property can't be set for user"
+msgstr ""
+
+msgid "some errors occured:"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
@@ -3584,6 +3626,9 @@ msgstr "to do by"
 msgid "toggle check boxes"
 msgstr ""
 
+msgid "transaction undoed"
+msgstr ""
+
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
 msgstr ""
@@ -3680,6 +3725,9 @@ msgid "unaccessible"
 msgstr ""
 
 msgid "unauthorized value"
+msgstr ""
+
+msgid "undo"
 msgstr ""
 
 msgid "unique identifier used to connect to the application"

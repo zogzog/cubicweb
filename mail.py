@@ -215,16 +215,9 @@ class NotificationView(EntityView):
         """return a list of either 2-uple (email, language) or user entity to
         who this email should be sent
         """
-        # use super_session when available, we don't want to consider security
-        # when selecting recipients_finder
-        try:
-            req = self._cw.super_session
-        except AttributeError:
-            req = self._cw
-        finder = self._cw.vreg['components'].select('recipients_finder', req,
-                                                    rset=self.cw_rset,
-                                                    row=self.cw_row or 0,
-                                                    col=self.cw_col or 0)
+        finder = self._cw.vreg['components'].select(
+            'recipients_finder', self._cw, rset=self.cw_rset,
+            row=self.cw_row or 0, col=self.cw_col or 0)
         return finder.recipients()
 
     def send_now(self, recipients, msg):

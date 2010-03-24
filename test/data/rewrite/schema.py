@@ -39,3 +39,10 @@ class require_permission(RelationDefinition):
 class require_state(RelationDefinition):
     subject = 'CWPermission'
     object = 'State'
+
+
+class inlined_card(RelationDefinition):
+    subject = 'Affaire'
+    object = 'Card'
+    inlined = True
+    cardinality = '?*'

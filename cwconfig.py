@@ -1002,7 +1002,7 @@ application_configuration = deprecated('use instance_configuration')(instance_co
 
 _EXT_REGISTERED = False
 def register_stored_procedures():
-    from logilab.common.adbh import FunctionDescr
+    from logilab.database import FunctionDescr
     from rql.utils import register_function, iter_funcnode_variables
 
     global _EXT_REGISTERED
@@ -1014,8 +1014,7 @@ def register_stored_procedures():
         supported_backends = ('postgres', 'sqlite',)
         rtype = 'String'
 
-        @classmethod
-        def st_description(cls, funcnode, mainindex, tr):
+        def st_description(self, funcnode, mainindex, tr):
             return ', '.join(sorted(term.get_description(mainindex, tr)
                                     for term in iter_funcnode_variables(funcnode)))
 
@@ -1027,6 +1026,7 @@ def register_stored_procedures():
 
     register_function(CONCAT_STRINGS) # XXX bw compat
 
+
     class GROUP_CONCAT(CONCAT_STRINGS):
         supported_backends = ('mysql', 'postgres', 'sqlite',)
 
@@ -1037,8 +1037,7 @@ def register_stored_procedures():
         supported_backends = ('postgres', 'sqlite',)
         rtype = 'String'
 
-        @classmethod
-        def st_description(cls, funcnode, mainindex, tr):
+        def st_description(self, funcnode, mainindex, tr):
             return funcnode.children[0].get_description(mainindex, tr)
 
     register_function(LIMIT_SIZE)
@@ -1048,7 +1047,6 @@ def register_stored_procedures():
         supported_backends = ('mysql', 'postgres', 'sqlite',)
 
     register_function(TEXT_LIMIT_SIZE)
-
 
 
     class FSPATH(FunctionDescr):

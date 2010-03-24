@@ -172,7 +172,7 @@ class ContentClear(StartupView):
     skip_etypes = ('CWGroup', 'CWUser')
 
     def call(self):
-        # XXX should use unsafe_execute with all hooks deactivated
+        # XXX should use unsafe execute with all hooks deactivated
         # XXX step by catching datastore errors?
         for eschema in self.schema.entities():
             if eschema.final or eschema in self.skip_etypes:

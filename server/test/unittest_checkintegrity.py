@@ -13,10 +13,9 @@ from cubicweb.devtools import init_test_database
 
 from cubicweb.server.checkintegrity import check
 
-repo, cnx = init_test_database()
-
 class CheckIntegrityTC(TestCase):
     def test(self):
+        repo, cnx = init_test_database()
         sys.stderr = sys.stdout = StringIO()
         try:
             check(repo, cnx, ('entities', 'relations', 'text_index', 'metadata'),
@@ -24,6 +23,7 @@ class CheckIntegrityTC(TestCase):
         finally:
             sys.stderr = sys.__stderr__
             sys.stdout = sys.__stdout__
+        repo.shutdown()
 
 if __name__ == '__main__':
     unittest_main()

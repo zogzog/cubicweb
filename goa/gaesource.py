@@ -255,10 +255,11 @@ class GAESource(AbstractSource):
                 if asession.user.eid == entity.eid:
                     asession.user.update(dict(gaeentity))
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         # do not delay delete_entity as other modifications to ensure
         # consistency
+        eid = entity.eid
         key = Key(eid)
         Delete(key)
         session.clear_datastore_cache(key)

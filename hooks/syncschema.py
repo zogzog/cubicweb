@@ -12,11 +12,12 @@ checking for schema consistency is done in hooks.py
 """
 __docformat__ = "restructuredtext en"
 
+from copy import copy
 from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
-from yams.buildobjs import EntityType, RelationType, RelationDefinition
-from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
+from yams import buildobjs as ybo, schema2sql as y2sql
 
 from logilab.common.decorators import clear_cache
+from logilab.common.testlib import mock_object
 
 from cubicweb import ValidationError
 from cubicweb.selectors import implements
@@ -255,7 +256,7 @@ class SourceDbCWRTypeUpdate(hook.Operation):
             # need to create the relation if it has not been already done by
             # another event of the same transaction
             if not rschema.type in session.transaction_data.get('createdtables', ()):
-                tablesql = rschema2sql(rschema)
+                tablesql = y2sql.rschema2sql(rschema)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():
@@ -323,13 +324,13 @@ class SourceDbCWAttributeAdd(hook.Operation):
         rtype = entity.rtype.name
         obj = str(entity.otype.name)
         constraints = get_constraints(self.session, entity)
-        rdef = RelationDefinition(subj, rtype, obj,
-                                  description=entity.description,
-                                  cardinality=entity.cardinality,
-                                  constraints=constraints,
-                                  order=entity.ordernum,
-                                  eid=entity.eid,
-                                  **kwargs)
+        rdef = ybo.RelationDefinition(subj, rtype, obj,
+                                      description=entity.description,
+                                      cardinality=entity.cardinality,
+                                      constraints=constraints,
+                                      order=entity.ordernum,
+                                      eid=entity.eid,
+                                      **kwargs)
         MemSchemaRDefAdd(self.session, rdef)
         return rdef
 
@@ -347,8 +348,8 @@ class SourceDbCWAttributeAdd(hook.Operation):
                  'internationalizable': entity.internationalizable}
         rdef = self.init_rdef(**props)
         sysource = session.pool.source('system')
-        attrtype = type_from_constraints(sysource.dbhelper, rdef.object,
-                                         rdef.constraints)
+        attrtype = y2sql.type_from_constraints(
+            sysource.dbhelper, rdef.object, rdef.constraints)
         # XXX should be moved somehow into lgc.adbh: sqlite doesn't support to
         # add a new column with UNIQUE, it should be added after the ALTER TABLE
         # using ADD INDEX
@@ -379,12 +380,13 @@ class SourceDbCWAttributeAdd(hook.Operation):
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
         # final relations are not infered, propagate
+        schema = session.vreg.schema
         try:
-            eschema = session.vreg.schema.eschema(rdef.subject)
+            eschema = schema.eschema(rdef.subject)
         except KeyError:
             return # entity type currently being added
         # propagate attribute to children classes
-        rschema = session.vreg.schema.rschema(rdef.name)
+        rschema = schema.rschema(rdef.name)
         # if relation type has been inserted in the same transaction, its final
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
@@ -394,15 +396,19 @@ class SourceDbCWAttributeAdd(hook.Operation):
                       'cardinality': rdef.cardinality,
                       'constraints': rdef.constraints,
                       'permissions': rdef.get_permissions(),
-                      'order': rdef.order})
+                      'order': rdef.order,
+                      'infered': False, 'eid': None
+                      })
+        cstrtypemap = ss.cstrtype_mapping(session)
         groupmap = group_mapping(session)
+        object = schema.eschema(rdef.object)
         for specialization in eschema.specialized_by(False):
             if (specialization, rdef.object) in rschema.rdefs:
                 continue
-            sperdef = RelationDefinitionSchema(specialization, rschema, rdef.object, props)
-            for rql, args in ss.rdef2rql(rschema, str(specialization),
-                                         rdef.object, sperdef, groupmap=groupmap):
-                session.execute(rql, args)
+            sperdef = RelationDefinitionSchema(specialization, rschema,
+                                               object, props)
+            ss.execschemarql(session.execute, sperdef,
+                             ss.rdef2rql(sperdef, cstrtypemap, groupmap))
         # set default value, using sql for performance and to avoid
         # modification_date update
         if default:
@@ -451,13 +457,13 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
                     rtype in session.transaction_data.get('createdtables', ())):
                 try:
                     rschema = schema.rschema(rtype)
-                    tablesql = rschema2sql(rschema)
+                    tablesql = y2sql.rschema2sql(rschema)
                 except KeyError:
                     # fake we add it to the schema now to get a correctly
                     # initialized schema but remove it before doing anything
                     # more dangerous...
                     rschema = schema.add_relation_type(rdef)
-                    tablesql = rschema2sql(rschema)
+                    tablesql = y2sql.rschema2sql(rschema)
                     schema.del_relation_type(rtype)
                 # create the necessary table
                 for sql in tablesql.split(';'):
@@ -490,11 +496,11 @@ class SourceDbRDefUpdate(hook.Operation):
                 return
             atype = self.rschema.objects(etype)[0]
             constraints = self.rschema.rdef(etype, atype).constraints
-            coltype = type_from_constraints(adbh, atype, constraints,
-                                            creating=False)
+            coltype = y2sql.type_from_constraints(adbh, atype, constraints,
+                                                  creating=False)
             # XXX check self.values['cardinality'][0] actually changed?
-            sql = adbh.sql_set_null_allowed(table, column, coltype,
-                                            self.values['cardinality'][0] != '1')
+            notnull = self.values['cardinality'][0] != '1'
+            sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
             session.system_sql(sql)
         if 'fulltextindexed' in self.values:
             UpdateFTIndexOp(session)
@@ -527,8 +533,8 @@ class SourceDbCWConstraintAdd(hook.Operation):
             oldcstr is None or oldcstr.max != newcstr.max):
             adbh = self.session.pool.source('system').dbhelper
             card = rtype.rdef(subjtype, objtype).cardinality
-            coltype = type_from_constraints(adbh, objtype, [newcstr],
-                                            creating=False)
+            coltype = y2sql.type_from_constraints(adbh, objtype, [newcstr],
+                                                  creating=False)
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
                 session.system_sql(sql, rollback_on_failure=False)
@@ -796,7 +802,7 @@ class DelCWETypeHook(SyncSchemaHook):
         if name in CORE_ETYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete every entities of this type
-        self._cw.unsafe_execute('DELETE %s X' % name)
+        self._cw.execute('DELETE %s X' % name)
         DropTable(self._cw, table=SQL_PREFIX + name)
         MemSchemaCWETypeDel(self._cw, name)
 
@@ -828,23 +834,26 @@ class AfterAddCWETypeHook(DelCWETypeHook):
             return
         schema = self._cw.vreg.schema
         name = entity['name']
-        etype = EntityType(name=name, description=entity.get('description'),
-                           meta=entity.get('meta')) # don't care about final
+        etype = ybo.EntityType(name=name, description=entity.get('description'),
+                               meta=entity.get('meta')) # don't care about final
         # fake we add it to the schema now to get a correctly initialized schema
         # but remove it before doing anything more dangerous...
         schema = self._cw.vreg.schema
         eschema = schema.add_entity_type(etype)
         # generate table sql and rql to add metadata
-        tablesql = eschema2sql(self._cw.pool.source('system').dbhelper, eschema,
-                               prefix=SQL_PREFIX)
-        relrqls = []
+        tablesql = y2sql.eschema2sql(self._cw.pool.source('system').dbhelper,
+                                     eschema, prefix=SQL_PREFIX)
+        rdefrqls = []
+        gmap = group_mapping(self._cw)
+        cmap = ss.cstrtype_mapping(self._cw)
         for rtype in (META_RTYPES - VIRTUAL_RTYPES):
             rschema = schema[rtype]
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
-            props = rschema.rdef(sampletype, desttype)
-            relrqls += list(ss.rdef2rql(rschema, name, desttype, props,
-                                        groupmap=group_mapping(self._cw)))
+            rdef = copy(rschema.rdef(sampletype, desttype))
+            rdef.subject = mock_object(eid=entity.eid)
+            mock = mock_object(eid=None)
+            rdefrqls.append( (mock, tuple(ss.rdef2rql(rdef, cmap, gmap))) )
         # now remove it !
         schema.del_entity_type(name)
         # create the necessary table
@@ -857,8 +866,8 @@ class AfterAddCWETypeHook(DelCWETypeHook):
         etype.eid = entity.eid
         MemSchemaCWETypeAdd(self._cw, etype)
         # add meta relations
-        for rql, kwargs in relrqls:
-            self._cw.execute(rql, kwargs)
+        for rdef, relrqls in rdefrqls:
+            ss.execschemarql(self._cw.execute, rdef, relrqls)
 
 
 class BeforeUpdateCWETypeHook(DelCWETypeHook):
@@ -915,12 +924,12 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
 
     def __call__(self):
         entity = self.entity
-        rtype = RelationType(name=entity.name,
-                             description=entity.get('description'),
-                             meta=entity.get('meta', False),
-                             inlined=entity.get('inlined', False),
-                             symmetric=entity.get('symmetric', False),
-                             eid=entity.eid)
+        rtype = ybo.RelationType(name=entity.name,
+                                 description=entity.get('description'),
+                                 meta=entity.get('meta', False),
+                                 inlined=entity.get('inlined', False),
+                                 symmetric=entity.get('symmetric', False),
+                                 eid=entity.eid)
         MemSchemaCWRTypeAdd(self._cw, rtype)
 
 
@@ -974,7 +983,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             if not (subjschema.eid in pendings or objschema.eid in pendings):
                 session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
-        execute = session.unsafe_execute
+        execute = session.execute
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
                        'R eid %%(x)s' % rdeftype, {'x': self.eidto})
         lastrel = rset[0][0] == 0

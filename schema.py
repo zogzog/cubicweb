@@ -34,14 +34,15 @@ from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
-#  set of meta-relations available for every entity types
+# set of meta-relations available for every entity types
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
-SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state', 'wf_info_for'))
+SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state',
+                     'wf_info_for'))
 
-#  set of entity and relation types used to build the schema
+# set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'RQLExpression',
@@ -704,7 +705,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.unsafe_execute(rql, args, ck, build_descr=False)
+        return session.execute(rql, args, ck, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -830,13 +831,10 @@ class RQLExpression(object):
                 return True
             return False
         if keyarg is None:
-            # on the server side, use unsafe_execute, but this is not available
-            # on the client side (session is actually a request)
-            execute = getattr(session, 'unsafe_execute', session.execute)
             kwargs.setdefault('u', session.user.eid)
             cachekey = kwargs.keys()
             try:
-                rset = execute(rql, kwargs, cachekey, build_descr=True)
+                rset = session.execute(rql, kwargs, cachekey, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
@@ -1084,10 +1082,10 @@ def vocabulary(self, entity=None, form=None):
     elif form is not None:
         cw = form._cw
     if cw is not None:
-        if hasattr(cw, 'is_super_session'):
+        if hasattr(cw, 'write_security'): # test it's a session and not a request
             # cw is a server session
-            hasperm = cw.is_super_session or \
-                      not cw.vreg.config.is_hook_category_activated('integrity') or \
+            hasperm = not cw.write_security or \
+                      not cw.is_hook_category_activated('integrity') or \
                       cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
         else:
             hasperm = cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)

@@ -35,13 +35,12 @@ def _acquire_unique_cstr_lock(session):
     RQLUniqueConstraint in two different transactions, as explained in
     http://intranet.logilab.fr/jpl/ticket/36564
     """
-    asession = session.actual_session()
-    if 'uniquecstrholder' in asession.transaction_data:
+    if 'uniquecstrholder' in session.transaction_data:
         return
     _UNIQUE_CONSTRAINTS_LOCK.acquire()
-    asession.transaction_data['uniquecstrholder'] = True
+    session.transaction_data['uniquecstrholder'] = True
     # register operation responsible to release the lock on commit/rollback
-    _ReleaseUniqueConstraintsOperation(asession)
+    _ReleaseUniqueConstraintsOperation(session)
 
 def _release_unique_cstr_lock(session):
     if 'uniquecstrholder' in session.transaction_data:
@@ -69,7 +68,7 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
             return
         if self.rtype in self.session.transaction_data.get('pendingrtypes', ()):
             return
-        if self.session.unsafe_execute(*self._rql()).rowcount < 1:
+        if self.session.execute(*self._rql()).rowcount < 1:
             etype = self.session.describe(self.eid)[0]
             _ = self.session._
             msg = _('at least one relation %(rtype)s is required on %(etype)s (%(eid)s)')
@@ -99,12 +98,8 @@ class IntegrityHook(hook.Hook):
     __abstract__ = True
     category = 'integrity'
 
-class UserIntegrityHook(IntegrityHook):
-    __abstract__ = True
-    __select__ = IntegrityHook.__select__ & hook.regular_session()
 
-
-class CheckCardinalityHook(UserIntegrityHook):
+class CheckCardinalityHook(IntegrityHook):
     """check cardinalities are satisfied"""
     __regid__ = 'checkcard'
     events = ('after_add_entity', 'before_delete_relation')
@@ -176,7 +171,7 @@ class _CheckConstraintsOp(hook.LateOperation):
         pass
 
 
-class CheckConstraintHook(UserIntegrityHook):
+class CheckConstraintHook(IntegrityHook):
     """check the relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -194,7 +189,7 @@ class CheckConstraintHook(UserIntegrityHook):
                                rdef=(self.eidfrom, self.rtype, self.eidto))
 
 
-class CheckAttributeConstraintHook(UserIntegrityHook):
+class CheckAttributeConstraintHook(IntegrityHook):
     """check the attribute relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -214,7 +209,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
                                         rdef=(self.entity.eid, attr, None))
 
 
-class CheckUniqueHook(UserIntegrityHook):
+class CheckUniqueHook(IntegrityHook):
     __regid__ = 'checkunique'
     events = ('before_add_entity', 'before_update_entity')
 
@@ -227,7 +222,7 @@ class CheckUniqueHook(UserIntegrityHook):
                 if val is None:
                     continue
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
-                rset = self._cw.unsafe_execute(rql, {'val': val})
+                rset = self._cw.execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
                     msg = self._cw._('the value "%s" is already used, use another one')
                     raise ValidationError(entity.eid, {attr: msg % val})
@@ -244,9 +239,9 @@ class _DelayedDeleteOp(hook.Operation):
         if not (session.deleted_in_transaction(self.eid) or
                 session.added_in_transaction(self.eid)):
             etype = session.describe(self.eid)[0]
-            session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
-                                   % (etype, self.relation),
-                                   {'x': self.eid}, 'x')
+            session.execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
+                            % (etype, self.relation),
+                            {'x': self.eid}, 'x')
 
 
 class DeleteCompositeOrphanHook(IntegrityHook):
@@ -290,7 +285,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
             self.entity['name'] = newname
 
 
-class TidyHtmlFields(UserIntegrityHook):
+class TidyHtmlFields(IntegrityHook):
     """tidy HTML in rich text strings"""
     __regid__ = 'htmltidy'
     events = ('before_add_entity', 'before_update_entity')

@@ -9,23 +9,27 @@ the user connected to a session
 __docformat__ = "restructuredtext en"
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import objectify_selector, lltrace
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
 def check_entity_attributes(session, entity, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
-    # ._default_set is only there on entity creation to indicate unspecified
-    # attributes which has been set to a default value defined in the schema
-    defaults = getattr(entity, '_default_set', ())
+    # .skip_security_attributes is there to bypass security for attributes
+    # set by hooks by modifying the entity's dictionnary
+    dontcheck = entity.skip_security_attributes
     if editedattrs is None:
         try:
             editedattrs = entity.edited_attributes
         except AttributeError:
-            editedattrs = entity
+            editedattrs = entity # XXX unexpected
     for attr in editedattrs:
-        if attr in defaults:
+        try:
+            dontcheck.remove(attr)
             continue
+        except KeyError:
+            pass
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
@@ -53,10 +57,17 @@ class _CheckRelationPermissionOp(hook.LateOperation):
         pass
 
 
+@objectify_selector
+@lltrace
+def write_security_enabled(cls, req, **kwargs):
+    if req is None or not req.write_security:
+        return 0
+    return 1
+
 class SecurityHook(hook.Hook):
     __abstract__ = True
     category = 'security'
-    __select__ = hook.Hook.__select__ & hook.regular_session()
+    __select__ = hook.Hook.__select__ & write_security_enabled()
 
 
 class AfterAddEntitySecurityHook(SecurityHook):

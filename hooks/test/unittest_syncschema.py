@@ -3,9 +3,11 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.devtools.repotest import schema_eids_idx, restore_schema_eids_idx
 
+def teardown_module(*args):
+    del SchemaModificationHooksTC.schema_eids
 
-SCHEMA_EIDS = {}
 class SchemaModificationHooksTC(CubicWebTC):
     reset_schema = True
 
@@ -15,29 +17,12 @@ class SchemaModificationHooksTC(CubicWebTC):
         # we have to read schema from the database to get eid for schema entities
         config._cubes = None
         cls.repo.fill_schema()
-        # remember them so we can reread it from the fs instead of the db (too
-        # costly) between tests
-        for x in cls.repo.schema.entities():
-            SCHEMA_EIDS[x] = x.eid
-        for x in cls.repo.schema.relations():
-            SCHEMA_EIDS[x] = x.eid
-            for rdef in x.rdefs.itervalues():
-                SCHEMA_EIDS[(rdef.subject, rdef.rtype, rdef.object)] = rdef.eid
+        cls.schema_eids = schema_eids_idx(cls.repo.schema)
 
     @classmethod
     def _refresh_repo(cls):
         super(SchemaModificationHooksTC, cls)._refresh_repo()
-        # rebuild schema eid index
-        schema = cls.repo.schema
-        for x in schema.entities():
-            x.eid = SCHEMA_EIDS[x]
-            schema._eid_index[x.eid] = x
-        for x in cls.repo.schema.relations():
-            x.eid = SCHEMA_EIDS[x]
-            schema._eid_index[x.eid] = x
-            for rdef in x.rdefs.itervalues():
-                rdef.eid = SCHEMA_EIDS[(rdef.subject, rdef.rtype, rdef.object)]
-                schema._eid_index[rdef.eid] = rdef
+        restore_schema_eids_idx(cls.repo.schema, cls.schema_eids)
 
     def index_exists(self, etype, attr, unique=False):
         self.session.set_pool()

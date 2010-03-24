@@ -57,6 +57,7 @@ def multiple_connections_unfix():
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
+
 class ConnectionProperties(object):
     def __init__(self, cnxtype=None, lang=None, close=True, log=False):
         self.cnxtype = cnxtype or 'pyro'
@@ -203,11 +204,6 @@ class DBAPIRequest(RequestSessionBase):
             self.pgettext = lambda x, y: y
         self.debug('request default language: %s', self.lang)
 
-    def decorate_rset(self, rset):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
-
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         return self.cnx.describe(eid)
@@ -242,7 +238,7 @@ class DBAPIRequest(RequestSessionBase):
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if self.cnx is None:
-            return None # before the connection has been established
+            return default # before the connection has been established
         return self.cnx.get_session_data(key, default, pop)
 
     def set_session_data(self, key, value):
@@ -398,14 +394,20 @@ class Connection(object):
 
     def check(self):
         """raise `BadSessionId` if the connection is no more valid"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         self._repo.check_session(self.sessionid)
 
     def set_session_props(self, **props):
         """raise `BadSessionId` if the connection is no more valid"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         self._repo.set_session_props(self.sessionid, props)
 
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.get_shared_data(self.sessionid, key, default, pop)
 
     def set_shared_data(self, key, value, querydata=False):
@@ -416,6 +418,8 @@ class Connection(object):
         transaction, and won't be available through the connexion, only on the
         repository side.
         """
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.set_shared_data(self.sessionid, key, value, querydata)
 
     def get_schema(self):
@@ -501,6 +505,8 @@ class Connection(object):
     def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         # cnx validity is checked by the call to .user_info
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         eid, login, groups, properties = self._repo.user_info(self.sessionid,
                                                               props)
         if req is None:
@@ -521,6 +527,8 @@ class Connection(object):
                 pass
 
     def describe(self, eid):
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.describe(self.sessionid, eid)
 
     def close(self):
@@ -535,19 +543,20 @@ class Connection(object):
         if self._closed:
             raise ProgrammingError('Connection is already closed')
         self._repo.close(self.sessionid)
+        del self._repo # necessary for proper garbage collection
         self._closed = 1
 
     def commit(self):
-        """Commit any pending transaction to the database. Note that if the
-        database supports an auto-commit feature, this must be initially off. An
-        interface method may be provided to turn it back on.
+        """Commit pending transaction for this connection to the repository.
 
-        Database modules that do not support transactions should implement this
-        method with void functionality.
+        may raises `Unauthorized` or `ValidationError` if we attempted to do
+        something we're not allowed to for security or integrity reason.
+
+        If the transaction is undoable, a transaction id will be returned.
         """
         if not self._closed is None:
             raise ProgrammingError('Connection is already closed')
-        self._repo.commit(self.sessionid)
+        return self._repo.commit(self.sessionid)
 
     def rollback(self):
         """This method is optional since not all databases provide transaction
@@ -573,6 +582,73 @@ class Connection(object):
         if req is None:
             req = self.request()
         return self.cursor_class(self, self._repo, req=req)
+
+    # undo support ############################################################
+
+    def undoable_transactions(self, ueid=None, req=None, **actionfilters):
+        """Return a list of undoable transaction objects by the connection's
+        user, ordered by descendant transaction time.
+
+        Managers may filter according to user (eid) who has done the transaction
+        using the `ueid` argument. Others will only see their own transactions.
+
+        Additional filtering capabilities is provided by using the following
+        named arguments:
+
+        * `etype` to get only transactions creating/updating/deleting entities
+          of the given type
+
+        * `eid` to get only transactions applied to entity of the given eid
+
+        * `action` to get only transactions doing the given action (action in
+          'C', 'U', 'D', 'A', 'R'). If `etype`, action can only be 'C', 'U' or
+          'D'.
+
+        * `public`: when additional filtering is provided, their are by default
+          only searched in 'public' actions, unless a `public` argument is given
+          and set to false.
+        """
+        txinfos = self._repo.undoable_transactions(self.sessionid, ueid,
+                                                   **actionfilters)
+        if req is None:
+            req = self.request()
+        for txinfo in txinfos:
+            txinfo.req = req
+        return txinfos
+
+    def transaction_info(self, txuuid, req=None):
+        """Return transaction object for the given uid.
+
+        raise `NoSuchTransaction` if not found or if session's user is not
+        allowed (eg not in managers group and the transaction doesn't belong to
+        him).
+        """
+        txinfo = self._repo.transaction_info(self.sessionid, txuuid)
+        if req is None:
+            req = self.request()
+        txinfo.req = req
+        return txinfo
+
+    def transaction_actions(self, txuuid, public=True):
+        """Return an ordered list of action effectued during that transaction.
+
+        If public is true, return only 'public' actions, eg not ones triggered
+        under the cover by hooks, else return all actions.
+
+        raise `NoSuchTransaction` if the transaction is not found or if
+        session's user is not allowed (eg not in managers group and the
+        transaction doesn't belong to him).
+        """
+        return self._repo.transaction_actions(self.sessionid, txuuid, public)
+
+    def undo_transaction(self, txuuid):
+        """Undo the given transaction. Return potential restoration errors.
+
+        raise `NoSuchTransaction` if not found or if session's user is not
+        allowed (eg not in managers group and the transaction doesn't belong to
+        him).
+        """
+        return self._repo.undo_transaction(self.sessionid, txuuid)
 
 
 # cursor object ###############################################################
@@ -646,11 +722,11 @@ class Cursor(object):
         Return values are not defined by the DB-API, but this here it returns a
         ResultSet object.
         """
-        self._res = res = self._repo.execute(self._sessid, operation,
-                                             parameters, eid_key, build_descr)
-        self.req.decorate_rset(res)
+        self._res = rset = self._repo.execute(self._sessid, operation,
+                                              parameters, eid_key, build_descr)
+        rset.req = self.req
         self._index = 0
-        return res
+        return rset
 
 
     def executemany(self, operation, seq_of_parameters):

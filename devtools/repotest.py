@@ -95,6 +95,31 @@ class DumbOrderedDict2(object):
     def __iter__(self):
         return iter(sorted(self.origdict, key=self.sortkey))
 
+def schema_eids_idx(schema):
+    """return a dictionary mapping schema types to their eids so we can reread
+    it from the fs instead of the db (too costly) between tests
+    """
+    schema_eids = {}
+    for x in schema.entities():
+        schema_eids[x] = x.eid
+    for x in schema.relations():
+        schema_eids[x] = x.eid
+        for rdef in x.rdefs.itervalues():
+            schema_eids[(rdef.subject, rdef.rtype, rdef.object)] = rdef.eid
+    return schema_eids
+
+def restore_schema_eids_idx(schema, schema_eids):
+    """rebuild schema eid index"""
+    for x in schema.entities():
+        x.eid = schema_eids[x]
+        schema._eid_index[x.eid] = x
+    for x in schema.relations():
+        x.eid = schema_eids[x]
+        schema._eid_index[x.eid] = x
+        for rdef in x.rdefs.itervalues():
+            rdef.eid = schema_eids[(rdef.subject, rdef.rtype, rdef.object)]
+            schema._eid_index[rdef.eid] = rdef
+
 
 from logilab.common.testlib import TestCase
 from rql import RQLHelper
@@ -150,17 +175,23 @@ class BaseQuerierTC(TestCase):
         self.pool = self.session.set_pool()
         self.maxeid = self.get_max_eid()
         do_monkey_patch()
+        self._dumb_sessions = []
 
     def get_max_eid(self):
-        return self.session.unsafe_execute('Any MAX(X)')[0][0]
+        return self.session.execute('Any MAX(X)')[0][0]
     def cleanup(self):
-        self.session.unsafe_execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
+        self.session.set_pool()
+        self.session.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
 
     def tearDown(self):
         undo_monkey_patch()
         self.session.rollback()
         self.cleanup()
         self.commit()
+        # properly close dumb sessions
+        for session in self._dumb_sessions:
+            session.rollback()
+            session.close()
         self.repo._free_pool(self.pool)
         assert self.session.user.eid != -1
 
@@ -198,6 +229,8 @@ class BaseQuerierTC(TestCase):
         u._groups = set(groups)
         s = Session(u, self.repo)
         s._threaddata.pool = self.pool
+        # register session to ensure it gets closed
+        self._dumb_sessions.append(s)
         return s
 
     def execute(self, rql, args=None, eid_key=None, build_descr=True):
@@ -223,6 +256,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
         do_monkey_patch()
+        self._dumb_sessions = [] # by hi-jacked parent setup
 
     def add_source(self, sourcecls, uri):
         self.sources.append(sourcecls(self.repo, self.o.schema,
@@ -237,6 +271,9 @@ class BasePlannerTC(BaseQuerierTC):
             del self.repo.sources_by_uri[source.uri]
             self.newsources -= 1
         undo_monkey_patch()
+        for session in self._dumb_sessions:
+            session._threaddata.pool = None
+            session.close()
 
     def _prepare_plan(self, rql, kwargs=None):
         rqlst = self.o.parse(rql, annotate=True)

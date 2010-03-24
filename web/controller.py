@@ -8,6 +8,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.mtconverter import xml_escape
+
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
@@ -79,19 +81,6 @@ class Controller(AppObject):
                 self.cw_rset = pp.process_query(rql)
         return self.cw_rset
 
-    def check_expected_params(self, params):
-        """check that the given list of parameters are specified in the form
-        dictionary
-        """
-        missing = []
-        for param in params:
-            if not self._cw.form.get(param):
-                missing.append(param)
-        if missing:
-            raise RequestError('missing required parameter(s): %s'
-                               % ','.join(missing))
-
-
     def notify_edited(self, entity):
         """called by edit_entity() to notify which entity is edited"""
         # NOTE: we can't use entity.rest_path() at this point because
@@ -100,31 +89,10 @@ class Controller(AppObject):
         if not self._edited_entity:
             self._edited_entity = entity
 
-    # XXX move to EditController (only customer)
-    def delete_entities(self, eidtypes):
-        """delete entities from the repository"""
-        redirect_info = set()
-        eidtypes = tuple(eidtypes)
-        for eid, etype in eidtypes:
-            entity = self._cw.entity_from_eid(eid, etype)
-            path, params = entity.after_deletion_path()
-            redirect_info.add( (path, tuple(params.iteritems())) )
-            entity.delete()
-        if len(redirect_info) > 1:
-            # In the face of ambiguity, refuse the temptation to guess.
-            self._after_deletion_path = 'view', ()
-        else:
-            self._after_deletion_path = iter(redirect_info).next()
-        if len(eidtypes) > 1:
-            self._cw.set_message(self._cw._('entities deleted'))
-        else:
-            self._cw.set_message(self._cw._('entity deleted'))
-
     def validate_cache(self, view):
         view.set_http_cache_headers()
         self._cw.validate_cache()
 
-    # XXX is that used AT ALL ?
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters
@@ -132,7 +100,7 @@ class Controller(AppObject):
         newparams = {}
         # sets message if needed
         if self._cw.message:
-            newparams['__message'] = self._cw.message
+            newparams['_cwmsgid'] = self._cw.set_redirect_message(self._cw.message)
         if self._cw.form.has_key('__action_apply'):
             self._return_to_edition_view(newparams)
         if self._cw.form.has_key('__action_cancel'):
@@ -140,8 +108,6 @@ class Controller(AppObject):
         else:
             self._return_to_original_view(newparams)
 
-
-    # XXX is that used AT ALL ?
     def _return_to_original_view(self, newparams):
         """validate-button case"""
         # transforms __redirect[*] parameters into regular form parameters
@@ -156,10 +122,13 @@ class Controller(AppObject):
         elif '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
             path = self._cw.form['__redirectpath']
-            if self._edited_entity and path != self._edited_entity.rest_path():
-                # XXX may be here on modification? if yes the message should be
-                # modified where __createdpath is detected (cw.web.request)
-                newparams['__createdpath'] = self._edited_entity.rest_path()
+            if (self._edited_entity and path != self._edited_entity.rest_path()
+                and '_cwmsgid' in newparams):
+                # XXX may be here on modification?
+                msg = u'(<a href="%s">%s</a>)' % (
+                    xml_escape(self._edited_entity.absolute_url()),
+                    self._cw._('click here to see created entity'))
+                self._cw.append_to_redirect_message(msg)
         elif self._after_deletion_path:
             # else it should have been set during form processing
             path, params = self._after_deletion_path
@@ -174,7 +143,6 @@ class Controller(AppObject):
         url = append_url_params(url, self._cw.form.get('__redirectparams'))
         raise Redirect(url)
 
-    # XXX is that used AT ALL ?
     def _return_to_edition_view(self, newparams):
         """apply-button case"""
         form = self._cw.form
@@ -186,7 +154,7 @@ class Controller(AppObject):
             path = 'view'
             newparams['rql'] = form['rql']
         else:
-            self.warning("the edited data seems inconsistent")
+            self.warning('the edited data seems inconsistent')
             path = 'view'
         # pick up the correction edition view
         if form.get('__form_id'):
@@ -198,7 +166,6 @@ class Controller(AppObject):
         raise Redirect(self._cw.build_url(path, **newparams))
 
 
-    # XXX is that used AT ALL ?
     def _return_to_lastpage(self, newparams):
         """cancel-button case: in this case we are always expecting to go back
         where we came from, and this is not easy. Currently we suppose that

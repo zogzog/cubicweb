@@ -50,7 +50,6 @@ class ResultSet(object):
         # .limit method
         self.limited = None
         # set by the cursor which returned this resultset
-        self.vreg = None
         self.req = None
         # actions cache
         self._rsetactions = None
@@ -83,7 +82,7 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg['actions'].poss_visible_objects(
+            actions = self.req.vreg['actions'].poss_visible_objects(
                 self.req, rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
@@ -115,14 +114,16 @@ class ResultSet(object):
         # method anymore (syt)
         rset = ResultSet(self.rows+rset.rows, self.rql, self.args,
                          self.description +rset.description)
-        return self.req.decorate_rset(rset)
+        rset.req = self.req
+        return rset
 
     def copy(self, rows=None, descr=None):
         if rows is None:
             rows = self.rows[:]
             descr = self.description[:]
         rset = ResultSet(rows, self.rql, self.args, descr)
-        return self.req.decorate_rset(rset)
+        rset.req = self.req
+        return rset
 
     def transformed_rset(self, transformcb):
         """ the result set according to a given column types
@@ -258,8 +259,8 @@ class ResultSet(object):
         # try to get page boundaries from the navigation component
         # XXX we should probably not have a ref to this component here (eg in
         #     cubicweb)
-        nav = self.vreg['components'].select_or_none('navigation', self.req,
-                                                     rset=self)
+        nav = self.req.vreg['components'].select_or_none('navigation', self.req,
+                                                         rset=self)
         if nav:
             start, stop = nav.page_boundaries()
             rql = self._limit_offset_rql(stop - start, start)
@@ -391,7 +392,7 @@ class ResultSet(object):
         """
         etype = self.description[row][col]
         try:
-            eschema = self.vreg.schema.eschema(etype)
+            eschema = self.req.vreg.schema.eschema(etype)
             if eschema.final:
                 raise NotAnEntity(etype)
         except KeyError:
@@ -435,8 +436,8 @@ class ResultSet(object):
             return entity
         # build entity instance
         etype = self.description[row][col]
-        entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
-                                                        row=row, col=col)
+        entity = self.req.vreg['etypes'].etype_class(etype)(req, rset=self,
+                                                            row=row, col=col)
         entity.set_eid(eid)
         # cache entity
         req.set_entity_cache(entity)
@@ -472,7 +473,7 @@ class ResultSet(object):
                         else:
                             rql = 'Any Y WHERE Y %s X, X eid %s'
                         rrset = ResultSet([], rql % (attr, entity.eid))
-                        req.decorate_rset(rrset)
+                        rrset.req = req
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
                     entity.set_related_cache(attr, role, rrset)
@@ -489,10 +490,10 @@ class ResultSet(object):
             rqlst = self._rqlst.copy()
             # to avoid transport overhead when pyro is used, the schema has been
             # unset from the syntax tree
-            rqlst.schema = self.vreg.schema
-            self.vreg.rqlhelper.annotate(rqlst)
+            rqlst.schema = self.req.vreg.schema
+            self.req.vreg.rqlhelper.annotate(rqlst)
         else:
-            rqlst = self.vreg.parse(self.req, self.rql, self.args)
+            rqlst = self.req.vreg.parse(self.req, self.rql, self.args)
         return rqlst
 
     @cached
@@ -532,7 +533,7 @@ class ResultSet(object):
         etype = self.description[row][col]
         # final type, find a better one to locate the correct subquery
         # (ambiguous if possible)
-        eschema = self.vreg.schema.eschema
+        eschema = self.req.vreg.schema.eschema
         if eschema(etype).final:
             for select in rqlst.children:
                 try:

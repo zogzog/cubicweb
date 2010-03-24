@@ -313,8 +313,6 @@ class PartPlanInformation(object):
             if varobj.stinfo['uidrels']:
                 vrels = varobj.stinfo['relations'] - varobj.stinfo['uidrels']
                 for rel in varobj.stinfo['uidrels']:
-                    if rel.neged(strict=True) or rel.operator() != '=':
-                        continue
                     for const in rel.children[1].get_nodes(Constant):
                         eid = const.eval(self.plan.args)
                         source = self._session.source_from_eid(eid)

@@ -9,12 +9,12 @@
 from cStringIO import StringIO
 from unittest import TestSuite
 
-
-from logilab.common.testlib import (TestCase, unittest_main, 
+from logilab.common.testlib import (TestCase, unittest_main,
                                     SkipAwareTextTestRunner)
 
 from cubicweb.devtools import htmlparser
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.pytestconf import clean_repo_test_cls
 
 class WebTestTC(TestCase):
 
@@ -37,7 +37,7 @@ class WebTestTC(TestCase):
         self.assertEquals(result.testsRun, 2)
         self.assertEquals(len(result.errors), 0)
         self.assertEquals(len(result.failures), 1)
-
+        clean_repo_test_cls(MyWebTest)
 
 
 HTML_PAGE = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

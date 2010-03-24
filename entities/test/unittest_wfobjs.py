@@ -1,5 +1,7 @@
+from __future__ import with_statement
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import ValidationError
+from cubicweb.server.session import security_enabled
 
 def add_wf(self, etype, name=None, default=False):
     if name is None:
@@ -126,10 +128,11 @@ class WorkflowTC(CubicWebTC):
         wf = add_wf(self, 'CWUser')
         s = wf.add_state(u'foo', initial=True)
         self.commit()
-        ex = self.assertRaises(ValidationError, self.session.unsafe_execute,
+        with security_enabled(self.session, write=False):
+            ex = self.assertRaises(ValidationError, self.session.execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                {'x': self.user().eid, 's': s.eid}, 'x')
-        self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
+            self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
                                       "You may want to set a custom workflow for this entity first."})
 
     def test_fire_transition(self):
@@ -505,7 +508,7 @@ class WorkflowHooksTC(CubicWebTC):
                      {'wf': self.wf.eid})
         self.commit()
 
-    # XXX currently, we've to rely on hooks to set initial state, or to use unsafe_execute
+    # XXX currently, we've to rely on hooks to set initial state, or to use execute
     # def test_initial_state(self):
     #     cnx = self.login('stduser')
     #     cu = cnx.cursor()

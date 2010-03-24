@@ -252,6 +252,25 @@ class EditController(basecontrollers.ViewController):
             for reid in seteids:
                 self.relations_rql.append((rql, {'x': eid, 'y': reid}, ('x', 'y')))
 
+    def delete_entities(self, eidtypes):
+        """delete entities from the repository"""
+        redirect_info = set()
+        eidtypes = tuple(eidtypes)
+        for eid, etype in eidtypes:
+            entity = self._cw.entity_from_eid(eid, etype)
+            path, params = entity.after_deletion_path()
+            redirect_info.add( (path, tuple(params.iteritems())) )
+            entity.delete()
+        if len(redirect_info) > 1:
+            # In the face of ambiguity, refuse the temptation to guess.
+            self._after_deletion_path = 'view', ()
+        else:
+            self._after_deletion_path = iter(redirect_info).next()
+        if len(eidtypes) > 1:
+            self._cw.set_message(self._cw._('entities deleted'))
+        else:
+            self._cw.set_message(self._cw._('entity deleted'))
+
     def _action_apply(self):
         self._default_publish()
         self.reset()
@@ -260,7 +279,7 @@ class EditController(basecontrollers.ViewController):
         errorurl = self._cw.form.get('__errorurl')
         if errorurl:
             self._cw.cancel_edition(errorurl)
-        self._cw.message = self._cw._('edit canceled')
+        self._cw.set_message(self._cw._('edit canceled'))
         return self.reset()
 
     def _action_delete(self):

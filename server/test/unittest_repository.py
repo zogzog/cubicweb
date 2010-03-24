@@ -21,7 +21,7 @@ from yams.constraints import UniqueConstraint
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError)
 from cubicweb.schema import CubicWebSchema, RQLConstraint
-from cubicweb.dbapi import connect, repo_connect, multiple_connections_unfix
+from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
@@ -38,25 +38,29 @@ class RepositoryTC(CubicWebTC):
     """
 
     def test_fill_schema(self):
-        self.repo.schema = CubicWebSchema(self.repo.config.appid)
-        self.repo.config._cubes = None # avoid assertion error
-        self.repo.config.repairing = True # avoid versions checking
-        self.repo.fill_schema()
-        table = SQL_PREFIX + 'CWEType'
-        namecol = SQL_PREFIX + 'name'
-        finalcol = SQL_PREFIX + 'final'
-        self.session.set_pool()
-        cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
-            namecol, table, finalcol))
-        self.assertEquals(cu.fetchall(), [])
-        cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
-                          % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
-        self.assertEquals(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
-                                          (u'Date',), (u'Datetime',),
-                                          (u'Decimal',),(u'Float',),
-                                          (u'Int',),
-                                          (u'Interval',), (u'Password',),
-                                          (u'String',), (u'Time',)])
+        origshema = self.repo.schema
+        try:
+            self.repo.schema = CubicWebSchema(self.repo.config.appid)
+            self.repo.config._cubes = None # avoid assertion error
+            self.repo.config.repairing = True # avoid versions checking
+            self.repo.fill_schema()
+            table = SQL_PREFIX + 'CWEType'
+            namecol = SQL_PREFIX + 'name'
+            finalcol = SQL_PREFIX + 'final'
+            self.session.set_pool()
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
+                namecol, table, finalcol))
+            self.assertEquals(cu.fetchall(), [])
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
+                                         % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
+            self.assertEquals(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
+                                              (u'Date',), (u'Datetime',),
+                                              (u'Decimal',),(u'Float',),
+                                              (u'Int',),
+                                              (u'Interval',), (u'Password',),
+                                              (u'String',), (u'Time',)])
+        finally:
+            self.repo.set_schema(origshema)
 
     def test_schema_has_owner(self):
         repo = self.repo
@@ -180,7 +184,9 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         # rollback state change which trigger TrInfo insertion
-        user = repo._get_session(cnxid).user
+        session = repo._get_session(cnxid)
+        session.set_pool()
+        user = session.user
         user.fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
@@ -263,6 +269,8 @@ class RepositoryTC(CubicWebTC):
                 self.fail('something went wrong, thread still alive')
         finally:
             repository.pyro_unregister(self.repo.config)
+            from logilab.common import pyro_ext
+            pyro_ext._DAEMONS.clear()
 
     def _pyro_client(self, done):
         cnx = connect(self.repo.config.appid, u'admin', password='gingkow')
@@ -377,14 +385,14 @@ class DataHelpersTC(CubicWebTC):
         entity.eid = -1
         entity.complete = lambda x: None
         self.session.set_pool()
-        self.repo.add_info(self.session, entity, self.repo.sources_by_uri['system'])
+        self.repo.add_info(self.session, entity, self.repo.system_source)
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
         self.assertIsInstance(data[0][3], datetime)
         data[0] = list(data[0])
         data[0][3] = None
         self.assertEquals(tuplify(data), [(-1, 'Personne', 'system', None, None)])
-        self.repo.delete_info(self.session, -1)
+        self.repo.delete_info(self.session, entity, 'system', None)
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
@@ -470,13 +478,6 @@ class DBInitTC(CubicWebTC):
                            u'system.version.tag'])
 
 CALLED = []
-class EcritParHook(hook.Hook):
-    __regid__ = 'inlinedrelhook'
-    __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
-    events = ('before_add_relation', 'after_add_relation',
-              'before_delete_relation', 'after_delete_relation')
-    def __call__(self):
-        CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
 class InlineRelHooksTC(CubicWebTC):
     """test relation hooks are called for inlined relations
@@ -491,6 +492,14 @@ class InlineRelHooksTC(CubicWebTC):
 
     def test_inline_relation(self):
         """make sure <event>_relation hooks are called for inlined relation"""
+        class EcritParHook(hook.Hook):
+            __regid__ = 'inlinedrelhook'
+            __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
+            events = ('before_add_relation', 'after_add_relation',
+                      'before_delete_relation', 'after_delete_relation')
+            def __call__(self):
+                CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
+
         self.hm.register(EcritParHook)
         eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
         eidn = self.execute('INSERT Note X: X type "T"')[0][0]

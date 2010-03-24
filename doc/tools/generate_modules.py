@@ -16,7 +16,7 @@ if __name__ == '__main__':
     cw_gen = ModuleGenerator('cubicweb', '../..')
     cw_gen.generate("../book/en/annexes/api_cubicweb.rst",
                     EXCLUDE_DIRS + ('cwdesklets', 'misc', 'skel', 'skeleton'))
-    for modname in ('indexer', 'logilab', 'rql', 'yams'):
+    for modname in ('logilab', 'rql', 'yams'):
         cw_gen = ModuleGenerator(modname, '../../../' + modname)
         cw_gen.generate("../book/en/annexes/api_%s.rst" % modname,
                         EXCLUDE_DIRS + ('tools',))

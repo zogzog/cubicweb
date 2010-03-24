@@ -332,16 +332,16 @@ class SQLGenerator(object):
     protected by a lock
     """
 
-    def __init__(self, schema, dbms_helper, dbencoding='UTF-8', attrmap=None):
+    def __init__(self, schema, dbms_helper, attrmap=None):
         self.schema = schema
         self.dbms_helper = dbms_helper
-        self.dbencoding = dbencoding
+        self.dbencoding = dbms_helper.dbencoding
         self.keyword_map = {'NOW' : self.dbms_helper.sql_current_timestamp,
                             'TODAY': self.dbms_helper.sql_current_date,
                             }
         if not self.dbms_helper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
-        if self.dbms_helper.fti_need_distinct_query:
+        if self.dbms_helper.fti_need_distinct:
             self.__union_sql = self.union_sql
             self.union_sql = self.has_text_need_distinct_union_sql
         self._lock = threading.Lock()
@@ -986,10 +986,9 @@ class SQLGenerator(object):
 
     def visit_function(self, func):
         """generate SQL name for a function"""
-        # function_description will check function is supported by the backend
-        sqlname = self.dbms_helper.func_sqlname(func.name)
-        return '%s(%s)' % (sqlname, ', '.join(c.accept(self)
-                                              for c in func.children))
+        # func_sql_call will check function is supported by the backend
+        return self.dbms_helper.func_as_sql(func.name,
+                                            [c.accept(self) for c in func.children])
 
     def visit_constant(self, constant):
         """generate SQL name for a constant"""

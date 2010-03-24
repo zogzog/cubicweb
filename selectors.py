@@ -23,17 +23,15 @@ exception::
 You can log the selectors involved for *calendar* by replacing the line
 above by::
 
-    # in Python2.5
     from cubicweb.selectors import traced_selection
     with traced_selection():
         self.view('calendar', myrset)
 
-    # in Python2.4
-    from cubicweb import selectors
-    selectors.TRACED_OIDS = ('calendar',)
-    self.view('calendar', myrset)
-    selectors.TRACED_OIDS = ()
+With python 2.5, think to add:
 
+    from __future__ import with_statement
+
+at the top of your module.
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

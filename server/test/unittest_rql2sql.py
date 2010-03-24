@@ -13,7 +13,6 @@ import sys
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
-from indexer import get_indexer
 
 #from cubicweb.server.sources.native import remove_unused_solutions
 from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
@@ -36,6 +35,10 @@ schema = config.load_schema()
 schema['in_state'].inlined = True
 schema['state_of'].inlined = False
 schema['comments'].inlined = False
+
+def teardown_module(*args):
+    global config, schema
+    del config, schema
 
 PARSER = [
     (r"Personne P WHERE P nom 'Zig\'oto';",
@@ -1068,7 +1071,7 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.common.adbh import get_adv_func_helper
+from logilab.database import get_db_helper
 
 class CWRQLTC(RQLGeneratorTC):
     schema = schema
@@ -1102,12 +1105,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     #capture = True
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        indexer = get_indexer('postgres', 'utf8')
-        dbms_helper = get_adv_func_helper('postgres')
-        dbms_helper.fti_uid_attr = indexer.uid_attr
-        dbms_helper.fti_table = indexer.table
-        dbms_helper.fti_restriction_sql = indexer.restriction_sql
-        dbms_helper.fti_need_distinct_query = indexer.need_distinct
+        dbms_helper = get_db_helper('postgres')
         self.o = SQLGenerator(schema, dbms_helper)
 
     def _norm_sql(self, sql):
@@ -1207,6 +1205,13 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
                                '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
 WHERE _X.cw_login IS NULL''')
+
+
+    def test_date_extraction(self):
+        self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT CAST(EXTRACT(MONTH from _P.cw_creation_date) AS INTEGER)
+FROM cw_Personne AS _P''')
+
 
     def test_parser_parse(self):
         for t in self._parse(PARSER):
@@ -1405,16 +1410,16 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
 
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        indexer = get_indexer('sqlite', 'utf8')
-        dbms_helper = get_adv_func_helper('sqlite')
-        dbms_helper.fti_uid_attr = indexer.uid_attr
-        dbms_helper.fti_table = indexer.table
-        dbms_helper.fti_restriction_sql = indexer.restriction_sql
-        dbms_helper.fti_need_distinct_query = indexer.need_distinct
+        dbms_helper = get_db_helper('sqlite')
         self.o = SQLGenerator(schema, dbms_helper)
 
     def _norm_sql(self, sql):
         return sql.strip().replace(' ILIKE ', ' LIKE ').replace('\nINTERSECT ALL\n', '\nINTERSECT\n')
+
+    def test_date_extraction(self):
+        self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT MONTH(_P.cw_creation_date)
+FROM cw_Personne AS _P''')
 
     def test_union(self):
         for t in self._parse((
@@ -1513,12 +1518,7 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
 
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        indexer = get_indexer('mysql', 'utf8')
-        dbms_helper = get_adv_func_helper('mysql')
-        dbms_helper.fti_uid_attr = indexer.uid_attr
-        dbms_helper.fti_table = indexer.table
-        dbms_helper.fti_restriction_sql = indexer.restriction_sql
-        dbms_helper.fti_need_distinct_query = indexer.need_distinct
+        dbms_helper = get_db_helper('mysql')
         self.o = SQLGenerator(schema, dbms_helper)
 
     def _norm_sql(self, sql):
@@ -1532,6 +1532,11 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
             newsql.append(line)
             latest = firstword
         return '\n'.join(newsql)
+
+    def test_date_extraction(self):
+        self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT EXTRACT(MONTH from _P.cw_creation_date)
+FROM cw_Personne AS _P''')
 
     def test_from_clause_needed(self):
         queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",

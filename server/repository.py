@@ -15,6 +15,8 @@ repository mainly:
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -22,9 +24,11 @@ import Queue
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
+#from pickle import dumps
 
 from logilab.common.decorators import cached
 from logilab.common.compat import any
+from logilab.common import flatten
 
 from yams import BadSchemaDefinition
 from rql import RQLSyntaxError
@@ -36,7 +40,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       typed_eid)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
-from cubicweb.server.session import Session, InternalSession
+from cubicweb.server.session import Session, InternalSession, security_enabled
 
 
 class CleanupEidTypeCacheOp(hook.SingleLastOperation):
@@ -80,12 +84,12 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # XXX now that rql in migraction default to unsafe_execute we don't want to
-    #     skip that for super session (though we can still skip it for internal
-    #     sessions). Also we should imo rely on the orm to first fetch existing
-    #     entity if any then delete it.
+    # skip that for internal session or if integrity explicitly disabled
+    #
+    # XXX we should imo rely on the orm to first fetch existing entity if any
+    # then delete it.
     if session.is_internal_session \
-           or not session.vreg.config.is_hook_category_activated('integrity'):
+           or not session.is_hook_category_activated('integrity'):
         return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
@@ -100,23 +104,15 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     rschema = session.repo.schema.rschema(rtype)
     if card[0] in '1?':
         if not rschema.inlined: # inlined relations will be implicitly deleted
-            rset = session.unsafe_execute('Any X,Y WHERE X %s Y, X eid %%(x)s, '
-                                          'NOT Y eid %%(y)s' % rtype,
-                                          {'x': eidfrom, 'y': eidto}, 'x')
-            if rset:
-                safe_delete_relation(session, rschema, *rset[0])
+            with security_enabled(session, read=False):
+                session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                                'NOT Y eid %%(y)s' % rtype,
+                                {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        rset = session.unsafe_execute('Any X,Y WHERE X %s Y, Y eid %%(y)s, '
-                                      'NOT X eid %%(x)s' % rtype,
-                                      {'x': eidfrom, 'y': eidto}, 'y')
-        if rset:
-            safe_delete_relation(session, rschema, *rset[0])
-
-
-def safe_delete_relation(session, rschema, subject, object):
-    if not rschema.has_perm(session, 'delete', fromeid=subject, toeid=object):
-        raise Unauthorized()
-    session.repo.glob_delete_relation(session, subject, rschema.type, object)
+        with security_enabled(session, read=False):
+            session.execute('DELETE X %sY WHERE Y eid %%(y)s, '
+                            'NOT X eid %%(x)s' % rtype,
+                            {'x': eidfrom, 'y': eidto}, 'y')
 
 
 class Repository(object):
@@ -223,11 +219,6 @@ class Repository(object):
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
         self.hm = self.vreg['hooks']
-        if not (config.creating or config.repairing):
-            # call instance level initialisation hooks
-            self.hm.call_hooks('server_startup', repo=self)
-            # register a task to cleanup expired session
-            self.looping_task(config['session-time']/3., self.clean_sessions)
 
     # internals ###############################################################
 
@@ -276,6 +267,11 @@ class Repository(object):
         self.set_schema(appschema)
 
     def start_looping_tasks(self):
+        if not (self.config.creating or self.config.repairing):
+            # call instance level initialisation hooks
+            self.hm.call_hooks('server_startup', repo=self)
+            # register a task to cleanup expired session
+            self.looping_task(self.config['session-time']/3., self.clean_sessions)
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
             self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)
@@ -327,6 +323,7 @@ class Repository(object):
         """called on server stop event to properly close opened sessions and
         connections
         """
+        assert not self._shutting_down, 'already shutting down'
         self._shutting_down = True
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
@@ -636,7 +633,7 @@ class Repository(object):
         """commit transaction for the session with the given id"""
         self.debug('begin commit for session %s', sessionid)
         try:
-            self._get_session(sessionid).commit()
+            return self._get_session(sessionid).commit()
         except (ValidationError, Unauthorized):
             raise
         except:
@@ -685,9 +682,41 @@ class Repository(object):
           custom properties)
         """
         session = self._get_session(sessionid, setpool=False)
-        # update session properties
         for prop, value in props.items():
             session.change_property(prop, value)
+
+    def undoable_transactions(self, sessionid, ueid=None, **actionfilters):
+        """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
+        session = self._get_session(sessionid, setpool=True)
+        try:
+            return self.system_source.undoable_transactions(session, ueid,
+                                                            **actionfilters)
+        finally:
+            session.reset_pool()
+
+    def transaction_info(self, sessionid, txuuid):
+        """See :class:`cubicweb.dbapi.Connection.transaction_info`"""
+        session = self._get_session(sessionid, setpool=True)
+        try:
+            return self.system_source.tx_info(session, txuuid)
+        finally:
+            session.reset_pool()
+
+    def transaction_actions(self, sessionid, txuuid, public=True):
+        """See :class:`cubicweb.dbapi.Connection.transaction_actions`"""
+        session = self._get_session(sessionid, setpool=True)
+        try:
+            return self.system_source.tx_actions(session, txuuid, public)
+        finally:
+            session.reset_pool()
+
+    def undo_transaction(self, sessionid, txuuid):
+        """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
+        session = self._get_session(sessionid, setpool=True)
+        try:
+            return self.system_source.undo_transaction(session, txuuid)
+        finally:
+            session.reset_pool()
 
     # public (inter-repository) interface #####################################
 
@@ -892,59 +921,58 @@ class Repository(object):
         self.system_source.add_info(session, entity, source, extid, complete)
         CleanupEidTypeCacheOp(session)
 
-    def delete_info(self, session, eid):
-        self._prepare_delete_info(session, eid)
-        self._delete_info(session, eid)
+    def delete_info(self, session, entity, sourceuri, extid):
+        """called by external source when some entity known by the system source
+        has been deleted in the external source
+        """
+        self._prepare_delete_info(session, entity, sourceuri)
+        self._delete_info(session, entity, sourceuri, extid)
 
-    def _prepare_delete_info(self, session, eid):
+    def _prepare_delete_info(self, session, entity, sourceuri):
         """prepare the repository for deletion of an entity:
         * update the fti
         * mark eid as being deleted in session info
         * setup cache update operation
+        * if undoable, get back all entity's attributes and relation
         """
+        eid = entity.eid
         self.system_source.fti_unindex_entity(session, eid)
         pending = session.transaction_data.setdefault('pendingeids', set())
         pending.add(eid)
         CleanupEidTypeCacheOp(session)
 
-    def _delete_info(self, session, eid):
+    def _delete_info(self, session, entity, sourceuri, extid):
+                     # attributes=None, relations=None):
         """delete system information on deletion of an entity:
-        * delete all relations on this entity
-        * transfer record from the entities table to the deleted_entities table
+        * delete all remaining relations from/to this entity
+        * call delete info on the system source which will transfer record from
+          the entities table to the deleted_entities table
         """
-        etype, uri, extid = self.type_and_source_from_eid(eid, session)
-        self._clear_eid_relations(session, etype, eid)
-        self.system_source.delete_info(session, eid, etype, uri, extid)
-
-    def _clear_eid_relations(self, session, etype, eid):
-        """when a entity is deleted, build and execute rql query to delete all
-        its relations
-        """
-        rql = []
-        eschema = self.schema.eschema(etype)
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
-        for rschema, targetschemas, x in eschema.relation_definitions():
-            rtype = rschema.type
-            if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
-                continue
-            var = '%s%s' % (rtype.upper(), x.upper())
-            if x == 'subject':
-                # don't skip inlined relation so they are regularly
-                # deleted and so hooks are correctly called
-                selection = 'X %s %s' % (rtype, var)
-            else:
-                selection = '%s %s X' % (var, rtype)
-            rql = 'DELETE %s WHERE X eid %%(x)s' % selection
-            # unsafe_execute since we suppose that if user can delete the entity,
-            # he can delete all its relations without security checking
-            session.unsafe_execute(rql, {'x': eid}, 'x', build_descr=False)
+        # delete remaining relations: if user can delete the entity, he can
+        # delete all its relations without security checking
+        with security_enabled(session, read=False, write=False):
+            eid = entity.eid
+            for rschema, _, role in entity.e_schema.relation_definitions():
+                rtype = rschema.type
+                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
+                    continue
+                if role == 'subject':
+                    # don't skip inlined relation so they are regularly
+                    # deleted and so hooks are correctly called
+                    selection = 'X %s Y' % rtype
+                else:
+                    selection = 'Y %s X' % rtype
+                rql = 'DELETE %s WHERE X eid %%(x)s' % selection
+                session.execute(rql, {'x': eid}, 'x', build_descr=False)
+        self.system_source.delete_info(session, entity, sourceuri, extid)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
         objsource = self.source_from_eid(object, session)
         if not subjsource is objsource:
             source = self.system_source
-            if not (subjsource.may_cross_relation(rtype) 
+            if not (subjsource.may_cross_relation(rtype)
                     and objsource.may_cross_relation(rtype)):
                 raise MultiSourcesError(
                     "relation %s can't be crossed among sources"
@@ -992,12 +1020,13 @@ class Repository(object):
             self.hm.call_hooks('before_add_entity', session, entity=entity)
         # XXX use entity.keys here since edited_attributes is not updated for
         # inline relations
-        for attr in entity.keys():
+        for attr in entity.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))
         entity.set_defaults()
-        entity.check(creation=True)
+        if session.is_hook_category_activated('integrity'):
+            entity.check(creation=True)
         source.add_entity(session, entity)
         if source.uri != 'system':
             extid = source.get_extid(entity)
@@ -1044,7 +1073,8 @@ class Repository(object):
             print 'UPDATE entity', etype, entity.eid, \
                   dict(entity), edited_attributes
         entity.edited_attributes = edited_attributes
-        entity.check()
+        if session.is_hook_category_activated('integrity'):
+            entity.check()
         eschema = entity.e_schema
         session.set_entity_cache(entity)
         only_inline_rels, need_fti_update = True, False
@@ -1101,19 +1131,16 @@ class Repository(object):
 
     def glob_delete_entity(self, session, eid):
         """delete an entity and all related entities from the repository"""
-        # call delete_info before hooks
-        self._prepare_delete_info(session, eid)
-        etype, uri, extid = self.type_and_source_from_eid(eid, session)
+        entity = session.entity_from_eid(eid)
+        etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
+        self._prepare_delete_info(session, entity, sourceuri)
         if server.DEBUG & server.DBG_REPO:
             print 'DELETE entity', etype, eid
-            if eid == 937:
-                server.DEBUG |= (server.DBG_SQL | server.DBG_RQL | server.DBG_MORE)
-        source = self.sources_by_uri[uri]
+        source = self.sources_by_uri[sourceuri]
         if source.should_call_hooks:
-            entity = session.entity_from_eid(eid)
             self.hm.call_hooks('before_delete_entity', session, entity=entity)
-        self._delete_info(session, eid)
-        source.delete_entity(session, etype, eid)
+        self._delete_info(session, entity, sourceuri, extid)
+        source.delete_entity(session, entity)
         if source.should_call_hooks:
             self.hm.call_hooks('after_delete_entity', session, entity=entity)
         # don't clear cache here this is done in a hook on commit

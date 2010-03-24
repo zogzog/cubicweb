@@ -93,15 +93,10 @@ class CWUser(AnyEntity):
         return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
-        if hasattr(self._cw, 'unsafe_execute'):
-            # use unsafe_execute on the repository side, in case
-            # session's user doesn't have access to CWUser
-            execute = self._cw.unsafe_execute
-        else:
-            execute = self._cw.execute
         try:
-            return execute('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
-                           {'x': eid, 'u': self.eid}, 'x')
+            return self._cw.execute(
+                'Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
+                {'x': eid, 'u': self.eid}, 'x')
         except Unauthorized:
             return False
     owns = cached(owns, keyarg=1)

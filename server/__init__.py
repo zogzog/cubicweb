@@ -8,6 +8,8 @@ This module contains functions to initialize a new repository.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -148,7 +150,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     schemasql = sqlschema(schema, driver)
     #skip_entities=[str(e) for e in schema.entities()
     #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute, pbtitle=_title)
+    sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()
@@ -197,6 +199,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     cnx.commit()
     cnx.close()
     session.close()
+    repo.shutdown()
     # restore initial configuration
     config.creating = False
     config.read_instance_schema = read_instance_schema
@@ -208,33 +211,30 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
-    # deactivate every hooks but those responsible to set metadata
-    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
-    oldmode = config.set_hooks_mode(config.DENY_ALL)
-    changes = config.enable_hook_category('metadata')
+    from cubicweb.server.session import hooks_control
+    session = mhandler.session
     paths = [p for p in config.cubes_path() + [config.apphome]
              if exists(join(p, 'migration'))]
-    # execute cubicweb's pre<event> script
-    mhandler.exec_event_script('pre%s' % event)
-    # execute cubes pre<event> script if any
-    for path in reversed(paths):
-        mhandler.exec_event_script('pre%s' % event, path)
-    # enter instance'schema into the database
-    mhandler.session.set_pool()
-    serialize_schema(mhandler.session, schema)
-    # execute cubicweb's post<event> script
-    mhandler.exec_event_script('post%s' % event)
-    # execute cubes'post<event> script if any
-    for path in reversed(paths):
-        mhandler.exec_event_script('post%s' % event, path)
-    # restore hooks config
-    if changes:
-        config.disable_hook_category(changes)
-    config.set_hooks_mode(oldmode)
+    # deactivate every hooks but those responsible to set metadata
+    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
+    with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata'):
+        # execute cubicweb's pre<event> script
+        mhandler.exec_event_script('pre%s' % event)
+        # execute cubes pre<event> script if any
+        for path in reversed(paths):
+            mhandler.exec_event_script('pre%s' % event, path)
+        # enter instance'schema into the database
+        session.set_pool()
+        serialize_schema(session, schema)
+        # execute cubicweb's post<event> script
+        mhandler.exec_event_script('post%s' % event)
+        # execute cubes'post<event> script if any
+        for path in reversed(paths):
+            mhandler.exec_event_script('post%s' % event, path)
 
 
-# sqlite'stored procedures have to be registered at connexion opening time
-SQL_CONNECT_HOOKS = {}
+# sqlite'stored procedures have to be registered at connection opening time
+from logilab.database import SQL_CONNECT_HOOKS
 
 # add to this set relations which should have their add security checking done
 # *BEFORE* adding the actual relation (done after by default)

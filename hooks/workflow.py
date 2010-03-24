@@ -19,8 +19,8 @@ def _change_state(session, x, oldstate, newstate):
     nocheck = session.transaction_data.setdefault('skip-security', set())
     nocheck.add((x, 'in_state', oldstate))
     nocheck.add((x, 'in_state', newstate))
-    # delete previous state first in case we're using a super session,
-    # unless in_state isn't stored in the system source
+    # delete previous state first unless in_state isn't stored in the system
+    # source
     fromsource = session.describe(x)[1]
     if fromsource == 'system' or \
            not session.repo.sources_by_uri[fromsource].support_relation('in_state'):
@@ -42,9 +42,7 @@ class _SetInitialStateOp(hook.Operation):
                and entity.current_workflow:
             state = entity.current_workflow.initial
             if state:
-                # use super session to by-pass security checks
-                session.super_session.add_relation(entity.eid, 'in_state',
-                                                   state.eid)
+                session.add_relation(entity.eid, 'in_state', state.eid)
 
 
 class _FireAutotransitionOp(hook.Operation):
@@ -122,14 +120,7 @@ class _SubWorkflowExitOp(hook.Operation):
             msg = session._('exiting from subworkflow %s')
             msg %= session._(forentity.current_workflow.name)
             session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
-            # XXX iirk
-            req = forentity._cw
-            forentity._cw = session.super_session
-            try:
-                trinfo = forentity.change_state(tostate, msg, u'text/plain',
-                                                tr=wftr)
-            finally:
-                forentity._cw = req
+            forentity.change_state(tostate, msg, u'text/plain', tr=wftr)
 
 
 # hooks ########################################################################
@@ -195,7 +186,8 @@ class FireTransitionHook(WorkflowHook):
             raise ValidationError(entity.eid, {None: msg})
         # True if we are coming back from subworkflow
         swtr = session.transaction_data.pop((forentity.eid, 'subwfentrytr'), None)
-        cowpowers = session.is_super_session or 'managers' in session.user.groups
+        cowpowers = ('managers' in session.user.groups
+                     or not session.write_security)
         # no investigate the requested state change...
         try:
             treid = entity['by_transition']
@@ -266,7 +258,7 @@ class FiredTransitionHook(WorkflowHook):
 
 
 class CheckInStateChangeAllowed(WorkflowHook):
-    """check state apply, in case of direct in_state change using unsafe_execute
+    """check state apply, in case of direct in_state change using unsafe execute
     """
     __regid__ = 'wfcheckinstate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
@@ -307,8 +299,7 @@ class SetModificationDateOnStateChange(WorkflowHook):
             return
         entity = self._cw.entity_from_eid(self.eidfrom)
         try:
-            entity.set_attributes(modification_date=datetime.now(),
-                                  _cw_unsafe=True)
+            entity.set_attributes(modification_date=datetime.now())
         except RepositoryError, ex:
             # usually occurs if entity is coming from a read-only source
             # (eg ldap user)

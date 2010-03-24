@@ -8,6 +8,11 @@ from cubicweb.devtools.repotest import BaseQuerierTC
 
 repo, cnx = init_test_database()
 
+def teardown_module(*args):
+    global repo, cnx
+    del repo, cnx
+
+
 class SQLGenAnnotatorTC(BaseQuerierTC):
     repo = repo
 

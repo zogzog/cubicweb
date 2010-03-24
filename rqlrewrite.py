@@ -11,7 +11,7 @@ This is used for instance for read security checking in the repository.
 __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
-
+from yams import BadSchemaDefinition
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized, typed_eid
@@ -185,7 +185,17 @@ class RQLRewriter(object):
                 vi['const'] = typed_eid(selectvar) # XXX gae
                 vi['rhs_rels'] = vi['lhs_rels'] = {}
             except ValueError:
-                vi['stinfo'] = sti = self.select.defined_vars[selectvar].stinfo
+                try:
+                    vi['stinfo'] = sti = self.select.defined_vars[selectvar].stinfo
+                except KeyError:
+                    # variable has been moved to a newly inserted subquery
+                    # we should insert snippet in that subquery
+                    subquery = self.select.aliases[selectvar].query
+                    assert len(subquery.children) == 1
+                    subselect = subquery.children[0]
+                    RQLRewriter(self.session).rewrite(subselect, [(varmap, rqlexprs)],
+                                                      subselect.solutions, self.kwargs)
+                    continue
                 if varexistsmap is None:
                     vi['rhs_rels'] = dict( (r.r_type, r) for r in sti['rhsrelations'])
                     vi['lhs_rels'] = dict( (r.r_type, r) for r in sti['relations']
@@ -294,21 +304,40 @@ class RQLRewriter(object):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
         selectvar = varmap[0]
-        subselect.append_selected(n.VariableRef(
-            subselect.get_variable(selectvar)))
+        subselectvar = subselect.get_variable(selectvar)
+        subselect.append_selected(n.VariableRef(subselectvar))
+        snippetrqlst = n.Exists(transformedsnippet.copy(subselect))
         aliases = [selectvar]
-        subselect.add_restriction(transformedsnippet.copy(subselect))
         stinfo = self.varinfo['stinfo']
+        need_null_test = False
         for rel in stinfo['relations']:
             rschema = self.schema.rschema(rel.r_type)
             if rschema.final or (rschema.inlined and
-                                      not rel in stinfo['rhsrelations']):
-                self.select.remove_node(rel)
-                rel.children[0].name = selectvar
+                                 not rel in stinfo['rhsrelations']):
+                rel.children[0].name = selectvar # XXX explain why
                 subselect.add_restriction(rel.copy(subselect))
                 for vref in rel.children[1].iget_nodes(n.VariableRef):
+                    if isinstance(vref.variable, n.ColumnAlias):
+                        # XXX could probably be handled by generating the subquery
+                        # into the detected subquery
+                        raise BadSchemaDefinition(
+                            "cant insert security because of usage two inlined "
+                            "relations in this query. You should probably at "
+                            "least uninline %s" % rel.r_type)
                     subselect.append_selected(vref.copy(subselect))
                     aliases.append(vref.name)
+                self.select.remove_node(rel)
+                # when some inlined relation has to be copied in the subquery,
+                # we need to test that either value is NULL or that the snippet
+                # condition is satisfied
+                if rschema.inlined and rel.optional:
+                    need_null_test = True
+        if need_null_test:
+            snippetrqlst = n.Or(
+                n.make_relation(subselectvar, 'is', (None, None), n.Constant,
+                                operator='IS'),
+                snippetrqlst)
+        subselect.add_restriction(snippetrqlst)
         if self.u_varname:
             # generate an identifier for the substitution
             argname = subselect.allocate_varname()

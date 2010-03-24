@@ -316,6 +316,30 @@ msgstr "Usuario"
 msgid "CWUser_plural"
 msgstr "Usuarios"
 
+#, python-format
+msgid ""
+"Can't restore %(role)s relation %(rtype)s to entity %(eid)s which is already "
+"linked using this relation."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s between %(subj)s and %(obj)s, that relation "
+"does not exists anymore in the schema."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exists anymore in the schema."
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
+"anymore."
+msgstr ""
+
 msgid "Date"
 msgstr "Fecha"
 
@@ -2152,8 +2176,14 @@ msgstr "entidad copiada"
 msgid "entity created"
 msgstr "entidad creada"
 
+msgid "entity creation"
+msgstr ""
+
 msgid "entity deleted"
 msgstr "Entidad eliminada"
+
+msgid "entity deletion"
+msgstr ""
 
 msgid "entity edited"
 msgstr "entidad modificada"
@@ -2175,6 +2205,9 @@ msgstr ""
 "avanzada"
 
 msgid "entity types which may use this workflow"
+msgstr ""
+
+msgid "entity update"
 msgstr ""
 
 msgid "error while embedding page"
@@ -3172,6 +3205,12 @@ msgstr ""
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
 
+msgid "relation add"
+msgstr ""
+
+msgid "relation removal"
+msgstr ""
+
 msgid "relation_type"
 msgstr "tipo de relación"
 
@@ -3393,6 +3432,9 @@ msgstr "titulo del sitio"
 msgid "site-wide property can't be set for user"
 msgstr ""
 "una propiedad especifica para el sitio no puede establecerse para el usuario"
+
+msgid "some errors occured:"
+msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "lo sentimos, el servidor no puede manejar esta consulta"
@@ -3665,6 +3707,9 @@ msgstr "a hacer por"
 msgid "toggle check boxes"
 msgstr "cambiar valor"
 
+msgid "transaction undoed"
+msgstr ""
+
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
 msgstr ""
@@ -3762,6 +3807,9 @@ msgstr "inaccesible"
 
 msgid "unauthorized value"
 msgstr "valor no permitido"
+
+msgid "undo"
+msgstr ""
 
 msgid "unique identifier used to connect to the application"
 msgstr "identificador unico utilizado para conectar a la aplicación"

@@ -343,7 +343,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'blogentry')
-        self.assertEquals(params, {u'__message': u'entity deleted'})
+        self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         self.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
                      {'x': self.session.user.eid, 'e': eid}, 'x')
@@ -353,7 +353,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'cwuser/admin')
-        self.assertEquals(params, {u'__message': u'entity deleted'})
+        self.assertIn('_cwmsgid', params)
         eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         eid2 = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         req = self.request()
@@ -363,7 +363,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'view')
-        self.assertEquals(params, {u'__message': u'entities deleted'})
+        self.assertIn('_cwmsgid', params)
 
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity
@@ -498,12 +498,20 @@ class ReportBugControllerTC(CubicWebTC):
 
     def test_usable_by_guets(self):
         self.login('anon')
-        self.vreg['controllers'].select('reportbug', self.request())
+        self.assertRaises(NoSelectableObject,
+                          self.vreg['controllers'].select, 'reportbug', self.request())
+        self.vreg['controllers'].select('reportbug', self.request(description='hop'))
 
 
 class SendMailControllerTC(CubicWebTC):
 
     def test_not_usable_by_guets(self):
+        self.assertRaises(NoSelectableObject,
+                          self.vreg['controllers'].select, 'sendmail', self.request())
+        self.vreg['controllers'].select('sendmail',
+                                        self.request(subject='toto',
+                                                     recipient='toto@logilab.fr',
+                                                     mailbody='hop'))
         self.login('anon')
         self.assertRaises(NoSelectableObject,
                           self.vreg['controllers'].select, 'sendmail', self.request())

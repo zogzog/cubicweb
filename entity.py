@@ -20,6 +20,7 @@ from cubicweb import Unauthorized, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
+from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
 from cubicweb.rqlrewrite import RQLRewriter
 
@@ -59,7 +60,7 @@ class Entity(AppObject, dict):
     :cvar skip_copy_for: a list of relations that should be skipped when copying
                          this kind of entity. Note that some relations such
                          as composite relations or relations that have '?1' as object
-                         cardinality are always skipped. 
+                         cardinality are always skipped.
     """
     __registry__ = 'etypes'
     __select__ = yes()
@@ -224,6 +225,47 @@ class Entity(AppObject, dict):
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
+    def __getitem__(self, key):
+        if key == 'eid':
+            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
+                 DeprecationWarning, stacklevel=2)
+            return self.eid
+        return super(Entity, self).__getitem__(key)
+
+    def __setitem__(self, attr, value):
+        """override __setitem__ to update self.edited_attributes.
+
+        Typically, a before_update_hook could do::
+
+            entity['generated_attr'] = generated_value
+
+        and this way, edited_attributes will be updated accordingly
+        """
+        if attr == 'eid':
+            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
+                 DeprecationWarning, stacklevel=2)
+            self.eid = value
+        else:
+            super(Entity, self).__setitem__(attr, value)
+            if hasattr(self, 'edited_attributes'):
+                self.edited_attributes.add(attr)
+                self.skip_security_attributes.add(attr)
+
+    def setdefault(self, attr, default):
+        """override setdefault to update self.edited_attributes"""
+        super(Entity, self).setdefault(attr, default)
+        if hasattr(self, 'edited_attributes'):
+            self.edited_attributes.add(attr)
+            self.skip_security_attributes.add(attr)
+
+    def rql_set_value(self, attr, value):
+        """call by rql execution plan when some attribute is modified
+
+        don't use dict api in such case since we don't want attribute to be
+        added to skip_security_attributes.
+        """
+        super(Entity, self).__setitem__(attr, value)
+
     def pre_add_hook(self):
         """hook called by the repository before doing anything to add the entity
         (before_add entity hooks have not been called yet). This give the
@@ -234,7 +276,7 @@ class Entity(AppObject, dict):
         return self
 
     def set_eid(self, eid):
-        self.eid = self['eid'] = eid
+        self.eid = eid
 
     def has_eid(self):
         """return True if the entity has an attributed eid (False
@@ -440,7 +482,8 @@ class Entity(AppObject, dict):
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
                          {'x': self.eid}, [(self.__regid__,)])
-        return self._cw.decorate_rset(rset)
+        rset.req = self._cw
+        return rset
 
     def to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
@@ -459,7 +502,7 @@ class Entity(AppObject, dict):
                    all(matching_groups(e.get_groups('read')) for e in targets):
                     yield rschema, 'subject'
 
-    def to_complete_attributes(self, skip_bytes=True):
+    def to_complete_attributes(self, skip_bytes=True, skip_pwd=True):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             # skip binary data by default
             if skip_bytes and attrschema.type == 'Bytes':
@@ -470,13 +513,13 @@ class Entity(AppObject, dict):
             # password retreival is blocked at the repository server level
             rdef = rschema.rdef(self.e_schema, attrschema)
             if not self._cw.user.matching_groups(rdef.get_groups('read')) \
-                   or attrschema.type == 'Password':
+                   or (attrschema.type == 'Password' and skip_pwd):
                 self[attr] = None
                 continue
             yield attr
 
     _cw_completed = False
-    def complete(self, attributes=None, skip_bytes=True):
+    def complete(self, attributes=None, skip_bytes=True, skip_pwd=True):
         """complete this entity by adding missing attributes (i.e. query the
         repository to fill the entity)
 
@@ -493,7 +536,7 @@ class Entity(AppObject, dict):
         V = varmaker.next()
         rql = ['WHERE %s eid %%(x)s' % V]
         selected = []
-        for attr in (attributes or self.to_complete_attributes(skip_bytes)):
+        for attr in (attributes or self.to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
             if self.has_key(attr):
                 continue
@@ -531,8 +574,8 @@ class Entity(AppObject, dict):
             # if some outer join are included to fetch inlined relations
             rql = 'Any %s,%s %s' % (V, ','.join(var for attr, var in selected),
                                     ','.join(rql))
-            execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
-            rset = execute(rql, {'x': self.eid}, 'x', build_descr=False)[0]
+            rset = self._cw.execute(rql, {'x': self.eid}, 'x',
+                                    build_descr=False)[0]
             # handle attributes
             for i in xrange(1, lastattr):
                 self[str(selected[i-1][0])] = rset[i]
@@ -542,7 +585,7 @@ class Entity(AppObject, dict):
                 value = rset[i]
                 if value is None:
                     rrset = ResultSet([], rql, {'x': self.eid})
-                    self._cw.decorate_rset(rrset)
+                    rrset.req = self._cw
                 else:
                     rrset = self._cw.eid_rset(value)
                 self.set_related_cache(rtype, role, rrset)
@@ -560,11 +603,8 @@ class Entity(AppObject, dict):
             if not self.is_saved():
                 return None
             rql = "Any A WHERE X eid %%(x)s, X %s A" % name
-            # XXX should we really use unsafe_execute here? I think so (syt),
-            # see #344874
-            execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
             try:
-                rset = execute(rql, {'x': self.eid}, 'x')
+                rset = self._cw.execute(rql, {'x': self.eid}, 'x')
             except Unauthorized:
                 self[name] = value = None
             else:
@@ -595,10 +635,7 @@ class Entity(AppObject, dict):
             pass
         assert self.has_eid()
         rql = self.related_rql(rtype, role)
-        # XXX should we really use unsafe_execute here? I think so (syt),
-        # see #344874
-        execute = getattr(self._cw, 'unsafe_execute', self._cw.execute)
-        rset = execute(rql, {'x': self.eid}, 'x')
+        rset = self._cw.execute(rql, {'x': self.eid}, 'x')
         self.set_related_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
@@ -785,10 +822,6 @@ class Entity(AppObject, dict):
         haseid = 'eid' in self
         self._cw_completed = False
         self.clear()
-        # set eid if it was in, else we may get nasty error while editing this
-        # entity if it's bound to a repo session
-        if haseid:
-            self['eid'] = self.eid
         # clear relations cache
         for rschema, _, role in self.e_schema.relation_definitions():
             self.clear_related_cache(rschema.type, role)
@@ -800,8 +833,9 @@ class Entity(AppObject, dict):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, _cw_unsafe=False, **kwargs):
+    def set_attributes(self, **kwargs):
         assert kwargs
+        _check_cw_unsafe(kwargs)
         relations = []
         for key in kwargs:
             relations.append('X %s %%(%s)s' % (key, key))
@@ -809,25 +843,18 @@ class Entity(AppObject, dict):
         self.update(kwargs)
         # and now update the database
         kwargs['x'] = self.eid
-        if _cw_unsafe:
-            self._cw.unsafe_execute(
-                'SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs, 'x')
-        else:
-            self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                             kwargs, 'x')
+        self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
+                         kwargs, 'x')
 
-    def set_relations(self, _cw_unsafe=False, **kwargs):
+    def set_relations(self, **kwargs):
         """add relations to the given object. To set a relation where this entity
         is the object of the relation, use 'reverse_'<relation> as argument name.
 
         Values may be an entity, a list of entity, or None (meaning that all
         relations of the given type from or to this object should be deleted).
         """
-        if _cw_unsafe:
-            execute = self._cw.unsafe_execute
-        else:
-            execute = self._cw.execute
         # XXX update cache
+        _check_cw_unsafe(kwargs)
         for attr, values in kwargs.iteritems():
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
@@ -839,24 +866,30 @@ class Entity(AppObject, dict):
                 continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
-            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
+            self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
-                    {'x': self.eid}, 'x')
+                             {'x': self.eid}, 'x')
 
-    def delete(self):
+    def delete(self, **kwargs):
         assert self.has_eid(), self.eid
         self._cw.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
-                         {'x': self.eid})
+                         {'x': self.eid}, **kwargs)
 
     # server side utilities ###################################################
 
+    @property
+    def skip_security_attributes(self):
+        try:
+            return self._skip_security_attributes
+        except:
+            self._skip_security_attributes = set()
+            return self._skip_security_attributes
+
     def set_defaults(self):
         """set default values according to the schema"""
-        self._default_set = set()
         for attr, value in self.e_schema.defaults():
             if not self.has_key(attr):
                 self[str(attr)] = value
-                self._default_set.add(attr)
 
     def check(self, creation=False):
         """check this entity against its schema. Only final relation
@@ -868,7 +901,15 @@ class Entity(AppObject, dict):
             _ = unicode
         else:
             _ = self._cw._
-        self.e_schema.check(self, creation=creation, _=_)
+        if creation or not hasattr(self, 'edited_attributes'):
+            # on creations, we want to check all relations, especially
+            # required attributes
+            relations = None
+        else:
+            relations = [self._cw.vreg.schema.rschema(rtype)
+                         for rtype in self.edited_attributes]
+        self.e_schema.check(self, creation=creation, _=_,
+                            relations=relations)
 
     def fti_containers(self, _done=None):
         if _done is None:
@@ -894,12 +935,12 @@ class Entity(AppObject, dict):
         """used by the full text indexer to get words to index
 
         this method should only be used on the repository side since it depends
-        on the indexer package
+        on the logilab.database package
 
         :rtype: list
         :return: the list of indexable word of this entity
         """
-        from indexer.query_objects import tokenize
+        from logilab.database.fti import tokenize
         # take care to cases where we're modyfying the schema
         pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
         words = []
@@ -942,8 +983,6 @@ class Attribute(object):
 
     def __set__(self, eobj, value):
         eobj[self._attrname] = value
-        if hasattr(eobj, 'edited_attributes'):
-            eobj.edited_attributes.add(self._attrname)
 
 class Relation(object):
     """descriptor that controls schema relation access"""

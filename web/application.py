@@ -342,7 +342,11 @@ class CubicWebPublisher(object):
                 # redirect is raised by edit controller when everything went fine,
                 # so try to commit
                 try:
-                    req.cnx.commit()
+                    txuuid = req.cnx.commit()
+                    if txuuid is not None:
+                        msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
+                            req.build_url('undo', txuuid=txuuid), req._('undo'))
+                        req.append_to_redirect_message(msg)
                 except ValidationError, ex:
                     self.validation_error_handler(req, ex)
                 except Unauthorized, ex:
@@ -393,7 +397,7 @@ class CubicWebPublisher(object):
         self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
-        req.message = None
+        req.reset_message()
         req.reset_headers()
         if req.json_request:
             raise RemoteCallFailed(unicode(ex))

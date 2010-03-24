@@ -40,6 +40,21 @@ for instance views and entities objects) has a few methods to do that:
   snippet inline in the html headers. This is quite useful for setting
   up early jQuery(document).ready(...) initialisations.
 
+CubicWeb javascript events
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ``server-response``: this event is triggered on HTTP responses (both
+  standard and ajax). The two following extra parameters are passed
+  to callbacks :
+
+  - ``ajax``: a boolean that says if the reponse was issued by an
+    ajax request
+
+  - ``node``: the DOM node returned by the server in case of an
+    ajax request, otherwise the document itself for standard HTTP
+    requests.
+
+
 Overview of what's available
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

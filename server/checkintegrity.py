@@ -6,6 +6,8 @@ is checked.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -15,6 +17,7 @@ from logilab.common.shellutils import ProgressBar
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.session import security_enabled
 
 def has_eid(sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
@@ -70,15 +73,9 @@ def reindex_entities(schema, session, withpb=True):
     # to be updated due to the reindexation
     repo = session.repo
     cursor = session.pool['system']
-    if not repo.system_source.indexer.has_fti_table(cursor):
-        from indexer import get_indexer
+    if not repo.system_source.dbhelper.has_fti_table(cursor):
         print 'no text index table'
-        indexer = get_indexer(repo.system_source.dbdriver)
-        # XXX indexer.init_fti(cursor) once index 0.7 is out
-        indexer.init_extensions(cursor)
-        cursor.execute(indexer.sql_init_fti())
-    repo.config.disabled_hooks_categories.add('metadata')
-    repo.config.disabled_hooks_categories.add('integrity')
+        dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():
@@ -94,9 +91,6 @@ def reindex_entities(schema, session, withpb=True):
     if withpb:
         pb = ProgressBar(len(etypes) + 1)
     # first monkey patch Entity.check to disable validation
-    from cubicweb.entity import Entity
-    _check = Entity.check
-    Entity.check = lambda self, creation=False: True
     # clear fti table first
     session.system_sql('DELETE FROM %s' % session.repo.system_source.dbhelper.fti_table)
     if withpb:
@@ -106,14 +100,9 @@ def reindex_entities(schema, session, withpb=True):
     source = repo.system_source
     for eschema in etypes:
         for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
-            source.fti_unindex_entity(session, entity.eid)
             source.fti_index_entity(session, entity)
         if withpb:
             pb.update()
-    # restore Entity.check
-    Entity.check = _check
-    repo.config.disabled_hooks_categories.remove('metadata')
-    repo.config.disabled_hooks_categories.remove('integrity')
 
 
 def check_schema(schema, session, eids, fix=1):
@@ -291,9 +280,10 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        for check in checks:
-            check_func = globals()['check_%s' % check]
-            check_func(repo.schema, session, eids_cache, fix=fix)
+        with security_enabled(session, read=False): # ensure no read security
+            for check in checks:
+                check_func = globals()['check_%s' % check]
+                check_func(repo.schema, session, eids_cache, fix=fix)
         if fix:
             cnx.commit()
         else:

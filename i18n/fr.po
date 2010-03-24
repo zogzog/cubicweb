@@ -315,6 +315,37 @@ msgstr "Utilisateur"
 msgid "CWUser_plural"
 msgstr "Utilisateurs"
 
+#, python-format
+msgid ""
+"Can't restore %(role)s relation %(rtype)s to entity %(eid)s which is already "
+"linked using this relation."
+msgstr ""
+"Ne peut restaurer la relation %(role)s %(rtype)s vers l'entité %(eid)s qui est "
+"déja lié à une autre entité par cette relation."
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s between %(subj)s and %(obj)s, that relation "
+"does not exists anymore in the schema."
+msgstr ""
+"Ne peut restaurer la relation %(rtype)s entre %(subj)s et  %(obj)s, "
+"cette relation n'existe plus dans le schéma."
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exists anymore in the schema."
+msgstr ""
+"Ne peut restaurer la relation %(rtype)s de l'entité %(eid)s, cette relation"
+"n'existe plus dans le schéma"
+
+#, python-format
+msgid ""
+"Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
+"anymore."
+msgstr ""
+"Ne peut restaurer la relation %(rtype)s, l'entité %(role)s %(eid)s n'existe plus."
+
 msgid "Date"
 msgstr "Date"
 
@@ -2175,8 +2206,14 @@ msgstr "entité copiée"
 msgid "entity created"
 msgstr "entité créée"
 
+msgid "entity creation"
+msgstr "création d'entité"
+
 msgid "entity deleted"
 msgstr "entité supprimée"
+
+msgid "entity deletion"
+msgstr "suppression d'entité"
 
 msgid "entity edited"
 msgstr "entité éditée"
@@ -2198,6 +2235,9 @@ msgstr ""
 
 msgid "entity types which may use this workflow"
 msgstr "types d'entité pouvant utiliser ce workflow"
+
+msgid "entity update"
+msgstr "mise à jour d'entité"
 
 msgid "error while embedding page"
 msgstr "erreur pendant l'inclusion de la page"
@@ -3196,6 +3236,12 @@ msgstr "l'entité lié n'a pas de workflow"
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relation %(relname)s de %(ent)s"
 
+msgid "relation add"
+msgstr "ajout de relation"
+
+msgid "relation removal"
+msgstr "suppression de relation"
+
 msgid "relation_type"
 msgstr "type de relation"
 
@@ -3417,6 +3463,9 @@ msgstr "titre du site"
 
 msgid "site-wide property can't be set for user"
 msgstr "une propriété spécifique au site ne peut être propre à un utilisateur"
+
+msgid "some errors occured:"
+msgstr "des erreurs sont survenues"
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"
@@ -3694,6 +3743,9 @@ msgstr "à faire par"
 msgid "toggle check boxes"
 msgstr "inverser les cases à cocher"
 
+msgid "transaction undoed"
+msgstr "transaction annulées"
+
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
 msgstr "la transition %(tr)s n'est pas autorisée depuis l'état %(st)s"
@@ -3791,6 +3843,9 @@ msgstr "inaccessible"
 
 msgid "unauthorized value"
 msgstr "valeur non autorisée"
+
+msgid "undo"
+msgstr "annuler"
 
 msgid "unique identifier used to connect to the application"
 msgstr "identifiant unique utilisé pour se connecter à l'application"

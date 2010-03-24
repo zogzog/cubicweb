@@ -5,7 +5,9 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from logilab.common.adbh import FunctionDescr
+
+from logilab.database import FunctionDescr
+from logilab.database.sqlite import register_sqlite_pyfunc
 from rql.utils import register_function
 
 try:
@@ -13,15 +15,9 @@ try:
         supported_backends = ('sqlite',)
 
     register_function(DUMB_SORT)
-
-
-    def init_sqlite_connexion(cnx):
-        def dumb_sort(something):
-            return something
-        cnx.create_function("DUMB_SORT", 1, dumb_sort)
-
-    from cubicweb.server import sqlutils
-    sqlutils.SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
+    def dumb_sort(something):
+        return something
+    register_sqlite_pyfunc(dumb_sort)
 except:
     # already registered
     pass
