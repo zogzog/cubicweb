@@ -123,7 +123,11 @@ class CookieSessionHandler(object):
         SESSION_MANAGER = self.session_manager
         if not 'last_login_time' in self.vreg.schema:
             self._update_last_login_time = lambda x: None
-        CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_session_manager)
+        if self.vreg.config.mode != 'test':
+            # don't try to reset session manager during test, this leads to
+            # weird failures when running multiple tests
+            CW_EVENT_MANAGER.bind('after-registry-reload',
+                                  self.reset_session_manager)
 
     def reset_session_manager(self):
         data = self.session_manager.dump_data()

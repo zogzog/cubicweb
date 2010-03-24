@@ -155,6 +155,9 @@ class Session(RequestSessionBase):
         session = Session(user, self.repo)
         threaddata = session._threaddata
         threaddata.pool = self.pool
+        # share pending_operations, else operation added in the hi-jacked
+        # session such as SendMailOp won't ever be processed
+        threaddata.pending_operations = self.pending_operations
         # everything in transaction_data should be copied back but the entity
         # type cache we don't want to avoid security pb
         threaddata.transaction_data = self.transaction_data.copy()
@@ -885,13 +888,15 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
-    @deprecated("[3.7] control security with session.[read|write]_security")
+    @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
+                " can also control security with session.[read|write]_security")
     def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                        propagate=False):
         """like .execute but with security checking disabled (this method is
         internal to the server, it's not part of the db-api)
         """
-        return self.execute(rql, kwargs, eid_key, build_descr)
+        with security_enabled(self, read=False, write=False):
+            return self.execute(rql, kwargs, eid_key, build_descr)
 
     @property
     @deprecated("[3.7] is_super_session is deprecated, test "

@@ -404,16 +404,8 @@ class PoweredByAction(action.Action):
 
 addmenu = uicfg.actionbox_appearsin_addmenu
 addmenu.tag_subject_of(('*', 'require_permission', '*'), False)
-addmenu.tag_subject_of(('*', 'wf_info_for', '*'), False)
-addmenu.tag_object_of(('*', 'wf_info_for', '*'), False)
-addmenu.tag_object_of(('*', 'state_of', 'CWEType'), True)
-addmenu.tag_object_of(('*', 'transition_of', 'CWEType'), True)
 addmenu.tag_object_of(('*', 'relation_type', 'CWRType'), True)
 addmenu.tag_object_of(('*', 'from_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'to_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'in_group', 'CWGroup'), True)
 addmenu.tag_object_of(('*', 'bookmarked_by', 'CWUser'), True)
-addmenu.tag_subject_of(('Transition', 'destination_state', '*'), True)
-addmenu.tag_object_of(('*', 'allowed_transition', 'Transition'), True)
-addmenu.tag_object_of(('*', 'destination_state', 'State'), True)
-addmenu.tag_subject_of(('State', 'allowed_transition', '*'), True)

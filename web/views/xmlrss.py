@@ -50,11 +50,14 @@ class XMLItemView(EntityView):
         self.w(u'<%s>\n' % (entity.e_schema))
         for rschema, attrschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
-            try:
-                value = entity[attr]
-            except KeyError:
-                # Bytes
-                continue
+            if attr == 'eid':
+                value = entity.eid
+            else:
+                try:
+                    value = entity[attr]
+                except KeyError:
+                    # Bytes
+                    continue
             if value is not None:
                 if attrschema == 'Bytes':
                     from base64 import b64encode
