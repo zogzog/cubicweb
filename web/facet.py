@@ -338,10 +338,11 @@ class VocabularyFacet(AbstractFacet):
 
 class RelationFacet(VocabularyFacet):
     __select__ = partial_relation_possible() & match_context_prop()
-    # class attributes to configure the rel ation facet
+    # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
     target_attr = 'eid'
+    target_type = None
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -365,8 +366,11 @@ class RelationFacet(VocabularyFacet):
             sort = self.sortasc
         try:
             mainvar = self.filtered_variable
-            insert_attr_select_relation(rqlst, mainvar, self.rtype, self.role,
-                                        self.target_attr, self.sortfunc, sort)
+            var = insert_attr_select_relation(
+                rqlst, mainvar, self.rtype, self.role, self.target_attr,
+                self.sortfunc, sort)
+            if self.target_type is not None:
+                rqlst.add_type_restriction(var, self.target_type)
             try:
                 rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
             except:
