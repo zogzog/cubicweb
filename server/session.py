@@ -885,13 +885,15 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
-    @deprecated("[3.7] control security with session.[read|write]_security")
+    @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
+                " can also control security with session.[read|write]_security")
     def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                        propagate=False):
         """like .execute but with security checking disabled (this method is
         internal to the server, it's not part of the db-api)
         """
-        return self.execute(rql, kwargs, eid_key, build_descr)
+        with security_enabled(self, read=False, write=False):
+            return self.execute(rql, kwargs, eid_key, build_descr)
 
     @property
     @deprecated("[3.7] is_super_session is deprecated, test "
