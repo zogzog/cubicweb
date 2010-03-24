@@ -17,6 +17,8 @@ from cubicweb.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
 
+from yams.buildobjs import EntityType
+
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
 
@@ -51,19 +53,6 @@ class SecurityViewMixIn(object):
             w(u'<td>%s</td>' % u'<br/><br/>'.join(expr.expression for expr in rqlexprs))
             w(u'</tr>\n')
         w(u'</table>')
-
-    def has_schema_modified_permissions(self, eschema, access_types):
-        """ return True if eschema's actual permissions are diffrents
-        from the default ones
-        """
-        for access_type in access_types:
-            if eschema.get_rqlexprs(access_type):
-                return True
-            if eschema.get_groups(access_type) != \
-                    frozenset(eschema.get_default_groups()[access_type]):
-                return True
-        return False
-
 
 class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""

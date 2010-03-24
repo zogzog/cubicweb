@@ -58,23 +58,27 @@ table.schemaInfo td {
 
 }
 
-.users{ 
+div.users, a.users{ 
  color : #00CC33;
  font-weight: bold }
 
-.guests{ 
+div.guests, a.guests{ 
  color :  #ff7700;
  font-weight: bold;
 }
 
-.staff{  
+div.staff, a.staff{  
  color : #0083ab;
  font-weight: bold;
 }
 
-.owners{ 
+div.owners, a.owners{ 
  color : #8b0000;
  font-weight: bold;
+}
+
+div.managers, a.managers{
+ color: #000000;
 }
 
 .discret,
@@ -91,7 +95,7 @@ a.grey:hover{
  }
 
 div#schema_security{ 
- width:780px;
+ width:100%;
  }
 /******************************************************************************/
 /* user groups edition form (views/euser.py)                                  */

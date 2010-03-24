@@ -3102,7 +3102,7 @@ msgid "read"
 msgstr ""
 
 msgid "read_perm"
-msgstr "read perm"
+msgstr "read permission"
 
 msgid "read_permission"
 msgstr "can be read by"

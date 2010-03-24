@@ -11,6 +11,7 @@ from itertools import cycle
 
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
+from yams.buildobjs import DEFAULT_ATTRPERMS
 
 from cubicweb.selectors import (implements, yes, match_user_groups,
                                 has_related_entities)
@@ -43,7 +44,7 @@ for _action in ('read', 'add', 'update', 'delete'):
 class SchemaView(tabs.TabsMixin, StartupView):
     __regid__ = 'schema'
     title = _('instance schema')
-    tabs = [_('schema-text'), _('schema-image')]
+    tabs = [_('schema-text'), _('schema-image'), _('schema-security')]
     default_tab = 'schema-text'
 
     def call(self):
@@ -74,19 +75,21 @@ class SchemaTabTextView(StartupView):
         rset = self._cw.execute('Any X ORDERBY N WHERE X is CWEType, X name N, '
                                 'X final FALSE')
         self.wview('table', rset, displayfilter=True)
+        rset = self._cw.execute('Any X ORDERBY N WHERE X is CWRType, X name N, '
+                                'X final FALSE')
+        self.wview('table', rset, displayfilter=True)
+        owl_downloadurl = self._cw.build_url('view', vid='owl')
+        self.w(u'<div><a href="%s">%s</a></div>' %
+               (owl_downloadurl, self._cw._(u'Download schema as OWL')))
 
 
-class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
+class SchemaPermissionsView(StartupView, management.SecurityViewMixIn):
     __regid__ = 'schema-security'
     __select__ = StartupView.__select__ & match_user_groups('managers')
 
     def call(self, display_relations=True):
         self._cw.add_css('cubicweb.acl.css')
         skiptypes = skip_types(self._cw)
-        formparams = {}
-        formparams['sec'] = self.__regid__
-        if not skiptypes:
-            formparams['skipmeta'] = u'0'
         schema = self._cw.vreg.schema
         # compute entities
         entities = sorted(eschema for eschema in schema.entities()
@@ -101,78 +104,88 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
             relations = []
         # index
         _ = self._cw._
-        self.w(u'<div id="schema_security"><a id="index" href="index"/>')
-        self.w(u'<h2 class="schema">%s</h2>' % _('index').capitalize())
-        self.w(u'<h4>%s</h4>' %   _('Entities').capitalize())
+        url = xml_escape(self._cw.build_url('schema'))
+        self.w(u'<div id="schema_security">')
+        self.w(u'<h2 class="schema">%s</h2>' % _('Index'))
+        self.w(u'<h4 id="entities">%s</h4>' % _('Entity types'))
         ents = []
         for eschema in sorted(entities):
-            url = xml_escape(self._cw.build_url('schema', **formparams))
-            ents.append(u'<a class="grey" href="%s#%s">%s</a> (%s)' % (
-                url,  eschema.type, eschema.type, _(eschema.type)))
+            ents.append(u'<a class="grey" href="%s#%s">%s</a>' % (
+                url,  eschema.type, eschema.type))
         self.w(u', '.join(ents))
-        self.w(u'<h4>%s</h4>' % (_('relations').capitalize()))
+        self.w(u'<h4 id="relations">%s</h4>' % _('Relation types'))
         rels = []
         for rschema in sorted(relations):
-            url = xml_escape(self._cw.build_url('schema', **formparams))
-            rels.append(u'<a class="grey" href="%s#%s">%s</a> (%s), ' %  (
-                url , rschema.type, rschema.type, _(rschema.type)))
-        self.w(u', '.join(ents))
-        # entities
-        self.display_entities(entities, formparams)
-        # relations
+            rels.append(u'<a class="grey" href="%s#%s">%s</a>' %  (
+                url , rschema.type, rschema.type))
+        self.w(u', '.join(rels))
+        # permissions tables
+        self.display_entities(entities)
         if relations:
-            self.display_relations(relations, formparams)
+            self.display_relations(relations)
         self.w(u'</div>')
 
-    def display_entities(self, entities, formparams):
+    def has_non_default_perms(self, rdef):
+        for access_type in rdef.ACTIONS:
+            def_rqlexprs = []
+            def_groups = []
+            for perm in DEFAULT_ATTRPERMS[access_type]:
+                if not isinstance(perm, basestring):
+                    def_rqlexprs.append(perm.expression)
+                else:
+                    def_groups.append(perm)
+            rqlexprs = [rql.expression for rql in rdef.get_rqlexprs(access_type)]
+            groups = rdef.get_groups(access_type)
+            if groups != frozenset(def_groups) or \
+                frozenset(rqlexprs) != frozenset(def_rqlexprs):
+                return True
+        return False
+
+    def display_entities(self, entities):
         _ = self._cw._
-        self.w(u'<a id="entities" href="entities"/>')
-        self.w(u'<h2 class="schema">%s</h2>' % _('permissions for entities').capitalize())
+        url = xml_escape(self._cw.build_url('schema'))
+        self.w(u'<h2 id="entities" class="schema">%s</h2>' % _('Permissions for entity types'))
         for eschema in entities:
-            self.w(u'<a id="%s" href="%s"/>' %  (eschema.type, eschema.type))
-            self.w(u'<h3 class="schema">%s (%s) ' % (eschema.type, _(eschema.type)))
-            url = xml_escape(self._cw.build_url('schema', **formparams) + '#index')
-            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
+            self.w(u'<h3 id="%s" class="schema"><a href="%s">%s (%s)</a> ' % (
+                eschema.type, self._cw.build_url('cwetype/%s' % eschema.type),
+                eschema.type, _(eschema.type)))
+            self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
                 url,  self._cw.external_resource('UP_ICON'), _('up')))
             self.w(u'</h3>')
             self.w(u'<div style="margin: 0px 1.5em">')
-            self._cw.vreg.schema_definition(eschema, link=False)
+            self.schema_definition(eschema)
             # display entity attributes only if they have some permissions modified
             modified_attrs = []
             for attr, etype in  eschema.attribute_definitions():
-                if self.has_schema_modified_permissions(attr, attr.ACTIONS):
-                    modified_attrs.append(attr)
-            if  modified_attrs:
-                self.w(u'<h4>%s</h4>' % _('attributes with modified permissions:').capitalize())
+                rdef = eschema.rdef(attr)
+                if attr not in META_RTYPES and self.has_non_default_perms(rdef):
+                    modified_attrs.append(rdef)
+            if modified_attrs:
+                self.w(u'<h4>%s</h4>' % _('Attributes with non default permissions:'))
                 self.w(u'</div>')
                 self.w(u'<div style="margin: 0px 6em">')
-                for attr in  modified_attrs:
-                    self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attr.type, _(attr.type)))
-                    self._cw.vreg.schema_definition(attr, link=False)
+                for rdef in modified_attrs:
+                    attrtype = str(rdef.rtype)
+                    self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attrtype, _(attrtype)))
+                    self.schema_definition(rdef)
             self.w(u'</div>')
 
-    def display_relations(self, relations, formparams):
+    def display_relations(self, relations):
         _ = self._cw._
-        self.w(u'<a id="relations" href="relations"/>')
-        self.w(u'<h2 class="schema">%s </h2>' % _('permissions for relations').capitalize())
+        url = xml_escape(self._cw.build_url('schema'))
+        self.w(u'<h2 id="relations" class="schema">%s</h2>' % _('Permissions for relations'))
         for rschema in relations:
-            self.w(u'<a id="%s" href="%s"/>' %  (rschema.type, rschema.type))
-            self.w(u'<h3 class="schema">%s (%s) ' % (rschema.type, _(rschema.type)))
-            url = xml_escape(self._cw.build_url('schema', **formparams) + '#index')
-            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
+            self.w(u'<h3 id="%s" class="schema"><a href="%s">%s (%s)</a> ' % (
+                rschema.type, self._cw.build_url('cwrtype/%s' % rschema.type),
+                rschema.type, _(rschema.type)))
+            self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
                 url,  self._cw.external_resource('UP_ICON'), _('up')))
             self.w(u'</h3>')
             self.w(u'<div style="margin: 0px 1.5em">')
-            subjects = [str(subj) for subj in rschema.subjects()]
-            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (
-                _('subject_plural:'),
-                ', '.join(str(subj) for subj in rschema.subjects()),
-                ', '.join(_(str(subj)) for subj in rschema.subjects())))
-            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (
-                _('object_plural:'),
-                ', '.join(str(obj) for obj in rschema.objects()),
-                ', '.join(_(str(obj)) for obj in rschema.objects())))
-            self._cw.vreg.schema_definition(rschema, link=False)
+            for rdef in rschema.rdefs.itervalues():
+                self.w(u'<h4 class="schema">%s %s %s</h4>' % (
+                        rdef.subject, rschema, rdef.object))
+                self.schema_definition(rdef)
             self.w(u'</div>')
 
 
