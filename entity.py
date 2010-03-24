@@ -889,8 +889,8 @@ class Entity(AppObject, dict):
             else:
                 restr = 'X %s Y' % attr
             if values is None:
-                execute('DELETE %s WHERE X eid %%(x)s' % restr,
-                        {'x': self.eid}, 'x')
+                self._cw.execute('DELETE %s WHERE X eid %%(x)s' % restr,
+                                 {'x': self.eid}, 'x')
                 continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
