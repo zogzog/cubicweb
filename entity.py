@@ -235,11 +235,13 @@ class Entity(AppObject, dict):
     def __setitem__(self, attr, value):
         """override __setitem__ to update self.edited_attributes.
 
-        Typically, a before_update_hook could do::
+        Typically, a before_[update|add]_hook could do::
 
             entity['generated_attr'] = generated_value
 
-        and this way, edited_attributes will be updated accordingly
+        and this way, edited_attributes will be updated accordingly. Also, add
+        the attribute to skip_security since we don't want to check security
+        for such attributes set by hooks.
         """
         if attr == 'eid':
             warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
@@ -250,6 +252,26 @@ class Entity(AppObject, dict):
             if hasattr(self, 'edited_attributes'):
                 self.edited_attributes.add(attr)
                 self.skip_security_attributes.add(attr)
+
+    def __delitem__(self, attr):
+        """override __delitem__ to update self.edited_attributes on cleanup of
+        undesired changes introduced in the entity's dict. For example, see the
+        code snippet below from the `forge` cube:
+
+        .. sourcecode:: python
+
+            edited = self.entity.edited_attributes
+            has_load_left = 'load_left' in edited
+            if 'load' in edited and self.entity.load_left is None:
+                self.entity.load_left = self.entity['load']
+            elif not has_load_left and edited:
+                # cleanup, this may cause undesired changes
+                del self.entity['load_left']
+
+        """
+        super(Entity, self).__delitem__(attr)
+        if hasattr(self, 'edited_attributes'):
+            self.edited_attributes.remove(attr)
 
     def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
