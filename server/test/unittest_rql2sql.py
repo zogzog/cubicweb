@@ -543,13 +543,10 @@ WHERE NOT EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_us
 ORDER BY 4 DESC'''),
 
 
-    ("Any X WHERE X eid 0, X eid 0",
-     '''SELECT 0'''),
-
-    ("Any X WHERE X eid 0, X eid 0, X test TRUE",
+    ("Any X WHERE X eid 0, X test TRUE",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE _X.cw_eid=0 AND _X.cw_eid=0 AND _X.cw_test=TRUE'''),
+WHERE _X.cw_eid=0 AND _X.cw_test=TRUE'''),
 
     ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN, X is CWGroup",
      '''SELECT _X.cw_eid, GROUP_CONCAT(_T.cw_name)
