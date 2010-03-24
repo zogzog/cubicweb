@@ -901,13 +901,16 @@ class Entity(AppObject, dict):
             _ = unicode
         else:
             _ = self._cw._
-        if creation or not hasattr(self, 'edited_attributes'):
+        if creation:
             # on creations, we want to check all relations, especially
             # required attributes
-            relations = None
-        else:
+            relations = [rschema for rschema in self.e_schema.subject_relations()
+                         if rschema.final and rschema.type != 'eid']
+        elif hasattr(self, 'edited_attributes'):
             relations = [self._cw.vreg.schema.rschema(rtype)
                          for rtype in self.edited_attributes]
+        else:
+            relations = None
         self.e_schema.check(self, creation=creation, _=_,
                             relations=relations)
 
