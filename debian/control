@@ -33,7 +33,6 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-# postgresql/mysql -client packages for backup/restore of non local database
 Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database, cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
@@ -46,7 +45,7 @@ Description: server part of the CubicWeb framework
 
 Package: cubicweb-postgresql-support
 Architecture: all
-# postgresql/mysql -client packages for backup/restore of non local database
+# postgresql-client packages for backup/restore of non local database
 Depends: python-psycopg2, postgresql-client
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -56,7 +55,7 @@ Description: postgres support for the CubicWeb framework
 
 Package: cubicweb-mysql-support
 Architecture: all
-# postgresql/mysql -client packages for backup/restore of non local database
+# mysql-client packages for backup/restore of non local database
 Depends: python-mysqldb, mysql-client
 Description: mysql support for the CubicWeb framework
  CubicWeb is a semantic web application framework.

@@ -247,7 +247,7 @@ class CWETypeSTextView(EntityView):
         self.w(u'<h2>%s</h2>' % _('Relations'))
         rset = self._cw.execute(
             'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
-            'WHERE A is CWRelation, A description D, A composite K?, '
+            'WHERE A is CWRelation, A description D, A composite K, '
             'A relation_type R, R name RN, A to_entity TT, TT name TTN, '
             'A cardinality C, A from_entity S, S eid %(x)s',
             {'x': entity.eid})
@@ -255,7 +255,7 @@ class CWETypeSTextView(EntityView):
                    displaycols=range(6), mainindex=5)
         rset = self._cw.execute(
             'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
-            'WHERE A is CWRelation, A description D, A composite K?, '
+            'WHERE A is CWRelation, A description D, A composite K, '
             'A relation_type R, R name RN, A from_entity TT, TT name TTN, '
             'A cardinality C, A to_entity O, O eid %(x)s',
             {'x': entity.eid})

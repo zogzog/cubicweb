@@ -314,7 +314,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 breadcrumbs.append(self.url())
             else:
                 url = self.url()
-                if breadcrumbs[-1] != url:
+                if breadcrumbs and breadcrumbs[-1] != url:
                     breadcrumbs.append(url)
 
     def last_visited_page(self):

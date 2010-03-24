@@ -394,7 +394,14 @@ class JSonController(Controller):
                              for key, value in extraargs.items())
         comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset, **extraargs)
         extraargs = extraargs or {}
-        return comp.render(**extraargs)
+        stream = comp.set_stream()
+        comp.render(**extraargs)
+        extresources = self._cw.html_headers.getvalue(skiphead=True)
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n')
+            stream.write(extresources)
+            stream.write(u'</div>\n')
+        return stream.getvalue()
 
     @check_pageid
     @xhtmlize
