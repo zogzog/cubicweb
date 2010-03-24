@@ -25,15 +25,16 @@ def check_entity_attributes(session, entity, editedattrs=None):
         except AttributeError:
             editedattrs = entity # XXX unexpected
     for attr in editedattrs:
-        try:
-            dontcheck.remove(attr)
+        if attr in dontcheck:
             continue
-        except KeyError:
-            pass
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
             rdef.check_perm(session, 'update', eid=eid)
+    # don't update dontcheck until everything went fine: see usage in
+    # after_update_entity, where if we got an Unauthorized at hook time, we will
+    # retry and commit time
+    dontcheck |= frozenset(editedattrs)
 
 
 class _CheckEntityPermissionOp(hook.LateOperation):
