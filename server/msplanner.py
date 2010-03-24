@@ -309,21 +309,20 @@ class PartPlanInformation(object):
         # find for each source which variable/solution are supported
         for varname, varobj in self.rqlst.defined_vars.items():
             # if variable has an eid specified, we can get its source directly
-            # NOTE: use uidrels and not constnode to deal with "X eid IN(1,2,3,4)"
-            if varobj.stinfo['uidrels']:
-                vrels = varobj.stinfo['relations'] - varobj.stinfo['uidrels']
-                for rel in varobj.stinfo['uidrels']:
-                    for const in rel.children[1].get_nodes(Constant):
-                        eid = const.eval(self.plan.args)
-                        source = self._session.source_from_eid(eid)
-                        if vrels and not any(source.support_relation(r.r_type)
-                                             for r in vrels):
-                            self._set_source_for_term(self.system_source, varobj)
-                        else:
-                            self._set_source_for_term(source, varobj)
+            # NOTE: use uidrel and not constnode to deal with "X eid IN(1,2,3,4)"
+            if varobj.stinfo['uidrel'] is not None:
+                rel = varobj.stinfo['uidrel']
+                for const in rel.children[1].get_nodes(Constant):
+                    eid = const.eval(self.plan.args)
+                    source = self._session.source_from_eid(eid)
+                    if vrels and not any(source.support_relation(r.r_type)
+                                         for r in vrels if not r is rel):
+                        self._set_source_for_term(self.system_source, varobj)
+                    else:
+                        self._set_source_for_term(source, varobj)
                 continue
             rels = varobj.stinfo['relations']
-            if not rels and not varobj.stinfo['typerels']:
+            if not rels and varobj.stinfo['typerel'] is None:
                 # (rare) case where the variable has no type specified nor
                 # relation accessed ex. "Any MAX(X)"
                 self._set_source_for_term(self.system_source, varobj)
@@ -700,7 +699,7 @@ class PartPlanInformation(object):
                     for var in select.defined_vars.itervalues():
                         if not var in terms:
                             stinfo = var.stinfo
-                            for ovar, rtype in stinfo['attrvars']:
+                            for ovar, rtype in stinfo.get('attrvars', ()):
                                 if ovar in terms:
                                     needsel.add(var.name)
                                     terms.append(var)
@@ -778,20 +777,19 @@ class PartPlanInformation(object):
             # variable is refed by an outer scope and should be substituted
             # using an 'identity' relation (else we'll get a conflict of
             # temporary tables)
-            if rhsvar in terms and not lhsvar in terms:
+            if rhsvar in terms and not lhsvar in terms and lhsvar.scope is lhsvar.stmt:
                 self._identity_substitute(rel, lhsvar, terms, needsel)
-            elif lhsvar in terms and not rhsvar in terms:
+            elif lhsvar in terms and not rhsvar in terms and rhsvar.scope is rhsvar.stmt:
                 self._identity_substitute(rel, rhsvar, terms, needsel)
 
     def _identity_substitute(self, relation, var, terms, needsel):
         newvar = self._insert_identity_variable(relation.scope, var)
-        if newvar is not None:
-            # ensure relation is using '=' operator, else we rely on a
-            # sqlgenerator side effect (it won't insert an inequality operator
-            # in this case)
-            relation.children[1].operator = '='
-            terms.append(newvar)
-            needsel.add(newvar.name)
+        # ensure relation is using '=' operator, else we rely on a
+        # sqlgenerator side effect (it won't insert an inequality operator
+        # in this case)
+        relation.children[1].operator = '='
+        terms.append(newvar)
+        needsel.add(newvar.name)
 
     def _choose_term(self, sourceterms):
         """pick one term among terms supported by a source, which will be used
@@ -1418,7 +1416,7 @@ class TermsFiltererVisitor(object):
             return False
         if not var in terms or used_in_outer_scope(var, self.current_scope):
             return False
-        if any(v for v, _ in var.stinfo['attrvars'] if not v in terms):
+        if any(v for v, _ in var.stinfo.get('attrvars', ()) if not v in terms):
             return False
         return True
 

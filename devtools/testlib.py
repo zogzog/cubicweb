@@ -5,6 +5,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import os
@@ -29,6 +31,7 @@ from cubicweb import cwconfig, devtools, web, server
 from cubicweb.dbapi import repo_connect, ConnectionProperties, ProgrammingError
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
+from cubicweb.server.session import security_enabled
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser
 
@@ -764,6 +767,10 @@ class AutoPopulateTest(CubicWebTC):
         """this method populates the database with `how_many` entities
         of each possible type. It also inserts random relations between them
         """
+        with security_enabled(self.session, read=False, write=False):
+            self._auto_populate(how_many)
+
+    def _auto_populate(self, how_many):
         cu = self.cursor()
         self.custom_populate(how_many, cu)
         vreg = self.vreg

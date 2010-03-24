@@ -41,15 +41,15 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
         except KeyError:
             continue
         stinfo = var.stinfo
-        if stinfo.get('uidrels'):
+        if stinfo.get('uidrel') is not None:
             continue # eid specified, no need for additional type specification
         try:
-            typerels = rqlst.defined_vars[varname].stinfo.get('typerels')
+            typerel = rqlst.defined_vars[varname].stinfo.get('typerel')
         except KeyError:
             assert varname in rqlst.aliases
             continue
-        if newroot is rqlst and typerels:
-            mytyperel = iter(typerels).next()
+        if newroot is rqlst and typerel is not None:
+            mytyperel = typerel
         else:
             for vref in newroot.defined_vars[varname].references():
                 rel = vref.relation()
@@ -80,7 +80,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 # tree is not annotated yet, no scope set so add the restriction
                 # to the root
                 rel = newroot.add_type_restriction(var, possibletypes)
-            stinfo['typerels'] = frozenset((rel,))
+            stinfo['typerel'] = rel
             stinfo['possibletypes'] = possibletypes
 
 

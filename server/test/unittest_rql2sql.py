@@ -1594,8 +1594,8 @@ GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
         rqlst = mock_object(defined_vars={})
-        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
-        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
@@ -1605,8 +1605,8 @@ class removeUnsusedSolutionsTC(TestCase):
 
     def test_invariant_varying(self):
         rqlst = mock_object(defined_vars={})
-        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
-        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())

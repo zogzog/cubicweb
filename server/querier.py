@@ -319,16 +319,9 @@ class ExecutionPlan(object):
         varkwargs = {}
         if not session.transaction_data.get('security-rqlst-cache'):
             for var in rqlst.defined_vars.itervalues():
-                for rel in var.stinfo['uidrels']:
-                    const = rel.children[1].children[0]
-                    try:
-                        varkwargs[var.name] = typed_eid(const.eval(self.args))
-                        break
-                    except AttributeError:
-                        #from rql.nodes import Function
-                        #assert isinstance(const, Function)
-                        # X eid IN(...)
-                        pass
+                if var.stinfo['constnode'] is not None:
+                    eid = var.stinfo['constnode'].eval(self.args)
+                    varkwargs[var.name] = typed_eid(eid)
         # dictionnary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
