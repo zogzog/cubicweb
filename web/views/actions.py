@@ -290,7 +290,6 @@ class AddRelatedActions(action.Action):
                         continue
                     # check the target types can be added as well
                     if teschema.may_have_permission('add', req):
-                        print 'hop', rschema, teschema, role
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target):
