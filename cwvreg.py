@@ -22,12 +22,6 @@ from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
 
 
-@onevent('before-registry-reload')
-def clear_rtag_objects():
-    for rtag in RTAGS:
-        rtag.clear()
-
-
 def use_interfaces(obj):
     """return interfaces used by the given object by searching for implements
     selectors, with a bw compat fallback to accepts_interfaces attribute
@@ -265,6 +259,13 @@ class CubicWebVRegistry(VRegistry):
         self.schema = None
         self.initialized = False
         self.reset()
+        if self.config.mode != 'test':
+            # don't clear rtags during test, this may cause breakage with
+            # manually imported appobject modules
+            @onevent('before-registry-reload')
+            def clear_rtag_objects():
+                for rtag in RTAGS:
+                    rtag.clear()
 
     def setdefault(self, regid):
         try:
