@@ -2,8 +2,9 @@ cubicweb (3.6.3-1) unstable; urgency=low
 
   * remove postgresql-contrib from cubicweb dependency (using tsearch
     which is included with postgres >= 8.3)
-  * add postgresql-client | mysql-client to cubicweb-server dependencies, necessary
-    for dump/restore of database
+  * add postgresql-client | mysql-client to cubicweb-server dependencies using two
+    new cubicweb-[postgresql|mysql]-support virtual packages (necessary for
+    dump/restore of database)
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 24 Mar 2010 07:50:47 +0100
 
