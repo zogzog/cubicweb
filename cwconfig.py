@@ -239,7 +239,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
     else:
         mode = _forced_mode or 'system'
-        _CUBES_DIR = join(_INSTALL_PREFIX, 'cubes')
+        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
     CUBES_DIR = env_path('CW_CUBES_DIR', _CUBES_DIR, 'cubes', checkexists=False)
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
