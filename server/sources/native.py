@@ -264,8 +264,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def init(self):
         self.init_creating()
 
-    def map_attribute(self, etype, attr, cb):
-        self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
+    # XXX deprecates [un]map_attribute ?
+    def map_attribute(self, etype, attr, cb, sourcedb=True):
+        self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = (cb, sourcedb)
 
     def unmap_attribute(self, etype, attr):
         self._rql_sqlgen.attr_map.pop('%s.%s' % (etype, attr), None)
@@ -273,7 +274,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def set_storage(self, etype, attr, storage):
         storage_dict = self._storages.setdefault(etype, {})
         storage_dict[attr] = storage
-        self.map_attribute(etype, attr, storage.sqlgen_callback)
+        self.map_attribute(etype, attr,
+                           storage.callback, storage.is_source_callback)
 
     def unset_storage(self, etype, attr):
         self._storages[etype].pop(attr)
@@ -348,17 +350,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if cachekey is None:
             self.no_cache += 1
             # generate sql query if we are able to do so (not supported types...)
-            sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
+            sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
         else:
             # sql may be cached
             try:
-                sql, query_args = self._cache[cachekey]
+                sql, qargs, cbs = self._cache[cachekey]
                 self.cache_hit += 1
             except KeyError:
                 self.cache_miss += 1
-                sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
-                self._cache[cachekey] = sql, query_args
-        args = self.merge_args(args, query_args)
+                sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
+                self._cache[cachekey] = sql, qargs, cbs
+        args = self.merge_args(args, qargs)
         assert isinstance(sql, basestring), repr(sql)
         try:
             cursor = self.doexec(session, sql, args)
@@ -367,7 +369,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.info("request failed '%s' ... retry with a new cursor", sql)
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
-        results = self.process_result(cursor)
+        results = self.process_result(cursor, cbs)
         assert dbg_results(results)
         return results
 
@@ -381,9 +383,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.uri, union, varmap, args,
             prefix='ON THE FLY temp data insertion into %s from' % table)
         # generate sql queries if we are able to do so
-        sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
+        sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
         query = 'INSERT INTO %s %s' % (table, sql.encode(self._dbencoding))
-        self.doexec(session, query, self.merge_args(args, query_args))
+        self.doexec(session, query, self.merge_args(args, qargs))
 
     def manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
@@ -428,10 +430,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         orig_values = {}
         etype = entity.__regid__
         for attr, storage in self._storages.get(etype, {}).items():
-            if attr in entity.edited_attributes:
-                orig_values[attr] = entity[attr]
-                handler = getattr(storage, 'entity_%s' % event)
-                handler(entity, attr)
+            try:
+                if attr in entity.edited_attributes:
+                    orig_values[attr] = entity[attr]
+                    handler = getattr(storage, 'entity_%s' % event)
+                    handler(entity, attr)
+            except AttributeError:
+                assert event == 'deleted'
+                getattr(storage, 'entity_deleted')(entity, attr)
         yield # 2/ execute the source's instructions
         # 3/ restore original values
         for attr, value in orig_values.items():

@@ -188,9 +188,17 @@ class SQLAdapterMixIn(object):
             return newargs
         return query_args
 
-    def process_result(self, cursor):
+    def process_result(self, cursor, column_callbacks=None):
         """return a list of CubicWeb compliant values from data in the given cursor
         """
+        # use two different implementations to avoid paying the price of
+        # callback lookup for each *cell* in results when there is nothing to
+        # lookup
+        if not column_callbacks:
+            return self._process_result(cursor)
+        return self._cb_process_result(cursor, column_callbacks)
+
+    def _process_result(self, cursor, column_callbacks=None):
         # begin bind to locals for optimization
         descr = cursor.description
         encoding = self._dbencoding
@@ -205,6 +213,30 @@ class SQLAdapterMixIn(object):
                     result.append(value)
                     continue
                 result.append(process_value(value, descr[col], encoding, binary))
+            results[i] = result
+        return results
+
+    def _cb_process_result(self, cursor, column_callbacks):
+        # begin bind to locals for optimization
+        descr = cursor.description
+        encoding = self._dbencoding
+        process_value = self._process_value
+        binary = Binary
+        # /end
+        results = cursor.fetchall()
+        for i, line in enumerate(results):
+            result = []
+            for col, value in enumerate(line):
+                if value is None:
+                    result.append(value)
+                    continue
+                cbstack = column_callbacks.get(col, None)
+                if cbstack is None:
+                    value = process_value(value, descr[col], encoding, binary)
+                else:
+                    for cb in cbstack:
+                        value = cb(self, value)
+                result.append(value)
             results[i] = result
         return results
 
@@ -276,29 +308,6 @@ def init_sqlite_connexion(cnx):
 
     import yams.constraints
     yams.constraints.patch_sqlite_decimal()
-
-    def fspath(eid, etype, attr):
-        try:
-            cu = cnx.cursor()
-            cu.execute('SELECT X.cw_%s FROM cw_%s as X '
-                       'WHERE X.cw_eid=%%(eid)s' % (attr, etype),
-                       {'eid': eid})
-            return cu.fetchone()[0]
-        except:
-            import traceback
-            traceback.print_exc()
-            raise
-    cnx.create_function('fspath', 3, fspath)
-
-    def _fsopen(fspath):
-        if fspath:
-            try:
-                return buffer(file(fspath).read())
-            except:
-                import traceback
-                traceback.print_exc()
-                raise
-    cnx.create_function('_fsopen', 1, _fsopen)
 
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])
 sqlite_hooks.append(init_sqlite_connexion)

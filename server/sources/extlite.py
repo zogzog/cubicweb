@@ -187,9 +187,10 @@ repository.',
         if self._need_sql_create:
             return []
         assert dbg_st_search(self.uri, union, varmap, args, cachekey)
-        sql, query_args = self.rqlsqlgen.generate(union, args)
-        args = self.sqladapter.merge_args(args, query_args)
-        results = self.sqladapter.process_result(self.doexec(session, sql, args))
+        sql, qargs, cbs = self.rqlsqlgen.generate(union, args)
+        args = self.sqladapter.merge_args(args, qargs)
+        cursor = self.doexec(session, sql, args)
+        results = self.sqladapter.process_result(cursor, cbs)
         assert dbg_results(results)
         return results
 

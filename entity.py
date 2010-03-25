@@ -286,6 +286,18 @@ class Entity(AppObject, dict):
             self.edited_attributes.add(attr)
             self.skip_security_attributes.add(attr)
 
+    def pop(self, attr, default=_marker):
+        """override pop to update self.edited_attributes on cleanup of
+        undesired changes introduced in the entity's dict. See `__delitem__`
+        """
+        if default is _marker:
+            value = super(Entity, self).pop(attr)
+        else:
+            value = super(Entity, self).pop(attr, default)
+        if hasattr(self, 'edited_attributes') and attr in self.edited_attributes:
+            self.edited_attributes.remove(attr)
+        return value
+
     def rql_set_value(self, attr, value):
         """call by rql execution plan when some attribute is modified
 

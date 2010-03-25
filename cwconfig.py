@@ -90,7 +90,8 @@ from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options)
 
-from cubicweb import CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, ConfigurationError
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
+                      ConfigurationError, Binary)
 from cubicweb.toolsutils import env_path, create_dir
 
 CONFIGURATIONS = []
@@ -1050,7 +1051,24 @@ def register_stored_procedures():
 
 
     class FSPATH(FunctionDescr):
-        supported_backends = ('postgres', 'sqlite',)
-        rtype = 'Bytes'
+        """return path of some bytes attribute stored using the Bytes
+        File-System Storage (bfss)
+        """
+        rtype = 'Bytes' # XXX return a String? potential pb with fs encoding
+
+        def update_cb_stack(self, stack):
+            assert len(stack) == 1
+            stack[0] = self.source_execute
+
+        def as_sql(self, backend, args):
+            raise NotImplementedError('source only callback')
+
+        def source_execute(self, source, value):
+            fpath = source.binary_to_str(value)
+            try:
+                return Binary(fpath)
+            except OSError, ex:
+                self.critical("can't open %s: %s", fpath, ex)
+                return None
 
     register_function(FSPATH)
