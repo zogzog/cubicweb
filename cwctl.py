@@ -285,8 +285,6 @@ class ListCommand(Command):
         else:
             print 'Available cubes (%s):' % cubesdir
             for cube in cwcfg.available_cubes():
-                if cube in ('CVS', '.svn', 'shared', '.hg'):
-                    continue
                 try:
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version

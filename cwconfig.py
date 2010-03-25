@@ -342,7 +342,9 @@ this option is set to yes",
                            % directory)
                 continue
             for cube in os.listdir(directory):
-                if isdir(join(directory, cube)) and not cube == 'shared':
+                if cube in ('CVS', '.svn', 'shared', '.hg'):
+                    continue
+                if isdir(join(directory, cube)):
                     cubes.add(cube)
         return sorted(cubes)
 
@@ -906,7 +908,8 @@ the repository',
                 if exists(sitefile) and not sitefile in self._site_loaded:
                     self._load_site_cubicweb(sitefile)
                     self._site_loaded.add(sitefile)
-                    self.warning('[3.5] site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
+                    self.warning('[3.5] site_erudi.py is deprecated, should be '
+                                 'renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
         # XXX extrapath argument to load_module_from_file only in lgc > 0.46
