@@ -169,84 +169,6 @@ class InstanceCommandFork(InstanceCommand):
 
 # base commands ###############################################################
 
-def version_strictly_lower(a, b):
-    from logilab.common.changelog import Version
-    if a:
-        a = Version(a)
-    if b:
-        b = Version(b)
-    return a < b
-
-def max_version(a, b):
-    from logilab.common.changelog import Version
-    return str(max(Version(a), Version(b)))
-
-class ConfigurationProblem(object):
-    """Each cube has its own list of dependencies on other cubes/versions.
-
-    The ConfigurationProblem is used to record the loaded cubes, then to detect
-    inconsistencies in their dependencies.
-
-    See configuration management on wikipedia for litterature.
-    """
-
-    def __init__(self):
-        self.cubes = {}
-
-    def add_cube(self, name, info):
-        self.cubes[name] = info
-
-    def solve(self):
-        self.warnings = []
-        self.errors = []
-        self.read_constraints()
-        for cube, versions in sorted(self.constraints.items()):
-            oper, version = None, None
-            # simplify constraints
-            if versions:
-                for constraint in versions:
-                    op, ver = constraint
-                    if oper is None:
-                        oper = op
-                        version = ver
-                    elif op == '>=' and oper == '>=':
-                        version = max_version(ver, version)
-                    else:
-                        print 'unable to handle this case', oper, version, op, ver
-            # "solve" constraint satisfaction problem
-            if cube not in self.cubes:
-                self.errors.append( ('add', cube, version) )
-            elif versions:
-                lower_strict = version_strictly_lower(self.cubes[cube].version, version)
-                if oper in ('>=','='):
-                    if lower_strict:
-                        self.errors.append( ('update', cube, version) )
-                else:
-                    print 'unknown operator', oper
-
-    def read_constraints(self):
-        self.constraints = {}
-        self.reverse_constraints = {}
-        for cube, info in self.cubes.items():
-            if hasattr(info,'__depends_cubes__'):
-                use = info.__depends_cubes__
-                if not isinstance(use, dict):
-                    use = dict((key, None) for key in use)
-                    self.warnings.append('cube %s should define __depends_cubes__ as a dict not a list')
-            else:
-                self.warnings.append('cube %s should define __depends_cubes__' % cube)
-                use = dict((key, None) for key in info.__use__)
-            for name, constraint in use.items():
-                self.constraints.setdefault(name,set())
-                if constraint:
-                    try:
-                        oper, version = constraint.split()
-                        self.constraints[name].add( (oper, version) )
-                    except:
-                        self.warnings.append('cube %s depends on %s but constraint badly formatted: %s'
-                                             % (cube, name, constraint))
-                self.reverse_constraints.setdefault(name, set()).add(cube)
-
 class ListCommand(Command):
     """List configurations, cubes and instances.
 
@@ -263,6 +185,7 @@ class ListCommand(Command):
         """run the command with its specific arguments"""
         if args:
             raise BadCommandUsage('Too much arguments')
+        from cubicweb.migration import ConfigurationProblem
         print 'CubicWeb %s (%s mode)' % (cwcfg.cubicweb_version(), cwcfg.mode)
         print
         print 'Available configurations:'
@@ -274,7 +197,7 @@ class ListCommand(Command):
                     continue
                 print '   ', line
         print
-        cfgpb = ConfigurationProblem()
+        cfgpb = ConfigurationProblem(cwcfg)
         try:
             cubesdir = pathsep.join(cwcfg.cubes_search_path())
             namesize = max(len(x) for x in cwcfg.available_cubes())
@@ -288,7 +211,7 @@ class ListCommand(Command):
                 try:
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
-                    cfgpb.add_cube(cube, tinfo)
+                    cfgpb.add_cube(cube, tversion)
                 except ConfigurationError:
                     tinfo = None
                     tversion = '[missing cube information]'
