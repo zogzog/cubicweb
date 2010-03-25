@@ -87,7 +87,8 @@ class BytesFileSystemStorage(Storage):
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                                  attr, entity.__regid__, entity.eid))
-        return sysource._process_value(cu.fetchone()[0], [None, dbmod.BINARY],
+        BINARY = sysource.dbhelper.dbapi_module.BINARY
+        return sysource._process_value(cu.fetchone()[0], [None, BINARY],
                                        binarywrap=str)
 
 
