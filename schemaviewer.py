@@ -22,11 +22,8 @@ class SchemaViewer(object):
         self.req = req
         if req is not None:
             self.req.add_css('cubicweb.schema.css')
-            self._possible_views = req.vreg['views'].possible_views
             if not encoding:
                 encoding = req.encoding
-        else:
-            self._possible_views = lambda x: ()
         self.encoding = encoding
 
     def format_acls(self, schema, access_types):
@@ -98,11 +95,6 @@ class SchemaViewer(object):
     def rschema_link_url(self, rschema):
         return self.req.build_url('cwrtype/%s' % rschema)
 
-    def possible_views(self, etype):
-        rset = self.req.etype_rset(etype)
-        return [v for v in self._possible_views(self.req, rset)
-                if v.category != 'startupview']
-
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
 
@@ -113,9 +105,6 @@ class SchemaViewer(object):
         layout.append(Link(etype,'&#160;' , id=etype)) # anchor
         title = Link(self.eschema_link_url(eschema), etype)
         boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
-        table = Table(cols=4, rheaders=1, klass='listing',
-                      children=self._entity_attributes_data(eschema))
-        boxchild.append(Section(children=(table,), klass='body'))
         data = []
         data.append(Section(children=boxchild, klass='box'))
         data.append(Section(children='', klass='vl'))
@@ -152,16 +141,6 @@ class SchemaViewer(object):
         data.append(Section(children=rels, klass='rels'))
         data.append(Section(children=t_vars, klass='vars'))
         layout.append(Section(children=data, klass='entityAttributes'))
-        if eschema.final: # stop here for final entities
-            return layout
-        _ = self.req._
-        if self.req.user.matching_groups('managers'):
-            # layout.append(self.format_acls(eschema, ('read', 'add', 'delete', 'update')))
-            # possible views for this entity type
-            views = [_(view.title) for view in self.possible_views(etype)]
-            layout.append(Section(children=(Table(cols=1, rheaders=1,
-                                                  children=[_('views')]+views),),
-                                  klass='views'))
         return layout
 
     def visit_relationschema(self, rschema, title=True):

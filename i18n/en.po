@@ -191,13 +191,13 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr ""
 
-msgid "Add permissions"
-msgstr ""
-
 msgid "Any"
 msgstr ""
 
 msgid "Attributes"
+msgstr ""
+
+msgid "Attributes with non default permissions:"
 msgstr ""
 
 # schema pot file, generated on 2009-09-16 16:46:55
@@ -365,10 +365,10 @@ msgstr "Decimal number"
 msgid "Decimal_plural"
 msgstr "Decimal numbers"
 
-msgid "Delete permissions"
+msgid "Do you want to delete the following element(s) ?"
 msgstr ""
 
-msgid "Do you want to delete the following element(s) ?"
+msgid "Download schema as OWL"
 msgstr ""
 
 msgctxt "inlined:CWUser.use_email.subject"
@@ -382,6 +382,9 @@ msgid "EmailAddress_plural"
 msgstr "Email addresses"
 
 msgid "Entities"
+msgstr ""
+
+msgid "Entity types"
 msgstr ""
 
 msgid "ExternalUri"
@@ -409,6 +412,9 @@ msgid "Garbage collection information"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "Index"
 msgstr ""
 
 msgid "Instance"
@@ -513,6 +519,12 @@ msgstr "Password"
 msgid "Password_plural"
 msgstr "Passwords"
 
+msgid "Permissions for entity types"
+msgstr ""
+
+msgid "Permissions for relations"
+msgstr ""
+
 msgid "Please note that this is only a shallow copy"
 msgstr ""
 
@@ -531,9 +543,6 @@ msgstr "RQL unique constraint"
 msgid "RQLVocabularyConstraint"
 msgstr "RQL vocabulary constraint"
 
-msgid "Read permissions"
-msgstr ""
-
 msgid "Recipients:"
 msgstr ""
 
@@ -541,6 +550,9 @@ msgid "RegexpConstraint"
 msgstr "regular expression constrainte"
 
 msgid "Registry's content"
+msgstr ""
+
+msgid "Relation types"
 msgstr ""
 
 msgid "Relations"
@@ -697,9 +709,6 @@ msgid "UniqueConstraint"
 msgstr "unique constraint"
 
 msgid "Unreachable objects"
-msgstr ""
-
-msgid "Update permissions"
 msgstr ""
 
 msgid "Used by:"
@@ -1201,7 +1210,7 @@ msgstr ""
 msgid "attribute"
 msgstr ""
 
-msgid "attributes with modified permissions:"
+msgid "attributes permissions:"
 msgstr ""
 
 msgid "august"
@@ -1800,14 +1809,17 @@ msgstr "custom workflow"
 msgid "custom_workflow_object"
 msgstr "custom workflow of"
 
-msgid "cwetype-schema-image"
-msgstr "schema"
+msgid "cwetype-box"
+msgstr "box"
 
 msgid "cwetype-schema-permissions"
 msgstr "permissions"
 
 msgid "cwetype-schema-text"
 msgstr "description"
+
+msgid "cwetype-views"
+msgstr "views"
 
 msgid "cwetype-workflow"
 msgstr "workflow"
@@ -1837,6 +1849,9 @@ msgid "default text format for rich text fields."
 msgstr ""
 
 msgid "default user workflow"
+msgstr ""
+
+msgid "default value"
 msgstr ""
 
 msgid "default workflow for an entity type"
@@ -2360,6 +2375,9 @@ msgstr "transitions from this state"
 msgid "full text or RQL query"
 msgstr ""
 
+msgid "fulltext indexed"
+msgstr ""
+
 msgid "fulltext_container"
 msgstr "fulltext container"
 
@@ -2452,6 +2470,18 @@ msgstr "path"
 msgid "i18n_login_popup"
 msgstr "login"
 
+msgid "i18ncard_*"
+msgstr "0..n"
+
+msgid "i18ncard_+"
+msgstr "1..n"
+
+msgid "i18ncard_1"
+msgstr "1"
+
+msgid "i18ncard_?"
+msgstr "0..1"
+
 msgid "i18nprevnext_next"
 msgstr "next"
 
@@ -2521,9 +2551,6 @@ msgstr ""
 
 #, python-format
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
-msgstr ""
-
-msgid "index"
 msgstr ""
 
 msgid "index this attribute's value in the plain text index"
@@ -2596,6 +2623,12 @@ msgid "invalid action %r"
 msgstr ""
 
 msgid "is"
+msgstr ""
+
+msgid "is object of:"
+msgstr ""
+
+msgid "is subject of:"
 msgstr ""
 
 msgid ""
@@ -2933,8 +2966,8 @@ msgstr ""
 msgid "object"
 msgstr ""
 
-msgid "object_plural:"
-msgstr "objects:"
+msgid "object type"
+msgstr ""
 
 msgid "october"
 msgstr ""
@@ -3016,12 +3049,6 @@ msgid "permission"
 msgstr ""
 
 msgid "permissions"
-msgstr ""
-
-msgid "permissions for entities"
-msgstr ""
-
-msgid "permissions for relations"
 msgstr ""
 
 msgid "permissions for this entity"
@@ -3146,6 +3173,9 @@ msgstr ""
 msgid "relation add"
 msgstr ""
 
+msgid "relation direction"
+msgstr ""
+
 msgid "relation removal"
 msgstr ""
 
@@ -3166,9 +3196,6 @@ msgstr "relation definitions"
 
 msgid "relation_type_object"
 msgstr "relation definitions"
-
-msgid "relations"
-msgstr ""
 
 msgid "relations deleted"
 msgstr ""
@@ -3256,6 +3283,9 @@ msgstr ""
 
 msgid "schema-image"
 msgstr "schema"
+
+msgid "schema-security"
+msgstr "permissions"
 
 msgid "schema-text"
 msgstr "description"
@@ -3445,11 +3475,11 @@ msgstr ""
 msgid "subject"
 msgstr ""
 
-msgid "subject/object cardinality"
+msgid "subject type"
 msgstr ""
 
-msgid "subject_plural:"
-msgstr "subjects:"
+msgid "subject/object cardinality"
+msgstr ""
 
 msgid "subworkflow"
 msgstr ""

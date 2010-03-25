@@ -9,12 +9,13 @@ __docformat__ = "restructuredtext en"
 
 from itertools import cycle
 
+from logilab.common.ureports import Section, Table
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 from yams.buildobjs import DEFAULT_ATTRPERMS
 
 from cubicweb.selectors import (implements, yes, match_user_groups,
-                                has_related_entities)
+                                has_related_entities, anonymous_user)
 from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
 from cubicweb.schemaviewer import SchemaViewer
@@ -22,7 +23,7 @@ from cubicweb.view import EntityView, StartupView
 from cubicweb import tags, uilib
 from cubicweb.web import action, facet, uicfg
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import primary, baseviews, tabs, management
+from cubicweb.web.views import primary, baseviews, tabs, management, tableview
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
 SKIP_TYPES  = (ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES | WORKFLOW_TYPES
@@ -189,27 +190,69 @@ class SchemaPermissionsView(StartupView, management.SecurityViewMixIn):
             self.w(u'</div>')
 
 
-class SchemaUreportsView(StartupView):
-    __regid__ = 'schema-block'
-
-    def call(self):
-        viewer = SchemaViewer(self._cw)
-        layout = viewer.visit_schema(self._cw.vreg.schema, display_relations=True,
-                                     skiptypes=skip_types(self._cw))
-        self.w(uilib.ureport_as_html(layout))
-
-
 # CWAttribute / CWRelation #####################################################
 
 class CWRDEFPrimaryView(primary.PrimaryView):
     __select__ = implements('CWAttribute', 'CWRelation')
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+    cache_max_age = 60*60*2 # stawy in http cache for 2 hours by default
 
     def render_entity_title(self, entity):
         self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                % (entity.dc_type().capitalize(),
                   xml_escape(entity.dc_long_title())))
 
+
+class CWAttributeConstraints(EntityView):
+    __regid__ = 'attr_constraints'
+    __select__ = implements('CWAttribute')
+
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
+        rschema = self._cw.vreg.schema.rschema(entity.rtype.name)
+        rdef = rschema.rdefs[(entity.stype.name, entity.otype.name)]
+        constraints = [xml_escape(str(c)) for c in getattr(rdef, 'constraints')]
+        self.w(u', '.join(constraints))
+
+
+class CWAttributeCellView(tableview.CellView):
+    """display attribute name only in a cell view, link to
+       cwattribute primary view"""
+    __select__ = tableview.CellView.__select__ & implements('CWAttribute')
+
+    def cell_call(self, row, col, cellvid=None):
+        """display attribute name only in a cell view, link to
+           cwattribute primary view"""
+        etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
+        if val is not None and not self._cw.vreg.schema.eschema(etype).final:
+            e = self.cw_rset.get_entity(row, col)
+            if cellvid is not None and cellvid != 'incontext':
+                self.wview(cellvid, e.as_rset(), 'null')
+            else:
+                desc = uilib.cut(e.dc_description(), 50)
+                self.w(u'<a href="%s" title="%s">%s' % 
+                       (xml_escape(e.absolute_url()) ,xml_escape(desc),
+                        self.cell_content(e)))
+                self.w(u'</a>')
+        elif val is None:
+            # This is usually caused by a left outer join and in that case,
+            # regular views will most certainly fail if they don't have
+            # a real eid
+            self.wview('final', self.cw_rset, row=row, col=col)
+        else:
+            self.wview(cellvid or 'final', self.cw_rset, 'null', row=row, col=col)
+
+    def cell_content(self, entity):
+        return entity.relation_type[0].name
+
+
+class CWRelationCellView(CWAttributeCellView):
+    """display relation name and its translation only in a cell view, link to
+       cwrelation primary view"""
+    __select__ = tableview.CellView.__select__ & implements('CWRelation')
+
+    def cell_content(self, entity):
+        return u'%s (%s)' % (entity.relation_type[0].name,
+                             self._cw._(entity.relation_type[0].name))
 
 # CWEType ######################################################################
 
@@ -226,99 +269,105 @@ class CWETypeOneLineView(baseviews.OneLineView):
             self.w(u'</em>')
 
 
-class CWETypePrimaryView(tabs.TabsMixin, primary.PrimaryView):
+class CWETypePrimaryView(tabs.TabbedPrimaryView):
     __select__ = implements('CWEType')
-    title = _('in memory entity schema')
-    main_related_section = False
-    tabs = [_('cwetype-schema-text'), _('cwetype-schema-image'),
-            _('cwetype-schema-permissions'), _('cwetype-workflow')]
-    default_tab = 'cwetype-schema-text'
-
-    def render_entity(self, entity):
-        self.render_entity_title(entity)
-        self.w(u'<div>%s</div>' % entity.description)
-        self.render_tabs(self.tabs, self.default_tab, entity)
+    tabs = [_('cwetype-text-tab'), _('cwetype-box-tab'), _('cwetype-workflow-tab'),
+            _('cwetype-views-tab'), _('cwetype-perm-tab')]
+    default_tab = 'cwetype-text-tab'
 
 
-class CWETypeSTextView(EntityView):
-    __regid__ = 'cwetype-schema-text'
-    __select__ = EntityView.__select__ & implements('CWEType')
+# register generated msgid
+_('i18ncard_1'), _('i18ncard_?'), _('i18ncard_+'), _('i18ncard_*')
 
-    def cell_call(self, row, col):
-        entity = self.cw_rset.get_entity(row, col)
+class CWETypeTextTab(tabs.PrimaryTab):
+    __regid__ = 'cwetype-text-tab'
+    __select__ = tabs.PrimaryTab.__select__ & implements('CWEType')
+
+    def render_entity_attributes(self, entity, siderelations=None):
+        self.w(u'<div>%s</div>' % xml_escape(entity.description or u''))
+        # entity schema image
+        url = entity.absolute_url(vid='schemagraph')
+        self.w(u'<img src="%s" alt="%s"/>' % (
+            xml_escape(url),
+            xml_escape(self._cw._('graphical schema for %s') % entity.name)))
+        # entity schema attributes
         self.w(u'<h2>%s</h2>' % _('Attributes'))
-        rset = self._cw.execute('Any N,F,D,I,J,DE,A '
+        rset = self._cw.execute('Any A,F,DE,D,C, I,J,A '
                                 'ORDERBY AA WHERE A is CWAttribute, '
                                 'A ordernum AA, A defaultval D, '
-                                'A description DE, '
+                                'A description DE, A cardinality C, '
                                 'A fulltextindexed I, A internationalizable J, '
                                 'A relation_type R, R name N, '
                                 'A to_entity O, O name F, '
                                 'A from_entity S, S eid %(x)s',
                                 {'x': entity.eid})
-        self.wview('editable-table', rset, 'null', displayfilter=True)
+        self.wview('table', rset, 'null',
+                   cellvids={4: 'attr_cardinality', 7: 'attr_constraints'},
+                   headers=(_(u'name'), _(u'type'), _(u'description'),
+                            _(u'default value'), _(u'required'),
+                            _(u'fulltext indexed'), _(u'internationalizable'),
+                            _(u'constraints')),
+                   mainindex=0)
+        # entity schema relations
         self.w(u'<h2>%s</h2>' % _('Relations'))
         rset = self._cw.execute(
-            'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
+            'Any A, TT, "i18ncard_"+SUBSTRING(C, 1, 1),K,D,A,RN,TTN ORDERBY RN '
             'WHERE A is CWRelation, A description D, A composite K, '
             'A relation_type R, R name RN, A to_entity TT, TT name TTN, '
             'A cardinality C, A from_entity S, S eid %(x)s',
             {'x': entity.eid})
-        self.wview('editable-table', rset, 'null', displayfilter=True,
-                   displaycols=range(6), mainindex=5)
+        if rset:
+            self.w(u'<h5>%s %s</h5>' % (entity.name, _('is subject of:')))
+        self.wview('table', rset, 'null',
+                   cellvids={2: 'entity_relation_cardinality',},
+                   headers=(_(u'name'), _(u'object type'), _(u'cardinality'),
+                            _(u'composite'), _(u'description'),
+                            _(u'relation direction')),
+                   displaycols=range(5), mainindex=0)
+        self.w(u'<br/>')
         rset = self._cw.execute(
-            'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
+            'Any A, TT, "i18ncard_"+SUBSTRING(C, 2, 1),K,D,A,RN,TTN ORDERBY RN '
             'WHERE A is CWRelation, A description D, A composite K, '
             'A relation_type R, R name RN, A from_entity TT, TT name TTN, '
             'A cardinality C, A to_entity O, O eid %(x)s',
             {'x': entity.eid})
-        self.wview('editable-table', rset, 'null', displayfilter=True,
-                   displaycols=range(6), mainindex=5)
+        if rset:
+            self.w(u'<h5>%s %s</h5>' % (entity.name, _('is object of:')))
+        self.wview('table', rset, 'null',
+                   cellvids={2: 'entity_relation_cardinality',},
+                   headers=(_(u'name'), _(u'subject type'), _(u'cardinality'),
+                            _(u'composite'), _(u'description'),
+                            _(u'relation direction')),
+                   displaycols=range(5), mainindex=0)
 
 
-class CWETypeSImageView(EntityView):
-    __regid__ = 'cwetype-schema-image'
-    __select__ = EntityView.__select__ & implements('CWEType')
-
-    def cell_call(self, row, col):
-        entity = self.cw_rset.get_entity(row, col)
-        url = entity.absolute_url(vid='schemagraph')
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(url),
-            xml_escape(self._cw._('graphical schema for %s') % entity.name)))
-
-
-class CWETypeSPermView(EntityView):
-    __regid__ = 'cwetype-schema-permissions'
-    __select__ = EntityView.__select__ & implements('CWEType')
+class CWETypePermTab(EntityView, management.SecurityViewMixIn):
+    __regid__ = 'cwetype-perm-tab'
+    __select__ = EntityView.__select__ & implements('CWEType') & ~anonymous_user()
 
     def cell_call(self, row, col):
+        self._cw.add_css('cubicweb.acl.css')
         entity = self.cw_rset.get_entity(row, col)
-        _ = self._cw._
-        self.w(u'<h2>%s</h2>' % _('Add permissions'))
-        rset = self._cw.execute('Any P WHERE X add_permission P, '
-                                'X eid %(x)s',
-                                {'x': entity.eid})
-        self.wview('outofcontext', rset, 'null')
-        self.w(u'<h2>%s</h2>' % _('Read permissions'))
-        rset = self._cw.execute('Any P WHERE X read_permission P, '
-                                'X eid %(x)s',
-                                {'x': entity.eid})
-        self.wview('outofcontext', rset, 'null')
-        self.w(u'<h2>%s</h2>' % _('Update permissions'))
-        rset = self._cw.execute('Any P WHERE X update_permission P, '
-                                'X eid %(x)s',
-                                {'x': entity.eid})
-        self.wview('outofcontext', rset, 'null')
-        self.w(u'<h2>%s</h2>' % _('Delete permissions'))
-        rset = self._cw.execute('Any P WHERE X delete_permission P, '
-                                'X eid %(x)s',
-                                {'x': entity.eid})
-        self.wview('outofcontext', rset, 'null')
+        eschema = self._cw.vreg.schema.eschema(entity.name)
+        self.w(u'<a id="%s" href="cwetype/%s">' %  (eschema.type, eschema.type))
+        self.w(u'<h3 class="schema">%s (%s) ' % (eschema.type, _(eschema.type)))
+        self.w(u'</h3></a>')
+        self.w(u'<div style="margin: 0px 1.5em">')
+        self.schema_definition(eschema)
+        # display entity attributes only if they have some permissions modified
+        modified_attrs = []
+        self.w(u'<h4>%s</h4>' % _('attributes permissions:').capitalize())
+        for attr, etype in  eschema.attribute_definitions():
+            if attr not in META_RTYPES:
+                rdef = eschema.rdef(attr)
+                attrtype = str(rdef.rtype)
+                self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attrtype, _(attrtype)))
+                self.schema_definition(rdef, link=False)
+        self.w(u'</div>')
 
 
-class CWETypeSWorkflowView(EntityView):
-    __regid__ = 'cwetype-workflow'
+class CWETypeWorkflowTab(EntityView):
+    __regid__ = 'cwetype-workflow-tab'
     __select__ = (EntityView.__select__ & implements('CWEType') &
                   has_related_entities('workflow_of', 'object'))
 
@@ -347,6 +396,37 @@ class CWETypeSWorkflowView(EntityView):
             wf.absolute_url(), self._cw._('more info about this workflow')))
 
 
+class CWETypeBoxTab(EntityView):
+    __regid__ = 'cwetype-box-tab'
+    __select__ = EntityView.__select__ & implements('CWEType')
+
+    def cell_call(self, row, col):
+        viewer = SchemaViewer(self._cw)
+        entity = self.cw_rset.get_entity(row, col)
+        eschema = self._cw.vreg.schema.eschema(entity.name)
+        layout = viewer.visit_entityschema(eschema)
+        self.w(uilib.ureport_as_html(layout))
+        self.w(u'<br class="clear"/>')
+
+
+class CWETypeViewsTab(EntityView):
+    __regid__ = 'cwetype-views-tab'
+    __select__ = EntityView.__select__ & implements('CWEType')
+
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
+        etype = entity.name
+        _ = self._cw._
+        # possible views for this entity type
+        views = [(_(view.title),) for view in self.possible_views(etype)]
+        self.wview('pyvaltable', pyvalue=views, headers=(_(u'views'),))
+
+    def possible_views(self, etype):
+        rset = self._cw.etype_rset(etype)
+        return [v for v in self._cw.vreg['views'].possible_views(self._cw, rset)
+                if v.category != 'startupview']
+
+
 # CWRType ######################################################################
 
 class CWRTypeSchemaView(primary.PrimaryView):
@@ -364,7 +444,6 @@ class CWRTypeSchemaView(primary.PrimaryView):
             msg = self._cw._('graphical schema for %s') % entity.name
             self.w(tags.img(src=entity.absolute_url(vid='schemagraph'),
                             alt=msg))
-
 
 # schema images ###############################################################
 
@@ -428,6 +507,25 @@ class CWRTypeSchemaImageView(CWETypeSchemaImageView):
         rschema = self._cw.vreg.schema.rschema(entity.name)
         visitor = OneHopRSchemaVisitor(self._cw, rschema)
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+
+
+# final views #################################################################
+
+class CardinalityRequiredCellView(baseviews.FinalView):
+    __regid__ = 'attr_cardinality'
+
+    def cell_call(self, row, col):
+        value = self.cw_rset.rows[row][col]
+        if value is not None and value[0] == '1':
+            self.w(self._cw._(u'required'))
+
+class I18NCardinalityCellView(baseviews.FinalView):
+    __regid__ = 'entity_relation_cardinality'
+
+    def cell_call(self, row, col):
+        value = self.cw_rset.rows[row][col]
+        if value is not None:
+            self.w(self._cw._(value))
 
 
 # misc: facets, actions ########################################################

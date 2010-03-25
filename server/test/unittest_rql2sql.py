@@ -1209,6 +1209,10 @@ WHERE _X.cw_login IS NULL''')
                     '''SELECT CAST(EXTRACT(MONTH from _P.cw_creation_date) AS INTEGER)
 FROM cw_Personne AS _P''')
 
+    def test_substring(self):
+        self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
+                    '''SELECT SUBSTR(_P.cw_nom, 1, 1)
+FROM cw_Personne AS _P''')
 
     def test_parser_parse(self):
         for t in self._parse(PARSER):
@@ -1601,6 +1605,10 @@ FROM concerne_relation AS rel_concerne0, cw_Affaire AS _A LEFT OUTER JOIN tags_r
 WHERE rel_concerne0.eid_from=_A.cw_eid AND rel_concerne0.eid_to=_N.cw_eid
 GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
 
+    def test_substring(self):
+        self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
+                    '''SELECT SUBSTRING(_P.cw_nom, 1, 1)
+FROM cw_Personne AS _P''')
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):

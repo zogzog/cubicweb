@@ -25,9 +25,12 @@ div.relationDefinition {
 div.acl{ 
   position: relative;
 /*  right: 20%;*/
-  float: right; 
-  width: 10%;
+  width: 25%;
   padding:0px 0px 0px 2em;
+}
+
+div.acl table tr,td{
+    padding: 2px 2px 2px 2px;
 }
 
 div.schema table {
@@ -40,7 +43,6 @@ div.entityAttributes{
 }
 
 div.box div.title{
- border-bottom:1px solid black;
  padding:0.2em 0.2em;
  margin: 0 auto;
 }
@@ -67,7 +69,6 @@ div.body table td{
 div.box{
  float:left;
  border:1px solid black;
- width:50%; 
 }
 
 div.vl{

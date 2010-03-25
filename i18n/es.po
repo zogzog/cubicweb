@@ -199,14 +199,14 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "Y"
 
-msgid "Add permissions"
-msgstr "Añadir autorizaciónes"
-
 msgid "Any"
 msgstr "Cualquiera"
 
 msgid "Attributes"
 msgstr "Atributos"
+
+msgid "Attributes with non default permissions:"
+msgstr ""
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -373,11 +373,11 @@ msgstr "Decimal"
 msgid "Decimal_plural"
 msgstr "Decimales"
 
-msgid "Delete permissions"
-msgstr "Autorización de suprimir"
-
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
+
+msgid "Download schema as OWL"
+msgstr ""
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
@@ -391,6 +391,9 @@ msgstr "Direcciones de Correo Electrónico"
 
 msgid "Entities"
 msgstr "Entidades"
+
+msgid "Entity types"
+msgstr ""
 
 msgid "ExternalUri"
 msgstr ""
@@ -417,6 +420,9 @@ msgid "Garbage collection information"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "Index"
 msgstr ""
 
 msgid "Instance"
@@ -521,6 +527,12 @@ msgstr "Contraseña"
 msgid "Password_plural"
 msgstr "Contraseñas"
 
+msgid "Permissions for entity types"
+msgstr ""
+
+msgid "Permissions for relations"
+msgstr ""
+
 msgid "Please note that this is only a shallow copy"
 msgstr "Recuerde que no es más que una copia superficial"
 
@@ -539,9 +551,6 @@ msgstr ""
 msgid "RQLVocabularyConstraint"
 msgstr ""
 
-msgid "Read permissions"
-msgstr "Autorización de leer"
-
 msgid "Recipients:"
 msgstr "Destinatarios"
 
@@ -549,6 +558,9 @@ msgid "RegexpConstraint"
 msgstr ""
 
 msgid "Registry's content"
+msgstr ""
+
+msgid "Relation types"
 msgstr ""
 
 msgid "Relations"
@@ -706,9 +718,6 @@ msgstr ""
 
 msgid "Unreachable objects"
 msgstr ""
-
-msgid "Update permissions"
-msgstr "Autorización de modificar"
 
 msgid "Used by:"
 msgstr "Utilizado por :"
@@ -1226,8 +1235,8 @@ msgstr ""
 msgid "attribute"
 msgstr "Atributo"
 
-msgid "attributes with modified permissions:"
-msgstr "atributos con autorizaciónes modificadas:"
+msgid "attributes permissions:"
+msgstr ""
 
 msgid "august"
 msgstr "Agosto"
@@ -1841,14 +1850,17 @@ msgstr ""
 msgid "custom_workflow_object"
 msgstr ""
 
-msgid "cwetype-schema-image"
-msgstr "Esquema"
+msgid "cwetype-box"
+msgstr ""
 
 msgid "cwetype-schema-permissions"
 msgstr "Autorizaciónes"
 
 msgid "cwetype-schema-text"
 msgstr "Modelo de datos"
+
+msgid "cwetype-views"
+msgstr ""
 
 msgid "cwetype-workflow"
 msgstr "Workflow"
@@ -1878,6 +1890,9 @@ msgid "default text format for rich text fields."
 msgstr "Formato de texto como opción por defecto para los campos texto"
 
 msgid "default user workflow"
+msgstr ""
+
+msgid "default value"
 msgstr ""
 
 msgid "default workflow for an entity type"
@@ -2410,6 +2425,9 @@ msgstr "Transiciones desde este estado"
 msgid "full text or RQL query"
 msgstr "Texto de búsqueda o demanda RQL"
 
+msgid "fulltext indexed"
+msgstr ""
+
 msgid "fulltext_container"
 msgstr "Contenedor de texto indexado"
 
@@ -2508,6 +2526,18 @@ msgstr ""
 msgid "i18n_login_popup"
 msgstr "Identificarse"
 
+msgid "i18ncard_*"
+msgstr ""
+
+msgid "i18ncard_+"
+msgstr ""
+
+msgid "i18ncard_1"
+msgstr ""
+
+msgid "i18ncard_?"
+msgstr ""
+
 msgid "i18nprevnext_next"
 msgstr "Siguiente"
 
@@ -2581,9 +2611,6 @@ msgstr ""
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
 
-msgid "index"
-msgstr "Indice"
-
 msgid "index this attribute's value in the plain text index"
 msgstr "Indexar el valor de este atributo en el índice de texto simple"
 
@@ -2656,6 +2683,12 @@ msgstr "Acción %r invalida"
 
 msgid "is"
 msgstr "es"
+
+msgid "is object of:"
+msgstr "es objeto de"
+
+msgid "is subject of:"
+msgstr "es sujeto de"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -3007,8 +3040,8 @@ msgstr "noviembre"
 msgid "object"
 msgstr "objeto"
 
-msgid "object_plural:"
-msgstr "objetos:"
+msgid "object type"
+msgstr ""
 
 msgid "october"
 msgstr "octubre"
@@ -3090,12 +3123,6 @@ msgstr "Permiso"
 
 msgid "permissions"
 msgstr ""
-
-msgid "permissions for entities"
-msgstr "autorizaciónes para entidades"
-
-msgid "permissions for relations"
-msgstr "autorizaciónes para relaciones"
 
 msgid "permissions for this entity"
 msgstr "Permisos para esta entidad"
@@ -3219,6 +3246,9 @@ msgstr "relación %(relname)s de %(ent)s"
 msgid "relation add"
 msgstr ""
 
+msgid "relation direction"
+msgstr ""
+
 msgid "relation removal"
 msgstr ""
 
@@ -3239,9 +3269,6 @@ msgstr ""
 
 msgid "relation_type_object"
 msgstr "Definición"
-
-msgid "relations"
-msgstr "relaciones"
 
 msgid "relations deleted"
 msgstr "Relaciones eliminadas"
@@ -3333,6 +3360,9 @@ msgstr "definiciones de permisos del esquema"
 
 msgid "schema-image"
 msgstr "esquema imagen"
+
+msgid "schema-security"
+msgstr ""
 
 msgid "schema-text"
 msgstr "esquema text"
@@ -3526,11 +3556,11 @@ msgstr "estatus cambiara de %(st1)s a %(st2)s"
 msgid "subject"
 msgstr "sujeto"
 
+msgid "subject type"
+msgstr ""
+
 msgid "subject/object cardinality"
 msgstr "cardinalidad sujeto/objeto"
-
-msgid "subject_plural:"
-msgstr "sujetos:"
 
 msgid "subworkflow"
 msgstr ""

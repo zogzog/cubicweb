@@ -198,14 +198,14 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "ET"
 
-msgid "Add permissions"
-msgstr "Permissions d'ajouter"
-
 msgid "Any"
 msgstr "N'importe"
 
 msgid "Attributes"
 msgstr "Attributs"
+
+msgid "Attributes with non default permissions:"
+msgstr "Attributs ayant des permissions non-standard"
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -384,11 +384,11 @@ msgstr "Nombre décimal"
 msgid "Decimal_plural"
 msgstr "Nombres décimaux"
 
-msgid "Delete permissions"
-msgstr "Permissions de supprimer"
-
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez-vous supprimer le(s) élément(s) suivant(s) ?"
+
+msgid "Download schema as OWL"
+msgstr "Télécharger le schéma au format OWL"
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
@@ -402,6 +402,9 @@ msgstr "Adresses électroniques"
 
 msgid "Entities"
 msgstr "entités"
+
+msgid "Entity types"
+msgstr "Types d'entités"
 
 msgid "ExternalUri"
 msgstr "Uri externe"
@@ -429,6 +432,9 @@ msgstr "Information sur le ramasse-miette"
 
 msgid "Help"
 msgstr "Aide"
+
+msgid "Index"
+msgstr ""
 
 msgid "Instance"
 msgstr "Instance"
@@ -532,6 +538,12 @@ msgstr "Mot de passe"
 msgid "Password_plural"
 msgstr "Mots de passe"
 
+msgid "Permissions for entity types"
+msgstr "Permissions pour les types d'entités"
+
+msgid "Permissions for relations"
+msgstr "Permissions pour les relations"
+
 msgid "Please note that this is only a shallow copy"
 msgstr "Attention, cela n'effectue qu'une copie de surface"
 
@@ -550,9 +562,6 @@ msgstr "contrainte rql d'unicité"
 msgid "RQLVocabularyConstraint"
 msgstr "contrainte rql de vocabulaire"
 
-msgid "Read permissions"
-msgstr "Permissions de lire"
-
 msgid "Recipients:"
 msgstr "Destinataires :"
 
@@ -561,6 +570,9 @@ msgstr "contrainte expression régulière"
 
 msgid "Registry's content"
 msgstr "Contenu du registre"
+
+msgid "Relation types"
+msgstr "Types de relation"
 
 msgid "Relations"
 msgstr "Relations"
@@ -717,9 +729,6 @@ msgstr "contrainte d'unicité"
 
 msgid "Unreachable objects"
 msgstr "Objets inacessible"
-
-msgid "Update permissions"
-msgstr "Permissions de modifier"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
@@ -1245,8 +1254,8 @@ msgstr ""
 msgid "attribute"
 msgstr "attribut"
 
-msgid "attributes with modified permissions:"
-msgstr "attributs ayant des permissions modifiées :"
+msgid "attributes permissions:"
+msgstr ""
 
 msgid "august"
 msgstr "août"
@@ -1864,14 +1873,17 @@ msgstr "workflow spécifique"
 msgid "custom_workflow_object"
 msgstr "workflow de"
 
-msgid "cwetype-schema-image"
-msgstr "schéma"
+msgid "cwetype-box"
+msgstr "boîte"
 
 msgid "cwetype-schema-permissions"
 msgstr "permissions"
 
 msgid "cwetype-schema-text"
 msgstr "description"
+
+msgid "cwetype-views"
+msgstr "vues"
 
 msgid "cwetype-workflow"
 msgstr "workflow"
@@ -1902,6 +1914,9 @@ msgstr "format de texte par défaut pour les champs textes"
 
 msgid "default user workflow"
 msgstr "workflow par défaut des utilisateurs"
+
+msgid "default value"
+msgstr "valeur par défaut"
 
 msgid "default workflow for an entity type"
 msgstr "workflow par défaut pour un type d'entité"
@@ -2444,6 +2459,9 @@ msgstr "transitions depuis cet état"
 msgid "full text or RQL query"
 msgstr "texte à rechercher ou requête RQL"
 
+msgid "fulltext indexed"
+msgstr "indexation du texte"
+
 msgid "fulltext_container"
 msgstr "conteneur du texte indexé"
 
@@ -2545,6 +2563,18 @@ msgstr "chemin"
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
 
+msgid "i18ncard_*"
+msgstr "0..n"
+
+msgid "i18ncard_+"
+msgstr "1..n"
+
+msgid "i18ncard_1"
+msgstr "1"
+
+msgid "i18ncard_?"
+msgstr "0..1"
+
 msgid "i18nprevnext_next"
 msgstr "suivant"
 
@@ -2618,9 +2648,6 @@ msgstr "valeur de captcha incorrecte"
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valeur %(value)s incorrecte pour le type \"%(type)s\""
 
-msgid "index"
-msgstr "index"
-
 msgid "index this attribute's value in the plain text index"
 msgstr "indexer la valeur de cet attribut dans l'index plein texte"
 
@@ -2693,6 +2720,12 @@ msgstr "action %r invalide"
 
 msgid "is"
 msgstr "de type"
+
+msgid "is object of:"
+msgstr "est object de"
+
+msgid "is subject of:"
+msgstr "est sujet de"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -3041,8 +3074,8 @@ msgstr "novembre"
 msgid "object"
 msgstr "objet"
 
-msgid "object_plural:"
-msgstr "objets :"
+msgid "object type"
+msgstr "type de l'objet"
 
 msgid "october"
 msgstr "octobre"
@@ -3126,12 +3159,6 @@ msgstr "permission"
 
 msgid "permissions"
 msgstr "permissions"
-
-msgid "permissions for entities"
-msgstr "permissions pour les entités"
-
-msgid "permissions for relations"
-msgstr "permissions pour les relations"
 
 msgid "permissions for this entity"
 msgstr "permissions pour cette entité"
@@ -3255,6 +3282,9 @@ msgstr "relation %(relname)s de %(ent)s"
 msgid "relation add"
 msgstr "ajout de relation"
 
+msgid "relation direction"
+msgstr "sens de la relation"
+
 msgid "relation removal"
 msgstr "suppression de relation"
 
@@ -3275,9 +3305,6 @@ msgstr "définition"
 
 msgid "relation_type_object"
 msgstr "définition"
-
-msgid "relations"
-msgstr "relations"
 
 msgid "relations deleted"
 msgstr "relations supprimées"
@@ -3370,6 +3397,9 @@ msgstr "permissions définies dans le schéma"
 
 msgid "schema-image"
 msgstr "schéma"
+
+msgid "schema-security"
+msgstr "permissions"
 
 msgid "schema-text"
 msgstr "description"
@@ -3565,11 +3595,11 @@ msgstr "l'entité passera de l'état %(st1)s à l'état %(st2)s"
 msgid "subject"
 msgstr "sujet"
 
+msgid "subject type"
+msgstr "type du sujet"
+
 msgid "subject/object cardinality"
 msgstr "cardinalité sujet/objet"
-
-msgid "subject_plural:"
-msgstr "sujets :"
 
 msgid "subworkflow"
 msgstr "sous-workflow"
@@ -4145,3 +4175,9 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid "Delete permissions"
+#~ msgstr "Permissions de supprimer"
+
+#~ msgid "attributes with modified permissions:"
+#~ msgstr "attributs ayant des permissions modifiées :"
