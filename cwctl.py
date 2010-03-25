@@ -85,7 +85,7 @@ class InstanceCommand(Command):
         Instance used by another one should appears first in the file (one
         instance per line)
         """
-        regdir = cwcfg.registry_dir()
+        regdir = cwcfg.instances_dir()
         _allinstances = list_instances(regdir)
         if isfile(join(regdir, 'startorder')):
             allinstances = []
@@ -303,7 +303,7 @@ class ListCommand(Command):
                     print '    available modes: %s' % ', '.join(modes)
         print
         try:
-            regdir = cwcfg.registry_dir()
+            regdir = cwcfg.instances_dir()
         except ConfigurationError, ex:
             print 'No instance available:', ex
             print
@@ -612,7 +612,7 @@ class RestartInstanceCommand(StartInstanceCommand):
     actionverb = 'restarted'
 
     def run_args(self, args, askconfirm):
-        regdir = cwcfg.registry_dir()
+        regdir = cwcfg.instances_dir()
         if not isfile(join(regdir, 'startorder')) or len(args) <= 1:
             # no specific startorder
             super(RestartInstanceCommand, self).run_args(args, askconfirm)
@@ -958,7 +958,7 @@ class ListInstancesCommand(Command):
 
     def run(self, args):
         """run the command with its specific arguments"""
-        regdir = cwcfg.registry_dir()
+        regdir = cwcfg.instances_dir()
         for appid in sorted(listdir(regdir)):
             print appid
 

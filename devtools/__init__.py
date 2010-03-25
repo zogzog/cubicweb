@@ -98,9 +98,6 @@ class TestServerConfiguration(ServerConfiguration):
           }),
         ))
 
-    if not os.environ.get('APYCOT_ROOT'):
-        REGISTRY_DIR = normpath(join(CW_SOFTWARE_ROOT, '../cubes'))
-
     def __init__(self, appid, log_threshold=logging.CRITICAL+10):
         ServerConfiguration.__init__(self, appid)
         self.init_log(log_threshold, force=True)

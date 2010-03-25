@@ -184,7 +184,7 @@ def read_config(config_file):
                 config_file, ex)
     return config
 
-def env_path(env_var, default, name):
+def env_path(env_var, default, name, checkexists=True):
     """get a path specified in a variable or using the default value and return
     it.
 
@@ -203,8 +203,8 @@ def env_path(env_var, default, name):
     :raise `ConfigurationError`: if the returned path does not exist
     """
     path = environ.get(env_var, default)
-    if not exists(path):
-        raise ConfigurationError('%s path %s doesn\'t exist' % (name, path))
+    if checkexists and not exists(path):
+        raise ConfigurationError('%s directory %s doesn\'t exist' % (name, path))
     return abspath(path)
 
 

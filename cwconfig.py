@@ -15,8 +15,7 @@ If cubicweb is a mercurial checkout (eg `CWDEV` is true), located in
 
  * cubicweb migration files are by default searched in
    `<CW_SOFTWARE_ROOT>/misc/migration` instead of
-   `/usr/share/cubicweb/migration/`(unless another emplacement is specified
-   using `CW_MIGRATION_DIR`.
+   `<install prefix>/share/cubicweb/migration/`
 
  * Cubicweb will start in 'user' mode (see below)
 
@@ -66,9 +65,6 @@ environment variable, to:
 .. envvar:: CW_RUNTIME_DIR
    Directory where pid files will be written
 
-.. envvar:: CW_MIGRATION_DIR
-   Directory where cubicweb migration files will be found
-
 
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -78,12 +74,11 @@ _ = unicode
 import sys
 import os
 import logging
-import tempfile
 from smtplib import SMTP
 from threading import Lock
-from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
+from os.path import (exists, join, expanduser, abspath, normpath,
+                     basename, isdir, dirname)
 from warnings import warn
-
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
@@ -131,6 +126,23 @@ def guess_configuration(directory):
                                  % (directory, modes))
     return modes[0]
 
+def _find_prefix(start_path=CW_SOFTWARE_ROOT):
+    """Runs along the parent directories of *start_path* (default to cubicweb source directory)
+    looking for one containing a 'share/cubicweb' directory.
+    The first matching directory is assumed as the prefix installation of cubicweb
+
+    Returns the matching prefix or None.
+    """
+    prefix = start_path
+    old_prefix = None
+    if not isdir(start_path):
+        prefix = dirname(start_path)
+    while not isdir(join(prefix, 'share', 'cubicweb')) and prefix != old_prefix:
+        old_prefix = prefix
+        prefix = dirname(prefix)
+    if isdir(join(prefix, 'share', 'cubicweb')):
+        return prefix
+    return sys.prefix
 
 # persistent options definition
 PERSISTENT_OPTIONS = (
@@ -203,6 +215,11 @@ assert _forced_mode in (None, 'system', 'user')
 
 CWDEV = exists(join(CW_SOFTWARE_ROOT, '.hg'))
 
+try:
+    _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
+except KeyError:
+    _INSTALL_PREFIX = _find_prefix()
+
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
     """
@@ -216,25 +233,16 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # debug mode
     debugmode = False
 
-    if os.environ.get('APYCOT_ROOT'):
-        mode = 'test'
-        # allow to test cubes within apycot using cubicweb not installed by
-        # apycot
-        if __file__.startswith(os.environ['APYCOT_ROOT']):
-            CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
-            # create __init__ file
-            file(join(CUBES_DIR, '__init__.py'), 'w').close()
-        else:
-            CUBES_DIR = '/usr/share/cubicweb/cubes/'
-    elif (CWDEV and _forced_mode != 'system'):
+
+    if (CWDEV and _forced_mode != 'system'):
         mode = 'user'
-        CUBES_DIR = abspath(normpath(join(CW_SOFTWARE_ROOT, '../cubes')))
+        _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
     else:
-        if _forced_mode == 'user':
-            mode = 'user'
-        else:
-            mode = 'system'
-        CUBES_DIR = '/usr/share/cubicweb/cubes/'
+        mode = _forced_mode or 'system'
+        _CUBES_DIR = join(_INSTALL_PREFIX, 'cubes')
+
+    CUBES_DIR = env_path('CW_CUBES_DIR', _CUBES_DIR, 'cubes', checkexists=False)
+    CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
        ('log-threshold',
@@ -296,7 +304,6 @@ this option is set to yes",
           }),
         )
     # static and class methods used to get instance independant resources ##
-
     @staticmethod
     def cubicweb_version():
         """return installed cubicweb version"""
@@ -343,13 +350,10 @@ this option is set to yes",
     def cubes_search_path(cls):
         """return the path of directories where cubes should be searched"""
         path = []
-        try:
-            for directory in os.environ['CW_CUBES_PATH'].split(os.pathsep):
-                directory = abspath(normpath(directory))
-                if exists(directory) and not directory in path:
-                    path.append(directory)
-        except KeyError:
-            pass
+        for directory in cls.CUBES_PATH:
+            directory = abspath(normpath(directory))
+            if exists(directory) and not directory in path:
+                path.append(directory)
         if not cls.CUBES_DIR in path and exists(cls.CUBES_DIR):
             path.append(cls.CUBES_DIR)
         return path
@@ -365,7 +369,7 @@ this option is set to yes",
     @classmethod
     def cube_dir(cls, cube):
         """return the cube directory for the given cube id,
-        raise ConfigurationError if it doesn't exists
+        raise `ConfigurationError` if it doesn't exists
         """
         for directory in cls.cubes_search_path():
             cubedir = join(directory, cube)
@@ -383,10 +387,12 @@ this option is set to yes",
         """return the information module for the given cube"""
         cube = CW_MIGRATION_MAP.get(cube, cube)
         try:
-            return getattr(__import__('cubes.%s.__pkginfo__' % cube), cube).__pkginfo__
+            parent = __import__('cubes.%s.__pkginfo__' % cube)
+            return getattr(parent, cube).__pkginfo__
         except Exception, ex:
-            raise ConfigurationError('unable to find packaging information for '
-                                     'cube %s (%s: %s)' % (cube, ex.__class__.__name__, ex))
+            raise ConfigurationError(
+                'unable to find packaging information for cube %s (%s: %s)'
+                % (cube, ex.__class__.__name__, ex))
 
     @classmethod
     def cube_version(cls, cube):
@@ -588,6 +594,7 @@ this option is set to yes",
             cw_rest_init()
 
     def adjust_sys_path(self):
+        # overriden in CubicWebConfiguration
         self.cls_adjust_sys_path()
 
     def init_log(self, logthreshold=None, debug=False,
@@ -637,35 +644,24 @@ this option is set to yes",
         """
         return None
 
+
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
 
-    INSTANCES_DATA_DIR = None
+    if CubicWebNoAppConfiguration.mode == 'user':
+        _INSTANCES_DIR = expanduser('~/etc/cubicweb.d/')
+    else: #mode = 'system'
+        if _INSTALL_PREFIX == '/usr':
+            _INSTANCES_DIR = '/etc/cubicweb.d/'
+        else:
+            _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
+
     if os.environ.get('APYCOT_ROOT'):
-        root = os.environ['APYCOT_ROOT']
-        REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-        if not exists(REGISTRY_DIR):
-            os.makedirs(REGISTRY_DIR)
-        RUNTIME_DIR = tempfile.gettempdir()
-        # allow to test cubes within apycot using cubicweb not installed by
-        # apycot
-        if __file__.startswith(os.environ['APYCOT_ROOT']):
-            MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
-        else:
-            MIGRATION_DIR = '/usr/share/cubicweb/migration/'
-    else:
-        if CubicWebNoAppConfiguration.mode == 'user':
-            REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-            RUNTIME_DIR = tempfile.gettempdir()
-            INSTANCES_DATA_DIR = REGISTRY_DIR
-        else: #mode = 'system'
-            REGISTRY_DIR = '/etc/cubicweb.d/'
-            RUNTIME_DIR = '/var/run/cubicweb/'
-            INSTANCES_DATA_DIR = '/var/lib/cubicweb/instances/'
-        if CWDEV:
-            MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
-        else:
-            MIGRATION_DIR = '/usr/share/cubicweb/migration/'
+        _cubes_init = join(CubicWebNoAppConfiguration.CUBES_DIR, '__init__.py')
+        if not exists(_cubes_init):
+            file(join(_cubes_init), 'w').close()
+        if not exists(_INSTANCES_DIR):
+            os.makedirs(_INSTANCES_DIR)
 
     # for some commands (creation...) we don't want to initialize gettext
     set_language = True
@@ -711,25 +707,19 @@ the repository',
         )
 
     @classmethod
-    def runtime_dir(cls):
-        """run time directory for pid file..."""
-        return env_path('CW_RUNTIME_DIR', cls.RUNTIME_DIR, 'run time')
-
-    @classmethod
-    def registry_dir(cls):
+    def instances_dir(cls):
         """return the control directory"""
-        return env_path('CW_INSTANCES_DIR', cls.REGISTRY_DIR, 'registry')
-
-    @classmethod
-    def instance_data_dir(cls):
-        """return the instance data directory"""
-        return env_path('CW_INSTANCES_DATA_DIR', cls.INSTANCES_DATA_DIR,
-                        'additional data')
+        return env_path('CW_INSTANCES_DIR', cls._INSTANCES_DIR, 'registry')
 
     @classmethod
     def migration_scripts_dir(cls):
         """cubicweb migration scripts directory"""
-        return env_path('CW_MIGRATION_DIR', cls.MIGRATION_DIR, 'migration')
+        if CWDEV:
+            return join(CW_SOFTWARE_ROOT, 'misc', 'migration')
+        mdir = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'migration')
+        if not exists(path):
+            raise ConfigurationError('migration path %s doesn\'t exist' % mdir)
+        return mdir
 
     @classmethod
     def config_for(cls, appid, config=None):
@@ -752,9 +742,10 @@ the repository',
         """return the home directory of the instance with the given
         instance id
         """
-        home = join(cls.registry_dir(), appid)
+        home = join(cls.instances_dir(), appid)
         if not exists(home):
-            raise ConfigurationError('no such instance %s (check it exists with "cubicweb-ctl list")' % appid)
+            raise ConfigurationError('no such instance %s (check it exists with'
+                                     ' "cubicweb-ctl list")' % appid)
         return home
 
     MODES = ('common', 'repository', 'Any', 'web')
@@ -777,7 +768,9 @@ the repository',
     def default_log_file(self):
         """return default path to the log file of the instance'server"""
         if self.mode == 'user':
-            basepath = join(tempfile.gettempdir(), '%s-%s' % (basename(self.appid), self.name))
+            import tempfile
+            basepath = join(tempfile.gettempdir(), '%s-%s' % (
+                basename(self.appid), self.name))
             path = basepath + '.log'
             i = 1
             while exists(path) and i < 100: # arbitrary limit to avoid infinite loop
@@ -792,7 +785,13 @@ the repository',
 
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
-        return join(self.runtime_dir(), '%s-%s.pid' % (self.appid, self.name))
+        if self.mode == 'system':
+            # XXX not under _INSTALL_PREFIX, right?
+            rtdir = env_path('CW_RUNTIME_DIR', '/var/run/cubicweb/', 'run time')
+        else:
+            import tempfile
+            rtdir = env_path('CW_RUNTIME_DIR', tempfile.gettempdir(), 'run time')
+        return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
     # instance methods used to get instance specific resources #############
 
@@ -812,11 +811,17 @@ the repository',
 
     @property
     def apphome(self):
-        return join(self.registry_dir(), self.appid)
+        return join(self.instances_dir(), self.appid)
 
     @property
     def appdatahome(self):
-        return join(self.instance_data_dir(), self.appid)
+        if self.mode == 'system':
+            # XXX not under _INSTALL_PREFIX, right?
+            iddir = '/var/lib/cubicweb/instances/'
+        else:
+            iddir = self.instances_dir()
+        iddir = env_path('CW_INSTANCES_DATA_DIR', iddir, 'additional data')
+        return join(iddir, self.appid)
 
     def init_cubes(self, cubes):
         assert self._cubes is None, self._cubes
