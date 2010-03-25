@@ -248,7 +248,14 @@ class CubicWebTC(TestCase):
 
     def setUp(self):
         pause_tracing()
-        self._init_repo()
+        previous_failure = self.__class__.__dict__.get('_repo_init_failed')
+        if previous_failure is not None:
+            self.skip('repository is not initialised: %r' % previous_failure)
+        try:
+            self._init_repo()
+        except Exception, ex:
+            self.__class__._repo_init_failed = ex
+            raise
         resume_tracing()
         self.setup_database()
         self.commit()
