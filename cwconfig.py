@@ -717,7 +717,7 @@ the repository',
         if CWDEV:
             return join(CW_SOFTWARE_ROOT, 'misc', 'migration')
         mdir = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'migration')
-        if not exists(path):
+        if not exists(mdif):
             raise ConfigurationError('migration path %s doesn\'t exist' % mdir)
         return mdir
 
