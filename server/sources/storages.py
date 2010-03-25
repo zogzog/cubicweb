@@ -11,10 +11,31 @@ def unset_attribute_storage(repo, etype, attr):
     repo.system_source.unset_storage(etype, attr)
 
 class Storage(object):
-    """abstract storage"""
-    def sqlgen_callback(self, generator, relation, linkedvar):
-        """sql generator callback when some attribute with a custom storage is
-        accessed
+    """abstract storage
+
+    * If `source_callback` is true (by default), the callback will be run during
+      query result process of fetched attribute's valu and should have the
+      following prototype::
+
+        callback(self, source, value)
+
+      where `value` is the value actually stored in the backend. None values
+      will be skipped (eg callback won't be called).
+
+    * if `source_callback` is false, the callback will be run during sql
+      generation when some attribute with a custom storage is accessed and
+      should have the following prototype::
+
+        callback(self, generator, relation, linkedvar)
+
+      where `generator` is the sql generator, `relation` the current rql syntax
+      tree relation and linkedvar the principal syntax tree variable holding the
+      attribute.
+    """
+    is_source_callback = True
+
+    def callback(self, *args):
+        """see docstring for prototype, which vary according to is_source_callback
         """
         raise NotImplementedError()
 
@@ -38,14 +59,16 @@ class BytesFileSystemStorage(Storage):
     def __init__(self, defaultdir):
         self.default_directory = defaultdir
 
-    def sqlgen_callback(self, generator, linkedvar, relation):
+    def callback(self, source, value):
         """sql generator callback when some attribute with a custom storage is
         accessed
         """
-        linkedvar.accept(generator)
-        return '_fsopen(%s.cw_%s)' % (
-            linkedvar._q_sql.split('.', 1)[0], # table name
-            relation.r_type) # attribute name
+        fpath = source.binary_to_str(value)
+        try:
+            return Binary(file(fpath).read())
+        except OSError, ex:
+            source.critical("can't open %s: %s", value, ex)
+            return None
 
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""

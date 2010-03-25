@@ -13,7 +13,7 @@ import os.path as osp
 import shutil
 import tempfile
 
-from cubicweb import Binary
+from cubicweb import Binary, QueryError
 from cubicweb.selectors import implements
 from cubicweb.server.sources import storages
 from cubicweb.server.hook import Hook, Operation
@@ -80,7 +80,7 @@ class StorageTC(CubicWebTC):
     def test_bfss_sqlite_fspath(self):
         f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
-        fspath = self.execute('Any fspath(F, "File", "data") WHERE F eid %(f)s',
+        fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
                               {'f': f1.eid})[0][0]
         self.assertEquals(fspath.getvalue(), expected_filepath)
 
@@ -88,7 +88,7 @@ class StorageTC(CubicWebTC):
         self.session.transaction_data['fs_importing'] = True
         f1 = self.session.create_entity('File', data=Binary('/the/path'),
                                         data_format=u'text/plain', data_name=u'foo')
-        fspath = self.execute('Any fspath(F, "File", "data") WHERE F eid %(f)s',
+        fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
                               {'f': f1.eid})[0][0]
         self.assertEquals(fspath.getvalue(), '/the/path')
 
@@ -101,6 +101,64 @@ class StorageTC(CubicWebTC):
         finally:
             self.vreg.unregister(DummyBeforeHook)
             self.vreg.unregister(DummyAfterHook)
+
+    def test_source_mapped_attribute_error_cases(self):
+        ex = self.assertRaises(QueryError, self.execute,
+                               'Any X WHERE X data ~= "hop", X is File')
+        self.assertEquals(str(ex), 'can\'t use File.data (X data ILIKE "hop") in restriction')
+        ex = self.assertRaises(QueryError, self.execute,
+                               'Any X, Y WHERE X data D, Y data D, '
+                               'NOT X identity Y, X is File, Y is File')
+        self.assertEquals(str(ex), "can't use D as a restriction variable")
+        # query returning mix of mapped / regular attributes (only file.data
+        # mapped, not image.data for instance)
+        ex = self.assertRaises(QueryError, self.execute,
+                               'Any X WITH X BEING ('
+                               ' (Any NULL)'
+                               '  UNION '
+                               ' (Any D WHERE X data D, X is File)'
+                               ')')
+        self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+        ex = self.assertRaises(QueryError, self.execute,
+                               '(Any D WHERE X data D, X is File)'
+                               ' UNION '
+                               '(Any D WHERE X data D, X is Image)')
+        self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+        ex = self.assertRaises(QueryError,
+                               self.execute, 'Any D WHERE X data D')
+        self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+
+    def test_source_mapped_attribute_advanced(self):
+        f1 = self.create_file()
+        rset = self.execute('Any X,D WITH D,X BEING ('
+                            ' (Any D, X WHERE X eid %(x)s, X data D)'
+                            '  UNION '
+                            ' (Any D, X WHERE X eid %(x)s, X data D)'
+                            ')', {'x': f1.eid}, 'x')
+        self.assertEquals(len(rset), 2)
+        self.assertEquals(rset[0][0], f1.eid)
+        self.assertEquals(rset[1][0], f1.eid)
+        self.assertEquals(rset[0][1].getvalue(), 'the-data')
+        self.assertEquals(rset[1][1].getvalue(), 'the-data')
+        rset = self.execute('Any X,LENGTH(D) WHERE X eid %(x)s, X data D',
+                            {'x': f1.eid}, 'x')
+        self.assertEquals(len(rset), 1)
+        self.assertEquals(rset[0][0], f1.eid)
+        self.assertEquals(rset[0][1], len('the-data'))
+        rset = self.execute('Any X,LENGTH(D) WITH D,X BEING ('
+                            ' (Any D, X WHERE X eid %(x)s, X data D)'
+                            '  UNION '
+                            ' (Any D, X WHERE X eid %(x)s, X data D)'
+                            ')', {'x': f1.eid}, 'x')
+        self.assertEquals(len(rset), 2)
+        self.assertEquals(rset[0][0], f1.eid)
+        self.assertEquals(rset[1][0], f1.eid)
+        self.assertEquals(rset[0][1], len('the-data'))
+        self.assertEquals(rset[1][1], len('the-data'))
+        ex = self.assertRaises(QueryError, self.execute,
+                               'Any X,UPPER(D) WHERE X eid %(x)s, X data D',
+                               {'x': f1.eid}, 'x')
+        self.assertEquals(str(ex), 'UPPER can not be called on mapped attribute')
 
 if __name__ == '__main__':
     unittest_main()

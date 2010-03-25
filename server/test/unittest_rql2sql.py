@@ -1113,8 +1113,8 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             args = {'text': 'hip hop momo'}
         try:
             union = self._prepare(rql)
-            r, nargs = self.o.generate(union, args,
-                                      varmap=varmap)
+            r, nargs, cbs = self.o.generate(union, args,
+                                            varmap=varmap)
             args.update(nargs)
             self.assertLinesEquals((r % args).strip(), self._norm_sql(sql), striplines=True)
         except Exception, ex:
@@ -1135,7 +1135,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def _checkall(self, rql, sql):
         try:
             rqlst = self._prepare(rql)
-            r, args = self.o.generate(rqlst)
+            r, args, cbs = self.o.generate(rqlst)
             self.assertEqual((r.strip(), args), sql)
         except Exception, ex:
             print rql
@@ -1197,7 +1197,7 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
 
     def test_is_null_transform(self):
         union = self._prepare('Any X WHERE X login %(login)s')
-        r, args = self.o.generate(union, {'login': None})
+        r, args, cbs = self.o.generate(union, {'login': None})
         self.assertLinesEquals((r % args).strip(),
                                '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
@@ -1386,11 +1386,11 @@ WHERE NOT EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_
                     '''SELECT COUNT(1)
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
-    def test_attr_map(self):
+    def test_attr_map_sqlcb(self):
         def generate_ref(gen, linkedvar, rel):
             linkedvar.accept(gen)
             return 'VERSION_DATA(%s)' % linkedvar._q_sql
-        self.o.attr_map['Affaire.ref'] = generate_ref
+        self.o.attr_map['Affaire.ref'] = (generate_ref, False)
         try:
             self._check('Any R WHERE X ref R',
                         '''SELECT VERSION_DATA(_X.cw_eid)
@@ -1399,6 +1399,17 @@ FROM cw_Affaire AS _X''')
                         '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
 WHERE VERSION_DATA(_X.cw_eid)=1''')
+        finally:
+            self.o.attr_map.clear()
+
+    def test_attr_map_sourcecb(self):
+        cb = lambda x,y: None
+        self.o.attr_map['Affaire.ref'] = (cb, True)
+        try:
+            union = self._prepare('Any R WHERE X ref R')
+            r, nargs, cbs = self.o.generate(union, args={})
+            self.assertLinesEquals(r.strip(), 'SELECT _X.cw_ref\nFROM cw_Affaire AS _X')
+            self.assertEquals(cbs, {0: [cb]})
         finally:
             self.o.attr_map.clear()
 

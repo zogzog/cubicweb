@@ -1,0 +1,2 @@
+sql('DROP FUNCTION IF EXISTS _fsopen')
+sql('DROP FUNCTION IF EXISTS fspath')
