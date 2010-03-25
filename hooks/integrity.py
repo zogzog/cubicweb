@@ -228,45 +228,6 @@ class CheckUniqueHook(IntegrityHook):
                     raise ValidationError(entity.eid, {attr: msg % val})
 
 
-class _DelayedDeleteOp(hook.Operation):
-    """delete the object of composite relation except if the relation
-    has actually been redirected to another composite
-    """
-
-    def precommit_event(self):
-        session = self.session
-        # don't do anything if the entity is being created or deleted
-        if not (session.deleted_in_transaction(self.eid) or
-                session.added_in_transaction(self.eid)):
-            etype = session.describe(self.eid)[0]
-            session.execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
-                            % (etype, self.relation),
-                            {'x': self.eid}, 'x')
-
-
-class DeleteCompositeOrphanHook(IntegrityHook):
-    """delete the composed of a composite relation when this relation is deleted
-    """
-    __regid__ = 'deletecomposite'
-    events = ('before_delete_relation',)
-
-    def __call__(self):
-        # if the relation is being delete, don't delete composite's components
-        # automatically
-        pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
-        if (self._cw.describe(self.eidfrom)[0], self.rtype,
-            self._cw.describe(self.eidto)[0]) in pendingrdefs:
-            return
-        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
-                                                 'composite')
-        if composite == 'subject':
-            _DelayedDeleteOp(self._cw, eid=self.eidto,
-                             relation='Y %s X' % self.rtype)
-        elif composite == 'object':
-            _DelayedDeleteOp(self._cw, eid=self.eidfrom,
-                             relation='X %s Y' % self.rtype)
-
-
 class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
@@ -314,3 +275,46 @@ class StripCWUserLoginHook(IntegrityHook):
         user = self.entity
         if 'login' in user.edited_attributes and user.login:
             user.login = user.login.strip()
+
+
+# 'active' integrity hooks: you usually don't want to deactivate them, they are
+# not really integrity check, they maintain consistency on changes
+
+class _DelayedDeleteOp(hook.Operation):
+    """delete the object of composite relation except if the relation
+    has actually been redirected to another composite
+    """
+
+    def precommit_event(self):
+        session = self.session
+        # don't do anything if the entity is being created or deleted
+        if not (session.deleted_in_transaction(self.eid) or
+                session.added_in_transaction(self.eid)):
+            etype = session.describe(self.eid)[0]
+            session.execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
+                            % (etype, self.relation),
+                            {'x': self.eid}, 'x')
+
+
+class DeleteCompositeOrphanHook(hook.Hook):
+    """delete the composed of a composite relation when this relation is deleted
+    """
+    __regid__ = 'deletecomposite'
+    events = ('before_delete_relation',)
+    category = 'activeintegrity'
+
+    def __call__(self):
+        # if the relation is being delete, don't delete composite's components
+        # automatically
+        pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
+        if (self._cw.describe(self.eidfrom)[0], self.rtype,
+            self._cw.describe(self.eidto)[0]) in pendingrdefs:
+            return
+        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
+                                              'composite')
+        if composite == 'subject':
+            _DelayedDeleteOp(self._cw, eid=self.eidto,
+                             relation='Y %s X' % self.rtype)
+        elif composite == 'object':
+            _DelayedDeleteOp(self._cw, eid=self.eidfrom,
+                             relation='X %s Y' % self.rtype)
