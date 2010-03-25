@@ -8,14 +8,11 @@ numversion = (0, 1, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LCL'
-copyright = '''Copyright (c) %(year)s %(author)s.
-%(author-web-site)s -- mailto:%(author-email)s'''
 
 author = '%(author)s'
 author_email = '%(author-email)s'
 
-short_desc = '%(shortdesc)s'
-long_desc = '''%(longdesc)s'''
+description = '%(shortdesc)s'
 
 web = 'http://www.cubicweb.org/project/%%s' %% distname
 
@@ -43,8 +40,8 @@ for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n'
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
-__depends_cubes__ = {}
 __depends__ = {'cubicweb': '>= 3.6.0'}
-__use__ = (%(dependancies)s)
-__recommend__ = ()
+__depends_cubes__ = {}
+__recommends__ = {}
+__recommends_cubes__ = {}
 
