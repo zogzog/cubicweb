@@ -591,10 +591,7 @@ class Session(RequestSessionBase):
             ecache[entity.eid] = entity
 
     def entity_cache(self, eid):
-        try:
-            return self.transaction_data['ecache'][eid]
-        except:
-            raise
+        return self.transaction_data['ecache'][eid]
 
     def cached_entities(self):
         return self.transaction_data.get('ecache', {}).values()
