@@ -1102,8 +1102,8 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     #capture = True
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        dbms_helper = get_db_helper('postgres')
-        self.o = SQLGenerator(schema, dbms_helper)
+        dbhelper = get_db_helper('postgres')
+        self.o = SQLGenerator(schema, dbhelper)
 
     def _norm_sql(self, sql):
         return sql.strip()
@@ -1407,8 +1407,8 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
 
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        dbms_helper = get_db_helper('sqlite')
-        self.o = SQLGenerator(schema, dbms_helper)
+        dbhelper = get_db_helper('sqlite')
+        self.o = SQLGenerator(schema, dbhelper)
 
     def _norm_sql(self, sql):
         return sql.strip().replace(' ILIKE ', ' LIKE ').replace('\nINTERSECT ALL\n', '\nINTERSECT\n')
@@ -1515,8 +1515,8 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
 
     def setUp(self):
         RQLGeneratorTC.setUp(self)
-        dbms_helper = get_db_helper('mysql')
-        self.o = SQLGenerator(schema, dbms_helper)
+        dbhelper = get_db_helper('mysql')
+        self.o = SQLGenerator(schema, dbhelper)
 
     def _norm_sql(self, sql):
         sql = sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')

@@ -332,16 +332,16 @@ class SQLGenerator(object):
     protected by a lock
     """
 
-    def __init__(self, schema, dbms_helper, attrmap=None):
+    def __init__(self, schema, dbhelper, attrmap=None):
         self.schema = schema
-        self.dbms_helper = dbms_helper
-        self.dbencoding = dbms_helper.dbencoding
-        self.keyword_map = {'NOW' : self.dbms_helper.sql_current_timestamp,
-                            'TODAY': self.dbms_helper.sql_current_date,
+        self.dbhelper = dbhelper
+        self.dbencoding = dbhelper.dbencoding
+        self.keyword_map = {'NOW' : self.dbhelper.sql_current_timestamp,
+                            'TODAY': self.dbhelper.sql_current_date,
                             }
-        if not self.dbms_helper.union_parentheses_support:
+        if not self.dbhelper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
-        if self.dbms_helper.fti_need_distinct:
+        if self.dbhelper.fti_need_distinct:
             self.__union_sql = self.union_sql
             self.union_sql = self.has_text_need_distinct_union_sql
         self._lock = threading.Lock()
@@ -391,9 +391,10 @@ class SQLGenerator(object):
         return '\nUNION ALL\n'.join(sqls)
 
     def noparen_union_sql(self, union, needalias=False):
-        # needed for sqlite backend which doesn't like parentheses around
-        # union query. This may cause bug in some condition (sort in one of
-        # the subquery) but will work in most case
+        # needed for sqlite backend which doesn't like parentheses around union
+        # query. This may cause bug in some condition (sort in one of the
+        # subquery) but will work in most case
+        #
         # see http://www.sqlite.org/cvstrac/tktview?tn=3074
         sqls = (self.select_sql(select, needalias)
                 for i, select in enumerate(union.children))
@@ -504,7 +505,7 @@ class SQLGenerator(object):
     def _subqueries_sql(self, select, state):
         for i, subquery in enumerate(select.with_):
             sql = self.union_sql(subquery.query, needalias=True)
-            tablealias = '_T%s' % i
+            tablealias = '_T%s' % i # XXX nested subqueries
             sql = '(%s) AS %s' % (sql, tablealias)
             state.subtables[tablealias] = (0, sql)
             for vref in subquery.aliases:
@@ -528,11 +529,11 @@ class SQLGenerator(object):
             if tables:
                 # sort for test predictability
                 sql.insert(1, 'FROM %s' % ', '.join(sorted(tables)))
-            elif self._state.restrictions and self.dbms_helper.needs_from_clause:
+            elif self._state.restrictions and self.dbhelper.needs_from_clause:
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
         if select.need_intersect:
-            #if distinct or not self.dbms_helper.intersect_all_support:
+            #if distinct or not self.dbhelper.intersect_all_support:
             return '\nINTERSECT\n'.join(sqls)
             #else:
             #    return '\nINTERSECT ALL\n'.join(sqls)
@@ -943,7 +944,7 @@ class SQLGenerator(object):
             not_ = True
         else:
             not_ = False
-        return self.dbms_helper.fti_restriction_sql(alias, const.eval(self._args),
+        return self.dbhelper.fti_restriction_sql(alias, const.eval(self._args),
                                                     jointo, not_) + restriction
 
     def visit_comparison(self, cmp):
@@ -956,7 +957,7 @@ class SQLGenerator(object):
             rhs = cmp.children[0]
         operator = cmp.operator
         if operator in ('IS', 'LIKE', 'ILIKE'):
-            if operator == 'ILIKE' and not self.dbms_helper.ilike_support:
+            if operator == 'ILIKE' and not self.dbhelper.ilike_support:
                 operator = ' LIKE '
             else:
                 operator = ' %s ' % operator
@@ -1003,7 +1004,7 @@ class SQLGenerator(object):
                 rel._q_needcast = value
             return self.keyword_map[value]()
         if constant.type == 'Boolean':
-            value = self.dbms_helper.boolean_value(value)
+            value = self.dbhelper.boolean_value(value)
         if constant.type == 'Substitute':
             _id = constant.value
             if isinstance(_id, unicode):
@@ -1065,7 +1066,7 @@ class SQLGenerator(object):
                     self._state.add_restriction(restr)
             elif principal.r_type == 'has_text':
                 sql = '%s.%s' % (self._fti_table(principal),
-                                 self.dbms_helper.fti_uid_attr)
+                                 self.dbhelper.fti_uid_attr)
             elif principal in variable.stinfo['rhsrelations']:
                 if self.schema.rschema(principal.r_type).inlined:
                     sql = self._linked_var_sql(variable)
@@ -1267,7 +1268,7 @@ class SQLGenerator(object):
             except AttributeError:
                 pass
         self._state.done.add(relation)
-        alias = self.alias_and_add_table(self.dbms_helper.fti_table)
+        alias = self.alias_and_add_table(self.dbhelper.fti_table)
         relation._q_sqltable = alias
         return alias
 
