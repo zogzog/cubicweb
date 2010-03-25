@@ -428,10 +428,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         orig_values = {}
         etype = entity.__regid__
         for attr, storage in self._storages.get(etype, {}).items():
-            if attr in entity.edited_attributes:
-                orig_values[attr] = entity[attr]
-                handler = getattr(storage, 'entity_%s' % event)
-                handler(entity, attr)
+            try:
+                if attr in entity.edited_attributes:
+                    orig_values[attr] = entity[attr]
+                    handler = getattr(storage, 'entity_%s' % event)
+                    handler(entity, attr)
+            except AttributeError:
+                assert event == 'deleted'
+                getattr(storage, 'entity_deleted')(entity, attr)
         yield # 2/ execute the source's instructions
         # 3/ restore original values
         for attr, value in orig_values.items():
