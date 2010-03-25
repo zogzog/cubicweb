@@ -51,25 +51,40 @@ class StorageTC(CubicWebTC):
         shutil.rmtree(self.tempdir)
 
 
-    def create_file(self, content):
+    def create_file(self, content='the-data'):
         req = self.request()
         return req.create_entity('File', data=Binary(content),
                                  data_format=u'text/plain', data_name=u'foo')
 
-    def test_bfs_storage(self):
-        f1 = self.create_file(content='the-data')
+    def test_bfss_storage(self):
+        f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
         self.failUnless(osp.isfile(expected_filepath))
         self.assertEquals(file(expected_filepath).read(), 'the-data')
+        self.rollback()
+        self.failIf(osp.isfile(expected_filepath))
+        f1 = self.create_file()
+        self.commit()
+        self.assertEquals(file(expected_filepath).read(), 'the-data')
+        f1.set_attributes(data=Binary('the new data'))
+        self.rollback()
+        self.assertEquals(file(expected_filepath).read(), 'the-data')
+        f1.delete()
+        self.failUnless(osp.isfile(expected_filepath))
+        self.rollback()
+        self.failUnless(osp.isfile(expected_filepath))
+        f1.delete()
+        self.commit()
+        self.failIf(osp.isfile(expected_filepath))
 
-    def test_sqlite_fspath(self):
-        f1 = self.create_file(content='the-data')
+    def test_bfss_sqlite_fspath(self):
+        f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
         fspath = self.execute('Any fspath(F, "File", "data") WHERE F eid %(f)s',
                               {'f': f1.eid})[0][0]
         self.assertEquals(fspath.getvalue(), expected_filepath)
 
-    def test_fs_importing_doesnt_touch_path(self):
+    def test_bfss_fs_importing_doesnt_touch_path(self):
         self.session.transaction_data['fs_importing'] = True
         f1 = self.session.create_entity('File', data=Binary('/the/path'),
                                         data_format=u'text/plain', data_name=u'foo')
@@ -77,12 +92,12 @@ class StorageTC(CubicWebTC):
                               {'f': f1.eid})[0][0]
         self.assertEquals(fspath.getvalue(), '/the/path')
 
-    def test_storage_transparency(self):
+    def test_source_storage_transparency(self):
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register(DummyBeforeHook)
         self.vreg.register(DummyAfterHook)
         try:
-            self.create_file(content='the-data')
+            self.create_file()
         finally:
             self.vreg.unregister(DummyBeforeHook)
             self.vreg.unregister(DummyAfterHook)
