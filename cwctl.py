@@ -13,6 +13,7 @@ __docformat__ = "restructuredtext en"
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
 import sys
+from warnings import warn
 from os import remove, listdir, system, pathsep
 try:
     from os import kill, getpgid
@@ -295,10 +296,17 @@ class ListCommand(Command):
                     tversion = '[missing cube information]'
                 print '* %s %s' % (cube.ljust(namesize), tversion)
                 if self.config.verbose:
-                    shortdesc = tinfo and (getattr(tinfo, 'short_desc', '')
-                                           or tinfo.__doc__)
-                    if shortdesc:
-                        print '    '+ '    \n'.join(shortdesc.splitlines())
+                    if tinfo:
+                        descr = getattr(tinfo, 'description', '')
+                        if not descr:
+                            descr = getattr(tinfo, 'short_desc', '')
+                            if descr:
+                                warn('[3.8] short_desc is deprecated, update %s'
+                                     ' pkginfo' % cube, DeprecationWarning)
+                            else:
+                                descr = tinfo.__doc__
+                        if descr:
+                            print '    '+ '    \n'.join(descr.splitlines())
                     modes = detect_available_modes(cwcfg.cube_dir(cube))
                     print '    available modes: %s' % ', '.join(modes)
         print

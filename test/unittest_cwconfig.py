@@ -55,7 +55,7 @@ class CubicWebConfigurationTC(TestCase):
 
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
-        comment_pkginfo.__recommend__ = ('file',)
+        comment_pkginfo.__recommends_cubes__ = {'file': None}
         try:
             # email recommends comment
             # comment recommends file
@@ -68,7 +68,7 @@ class CubicWebConfigurationTC(TestCase):
             self.assertEquals(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
                               ('forge', 'email', 'comment', 'file'))
         finally:
-            comment_pkginfo.__use__ = ()
+            comment_pkginfo.__recommends_cubes__ = {}
 
 
 #     def test_vc_config(self):

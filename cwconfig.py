@@ -404,14 +404,33 @@ this option is set to yes",
         return Version(version)
 
     @classmethod
+    def _cube_deps(cls, cube, key, oldkey):
+        """return cubicweb cubes used by the given cube"""
+        pkginfo = cls.cube_pkginfo(cube)
+        try:
+            deps = getattr(pkginfo, key)
+        except AttributeError:
+            if hasattr(pkginfo, oldkey):
+                warn('[3.6] %s is deprecated, use %s dict' % (oldkey, key),
+                     DeprecationWarning)
+                deps = getattr(pkginfo, oldkey)
+            else:
+                deps = {}
+        if not isinstance(deps, dict):
+            deps = dict((key, None) for key in deps)
+            warn('[3.6] cube %s should define %s as a dict' % (cube, key),
+                 DeprecationWarning)
+        return deps
+
+    @classmethod
     def cube_dependencies(cls, cube):
         """return cubicweb cubes used by the given cube"""
-        return getattr(cls.cube_pkginfo(cube), '__use__', ())
+        return cls._cube_deps(cube, '__depends_cubes__', '__use__')
 
     @classmethod
     def cube_recommends(cls, cube):
         """return cubicweb cubes recommended by the given cube"""
-        return getattr(cls.cube_pkginfo(cube), '__recommend__', ())
+        return cls._cube_deps(cube, '__recommends_cubes__', '__recommend__')
 
     @classmethod
     def expand_cubes(cls, cubes, with_recommends=False):
@@ -444,9 +463,10 @@ this option is set to yes",
         graph = {}
         for cube in cubes:
             cube = CW_MIGRATION_MAP.get(cube, cube)
-            deps = cls.cube_dependencies(cube) + \
-                   cls.cube_recommends(cube)
-            graph[cube] = set(dep for dep in deps if dep in cubes)
+            graph[cube] = set(dep for dep in cls.cube_dependencies(cube)
+                              if dep in cubes)
+            graph[cube] |= set(dep for dep in cls.cube_recommends(cube)
+                               if dep in cubes)
         cycles = get_cycles(graph)
         if cycles:
             cycles = '\n'.join(' -> '.join(cycle) for cycle in cycles)
