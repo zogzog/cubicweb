@@ -186,7 +186,7 @@ class ApplicationTC(CubicWebTC):
         self.assertEquals(values['eid'], eid)
         error = forminfo['error']
         self.assertEquals(error.entity, user.eid)
-        self.assertEquals(error.errors['login'], 'required attribute')
+        self.assertEquals(error.errors['login-subject'], 'required attribute')
 
 
     def test_validation_error_dont_loose_subentity_data(self):
@@ -213,8 +213,9 @@ class ApplicationTC(CubicWebTC):
         forminfo = req.get_session_data('view?vid=edition...')
         self.assertEquals(set(forminfo['eidmap']), set('XY'))
         self.assertEquals(forminfo['error'].entity, forminfo['eidmap']['X'])
-        self.assertEquals(forminfo['error'].errors, {'login': 'required attribute',
-                                                     'upassword': 'required attribute'})
+        self.assertEquals(forminfo['error'].errors,
+                          {'login-subject': 'required attribute',
+                           'upassword-subject': 'required attribute'})
         self.assertEquals(forminfo['values'], form)
 
     def _test_cleaned(self, kwargs, injected, cleaned):

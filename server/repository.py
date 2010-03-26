@@ -31,6 +31,7 @@ from logilab.common.compat import any
 from logilab.common import flatten
 
 from yams import BadSchemaDefinition
+from yams.schema import role_name
 from rql import RQLSyntaxError
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
@@ -519,7 +520,8 @@ class Repository(object):
             if (session.execute('CWUser X WHERE X login %(login)s', {'login': login})
                 or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
                                    {'login': login})):
-                raise ValidationError(None, {'login': errmsg % login})
+                qname = role_name('login', 'subject')
+                raise ValidationError(None, {qname: errmsg % login})
             # we have to create the user
             user = self.vreg['etypes'].etype_class('CWUser')(session, None)
             if isinstance(password, unicode):
@@ -534,7 +536,8 @@ class Repository(object):
             if email or '@' in login:
                 d = {'login': login, 'email': email or login}
                 if session.execute('EmailAddress X WHERE X address %(email)s', d):
-                    raise ValidationError(None, {'address': errmsg % d['email']})
+                    qname = role_name('address', 'subject')
+                    raise ValidationError(None, {qname: errmsg % d['email']})
                 session.execute('INSERT EmailAddress X: X address %(email)s, '
                                 'U primary_email X, U use_email X WHERE U login %(login)s', d)
             session.commit()

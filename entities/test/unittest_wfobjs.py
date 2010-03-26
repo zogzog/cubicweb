@@ -39,7 +39,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
+        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
@@ -49,7 +49,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name': 'workflow already have a state of that name'})
+        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')
@@ -58,7 +58,7 @@ class WorkflowBuildingTC(CubicWebTC):
         wf.add_transition(u'baz', (foo,), bar, ('managers',))
         wf.add_transition(u'baz', (bar,), foo)
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
+        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf.add_state(u'foo', initial=True)
@@ -70,7 +70,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         biz.set_attributes(name=u'baz')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name': 'workflow already have a transition of that name'})
+        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
 
 
 class WorkflowTC(CubicWebTC):
@@ -132,7 +132,7 @@ class WorkflowTC(CubicWebTC):
             ex = self.assertRaises(ValidationError, self.session.execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                {'x': self.user().eid, 's': s.eid}, 'x')
-            self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
+            self.assertEquals(ex.errors, {'in_state-subject': "state doesn't belong to entity's workflow. "
                                       "You may want to set a custom workflow for this entity first."})
 
     def test_fire_transition(self):
@@ -175,7 +175,7 @@ class WorkflowTC(CubicWebTC):
         member = req.entity_from_eid(self.member.eid)
         ex = self.assertRaises(ValidationError,
                                member.fire_transition, 'deactivate')
-        self.assertEquals(ex.errors, {'by_transition': "transition may not be fired"})
+        self.assertEquals(ex.errors, {'by_transition-subject': "transition may not be fired"})
         cnx.close()
         cnx = self.login('member')
         req = self.request()
@@ -184,7 +184,7 @@ class WorkflowTC(CubicWebTC):
         cnx.commit()
         ex = self.assertRaises(ValidationError,
                                member.fire_transition, 'activate')
-        self.assertEquals(ex.errors, {'by_transition': "transition may not be fired"})
+        self.assertEquals(ex.errors, {'by_transition-subject': "transition may not be fired"})
 
     def test_fire_transition_owned_by(self):
         self.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
@@ -257,7 +257,7 @@ class WorkflowTC(CubicWebTC):
         # subworkflow input transition
         ex = self.assertRaises(ValidationError,
                                self.group.change_state, swfstate1, u'gadget')
-        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's workflow"})
+        self.assertEquals(ex.errors, {'to_state-subject': "state doesn't belong to entity's workflow"})
         self.rollback()
         # force back to state1
         self.group.change_state('state1', u'gadget')
@@ -293,7 +293,7 @@ class WorkflowTC(CubicWebTC):
         mwf.add_wftransition(u'swftr1', swf, state1,
                              [(swfstate2, state2), (swfstate2, state3)])
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'subworkflow_exit': u"can't have multiple exits on the same state"})
+        self.assertEquals(ex.errors, {'subworkflow_exit-subject': u"can't have multiple exits on the same state"})
 
     def test_swf_fire_in_a_row(self):
         # sub-workflow
@@ -406,7 +406,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow': u'workflow has no initial state'})
+        self.assertEquals(ex.errors, {'custom_workflow-subject': u'workflow has no initial state'})
 
     def test_custom_wf_bad_etype(self):
         """try to set a custom workflow which doesn't apply to entity type"""
@@ -415,7 +415,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid}, 'x')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow': 'workflow isn\'t a workflow for this type'})
+        self.assertEquals(ex.errors, {'custom_workflow-subject': 'workflow isn\'t a workflow for this type'})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be
@@ -535,7 +535,7 @@ class WorkflowHooksTC(CubicWebTC):
         user = cnx.user(self.session)
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'activate')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
                           u"transition isn't allowed from")
         cnx.close()
 
@@ -544,7 +544,7 @@ class WorkflowHooksTC(CubicWebTC):
         user = cnx.user(self.session)
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'dummy')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
                           u"transition isn't allowed from")
         cnx.close()
 
@@ -557,7 +557,7 @@ class WorkflowHooksTC(CubicWebTC):
         session.set_pool()
         ex = self.assertRaises(ValidationError,
                                user.fire_transition, 'deactivate')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition']),
+        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
                                             u"transition isn't allowed from")
         # get back now
         user.fire_transition('activate')

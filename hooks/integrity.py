@@ -10,6 +10,8 @@ __docformat__ = "restructuredtext en"
 
 from threading import Lock
 
+from yams.schema import role_name
+
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.selectors import implements
@@ -73,7 +75,8 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
             _ = self.session._
             msg = _('at least one relation %(rtype)s is required on %(etype)s (%(eid)s)')
             msg %= {'rtype': _(self.rtype), 'etype': _(etype), 'eid': self.eid}
-            raise ValidationError(self.eid, {self.rtype: msg})
+            qname = role_name(self.rtype, self.role)
+            raise ValidationError(self.eid, {qname: msg})
 
     def commit_event(self):
         pass
@@ -84,12 +87,14 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
 
 class _CheckSRelationOp(_CheckRequiredRelationOperation):
     """check required subject relation"""
+    role = 'subject'
     def _rql(self):
         return 'Any O WHERE S eid %%(x)s, S %s O' % self.rtype, {'x': self.eid}, 'x'
 
 
 class _CheckORelationOp(_CheckRequiredRelationOperation):
     """check required object relation"""
+    role = 'object'
     def _rql(self):
         return 'Any S WHERE O eid %%(x)s, S %s O' % self.rtype, {'x': self.eid}, 'x'
 
@@ -225,7 +230,8 @@ class CheckUniqueHook(IntegrityHook):
                 rset = self._cw.execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
                     msg = self._cw._('the value "%s" is already used, use another one')
-                    raise ValidationError(entity.eid, {attr: msg % val})
+                    qname = role_name(attr, 'subject')
+                    raise ValidationError(entity.eid, {qname: msg % val})
 
 
 class DontRemoveOwnersGroupHook(IntegrityHook):
@@ -237,12 +243,16 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
 
     def __call__(self):
         if self.event == 'before_delete_entity' and self.entity.name == 'owners':
-            raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
-        elif self.event == 'before_update_entity' and 'name' in self.entity.edited_attributes:
+            msg = self._cw._('can\'t be deleted')
+            raise ValidationError(self.entity.eid, {None: msg})
+        elif self.event == 'before_update_entity' and \
+                 'name' in self.entity.edited_attributes:
             newname = self.entity.pop('name')
             oldname = self.entity.name
             if oldname == 'owners' and newname != oldname:
-                raise ValidationError(self.entity.eid, {'name': self._cw._('can\'t be changed')})
+                qname = role_name('name', 'subject')
+                msg = self._cw._('can\'t be changed')
+                raise ValidationError(self.entity.eid, {qname: msg})
             self.entity['name'] = newname
 
 

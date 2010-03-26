@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
+from yams.schema import role_name
+
 from cubicweb import RepositoryError, ValidationError
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import implements
@@ -73,8 +75,9 @@ class _WorkflowChangedOp(hook.Operation):
         if mainwf.eid == self.wfeid:
             deststate = mainwf.initial
             if not deststate:
+                qname = role_name('custom_workflow', 'subject')
                 msg = session._('workflow has no initial state')
-                raise ValidationError(entity.eid, {'custom_workflow': msg})
+                raise ValidationError(entity.eid, {qname: msg})
             if mainwf.state_by_eid(entity.current_state.eid):
                 # nothing to do
                 return
@@ -97,8 +100,9 @@ class _CheckTrExitPoint(hook.Operation):
         outputs = set()
         for ep in tr.subworkflow_exit:
             if ep.subwf_state.eid in outputs:
+                qname = role_name('subworkflow_exit', 'subject')
                 msg = self.session._("can't have multiple exits on the same state")
-                raise ValidationError(self.treid, {'subworkflow_exit': msg})
+                raise ValidationError(self.treid, {qname: msg})
             outputs.add(ep.subwf_state.eid)
 
 
@@ -112,6 +116,7 @@ class _SubWorkflowExitOp(hook.Operation):
         wftr = forentity.subworkflow_input_transition()
         if wftr is None:
             # inconsistency detected
+            qname = role_name('to_state', 'subject')
             msg = session._("state doesn't belong to entity's current workflow")
             raise ValidationError(self.trinfo.eid, {'to_state': msg})
         tostate = wftr.get_exit_point(forentity, trinfo['to_state'])
@@ -166,8 +171,9 @@ class FireTransitionHook(WorkflowHook):
         try:
             foreid = entity['wf_info_for']
         except KeyError:
+            qname = role_name('wf_info_for', 'subject')
             msg = session._('mandatory relation')
-            raise ValidationError(entity.eid, {'wf_info_for': msg})
+            raise ValidationError(entity.eid, {qname: msg})
         forentity = session.entity_from_eid(foreid)
         # then check it has a workflow set, unless we're in the process of changing
         # entity's workflow
@@ -195,41 +201,47 @@ class FireTransitionHook(WorkflowHook):
             # no transition set, check user is a manager and destination state
             # is specified (and valid)
             if not cowpowers:
+                qname = role_name('by_transition', 'subject')
                 msg = session._('mandatory relation')
-                raise ValidationError(entity.eid, {'by_transition': msg})
+                raise ValidationError(entity.eid, {qname: msg})
             deststateeid = entity.get('to_state')
             if not deststateeid:
+                qname = role_name('by_transition', 'subject')
                 msg = session._('mandatory relation')
-                raise ValidationError(entity.eid, {'by_transition': msg})
+                raise ValidationError(entity.eid, {qname: msg})
             deststate = wf.state_by_eid(deststateeid)
             if deststate is None:
+                qname = role_name('to_state', 'subject')
                 msg = session._("state doesn't belong to entity's workflow")
-                raise ValidationError(entity.eid, {'to_state': msg})
+                raise ValidationError(entity.eid, {qname: msg})
         else:
             # check transition is valid and allowed, unless we're coming back
             # from subworkflow
             tr = session.entity_from_eid(treid)
             if swtr is None:
+                qname = role_name('by_transition', 'subject')
                 if tr is None:
                     msg = session._("transition doesn't belong to entity's workflow")
-                    raise ValidationError(entity.eid, {'by_transition': msg})
+                    raise ValidationError(entity.eid, {qname: msg})
                 if not tr.has_input_state(fromstate):
                     msg = session._("transition %(tr)s isn't allowed from %(st)s") % {
                         'tr': session._(tr.name), 'st': session._(fromstate.name)}
-                    raise ValidationError(entity.eid, {'by_transition': msg})
+                    raise ValidationError(entity.eid, {qname: msg})
                 if not tr.may_be_fired(foreid):
                     msg = session._("transition may not be fired")
-                    raise ValidationError(entity.eid, {'by_transition': msg})
+                    raise ValidationError(entity.eid, {qname: msg})
             if entity.get('to_state'):
                 deststateeid = entity['to_state']
                 if not cowpowers and deststateeid != tr.destination(forentity).eid:
+                    qname = role_name('by_transition', 'subject')
                     msg = session._("transition isn't allowed")
-                    raise ValidationError(entity.eid, {'by_transition': msg})
+                    raise ValidationError(entity.eid, {qname: msg})
                 if swtr is None:
                     deststate = session.entity_from_eid(deststateeid)
                     if not cowpowers and deststate is None:
+                        qname = role_name('to_state', 'subject')
                         msg = session._("state doesn't belong to entity's workflow")
-                        raise ValidationError(entity.eid, {'to_state': msg})
+                        raise ValidationError(entity.eid, {qname: msg})
             else:
                 deststateeid = tr.destination(forentity).eid
         # everything is ok, add missing information on the trinfo entity
@@ -279,12 +291,14 @@ class CheckInStateChangeAllowed(WorkflowHook):
             if wf.state_by_eid(self.eidto):
                 break
         else:
+            qname = role_name('in_state', 'subject')
             msg = session._("state doesn't belong to entity's workflow. You may "
                             "want to set a custom workflow for this entity first.")
-            raise ValidationError(self.eidfrom, {'in_state': msg})
+            raise ValidationError(self.eidfrom, {qname: msg})
         if entity.current_workflow and wf.eid != entity.current_workflow.eid:
+            qname = role_name('in_state', 'subject')
             msg = session._("state doesn't belong to entity's current workflow")
-            raise ValidationError(self.eidfrom, {'in_state': msg})
+            raise ValidationError(self.eidfrom, {qname: msg})
 
 
 class SetModificationDateOnStateChange(WorkflowHook):

@@ -21,7 +21,7 @@ from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
-     RelationDefinitionSchema, PermissionMixIn
+     RelationDefinitionSchema, PermissionMixIn, role_name
 from yams.constraints import BaseConstraint, FormatConstraint
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          obsolete as yobsolete, cleanup_sys_modules)
@@ -682,17 +682,22 @@ class RepoEnforcedRQLConstraintMixIn(object):
             # XXX at this point if both or neither of S and O are in mainvar we
             # dunno if the validation error `occured` on eidfrom or eidto (from
             # user interface point of view)
+            #
+            # possible enhancement: check entity being created, it's probably
+            # the main eid unless this is a composite relation
             if eidto is None or 'S' in self.mainvars or not 'O' in self.mainvars:
                 maineid = eidfrom
+                qname = role_name(rtype, 'subject')
             else:
                 maineid = eidto
+                qname = role_name(rtype, 'object')
             if self.msg:
                 msg = session._(self.msg)
             else:
                 msg = '%(constraint)s %(restriction)s failed' % {
                     'constraint':  session._(self.type()),
                     'restriction': self.restriction}
-            raise ValidationError(maineid, {rtype: msg})
+            raise ValidationError(maineid, {qname: msg})
 
     def exec_query(self, session, eidfrom, eidto):
         if eidto is None:

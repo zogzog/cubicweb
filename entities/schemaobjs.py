@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached
 
+from yams.schema import role_name
+
 from cubicweb import ValidationError
 from cubicweb.schema import ERQLExpression, RRQLExpression
 
@@ -64,13 +66,14 @@ class CWRType(AnyEntity):
         for rdef in self.reverse_relation_type:
             card = rdef.cardinality[0]
             if not card in '?1':
+                qname = role_name('inlined', 'subject')
                 rtype = self.name
                 stype = rdef.stype
                 otype = rdef.otype
                 msg = self._cw._("can't set inlined=%(inlined)s, "
                                  "%(stype)s %(rtype)s %(otype)s "
                                  "has cardinality=%(card)s")
-                raise ValidationError(self.eid, {'inlined': msg % locals()})
+                raise ValidationError(self.eid, {qname: msg % locals()})
 
     def db_key_name(self):
         """XXX goa specific"""

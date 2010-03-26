@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from yams.schema import role_name
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 from cubicweb.selectors import implements
 from cubicweb.server import hook
@@ -147,11 +148,13 @@ class AddCWPropertyHook(SyncSessionHook):
         try:
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
+            qname = role_name('pkey', 'subject')
             raise ValidationError(self.entity.eid,
-                                  {'pkey': session._('unknown property key')})
+                                  {qname: session._('unknown property key')})
         except ValueError, ex:
+            qname = role_name('value', 'subject')
             raise ValidationError(self.entity.eid,
-                                  {'value': session._(str(ex))})
+                                  {qname: session._(str(ex))})
         if not session.user.matching_groups('managers'):
             session.add_relation(self.entity.eid, 'for_user', session.user.eid)
         else:
@@ -174,7 +177,8 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
         except UnknownProperty:
             return
         except ValueError, ex:
-            raise ValidationError(entity.eid, {'value': session._(str(ex))})
+            qname = role_name('value', 'subject')
+            raise ValidationError(entity.eid, {qname: session._(str(ex))})
         if entity.for_user:
             for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
                 _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
@@ -214,8 +218,10 @@ class AddForUserRelationHook(SyncSessionHook):
         key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                      {'x': eidfrom}, 'x')[0]
         if session.vreg.property_info(key)['sitewide']:
+            qname = role_name('for_user', 'subject')
+            msg = session._("site-wide property can't be set for user")
             raise ValidationError(eidfrom,
-                                  {'for_user': session._("site-wide property can't be set for user")})
+                                  {qname: msg})
         for session_ in get_user_sessions(session.repo, self.eidto):
             _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
                               key=key, value=value)
