@@ -499,7 +499,8 @@ class CubicWebTC(TestCase):
             else:
                 cleanup = lambda p: (p[0], unquote(p[1]))
                 params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
-            path = path[len(req.base_url()):]
+            if path.startswith(req.base_url()): # may be relative
+                path = path[len(req.base_url()):]
             return path, params
         else:
             self.fail('expected a Redirect exception')
