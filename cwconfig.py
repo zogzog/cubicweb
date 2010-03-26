@@ -351,11 +351,8 @@ this option is set to yes",
     @classmethod
     def cubes_search_path(cls):
         """return the path of directories where cubes should be searched"""
-        path = []
-        for directory in cls.CUBES_PATH:
-            directory = abspath(normpath(directory))
-            if exists(directory) and not directory in path:
-                path.append(directory)
+        path = [abspath(normpath(directory)) for directory in cls.CUBES_PATH
+                if directory.strip() and exists(directory.strip())]
         if not cls.CUBES_DIR in path and exists(cls.CUBES_DIR):
             path.append(cls.CUBES_DIR)
         return path
