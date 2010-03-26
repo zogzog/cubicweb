@@ -192,11 +192,14 @@ div.editableField p:hover {
   background-color: #eeedd9;
 }
 
-input.error {
+.error input { /* error added by the form renderer */
+  background: transparent url("error.png") 100% 50% no-repeat;
+}
+input.error { /* error added by javascript */
   background: transparent url("error.png") 100% 50% no-repeat;
 }
 
-span.error {
+span.errorMsg {
   display: block;
   font-weight: bold;
   color: #ed0d0d;

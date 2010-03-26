@@ -430,7 +430,7 @@ class EditControllerTC(CubicWebTC):
                     'use_email-object:Y': 'X',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'address-subject': u'required attribute'})
+        self.assertEquals(ex.errors, {'address-subject': u'required field'})
 
     def test_nonregr_copy(self):
         user = self.user()

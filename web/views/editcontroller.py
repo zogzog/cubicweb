@@ -17,6 +17,11 @@ from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
 from cubicweb.web.views import basecontrollers, autoform
 
+def valerror_eid(eid):
+    try:
+        return typed_eid(eid)
+    except (ValueError, TypeError):
+        return eid
 
 class RqlQuery(object):
     def __init__(self):
@@ -110,7 +115,7 @@ class EditController(basecontrollers.ViewController):
         self._cw.remove_pending_operations()
         if self.errors:
             errors = dict((f.name, unicode(ex)) for f, ex in self.errors)
-            raise ValidationError(form.get('__maineid'), errors)
+            raise ValidationError(valerror_eid(form.get('__maineid')), errors)
 
     def _insert_entity(self, etype, eid, rqlquery):
         rql = rqlquery.insert_query(etype)
@@ -166,7 +171,7 @@ class EditController(basecontrollers.ViewController):
                     self.handle_formfield(form, field, rqlquery)
         if self.errors:
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
-            raise ValidationError(entity.eid, errors)
+            raise ValidationError(valerror_eid(entity.eid), errors)
         if eid is None: # creation or copy
             entity.eid = self._insert_entity(etype, formparams['eid'], rqlquery)
         elif rqlquery.edited: # edition of an existant entity

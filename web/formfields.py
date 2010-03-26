@@ -381,7 +381,10 @@ class Field(object):
         for field in self.actual_fields(form):
             if field is self:
                 try:
-                    yield field, field.process_form_value(form)
+                    value = field.process_form_value(form)
+                    if value is None and field.required:
+                        raise ProcessFormError(form._cw._("required field"))
+                    yield field, value
                 except UnmodifiedField:
                     continue
             else:

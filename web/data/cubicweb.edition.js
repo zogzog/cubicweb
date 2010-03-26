@@ -322,7 +322,7 @@ function restoreInlinedEntity(peid, rtype, eid) {
 
 function _clearPreviousErrors(formid) {
     jQuery('#' + formid + 'ErrorMessage').remove();
-    jQuery('#' + formid + ' span.error').remove();
+    jQuery('#' + formid + ' span.errorMsg').remove();
     jQuery('#' + formid + ' .error').removeClass('error');
 }
 
@@ -334,6 +334,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	var fieldid = fieldname + ':' + eid;
 	var suffixes = ['', '-subject', '-object'];
 	var found = false;
+	// XXX remove suffixes at some point
 	for (var i=0, length=suffixes.length; i<length;i++) {
 	    var field = jqNode(fieldname + suffixes[i] + ':' + eid);
 	    if (field && getNodeAttribute(field, 'type') != 'hidden') {
@@ -341,7 +342,7 @@ function _displayValidationerrors(formid, eid, errors) {
 		    firsterrfield = 'err-' + fieldid;
 		}
 		addElementClass(field, 'error');
-		var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
+		var span = SPAN({'id': 'err-' + fieldid, 'class': "errorMsg"}, errmsg);
 		field.before(span);
 		found = true;
 		break;
