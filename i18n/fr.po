@@ -320,31 +320,32 @@ msgid ""
 "Can't restore %(role)s relation %(rtype)s to entity %(eid)s which is already "
 "linked using this relation."
 msgstr ""
-"Ne peut restaurer la relation %(role)s %(rtype)s vers l'entité %(eid)s qui est "
-"déja lié à une autre entité par cette relation."
+"Ne peut restaurer la relation %(role)s %(rtype)s vers l'entité %(eid)s qui "
+"est déja lié à une autre entité par cette relation."
 
 #, python-format
 msgid ""
 "Can't restore relation %(rtype)s between %(subj)s and %(obj)s, that relation "
 "does not exists anymore in the schema."
 msgstr ""
-"Ne peut restaurer la relation %(rtype)s entre %(subj)s et  %(obj)s, "
-"cette relation n'existe plus dans le schéma."
+"Ne peut restaurer la relation %(rtype)s entre %(subj)s et  %(obj)s, cette "
+"relation n'existe plus dans le schéma."
 
 #, python-format
 msgid ""
 "Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
 "exists anymore in the schema."
 msgstr ""
-"Ne peut restaurer la relation %(rtype)s de l'entité %(eid)s, cette relation"
-"n'existe plus dans le schéma"
+"Ne peut restaurer la relation %(rtype)s de l'entité %(eid)s, cette "
+"relationn'existe plus dans le schéma"
 
 #, python-format
 msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
-"Ne peut restaurer la relation %(rtype)s, l'entité %(role)s %(eid)s n'existe plus."
+"Ne peut restaurer la relation %(rtype)s, l'entité %(role)s %(eid)s n'existe "
+"plus."
 
 msgid "Date"
 msgstr "Date"
@@ -2604,6 +2605,9 @@ msgstr "état de"
 msgid "incontext"
 msgstr "dans le contexte"
 
+msgid "incorrect captcha value"
+msgstr "valeur de captcha incorrecte"
+
 #, python-format
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valeur %(value)s incorrecte pour le type \"%(type)s\""
@@ -3837,6 +3841,9 @@ msgstr "titre du site"
 
 msgid "ui.time-format"
 msgstr "format de l'heure"
+
+msgid "unable to check captcha, please try again"
+msgstr "impossible de vérifier le captcha, veuillez réessayer"
 
 msgid "unaccessible"
 msgstr "inaccessible"

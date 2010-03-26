@@ -86,7 +86,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     cube_appobject_path = WebConfiguration.cube_appobject_path | ServerConfiguration.cube_appobject_path
 
     # use file system schema
-    bootstrap_schema = read_instance_schema = False
+    read_instance_schema = False
     # schema is not persistent, don't load schema hooks (unavailable)
     schema_hooks = False
     # no user workflow for now

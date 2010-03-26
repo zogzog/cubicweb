@@ -393,13 +393,13 @@ class Connection(object):
             pass
 
     def check(self):
-        """raise `BadSessionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid"""
         if self._closed is not None:
             raise ProgrammingError('Closed connection')
         self._repo.check_session(self.sessionid)
 
     def set_session_props(self, **props):
-        """raise `BadSessionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid"""
         if self._closed is not None:
             raise ProgrammingError('Closed connection')
         self._repo.set_session_props(self.sessionid, props)

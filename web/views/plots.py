@@ -115,8 +115,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
                                      'plotdata': ','.join(plotdata),
-                                     'mode': self.timemode and "'time'" or 'null'},
-                                    jsoncall=req.json_request)
+                                     'mode': self.timemode and "'time'" or 'null'})
 
 
 class PlotView(baseviews.AnyRsetView):

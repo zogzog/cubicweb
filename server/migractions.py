@@ -59,7 +59,6 @@ class ServerMigrationHelper(MigrationHelper):
     def __init__(self, config, schema, interactive=True,
                  repo=None, cnx=None, verbosity=1, connect=True):
         MigrationHelper.__init__(self, config, interactive, verbosity)
-        # no config on shell to a remote instance
         if not interactive:
             assert cnx
             assert repo
@@ -67,11 +66,13 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self._cnx = cnx
             self.repo = repo
-            if config is not None:
-                self.session.data['rebuild-infered'] = False
         elif connect:
             self.repo_connect()
-        if not schema:
+        # no config on shell to a remote instance
+        if config is not None and (cnx or connect):
+            self.session.data['rebuild-infered'] = False
+            self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
+        if not schema and not getattr(config, 'quick_start', False):
             schema = config.load_schema(expand_cubes=True)
         self.fs_schema = schema
         self._synchronized = set()

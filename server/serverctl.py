@@ -389,7 +389,7 @@ tables, indexes... (no by default)'}),
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
-                user=system.get('db-user'), password=system.get('db-password'), 
+                user=system.get('db-user'), password=system.get('db-password'),
                 **extra)
         except Exception, ex:
             raise ConfigurationError(
@@ -572,17 +572,16 @@ def _remote_dump(host, appid, output, sudo=False):
 
 def _local_dump(appid, output):
     config = ServerConfiguration.config_for(appid)
-    # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
+    config.quick_start = True
+    mih = config.migration_handler(connect=False, verbosity=1)
     mih.backup_database(output, askconfirm=False)
     mih.shutdown()
 
 def _local_restore(appid, backupfile, drop, systemonly=True):
     config = ServerConfiguration.config_for(appid)
     config.verbosity = 1 # else we won't be asked for confirmation on problems
-    config.repairing = 1 # don't check versions
-    # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
+    config.quick_start = True
+    mih = config.migration_handler(connect=False, verbosity=1)
     mih.restore_database(backupfile, drop, systemonly, askconfirm=False)
     repo = mih.repo_connect()
     # version of the database

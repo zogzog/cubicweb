@@ -15,7 +15,7 @@ from datetime import datetime
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ustrftime
 
-from yams.schema import KNOWN_METAATTRIBUTES
+from yams.schema import KNOWN_METAATTRIBUTES, role_name
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
@@ -214,7 +214,7 @@ class Field(object):
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
         if self.role is not None:
-            return '%s-%s' % (self.name, self.role)
+            return role_name(self.name, self.role)
         return self.name
 
     def dom_id(self, form, suffix=None):
@@ -381,7 +381,10 @@ class Field(object):
         for field in self.actual_fields(form):
             if field is self:
                 try:
-                    yield field, field.process_form_value(form)
+                    value = field.process_form_value(form)
+                    if value is None and field.required:
+                        raise ProcessFormError(form._cw._("required field"))
+                    yield field, value
                 except UnmodifiedField:
                     continue
             else:

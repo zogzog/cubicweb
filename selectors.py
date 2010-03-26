@@ -1078,6 +1078,24 @@ class match_transition(ExpectedValueSelector):
             return 1
         return 0
 
+class is_in_state(score_entity):
+    """return 1 if entity is in one of the states given as argument list
+
+    you should use this instead of your own score_entity x: x.state == 'bla'
+    selector to avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info, not entity.state for repository side
+      checking of the current state
+    """
+    def __init__(self, *states):
+        def score(entity, states=set(states)):
+            try:
+                return entity.latest_trinfo().new_state.name in states
+            except AttributeError:
+                return None
+        super(is_in_state, self).__init__(score)
+
 
 ## deprecated stuff ############################################################
 

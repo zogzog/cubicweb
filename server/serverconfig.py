@@ -194,8 +194,11 @@ and if not set, it will be choosen randomly',
 
     # read the schema from the database
     read_instance_schema = True
-    bootstrap_schema = True
-
+    # set to true while creating an instance
+    creating = False
+    # set this to true to get a minimal repository, for instance to get cubes
+    # information on commands such as i18ninstance, db-restore, etc...
+    quick_start = False
     # check user's state at login time
     consider_user_state = True
 

@@ -312,7 +312,6 @@ repository and the web server.',
         cubes = splitstrip(pop_arg(args, 1))
         appid = pop_arg(args)
         # get the configuration and helper
-        cwcfg.creating = True
         config = cwcfg.config_for(appid, configname)
         config.set_language = False
         cubes = config.expand_cubes(cubes)
@@ -861,20 +860,11 @@ class RecompileInstanceCatalogsCommand(InstanceCommand):
     def i18ninstance_instance(appid):
         """recompile instance's messages catalogs"""
         config = cwcfg.config_for(appid)
-        try:
-            config.bootstrap_cubes()
-        except IOError, ex:
-            import errno
-            if ex.errno != errno.ENOENT:
-                raise
-            # bootstrap_cubes files doesn't exist
-            # notify this is not a regular start
-            config.repairing = True
-            # create an in-memory repository, will call config.init_cubes()
-            config.repository()
-        except AttributeError:
+        config.quick_start = True # notify this is not a regular start
+        repo = config.repository()
+        if config._cubes is None:
             # web only config
-            config.init_cubes(config.repository().get_cubes())
+            config.init_cubes(repo.get_cubes())
         errors = config.i18ncompile()
         if errors:
             print '\n'.join(errors)

@@ -36,3 +36,8 @@ class PDFTC(TestCase):
         self.assertEquals( len(output), len(reference) )
         # cut begin & end 'cause they contain variyng data
         self.assertTextEquals(output[150:1500], reference[150:1500])
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
+

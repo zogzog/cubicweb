@@ -19,8 +19,11 @@ after_update_entity, before_delete_entity, after_delete_entity) all have an
 Relation (eg before_add_relation, after_add_relation, before_delete_relation,
 after_delete_relation) all have `eidfrom`, `rtype`, `eidto` attributes.
 
-Server start/stop hooks (eg server_startup, server_shutdown) have a `repo`
-attribute, but *their `_cw` attribute is None*.
+Server start/maintenance/stop hooks (eg server_startup, server_maintenance,
+server_shutdown) have a `repo` attribute, but *their `_cw` attribute is None*.
+The `server_startup` is called on regular startup, while `server_maintenance`
+is called on cubicweb-ctl upgrade or shell commands. `server_shutdown` is
+called anyway.
 
 Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
 `timestamp` attributes, but *their `_cw` attribute is None*.
@@ -57,7 +60,7 @@ ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
 RELATIONS_HOOKS = set(('before_add_relation',   'after_add_relation' ,
                        'before_delete_relation','after_delete_relation'))
 SYSTEM_HOOKS = set(('server_backup', 'server_restore',
-                    'server_startup', 'server_shutdown',
+                    'server_startup', 'server_maintenance', 'server_shutdown',
                     'session_open', 'session_close'))
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 

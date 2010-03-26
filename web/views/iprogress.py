@@ -261,8 +261,7 @@ class ProgressBarView(EntityView):
         self._cw.html_headers.add_onload('draw_progressbar("canvas%s", %i, %i, %i, "%s");' %
                                          (cid,
                                           int(100.*done/maxi), int(100.*(done+todo)/maxi),
-                                          int(100.*budget/maxi), color),
-                                         jsoncall=self._cw.json_request)
+                                          int(100.*budget/maxi), color))
         self.w(u'%s<br/>'
                u'<canvas class="progressbar" id="canvas%s" width="100" height="10"></canvas>'
                % (short_title.replace(' ','&nbsp;'), cid))

@@ -51,7 +51,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject-confirm:X': u'toto',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'login': 'the value "admin" is already used, use another one'})
+        self.assertEquals(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
         """checking that a manager user can edit itself
@@ -219,7 +219,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount': 'value [0;100] constraint failed for value -10'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value -10'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -228,7 +228,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount': 'value [0;100] constraint failed for value 110'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value 110'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -430,7 +430,7 @@ class EditControllerTC(CubicWebTC):
                     'use_email-object:Y': 'X',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'address': u'required attribute'})
+        self.assertEquals(ex.errors, {'address-subject': u'required field'})
 
     def test_nonregr_copy(self):
         user = self.user()

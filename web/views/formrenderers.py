@@ -224,6 +224,8 @@ class FormRenderer(AppObject):
                     w(u' class="error"')
                 w(u'>')
                 w(field.render(form, self))
+                if error:
+                    self.render_error(w, error)
                 if self.display_help:
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
@@ -241,7 +243,7 @@ class FormRenderer(AppObject):
 
     def render_error(self, w, err):
         """return validation error for widget's field, if any"""
-        w(u'<span class="error">%s</span>' % err)
+        w(u'<span class="errorMsg">%s</span>' % err)
 
 
 

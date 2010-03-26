@@ -553,7 +553,7 @@ class Session(RequestSessionBase):
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
-        self.local_perm_cache.clear()
+        self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
         self._threaddata.mode = self.default_mode
 
     # shared data handling ###################################################

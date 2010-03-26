@@ -258,7 +258,7 @@ class AppObject(object):
         except AttributeError:
             pdefs = getattr(cls, 'cw_property_defs', {})
         else:
-            warn('property_defs is deprecated, use cw_property_defs in %s'
+            warn('[3.6] property_defs is deprecated, use cw_property_defs in %s'
                  % cls, DeprecationWarning)
         for propid, pdef in pdefs.items():
             pdef = pdef.copy() # may be shared

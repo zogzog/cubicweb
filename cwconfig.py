@@ -687,8 +687,6 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
 
     # for some commands (creation...) we don't want to initialize gettext
     set_language = True
-    # set this to true to avoid false error message while creating an instance
-    creating = False
     # set this to true to allow somethings which would'nt be possible
     repairing = False
 

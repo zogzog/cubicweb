@@ -15,7 +15,7 @@ from cubicweb import typed_eid
 from cubicweb.view import EntityView, StartupView
 from cubicweb.selectors import (one_line_rset, non_final_entity,
                                 match_search_state)
-from cubicweb.web import httpcache, captcha
+from cubicweb.web import httpcache
 from cubicweb.web.views import baseviews, linksearch_select_url
 
 
@@ -95,17 +95,23 @@ class EditableFinalView(baseviews.FinalView):
         else:
             super(EditableFinalView, self).cell_call(row, col, props)
 
+try:
+    from cubicweb.web import captcha
+except ImportError:
+    # PIL not installed
+    pass
+else:
+    class CaptchaView(StartupView):
+        __regid__ = 'captcha'
 
-class CaptchaView(StartupView):
-    __regid__ = 'captcha'
+        http_cache_manager = httpcache.NoHTTPCacheManager
+        binary = True
+        templatable = False
+        content_type = 'image/jpg'
 
-    http_cache_manager = httpcache.NoHTTPCacheManager
-    binary = True
-    templatable = False
-    content_type = 'image/jpg'
-
-    def call(self):
-        text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
-                                     self._cw.vreg.config['captcha-font-size'])
-        self._cw.set_session_data('captcha', text)
-        self.w(data.read())
+        def call(self):
+            text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
+                                         self._cw.vreg.config['captcha-font-size'])
+            key = self._cw.form.get('captchakey', 'captcha')
+            self._cw.set_session_data(key, text)
+            self.w(data.read())

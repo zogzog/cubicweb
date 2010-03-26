@@ -115,11 +115,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     from cubicweb.server.sqlutils import sqlexec, sqlschema, sqldropschema
     # configuration to avoid db schema loading and user'state checking
     # on connection
-    read_instance_schema = config.read_instance_schema
-    bootstrap_schema = config.bootstrap_schema
-    config.read_instance_schema = False
     config.creating = True
-    config.bootstrap_schema = True
     config.consider_user_state = False
     config.set_language = False
     # only enable the system source at initialization time + admin which is not
@@ -202,8 +198,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo.shutdown()
     # restore initial configuration
     config.creating = False
-    config.read_instance_schema = read_instance_schema
-    config.bootstrap_schema = bootstrap_schema
     config.consider_user_state = True
     config.set_language = True
     print '-> database for instance %s initialized.' % config.appid
