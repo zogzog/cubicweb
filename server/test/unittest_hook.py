@@ -92,19 +92,19 @@ class HooksManagerTC(TestCase):
         class _Hook(hook.Hook):
             events = ('before_add_entiti',)
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event before_add_entiti on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad event before_add_entiti on %s._Hook' % __name__)
 
     def test_register_bad_hook2(self):
         class _Hook(hook.Hook):
             events = None
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad .events attribute None on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad .events attribute None on %s._Hook' % __name__)
 
     def test_register_bad_hook3(self):
         class _Hook(hook.Hook):
             events = 'before_add_entity'
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event b on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad event b on %s._Hook' % __name__)
 
     def test_call_hook(self):
         self.o.register(AddAnyHook)
