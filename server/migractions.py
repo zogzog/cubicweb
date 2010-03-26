@@ -69,7 +69,7 @@ class ServerMigrationHelper(MigrationHelper):
         elif connect:
             self.repo_connect()
         # no config on shell to a remote instance
-        if config is not None:
+        if config is not None and (cnx or connect):
             self.session.data['rebuild-infered'] = False
             self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
         if not schema:
