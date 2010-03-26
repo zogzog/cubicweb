@@ -72,7 +72,7 @@ class ServerMigrationHelper(MigrationHelper):
         if config is not None and (cnx or connect):
             self.session.data['rebuild-infered'] = False
             self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
-        if not schema:
+        if not schema and not getattr(config, 'quick_start', False):
             schema = config.load_schema(expand_cubes=True)
         self.fs_schema = schema
         self._synchronized = set()

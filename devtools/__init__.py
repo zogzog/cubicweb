@@ -81,7 +81,6 @@ class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
     set_language = False
     read_instance_schema = False
-    bootstrap_schema = False
     init_repository = True
     options = cwconfig.merge_options(ServerConfiguration.options + (
         ('anonymous-user',

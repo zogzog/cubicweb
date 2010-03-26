@@ -165,7 +165,7 @@ class Repository(object):
         if config.open_connections_pools:
             self.open_connections_pools()
 
-    def _boostrap_hook_registry(self):
+    def _bootstrap_hook_registry(self):
         """called during bootstrap since we need the metadata hooks"""
         hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
         self.vreg.init_registration([hooksdirectory])
@@ -176,12 +176,15 @@ class Repository(object):
         config = self.config
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(pool.ConnectionsPool(self.sources))
-        if config.read_instance_schema:
-            # normal start: load the instance schema from the database
-            self.fill_schema()
-        elif config.bootstrap_schema:
-            # usually during repository creation
-            self.warning("set fs instance'schema as bootstrap schema")
+        if config.quick_start:
+            # quick start, usually only to get a minimal repository to get cubes
+            # information (eg dump/restore/
+            config._cubes = ()
+            self.set_schema(config.load_schema(), resetvreg=False)
+            config['connections-pool-size'] = 1
+            config._cubes = None
+        elif config.creating:
+            # repository creation
             config.bootstrap_cubes()
             self.set_schema(config.load_schema(), resetvreg=False)
             # need to load the Any and CWUser entity types
@@ -189,8 +192,11 @@ class Repository(object):
             self.vreg.init_registration([etdirectory])
             for modname in ('__init__', 'authobjs', 'wfobjs'):
                 self.vreg.load_file(join(etdirectory, '%s.py' % modname),
-                                'cubicweb.entities.%s' % modname)
-            self._boostrap_hook_registry()
+                                    'cubicweb.entities.%s' % modname)
+            self._bootstrap_hook_registry()
+        elif config.read_instance_schema:
+            # normal start: load the instance schema from the database
+            self.fill_schema()
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
@@ -219,7 +225,10 @@ class Repository(object):
             self.pools.append(pool.ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
-        self.hm = self.vreg['hooks']
+        if config.quick_start:
+            config.init_cubes(self.get_cubes())
+        else:
+            self.hm = self.vreg['hooks']
 
     # internals ###############################################################
 
@@ -268,7 +277,8 @@ class Repository(object):
         self.set_schema(appschema)
 
     def start_looping_tasks(self):
-        if not (self.config.creating or self.config.repairing):
+        if not (self.config.creating or self.config.repairing
+                or self.config.quick_start):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
@@ -336,7 +346,8 @@ class Repository(object):
             self.info('waiting thread %s...', thread.name)
             thread.join()
             self.info('thread %s finished', thread.name)
-        if not (self.config.creating or self.config.repairing):
+        if not (self.config.creating or self.config.repairing
+                or self.config.quick_start):
             self.hm.call_hooks('server_shutdown', repo=self)
         self.close_sessions()
         while not self._available_pools.empty():
@@ -448,6 +459,7 @@ class Repository(object):
         """
         versions = self.get_versions(not (self.config.creating
                                           or self.config.repairing
+                                          or self.config.quick_start
                                           or self.config.mode == 'test'))
         cubes = list(versions)
         cubes.remove('cubicweb')
