@@ -2572,6 +2572,9 @@ msgstr "estado de"
 msgid "incontext"
 msgstr "En el contexto"
 
+msgid "incorrect captcha value"
+msgstr ""
+
 #, python-format
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
@@ -3800,6 +3803,9 @@ msgid "ui.site-title"
 msgstr ""
 
 msgid "ui.time-format"
+msgstr ""
+
+msgid "unable to check captcha, please try again"
 msgstr ""
 
 msgid "unaccessible"
