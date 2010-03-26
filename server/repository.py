@@ -507,12 +507,13 @@ class Repository(object):
         finally:
             session.close()
 
+    # XXX protect this method: anonymous should be allowed and registration
+    # plugged
     def register_user(self, login, password, email=None, **kwargs):
         """check a user with the given login exists, if not create it with the
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
-        # XXX should not be called from web interface
         session = self.internal_session()
         # for consistency, keep same error as unique check hook (although not required)
         errmsg = session._('the value "%s" is already used, use another one')
@@ -539,7 +540,8 @@ class Repository(object):
                     qname = role_name('address', 'subject')
                     raise ValidationError(None, {qname: errmsg % d['email']})
                 session.execute('INSERT EmailAddress X: X address %(email)s, '
-                                'U primary_email X, U use_email X WHERE U login %(login)s', d)
+                                'U primary_email X, U use_email X '
+                                'WHERE U login %(login)s', d)
             session.commit()
         finally:
             session.close()
@@ -613,7 +615,7 @@ class Repository(object):
             session.reset_pool()
 
     def check_session(self, sessionid):
-        """raise `BadSessionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid"""
         self._get_session(sessionid, setpool=False)
 
     def get_shared_data(self, sessionid, key, default=None, pop=False):

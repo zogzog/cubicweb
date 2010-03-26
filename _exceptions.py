@@ -45,21 +45,19 @@ class CubicWebRuntimeError(CubicWebException):
 
 class ConnectionError(RepositoryError):
     """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
+    a connection failed
+    """
 
 class AuthenticationError(ConnectionError):
-    """raised when a bad connection id is given or when an attempt to establish
-    a connection failed
+    """raised when when an attempt to establish a connection failed do to wrong
+    connection information (login / password or other authentication token)
     """
     def __init__(self, *args, **kwargs):
         super(AuthenticationError, self).__init__(*args)
         self.__dict__.update(kwargs)
 
 class BadConnectionId(ConnectionError):
-    """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
-
-BadSessionId = BadConnectionId # XXX bw compat for pyro connections
+    """raised when a bad connection id is given"""
 
 class UnknownEid(RepositoryError):
     """the eid is not defined in the system tables"""
