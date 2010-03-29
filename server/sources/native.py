@@ -194,6 +194,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._eid_creation_lock = Lock()
         # (etype, attr) / storage mapping
         self._storages = {}
+        # entity types that may be used by other multi-sources instances
+        self.multisources_etypes = set(repo.config['multi-sources-etypes'])
         # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
@@ -659,16 +661,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # reindex the entity only if this query is updating at least
             # one indexable attribute
             FTIndexEntityOp(session, entity=entity)
-        # update entities.mtime
+        # update entities.mtime.
+        # XXX Only if entity.__regid__ in self.multisources_etypes?
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def delete_info(self, session, entity, uri, extid):
-        """delete system information on deletion of an entity by transfering
-        record from the entities table to the deleted_entities table
+        """delete system information on deletion of an entity:
+        * remove record from the entities table
+        * transfer it to the deleted_entities table if the entity's type is
+          multi-sources
         """
         attrs = {'eid': entity.eid}
         self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
+        if not entity.__regid__ in self.multisources_etypes:
+            return
         if extid is not None:
             assert isinstance(extid, str), type(extid)
             extid = b64encode(extid)
@@ -685,6 +692,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         * list of (etype, eid) of entities of the given types which have been
           deleted since the given timestamp
         """
+        for etype in etypes:
+            if not etype in self.multisources_etypes:
+                self.critical('%s not listed as a multi-sources entity types. '
+                              'Modify your configuration')
+                self.multisources_etypes.add(etype)
         modsql = _modified_sql('entities', etypes)
         cursor = self.doexec(session, modsql, {'time': mtime})
         modentities = cursor.fetchall()
@@ -931,8 +943,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.doexec(session, sql, action.changes)
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
-        # remove record from deleted_entities
-        self.doexec(session, 'DELETE FROM deleted_entities WHERE eid=%s' % eid)
+        # remove record from deleted_entities if entity's type is multi-sources
+        if entity.__regid__ in self.multisources_etypes:
+            self.doexec(session,
+                        'DELETE FROM deleted_entities WHERE eid=%s' % eid)
         self.repo.hm.call_hooks('after_add_entity', session, entity=entity)
         return errors
 

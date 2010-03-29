@@ -141,6 +141,14 @@ support undoing of deletion only.',
 kept (hence undoable).',
           'group': 'main', 'inputlevel': 1,
           }),
+        ('multi-sources-etypes',
+         {'type' : 'csv', 'default': (),
+          'help': 'defines which entity types from this repository are used \
+by some other instances. You should set this properly so those instances to \
+detect updates / deletions.',
+          'group': 'main', 'inputlevel': 1,
+          }),
+
         ('delay-full-text-indexation',
          {'type' : 'yn', 'default': False,
           'help': 'When full text indexation of entity has a too important cost'
