@@ -450,6 +450,25 @@ class Operation(object):
 set_log_methods(Operation, getLogger('cubicweb.session'))
 
 
+def set_operation(session, datakey, value, opcls, **opkwargs):
+    """Search for session.transaction_data[`datakey`] (expected to be a set):
+
+    * if found, simply append `value`
+
+    * else, initialize it to set([`value`]) and instantiate the given `opcls`
+      operation class with additional keyword arguments.
+
+    You should use this instead of creating on operation for each `value`,
+    since handling operations becomes coslty on massive data import.
+    """
+    try:
+        session.transaction_data[datakey].add(value)
+    except KeyError:
+        print 'init', datakey
+        opcls(session, *opkwargs)
+        session.transaction_data[datakey] = set((value,))
+
+
 class LateOperation(Operation):
     """special operation which should be called after all possible (ie non late)
     operations
