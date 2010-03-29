@@ -507,7 +507,7 @@ class DeleteEntitiesStep(Step):
     def execute(self):
         """execute this step"""
         results = self.execute_child()
-        todelete = frozenset(typed_eid(eid) for eid, in self.execute_child())
+        todelete = frozenset(typed_eid(eid) for eid, in results)
         session = self.plan.session
         delete = session.repo.glob_delete_entity
         # register pending eids first to avoid multiple deletion
