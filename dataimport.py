@@ -558,7 +558,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_entities = 0
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
-        self.rql = session.unsafe_execute
+        self.rql = session.execute
+        # deactivate security
+        session.set_read_security(False)
+        session.set_write_security(False)
         # disable undoing
         session.undo_actions = frozenset()
 
@@ -570,9 +573,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity._related_cache = {}
         self.metagen.init_entity(entity)
         entity.update(kwargs)
+        entity.edited_attributes = set(entity)
         session = self.session
         self.source.add_entity(session, entity)
-        self.source.add_info(session, entity, self.source, complete=False)
+        self.source.add_info(session, entity, self.source, None, complete=False)
         for rtype, targeteids in rels.iteritems():
             # targeteids may be a single eid or a list of eids
             inlined = self.rschema(rtype).inlined
@@ -621,7 +625,7 @@ class MetaGenerator(object):
         self.etype_attrs = []
         self.etype_rels = []
         # attributes/relations specific to each entity
-        self.entity_attrs = ['eid', 'cwuri']
+        self.entity_attrs = ['cwuri']
         #self.entity_rels = [] XXX not handled (YAGNI?)
         schema = session.vreg.schema
         rschema = schema.rschema
@@ -650,18 +654,15 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
+        entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
             entity[attr] = self.generate(entity, attr)
-        entity.eid = entity['eid']
 
     def generate(self, entity, rtype):
         return getattr(self, 'gen_%s' % rtype)(entity)
 
-    def gen_eid(self, entity):
-        return self.source.create_eid(self.session)
-
     def gen_cwuri(self, entity):
-        return u'%seid/%s' % (self.baseurl, entity['eid'])
+        return u'%seid/%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
         return self.time
