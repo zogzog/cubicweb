@@ -443,19 +443,21 @@ class CustomWorkflowTC(CubicWebTC):
 
 class AutoTransitionTC(CubicWebTC):
 
-    def setup_database(self):
-        self.wf = add_wf(self, 'CWUser')
-        asleep = self.wf.add_state('asleep', initial=True)
-        dead = self.wf.add_state('dead')
-        self.wf.add_transition('rest', asleep, asleep)
-        self.wf.add_transition('sick', asleep, dead, type=u'auto',
-                               conditions=({'expr': u'U surname "toto"',
-                                            'mainvars': u'U'},))
+    def setup_custom_wf(self):
+        wf = add_wf(self, 'CWUser')
+        asleep = wf.add_state('asleep', initial=True)
+        dead = wf.add_state('dead')
+        wf.add_transition('rest', asleep, asleep)
+        wf.add_transition('sick', asleep, dead, type=u'auto',
+                          conditions=({'expr': u'X surname "toto"',
+                                       'mainvars': u'X'},))
+        return wf
 
     def test_auto_transition_fired(self):
+        wf = self.setup_custom_wf()
         user = self.create_user('member')
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': self.wf.eid, 'x': user.eid})
+                     {'wf': wf.eid, 'x': user.eid})
         self.commit()
         user.clear_all_caches()
         self.assertEquals(user.state, 'asleep')
@@ -469,7 +471,7 @@ class AutoTransitionTC(CubicWebTC):
                           ['rest'])
         self.assertEquals(parse_hist(user.workflow_history),
                           [('asleep', 'asleep', 'rest', None)])
-        self.request().user.set_attributes(surname=u'toto') # fulfill condition
+        user.set_attributes(surname=u'toto') # fulfill condition
         self.commit()
         user.fire_transition('rest')
         self.commit()
@@ -479,6 +481,26 @@ class AutoTransitionTC(CubicWebTC):
                           [('asleep', 'asleep', 'rest', None),
                            ('asleep', 'asleep', 'rest', None),
                            ('asleep', 'dead', 'sick', None),])
+
+    def test_auto_transition_custom_initial_state_fired(self):
+        wf = self.setup_custom_wf()
+        user = self.create_user('member', surname=u'toto')
+        self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
+                     {'wf': wf.eid, 'x': user.eid})
+        self.commit()
+        self.assertEquals(user.state, 'dead')
+
+    def test_auto_transition_initial_state_fired(self):
+        wf = self.execute('Any WF WHERE ET default_workflow WF, '
+                          'ET name %(et)s', {'et': 'CWUser'}).get_entity(0, 0)
+        dead = wf.add_state('dead')
+        wf.add_transition('sick', wf.state_by_name('activated'), dead,
+                          type=u'auto', conditions=({'expr': u'X surname "toto"',
+                                                     'mainvars': u'X'},))
+        self.commit()
+        user = self.create_user('member', surname=u'toto')
+        self.commit()
+        self.assertEquals(user.state, 'dead')
 
 
 class WorkflowHooksTC(CubicWebTC):
