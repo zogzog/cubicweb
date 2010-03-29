@@ -290,5 +290,3 @@ class EditController(basecontrollers.ViewController):
     def _action_delete(self):
         self.delete_entities(self._cw.edited_eids(withtype=True))
         return self.reset()
-
-

@@ -191,6 +191,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # sql queries cache
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
+        # we need a lock to protect eid attribution function (XXX, really?
+        # explain)
         self._eid_creation_lock = Lock()
         # (etype, attr) / storage mapping
         self._storages = {}
@@ -680,8 +682,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             assert isinstance(extid, str), type(extid)
             extid = b64encode(extid)
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'dtime': datetime.now(),
-                 }
+                 'source': uri, 'dtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
 
     def modified_entities(self, session, etypes, mtime):
