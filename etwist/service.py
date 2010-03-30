@@ -17,7 +17,6 @@ logger.handlers = [handlers.NTEventLogHandler('cubicweb')]
 os.environ['CW_INSTANCES_DIR'] = r'C:\etc\cubicweb.d'
 os.environ['USERNAME'] = 'cubicweb'
 
-
 class CWService(object, win32serviceutil.ServiceFramework):
     _svc_name_ = None
     _svc_display_name_ = None
@@ -25,7 +24,6 @@ class CWService(object, win32serviceutil.ServiceFramework):
 
     def __init__(self, *args, **kwargs):
         win32serviceutil.ServiceFramework.__init__(self, *args, **kwargs)
-        self._stop_event = win32event.CreateEvent(None, 0, 0, None)
         cwcfg.load_cwctl_plugins()
         set_log_methods(CubicWebRootResource, logger)
         server.parsePOSTData = parsePOSTData
@@ -33,8 +31,8 @@ class CWService(object, win32serviceutil.ServiceFramework):
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         logger.info('stopping %s service' % self.instance)
-        win32event.SetEvent(self._stop_event)
-        self.ReportServiceStatus(win32service.SERVICE_STOPPED)
+        reactor.stop()
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
     def SvcDoRun(self):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
@@ -57,5 +55,4 @@ class CWService(object, win32serviceutil.ServiceFramework):
         except Exception, e:
             logger.error('service %s stopped (cause: %s)' % (self.instance, e))
             logger.exception('what happened ...')
-            self.SvcStop()
-
+        self.ReportServiceStatus(win32service.SERVICE_STOPPED)
