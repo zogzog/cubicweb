@@ -366,7 +366,8 @@ class Repository(object):
         session = self.internal_session()
         try:
             rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                                   'M address %(login)s', {'login': login})
+                                   'M address %(login)s', {'login': login},
+                                   build_descr=False)
             if rset.rowcount == 1:
                 login = rset[0][0]
         finally:
@@ -498,9 +499,10 @@ class Repository(object):
         # for consistency, keep same error as unique check hook (although not required)
         errmsg = session._('the value "%s" is already used, use another one')
         try:
-            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login})
+            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login},
+                                build_descr=False)
                 or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                                   {'login': login})):
+                                   {'login': login}, build_descr=False)):
                 qname = role_name('login', 'subject')
                 raise ValidationError(None, {qname: errmsg % login})
             # we have to create the user
@@ -516,12 +518,13 @@ class Repository(object):
                             {'x': user.eid})
             if email or '@' in login:
                 d = {'login': login, 'email': email or login}
-                if session.execute('EmailAddress X WHERE X address %(email)s', d):
+                if session.execute('EmailAddress X WHERE X address %(email)s', d,
+                                   build_descr=False):
                     qname = role_name('address', 'subject')
                     raise ValidationError(None, {qname: errmsg % d['email']})
                 session.execute('INSERT EmailAddress X: X address %(email)s, '
                                 'U primary_email X, U use_email X '
-                                'WHERE U login %(login)s', d)
+                                'WHERE U login %(login)s', d, build_descr=False)
             session.commit()
         finally:
             session.close()
