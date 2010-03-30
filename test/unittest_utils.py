@@ -78,6 +78,14 @@ class RepeatListTC(TestCase):
         x = l + [(1, 3)] * 2
         self.assertEquals(x, [(1, 3)] * 5)
 
+    def test_eq(self):
+        self.assertEquals(RepeatList(3, (1, 3)),
+                          [(1, 3)]*3)
+
+    def test_pop(self):
+        l = RepeatList(3, (1, 3))
+        l.pop(2)
+        self.assertEquals(l, [(1, 3)]*2)
 
 class SizeConstrainedListTC(TestCase):
 

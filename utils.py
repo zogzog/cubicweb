@@ -135,7 +135,8 @@ class RepeatList(object):
         if isinstance(other, RepeatList):
             return other._size == self.size and other._item == self.item
         return self[:] == other
-
+    def pop(self, i):
+        self._size -= 1
 
 class UStringIO(list):
     """a file wrapper which automatically encode unicode string to an encoding
