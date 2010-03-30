@@ -402,8 +402,9 @@ class RQLObjectStore(ObjectStore):
         self.commit()
 
     def commit(self):
-        self._commit()
+        txuuid = self._commit()
         self.session.set_pool()
+        return txuuid
 
     def rql(self, *args):
         if self._rql is not None:
@@ -562,8 +563,6 @@ class NoHookRQLObjectStore(RQLObjectStore):
         # deactivate security
         session.set_read_security(False)
         session.set_write_security(False)
-        # disable undoing
-        session.undo_actions = frozenset()
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():
