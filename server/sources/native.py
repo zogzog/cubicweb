@@ -806,11 +806,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return sorted(actions, key=lambda x: x.order)
 
     def undo_transaction(self, session, txuuid):
-        """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
+        """See :class:`cubicweb.dbapi.Connection.undo_transaction`
+
+        important note: while undoing of a transaction, only hooks in the
+        'integrity', 'activeintegrity' and 'undo' categories are called.
+        """
         # set mode so pool isn't released subsquently until commit/rollback
         session.mode = 'write'
         errors = []
-        with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
+        session.transaction_data['undoing_uuid'] = txuuid
+        with hooks_control(session, session.HOOKS_DENY_ALL,
+                           'integrity', 'activeintegrity', 'undo'):
             with security_enabled(session, read=False):
                 for action in reversed(self.tx_actions(session, txuuid, False)):
                     undomethod = getattr(self, '_undo_%s' % action.action.lower())
