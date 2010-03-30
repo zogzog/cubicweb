@@ -968,6 +968,20 @@ class Repository(object):
         else:
             raise ETypeNotSupportedBySources(etype)
 
+    def init_entity_caches(self, session, entity, source):
+        """add entity to session entities cache and repo's extid cache.
+        Return entity's ext id if the source isn't the system source.
+        """
+        session.set_entity_cache(entity)
+        suri = source.uri
+        if suri == 'system':
+            extid = None
+        else:
+            extid = source.get_extid(entity)
+            self._extid_cache[(str(extid), suri)] = entity.eid
+        self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid)
+        return extid
+
     def glob_add_entity(self, session, entity):
         """add an entity to the repository
 
@@ -987,6 +1001,8 @@ class Repository(object):
         source = self.locate_etype_source(etype)
         # attribute an eid to the entity before calling hooks
         entity.set_eid(self.system_source.create_eid(session))
+        # set caches asap
+        extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', etype, entity.eid, dict(entity)
         relations = []
@@ -1002,15 +1018,9 @@ class Repository(object):
         if session.is_hook_category_activated('integrity'):
             entity.check(creation=True)
         source.add_entity(session, entity)
-        if source.uri != 'system':
-            extid = source.get_extid(entity)
-            self._extid_cache[(str(extid), source.uri)] = entity.eid
-        else:
-            extid = None
         self.add_info(session, entity, source, extid, complete=False)
         entity._is_saved = True # entity has an eid and is saved
         # prefill entity relation caches
-        session.set_entity_cache(entity)
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
             if rtype in schema.VIRTUAL_RTYPES:
