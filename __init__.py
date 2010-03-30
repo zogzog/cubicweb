@@ -112,7 +112,7 @@ class CubicWebEventManager(object):
 
 CW_EVENT_MANAGER = CubicWebEventManager()
 
-def onevent(event):
+def onevent(event, *args, **kwargs):
     """decorator to ease event / callback binding
 
     >>> from cubicweb import onevent
@@ -123,6 +123,6 @@ def onevent(event):
     >>>
     """
     def _decorator(func):
-        CW_EVENT_MANAGER.bind(event, func)
+        CW_EVENT_MANAGER.bind(event, func, *args, **kwargs)
         return func
     return _decorator
