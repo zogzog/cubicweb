@@ -927,6 +927,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         action.changes['cw_eid'] = eid
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(session, sql, action.changes)
+        # add explicitly is / is_instance_of whose deletion is not recorded for
+        # consistency with addition (done by sql in hooks)
+        self.doexec(session, 'INSERT INTO is_relation(eid_from, eid_to) '
+                    'VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
+        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+            self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,'
+                        'eid_to) VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
         # remove record from deleted_entities if entity's type is multi-sources

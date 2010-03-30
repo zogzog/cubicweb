@@ -28,6 +28,11 @@ ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
 NO_UNDO_TYPES.add('CWCache')
+# is / is_instance_of are usually added by sql hooks except when using
+# dataimport.NoHookRQLObjectStore, and we don't want to record them
+# anyway in the later case
+NO_UNDO_TYPES.add('is')
+NO_UNDO_TYPES.add('is_instance_of')
 # XXX rememberme,forgotpwd,apycot,vcsfile
 
 def is_final(rqlst, variable, args):
