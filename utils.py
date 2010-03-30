@@ -12,6 +12,7 @@ import sys
 import decimal
 import datetime
 import random
+from itertools import repeat
 from uuid import uuid4
 from warnings import warn
 
@@ -99,6 +100,41 @@ class SizeConstrainedList(list):
             del self[:keepafter]
 
     __iadd__ = extend
+
+
+class RepeatList(object):
+    """fake a list with the same element in each row"""
+    __slots__ = ('_size', '_item')
+    def __init__(self, size, item):
+        self._size = size
+        self._item = item
+    def __len__(self):
+        return self._size
+    def __nonzero__(self):
+        return self._size
+    def __iter__(self):
+        return repeat(self._item, self._size)
+    def __getitem__(self, index):
+        return self._item
+    def __getslice__(self, i, j):
+        # XXX could be more efficient, but do we bother?
+        return ([self._item] * self._size)[i:j]
+    def __add__(self, other):
+        if isinstance(other, RepeatList):
+            if other._item == self._item:
+                return RepeatList(self._size + other._size, self._item)
+            return ([self._item] * self._size) + other[:]
+        return ([self._item] * self._size) + other
+    def __radd__(self, other):
+        if isinstance(other, RepeatList):
+            if other._item == self._item:
+                return RepeatList(self._size + other._size, self._item)
+            return other[:] + ([self._item] * self._size)
+        return other[:] + ([self._item] * self._size)
+    def __eq__(self, other):
+        if isinstance(other, RepeatList):
+            return other._size == self.size and other._item == self.item
+        return self[:] == other
 
 
 class UStringIO(list):
