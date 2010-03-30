@@ -655,14 +655,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
-            FTIndexEntityOp(session, entity=entity)
+            self.index_entity(session, entity=entity)
 
     def update_info(self, session, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
         if self.do_fti and need_fti_update:
             # reindex the entity only if this query is updating at least
             # one indexable attribute
-            FTIndexEntityOp(session, entity=entity)
+            self.index_entity(session, entity=entity)
         # update entities.mtime.
         # XXX Only if entity.__regid__ in self.multisources_etypes?
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
@@ -1028,7 +1028,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        FTIndexEntityOp(session, entity=entity)
+        hook.set_operation(session, 'ftindex', entity.eid, FTIndexEntityOp)
 
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
@@ -1062,21 +1062,18 @@ class FTIndexEntityOp(hook.LateOperation):
 
     def precommit_event(self):
         session = self.session
-        entity = self.entity
-        if entity.eid in session.transaction_data.get('pendingeids', ()):
-            return # entity added and deleted in the same transaction
-        alreadydone = session.transaction_data.setdefault('indexedeids', set())
-        if entity.eid in alreadydone:
-            self.debug('skipping reindexation of %s, already done', entity.eid)
-            return
-        alreadydone.add(entity.eid)
         source = session.repo.system_source
-        for container in entity.fti_containers():
-            source.fti_unindex_entity(session, container.eid)
-            source.fti_index_entity(session, container)
-
-    def commit_event(self):
-        pass
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        done = session.transaction_data.setdefault('indexedeids', set())
+        for eid in session.transaction_data.pop('ftindex', ()):
+            if eid in pendingeids or eid in done:
+                # entity added and deleted in the same transaction or already
+                # processed
+                return
+            done.add(eid)
+            for container in session.entity_from_eid(eid).fti_containers():
+                source.fti_unindex_entity(session, container.eid)
+                source.fti_index_entity(session, container)
 
 
 def sql_schema(driver):
