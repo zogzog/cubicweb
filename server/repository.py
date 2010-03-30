@@ -44,38 +44,6 @@ from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, security_enabled
 
 
-class CleanupEidTypeCacheOp(hook.SingleLastOperation):
-    """on rollback of a insert query or commit of delete query, we have to
-    clear repository's cache from no more valid entries
-
-    NOTE: querier's rqlst/solutions cache may have been polluted too with
-    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
-    generated queries are unpredictable and analysing all the cache probably
-    too expensive. Notice that there is no pb when using args to specify eids
-    instead of giving them into the rql string.
-    """
-
-    def commit_event(self):
-        """the observed connections pool has been rollbacked,
-        remove inserted eid from repository type/source cache
-        """
-        try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['pendingeids'])
-        except KeyError:
-            pass
-
-    def rollback_event(self):
-        """the observed connections pool has been rollbacked,
-        remove inserted eid from repository type/source cache
-        """
-        try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['neweids'])
-        except KeyError:
-            pass
-
-
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
 
@@ -933,30 +901,19 @@ class Repository(object):
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        new = session.transaction_data.setdefault('neweids', set())
-        new.add(entity.eid)
+        hook.set_operation(session, 'neweids', entity.eid,
+                           hook.CleanupNewEidsCacheOp)
         self.system_source.add_info(session, entity, source, extid, complete)
-        CleanupEidTypeCacheOp(session)
 
     def delete_info(self, session, entity, sourceuri, extid):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
-        self._prepare_delete_info(session, entity, sourceuri)
+        # mark eid as being deleted in session info and setup cache update
+        # operation
+        hook.set_operation(session, 'pendingeids', entity.eid,
+                           hook.CleanupDeletedEidsCacheOp)
         self._delete_info(session, entity, sourceuri, extid)
-
-    def _prepare_delete_info(self, session, entity, sourceuri):
-        """prepare the repository for deletion of an entity:
-        * update the fti
-        * mark eid as being deleted in session info
-        * setup cache update operation
-        * if undoable, get back all entity's attributes and relation
-        """
-        eid = entity.eid
-        self.system_source.fti_unindex_entity(session, eid)
-        pending = session.transaction_data.setdefault('pendingeids', set())
-        pending.add(eid)
-        CleanupEidTypeCacheOp(session)
 
     def _delete_info(self, session, entity, sourceuri, extid):
                      # attributes=None, relations=None):
@@ -1150,7 +1107,6 @@ class Repository(object):
         """delete an entity and all related entities from the repository"""
         entity = session.entity_from_eid(eid)
         etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
-        self._prepare_delete_info(session, entity, sourceuri)
         if server.DEBUG & server.DBG_REPO:
             print 'DELETE entity', etype, eid
         source = self.sources_by_uri[sourceuri]

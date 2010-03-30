@@ -670,10 +670,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def delete_info(self, session, entity, uri, extid):
         """delete system information on deletion of an entity:
+        * update the fti
         * remove record from the entities table
         * transfer it to the deleted_entities table if the entity's type is
           multi-sources
         """
+        self.fti_unindex_entity(session, entity.eid)
         attrs = {'eid': entity.eid}
         self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
         if not entity.__regid__ in self.multisources_etypes:

@@ -548,3 +548,40 @@ class RQLPrecommitOperation(Operation):
         execute = self.session.execute
         for rql in self.rqls:
             execute(*rql)
+
+
+class CleanupNewEidsCacheOp(SingleLastOperation):
+    """on rollback of a insert query we have to remove from repository's
+    type/source cache eids of entities added in that transaction.
+
+    NOTE: querier's rqlst/solutions cache may have been polluted too with
+    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
+    generated queries are unpredictable and analysing all the cache probably
+    too expensive. Notice that there is no pb when using args to specify eids
+    instead of giving them into the rql string.
+    """
+
+    def rollback_event(self):
+        """the observed connections pool has been rollbacked,
+        remove inserted eid from repository type/source cache
+        """
+        try:
+            self.session.repo.clear_caches(
+                self.session.transaction_data['neweids'])
+        except KeyError:
+            pass
+
+class CleanupDeletedEidsCacheOp(SingleLastOperation):
+    """on commit of delete query, we have to remove from repository's
+    type/source cache eids of entities deleted in that transaction.
+    """
+
+    def commit_event(self):
+        """the observed connections pool has been rollbacked,
+        remove inserted eid from repository type/source cache
+        """
+        try:
+            self.session.repo.clear_caches(
+                self.session.transaction_data['pendingeids'])
+        except KeyError:
+            pass
