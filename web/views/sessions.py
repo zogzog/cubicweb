@@ -22,6 +22,8 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         #assert isinstance(self.authmanager, RepositoryAuthenticationManager)
         self._sessions = {}
 
+    # dump_data / restore_data to avoid loosing open sessions on registry
+    # reloading
     def dump_data(self):
         return self._sessions
     def restore_data(self, data):
@@ -38,9 +40,9 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if self.has_expired(session):
             self.close_session(session)
             raise InvalidSession()
-        # give an opportunity to auth manager to hijack the session
-        # (necessary with the RepositoryAuthenticationManager in case
-        #  the connection to the repository has expired)
+        # give an opportunity to auth manager to hijack the session (necessary
+        # with the RepositoryAuthenticationManager in case the connection to the
+        # repository has expired)
         try:
             session = self.authmanager.validate_session(req, session)
             # necessary in case session has been hijacked
