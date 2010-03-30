@@ -464,7 +464,6 @@ def set_operation(session, datakey, value, opcls, **opkwargs):
     try:
         session.transaction_data[datakey].add(value)
     except KeyError:
-        print 'init', datakey
         opcls(session, *opkwargs)
         session.transaction_data[datakey] = set((value,))
 

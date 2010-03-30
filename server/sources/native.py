@@ -485,6 +485,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
             self.doexec(session, sql, attrs)
 
+    def add_relation(self, session, subject, rtype, object, inlined=False):
+        """add a relation to the source"""
+        self._add_relation(session, subject, rtype, object, inlined)
+        if session.undoable_action('A', rtype):
+            self._record_tx_action(session, 'tx_relation_actions', 'A',
+                                   eid_from=subject, rtype=rtype, eid_to=object)
+
     def _add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
         if inlined is False:
@@ -496,13 +503,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.update(SQL_PREFIX + etype, attrs,
                                      ['cw_eid'])
         self.doexec(session, sql, attrs)
-
-    def add_relation(self, session, subject, rtype, object, inlined=False):
-        """add a relation to the source"""
-        self._add_relation(session, subject, rtype, object, inlined)
-        if session.undoable_action('A', rtype):
-            self._record_tx_action(session, 'tx_relation_actions', 'A',
-                                   eid_from=subject, rtype=rtype, eid_to=object)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -698,7 +698,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         for etype in etypes:
             if not etype in self.multisources_etypes:
                 self.critical('%s not listed as a multi-sources entity types. '
-                              'Modify your configuration')
+                              'Modify your configuration' % etype)
                 self.multisources_etypes.add(etype)
         modsql = _modified_sql('entities', etypes)
         cursor = self.doexec(session, modsql, {'time': mtime})
@@ -792,6 +792,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         restr = {'tx_uuid': txuuid}
         if public:
             restr['txa_public'] = True
+        # XXX use generator to avoid loading everything in memory?
         sql = self.sqlgen.select('tx_entity_actions', restr,
                                  ('txa_action', 'txa_public', 'txa_order',
                                   'etype', 'eid', 'changes'))
@@ -911,30 +912,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     % {'rtype': rtype, 'eid': eid})
             if not rschema.final:
                 assert value is None
-                    # try:
-                    #     tentity = session.entity_from_eid(eid)
-                    # except UnknownEid:
-                    #     err(_("Can't restore %(role)s relation %(rtype)s to "
-                    #           "entity %(eid)s which doesn't exist anymore.")
-                    #         % {'role': _('subject'),
-                    #            'rtype': _(rtype),
-                    #            'eid': eid})
-                    #     continue
-                    # rdef = rdefs[(eschema, tentity.__regid__)]
-                    # try:
-                    #     _undo_check_relation_target(tentity, rdef, 'object')
-                    # except UndoException, ex:
-                    #     err(unicode(ex))
-                    #     continue
-                    # if rschema.inlined:
-                    #     entity[rtype] = value
-                    # else:
-                    #     # restore relation where inlined changed since the deletion
-                    #     del action.changes[column]
-                    #     self._add_relation(session, subject, rtype, object)
-                    # # set related cache
-                    # session.update_rel_cache_add(eid, rtype, value,
-                    #                              rschema.symmetric)
             elif eschema.destination(rtype) in ('Bytes', 'Password'):
                 action.changes[column] = self._binary(value)
                 entity[rtype] = Binary(value)

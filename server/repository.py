@@ -504,7 +504,7 @@ class Repository(object):
                 qname = role_name('login', 'subject')
                 raise ValidationError(None, {qname: errmsg % login})
             # we have to create the user
-            user = self.vreg['etypes'].etype_class('CWUser')(session, None)
+            user = self.vreg['etypes'].etype_class('CWUser')(session)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')
@@ -934,10 +934,9 @@ class Repository(object):
                 if role == 'subject':
                     # don't skip inlined relation so they are regularly
                     # deleted and so hooks are correctly called
-                    selection = 'X %s Y' % rtype
+                    rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
-                    selection = 'Y %s X' % rtype
-                rql = 'DELETE %s WHERE X eid %%(x)s' % selection
+                    rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 session.execute(rql, {'x': eid}, 'x', build_descr=False)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
@@ -997,19 +996,19 @@ class Repository(object):
             entity.__class__ = entity_.__class__
             entity.__dict__.update(entity_.__dict__)
         eschema = entity.e_schema
-        etype = str(eschema)
-        source = self.locate_etype_source(etype)
-        # attribute an eid to the entity before calling hooks
+        source = self.locate_etype_source(entity.__regid__)
+        # allocate an eid to the entity before calling hooks
         entity.set_eid(self.system_source.create_eid(session))
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', etype, entity.eid, dict(entity)
+            print 'ADD entity', entity.__regid__, entity.eid, dict(entity)
         relations = []
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
         # XXX use entity.keys here since edited_attributes is not updated for
-        # inline relations
+        # inline relations XXX not true, right? (see edited_attributes
+        # affectation above)
         for attr in entity.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
@@ -1052,9 +1051,8 @@ class Repository(object):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
-        etype = str(entity.e_schema)
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', etype, entity.eid, \
+            print 'UPDATE entity', entity.__regid__, entity.eid, \
                   dict(entity), edited_attributes
         entity.edited_attributes = edited_attributes
         if session.is_hook_category_activated('integrity'):
