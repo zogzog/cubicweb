@@ -210,8 +210,11 @@ def initialize_schema(config, schema, mhandler, event='create'):
     paths = [p for p in config.cubes_path() + [config.apphome]
              if exists(join(p, 'migration'))]
     # deactivate every hooks but those responsible to set metadata
-    # so, NO INTEGRITY CHECKS are done, to have quicker db creation
-    with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata'):
+    # so, NO INTEGRITY CHECKS are done, to have quicker db creation.
+    # Active integrity is kept else we may pb such as two default
+    # workflows for one entity type.
+    with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata',
+                       'activeintegrity'):
         # execute cubicweb's pre<event> script
         mhandler.exec_event_script('pre%s' % event)
         # execute cubes pre<event> script if any
