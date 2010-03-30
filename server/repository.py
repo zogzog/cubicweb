@@ -38,10 +38,11 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      typed_eid)
+                      typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
-from cubicweb.server.session import Session, InternalSession, security_enabled
+from cubicweb.server.session import Session, InternalSession, InternalManager, \
+     security_enabled
 
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
@@ -132,6 +133,12 @@ class Repository(object):
         # open some connections pools
         if config.open_connections_pools:
             self.open_connections_pools()
+        @onevent('after-registry-reload', self)
+        def fix_user_classes(self):
+            usercls = self.vreg['etypes'].etype_class('CWUser')
+            for session in self._sessions.values():
+                if not isinstance(session.user, InternalManager):
+                    session.user.__class__ = usercls
 
     def _bootstrap_hook_registry(self):
         """called during bootstrap since we need the metadata hooks"""
