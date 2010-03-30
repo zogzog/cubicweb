@@ -153,10 +153,14 @@ class Repository(object):
         self._available_pools.put_nowait(pool.ConnectionsPool(self.sources))
         if config.quick_start:
             # quick start, usually only to get a minimal repository to get cubes
-            # information (eg dump/restore/
+            # information (eg dump/restore/...)
             config._cubes = ()
-            self.set_schema(config.load_schema(), resetvreg=False)
+            # only load hooks and entity classes in the registry
+            config.cube_appobject_path = set(('hooks', 'entities'))
+            config.cubicweb_appobject_path = set(('hooks', 'entities'))
+            self.set_schema(config.load_schema())
             config['connections-pool-size'] = 1
+            # will be reinitialized later from cubes found in the database
             config._cubes = None
         elif config.creating:
             # repository creation
@@ -202,8 +206,7 @@ class Repository(object):
         self._shutting_down = False
         if config.quick_start:
             config.init_cubes(self.get_cubes())
-        else:
-            self.hm = self.vreg['hooks']
+        self.hm = self.vreg['hooks']
 
     # internals ###############################################################
 
