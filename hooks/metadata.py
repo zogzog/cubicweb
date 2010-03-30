@@ -12,17 +12,7 @@ from datetime import datetime
 
 from cubicweb.selectors import implements
 from cubicweb.server import hook
-
-
-def eschema_eid(session, eschema):
-    """get eid of the CWEType entity for the given yams type"""
-    # eschema.eid is None if schema has been readen from the filesystem, not
-    # from the database (eg during tests)
-    if eschema.eid is None:
-        eschema.eid = session.execute(
-            'Any X WHERE X is CWEType, X name %(name)s',
-            {'name': str(eschema)})[0][0]
-    return eschema.eid
+from cubicweb.server.utils import eschema_eid
 
 
 class MetaDataHook(hook.Hook):

@@ -62,6 +62,7 @@ from logilab.common.date import strptime
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
+from cubicweb.server.utils import eschema_eid
 
 def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
@@ -685,10 +686,8 @@ class MetaGenerator(object):
     # schema has been loaded from the fs (hence entity type schema eids are not
     # known)
     def test_gen_is(self, entity):
-        from cubicweb.hooks.metadata import eschema_eid
         return eschema_eid(self.session, entity.e_schema)
     def test_gen_is_instanceof(self, entity):
-        from cubicweb.hooks.metadata import eschema_eid
         eids = []
         for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
             eids.append(eschema_eid(self.session, eschema))
