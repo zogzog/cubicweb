@@ -62,6 +62,7 @@ from logilab.common.date import strptime
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
+from cubicweb.server.utils import eschema_eid
 
 def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
@@ -402,8 +403,9 @@ class RQLObjectStore(ObjectStore):
         self.commit()
 
     def commit(self):
-        self._commit()
+        txuuid = self._commit()
         self.session.set_pool()
+        return txuuid
 
     def rql(self, *args):
         if self._rql is not None:
@@ -558,9 +560,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_entities = 0
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
-        self.rql = session.unsafe_execute
-        # disable undoing
-        session.undo_actions = frozenset()
+        self.rql = session.execute
+        # deactivate security
+        session.set_read_security(False)
+        session.set_write_security(False)
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():
@@ -570,9 +573,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity._related_cache = {}
         self.metagen.init_entity(entity)
         entity.update(kwargs)
+        entity.edited_attributes = set(entity)
         session = self.session
         self.source.add_entity(session, entity)
-        self.source.add_info(session, entity, self.source, complete=False)
+        self.source.add_info(session, entity, self.source, None, complete=False)
         for rtype, targeteids in rels.iteritems():
             # targeteids may be a single eid or a list of eids
             inlined = self.rschema(rtype).inlined
@@ -621,7 +625,7 @@ class MetaGenerator(object):
         self.etype_attrs = []
         self.etype_rels = []
         # attributes/relations specific to each entity
-        self.entity_attrs = ['eid', 'cwuri']
+        self.entity_attrs = ['cwuri']
         #self.entity_rels = [] XXX not handled (YAGNI?)
         schema = session.vreg.schema
         rschema = schema.rschema
@@ -650,18 +654,15 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
+        entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
             entity[attr] = self.generate(entity, attr)
-        entity.eid = entity['eid']
 
     def generate(self, entity, rtype):
         return getattr(self, 'gen_%s' % rtype)(entity)
 
-    def gen_eid(self, entity):
-        return self.source.create_eid(self.session)
-
     def gen_cwuri(self, entity):
-        return u'%seid/%s' % (self.baseurl, entity['eid'])
+        return u'%seid/%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
         return self.time
@@ -685,10 +686,8 @@ class MetaGenerator(object):
     # schema has been loaded from the fs (hence entity type schema eids are not
     # known)
     def test_gen_is(self, entity):
-        from cubicweb.hooks.metadata import eschema_eid
         return eschema_eid(self.session, entity.e_schema)
     def test_gen_is_instanceof(self, entity):
-        from cubicweb.hooks.metadata import eschema_eid
         eids = []
         for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
             eids.append(eschema_eid(self.session, eschema))

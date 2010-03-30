@@ -450,6 +450,24 @@ class Operation(object):
 set_log_methods(Operation, getLogger('cubicweb.session'))
 
 
+def set_operation(session, datakey, value, opcls, **opkwargs):
+    """Search for session.transaction_data[`datakey`] (expected to be a set):
+
+    * if found, simply append `value`
+
+    * else, initialize it to set([`value`]) and instantiate the given `opcls`
+      operation class with additional keyword arguments.
+
+    You should use this instead of creating on operation for each `value`,
+    since handling operations becomes coslty on massive data import.
+    """
+    try:
+        session.transaction_data[datakey].add(value)
+    except KeyError:
+        opcls(session, *opkwargs)
+        session.transaction_data[datakey] = set((value,))
+
+
 class LateOperation(Operation):
     """special operation which should be called after all possible (ie non late)
     operations
@@ -529,3 +547,40 @@ class RQLPrecommitOperation(Operation):
         execute = self.session.execute
         for rql in self.rqls:
             execute(*rql)
+
+
+class CleanupNewEidsCacheOp(SingleLastOperation):
+    """on rollback of a insert query we have to remove from repository's
+    type/source cache eids of entities added in that transaction.
+
+    NOTE: querier's rqlst/solutions cache may have been polluted too with
+    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
+    generated queries are unpredictable and analysing all the cache probably
+    too expensive. Notice that there is no pb when using args to specify eids
+    instead of giving them into the rql string.
+    """
+
+    def rollback_event(self):
+        """the observed connections pool has been rollbacked,
+        remove inserted eid from repository type/source cache
+        """
+        try:
+            self.session.repo.clear_caches(
+                self.session.transaction_data['neweids'])
+        except KeyError:
+            pass
+
+class CleanupDeletedEidsCacheOp(SingleLastOperation):
+    """on commit of delete query, we have to remove from repository's
+    type/source cache eids of entities deleted in that transaction.
+    """
+
+    def commit_event(self):
+        """the observed connections pool has been rollbacked,
+        remove inserted eid from repository type/source cache
+        """
+        try:
+            self.session.repo.clear_caches(
+                self.session.transaction_data['pendingeids'])
+        except KeyError:
+            pass

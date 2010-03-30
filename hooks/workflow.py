@@ -45,7 +45,7 @@ class _SetInitialStateOp(hook.Operation):
             state = entity.current_workflow.initial
             if state:
                 session.add_relation(entity.eid, 'in_state', state.eid)
-
+                _FireAutotransitionOp(session, entity=entity)
 
 class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
@@ -86,6 +86,7 @@ class _WorkflowChangedOp(hook.Operation):
                 if entity.current_state.eid != deststate.eid:
                     _change_state(session, entity.eid,
                                   entity.current_state.eid, deststate.eid)
+                    _FireAutotransitionOp(session, entity=entity)
                 return
             msg = session._('workflow changed to "%s"')
             msg %= session._(mainwf.name)

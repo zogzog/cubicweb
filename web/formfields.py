@@ -21,7 +21,7 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
 
 from cubicweb import Binary, tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
-     formwidgets as fw
+     formwidgets as fw, uicfg
 
 
 class UnmodifiedField(Exception):
@@ -880,6 +880,8 @@ class CompoundField(Field):
         return [self] + list(self.fields)
 
 
+_AFF_KWARGS = uicfg.autoform_field_kwargs
+
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
@@ -894,14 +896,14 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     else:
         targetschema = rdef.subject
     card = rdef.role_cardinality(role)
-    kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
     kwargs['role'] = role
+    kwargs['eidparam'] = True
+    kwargs.setdefault('required', card in '1+')
     if role == 'object':
         kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
         kwargs.setdefault('label', (eschema.type, rschema.type))
-    kwargs['eidparam'] = True
     kwargs.setdefault('help', rdef.description)
     if rschema.final:
         if skip_meta_attr and rschema in eschema.meta_attributes():
@@ -929,8 +931,10 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             for metadata in KNOWN_METAATTRIBUTES:
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
+                    metakwargs = _AFF_KWARGS.etype_get(eschema, metaschema, 'subject')
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                skip_meta_attr=False)
+                                                                skip_meta_attr=False,
+                                                                **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)
 

@@ -21,13 +21,18 @@ from yams import BASE_TYPES
 from cubicweb import Binary, UnknownEid, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
 NO_UNDO_TYPES.add('CWCache')
+# is / is_instance_of are usually added by sql hooks except when using
+# dataimport.NoHookRQLObjectStore, and we don't want to record them
+# anyway in the later case
+NO_UNDO_TYPES.add('is')
+NO_UNDO_TYPES.add('is_instance_of')
 # XXX rememberme,forgotpwd,apycot,vcsfile
 
 def is_final(rqlst, variable, args):
@@ -829,7 +834,7 @@ class Session(RequestSessionBase):
             selected = rqlst.children[0].selection
             solution = rqlst.children[0].solutions[0]
             description = _make_description(selected, args, solution)
-            return [tuple(description)] * len(result)
+            return RepeatList(len(result), tuple(description))
         # hard, delegate the work :o)
         return self.manual_build_descr(rqlst, args, result)
 
@@ -858,7 +863,7 @@ class Session(RequestSessionBase):
                 etype = rqlst.children[0].solutions[0]
                 basedescription.append(term.get_type(etype, args))
         if not todetermine:
-            return [tuple(basedescription)] * len(result)
+            return RepeatList(len(result), tuple(basedescription))
         return self._build_descr(result, basedescription, todetermine)
 
     def _build_descr(self, result, basedescription, todetermine):

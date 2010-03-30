@@ -11,7 +11,7 @@ import decimal
 import datetime
 
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList
+from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
 
 try:
     import simplejson
@@ -40,6 +40,52 @@ class UStringIOTC(TestCase):
     def test_boolean_value(self):
         self.assert_(UStringIO())
 
+
+class RepeatListTC(TestCase):
+
+    def test_base(self):
+        l = RepeatList(3, (1, 3))
+        self.assertEquals(l[0], (1, 3))
+        self.assertEquals(l[2], (1, 3))
+        self.assertEquals(l[-1], (1, 3))
+        self.assertEquals(len(l), 3)
+        # XXX
+        self.assertEquals(l[4], (1, 3))
+
+        self.failIf(RepeatList(0, None))
+
+    def test_slice(self):
+        l = RepeatList(3, (1, 3))
+        self.assertEquals(l[0:1], [(1, 3)])
+        self.assertEquals(l[0:4], [(1, 3)]*3)
+        self.assertEquals(l[:], [(1, 3)]*3)
+
+    def test_iter(self):
+        self.assertEquals(list(RepeatList(3, (1, 3))),
+                          [(1, 3)]*3)
+
+    def test_add(self):
+        l = RepeatList(3, (1, 3))
+        self.assertEquals(l + [(1, 4)], [(1, 3)]*3  + [(1, 4)])
+        self.assertEquals([(1, 4)] + l, [(1, 4)] + [(1, 3)]*3)
+        self.assertEquals(l + RepeatList(2, (2, 3)), [(1, 3)]*3 + [(2, 3)]*2)
+
+        x = l + RepeatList(2, (1, 3))
+        self.assertIsInstance(x, RepeatList)
+        self.assertEquals(len(x), 5)
+        self.assertEquals(x[0], (1, 3))
+
+        x = l + [(1, 3)] * 2
+        self.assertEquals(x, [(1, 3)] * 5)
+
+    def test_eq(self):
+        self.assertEquals(RepeatList(3, (1, 3)),
+                          [(1, 3)]*3)
+
+    def test_pop(self):
+        l = RepeatList(3, (1, 3))
+        l.pop(2)
+        self.assertEquals(l, [(1, 3)]*2)
 
 class SizeConstrainedListTC(TestCase):
 

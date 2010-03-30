@@ -48,7 +48,21 @@ def _toload_info(path, extrapath, _toload=None):
             subfiles = [join(fileordir, fname) for fname in listdir(fileordir)]
             _toload_info(subfiles, extrapath, _toload)
         elif fileordir[-3:] == '.py':
-            modname = '.'.join(modpath_from_file(fileordir, extrapath))
+            modpath = modpath_from_file(fileordir, extrapath)
+            # omit '__init__' from package's name to avoid loading that module
+            # once for each name when it is imported by some other appobject
+            # module. This supposes import in modules are done as::
+            #
+            #   from package import something
+            #
+            # not::
+            #
+            #  from package.__init__ import something
+            #
+            # which seems quite correct.
+            if modpath[-1] == '__init__':
+                modpath.pop()
+            modname = '.'.join(modpath)
             _toload[0][modname] = fileordir
             _toload[1].append((fileordir, modname))
     return _toload

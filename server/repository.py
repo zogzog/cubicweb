@@ -38,42 +38,11 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      typed_eid)
+                      typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
-from cubicweb.server.session import Session, InternalSession, security_enabled
-
-
-class CleanupEidTypeCacheOp(hook.SingleLastOperation):
-    """on rollback of a insert query or commit of delete query, we have to
-    clear repository's cache from no more valid entries
-
-    NOTE: querier's rqlst/solutions cache may have been polluted too with
-    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
-    generated queries are unpredictable and analysing all the cache probably
-    too expensive. Notice that there is no pb when using args to specify eids
-    instead of giving them into the rql string.
-    """
-
-    def commit_event(self):
-        """the observed connections pool has been rollbacked,
-        remove inserted eid from repository type/source cache
-        """
-        try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['pendingeids'])
-        except KeyError:
-            pass
-
-    def rollback_event(self):
-        """the observed connections pool has been rollbacked,
-        remove inserted eid from repository type/source cache
-        """
-        try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['neweids'])
-        except KeyError:
-            pass
+from cubicweb.server.session import Session, InternalSession, InternalManager, \
+     security_enabled
 
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
@@ -164,6 +133,12 @@ class Repository(object):
         # open some connections pools
         if config.open_connections_pools:
             self.open_connections_pools()
+        @onevent('after-registry-reload', self)
+        def fix_user_classes(self):
+            usercls = self.vreg['etypes'].etype_class('CWUser')
+            for session in self._sessions.values():
+                if not isinstance(session.user, InternalManager):
+                    session.user.__class__ = usercls
 
     def _bootstrap_hook_registry(self):
         """called during bootstrap since we need the metadata hooks"""
@@ -398,7 +373,8 @@ class Repository(object):
         session = self.internal_session()
         try:
             rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                                   'M address %(login)s', {'login': login})
+                                   'M address %(login)s', {'login': login},
+                                   build_descr=False)
             if rset.rowcount == 1:
                 login = rset[0][0]
         finally:
@@ -530,13 +506,14 @@ class Repository(object):
         # for consistency, keep same error as unique check hook (although not required)
         errmsg = session._('the value "%s" is already used, use another one')
         try:
-            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login})
+            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login},
+                                build_descr=False)
                 or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                                   {'login': login})):
+                                   {'login': login}, build_descr=False)):
                 qname = role_name('login', 'subject')
                 raise ValidationError(None, {qname: errmsg % login})
             # we have to create the user
-            user = self.vreg['etypes'].etype_class('CWUser')(session, None)
+            user = self.vreg['etypes'].etype_class('CWUser')(session)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')
@@ -548,12 +525,13 @@ class Repository(object):
                             {'x': user.eid})
             if email or '@' in login:
                 d = {'login': login, 'email': email or login}
-                if session.execute('EmailAddress X WHERE X address %(email)s', d):
+                if session.execute('EmailAddress X WHERE X address %(email)s', d,
+                                   build_descr=False):
                     qname = role_name('address', 'subject')
                     raise ValidationError(None, {qname: errmsg % d['email']})
                 session.execute('INSERT EmailAddress X: X address %(email)s, '
                                 'U primary_email X, U use_email X '
-                                'WHERE U login %(login)s', d)
+                                'WHERE U login %(login)s', d, build_descr=False)
             session.commit()
         finally:
             session.close()
@@ -933,30 +911,19 @@ class Repository(object):
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        new = session.transaction_data.setdefault('neweids', set())
-        new.add(entity.eid)
+        hook.set_operation(session, 'neweids', entity.eid,
+                           hook.CleanupNewEidsCacheOp)
         self.system_source.add_info(session, entity, source, extid, complete)
-        CleanupEidTypeCacheOp(session)
 
     def delete_info(self, session, entity, sourceuri, extid):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
-        self._prepare_delete_info(session, entity, sourceuri)
+        # mark eid as being deleted in session info and setup cache update
+        # operation
+        hook.set_operation(session, 'pendingeids', entity.eid,
+                           hook.CleanupDeletedEidsCacheOp)
         self._delete_info(session, entity, sourceuri, extid)
-
-    def _prepare_delete_info(self, session, entity, sourceuri):
-        """prepare the repository for deletion of an entity:
-        * update the fti
-        * mark eid as being deleted in session info
-        * setup cache update operation
-        * if undoable, get back all entity's attributes and relation
-        """
-        eid = entity.eid
-        self.system_source.fti_unindex_entity(session, eid)
-        pending = session.transaction_data.setdefault('pendingeids', set())
-        pending.add(eid)
-        CleanupEidTypeCacheOp(session)
 
     def _delete_info(self, session, entity, sourceuri, extid):
                      # attributes=None, relations=None):
@@ -977,10 +944,9 @@ class Repository(object):
                 if role == 'subject':
                     # don't skip inlined relation so they are regularly
                     # deleted and so hooks are correctly called
-                    selection = 'X %s Y' % rtype
+                    rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
-                    selection = 'Y %s X' % rtype
-                rql = 'DELETE %s WHERE X eid %%(x)s' % selection
+                    rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 session.execute(rql, {'x': eid}, 'x', build_descr=False)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
@@ -1011,6 +977,20 @@ class Repository(object):
         else:
             raise ETypeNotSupportedBySources(etype)
 
+    def init_entity_caches(self, session, entity, source):
+        """add entity to session entities cache and repo's extid cache.
+        Return entity's ext id if the source isn't the system source.
+        """
+        session.set_entity_cache(entity)
+        suri = source.uri
+        if suri == 'system':
+            extid = None
+        else:
+            extid = source.get_extid(entity)
+            self._extid_cache[(str(extid), suri)] = entity.eid
+        self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid)
+        return extid
+
     def glob_add_entity(self, session, entity):
         """add an entity to the repository
 
@@ -1026,17 +1006,19 @@ class Repository(object):
             entity.__class__ = entity_.__class__
             entity.__dict__.update(entity_.__dict__)
         eschema = entity.e_schema
-        etype = str(eschema)
-        source = self.locate_etype_source(etype)
-        # attribute an eid to the entity before calling hooks
+        source = self.locate_etype_source(entity.__regid__)
+        # allocate an eid to the entity before calling hooks
         entity.set_eid(self.system_source.create_eid(session))
+        # set caches asap
+        extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', etype, entity.eid, dict(entity)
+            print 'ADD entity', entity.__regid__, entity.eid, dict(entity)
         relations = []
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
         # XXX use entity.keys here since edited_attributes is not updated for
-        # inline relations
+        # inline relations XXX not true, right? (see edited_attributes
+        # affectation above)
         for attr in entity.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
@@ -1045,15 +1027,9 @@ class Repository(object):
         if session.is_hook_category_activated('integrity'):
             entity.check(creation=True)
         source.add_entity(session, entity)
-        if source.uri != 'system':
-            extid = source.get_extid(entity)
-            self._extid_cache[(str(extid), source.uri)] = entity.eid
-        else:
-            extid = None
         self.add_info(session, entity, source, extid, complete=False)
         entity._is_saved = True # entity has an eid and is saved
         # prefill entity relation caches
-        session.set_entity_cache(entity)
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
             if rtype in schema.VIRTUAL_RTYPES:
@@ -1085,9 +1061,8 @@ class Repository(object):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
-        etype = str(entity.e_schema)
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', etype, entity.eid, \
+            print 'UPDATE entity', entity.__regid__, entity.eid, \
                   dict(entity), edited_attributes
         entity.edited_attributes = edited_attributes
         if session.is_hook_category_activated('integrity'):
@@ -1150,7 +1125,6 @@ class Repository(object):
         """delete an entity and all related entities from the repository"""
         entity = session.entity_from_eid(eid)
         etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
-        self._prepare_delete_info(session, entity, sourceuri)
         if server.DEBUG & server.DBG_REPO:
             print 'DELETE entity', etype, eid
         source = self.sources_by_uri[sourceuri]

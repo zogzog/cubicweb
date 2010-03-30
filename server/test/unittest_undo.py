@@ -24,6 +24,15 @@ class UndoableTransactionTC(CubicWebTC):
         self.session.undo_support = set()
         super(UndoableTransactionTC, self).tearDown()
 
+    def check_transaction_deleted(self, txuuid):
+        # also check transaction actions have been properly deleted
+        cu = self.session.system_sql(
+            "SELECT * from tx_entity_actions WHERE tx_uuid='%s'" % txuuid)
+        self.failIf(cu.fetchall())
+        cu = self.session.system_sql(
+            "SELECT * from tx_relation_actions WHERE tx_uuid='%s'" % txuuid)
+        self.failIf(cu.fetchall())
+
     def test_undo_api(self):
         self.failUnless(self.txuuid)
         # test transaction api
@@ -154,13 +163,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertEquals(len(txs), 2)
         self.assertRaises(NoSuchTransaction,
                           self.cnx.transaction_info, txuuid)
-        # also check transaction actions have been properly deleted
-        cu = self.session.system_sql(
-            "SELECT * from tx_entity_actions WHERE tx_uuid='%s'" % txuuid)
-        self.failIf(cu.fetchall())
-        cu = self.session.system_sql(
-            "SELECT * from tx_relation_actions WHERE tx_uuid='%s'" % txuuid)
-        self.failIf(cu.fetchall())
+        self.check_transaction_deleted(txuuid)
         # the final test: check we can login with the previously deleted user
         self.login('toto')
 
@@ -196,11 +199,74 @@ class UndoableTransactionTC(CubicWebTC):
         g.delete()
         self.commit()
         errors = self.cnx.undo_transaction(txuuid)
-        self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(errors,
+                          [u"Can't restore relation in_group, object entity "
+                          "%s doesn't exist anymore." % g.eid])
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.entity, self.toto.eid)
+        self.assertEquals(ex.errors,
+                          {'in_group-subject': u'at least one relation in_group is '
+                           'required on CWUser (%s)' % self.toto.eid})
 
-    def test_undo_creation(self):
-        # XXX what about relation / composite entities which have been created
-        # afterwhile and linked to the undoed addition ?
-        self.skip('not implemented')
+    def test_undo_creation_1(self):
+        session = self.session
+        c = session.create_entity('Card', title=u'hop', content=u'hop')
+        p = session.create_entity('Personne', nom=u'louis', fiche=c)
+        txuuid = self.commit()
+        errors = self.cnx.undo_transaction(txuuid)
+        self.commit()
+        self.failIf(errors)
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}, 'x'))
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}, 'x'))
+        self.failIf(self.execute('Any X,Y WHERE X fiche Y'))
+        self.session.set_pool()
+        for eid in (p.eid, c.eid):
+            self.failIf(session.system_sql(
+                'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())
+            self.failIf(session.system_sql(
+                'SELECT 1 FROM owned_by_relation WHERE eid_from=%s' % eid).fetchall())
+            # added by sql in hooks (except when using dataimport)
+            self.failIf(session.system_sql(
+                'SELECT 1 FROM is_relation WHERE eid_from=%s' % eid).fetchall())
+            self.failIf(session.system_sql(
+                'SELECT 1 FROM is_instance_of_relation WHERE eid_from=%s' % eid).fetchall())
+        self.check_transaction_deleted(txuuid)
+
+
+    def test_undo_creation_integrity_1(self):
+        session = self.session
+        tutu = self.create_user('tutu', commit=False)
+        txuuid = self.commit()
+        email = self.request().create_entity('EmailAddress', address=u'tutu@cubicweb.org')
+        prop = self.request().create_entity('CWProperty', pkey=u'ui.default-text-format',
+                                            value=u'text/html')
+        tutu.set_relations(use_email=email, reverse_for_user=prop)
+        self.commit()
+        ex = self.assertRaises(ValidationError,
+                               self.cnx.undo_transaction, txuuid)
+        self.assertEquals(ex.entity, tutu.eid)
+        self.assertEquals(ex.errors,
+                          {None: 'some later transaction(s) touch entity, undo them first'})
+
+    def test_undo_creation_integrity_2(self):
+        session = self.session
+        g = session.create_entity('CWGroup', name=u'staff')
+        txuuid = self.commit()
+        session.execute('DELETE U in_group G WHERE U eid %(x)s', {'x': self.toto.eid})
+        self.toto.set_relations(in_group=g)
+        self.commit()
+        ex = self.assertRaises(ValidationError,
+                               self.cnx.undo_transaction, txuuid)
+        self.assertEquals(ex.entity, g.eid)
+        self.assertEquals(ex.errors,
+                          {None: 'some later transaction(s) touch entity, undo them first'})
+        # self.assertEquals(errors,
+        #                   [u"Can't restore relation in_group, object entity "
+        #                   "%s doesn't exist anymore." % g.eid])
+        # ex = self.assertRaises(ValidationError, self.commit)
+        # self.assertEquals(ex.entity, self.toto.eid)
+        # self.assertEquals(ex.errors,
+        #                   {'in_group-subject': u'at least one relation in_group is '
+        #                    'required on CWUser (%s)' % self.toto.eid})
 
     # test implicit 'replacement' of an inlined relation

@@ -613,7 +613,7 @@ class QuerierHelper(object):
                 return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
-        if not rqlst.TYPE == 'select':
+        if rqlst.TYPE != 'select':
             if session.read_security:
                 check_no_password_selected(rqlst)
             # write query, ensure session's mode is 'write' so connections won't

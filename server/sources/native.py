@@ -28,14 +28,15 @@ from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin
 from logilab.database import get_db_helper
 
-from cubicweb import UnknownEid, AuthenticationError, Binary, server, neg_role
-from cubicweb import transaction as tx
+from cubicweb import UnknownEid, AuthenticationError, ValidationError, Binary
+from cubicweb import transaction as tx, server, neg_role
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
-from cubicweb.server.utils import crypt_password
+from cubicweb.server.utils import crypt_password, eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
+from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.session import hooks_control, security_enabled
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
@@ -128,6 +129,45 @@ def _undo_check_relation_target(tentity, rdef, role):
                                'rtype': rdef.rtype,
                                'eid': tentity.eid})
 
+def _undo_rel_info(session, subj, rtype, obj):
+    entities = []
+    for role, eid in (('subject', subj), ('object', obj)):
+        try:
+            entities.append(session.entity_from_eid(eid))
+        except UnknownEid:
+            raise UndoException(session._(
+                "Can't restore relation %(rtype)s, %(role)s entity %(eid)s"
+                " doesn't exist anymore.")
+                                % {'role': session._(role),
+                                   'rtype': session._(rtype),
+                                   'eid': eid})
+    sentity, oentity = entities
+    try:
+        rschema = session.vreg.schema.rschema(rtype)
+        rdef = rschema.rdefs[(sentity.__regid__, oentity.__regid__)]
+    except KeyError:
+        raise UndoException(session._(
+            "Can't restore relation %(rtype)s between %(subj)s and "
+            "%(obj)s, that relation does not exists anymore in the "
+            "schema.")
+                            % {'rtype': session._(rtype),
+                               'subj': subj,
+                               'obj': obj})
+    return sentity, oentity, rdef
+
+def _undo_has_later_transaction(session, eid):
+    return session.system_sql('''\
+SELECT T.tx_uuid FROM transactions AS TREF, transactions AS T
+WHERE TREF.tx_uuid='%(txuuid)s' AND T.tx_uuid!='%(txuuid)s'
+AND T.tx_time>=TREF.tx_time
+AND (EXISTS(SELECT 1 FROM tx_entity_actions AS TEA
+            WHERE TEA.tx_uuid=T.tx_uuid AND TEA.eid=%(eid)s)
+     OR EXISTS(SELECT 1 FROM tx_relation_actions as TRA
+               WHERE TRA.tx_uuid=T.tx_uuid AND (
+                   TRA.eid_from=%(eid)s OR TRA.eid_to=%(eid)s))
+     )''' % {'txuuid': session.transaction_data['undoing_uuid'],
+             'eid': eid}).fetchone()
+
 
 class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """adapter for source using the native cubicweb schema (see below)
@@ -191,9 +231,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # sql queries cache
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
+        # we need a lock to protect eid attribution function (XXX, really?
+        # explain)
         self._eid_creation_lock = Lock()
         # (etype, attr) / storage mapping
         self._storages = {}
+        # entity types that may be used by other multi-sources instances
+        self.multisources_etypes = set(repo.config['multi-sources-etypes'])
         # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
@@ -481,6 +525,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
             self.doexec(session, sql, attrs)
 
+    def add_relation(self, session, subject, rtype, object, inlined=False):
+        """add a relation to the source"""
+        self._add_relation(session, subject, rtype, object, inlined)
+        if session.undoable_action('A', rtype):
+            self._record_tx_action(session, 'tx_relation_actions', 'A',
+                                   eid_from=subject, rtype=rtype, eid_to=object)
+
     def _add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
         if inlined is False:
@@ -493,17 +544,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                                      ['cw_eid'])
         self.doexec(session, sql, attrs)
 
-    def add_relation(self, session, subject, rtype, object, inlined=False):
-        """add a relation to the source"""
-        self._add_relation(session, subject, rtype, object, inlined)
-        if session.undoable_action('A', rtype):
-            self._record_tx_action(session, 'tx_relation_actions', 'A',
-                                   eid_from=subject, rtype=rtype, eid_to=object)
-
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
-        if rschema.inlined:
+        self._delete_relation(session, subject, rtype, object, rschema.inlined)
+        if session.undoable_action('R', rtype):
+            self._record_tx_action(session, 'tx_relation_actions', 'R',
+                                   eid_from=subject, rtype=rtype, eid_to=object)
+
+    def _delete_relation(self, session, subject, rtype, object, inlined=False):
+        """delete a relation from the source"""
+        if inlined:
             table = SQL_PREFIX + session.describe(subject)[0]
             column = SQL_PREFIX + rtype
             sql = 'UPDATE %s SET %s=NULL WHERE %seid=%%(eid)s' % (table, column,
@@ -513,9 +564,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
         self.doexec(session, sql, attrs)
-        if session.undoable_action('R', rtype):
-            self._record_tx_action(session, 'tx_relation_actions', 'R',
-                                   eid_from=subject, rtype=rtype, eid_to=object)
 
     def doexec(self, session, query, args=None, rollback=True):
         """Execute a query.
@@ -651,30 +699,36 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
-            FTIndexEntityOp(session, entity=entity)
+            self.index_entity(session, entity=entity)
 
     def update_info(self, session, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
         if self.do_fti and need_fti_update:
             # reindex the entity only if this query is updating at least
             # one indexable attribute
-            FTIndexEntityOp(session, entity=entity)
-        # update entities.mtime
+            self.index_entity(session, entity=entity)
+        # update entities.mtime.
+        # XXX Only if entity.__regid__ in self.multisources_etypes?
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def delete_info(self, session, entity, uri, extid):
-        """delete system information on deletion of an entity by transfering
-        record from the entities table to the deleted_entities table
+        """delete system information on deletion of an entity:
+        * update the fti
+        * remove record from the entities table
+        * transfer it to the deleted_entities table if the entity's type is
+          multi-sources
         """
+        self.fti_unindex_entity(session, entity.eid)
         attrs = {'eid': entity.eid}
         self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
+        if not entity.__regid__ in self.multisources_etypes:
+            return
         if extid is not None:
             assert isinstance(extid, str), type(extid)
             extid = b64encode(extid)
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'dtime': datetime.now(),
-                 }
+                 'source': uri, 'dtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
 
     def modified_entities(self, session, etypes, mtime):
@@ -685,6 +739,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         * list of (etype, eid) of entities of the given types which have been
           deleted since the given timestamp
         """
+        for etype in etypes:
+            if not etype in self.multisources_etypes:
+                self.critical('%s not listed as a multi-sources entity types. '
+                              'Modify your configuration' % etype)
+                self.multisources_etypes.add(etype)
         modsql = _modified_sql('entities', etypes)
         cursor = self.doexec(session, modsql, {'time': mtime})
         modentities = cursor.fetchall()
@@ -777,6 +836,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         restr = {'tx_uuid': txuuid}
         if public:
             restr['txa_public'] = True
+        # XXX use generator to avoid loading everything in memory?
         sql = self.sqlgen.select('tx_entity_actions', restr,
                                  ('txa_action', 'txa_public', 'txa_order',
                                   'etype', 'eid', 'changes'))
@@ -791,11 +851,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return sorted(actions, key=lambda x: x.order)
 
     def undo_transaction(self, session, txuuid):
-        """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
+        """See :class:`cubicweb.dbapi.Connection.undo_transaction`
+
+        important note: while undoing of a transaction, only hooks in the
+        'integrity', 'activeintegrity' and 'undo' categories are called.
+        """
         # set mode so pool isn't released subsquently until commit/rollback
         session.mode = 'write'
         errors = []
-        with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
+        session.transaction_data['undoing_uuid'] = txuuid
+        with hooks_control(session, session.HOOKS_DENY_ALL,
+                           'integrity', 'activeintegrity', 'undo'):
             with security_enabled(session, read=False):
                 for action in reversed(self.tx_actions(session, txuuid, False)):
                     undomethod = getattr(self, '_undo_%s' % action.action.lower())
@@ -890,30 +956,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     % {'rtype': rtype, 'eid': eid})
             if not rschema.final:
                 assert value is None
-                    # try:
-                    #     tentity = session.entity_from_eid(eid)
-                    # except UnknownEid:
-                    #     err(_("Can't restore %(role)s relation %(rtype)s to "
-                    #           "entity %(eid)s which doesn't exist anymore.")
-                    #         % {'role': _('subject'),
-                    #            'rtype': _(rtype),
-                    #            'eid': eid})
-                    #     continue
-                    # rdef = rdefs[(eschema, tentity.__regid__)]
-                    # try:
-                    #     _undo_check_relation_target(tentity, rdef, 'object')
-                    # except UndoException, ex:
-                    #     err(unicode(ex))
-                    #     continue
-                    # if rschema.inlined:
-                    #     entity[rtype] = value
-                    # else:
-                    #     # restore relation where inlined changed since the deletion
-                    #     del action.changes[column]
-                    #     self._add_relation(session, subject, rtype, object)
-                    # # set related cache
-                    # session.update_rel_cache_add(eid, rtype, value,
-                    #                              rschema.symmetric)
             elif eschema.destination(rtype) in ('Bytes', 'Password'):
                 action.changes[column] = self._binary(value)
                 entity[rtype] = Binary(value)
@@ -922,6 +964,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             else:
                 entity[rtype] = value
         entity.set_eid(eid)
+        session.repo.init_entity_caches(session, entity, self)
         entity.edited_attributes = set(entity)
         entity.check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
@@ -929,64 +972,85 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         action.changes['cw_eid'] = eid
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(session, sql, action.changes)
+        # add explicitly is / is_instance_of whose deletion is not recorded for
+        # consistency with addition (done by sql in hooks)
+        self.doexec(session, 'INSERT INTO is_relation(eid_from, eid_to) '
+                    'VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
+        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+            self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,'
+                        'eid_to) VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
-        # remove record from deleted_entities
-        self.doexec(session, 'DELETE FROM deleted_entities WHERE eid=%s' % eid)
+        # remove record from deleted_entities if entity's type is multi-sources
+        if entity.__regid__ in self.multisources_etypes:
+            self.doexec(session,
+                        'DELETE FROM deleted_entities WHERE eid=%s' % eid)
         self.repo.hm.call_hooks('after_add_entity', session, entity=entity)
         return errors
 
     def _undo_r(self, session, action):
         """undo a relation removal"""
         errors = []
-        err = errors.append
-        _ = session._
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
-        entities = []
-        for role, eid in (('subject', subj), ('object', obj)):
-            try:
-                entities.append(session.entity_from_eid(eid))
-            except UnknownEid:
-                err(_("Can't restore relation %(rtype)s, %(role)s entity %(eid)s"
-                      " doesn't exist anymore.")
-                    % {'role': _(role),
-                       'rtype': _(rtype),
-                       'eid': eid})
-        if not len(entities) == 2:
-            return errors
-        sentity, oentity = entities
         try:
-            rschema = self.schema.rschema(rtype)
-            rdef = rschema.rdefs[(sentity.__regid__, oentity.__regid__)]
-        except KeyError:
-            err(_("Can't restore relation %(rtype)s between %(subj)s and "
-                  "%(obj)s, that relation does not exists anymore in the "
-                  "schema.")
-                % {'rtype': rtype,
-                   'subj': subj,
-                   'obj': obj})
+            sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
+        except UndoException, ex:
+            errors.append(unicode(ex))
         else:
             for role, entity in (('subject', sentity),
                                  ('object', oentity)):
                 try:
                     _undo_check_relation_target(entity, rdef, role)
                 except UndoException, ex:
-                    err(unicode(ex))
+                    errors.append(unicode(ex))
                     continue
         if not errors:
             self.repo.hm.call_hooks('before_add_relation', session,
                                     eidfrom=subj, rtype=rtype, eidto=obj)
             # add relation in the database
-            self._add_relation(session, subj, rtype, obj, rschema.inlined)
+            self._add_relation(session, subj, rtype, obj, rdef.rtype.inlined)
             # set related cache
-            session.update_rel_cache_add(subj, rtype, obj, rschema.symmetric)
+            session.update_rel_cache_add(subj, rtype, obj, rdef.rtype.symmetric)
             self.repo.hm.call_hooks('after_add_relation', session,
                                     eidfrom=subj, rtype=rtype, eidto=obj)
         return errors
 
     def _undo_c(self, session, action):
         """undo an entity creation"""
-        return ['undoing of entity creation not yet supported.']
+        eid = action.eid
+        # XXX done to avoid fetching all remaining relation for the entity
+        # we should find an efficient way to do this (keeping current veolidf
+        # massive deletion performance)
+        if _undo_has_later_transaction(session, eid):
+            msg = session._('some later transaction(s) touch entity, undo them '
+                            'first')
+            raise ValidationError(eid, {None: msg})
+        etype = action.etype
+        # get an entity instance
+        try:
+            entity = self.repo.vreg['etypes'].etype_class(etype)(session)
+        except Exception:
+            return [session._(
+                "Can't undo creation of entity %s of type %s, type "
+                "no more supported" % (eid, etype))]
+        entity.set_eid(eid)
+        # for proper eid/type cache update
+        hook.set_operation(session, 'pendingeids', eid,
+                           CleanupDeletedEidsCacheOp)
+        self.repo.hm.call_hooks('before_delete_entity', session, entity=entity)
+        # remove is / is_instance_of which are added using sql by hooks, hence
+        # unvisible as transaction action
+        self.doexec(session, 'DELETE FROM is_relation WHERE eid_from=%s' % eid)
+        self.doexec(session, 'DELETE FROM is_instance_of_relation WHERE eid_from=%s' % eid)
+        # XXX check removal of inlined relation?
+        # delete the entity
+        attrs = {'cw_eid': eid}
+        sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
+        self.doexec(session, sql, attrs)
+        # remove record from entities (will update fti if needed)
+        self.delete_info(session, entity, self.uri, None)
+        self.repo.hm.call_hooks('after_delete_entity', session, entity=entity)
+        return ()
 
     def _undo_u(self, session, action):
         """undo an entity update"""
@@ -994,7 +1058,35 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def _undo_a(self, session, action):
         """undo a relation addition"""
-        return ['undoing of relation addition not yet supported.']
+        errors = []
+        subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
+        try:
+            sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
+        except UndoException, ex:
+            errors.append(unicode(ex))
+        else:
+            rschema = rdef.rtype
+            if rschema.inlined:
+                sql = 'SELECT 1 FROM cw_%s WHERE cw_eid=%s and cw_%s=%s'\
+                      % (sentity.__regid__, subj, rtype, obj)
+            else:
+                sql = 'SELECT 1 FROM %s_relation WHERE eid_from=%s and eid_to=%s'\
+                      % (rtype, subj, obj)
+            cu = self.doexec(session, sql)
+            if cu.fetchone() is None:
+                errors.append(session._(
+                    "Can't undo addition of relation %s from %s to %s, doesn't "
+                    "exist anymore" % (rtype, subj, obj)))
+        if not errors:
+            self.repo.hm.call_hooks('before_delete_relation', session,
+                                    eidfrom=subj, rtype=rtype, eidto=obj)
+            # delete relation from the database
+            self._delete_relation(session, subj, rtype, obj, rschema.inlined)
+            # set related cache
+            session.update_rel_cache_del(subj, rtype, obj, rschema.symmetric)
+            self.repo.hm.call_hooks('after_delete_relation', session,
+                                    eidfrom=subj, rtype=rtype, eidto=obj)
+        return errors
 
     # full text index handling #################################################
 
@@ -1011,7 +1103,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        FTIndexEntityOp(session, entity=entity)
+        hook.set_operation(session, 'ftindex', entity.eid, FTIndexEntityOp)
 
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
@@ -1045,21 +1137,18 @@ class FTIndexEntityOp(hook.LateOperation):
 
     def precommit_event(self):
         session = self.session
-        entity = self.entity
-        if entity.eid in session.transaction_data.get('pendingeids', ()):
-            return # entity added and deleted in the same transaction
-        alreadydone = session.transaction_data.setdefault('indexedeids', set())
-        if entity.eid in alreadydone:
-            self.debug('skipping reindexation of %s, already done', entity.eid)
-            return
-        alreadydone.add(entity.eid)
         source = session.repo.system_source
-        for container in entity.fti_containers():
-            source.fti_unindex_entity(session, container.eid)
-            source.fti_index_entity(session, container)
-
-    def commit_event(self):
-        pass
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        done = session.transaction_data.setdefault('indexedeids', set())
+        for eid in session.transaction_data.pop('ftindex', ()):
+            if eid in pendingeids or eid in done:
+                # entity added and deleted in the same transaction or already
+                # processed
+                return
+            done.add(eid)
+            for container in session.entity_from_eid(eid).fti_containers():
+                source.fti_unindex_entity(session, container.eid)
+                source.fti_index_entity(session, container)
 
 
 def sql_schema(driver):

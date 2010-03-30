@@ -278,20 +278,20 @@ class CubicWebTC(TestCase):
             return req.user
 
     def create_user(self, login, groups=('users',), password=None, req=None,
-                    commit=True):
+                    commit=True, **kwargs):
         """create and return a new user entity"""
         if password is None:
             password = login.encode('utf8')
-        cursor = self._orig_cnx.cursor(req or self.request())
-        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
-                              {'login': unicode(login), 'passwd': password})
-        user = rset.get_entity(0, 0)
-        cursor.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
-                       % ','.join(repr(g) for g in groups),
-                       {'x': user.eid}, 'x')
+        if req is None:
+            req = self._orig_cnx.request()
+        user = req.create_entity('CWUser', login=unicode(login),
+                                 upassword=password, **kwargs)
+        req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
+                    % ','.join(repr(g) for g in groups),
+                    {'x': user.eid}, 'x')
         user.clear_related_cache('in_group', 'subject')
         if commit:
-            self._orig_cnx.commit()
+            req.cnx.commit()
         return user
 
     def login(self, login, **kwargs):

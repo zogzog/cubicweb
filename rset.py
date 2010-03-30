@@ -113,7 +113,7 @@ class ResultSet(object):
         # but I tend to think that since we have that, we should not need this
         # method anymore (syt)
         rset = ResultSet(self.rows+rset.rows, self.rql, self.args,
-                         self.description +rset.description)
+                         self.description + rset.description)
         rset.req = self.req
         return rset
 

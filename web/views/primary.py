@@ -15,7 +15,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
-from cubicweb.schema import display_name
+from cubicweb.schema import VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg
 
 
@@ -202,6 +202,8 @@ class PrimaryView(EntityView):
         rdefs = []
         eschema = entity.e_schema
         for rschema, tschemas, role in eschema.relation_definitions(True):
+            if rschema in VIRTUAL_RTYPES:
+                continue
             matchtschemas = []
             for tschema in tschemas:
                 section = self.rsection.etype_get(eschema, rschema, role,
