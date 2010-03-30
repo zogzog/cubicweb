@@ -920,6 +920,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             else:
                 entity[rtype] = value
         entity.set_eid(eid)
+        session.repo.init_entity_caches(session, entity, self)
         entity.edited_attributes = set(entity)
         entity.check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
