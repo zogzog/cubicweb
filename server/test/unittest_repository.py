@@ -403,6 +403,7 @@ class DataHelpersTC(CubicWebTC):
 class FTITC(CubicWebTC):
 
     def test_reindex_and_modified_since(self):
+        self.repo.system_source.multisources_etypes.add('Personne')
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
         self.commit()
         ts = datetime.now()
