@@ -400,7 +400,9 @@ class CubicWebEntitySchema(EntitySchema):
                                           __permissions__=RO_ATTR_PERMS)
             self.schema.add_relation_def(rdef)
         elif not need_has_text and has_has_text:
-            self.schema.del_relation_def(self.type, 'has_text', 'String')
+            # use rschema.del_relation_def and not schema.del_relation_def to
+            # avoid deleting the relation type accidentally...
+            self.schema['has_text'].del_relation_def(self, self.schema['String'])
 
     def schema_entity(self):
         """return True if this entity type is used to build the schema"""
