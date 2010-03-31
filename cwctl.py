@@ -725,7 +725,7 @@ given, appropriate sources for migration will be automatically selected \
         # handle i18n upgrade:
         # * install new languages
         # * recompile catalogs
-        # in the first componant given
+        # XXX search available language in the first cube given
         from cubicweb import i18n
         templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
@@ -740,7 +740,12 @@ given, appropriate sources for migration will be automatically selected \
         print
         print '-> instance migrated.'
         if not (CWDEV or self.config.nostartstop):
-            StartInstanceCommand().start_instance(appid)
+            # restart instance through fork to get a proper environment, avoid
+            # uicfg pb (and probably gettext catalogs, to check...)
+            forkcmd = '%s start %s' % (sys.argv[0], appid)
+            status = system(forkcmd)
+            if status:
+                print '%s exited with status %s' % (forkcmd, status)
         print
 
 

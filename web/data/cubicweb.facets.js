@@ -47,10 +47,11 @@ function buildRQL(divid, vid, paginate, vidargs) {
 	var rql = result[0];
 	var $bkLink = jQuery('#facetBkLink');
 	if ($bkLink.length) {
-	    var bkUrl = $bkLink.attr('cubicweb:target') + '&path=view?rql=' + rql;
+	    var bkPath = 'view?rql=' + escape(rql);
 	    if (vid) {
-		bkUrl += '&vid=' + vid;
+		bkPath += '&vid=' + escape(vid);
 	    }
+	    var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + escape(bkPath);
 	    $bkLink.attr('href', bkUrl);
 	}
 	var toupdate = result[1];

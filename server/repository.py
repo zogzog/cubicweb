@@ -24,7 +24,6 @@ import Queue
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
-#from pickle import dumps
 
 from logilab.common.decorators import cached
 from logilab.common.compat import any
@@ -38,7 +37,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      typed_eid, onevent)
+                      RepositoryError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
@@ -59,7 +58,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # XXX we should imo rely on the orm to first fetch existing entity if any
     # then delete it.
     if session.is_internal_session \
-           or not session.is_hook_category_activated('integrity'):
+           or not session.is_hook_category_activated('activeintegrity'):
         return
     card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
@@ -153,10 +152,14 @@ class Repository(object):
         self._available_pools.put_nowait(pool.ConnectionsPool(self.sources))
         if config.quick_start:
             # quick start, usually only to get a minimal repository to get cubes
-            # information (eg dump/restore/
+            # information (eg dump/restore/...)
             config._cubes = ()
-            self.set_schema(config.load_schema(), resetvreg=False)
+            # only load hooks and entity classes in the registry
+            config.cube_appobject_path = set(('hooks', 'entities'))
+            config.cubicweb_appobject_path = set(('hooks', 'entities'))
+            self.set_schema(config.load_schema())
             config['connections-pool-size'] = 1
+            # will be reinitialized later from cubes found in the database
             config._cubes = None
         elif config.creating:
             # repository creation
@@ -202,8 +205,7 @@ class Repository(object):
         self._shutting_down = False
         if config.quick_start:
             config.init_cubes(self.get_cubes())
-        else:
-            self.hm = self.vreg['hooks']
+        self.hm = hook.HooksManager(self.vreg)
 
     # internals ###############################################################
 
@@ -1064,62 +1066,68 @@ class Repository(object):
         if server.DEBUG & server.DBG_REPO:
             print 'UPDATE entity', entity.__regid__, entity.eid, \
                   dict(entity), edited_attributes
-        entity.edited_attributes = edited_attributes
-        if session.is_hook_category_activated('integrity'):
-            entity.check()
+        hm = self.hm
         eschema = entity.e_schema
         session.set_entity_cache(entity)
-        only_inline_rels, need_fti_update = True, False
-        relations = []
-        for attr in edited_attributes:
-            if attr == 'eid':
-                continue
-            rschema = eschema.subjrels[attr]
-            if rschema.final:
-                if getattr(eschema.rdef(attr), 'fulltextindexed', False):
-                    need_fti_update = True
-                only_inline_rels = False
-            else:
-                # inlined relation
-                previous_value = entity.related(attr) or None
-                if previous_value is not None:
-                    previous_value = previous_value[0][0] # got a result set
-                    if previous_value == entity[attr]:
-                        previous_value = None
-                    else:
-                        self.hm.call_hooks('before_delete_relation', session,
-                                           eidfrom=entity.eid, rtype=attr,
-                                           eidto=previous_value)
-                relations.append((attr, entity[attr], previous_value))
-        source = self.source_from_eid(entity.eid, session)
-        if source.should_call_hooks:
-            # call hooks for inlined relations
-            for attr, value, _ in relations:
-                self.hm.call_hooks('before_add_relation', session,
-                                    eidfrom=entity.eid, rtype=attr, eidto=value)
-            if not only_inline_rels:
-                self.hm.call_hooks('before_update_entity', session, entity=entity)
-        source.update_entity(session, entity)
-        self.system_source.update_info(session, entity, need_fti_update)
-        if source.should_call_hooks:
-            if not only_inline_rels:
-                self.hm.call_hooks('after_update_entity', session, entity=entity)
-            for attr, value, prevvalue in relations:
-                # if the relation is already cached, update existant cache
-                relcache = entity.relation_cached(attr, 'subject')
-                if prevvalue is not None:
-                    self.hm.call_hooks('after_delete_relation', session,
-                                       eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
-                    if relcache is not None:
-                        session.update_rel_cache_del(entity.eid, attr, prevvalue)
-                del_existing_rel_if_needed(session, entity.eid, attr, value)
-                if relcache is not None:
-                    session.update_rel_cache_add(entity.eid, attr, value)
+        orig_edited_attributes = getattr(entity, 'edited_attributes', None)
+        entity.edited_attributes = edited_attributes
+        try:
+            if session.is_hook_category_activated('integrity'):
+                entity.check()
+            only_inline_rels, need_fti_update = True, False
+            relations = []
+            for attr in list(edited_attributes):
+                if attr == 'eid':
+                    continue
+                rschema = eschema.subjrels[attr]
+                if rschema.final:
+                    if getattr(eschema.rdef(attr), 'fulltextindexed', False):
+                        need_fti_update = True
+                    only_inline_rels = False
                 else:
-                    entity.set_related_cache(attr, 'subject',
-                                             session.eid_rset(value))
-                self.hm.call_hooks('after_add_relation', session,
-                                    eidfrom=entity.eid, rtype=attr, eidto=value)
+                    # inlined relation
+                    previous_value = entity.related(attr) or None
+                    if previous_value is not None:
+                        previous_value = previous_value[0][0] # got a result set
+                        if previous_value == entity[attr]:
+                            previous_value = None
+                        else:
+                            hm.call_hooks('before_delete_relation', session,
+                                          eidfrom=entity.eid, rtype=attr,
+                                          eidto=previous_value)
+                    relations.append((attr, entity[attr], previous_value))
+                source = self.source_from_eid(entity.eid, session)
+                if source.should_call_hooks:
+                    # call hooks for inlined relations
+                    for attr, value, _ in relations:
+                        hm.call_hooks('before_add_relation', session,
+                                      eidfrom=entity.eid, rtype=attr, eidto=value)
+                    if not only_inline_rels:
+                        hm.call_hooks('before_update_entity', session, entity=entity)
+                source.update_entity(session, entity)
+            self.system_source.update_info(session, entity, need_fti_update)
+            if source.should_call_hooks:
+                if not only_inline_rels:
+                    hm.call_hooks('after_update_entity', session, entity=entity)
+                for attr, value, prevvalue in relations:
+                    # if the relation is already cached, update existant cache
+                    relcache = entity.relation_cached(attr, 'subject')
+                    if prevvalue is not None:
+                        hm.call_hooks('after_delete_relation', session,
+                                      eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
+                        if relcache is not None:
+                            session.update_rel_cache_del(entity.eid, attr, prevvalue)
+                    del_existing_rel_if_needed(session, entity.eid, attr, value)
+                    if relcache is not None:
+                        session.update_rel_cache_add(entity.eid, attr, value)
+                    else:
+                        entity.set_related_cache(attr, 'subject',
+                                                 session.eid_rset(value))
+                    hm.call_hooks('after_add_relation', session,
+                                  eidfrom=entity.eid, rtype=attr, eidto=value)
+        finally:
+            if orig_edited_attributes is not None:
+                entity.edited_attributes = orig_edited_attributes
 
     def glob_delete_entity(self, session, eid):
         """delete an entity and all related entities from the repository"""

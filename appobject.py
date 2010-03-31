@@ -14,6 +14,7 @@ from logging import getLogger
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
+from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
 
 
@@ -244,6 +245,12 @@ class AppObject(object):
     __registry__ = None
     __regid__ = None
     __select__ = yes()
+
+    @classproperty
+    def __registries__(cls):
+        if cls.__registry__ is None:
+            return ()
+        return (cls.__registry__,)
 
     @classmethod
     def __registered__(cls, registry):

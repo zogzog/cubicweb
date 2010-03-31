@@ -6,6 +6,8 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from __future__ import with_statement
+
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -93,14 +95,8 @@ class StorageTC(CubicWebTC):
         self.assertEquals(fspath.getvalue(), '/the/path')
 
     def test_source_storage_transparency(self):
-        self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(DummyBeforeHook)
-        self.vreg.register(DummyAfterHook)
-        try:
+        with self.temporary_appobjects(DummyBeforeHook, DummyAfterHook):
             self.create_file()
-        finally:
-            self.vreg.unregister(DummyBeforeHook)
-            self.vreg.unregister(DummyAfterHook)
 
     def test_source_mapped_attribute_error_cases(self):
         ex = self.assertRaises(QueryError, self.execute,

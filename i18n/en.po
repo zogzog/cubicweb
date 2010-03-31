@@ -332,6 +332,18 @@ msgid ""
 "anymore."
 msgstr ""
 
+#, python-format
+msgid ""
+"Can't undo addition of relation %(rtype)s from %(subj)s to %(obj)s, doesn't "
+"exist anymore"
+msgstr ""
+
+#, python-format
+msgid ""
+"Can't undo creation of entity %(eid)s of type %(etype)s, type no more "
+"supported"
+msgstr ""
+
 msgid "Date"
 msgstr "Date"
 
@@ -3356,6 +3368,9 @@ msgid "site-wide property can't be set for user"
 msgstr ""
 
 msgid "some errors occured:"
+msgstr ""
+
+msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"

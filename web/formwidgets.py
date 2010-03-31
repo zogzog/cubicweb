@@ -783,6 +783,7 @@ class EditableURLWidget(FieldWidget):
             attrs['id'] = field.dom_id(form, 'fqs')
         if self.settabindex:
             attrs['tabindex'] = req.next_tabindex()
+        attrs.setdefault('cols', 60)
         attrs.setdefault('onkeyup', 'autogrow(this)')
         inputs += [tags.textarea(fqs, name=fqsqname, **attrs),
                    u'</td></tr></table>']

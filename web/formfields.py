@@ -867,7 +867,7 @@ class RelationField(Field):
             eids.add(typed_eid)
         return eids
 
-
+# XXX use cases where we don't actually want a better widget?
 class CompoundField(Field):
     def __init__(self, fields, *args, **kwargs):
         super(CompoundField, self).__init__(*args, **kwargs)
@@ -877,7 +877,11 @@ class CompoundField(Field):
         return self.fields
 
     def actual_fields(self, form):
-        return [self] + list(self.fields)
+        # don't add [self] to actual fields, compound field is usually kinda
+        # virtual, all interesting values are in subfield. Skipping it may avoid
+        # error when processed by the editcontroller : it may be marked as required
+        # while it has no value, hence generating a false error.
+        return list(self.fields)
 
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs

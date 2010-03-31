@@ -14,6 +14,7 @@ import sys
 import re
 from urllib import unquote
 from math import log
+from contextlib import contextmanager
 
 import simplejson
 
@@ -356,6 +357,15 @@ class CubicWebTC(TestCase):
 
     def entity(self, rql, args=None, eidkey=None, req=None):
         return self.execute(rql, args, eidkey, req=req).get_entity(0, 0)
+
+    @contextmanager
+    def temporary_appobjects(self, *appobjects):
+        self.vreg._loadedmods.setdefault(self.__module__, {})
+        for obj in appobjects:
+            self.vreg.register(obj)
+        yield
+        for obj in appobjects:
+            self.vreg.unregister(obj)
 
     # vregistry inspection utilities ###########################################
 

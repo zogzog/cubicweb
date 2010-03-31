@@ -337,7 +337,7 @@ this option is set to yes",
     def available_cubes(cls):
         cubes = set()
         for directory in cls.cubes_search_path():
-            if not os.path.exists(directory):
+            if not exists(directory):
                 cls.error('unexistant directory in cubes search path: %s'
                            % directory)
                 continue

@@ -6,6 +6,9 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
+from __future__ import with_statement
 
 import os
 import sys
@@ -20,12 +23,14 @@ from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError)
+from cubicweb.selectors import implements
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
 
 # start name server anyway, process will fail if already running
@@ -272,8 +277,10 @@ class RepositoryTC(CubicWebTC):
             from logilab.common import pyro_ext
             pyro_ext._DAEMONS.clear()
 
+
     def _pyro_client(self, done):
-        cnx = connect(self.repo.config.appid, u'admin', password='gingkow')
+        cnx = connect(self.repo.config.appid, u'admin', password='gingkow',
+                      initlog=False) # don't reset logging configuration
         try:
             # check we can get the schema
             schema = cnx.get_schema()
@@ -283,7 +290,7 @@ class RepositoryTC(CubicWebTC):
             cnx.close()
             done.append(True)
         finally:
-            # connect monkey path some method by default, remove them
+            # connect monkey patch some method by default, remove them
             multiple_connections_unfix()
 
     def test_internal_api(self):
@@ -357,6 +364,42 @@ class RepositoryTC(CubicWebTC):
         self.assertEquals(rset.rows[0][0], p2.eid)
 
 
+    def test_set_attributes_in_before_update(self):
+        # local hook
+        class DummyBeforeHook(Hook):
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('EmailAddress')
+            events = ('before_update_entity',)
+            def __call__(self):
+                # safety belt: avoid potential infinite recursion if the test
+                #              fails (i.e. RuntimeError not raised)
+                pendings = self._cw.transaction_data.setdefault('pending', set())
+                if self.entity.eid not in pendings:
+                    pendings.add(self.entity.eid)
+                    self.entity.set_attributes(alias=u'foo')
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            addr = req.create_entity('EmailAddress', address=u'a@b.fr')
+            addr.set_attributes(address=u'a@b.com')
+            rset = self.execute('Any A,AA WHERE X eid %(x)s, X address A, X alias AA',
+                                {'x': addr.eid})
+            self.assertEquals(rset.rows, [[u'a@b.com', u'foo']])
+
+    def test_set_attributes_in_before_add(self):
+        # local hook
+        class DummyBeforeHook(Hook):
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('EmailAddress')
+            events = ('before_add_entity',)
+            def __call__(self):
+                # set_attributes is forbidden within before_add_entity()
+                self.entity.set_attributes(alias=u'foo')
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            self.assertRaises(RepositoryError, req.create_entity,
+                              'EmailAddress', address=u'a@b.fr')
+
+
 class DataHelpersTC(CubicWebTC):
 
     def test_create_eid(self):
@@ -402,6 +445,7 @@ class DataHelpersTC(CubicWebTC):
 class FTITC(CubicWebTC):
 
     def test_reindex_and_modified_since(self):
+        self.repo.system_source.multisources_etypes.add('Personne')
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
         self.commit()
         ts = datetime.now()
@@ -484,7 +528,6 @@ class InlineRelHooksTC(CubicWebTC):
     """
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.hm = self.repo.hm
         CALLED[:] = ()
 
     def _after_relation_hook(self, pool, fromeid, rtype, toeid):
@@ -500,20 +543,20 @@ class InlineRelHooksTC(CubicWebTC):
             def __call__(self):
                 CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
-        self.hm.register(EcritParHook)
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_delete_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
+        with self.temporary_appobjects(EcritParHook):
+            eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
+            eidn = self.execute('INSERT Note X: X type "T"')[0][0]
+            self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_delete_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
 
 if __name__ == '__main__':

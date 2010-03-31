@@ -367,6 +367,16 @@ class Connection(object):
             return '<Connection %s (anonymous)>' % self.sessionid
         return '<Connection %s>' % self.sessionid
 
+    def __enter__(self):
+        return self.cursor()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
+            return False #propagate the exception
+
     def request(self):
         return DBAPIRequest(self.vreg, self)
 

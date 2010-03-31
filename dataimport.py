@@ -498,7 +498,7 @@ class CWImportController(object):
                     err = func(buckets)
                     if err:
                         self.errors[title] = (help, err)
-        self.store.commit()
+        txuuid = self.store.commit()
         self._print_stats()
         if self.errors:
             if self.askerror == 2 or (self.askerror and confirm('Display errors ?')):
@@ -506,7 +506,8 @@ class CWImportController(object):
                 for errkey, error in self.errors.items():
                     self.tell("\n%s (%s): %d\n" % (error[0], errkey, len(error[1])))
                     self.tell(pformat(sorted(error[1])))
-
+        if txuuid is not None:
+            print 'transaction id:', txuuid
     def _print_stats(self):
         nberrors = sum(len(err[1]) for err in self.errors.values())
         self.tell('\nImport statistics: %i entities, %i types, %i relations and %i errors'

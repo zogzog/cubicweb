@@ -48,6 +48,7 @@ from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
+from cubicweb import RegistryNotFound
 from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
                                 implements)
@@ -66,15 +67,14 @@ ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 
 
 class HooksRegistry(CWRegistry):
+    def initialization_completed(self):
+        for appobjects in self.values():
+            for cls in appobjects:
+                if not cls.enabled:
+                    warn('[3.6] %s: enabled is deprecated' % cls)
+                    self.unregister(cls)
 
     def register(self, obj, **kwargs):
-        try:
-            iter(obj.events)
-        except AttributeError:
-            raise
-        except:
-            raise Exception('bad .events attribute %s on %s.%s' % (
-                obj.events, obj.__module__, obj.__name__))
         for event in obj.events:
             if event not in ALL_HOOKS:
                 raise Exception('bad event %s on %s.%s' % (
@@ -96,7 +96,19 @@ class HooksRegistry(CWRegistry):
                     for hook in hooks:
                         hook()
 
-VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
+class HooksManager(object):
+    def __init__(self, vreg):
+        self.vreg = vreg
+
+    def call_hooks(self, event, session=None, **kwargs):
+        try:
+            self.vreg['%s_hooks' % event].call_hooks(event, session, **kwargs)
+        except RegistryNotFound:
+            pass # no hooks for this event
+
+
+for event in ALL_HOOKS:
+    VRegistry.REGISTRY_FACTORY['%s_hooks' % event] = HooksRegistry
 
 _MARKER = object()
 def entity_oldnewvalue(entity, attr):
@@ -113,21 +125,6 @@ def entity_oldnewvalue(entity, attr):
 
 
 # some hook specific selectors #################################################
-
-@objectify_selector
-@lltrace
-def _bw_is_enabled(cls, req, **kwargs):
-    if cls.enabled:
-        return 1
-    warn('[3.6] %s: enabled is deprecated' % cls)
-    return 0
-
-@objectify_selector
-@lltrace
-def match_event(cls, req, **kwargs):
-    if kwargs.get('event') in cls.events:
-        return 1
-    return 0
 
 @objectify_selector
 @lltrace
@@ -190,17 +187,27 @@ class match_rtype_sets(ExpectedValueSelector):
                 return 1
         return 0
 
+
 # base class for hook ##########################################################
 
 class Hook(AppObject):
-    __registry__ = 'hooks'
-    __select__ = match_event() & enabled_category() & _bw_is_enabled()
+    __select__ = enabled_category()
     # set this in derivated classes
     events = None
     category = None
     order = 0
     # XXX deprecated
     enabled = True
+
+    @classproperty
+    def __registries__(cls):
+        try:
+            return ['%s_hooks' % ev for ev in cls.events]
+        except AttributeError:
+            raise
+        except TypeError:
+            raise Exception('bad .events attribute %s on %s.%s' % (
+                cls.events, cls.__module__, cls.__name__))
 
     @classproperty
     def __regid__(cls):

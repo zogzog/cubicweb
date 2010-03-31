@@ -105,7 +105,10 @@ class FilterBox(BoxTemplate):
     def display_bookmark_link(self, rset):
         eschema = self._cw.vreg.schema.eschema('Bookmark')
         if eschema.has_perm(self._cw, 'add'):
-            bk_path = 'view?rql=%s' % rset.printable_rql()
+            bk_path = 'rql=%s' % self._cw.url_quote(rset.printable_rql())
+            if self._cw.form.get('vid'):
+                bk_path += '&vid=%s' % self._cw.url_quote(self._cw.form['vid'])
+            bk_path = 'view?' + bk_path
             bk_title = self._cw._('my custom search')
             linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
             bk_add_url = self._cw.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)

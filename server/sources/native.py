@@ -410,7 +410,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             cursor = self.doexec(session, sql, args)
         except (self.OperationalError, self.InterfaceError):
             # FIXME: better detection of deconnection pb
-            self.info("request failed '%s' ... retry with a new cursor", sql)
+            self.warning("trying to reconnect")
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
         results = self.process_result(cursor, cbs)
@@ -1031,8 +1031,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             entity = self.repo.vreg['etypes'].etype_class(etype)(session)
         except Exception:
             return [session._(
-                "Can't undo creation of entity %s of type %s, type "
-                "no more supported" % (eid, etype))]
+                "Can't undo creation of entity %(eid)s of type %(etype)s, type "
+                "no more supported" % {'eid': eid, 'etype': etype})]
         entity.set_eid(eid)
         # for proper eid/type cache update
         hook.set_operation(session, 'pendingeids', eid,
@@ -1075,8 +1075,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             cu = self.doexec(session, sql)
             if cu.fetchone() is None:
                 errors.append(session._(
-                    "Can't undo addition of relation %s from %s to %s, doesn't "
-                    "exist anymore" % (rtype, subj, obj)))
+                    "Can't undo addition of relation %(rtype)s from %(subj)s to"
+                    " %(obj)s, doesn't exist anymore" % locals()))
         if not errors:
             self.repo.hm.call_hooks('before_delete_relation', session,
                                     eidfrom=subj, rtype=rtype, eidto=obj)

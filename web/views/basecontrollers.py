@@ -282,8 +282,6 @@ class JSonController(Controller):
         except RemoteCallFailed:
             raise
         except Exception, ex:
-            import traceback
-            traceback.print_exc()
             self.exception('an exception occured while calling js_%s(%s): %s',
                            fname, args, ex)
             raise RemoteCallFailed(repr(ex))
@@ -392,7 +390,18 @@ class JSonController(Controller):
         else: # we receive unicode keys which is not supported by the **syntax
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
-        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset, **extraargs)
+        # XXX while it sounds good, addition of the try/except below cause pb:
+        # when filtering using facets return an empty rset, the edition box
+        # isn't anymore selectable, as expected. The pb is that with the
+        # try/except below, we see a "an error occured" message in the ui, while
+        # we don't see it without it. Proper fix would probably be to deal with
+        # this by allowing facet handling code to tell to js_component that such
+        # error is expected and should'nt be reported.
+        #try:
+        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset,
+                                              **extraargs)
+        #except NoSelectableObject:
+        #    raise RemoteCallFailed('unselectable')
         extraargs = extraargs or {}
         stream = comp.set_stream()
         comp.render(**extraargs)

@@ -24,7 +24,7 @@ class ServerStartupHook(hook.Hook):
             session = repo.internal_session()
             try:
                 session.system_sql(
-                    'DELETE FROM transaction WHERE tx_time < %(time)s',
+                    'DELETE FROM transactions WHERE tx_time < %(time)s',
                     {'time': mindate})
                 # cleanup deleted entities
                 session.system_sql(

@@ -113,7 +113,7 @@ class BookmarksBox(box.UserRQLBoxTemplate):
                     # we can't edit shared bookmarks we don't own
                     bookmarksrql = 'Bookmark B WHERE B bookmarked_by U, B owned_by U, U eid %(x)s'
                     erset = req.execute(bookmarksrql, {'x': ueid}, 'x',
-                                                build_descr=False)
+                                        build_descr=False)
                     bookmarksrql %= {'x': ueid}
                 if erset:
                     url = self._cw.build_url(vid='muledit', rql=bookmarksrql)
