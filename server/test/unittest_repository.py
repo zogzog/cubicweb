@@ -484,7 +484,6 @@ class InlineRelHooksTC(CubicWebTC):
     """
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.hm = self.repo.hm
         CALLED[:] = ()
 
     def _after_relation_hook(self, pool, fromeid, rtype, toeid):
@@ -500,7 +499,7 @@ class InlineRelHooksTC(CubicWebTC):
             def __call__(self):
                 CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
-        self.hm.register(EcritParHook)
+        self.vreg.register(EcritParHook)
         eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
         eidn = self.execute('INSERT Note X: X type "T"')[0][0]
         self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
