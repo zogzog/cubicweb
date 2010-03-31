@@ -64,7 +64,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertEquals(a4.eid_to, self.toto.in_group[0].eid)
         self.assertEquals(a4.order, 4)
         for i, rtype in ((1, 'owned_by'), (2, 'owned_by'),
-                         (4, 'created_by'), (5, 'in_state')):
+                         (4, 'in_state'), (5, 'created_by')):
             a = actions[i]
             self.assertEquals(a.action, 'A')
             self.assertEquals(a.eid_from, self.toto.eid)
