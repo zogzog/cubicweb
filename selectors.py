@@ -58,26 +58,29 @@ from cubicweb.schema import split_expression
 
 # helpers for debugging selectors
 SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
-TRACED_OIDS = ()
+TRACED_OIDS = None
+
+def _trace_selector(cls, ret):
+    # /!\ lltrace decorates pure function or __call__ method, this
+    #     means argument order may be different
+    if isinstance(cls, Selector):
+        selname = str(cls)
+        vobj = args[0]
+    else:
+        selname = selector.__name__
+        vobj = cls
+    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
+        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
+        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
 
 def lltrace(selector):
     # don't wrap selectors if not in development mode
     if CubicWebConfiguration.mode == 'system': # XXX config.debug
         return selector
     def traced(cls, *args, **kwargs):
-        # /!\ lltrace decorates pure function or __call__ method, this
-        #     means argument order may be different
-        if isinstance(cls, Selector):
-            selname = str(cls)
-            vobj = args[0]
-        else:
-            selname = selector.__name__
-            vobj = cls
-        oid = class_regid(vobj)
         ret = selector(cls, *args, **kwargs)
-        if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
-            #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-            print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
+        if TRACED_OIDS is not None:
+            _trace_selector(cls, ret)
         return ret
     traced.__name__ = selector.__name__
     traced.__doc__ = selector.__doc__
@@ -108,7 +111,7 @@ class traced_selection(object):
 
     def __exit__(self, exctype, exc, traceback):
         global TRACED_OIDS
-        TRACED_OIDS = ()
+        TRACED_OIDS = None
         return traceback is None
 
 
