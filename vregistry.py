@@ -210,14 +210,14 @@ class Registry(dict):
         if len(args) > 1:
             warn('[3.5] only the request param can not be named when calling select*',
                  DeprecationWarning, stacklevel=3)
-        score, winners = 0, []
+        score, winners = 0, None
         for appobject in appobjects:
             appobjectscore = appobject.__select__(appobject, *args, **kwargs)
             if appobjectscore > score:
                 score, winners = appobjectscore, [appobject]
             elif appobjectscore > 0 and appobjectscore == score:
                 winners.append(appobject)
-        if not winners:
+        if winners is None:
             raise NoSelectableObject('args: %s\nkwargs: %s %s'
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
