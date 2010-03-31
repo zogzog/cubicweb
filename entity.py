@@ -298,6 +298,12 @@ class Entity(AppObject, dict):
             self.edited_attributes.remove(attr)
         return value
 
+    def update(self, values):
+        """override update to update self.edited_attributes. See `__setitem__`
+        """
+        for attr, value in values.items():
+            self[attr] = value # use self.__setitem__ implementation
+
     def rql_set_value(self, attr, value):
         """call by rql execution plan when some attribute is modified
 
@@ -874,17 +880,21 @@ class Entity(AppObject, dict):
     # raw edition utilities ###################################################
 
     def set_attributes(self, **kwargs):
-        assert kwargs
         _check_cw_unsafe(kwargs)
+        assert kwargs
+        assert self._is_saved
         relations = []
         for key in kwargs:
             relations.append('X %s %%(%s)s' % (key, key))
-        # update current local object
-        self.update(kwargs)
         # and now update the database
         kwargs['x'] = self.eid
         self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                          kwargs, 'x')
+        kwargs.pop('x')
+        # update current local object _after_ the rql query to avoid
+        # interferences between the query execution itself and the
+        # edited_attributes / skip_security_attributes machinery
+        self.update(kwargs)
 
     def set_relations(self, **kwargs):
         """add relations to the given object. To set a relation where this entity
