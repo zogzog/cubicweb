@@ -222,6 +222,8 @@ class Registry(dict):
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
         if len(winners) > 1:
+            # don't we want the opposite: log in production environement, error
+            # while debugging?
             if self.config.debugmode:
                 self.error('select ambiguity, args: %s\nkwargs: %s %s',
                            args, kwargs.keys(), [repr(v) for v in winners])
@@ -334,6 +336,7 @@ class VRegistry(dict):
         try:
             vname = obj.__name__
         except AttributeError:
+            # XXX may occurs?
             vname = obj.__class__.__name__
         for registryname in class_registries(obj, registryname):
             registry = self.setdefault(registryname)
