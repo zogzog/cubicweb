@@ -95,9 +95,9 @@ try:
          [join(_data_dir, fname) for fname in listdir(_data_dir)
           if not isdir(join(_data_dir, fname))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'timeline'),
-         [join(data_dir, 'timeline', fname) for fname in listdir(join(data_dir, 'timeline'))]],
+         [join(_data_dir, 'timeline', fname) for fname in listdir(join(_data_dir, 'timeline'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'images'),
-         [join(data_dir, 'images', fname) for fname in listdir(join(data_dir, 'images'))]],
+         [join(_data_dir, 'images', fname) for fname in listdir(join(_data_dir, 'images'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc'),
          [join(_wdoc_dir, fname) for fname in listdir(_wdoc_dir)
           if not isdir(join(_wdoc_dir, fname))]],
