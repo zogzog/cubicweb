@@ -206,7 +206,7 @@ class Repository(object):
         self._shutting_down = False
         if config.quick_start:
             config.init_cubes(self.get_cubes())
-        self.hm = self.vreg['hooks']
+        self.hm = hook.HooksManager(self.vreg)
 
     # internals ###############################################################
 

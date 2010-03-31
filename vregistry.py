@@ -82,6 +82,11 @@ def class_regid(cls):
         return cls.id
     return cls.__regid__
 
+def class_registries(cls, registryname):
+    if registryname:
+        return (registryname,)
+    return cls.__registries__
+
 
 class Registry(dict):
 
@@ -318,31 +323,32 @@ class VRegistry(dict):
                 if obj.__module__ != modname or obj in butclasses:
                     continue
                 oid = class_regid(obj)
-                registryname = obj.__registry__
             except AttributeError:
                 continue
             if oid and not '__abstract__' in obj.__dict__:
-                self.register(obj, registryname)
+                self.register(obj, oid=oid)
 
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
-        registryname = registryname or obj.__registry__
-        registry = self.setdefault(registryname)
-        registry.register(obj, oid=oid, clear=clear)
         try:
             vname = obj.__name__
         except AttributeError:
             vname = obj.__class__.__name__
-        self.debug('registered appobject %s in registry %s with id %s',
-                   vname, registryname, oid or class_regid(obj))
+        for registryname in class_registries(obj, registryname):
+            registry = self.setdefault(registryname)
+            registry.register(obj, oid=oid, clear=clear)
+            self.debug('registered appobject %s in registry %s with id %s',
+                       vname, registryname, oid or class_regid(obj))
         self._loadedmods[obj.__module__][classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
-        self[registryname or obj.__registry__].unregister(obj)
+        for registryname in class_registries(obj, registryname):
+            self[registryname].unregister(obj)
 
     def register_and_replace(self, obj, replaced, registryname=None):
-        self[registryname or obj.__registry__].register_and_replace(obj, replaced)
+        for registryname in class_registries(obj, registryname):
+            self[registryname].register_and_replace(obj, replaced)
 
     # initialization methods ###################################################
 
@@ -451,7 +457,7 @@ class VRegistry(dict):
             self._load_ancestors_then_object(modname, parent)
         if (appobjectcls.__dict__.get('__abstract__')
             or appobjectcls.__name__[0] == '_'
-            or not appobjectcls.__registry__
+            or not appobjectcls.__registries__
             or not class_regid(appobjectcls)):
             return
         try:

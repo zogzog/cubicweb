@@ -81,7 +81,7 @@ class AddAnyHook(hook.Hook):
         raise HookCalled()
 
 
-class HooksManagerTC(TestCase):
+class HooksRegistryTC(TestCase):
 
     def setUp(self):
         """ called before each test from this class """
@@ -115,7 +115,6 @@ class HooksManagerTC(TestCase):
                          is_hook_activated=lambda x, cls: cls.category not in dis)
         self.assertRaises(HookCalled,
                           self.o.call_hooks, 'before_add_entity', cw)
-        self.o.call_hooks('before_delete_entity', cw) # nothing to call
         dis.add('cat1')
         self.o.call_hooks('before_add_entity', cw) # disabled hooks category, not called
         dis.remove('cat1')
