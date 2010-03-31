@@ -6,6 +6,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
 
 import os
 import sys
@@ -499,20 +500,20 @@ class InlineRelHooksTC(CubicWebTC):
             def __call__(self):
                 CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
-        self.vreg.register(EcritParHook)
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_delete_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
+        with self.temporary_appobjects(EcritParHook):
+            eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
+            eidn = self.execute('INSERT Note X: X type "T"')[0][0]
+            self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_delete_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
 
 if __name__ == '__main__':
