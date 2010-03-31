@@ -75,13 +75,6 @@ class HooksRegistry(CWRegistry):
                     self.unregister(cls)
 
     def register(self, obj, **kwargs):
-        try:
-            iter(obj.events)
-        except AttributeError:
-            raise
-        except:
-            raise Exception('bad .events attribute %s on %s.%s' % (
-                obj.events, obj.__module__, obj.__name__))
         for event in obj.events:
             if event not in ALL_HOOKS:
                 raise Exception('bad event %s on %s.%s' % (
@@ -207,8 +200,14 @@ class Hook(AppObject):
     enabled = True
 
     @classproperty
-    def __registries__(self):
-        return ['%s_hooks' % ev for ev in self.events]
+    def __registries__(cls):
+        try:
+            return ['%s_hooks' % ev for ev in cls.events]
+        except AttributeError:
+            raise
+        except TypeError:
+            raise Exception('bad .events attribute %s on %s.%s' % (
+                cls.events, cls.__module__, cls.__name__))
 
     @classproperty
     def __regid__(cls):
