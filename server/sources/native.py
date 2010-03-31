@@ -410,7 +410,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             cursor = self.doexec(session, sql, args)
         except (self.OperationalError, self.InterfaceError):
             # FIXME: better detection of deconnection pb
-            self.info("request failed '%s' ... retry with a new cursor", sql)
+            self.warning("trying to reconnect")
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
         results = self.process_result(cursor, cbs)
