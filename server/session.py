@@ -896,7 +896,8 @@ class Session(RequestSessionBase):
     # deprecated ###############################################################
 
     @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
-                " can also control security with session.[read|write]_security")
+                " can also control security with the security_enabled context "
+                "manager")
     def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                        propagate=False):
         """like .execute but with security checking disabled (this method is
