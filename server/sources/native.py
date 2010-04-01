@@ -482,10 +482,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             except AttributeError:
                 assert event == 'deleted'
                 getattr(storage, 'entity_deleted')(entity, attr)
-        yield # 2/ execute the source's instructions
-        # 3/ restore original values
-        for attr, value in orig_values.items():
-            entity[attr] = value
+        try:
+            yield # 2/ execute the source's instructions
+        finally:
+            # 3/ restore original values
+            for attr, value in orig_values.items():
+                entity[attr] = value
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""

@@ -360,9 +360,11 @@ class CubicWebTC(TestCase):
         self.vreg._loadedmods.setdefault(self.__module__, {})
         for obj in appobjects:
             self.vreg.register(obj)
-        yield
-        for obj in appobjects:
-            self.vreg.unregister(obj)
+        try:
+            yield
+        finally:
+            for obj in appobjects:
+                self.vreg.unregister(obj)
 
     # vregistry inspection utilities ###########################################
 
