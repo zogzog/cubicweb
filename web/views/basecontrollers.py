@@ -276,7 +276,11 @@ class JSonController(Controller):
         args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
             args = (args,)
-        args = [simplejson.loads(arg) for arg in args]
+        try:
+            args = [simplejson.loads(arg) for arg in args]
+        except ValueError, exc:
+            self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
+            raise RemoteCallFailed(repr(exc)
         try:
             result = func(*args)
         except RemoteCallFailed:
