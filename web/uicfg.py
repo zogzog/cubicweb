@@ -11,24 +11,25 @@ To configure the interface generation, we use ``RelationTag`` objects.
 Primary view configuration
 ``````````````````````````
 
-If you want to customize the primary view of an entity, overriding the
-primary view class may not be necessary. For simple adjustments
-(attributes or relations display locations and styles), a much simpler
-way is to use uicfg.
+If you want to customize the primary view of an entity, overriding the primary
+view class may not be necessary. For simple adjustments (attributes or relations
+display locations and styles), a much simpler way is to use uicfg.
 
 Attributes/relations display location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the primary view, there are 3 sections where attributes and
-relations can be displayed (represented in pink in the image below):
-   * attributes
-   * relations
-   * sideboxes
+In the primary view, there are 3 sections where attributes and relations can be
+displayed (represented in pink in the image below):
+
+* attributes
+* relations
+* sideboxes
 
 .. image:: ../../images/primaryview_template.png
 
 
-**Attributes** can only be displayed in the attributes section (default behavior). They can also be hidden.
+**Attributes** can only be displayed in the attributes section (default
+  behavior). They can also be hidden.
 
 For instance, to hide the ``title`` attribute of the ``Blog`` entity:
 
@@ -41,12 +42,14 @@ For instance, to hide the ``title`` attribute of the ``Blog`` entity:
 **Relations** can be either displayed in one of the three sections or hidden.
 
 For relations, there are two methods:
-   * ``tag_object_of`` for modifying the primary view of the object
-   * ``tag_subject_of`` for modifying the primary view of the subject
+
+* ``tag_object_of`` for modifying the primary view of the object
+* ``tag_subject_of`` for modifying the primary view of the subject
 
 These two methods take two arguments:
-   * a triplet ``(subject, relation_name, object)``, where subject or object can be replaced with ``'*'``
-   * the section name or ``hidden``
+
+* a triplet ``(subject, relation_name, object)``, where subject or object can be replaced with ``'*'``
+* the section name or ``hidden``
 
 .. sourcecode:: python
 
@@ -61,29 +64,31 @@ These two methods take two arguments:
 Display content
 ^^^^^^^^^^^^^^^
 
-You can use ``primaryview_display_ctrl`` to customize the display of attributes or relations. Values of ``primaryview_display_ctrl`` are dictionaries.
+You can use ``primaryview_display_ctrl`` to customize the display of attributes
+or relations. Values of ``primaryview_display_ctrl`` are dictionaries.
 
 
 Common keys for attributes and relations are:
-   * ``vid``: specifies the regid of the view for displaying the attribute or the relation.
+* ``vid``: specifies the regid of the view for displaying the attribute or the relation.
 
-     If ``vid`` is not specified, the default value depends on the section:
-       * ``attributes`` section: 'reledit' view
-       * ``relations`` section: 'autolimited' view
-       * ``sideboxes`` section: 'sidebox' view
+  If ``vid`` is not specified, the default value depends on the section:
+  * ``attributes`` section: 'reledit' view
+  * ``relations`` section: 'autolimited' view
+  * ``sideboxes`` section: 'sidebox' view
 
-   * ``order``: int used to control order within a section. When not specified, automatically set according to order in which tags are added.
+* ``order``: int used to control order within a section. When not specified,
+  automatically set according to order in which tags are added.
 
 
 Keys for relations only:
 
-   * ``label``: label for the relations section or side box
+* ``label``: label for the relations section or side box
 
-   * ``showlabel``: boolean telling whether the label is displayed
+* ``showlabel``: boolean telling whether the label is displayed
 
-   * ``limit``: boolean telling if the results should be limited. If so, a link to all results is displayed
+* ``limit``: boolean telling if the results should be limited. If so, a link to all results is displayed
 
-   * ``filter``: callback taking the related result set as argument and returning it filtered
+* ``filter``: callback taking the related result set as argument and returning it filtered
 
 .. sourcecode:: python
 
@@ -96,13 +101,17 @@ Keys for relations only:
        {'vid': 'list', 'label': _('latest comment(s):'), 'limit': True,
         'filter': lambda rset: rset.filtered_rset(lambda x: x.e_schema == 'Comment')})
 
-.. warning:: with the ``primaryview_display_ctrl`` rtag, the subject or the object of the relation is ignored for respectively ``tag_object_of`` or  ``tag_subject_of``. To avoid warnings during execution, they should be set to ``'*'``.
+.. Warning:: with the ``primaryview_display_ctrl`` rtag, the subject or the
+   object of the relation is ignored for respectively ``tag_object_of`` or
+   ``tag_subject_of``. To avoid warnings during execution, they should be set to
+   ``'*'``.
 
 
 Index view configuration
 ````````````````````````
 :indexview_etype_section:
    entity type category in the index/manage page. May be one of:
+
       * ``application``
       * ``system``
       * ``schema``
@@ -128,46 +137,59 @@ Automatic form configuration
 Attributes/relations display location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``uicfg.autoform_section`` specifies where to display a relation in creation/edition entity form for a given form type.
-``tag_attribute``, ``tag_subject_of`` and ``tag_object_of`` methods for this
-relation tag expect two arguments additionally to the relation key: a
-``formtype`` and a ``section``.
+``uicfg.autoform_section`` specifies where to display a relation in
+creation/edition entity form for a given form type.  ``tag_attribute``,
+``tag_subject_of`` and ``tag_object_of`` methods for this relation tag expect
+two arguments additionally to the relation key: a ``formtype`` and a
+``section``.
 
 formtype may be one of:
-   * ``main``, the main entity form (via the modify action)
-   * ``inlined``, the form for an entity inlined into another form
-   * ``muledit``, the table form to edit multiple entities
+
+* ``main``, the main entity form (via the modify action)
+* ``inlined``, the form for an entity inlined into another form
+* ``muledit``, the table form to edit multiple entities
 
 section may be one of:
-   * ``hidden``, don't display
-   * ``attributes``, display in the attributes section
-   * ``relations``, display in the relations section, using the generic relation
-     selector combobox (available in main form only, and not for attribute
-     relation)
-   * ``inlined``, display target entity of the relation in an inlined form
-     (available in main form only, and not for attribute relation)
-   * ``metadata``, display in a special metadata form (NOT YET IMPLEMENTED,
-     subject to changes)
 
-By default, mandatory relations are displayed in the ``attributes`` section, others in ``relations`` section.
+* ``hidden``, don't display
+
+* ``attributes``, display in the attributes section
+
+* ``relations``, display in the relations section, using the generic relation
+  selector combobox (available in main form only, and not for attribute
+  relation)
+
+* ``inlined``, display target entity of the relation in an inlined form
+  (available in main form only, and not for attribute relation)
+
+* ``metadata``, display in a special metadata form (NOT YET IMPLEMENTED, subject
+  to changes)
+
+By default, mandatory relations are displayed in the ``attributes`` section,
+others in ``relations`` section.
 
 Change default fields
 ^^^^^^^^^^^^^^^^^^^^^
 
 Use ``autoform_field`` to replace the default field type of an attribute.
 
-.. warning: ``autoform_field_kwargs`` should usually be used instead of ``autoform_field``. Do not use both methods for the same relation!
+.. Warning:
+   ``autoform_field_kwargs`` should usually be used instead of
+   ``autoform_field``. Do not use both methods for the same relation!
 
 
 Customize field options
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to customize field options (see :class:`cubicweb.web.formfields.Field` for a detailed list of options), use ``autoform_field_kwargs``. This rtag takes a relation triplet and a dictionary as arguments.
+In order to customize field options (see :class:`cubicweb.web.formfields.Field`
+for a detailed list of options), use ``autoform_field_kwargs``. This rtag takes
+a relation triplet and a dictionary as arguments.
 
 .. sourcecode:: python
 
    # Change the content of the combobox
-   # here ``ticket_done_in_choices`` is a function which returns a list of elements to populate the combobox
+   # here ``ticket_done_in_choices`` is a function which returns a list of
+   # elements to populate the combobox
    uicfg.autoform_field_kwargs.tag_subject_of(('Ticket', 'done_in', '*'), {'sort': False,
                                                   'choices': ticket_done_in_choices})
 
@@ -176,8 +198,8 @@ In order to customize field options (see :class:`cubicweb.web.formfields.Field` 
 Overriding permissions
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``autoform_permissions_overrides`` provides a way to by-pass security checking for dark-corner case where it can't
-be verified properly. XXX documents.
+``autoform_permissions_overrides`` provides a way to by-pass security checking
+for dark-corner case where it can't be verified properly. XXX documents.
 
 """
 __docformat__ = "restructuredtext en"
