@@ -39,7 +39,6 @@ class DummyAfterHook(Hook):
         oldvalue = self._cw.transaction_data['orig_file_value']
         assert oldvalue == self.entity.data.getvalue()
 
-
 class StorageTC(CubicWebTC):
 
     def setup_database(self):
@@ -88,11 +87,12 @@ class StorageTC(CubicWebTC):
 
     def test_bfss_fs_importing_doesnt_touch_path(self):
         self.session.transaction_data['fs_importing'] = True
-        f1 = self.session.create_entity('File', data=Binary('/the/path'),
+        filepath = osp.abspath(__file__)
+        f1 = self.session.create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
         fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
                               {'f': f1.eid})[0][0]
-        self.assertEquals(fspath.getvalue(), '/the/path')
+        self.assertEquals(fspath.getvalue(), filepath)
 
     def test_source_storage_transparency(self):
         with self.temporary_appobjects(DummyBeforeHook, DummyAfterHook):
@@ -155,6 +155,30 @@ class StorageTC(CubicWebTC):
                                'Any X,UPPER(D) WHERE X eid %(x)s, X data D',
                                {'x': f1.eid}, 'x')
         self.assertEquals(str(ex), 'UPPER can not be called on mapped attribute')
+
+
+    def test_bfss_fs_importing_transparency(self):
+        self.session.transaction_data['fs_importing'] = True
+        filepath = osp.abspath(__file__)
+        f1 = self.session.create_entity('File', data=Binary(filepath),
+                                        data_format=u'text/plain', data_name=u'foo')
+        self.assertEquals(f1.data.getvalue(), file(filepath).read(),
+                          'files content differ')
+
+
+    def test_bfss_update_with_existing_data(self):
+        # use self.session to use server-side cache
+        f1 = self.session.create_entity('File', data=Binary('some data'),
+                                        data_format=u'text/plain', data_name=u'foo')
+        # NOTE: do not use set_attributes() which would automatically
+        #       update f1's local dict. We want the pure rql version to work
+        self.execute('SET F data %(d)s WHERE F eid %(f)s',
+                     {'d': Binary('some other data'), 'f': f1.eid})
+        self.assertEquals(f1.data.getvalue(), 'some other data')
+        self.commit()
+        f2 = self.entity('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid})
+        self.assertEquals(f2.data.getvalue(), 'some other data')
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -471,14 +471,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         #    on the filesystem. To make the entity.data usage absolutely
         #    transparent, we'll have to reset entity.data to its binary
         #    value once the SQL query will be executed
-        orig_values = {}
+        restore_values = {}
         etype = entity.__regid__
         for attr, storage in self._storages.get(etype, {}).items():
             try:
                 if attr in entity.edited_attributes:
-                    orig_values[attr] = entity[attr]
                     handler = getattr(storage, 'entity_%s' % event)
-                    handler(entity, attr)
+                    real_value = handler(entity, attr)
+                    restore_values[attr] = real_value
             except AttributeError:
                 assert event == 'deleted'
                 getattr(storage, 'entity_deleted')(entity, attr)
@@ -486,7 +486,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             yield # 2/ execute the source's instructions
         finally:
             # 3/ restore original values
-            for attr, value in orig_values.items():
+            for attr, value in restore_values.items():
                 entity[attr] = value
 
     def add_entity(self, session, entity):
