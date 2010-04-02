@@ -5,10 +5,10 @@
 The Core Concepts of |cubicweb|
 ===============================
 
-This section defines some terms and core concepts of the |cubicweb|
-framework. To avoid confusion while reading this book, take time to go through
-the following definitions and use this section as a reference during your
-reading.
+This section defines some terms and core concepts of the |cubicweb| framework. To
+avoid confusion while reading this book, take time to go through the following
+definitions and use this section as a reference during your reading.
+
 
 .. _Cube:
 
@@ -19,16 +19,16 @@ A cube is a software component made of three parts: its data model
 (:file:`schema`), its logic (:file:`entities`) and its user interface
 (:file:`views`).
 
-A cube can use other cubes as building blocks and assemble them to provide
-a whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_
-and `cubicweb-comment`_ could be used to make a cube named *myblog* with
-commentable blog entries.
+A cube can use other cubes as building blocks and assemble them to provide a
+whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_ and
+`cubicweb-comment`_ could be used to make a cube named *myblog* with commentable
+blog entries.
 
-The `|cubicweb| Forge`_ offers a large number of cubes developed by the community
+The `CubicWeb.org Forge`_ offers a large number of cubes developed by the community
 and available under a free software license.
 
-The command :command:`cubicweb-ctl list` displays the list of cubes installed on your
-system.
+The command :command:`cubicweb-ctl list` displays the list of cubes installed on
+your system.
 
 On a Unix system, the available cubes are usually stored in the directory
 :file:`/usr/share/cubicweb/cubes`. If you're using the cubicweb forest
@@ -36,10 +36,12 @@ On a Unix system, the available cubes are usually stored in the directory
 :file:`/path/to/cubicweb_forest/cubes`. The environment variable
 :envvar:`CW_CUBES_PATH` gives additionnal locations where to search for cubes.
 
-.. _`|cubicweb| Forge`: http://www.cubicweb.org/project/
+.. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
 .. _`cubicweb-comment`: http://www.cubicweb.org/project/cubicweb-comment
 
+
+.. _Instance:
 
 Instances
 ---------
@@ -47,9 +49,9 @@ Instances
 An instance is a runnable application installed on a computer and based on a
 cube.
 
-The instance directory contains the configuration files. Several instances can
-be created and based on the same cube. For exemple, several software forges can
-be set up on one computer system based on the `cubicweb-forge`_ cube.
+The instance directory contains the configuration files. Several instances can be
+created and based on the same cube. For exemple, several software forges can be
+set up on one computer system based on the `cubicweb-forge`_ cube.
 
 .. _`cubicweb-forge`: http://www.cubicweb.org/project/cubicweb-forge
 
@@ -67,20 +69,26 @@ On a Unix system, the instances are usually stored in the directory
 directory is looked up, as well as the paths in :envvar:`CW_INSTANCES_DIR`
 environment variable.
 
-The term application is used to refer to "something that should do something as a
-whole", eg more like a project and so can refer to an instance or to a cube,
-depending on the context. This book will try to use *application*, *cube* and
-*instance* as appropriate.
+
+.. Note::
+
+  The term application is used to refer to "something that should do something as
+  a whole", eg more like a project and so can refer to an instance or to a cube,
+  depending on the context. This book will try to use *application*, *cube* and
+  *instance* as appropriate.
+
+
+.. _RepositoryIntro:
 
 Data Repository
 ---------------
 
 The data repository [1]_ provides access to one or more data sources (including
-SQL databases, LDAP repositories, Mercurial or Subversion version control
-systems, other |cubicweb| instance repositories, GAE's DataStore, etc).
+SQL databases, LDAP repositories, other |cubicweb| instance repositories, GAE's
+DataStore, etc).
 
 All interactions with the repository are done using the Relation Query Language
-(RQL). The repository federates the data sources and hides them from the
+(:ref:`RQL`). The repository federates the data sources and hides them from the
 querier, which does not realize when a query spans accross several data sources
 and requires running sub-queries and merges to complete.
 
@@ -96,6 +104,9 @@ send email notifications when the state of an object changes. See `Hooks` below.
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
 .. _`Python Remote Objects`: http://pyro.sourceforge.net/
 
+
+.. _WebEngineIntro:
+
 Web Engine
 ----------
 
@@ -106,6 +117,9 @@ By default the web engine provides a default user interface based on
 the data model of the instance. Entities can be created, displayed,
 updated and deleted. As the default user interface is not very fancy,
 it is usually necessary to develop your own.
+
+
+.. _SchemaIntro:
 
 Schema (Data Model)
 -------------------
@@ -128,8 +142,10 @@ A `relation definition` is a triple (*subject entity type*, *relation type*, *ob
 entity type*) associated with a set of properties such as cardinality,
 constraints, etc.
 
-Permissions can be set on entity types and relation types to control who will be
-able to create, read, update or delete entities and relations.
+Permissions can be set on entity types and relation definition to control who
+will be able to create, read, update or delete entities and relations. Permissions
+are granted to groups (to which users may belong) or using rql expression (if the
+rql expression returns some results, the permission is granted).
 
 Some meta-data necessary to the system is added to the data model. That includes
 entities like users and groups, the entities used to store the data model
@@ -139,6 +155,9 @@ When you create a new |cubicweb| instance, the schema is stored in the database.
 When the cubes the instance is based on evolve, they may change their data model
 and provide migration scripts that will be executed when the administrator will
 run the upgrade process for the instance.
+
+
+.. _VRegistryIntro:
 
 Registries and Objects
 ----------------------
@@ -150,108 +169,154 @@ Beside a few core functionalities, almost every feature of the framework is
 achieved by dynamic objects (`application objects` or `appobjects`) stored in a
 two-levels registry (the `vregistry`). Each object is affected to a registry with
 an identifier in this registry. You may have more than one object sharing an
-identifier in the same registry, At runtime, appobjects are selected in the
-vregistry according to the context.
+identifier in the same registry, At runtime, appobjects are selected in a
+registry according to the context. Selection is done by comparing *score*
+returned by each appobject's *selector*.
 
-Application objects are stored in the registry using a two-level hierarchy :
+Application objects are stored in the vregistry using a two-level hierarchy :
 
-  object's `__registry__` : object's `id` : [list of app objects]
+  object's `__registry__` : object's `__regid__` : [list of app objects]
 
-The base class of appobjects is `AppObject` (module `cubicweb.appobject`).
+E.g. The `vregistry` contains several registries which hold a list of
+appobjects associated to an identifier.
 
-The `vregistry`
-~~~~~~~~~~~~~~~
-
-At startup, the `registry` inspects a number of directories looking
-for compatible classes definition. After a recording process, the
-objects are assigned to registers so that they can be selected
-dynamically while the instance is running.
+The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
 
 Selectors
 ~~~~~~~~~
 
-Each appobject has a selector, that is used to compute how well the object fits
-a given context. The better the object fits the context, the higher the score.
+Each appobject has a selector, that is used to compute how well the object fits a
+given context. The better the object fits the context, the higher the score. They
+are the glue that tie appobjects to the data model. Using them appropriately is
+an essential part of the construction of well behaved cubes.
 
-|cubicweb| provides a set of basic selectors that may be parametrized. Selectors
-can be combined with the binary operators `&` and `|` to build more complex
-selector that can be combined too.
+|cubicweb| provides a set of basic selectors that may be parametrized.  Also,
+selectors can be combined with the `~` unary operator (negation) and the binary
+operators `&` and `|` (respectivly 'and' and 'or') to build more complex
+selector. Of course complex selector may be combined too.
 
-There are three common ways to retrieve some appobject from the repository:
+The `vregistry`
+~~~~~~~~~~~~~~~
 
-* get the most appropriate objects by specifying a registry and an identifier. In
-  that case, the object with the greatest score is selected. There should always
-  be a single appobject with a greater score than others.
+At startup, the `vregistry` inspects a number of directories looking for
+compatible classes definition. After a recording process, the objects are
+assigned to registries so that they can be selected dynamically while the
+instance is running.
 
-* get all appobjects applying to a context by specifying a registry. In
-  that case, every object with the a postive score is selected.
+In a cube, appobject classes are looked in the following modules or packages:
+
+- `entities`
+- `views`
+- `sobjects`
+- `hooks`
+
+
+Once initialized, there are three common ways to retrieve some appobject from a
+registry:
+
+* get the most appropriate object by specifying an identifier. In that case, the
+  object with the greatest score is selected. There should always be a single
+  appobject with a greater score than others for a particular context (see note
+  below).
+
+  - If no object has a positive score, :class:`cubicweb.NoSelectableObject`
+    exception is raised.
+
+* get all appobjects applying to a context by specifying a registry. In that
+  case, a list of objects will be returned containing the object with the
+  highest score (> 0) for each identifier in that registry.
 
 * get the object within a particular registry/identifier. In that case no
   selection process is involved, the vregistry will expect to find a single
   object in that cell.
 
-Selector sets are the glue that tie views to the data model. Using them
-appropriately is an essential part of the construction of well behaved cubes.
+In all cases:
 
-When no score is higher than the others, an exception is raised in development
-mode to let you know that the engine was not able to identify the view to
-apply. This error is silenced in production mode and one of the objects with the
-higher score is picked.
+- If no object is found for the identifier, :class:`cubicweb.ObjectNotFound`
+  exception is raised.
 
-If no object has a positive score, ``NoSelectableObject`` exception is raised.
+- If you ask the `vregistry` for an unexistant registry,
+  :class:`cubicweb.RegistryNotFound` exception is raised.
 
-If no object is found for a particular registry and identifier,
-``ObjectNotFound`` exception is raised.
+.. note::
 
-In such cases you would need to review your design and make sure your views are
-properly defined.
+  When no score is higher than the others, an exception is raised in development
+  mode to let you know that the engine was not able to identify the view to
+  apply. This error is silenced in production mode and one of the objects with
+  the higher score is picked.
+
+  In such cases you would need to review your design and make sure your selectors
+  or appobjects are properly defined.
 
 
+.. _RQLIntro:
 
 The RQL query language
 ----------------------
 
 **No need for a complicated ORM when you have a powerful query language**
 
-All the persistent data in a |cubicweb| instance is retrieved and modified by using the
-Relation Query Language.
+All the persistent data in a |cubicweb| instance is retrieved and modified by
+using the Relation Query Language.
 
 This query language is inspired by SQL but is on a higher level in order to
 emphasize browsing relations.
+
 
 db-api
 ~~~~~~
 
 The repository exposes a `db-api`_ like api but using the RQL instead of SQL.
-XXX feed me
+
+You basically get a connection using :ref:`cubicweb.dbapi.connect` , then
+get a cursor to call its `execute` method which will return result set for the
+given rql query.
+
+You can also get additional information through the connection, such as the
+repository'schema, version configuration, etc.
+
 
 Result set
 ~~~~~~~~~~
 
-Every request made (using RQL) to the data repository returns an
-object we call a Result Set. It enables easy use of the retrieved
-data, providing a translation layer between the backend's native
-datatypes and |cubicweb| schema's EntityTypes.
+Every request made (using RQL) to the data repository returns an object we call a
+Result Set. It enables easy use of the retrieved data, providing a translation
+layer between the backend's native datatypes and |cubicweb| schema's EntityTypes.
 
-Result sets provide access to the raw data, yielding either basic
-Python data types, or schema-defined high-level entities, in a
-straightforward way.
+Result sets provide access to the raw data, yielding either basic Python data
+types, or schema-defined high-level entities, in a straightforward way.
 
+
+.. _ViewIntro:
 
 Views
 -----
 
-**CubicWeb| is data driven**
+**CubicWeb is data driven**
 
-The view system is loosely coupled to data through a selection
-system. Views are, in essence, defined by an id, a selection predicate
-and an entry point (generaly producing html).
+The view system is loosely coupled to data through the selection system explained
+above. Views are application objects with a dedicated interface to 'render'
+something, eg producing some html, text, xml, pdf, or whatsover that can be
+displayed to a user.
 
-XXX feed me.
+The two main entry points of a view are:
+
+* `call()`, used to render a view on a context with no result set, or on a whole
+  result set
+
+* `cell_call(row, col)`, used to render a view on a the cell with index `row` and
+  `col` of the context's result set (remember result set may be seen as a two
+  dimensions array).
+
+Then view may gets refined into different kind of objects such as `template`,
+`boxes`, `components`, which are more high-level abstraction useful to build
+the user interface in an object oriented way.
 
 
-Hooks
------
+.. _HookIntro:
+
+Hooks and operations
+--------------------
 
 **CubicWeb provides an extensible data repository**
 
@@ -275,43 +340,16 @@ except that:
 
 * it is well-coupled to the rest of the framework
 
-Hooks are basically functions that dispatch on both:
+Hooks are also application objects registered on events such as after/before
+add/update/delete on entities/relations, server startup or shutdown, etc. As all
+appobjects, they have a selector defining when they should be called or not.
 
-* events : after/before add/update/delete on entities/relations
+`Operations` may be instantiated by hooks to do further processing at different
+steps of the transaction's commit / rollback, which usually can not be done
+safely at the hook execution time.
 
-* entity or relation types
-
-They are an essential building block of any moderately complicated
+Hooks and operation are an essential building block of any moderately complicated
 cubicweb application.
 
-
-.. _RunMode:
-
-Running mode
-------------
-
-A running mode is a predifined set of configuration telling where it should look
-for various resources, such as cubes, instances, etc. To ease development with
-the framework, there are two running modes with |cubicweb|:
-
-* 'user', resources are searched / created in the user home directory:
-  - instances are stored in :file:`~/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/tmp`
-
-* 'system', resources are searched / created in the system directories (eg usually requiring root access):
-  - instances are stored in :file:`/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/var/run/cubicweb`
-
-Cubes search path is also affected, see the :ref:Cube section.
-
-By default, the mode automatically set to 'user' if a :file:`.hg` directory is found
-in the cubicweb package, else it's set to 'system'. You can force this by setting
-the :envvar:`CW_MODE` environment variable to either 'user' or 'system'.
-
-If you've a doubt about the mode you're currently running, check the first line
-outputed by the :command:`cubicweb-ctl list` command.
-
-Notice that each resource path may be explicitly set using an environment
-variable if the default doesn't suit your needs.
 
 .. |cubicweb| replace:: *CubicWeb*
