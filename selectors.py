@@ -74,6 +74,9 @@ def _trace_selector(cls, ret):
         print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
 
 def lltrace(selector):
+    """use this decorator on your selectors so the becomes traceable with
+    :class:`traced_selection`
+    """
     # don't wrap selectors if not in development mode
     if CubicWebConfiguration.mode == 'system': # XXX config.debug
         return selector

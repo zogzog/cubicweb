@@ -131,8 +131,7 @@ comprehensive language made of Python classes imported from the yams_ library.
 
 An `entity type` defines a set of attributes and is used in some relations.
 Attributes may be of the following types: `String`, `Int`, `Float`, `Boolean`,
-`Date`, `Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`. See
-:ref:`yams.BASE_TYPES` for details.
+`Date`, `Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`.
 
 A `relation type` is used to define an oriented binary relation between two
 entity types.  The left-hand part of a relation is named the `subject` and the
@@ -159,8 +158,8 @@ run the upgrade process for the instance.
 
 .. _VRegistryIntro:
 
-Registries and Objects
-----------------------
+Registries and application objects
+----------------------------------
 
 Application objects
 ~~~~~~~~~~~~~~~~~~~
@@ -193,7 +192,8 @@ an essential part of the construction of well behaved cubes.
 |cubicweb| provides a set of basic selectors that may be parametrized.  Also,
 selectors can be combined with the `~` unary operator (negation) and the binary
 operators `&` and `|` (respectivly 'and' and 'or') to build more complex
-selector. Of course complex selector may be combined too.
+selector. Of course complex selector may be combined too. Last but not least, you
+can write your own selectors.
 
 The `vregistry`
 ~~~~~~~~~~~~~~~
@@ -203,7 +203,8 @@ compatible classes definition. After a recording process, the objects are
 assigned to registries so that they can be selected dynamically while the
 instance is running.
 
-In a cube, appobject classes are looked in the following modules or packages:
+In a cube, application object classes are looked in the following modules or
+packages:
 
 - `entities`
 - `views`
@@ -211,42 +212,20 @@ In a cube, appobject classes are looked in the following modules or packages:
 - `hooks`
 
 
-Once initialized, there are three common ways to retrieve some appobject from a
-registry:
+Once initialized, there are three common ways to retrieve some application object
+from a registry:
 
 * get the most appropriate object by specifying an identifier. In that case, the
   object with the greatest score is selected. There should always be a single
-  appobject with a greater score than others for a particular context (see note
-  below).
+  appobject with a greater score than others for a particular context.
 
-  - If no object has a positive score, :class:`cubicweb.NoSelectableObject`
-    exception is raised.
-
-* get all appobjects applying to a context by specifying a registry. In that
-  case, a list of objects will be returned containing the object with the
-  highest score (> 0) for each identifier in that registry.
+* get all objects applying to a context by specifying a registry. In that case, a
+  list of objects will be returned containing the object with the highest score
+  (> 0) for each identifier in that registry.
 
 * get the object within a particular registry/identifier. In that case no
   selection process is involved, the vregistry will expect to find a single
   object in that cell.
-
-In all cases:
-
-- If no object is found for the identifier, :class:`cubicweb.ObjectNotFound`
-  exception is raised.
-
-- If you ask the `vregistry` for an unexistant registry,
-  :class:`cubicweb.RegistryNotFound` exception is raised.
-
-.. note::
-
-  When no score is higher than the others, an exception is raised in development
-  mode to let you know that the engine was not able to identify the view to
-  apply. This error is silenced in production mode and one of the objects with
-  the higher score is picked.
-
-  In such cases you would need to review your design and make sure your selectors
-  or appobjects are properly defined.
 
 
 .. _RQLIntro:

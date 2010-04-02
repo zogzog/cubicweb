@@ -347,8 +347,11 @@ class CubicWebVRegistry(VRegistry):
                     obj.schema = schema
 
     def register_if_interface_found(self, obj, ifaces, **kwargs):
-        """register an object but remove it if no entity class implements one of
-        the given interfaces at the end of the registration process
+        """register `obj` but remove it if no entity class implements one of
+        the given `ifaces` interfaces at the end of the registration process.
+
+        Extra keyword arguments are given to the
+        :meth:`~cubicweb.cwvreg.CubicWebVRegistry.register` function.
         """
         self.register(obj, **kwargs)
         if not isinstance(ifaces,  (tuple, list)):
@@ -357,6 +360,13 @@ class CubicWebVRegistry(VRegistry):
             self._needs_iface[obj] = ifaces
 
     def register(self, obj, *args, **kwargs):
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified, with identifier `oid` or
+        `obj.__regid__` if not specified.
+
+        If `clear` is true, all objects with the same identifier will be
+        previously unregistered.
+        """
         super(CubicWebVRegistry, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)

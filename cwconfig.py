@@ -119,9 +119,6 @@ Here are all environment variables that may be used to configure |cubicweb|:
 .. envvar:: CW_RUNTIME_DIR
 
    Directory where pid files will be written
-
-
-.. |cubicweb| replace:: *CubicWeb*
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
