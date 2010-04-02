@@ -64,7 +64,7 @@ class LDAPUserSource(AbstractSource):
          {'type' : 'choice',
           'default': 'ldap',
           'choices': ('ldap', 'ldaps', 'ldapi'),
-          'help': 'ldap protocol',
+          'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
           'group': 'ldap-source', 'inputlevel': 1,
           }),
 
