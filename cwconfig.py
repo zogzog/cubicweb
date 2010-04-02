@@ -1,46 +1,42 @@
 # -*- coding: utf-8 -*-
-"""common configuration utilities for cubicweb
+#:organization: Logilab
+#:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+#:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# docstring included in doc/book/en/admin/setup.rst
+"""
+.. _ResourceMode:
+
+Resource mode
+-------------
+
+A resource *mode* is a predifined set of settings for various resources
+directories, such as cubes, instances, etc. to ease development with the
+framework. There are two running modes with |cubicweb|:
+
+* 'user', resources are searched / created in the user home directory:
+
+  - instances are stored in :file:`~/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/tmp`
+
+* 'system', resources are searched / created in the system directories (eg
+  usually requiring root access):
+
+  - instances are stored in :file:`<INSTALL_PREFIX>/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/var/run/cubicweb`
+
+  where `<INSTALL_PREFIX>` is the detected installation prefix ('/usr/local' for
+  instance).
 
 
-If cubicweb is a mercurial checkout (eg `CWDEV` is true), located in
-`CW_SOFTWARE_ROOT`:
-
- * main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
-   another one with `CW_INSTANCES_DIR` environment variable or simply add some
-   other directories by using `CW_CUBES_PATH`.
-
- * cubicweb migration files are by default searched in
-   `<CW_SOFTWARE_ROOT>/misc/migration` instead of
-   `/usr/share/cubicweb/migration/`(unless another emplacement is specified
-   using `CW_MIGRATION_DIR`.
-
- * Cubicweb will start in 'user' mode (see below)
-
-
-On startup, Cubicweb is using a specific *mode*. A mode corresponds to some
-default setting for various resource directories. There are currently 2 main
-modes : 'system', for system wide installation, and 'user', fur user local
-installation (e.g. no root privileges).
-
-'user' mode is activated automatically when cubicweb is a mercurial checkout
-(e.g.  has a .hg directory). You can also force mode by using the `CW_MODE`
-environment variable, to:
-
-* use system wide installation but user specific instances and all, without root
-  privileges on the system (`export CW_MODE=user`)
-
-* use local checkout of cubicweb on system wide instances (requires root
-  privileges on the system (`export CW_MODE=system`)
-
- Here is the default resource directories settings according to mode:
+Notice that each resource path may be explicitly set using an environment
+variable if the default doesn't suit your needs. Here are the default resource
+directories that are affected according to mode:
 
 * 'system': ::
 
-        CW_INSTANCES_DIR = /etc/cubicweb.d/
+        CW_INSTANCES_DIR = <INSTALL_PREFIX>/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
         CW_RUNTIME_DIR = /var/run/cubicweb/
 
@@ -50,27 +46,82 @@ environment variable, to:
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
         CW_RUNTIME_DIR = /tmp
 
+Cubes search path is also affected, see the :ref:Cube section.
+
+By default, the mode automatically set to 'user' if a :file:`.hg` directory is found
+in the cubicweb package, else it's set to 'system'. You can force this by setting
+the :envvar:`CW_MODE` environment variable to either 'user' or 'system' so you can
+easily:
+
+* use system wide installation but user specific instances and all, without root
+  privileges on the system (`export CW_MODE=user`)
+
+* use local checkout of cubicweb on system wide instances (requires root
+  privileges on the system (`export CW_MODE=system`)
+
+If you've a doubt about the mode you're currently running, check the first line
+outputed by the :command:`cubicweb-ctl list` command.
+
+Also, if cubicweb is a mercurial checkout located in `<CW_SOFTWARE_ROOT>`:
+
+* main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
+  another one with :envvar:`CW_INSTANCES_DIR` environment variable or simply
+  add some other directories by using :envvar:`CW_CUBES_PATH`
+
+* cubicweb migration files are searched in `<CW_SOFTWARE_ROOT>/misc/migration`
+  instead of `<INSTALL_PREFIX>/share/cubicweb/migration/`.
+
+
+.. _ConfigurationEnv:
+
+Environment configuration
+-------------------------
+
+Python
+``````
+
+If you installed |cubicweb| by cloning the Mercurial forest or from source
+distribution, then you will need to update the environment variable PYTHONPATH by
+adding the path to the forest `cubicweb`:
+
+Add the following lines to either :file:`.bashrc` or :file:`.bash_profile` to
+configure your development environment ::
+
+    export PYTHONPATH=/full/path/to/cubicweb-forest
+
+If you installed |cubicweb| with packages, no configuration is required and your
+new cubes will be placed in `/usr/share/cubicweb/cubes` and your instances will
+be placed in `/etc/cubicweb.d`.
+
+
+CubicWeb
+````````
+
+Here are all environment variables that may be used to configure |cubicweb|:
 
 .. envvar:: CW_MODE
-   Resource mode: user or system
+
+   Resource mode: user or system, as explained in :ref:ResourceMode.
 
 .. envvar:: CW_CUBES_PATH
-   Augments the default search path for cubes
+
+   Augments the default search path for cubes. You may specify several
+   directories using ':' as separator (';' under windows environment).
 
 .. envvar:: CW_INSTANCES_DIR
-   Directory where cubicweb instances will be found
+
+   Directory where cubicweb instances will be found.
 
 .. envvar:: CW_INSTANCES_DATA_DIR
-   Directory where cubicweb instances data will be written
+
+   Directory where cubicweb instances data will be written (backup file...)
 
 .. envvar:: CW_RUNTIME_DIR
+
    Directory where pid files will be written
 
-.. envvar:: CW_MIGRATION_DIR
-   Directory where cubicweb migration files will be found
 
-
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. |cubicweb| replace:: *CubicWeb*
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
