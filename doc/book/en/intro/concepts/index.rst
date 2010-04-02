@@ -113,11 +113,12 @@ Web Engine
 The web engine replies to http requests and runs the user interface
 and most of the application logic.
 
-By default the web engine provides a default user interface based on
+By default the web engine provides a `CRUD`_ user interface based on
 the data model of the instance. Entities can be created, displayed,
 updated and deleted. As the default user interface is not very fancy,
 it is usually necessary to develop your own.
 
+.. _`CRUD`: http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 
 .. _SchemaIntro:
 
