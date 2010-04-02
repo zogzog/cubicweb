@@ -78,12 +78,14 @@ Core development
 | schema - security                                                  | 2  | 2  |
 | schema - inheritance                                               | 1  | 1  |
 | schema - customization                                             | 1  | 1  |
+| schema - introspection                                             | 2  | 1  |
 +--------------------------------------------------------------------+----+----+
 | vregistry - appobject                                              | 2  | 2  |
 | vregistry - registration                                           | 2  | 2  |
 | vregistry - selection                                              | 3  | 2  |
 | vregistry - core selectors                                         | 3  | 3  |
 | vregistry - custom selectors                                       | 2  | 1  |
+| vregistry - debugging selection                                    | 2  | 1  |
 +--------------------------------------------------------------------+----+----+
 | entities - interfaces                                              | 2  | ?  |
 | entities - customization (dc_,...)                                 | 2  | ?  |
@@ -119,6 +121,7 @@ Core development
 | more - crypto services                                             | 0  | 0  |
 | more - massive import                                              | 2  | 0  |
 | more - mime type based conversion                                  | 2  | 0  |
+| more - CWCache                                                     | 1  | 0  |
 +--------------------------------------------------------------------+----+----+
 
 
@@ -135,6 +138,7 @@ Web UI development
 | base - external resources                                          | 2  | 2  |
 | base - static files                                                | 2  | ?  |
 | base - data sharing                                                | 2  | 2  |
+| base - graphical chart customization                               | 1  | 1  |
 +--------------------------------------------------------------------+----+----+
 | publishing - cycle                                                 | 2  | 2  |
 | publishing - error handling                                        | 2  | 1  |
@@ -202,6 +206,7 @@ Repository development
 +====================================================================+====+====+
 | base - session                                                     | 2  | 2  |
 | base - more security control                                       | 2  | 0  |
+| base - debugging                                                   | 2  | 0  |
 +--------------------------------------------------------------------+----+----+
 | hooks - development                                                | 2  | 2  |
 | hooks - abstract hooks                                             | 2  | 0  |

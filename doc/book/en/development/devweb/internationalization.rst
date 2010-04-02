@@ -15,7 +15,7 @@ Cubicweb' internalization involves two steps:
 
 * in your Python code and cubicweb-tal templates : mark translatable strings
 
-* in your instance : handle the translation catalog
+* in your instance : handle the translation catalog, edit translations
 
 String internationalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,8 +50,9 @@ translatable strings**, it will only return the string to translate
 itself, but not its translation (it's actually another name for the
 `unicode` builtin).
 
-In the other hand the request's method `self._cw._` is meant to retrieve the
-proper translation of translation strings in the requested language.
+In the other hand the request's method `self._cw._` is also meant to
+retrieve the proper translation of translation strings in the
+requested language.
 
 Finally you can also use the `__` attribute of request object to get a
 translation for a string *which should not itself added to the catalog*,
@@ -62,13 +63,14 @@ usually in case where the actual msgid is created by string interpolation ::
 In this example ._cw.__` is used instead of ._cw._` so we don't have 'This %s' in
 messages catalogs.
 
-
 Translations in cubicweb-tal template can also be done with TAL tags
 `i18n:content` and `i18n:replace`.
 
-
 If you need to add messages on top of those that can be found in the source,
 you can create a file named `i18n/static-messages.pot`.
+
+You could put there messages not found in the python sources or
+overrides for some messages of used cubes.
 
 Generated string
 ````````````````
@@ -80,20 +82,20 @@ various actions are also generated.
 For exemple the following schema ::
 
   Class EntityA(EntityType):
-      relationa2b = SubjectRelation('EntityB')
+      relation_a2b = SubjectRelation('EntityB')
 
   class EntityB(EntityType):
       pass
 
 May generate the following message ::
 
-  add Execution has_export File subject
+  add EntityA relation_a2b EntityB subject
 
 This message will be used in views of ``EntityA`` for creation of a new
 ``EntityB`` with a preset relation ``relation_a2b`` between the current
 ``EntityA`` and the new ``EntityB``. The opposite message ::
 
-  add Execution has_export File object
+  add EntityA relation_a2b EntityB object
 
 Is used for similar creation of an ``EntityA`` from a view of ``EntityB``. The
 title of they respective creation form will be ::
@@ -105,8 +107,8 @@ title of they respective creation form will be ::
 In the translated string you can use ``%(linkto)s`` for reference to the source
 ``entity``.
 
-Handle the translation catalog
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling the translation catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once the internationalization is done in your code, you need to populate and
 update the translation catalog. Cubicweb provides the following commands for this
@@ -117,11 +119,11 @@ purpose:
   catalogs. Unless you actually work on the framework itself, you
   don't need to use this command.
 
-* `i18ncube` updates the translation catalogs of *one particular
-  cube* (or of all cubes). After this command is
-  executed you must update the translation files *.po* in the "i18n"
-  directory of your template. This command will of course not remove
-  existing translations still in use.
+* `i18ncube` updates the translation catalogs of *one particular cube*
+  (or of all cubes). After this command is executed you must update
+  the translation files *.po* in the "i18n" directory of your
+  cube. This command will of course not remove existing translations
+  still in use. It will mark unused translation but not remove them.
 
 * `i18ninstance` recompiles the translation catalogs of *one particular
   instance* (or of all instances) after the translation catalogs of
@@ -134,6 +136,7 @@ purpose:
 
 Example
 ```````
+
 You have added and/or modified some translation strings in your cube
 (after creating a new view or modifying the cube's schema for exemple).
 To update the translation catalogs you need to do:
@@ -143,3 +146,77 @@ To update the translation catalogs you need to do:
 3. `hg ci -m "updated i18n catalogs"`
 4. `cubicweb-ctl i18ninstance <myinstance>`
 
+Editing po files
+~~~~~~~~~~~~~~~~
+
+Using a PO aware editor
+````````````````````````
+
+Many tools exist to help maintain .po (PO) files. Common editors or
+development environment provides modes for these. One can also find
+dedicated PO files editor, such as `poedit`_.
+
+.. _`poedit`:  http://www.poedit.net/
+
+While usage of such a tool is commendable, PO files are perfectly
+editable with a (unicode aware) plain text editor. It is also useful
+to know their structure for troubleshooting purposes.
+
+Structure of a PO file
+``````````````````````
+
+In this section, we selectively quote passages of the `GNU gettext`_
+manual chapter on PO files, available there::
+
+ http://www.gnu.org/software/hello/manual/gettext/PO-Files.html
+
+One PO file entry has the following schematic structure::
+
+     white-space
+     #  translator-comments
+     #. extracted-comments
+     #: reference...
+     #, flag...
+     #| msgid previous-untranslated-string
+     msgid untranslated-string
+     msgstr translated-string
+
+
+A simple entry can look like this::
+
+     #: lib/error.c:116
+     msgid "Unknown system error"
+     msgstr "Error desconegut del sistema"
+
+It is also possible to have entries with a context specifier. They
+look like this::
+
+     white-space
+     #  translator-comments
+     #. extracted-comments
+     #: reference...
+     #, flag...
+     #| msgctxt previous-context
+     #| msgid previous-untranslated-string
+     msgctxt context
+     msgid untranslated-string
+     msgstr translated-string
+
+
+The context serves to disambiguate messages with the same
+untranslated-string. It is possible to have several entries with the
+same untranslated-string in a PO file, provided that they each have a
+different context. Note that an empty context string and an absent
+msgctxt line do not mean the same thing.
+
+Contexts and CubicWeb
+`````````````````````
+
+CubicWeb PO files have both non-contextual and contextual msgids.
+
+Contextual entries are automatically used in some cases. For instance,
+entity.dc_type(), eschema.display_name(req) or display_name(etype,
+req, form, context) methods/function calls will use them.
+
+It is also possible to explicitly use the with _cw.pgettext(context,
+msgid).
