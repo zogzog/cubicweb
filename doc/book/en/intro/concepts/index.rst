@@ -95,11 +95,15 @@ and requires running sub-queries and merges to complete.
 It is common to run the web engine and the repository in the same process (see
 instances of type all-in-one above), but this is not a requirement. A repository
 can be set up to be accessed remotely using Pyro (`Python Remote Objects`_) and
-act as a server.
+act as a server. However, it's important to know if code you're writing is
+executed on the repository side, on our client side (the web engine being a
+client for instance): you don't have the same abilities on both side. On the
+repository side, you can for instance by-pass security checks, which isn't
+possible from client code.
 
 Some logic can be attached to events that happen in the repository, like
 creation of entities, deletion of relations, etc. This is used for example to
-send email notifications when the state of an object changes. See `Hooks` below.
+send email notifications when the state of an object changes. See :ref:`HookIntro` below.
 
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
 .. _`Python Remote Objects`: http://pyro.sourceforge.net/
@@ -248,7 +252,7 @@ db-api
 
 The repository exposes a `db-api`_ like api but using the RQL instead of SQL.
 
-You basically get a connection using :ref:`cubicweb.dbapi.connect` , then
+You basically get a connection using :func:`cubicweb.dbapi.connect` , then
 get a cursor to call its `execute` method which will return result set for the
 given rql query.
 
@@ -322,7 +326,8 @@ except that:
 
 Hooks are also application objects registered on events such as after/before
 add/update/delete on entities/relations, server startup or shutdown, etc. As all
-appobjects, they have a selector defining when they should be called or not.
+application objects, they have a selector defining when they should be called or
+not.
 
 `Operations` may be instantiated by hooks to do further processing at different
 steps of the transaction's commit / rollback, which usually can not be done
@@ -331,5 +336,8 @@ safely at the hook execution time.
 Hooks and operation are an essential building block of any moderately complicated
 cubicweb application.
 
-
+.. Note:
+   RQL queries executed in hooks and operations are *unsafe* by default, e.g. the
+   read and write security is deactivated unless explicitly asked.
+  
 .. |cubicweb| replace:: *CubicWeb*
