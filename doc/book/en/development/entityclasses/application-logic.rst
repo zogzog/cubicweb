@@ -34,14 +34,19 @@ wire. There is no way state can be shared between these processes
 entity objects as messengers between these components of an
 application. It means that an attribute set as in `obj.x = 42`,
 whether or not x is actually an entity schema attribute, has a short
-life span, limited to the hook, operation or view within the object
-was built.
+life span, limited to the hook, operation or view within which the
+object was built.
 
-Setting an attribute value should always be done in the context of a
+Setting an attribute or relation value can be done in the context of a
 Hook/Operation, using the obj.set_attributes(x=42) notation or a plain
 RQL SET expression.
 
-That still leaves for entity objects an essential role: it's where an
+In views, it would be preferable to encapsulate the necessary logic in
+a method of the concerned entity class(es). But of course, this advice
+is also reasonnable for Hooks/Operations, though the separation of
+concerns here is less stringent than in the case of views.
+
+This leads to the practical role of entity objects: it's where an
 important part of the application logic lie (the other part being
 located in the Hook/Operations).
 
@@ -72,14 +77,17 @@ First we see that it uses an ITree interface and the TreeMixIn default
 implementation. The attributes `tree_attribute`, `parent_target` and
 `children_target` are used by the TreeMixIn code. This is typically
 used in views concerned with the representation of tree-like
-structures (CubicWeb provides several such views). It is important
-that the views themselves try not to implement this logic, not only
-because such views would be hardly applyable to other tree-like
-relations, but also because it is perfectly fine and useful to use
-such an interface in Hooks. In fact, Tree nature is a property of the
-data model that cannot be fully and portably expressed at the level of
-database entities (think about the transitive closure of the child
-relation).
+structures (CubicWeb provides several such views).
+
+It is important that the views themselves try not to implement this
+logic, not only because such views would be hardly applyable to other
+tree-like relations, but also because it is perfectly fine and useful
+to use such an interface in Hooks.
+
+In fact, Tree nature is a property of the data model that cannot be
+fully and portably expressed at the level of database entities (think
+about the transitive closure of the child relation). This is a further
+argument to implement it at entity class level.
 
 The `dc_title` method provides a (unicode string) value likely to be
 consummed by views, but note that here we do not care about output
@@ -92,8 +100,8 @@ needed byte stream encoding).
 The fetch_attrs, fetch_order class attributes are parameters of the
 `ORM`_ layer. They tell which attributes should be loaded at once on
 entity object instantiation (by default, only the eid is known, other
-attributes are loaded on demand), and which attribute is to be used
-when SORTing in an RQL expression concerned with many such entities.
+attributes are loaded on demand), and which attribute is to be used to
+order the .related() and .unrelated() methods output.
 
 Finally, we can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
 application domain piece of data. There is, of course, no limitation
