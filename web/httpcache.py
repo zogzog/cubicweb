@@ -131,8 +131,5 @@ viewmod.View.http_cache_manager = NoHTTPCacheManager
 # max-age=0 to actually force revalidation when needed
 viewmod.View.cache_max_age = 0
 
-
-viewmod.EntityView.http_cache_manager = EntityHTTPCacheManager
-
 viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
 viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default

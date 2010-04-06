@@ -31,6 +31,7 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
+from cubicweb.web.http_headers import Headers
 
 _MARKER = object()
 
@@ -88,6 +89,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.pageid = None
         self.datadir_url = self._datadir_url()
         self._set_pageid()
+        # prepare output header
+        self.headers_out = Headers()
 
     def _set_pageid(self):
         """initialize self.pageid
@@ -657,17 +660,26 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         raise NotImplementedError()
 
-    def set_header(self, header, value):
+    def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
-        raise NotImplementedError()
+        if raw:
+            # adding encoded header is important, else page content
+            # will be reconverted back to unicode and apart unefficiency, this
+            # may cause decoding problem (e.g. when downloading a file)
+            self.headers_out.setRawHeaders(header, [str(value)])
+        else:
+            self.headers_out.setHeader(header, value)
 
     def add_header(self, header, value):
         """add an output HTTP header"""
-        raise NotImplementedError()
+        # adding encoded header is important, else page content
+        # will be reconverted back to unicode and apart unefficiency, this
+        # may cause decoding problem (e.g. when downloading a file)
+        self.headers_out.addRawHeader(header, str(value))
 
     def remove_header(self, header):
         """remove an output HTTP header"""
-        raise NotImplementedError()
+        self.headers_out.removeHeader(header)
 
     def header_authorization(self):
         """returns a couple (auth-type, auth-value)"""

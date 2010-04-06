@@ -22,10 +22,11 @@ from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
 from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
+from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, DirectResponse, json_dumps
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 from cubicweb.web.views.formrenderers import FormRenderer
+
 try:
     from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
                                     prepare_facets_rqlst)
@@ -279,7 +280,7 @@ class JSonController(Controller):
         args = [simplejson.loads(arg) for arg in args]
         try:
             result = func(*args)
-        except RemoteCallFailed:
+        except (RemoteCallFailed, DirectResponse):
             raise
         except Exception, ex:
             self.exception('an exception occured while calling js_%s(%s): %s',
