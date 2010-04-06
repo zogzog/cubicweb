@@ -6,8 +6,6 @@ Frequently Asked Questions
 [XXX 'copy answer from forum' means reusing text from
 http://groups.google.com/group/google-appengine/browse_frm/thread/c9476925f5f66ec6
 and
-http://groups.google.com/group/google-appengine/browse_frm/thread/d791ce17e2716147/eb078f8cfe8426e0
-and
 http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973aef5/c28cd6934dd72457
 ]
 
@@ -26,8 +24,13 @@ as an intermediary that could not be anyway efficient for both parties.
 Python is the templating language that we use in *CubicWeb*, but again,
 it does not prevent you from using a templating language.
 
-The reason template languages are not used in this book is that
-experience has proved us that using pure python was less cumbersome.
+Moreover, CubicWeb currently supports `simpletal`_ out of the box and
+it is also possible to use the `cwtags`_ library to build html trees
+using the `with statement`_ with more comfort than raw strings.
+
+.. _`simpletal`: http://www.owlfish.com/software/simpleTAL/
+.. _`cwtags`: http://www.cubicweb.org/project/cwtags
+.. _`with statement`: http://www.python.org/dev/peps/pep-0343/
 
 Why do you think using pure python is better than using a template language ?
 -----------------------------------------------------------------------------
@@ -36,17 +39,10 @@ Python is an Object Oriented Programming language and as such it
 already provides a consistent and strong architecture and syntax
 a templating language would not reach.
 
-When doing development, you need a real language and template
-languages are not real languages.
-
 Using Python instead of a template langage for describing the user interface
 makes it to maintain with real functions/classes/contexts without the need of
 learning a new dialect. By using Python, we use standard OOP techniques and
 this is a key factor in a robust application.
-
-The `cwtags` (http://www.cubicweb.org/project/cwtags) package can be
-used in cubes to help generate html from Python with more comfort than
-raw strings.
 
 Why do you use the LGPL license to prevent me from doing X ?
 ------------------------------------------------------------
@@ -54,13 +50,13 @@ Why do you use the LGPL license to prevent me from doing X ?
 LGPL means that *if* you redistribute your application, you need to
 redistribute the changes you made to CubicWeb under the LGPL licence.
 
-Publishing a web site has nothing to do with redistributing
-source code. A fair amount of companies use modified LGPL code
-for internal use. And someone could publish a *CubicWeb* component
-under a BSD licence for others to plug into a LGPL framework without
-any problem. The only thing we are trying to prevent here is someone
-taking the framework and packaging it as closed source to his own
-clients.
+Publishing a web site has nothing to do with redistributing source
+code according to the terms of the LGPL. A fair amount of companies
+use modified LGPL code for internal use. And someone could publish a
+*CubicWeb* component under a BSD licence for others to plug into a
+LGPL framework without any problem. The only thing we are trying to
+prevent here is someone taking the framework and packaging it as
+closed source to his own clients.
 
 
 CubicWeb looks pretty recent. Is it stable ?
@@ -77,7 +73,7 @@ It may remind you of SQL but it is higher level than SQL, more like
 SPARQL. Except that SPARQL did not exist when we started the project.
 With version 3.4, CubicWeb has support for SPARQL.
 
-That RQL language is what is going to make a difference with django-
+The RQL language is what is going to make a difference with django-
 like frameworks for several reasons.
 
 1. accessing data is *much* easier with it. One can write complex
@@ -192,23 +188,17 @@ content.  A component is made of code and operations that apply on a
 well defined context (request, result set). It enables much more
 dynamic views.
 
-What is the difference between `AppRsetObject` and `AppObject` ?
-----------------------------------------------------------------
-
-`AppRsetObject` instances are selected on a request and a result
-set. `AppObject` instances are directly selected by id.
-
 How to update a database after a schema modification ?
 ------------------------------------------------------
 
 It depends on what has been modified in the schema.
 
-* Update the permissions and properties of an entity or a relation:
+* update the permissions and properties of an entity or a relation:
   ``sync_schema_props_perms('MyEntityOrRelation')``.
 
-* Add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
+* add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
 
-* Add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
+* add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
 
 
 How to create an anonymous user ?
@@ -401,3 +391,9 @@ You are probably getting errors such as ::
   remove {'PR': 'Project', 'C': 'CWUser'} from solutions since your_user has no read access to cost
 
 This is because you have to put your user in the "users" group. The user has to be in both groups.
+
+How do I translate an msg id defined (and translated) in another cube ?
+-----------------------------------------------------------------------
+
+You should put these translations in the `i18n/static-messages.pot`
+file of your own cube.
