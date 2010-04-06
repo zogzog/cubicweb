@@ -5,5 +5,6 @@ Core APIs
    :maxdepth: 1
 
    dbapi.rst
+   reqbase.rst
    cwconfig.rst
 
