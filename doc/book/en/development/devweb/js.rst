@@ -165,8 +165,7 @@ This creates a `div` with an specific event associated to it.
 
 The full version deals with:
 
-* optional parameters such as an rql expression, an entity eid, an
-  rset
+* optional parameters such as an entity eid, an rset
 
 * the ability to further reload the fragment
 
