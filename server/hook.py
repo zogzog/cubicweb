@@ -75,10 +75,7 @@ class HooksRegistry(CWRegistry):
                     self.unregister(cls)
 
     def register(self, obj, **kwargs):
-        for event in obj.events:
-            if event not in ALL_HOOKS:
-                raise Exception('bad event %s on %s.%s' % (
-                    event, obj.__module__, obj.__name__))
+        obj.check_events()
         super(HooksRegistry, self).register(obj, **kwargs)
 
     def call_hooks(self, event, session=None, **kwargs):
@@ -199,15 +196,23 @@ class Hook(AppObject):
     # XXX deprecated
     enabled = True
 
-    @classproperty
-    def __registries__(cls):
+    @classmethod
+    def check_events(cls):
         try:
-            return ['%s_hooks' % ev for ev in cls.events]
+            for event in cls.events:
+                if event not in ALL_HOOKS:
+                    raise Exception('bad event %s on %s.%s' % (
+                        event, obj.__module__, obj.__name__))
         except AttributeError:
             raise
         except TypeError:
             raise Exception('bad .events attribute %s on %s.%s' % (
                 cls.events, cls.__module__, cls.__name__))
+
+    @classproperty
+    def __registries__(cls):
+        cls.check_events()
+        return ['%s_hooks' % ev for ev in cls.events]
 
     @classproperty
     def __regid__(cls):
