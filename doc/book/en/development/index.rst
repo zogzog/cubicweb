@@ -11,7 +11,7 @@ This part is about developing web applications with the *CubicWeb* framework.
    :numbered:
 
    cubes/index
-   vreg/index
+   vreg.rst
    datamodel/index
    entityclasses/index
    devcore/index

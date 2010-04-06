@@ -1,3 +1,21 @@
+The VRegistry, selectors and application objects
+================================================
+
+This chapter talk about core concepts of the |cubicweb| framework, that make it
+different from other framework (and probably not easy to grasp at a first
+glance). You won't be able to do advanced development with |cubicweb| without
+a good understanding of what's explain below.
+
+This chapter goes deep into details. You don't have to remember them all but keep
+it in mind so you can go back there later...
+
+.. toctree::
+   :maxdepth: 1
+
+.. autodocstring:: cubicweb.cwvreg
+.. autodocstring:: cubicweb.selectors
+.. automodule:: cubicweb.appobject
+
 Base selectors
 --------------
 
@@ -87,3 +105,6 @@ Other selectors
 
 You'll also find some other (very) specific selectors hidden in other modules
 than :mod:`cubicweb.selectors`.
+
+
+.. |cubicweb| replace:: *CubicWeb*
