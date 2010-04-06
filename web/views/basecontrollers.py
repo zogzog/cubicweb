@@ -445,6 +445,7 @@ class JSonController(Controller):
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         stream = view.set_stream()
         view.render(**args)
+        # XXX why not _call_view ?
         extresources = req.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n')

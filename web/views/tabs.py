@@ -32,9 +32,7 @@ class LazyViewMixin(object):
 
     def lazyview(self, vid, rql=None, eid=None, rset=None, tabid=None,
                  reloadable=False, show_spinbox=True, w=None):
-        """a lazy version of wview
-        first version only support lazy viewing for an entity at a time
-        """
+        """ a lazy version of wview """
         w = w or self.w
         self._cw.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'fname' : 'view'}
