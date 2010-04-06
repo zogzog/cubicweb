@@ -19,10 +19,10 @@ usually only accessible to application developers.
 *CubicWeb* has been developed by Logilab_ and used in-house for many years
 before it was first installed for its clients in 2006 as version 2.
 
-In 2008, *CubicWeb* version 3 became downloadable for free under the terms of
-the LGPL license. Its community is now steadily growing as changes can occur
-rapidly thanks to the time and energy originally put in the design of the
-framework.
+In 2008, *CubicWeb* version 3 became downloadable for free under the
+terms of the LGPL license. Its community is now steadily growing
+without hampering the fast-paced stream of changes thanks to the time
+and energy originally put in the design of the framework.
 
 
 .. _Narval: http://www.logilab.org/project/narval

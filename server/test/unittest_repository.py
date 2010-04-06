@@ -396,7 +396,8 @@ class RepositoryTC(CubicWebTC):
                 self.entity.set_attributes(alias=u'foo')
         with self.temporary_appobjects(DummyBeforeHook):
             req = self.request()
-            self.assertRaises(RepositoryError, req.create_entity,
+            # XXX will fail with python -O
+            self.assertRaises(AssertionError, req.create_entity,
                               'EmailAddress', address=u'a@b.fr')
 
 

@@ -17,6 +17,7 @@ classes are registered in order to initialize the class according to its schema:
 :Formatting and output generation:
 
   * `view(vid, **kwargs)`, applies the given view to the entity
+    (and returns an unicode string)
 
   * `absolute_url(**kwargs)`, returns an absolute URL to access the primary view
     of an entity
@@ -32,21 +33,29 @@ classes are registered in order to initialize the class according to its schema:
   * `as_rset()`, converts the entity into an equivalent result set simulating the
      request `Any X WHERE X eid _eid_`
 
-  * `complete(skip_bytes=True)`, executes a request that recovers all at once
-    all the missing attributes of an entity
+  * `complete(skip_bytes=True)`, executes a request that recovers at
+    once all the missing attributes of an entity
 
   * `get_value(name)`, returns the value associated to the attribute name given
     in parameter
 
-  * `related(rtype, x='subject', limit=None, entities=False)`, returns a list
-    of entities related to the current entity by the relation given in parameter
+  * `related(rtype, role='subject', limit=None, entities=False)`,
+    returns a list of entities related to the current entity by the
+    relation given in parameter
 
-  * `unrelated(rtype, targettype, x='subject', limit=None)`, returns a result set
-    corresponding to the entities not related to the current entity by the
-    relation given in parameter and satisfying its constraints
+  * `unrelated(rtype, targettype, role='subject', limit=None)`,
+    returns a result set corresponding to the entities not (yet)
+    related to the current entity by the relation given in parameter
+    and satisfying its constraints
 
   * `set_attributes(**kwargs)`, updates the attributes list with the corresponding
     values given named parameters
+
+  * `set_relations(**kwargs)`, add relations to the given object. To
+     set a relation where this entity is the object of the relation,
+     use 'reverse_'<relation> as argument name.  Values may be an
+     entity, a list of entities, or None (meaning that all relations of
+     the given type from or to this object should be deleted).
 
   * `copy_relations(ceid)`, copies the relations of the entities having the eid
     given in the parameters on the current entity
@@ -66,8 +75,10 @@ The class `AnyEntity` is a sub-class of Entity that add methods to it,
 and helps specializing (by further subclassing) the handling of a
 given entity type.
 
-The methods defined for `AnyEntity`, in addition to `Entity`, are the
-following ones:
+Most methods defined for `AnyEntity`, in addition to `Entity`, add
+support for the `Dublin Core`_ metadata.
+
+.. _`Dublin Core`: http://dublincore.org/
 
 :Standard meta-data (Dublin Core):
 
@@ -85,12 +96,26 @@ following ones:
   * `dc_authors()`, returns a unicode string corresponding to the meta-data
     `Authors` (owners by default)
 
+  * `dc_creator()`, returns a unicode string corresponding to the
+    creator of the entity
+
   * `dc_date(date_format=None)`, returns a unicode string corresponding to
     the meta-data `Date` (update date by default)
 
   * `dc_type(form='')`, returns a string to display the entity type by
     specifying the preferred form (`plural` for a plural form)
 
+  * `dc_language()`, returns the language used by the entity
+
+
+:Misc methods:
+
+  * `after_deletion_path`, return (path, parameters) which should be
+     used as redirect information when this entity is being deleted
+
+  * `pre_web_edit`, callback called by the web editcontroller when an
+    entity will be created/modified, to let a chance to do some entity
+    specific stuff (does nothing by default)
 
 Inheritance
 -----------

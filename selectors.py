@@ -1,42 +1,184 @@
-"""This file contains some basic selectors required by application objects.
+# :organization: Logilab
+# :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+""".. _Selectors:
 
-A selector is responsible to score how well an object may be used with a
-given context by returning a score.
+Selectors
+---------
 
-In CubicWeb Usually the context consists for a request object, a result set
-or None, a specific row/col in the result set, etc...
+Using and combining existant selectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can combine selectors using the `&`, `|` and `~` operators.
+
+When two selectors are combined using the `&` operator (formerly `chainall`), it
+means that both should return a positive score. On success, the sum of scores is returned.
+
+When two selectors are combined using the `|` operator (former `chainfirst`), it
+means that one of them should return a positive score. On success, the first
+positive score is returned.
+
+You can also "negate" a selector by precedeing it by the `~` unary operator.
+
+Of course you can use parens to balance expressions.
+
+.. Note:
+  When one chains selectors, the final score is the sum of the score of each
+  individual selector (unless one of them returns 0, in which case the object is
+  non selectable)
 
 
-If you have trouble with selectors, especially if the objet (typically
-a view or a component) you want to use is not selected and you want to
-know which one(s) of its selectors fail (e.g. returns 0), you can use
-`traced_selection` or even direclty `TRACED_OIDS`.
+Example
+~~~~~~~
 
-`TRACED_OIDS` is a tuple of traced object ids. The special value
-'all' may be used to log selectors for all objects.
+The goal: when on a Blog, one wants the RSS link to refer to blog entries, not to
+the blog entity itself.
 
-For instance, say that the following code yields a `NoSelectableObject`
-exception::
+To do that, one defines a method on entity classes that returns the RSS stream
+url for a given entity. The default implementation on
+:class:`~cubicweb.entities.AnyEntity` (the generic entity class used as base for
+all others) and a specific implementation on Blog will do what we want.
 
-    self.view('calendar', myrset)
+But when we have a result set containing several Blog entities (or different
+entities), we don't know on which entity to call the aforementioned method. In
+this case, we keep the generic behaviour.
 
-You can log the selectors involved for *calendar* by replacing the line
-above by::
+Hence we have two cases here, one for a single-entity rsets, the other for
+multi-entities rsets.
 
-    from cubicweb.selectors import traced_selection
-    with traced_selection():
-        self.view('calendar', myrset)
+In web/views/boxes.py lies the RSSIconBox class. Look at its selector:
 
-With python 2.5, think to add:
+.. sourcecode:: python
 
-    from __future__ import with_statement
+  class RSSIconBox(ExtResourcesBoxTemplate):
+    '''just display the RSS icon on uniform result set'''
+    __select__ = ExtResourcesBoxTemplate.__select__ & non_final_entity()
 
-at the top of your module.
+It takes into account:
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+* the inherited selection criteria (one has to look them up in the class
+  hierarchy to know the details)
+
+* :class:`~cubicweb.selectors.non_final_entity`, which filters on result sets
+  containing non final entities (a 'final entity' being synonym for entity
+  attributes type, eg `String`, `Int`, etc)
+
+This matches our second case. Hence we have to provide a specific component for
+the first case:
+
+.. sourcecode:: python
+
+  class EntityRSSIconBox(RSSIconBox):
+    '''just display the RSS icon on uniform result set for a single entity'''
+    __select__ = RSSIconBox.__select__ & one_line_rset()
+
+Here, one adds the :class:`~cubicweb.selectors.one_line_rset` selector, which
+filters result sets of size 1. Thus, on a result set containing multiple
+entities, :class:`one_line_rset` makes the EntityRSSIconBox class non
+selectable. However for a result set with one entity, the `EntityRSSIconBox`
+class will have a higher score than `RSSIconBox`, which is what we wanted.
+
+Of course, once this is done, you have to:
+
+* fill in the call method of `EntityRSSIconBox`
+
+* provide the default implementation of the method returning the RSS stream url
+  on :class:`~cubicweb.entities.AnyEntity`
+
+* redefine this method on `Blog`.
+
+
+When to use selectors?
+~~~~~~~~~~~~~~~~~~~~~~
+
+Selectors are to be used whenever arises the need of dispatching on the shape or
+content of a result set or whatever else context (value in request form params,
+authenticated user groups, etc...). That is, almost all the time.
+
+Here is a quick example:
+
+.. sourcecode:: python
+
+    class UserLink(component.Component):
+	'''if the user is the anonymous user, build a link to login else a link
+	to the connected user object with a loggout link
+	'''
+	__regid__ = 'loggeduserlink'
+
+	def call(self):
+	    if self._cw.cnx.anonymous_connection:
+		# display login link
+		...
+	    else:
+		# display a link to the connected user object with a loggout link
+		...
+
+The proper way to implement this with |cubicweb| is two have two different
+classes sharing the same identifier but with different selectors so you'll get
+the correct one according to the context:
+
+
+    class UserLink(component.Component):
+	'''display a link to the connected user object with a loggout link'''
+	__regid__ = 'loggeduserlink'
+	__select__ = component.Component.__select__ & authenticated_user()
+
+	def call(self):
+            # display useractions and siteactions
+	    ...
+
+    class AnonUserLink(component.Component):
+	'''build a link to login'''
+	__regid__ = 'loggeduserlink'
+	__select__ = component.Component.__select__ & anonymous_user()
+
+	def call(self):
+	    # display login link
+            ...
+
+The big advantage, aside readibily once you're familiar with the system, is that
+your cube becomes much more easily customizable by improving componentization.
+
+
+.. _CustomSelectors:
+
+Defining your own selectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autodocstring:: cubicweb.appobject::objectify_selector
+
+In other case, you can take a look at the following abstract base classes:
+
+.. autoclass:: cubicweb.selectors.ExpectedValueSelector
+.. autoclass:: cubicweb.selectors.EClassSelector
+.. autoclass:: cubicweb.selectors.EntitySelector
+
+Also, think to use the :func:`lltrace` decorator on your selector class' :meth:`__call__` method
+or below the :func:`objectify_selector` decorator of your selector function so it gets
+traceable when :class:`traced_selection` is activated (see :ref:`DebuggingSelectors`).
+
+.. autofunction:: cubicweb.selectors.lltrace
+
+.. Note::
+  Selectors __call__ should *always* return a positive integer, and shall never
+  return `None`.
+
+
+.. _DebuggingSelectors:
+
+Debugging selection
+~~~~~~~~~~~~~~~~~~~
+
+Once in a while, one needs to understand why a view (or any application object)
+is, or is not selected appropriately. Looking at which selectors fired (or did
+not) is the way. The :class:`cubicweb.selectors.traced_selection` context
+manager to help with that, *if you're running your instance in debug mode*.
+
+.. autoclass:: cubicweb.selectors.traced_selection
+
+
+.. |cubicweb| replace:: *CubicWeb*
 """
 __docformat__ = "restructuredtext en"
 
@@ -74,6 +216,9 @@ def _trace_selector(cls, ret):
         print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
 
 def lltrace(selector):
+    """use this decorator on your selectors so the becomes traceable with
+    :class:`traced_selection`
+    """
     # don't wrap selectors if not in development mode
     if CubicWebConfiguration.mode == 'system': # XXX config.debug
         return selector
@@ -87,19 +232,31 @@ def lltrace(selector):
     return traced
 
 class traced_selection(object):
-    """selector debugging helper.
-
+    """
     Typical usage is :
 
-    >>> with traced_selection():
-    ...     # some code in which you want to debug selectors
-    ...     # for all objects
+    .. sourcecode:: python
 
-    or
+        >>> from cubicweb.selectors import traced_selection
+        >>> with traced_selection():
+        ...     # some code in which you want to debug selectors
+        ...     # for all objects
 
-    >>> with traced_selection( ('oid1', 'oid2') ):
-    ...     # some code in which you want to debug selectors
-    ...     # for objects with id 'oid1' and 'oid2'
+    Don't forget the 'from __future__ import with_statement' at the module top-level
+    if you're using python prior to 2.6.
+
+    This will yield lines like this in the logs::
+
+        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+    You can also give to :class:`traced_selection` the identifiers of objects on
+    which you want to debug selection ('oid1' and 'oid2' in the example above).
+
+    .. sourcecode:: python
+
+        >>> with traced_selection( ('oid1', 'oid2') ):
+        ...     # some code in which you want to debug selectors
+        ...     # for objects with id 'oid1' and 'oid2'
 
     """
     def __init__(self, traced='all'):
@@ -261,12 +418,12 @@ class EntitySelector(EClassSelector):
       - `accept_none` is False and some cell in the column has a None value
         (this may occurs with outer join)
 
-    .. note::
-       using EntitySelector or EClassSelector as base selector class impacts
-       performance, since when no entity or row is specified the later works on
-       every different *entity class* found in the result set, while the former
-       works on each *entity* (eg each row of the result set), which may be much
-       more costly.
+    .. Note::
+       using :class:`EntitySelector` or :class:`EClassSelector` as base selector
+       class impacts performance, since when no entity or row is specified the
+       later works on every different *entity class* found in the result set,
+       while the former works on each *entity* (eg each row of the result set),
+       which may be much more costly.
     """
 
     @lltrace
@@ -307,8 +464,12 @@ class EntitySelector(EClassSelector):
 
 
 class ExpectedValueSelector(Selector):
-    """Take a list of expected values as initializer argument, check
-    _get_value method return one of these expected values.
+    """Take a list of expected values as initializer argument and store them
+    into the :attr:`expected` set attribute.
+
+    You should implements the :meth:`_get_value(cls, req, **kwargs)` method
+    which should return the value for the given context. The selector will then
+    return 1 if the value is expected, else 0.
     """
     def __init__(self, *expected):
         assert expected, self
@@ -346,10 +507,12 @@ class match_kwargs(ExpectedValueSelector):
 
 
 class appobject_selectable(Selector):
-    """return 1 if another appobject is selectable using the same input context.
+    """Return 1 if another appobject is selectable using the same input context.
 
     Initializer arguments:
+
     * `registry`, a registry name
+
     * `regid`, an object identifier in this registry
     """
     def __init__(self, registry, regid):

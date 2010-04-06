@@ -161,11 +161,12 @@ class Registry(dict):
     # dynamic selection methods ################################################
 
     def object_by_id(self, oid, *args, **kwargs):
-        """return object with the given oid. Only one object is expected to be
-        found.
+        """return object with the `oid` identifier. Only one object is expected
+        to be found.
 
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `AssertionError` if there is more than one object there
+        raise :exc:`ObjectNotFound` if not object with id <oid> in <registry>
+
+        raise :exc:`AssertionError` if there is more than one object there
         """
         objects = self[oid]
         assert len(objects) == 1, objects
@@ -175,8 +176,9 @@ class Registry(dict):
         """return the most specific object among those with the given oid
         according to the given context.
 
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `NoSelectableObject` if not object apply
+        raise :exc:`ObjectNotFound` if not object with id <oid> in <registry>
+
+        raise :exc:`NoSelectableObject` if not object apply
         """
         return self._select_best(self[oid], *args, **kwargs)
 
@@ -318,6 +320,20 @@ class VRegistry(dict):
 #         self[regname].pop(oid, None)
 
     def register_all(self, objects, modname, butclasses=()):
+        """register all `objects` given. Objects which are not from the module
+        `modname` or which are in `butclasses` won't be registered.
+
+        Typical usage is:
+
+        .. sourcecode:: python
+
+            vreg.register_all(globals().values(), __name__, (ClassIWantToRegisterExplicitly,))
+
+        So you get partially automatic registration, keeping manual registration
+        for some object (to use
+        :meth:`~cubicweb.cwvreg.CubicWebRegistry.register_and_replace` for
+        instance)
+        """
         for obj in objects:
             try:
                 if obj.__module__ != modname or obj in butclasses:
@@ -329,7 +345,13 @@ class VRegistry(dict):
                 self.register(obj, oid=oid)
 
     def register(self, obj, registryname=None, oid=None, clear=False):
-        """base method to add an object in the registry"""
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified, with identifier `oid` or
+        `obj.__regid__` if not specified.
+
+        If `clear` is true, all objects with the same identifier will be
+        previously unregistered.
+        """
         assert not '__abstract__' in obj.__dict__
         try:
             vname = obj.__name__
@@ -344,10 +366,18 @@ class VRegistry(dict):
         self._loadedmods[obj.__module__][classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
+        """unregister `obj` application object from the registry `registryname` or
+        `obj.__registry__` if not specified.
+        """
         for registryname in class_registries(obj, registryname):
             self[registryname].unregister(obj)
 
     def register_and_replace(self, obj, replaced, registryname=None):
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified. If found, the `replaced` object
+        will be unregistered first (else a warning will be issued as it's
+        generally unexpected).
+        """
         for registryname in class_registries(obj, registryname):
             self[registryname].register_and_replace(obj, replaced)
 

@@ -10,4 +10,4 @@ the logic associated to the data stored in the database.
    data-as-objects
    load-sort
    interfaces
-   more
+   application-logic

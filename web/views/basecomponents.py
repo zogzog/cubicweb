@@ -15,7 +15,8 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from rql import parse
 
-from cubicweb.selectors import yes, multi_etypes_rset, match_form_params
+from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
+                                anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
 from cubicweb.uilib import toggle_action
 from cubicweb.web import component
@@ -79,35 +80,19 @@ class ApplHelp(component.Component):
                   self._cw._(u'help'),))
 
 
-class UserLink(component.Component):
-    """if the user is the anonymous user, build a link to login
-    else a link to the connected user object with a loggout link
+class _UserLink(component.Component):
+    """if the user is the anonymous user, build a link to login else display a menu
+    with user'action (preference, logout, etc...)
     """
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
     __regid__ = 'loggeduserlink'
 
-    def call(self):
-        if not self._cw.cnx.anonymous_connection:
-            # display useractions and siteactions
-            actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
-            box = MenuWidget('', 'userActionsBox', _class='', islist=False)
-            menu = PopupBoxMenu(self._cw.user.login, isitem=False)
-            box.append(menu)
-            for action in actions.get('useractions', ()):
-                menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                    action.html_class()))
-            if actions.get('useractions') and actions.get('siteactions'):
-                menu.append(BoxSeparator())
-            for action in actions.get('siteactions', ()):
-                menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                    action.html_class()))
-            box.render(w=self.w)
-        else:
-            self.anon_user_link()
 
-    def anon_user_link(self):
+class AnonUserLink(_UserLink):
+    __select__ = _UserLink.__select__ & anonymous_user()
+    def call(self):
         if self._cw.vreg.config['auth-mode'] == 'cookie':
             self.w(self._cw._('anonymous'))
             self.w(u'''&#160;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
@@ -116,6 +101,26 @@ class UserLink(component.Component):
             self.w(self._cw._('anonymous'))
             self.w(u'&#160;[<a class="logout" href="%s">%s</a>]'
                    % (self._cw.build_url('login'), self._cw._('login')))
+
+
+class UserLink(_UserLink):
+    __select__ = _UserLink.__select__ & authenticated_user()
+
+    def call(self):
+        # display useractions and siteactions
+        actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
+        box = MenuWidget('', 'userActionsBox', _class='', islist=False)
+        menu = PopupBoxMenu(self._cw.user.login, isitem=False)
+        box.append(menu)
+        for action in actions.get('useractions', ()):
+            menu.append(BoxLink(action.url(), self._cw._(action.title),
+                                action.html_class()))
+        if actions.get('useractions') and actions.get('siteactions'):
+            menu.append(BoxSeparator())
+        for action in actions.get('siteactions', ()):
+            menu.append(BoxLink(action.url(), self._cw._(action.title),
+                                action.html_class()))
+        box.render(w=self.w)
 
 
 class ApplicationMessage(component.Component):

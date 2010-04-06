@@ -100,7 +100,7 @@ class AbstractSource(object):
         """method called by the repository once ready to handle request"""
         pass
 
-    def backup(self, backupfile):
+    def backup(self, backupfile, confirm):
         """method called to create a backup of source's data"""
         pass
 

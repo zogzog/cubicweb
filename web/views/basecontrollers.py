@@ -277,7 +277,11 @@ class JSonController(Controller):
         args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
             args = (args,)
-        args = [simplejson.loads(arg) for arg in args]
+        try:
+            args = [simplejson.loads(arg) for arg in args]
+        except ValueError, exc:
+            self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
+            raise RemoteCallFailed(repr(exc))
         try:
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
@@ -442,6 +446,7 @@ class JSonController(Controller):
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         stream = view.set_stream()
         view.render(**args)
+        # XXX why not _call_view ?
         extresources = req.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n')

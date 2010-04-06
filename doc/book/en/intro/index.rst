@@ -17,5 +17,5 @@ overview of its features and lists its key concepts.
 
    book-map
    history
-   concepts/index
+   concepts.rst
    tutorial/index

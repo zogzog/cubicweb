@@ -72,28 +72,23 @@ class BytesFileSystemStorage(Storage):
 
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
-        if not entity._cw.transaction_data.get('fs_importing'):
-            try:
-                value = entity.pop(attr)
-            except KeyError:
-                pass
-            else:
-                fpath = self.new_fs_path(entity, attr)
-                # bytes storage used to store file's path
-                entity[attr] = Binary(fpath)
-                file(fpath, 'w').write(value.getvalue())
-                AddFileOp(entity._cw, filepath=fpath)
-        # else entity[attr] is expected to be an already existant file path
+        if entity._cw.transaction_data.get('fs_importing'):
+            binary = Binary(file(entity[attr].getvalue()).read())
+        else:
+            binary = entity.pop(attr)
+            fpath = self.new_fs_path(entity, attr)
+            # bytes storage used to store file's path
+            entity[attr] = Binary(fpath)
+            file(fpath, 'w').write(binary.getvalue())
+            AddFileOp(entity._cw, filepath=fpath)
+        return binary
 
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
-        try:
-            value = entity.pop(attr)
-        except KeyError:
-            pass
-        else:
-            fpath = self.current_fs_path(entity, attr)
-            UpdateFileOp(entity._cw, filepath=fpath, filedata=value.getvalue())
+        binary = entity.pop(attr)
+        fpath = self.current_fs_path(entity, attr)
+        UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
+        return binary
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
@@ -110,8 +105,10 @@ class BytesFileSystemStorage(Storage):
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                                  attr, entity.__regid__, entity.eid))
-        BINARY = sysource.dbhelper.dbapi_module.BINARY
-        return sysource._process_value(cu.fetchone()[0], [None, BINARY],
+        rawvalue = cu.fetchone()[0]
+        if rawvalue is None: # no previous value
+            return self.new_fs_path(entity, attr)
+        return sysource._process_value(rawvalue, cu.description[0],
                                        binarywrap=str)
 
 
