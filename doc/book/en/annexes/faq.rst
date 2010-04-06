@@ -395,5 +395,5 @@ This is because you have to put your user in the "users" group. The user has to 
 How do I translate an msg id defined (and translated) in another cube ?
 -----------------------------------------------------------------------
 
-You should but these translations in the `i18n/static-messages.pot`
+You should put these translations in the `i18n/static-messages.pot`
 file of your own cube.

@@ -409,6 +409,7 @@ class JSonController(Controller):
         extraargs = extraargs or {}
         stream = comp.set_stream()
         comp.render(**extraargs)
+        # XXX why not _call_view ?
         extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n')

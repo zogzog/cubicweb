@@ -8,7 +8,7 @@ about the common patterns of usage of these objects.
 .. _`ORM`: http://en.wikipedia.org/wiki/Object-relational_mapping
 
 Entities objects are used in the repository and web sides of
-CubicWeb. In the repository side of things, one should manipulate them
+CubicWeb. On the repository side of things, one should manipulate them
 in Hooks and Operations.
 
 Hooks and Operations provide support for the implementation of rules
@@ -19,7 +19,7 @@ the actual data sources).
 So a lot of an application's business rules will be written in Hooks
 (or Operations).
 
-In the web side, views also typically operate using entity
+On the web side, views also typically operate using entity
 objects. Obvious entity methods for use in views are the dublin code
 method like dc_title, etc. For separation of concerns reasons, one
 should ensure no ui logic pervades the entities level, and also no

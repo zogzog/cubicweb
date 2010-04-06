@@ -239,7 +239,7 @@ function remoteExec(fname /* ... */) {
 function asyncRemoteExec(fname /* ... */) {
     setProgressCursor();
     var props = {'fname' : fname, 'pageid' : pageid,
-                      'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+                 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
     var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
     deferred = deferred.addErrback(remoteCallFailed);
     deferred = deferred.addErrback(resetCursor);
