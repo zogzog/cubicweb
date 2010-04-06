@@ -17,13 +17,13 @@ h2.schema{
 }
 
 
-h3.schema{ 
+h3.schema{
  font-weight: bold;
 }
 
 h4 a,
 h4 a:link,
-h4 a:visited{ 
+h4 a:visited{
  color:#000;
  }
 
@@ -39,11 +39,11 @@ table.schemaInfo th,
 table.schemaInfo td {
   padding: .3em .5em;
   border: 1px solid grey;
-  width:33%; 
+  width:33%;
 }
 
 
-table.schemaInfo tr th {   
+table.schemaInfo tr th {
  padding: 0.2em 0px 0.2em 5px;
  background-image:none;
  background-color:#dfdfdf;
@@ -51,50 +51,45 @@ table.schemaInfo tr th {
 
 table.schemaInfo thead tr {
   border: 1px solid #dfdfdf;
-} 
+}
 
 table.schemaInfo td {
-  padding: 3px 10px 3px 5px; 
+  padding: 3px 10px 3px 5px;
 
 }
 
-div.users, a.users{ 
+a.users{
  color : #00CC33;
  font-weight: bold }
 
-div.guests, a.guests{ 
+a.guests{
  color :  #ff7700;
  font-weight: bold;
 }
 
-div.staff, a.staff{  
- color : #0083ab;
- font-weight: bold;
-}
-
-div.owners, a.owners{ 
+a.owners{
  color : #8b0000;
  font-weight: bold;
 }
 
-div.managers, a.managers{
+a.managers{
  color: #000000;
 }
 
 .discret,
-a.grey{ 
+a.grey{
  color:#666;
 }
 
-a.grey:hover{ 
+a.grey:hover{
  color:#000;
 }
 
-.red{ 
+.red{
  color :  #ff7700;
  }
 
-div#schema_security{ 
+div#schema_security{
  width:100%;
  }
 /******************************************************************************/

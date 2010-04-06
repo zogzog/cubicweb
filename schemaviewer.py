@@ -39,7 +39,6 @@ class SchemaViewer(object):
         return Section(children=(Table(cols=2, cheaders=1, rheaders=1, children=data),),
                        klass='acl')
 
-
     def visit_schema(self, schema, display_relations=0, skiptypes=()):
         """get a layout for a whole schema"""
         title = Title(self.req._('Schema %s') % schema.name,
@@ -187,6 +186,8 @@ class SchemaViewer(object):
                     val = getattr(rdef, prop)
                     if val is None:
                         val = ''
+                    elif prop == 'constraints':
+                        val = ', '.join([c.restriction for c in val])
                     elif isinstance(val, (list, tuple)):
                         val = ', '.join(str(v) for v in val)
                     elif val and isinstance(val, basestring):
