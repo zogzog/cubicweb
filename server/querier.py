@@ -164,6 +164,13 @@ class ExecutionPlan(object):
         finally:
             self.clean()
 
+    def make_temp_table_name(self, table):
+        """
+        return a temp table name according to db backend
+        """
+        return self.syssource.make_temp_table_name(table)
+
+
     def init_temp_table(self, table, selected, sol):
         """initialize sql schema and variable map for a temporary table which
         will be used to store result for the given rqlst

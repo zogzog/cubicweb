@@ -1042,7 +1042,7 @@ class MSPlanner(SSPlanner):
                      for select in subquery.query.children]
             for sppi in sppis:
                 if sppi.needsplit or sppi.part_sources != ppi.part_sources:
-                    temptable = 'T%s' % make_uid(id(subquery))
+                    temptable = plan.make_temp_table_name('T%s' % make_uid(id(subquery)))
                     sstep = self._union_plan(plan, sppis, temptable)[0]
                     break
             else:
@@ -1075,7 +1075,7 @@ class MSPlanner(SSPlanner):
                 inputmap = self._ppi_subqueries(ppi)
                 aggrstep = need_aggr_step(select, sources)
                 if aggrstep:
-                    atemptable = 'T%s' % make_uid(id(select))
+                    atemptable = plan.make_temp_table_name('T%s' % make_uid(id(select)))
                     sunion = Union()
                     sunion.append(select)
                     selected = select.selection[:]
@@ -1119,7 +1119,7 @@ class MSPlanner(SSPlanner):
         subinputmap = self._ppi_subqueries(ppi)
         stepdefs = ppi.part_steps()
         if need_aggr_step(select, ppi.part_sources, stepdefs):
-            atemptable = 'T%s' % make_uid(id(select))
+            atemptable = plan.make_temp_table_name('T%s' % make_uid(id(select)))
             selection = select.selection[:]
             select_group_sort(select)
         else:
@@ -1169,6 +1169,7 @@ class MSPlanner(SSPlanner):
                 else:
                     table = '_T%s%s' % (''.join(sorted(v._ms_table_key() for v in terms)),
                                         ''.join(sorted(str(i) for i in solindices)))
+                    table = plan.make_temp_table_name(table)
                     ppi.build_non_final_part(minrqlst, solindices, sources,
                                              insertedvars, table)
         # finally: join parts, deal with aggregat/group/sorts if necessary
