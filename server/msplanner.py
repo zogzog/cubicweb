@@ -312,11 +312,15 @@ class PartPlanInformation(object):
             # NOTE: use uidrel and not constnode to deal with "X eid IN(1,2,3,4)"
             if varobj.stinfo['uidrel'] is not None:
                 rel = varobj.stinfo['uidrel']
+                hasrel = len(varobj.stinfo['relations']) > 1
                 for const in rel.children[1].get_nodes(Constant):
                     eid = const.eval(self.plan.args)
                     source = self._session.source_from_eid(eid)
-                    if not any(source.support_relation(r.r_type)
-                               for r in varobj.stinfo['relations'] if not r is rel):
+                    if (source is self.system_source
+                        or (hasrel and
+                            not any(source.support_relation(r.r_type)
+                                    for r in varobj.stinfo['relations']
+                                    if not r is rel))):
                         self._set_source_for_term(self.system_source, varobj)
                     else:
                         self._set_source_for_term(source, varobj)
