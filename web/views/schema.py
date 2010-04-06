@@ -45,7 +45,6 @@ _pvs.tag_subject_of(('CWEType', 'default_workflow', 'Workflow'), 'hidden')
 
 _pvs.tag_object_of(('*', 'relation_type', 'CWRType'), 'hidden')
 
-
 class SecurityViewMixIn(object):
     """mixin providing methods to display security information for a entity,
     relation or relation definition schema
