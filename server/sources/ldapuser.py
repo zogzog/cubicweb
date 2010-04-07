@@ -230,10 +230,10 @@ directory (default to once a day).',
                             elif rset:
                                 if not execute('SET X address %(addr)s WHERE '
                                                'U primary_email X, U eid %(u)s',
-                                               {'addr': ldapemailaddr, 'u': eid}, 'u'):
+                                               {'addr': ldapemailaddr, 'u': eid}):
                                     execute('SET X address %(addr)s WHERE '
                                             'X eid %(x)s',
-                                            {'addr': ldapemailaddr, 'x': rset[0][0]}, 'x')
+                                            {'addr': ldapemailaddr, 'x': rset[0][0]})
                             else:
                                 # no email found, create it
                                 _insert_email(session, ldapemailaddr, eid)
@@ -546,7 +546,7 @@ directory (default to once a day).',
         super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
-                            {'x': entity.eid, 'group': group}, 'x')
+                            {'x': entity.eid, 'group': group})
         # search for existant email first
         try:
             emailaddr = self._cache[dn][self.user_rev_attrs['email']]
@@ -556,7 +556,7 @@ directory (default to once a day).',
                                {'addr': emailaddr})
         if rset:
             session.execute('SET U primary_email X WHERE U eid %(u)s, X eid %(x)s',
-                            {'x': rset[0][0], 'u': entity.eid}, 'u')
+                            {'x': rset[0][0], 'u': entity.eid})
         else:
             # not found, create it
             _insert_email(session, emailaddr, entity.eid)
@@ -571,7 +571,7 @@ directory (default to once a day).',
 
 def _insert_email(session, emailaddr, ueid):
     session.execute('INSERT EmailAddress X: X address %(addr)s, U primary_email X '
-                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid}, 'x')
+                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid})
 
 class GotDN(Exception):
     """exception used when a dn localizing the searched user has been found"""

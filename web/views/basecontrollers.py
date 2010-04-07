@@ -180,7 +180,7 @@ class ViewController(Controller):
             else:
                 rql = 'SET Y %s X WHERE X eid %%(x)s, Y eid %%(y)s' % rtype
             for teid in eids:
-                req.execute(rql, {'x': eid, 'y': typed_eid(teid)}, ('x', 'y'))
+                req.execute(rql, {'x': eid, 'y': typed_eid(teid)})
 
 
 def _validation_error(req, ex):
@@ -317,12 +317,12 @@ class JSonController(Controller):
             form['__action_%s' % action] = u'whatever'
         return form
 
-    def _exec(self, rql, args=None, eidkey=None, rocheck=True):
+    def _exec(self, rql, args=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
         if rocheck:
             self._cw.ensure_ro_rql(rql)
         try:
-            return self._cw.execute(rql, args, eidkey)
+            return self._cw.execute(rql, args)
         except Exception, ex:
             self.exception("error in _exec(rql=%s): %s", rql, ex)
             return None

@@ -31,14 +31,12 @@ class ResultSet(object):
     :type rql: str or unicode
     :ivar rql: the original RQL query string
     """
-    def __init__(self, results, rql, args=None, description=(), cachekey=None,
-                 rqlst=None):
+    def __init__(self, results, rql, args=None, description=(), rqlst=None):
         self.rows = results
         self.rowcount = results and len(results) or 0
         # original query and arguments
         self.rql = rql
         self.args = args
-        self.cachekey = cachekey
         # entity types for each cell (same shape as rows)
         # maybe discarded if specified when the query has been executed
         self.description = description

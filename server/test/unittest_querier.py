@@ -220,13 +220,13 @@ class QuerierTC(BaseQuerierTC):
 
     def test_typed_eid(self):
         # should return an empty result set
-        rset = self.execute('Any X WHERE X eid %(x)s', {'x': '1'}, 'x')
+        rset = self.execute('Any X WHERE X eid %(x)s', {'x': '1'})
         self.assertIsInstance(rset[0][0], (int, long))
 
     def test_bytes_storage(self):
         feid = self.execute('INSERT File X: X data_name "foo.pdf", X data_format "text/plain", X data %(data)s',
                             {'data': Binary("xxx")})[0][0]
-        fdata = self.execute('Any D WHERE X data D, X eid %(x)s', {'x': feid}, 'x')[0][0]
+        fdata = self.execute('Any D WHERE X data D, X eid %(x)s', {'x': feid})[0][0]
         self.assertIsInstance(fdata, Binary)
         self.assertEquals(fdata.getvalue(), 'xxx')
 
@@ -356,17 +356,17 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_outer_join_optimized(self):
         peid1 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
-        rset = self.execute('Any X WHERE X eid %(x)s, P? connait X', {'x':peid1}, 'x')
+        rset = self.execute('Any X WHERE X eid %(x)s, P? connait X', {'x':peid1})
         self.assertEquals(rset.rows, [[peid1]])
         rset = self.execute('Any X WHERE X eid %(x)s, X require_permission P?',
-                            {'x':peid1}, 'x')
+                            {'x':peid1})
         self.assertEquals(rset.rows, [[peid1]])
 
     def test_select_left_outer_join(self):
         rset = self.execute('DISTINCT Any G WHERE U? in_group G')
         self.assertEquals(len(rset), 4)
         rset = self.execute('DISTINCT Any G WHERE U? in_group G, U eid %(x)s',
-                            {'x': self.session.user.eid}, 'x')
+                            {'x': self.session.user.eid})
         self.assertEquals(len(rset), 4)
 
     def test_select_ambigous_outer_join(self):
@@ -374,7 +374,7 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Tag X: X name 'tagbis'")[0][0]
         geid = self.execute("CWGroup G WHERE G name 'users'")[0][0]
         self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
-                     {'g': geid, 't': teid}, 'g')
+                     {'g': geid, 't': teid})
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T? tags G, T name TN, G name GN")
         self.failUnless(['users', 'tag'] in rset.rows)
         self.failUnless(['activated', None] in rset.rows)
@@ -882,7 +882,7 @@ class QuerierTC(BaseQuerierTC):
     def test_insert_5bis(self):
         peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
         self.execute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X eid %(x)s",
-                     {'x': peid}, 'x')
+                     {'x': peid})
         rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto", X travaille Y')
         self.assert_(rset.rows)
         self.assertEquals(rset.description, [('Personne', 'Societe',)])
@@ -1000,17 +1000,17 @@ class QuerierTC(BaseQuerierTC):
         eid = self.execute("INSERT Folder T: T name 'toto'")[0][0]
         self.commit()
         # fill the cache
-        self.execute("Any X WHERE X eid %(x)s", {'x': eid}, 'x')
+        self.execute("Any X WHERE X eid %(x)s", {'x': eid})
         self.execute("Any X WHERE X eid %s" %eid)
-        self.execute("Folder X WHERE X eid %(x)s", {'x': eid}, 'x')
+        self.execute("Folder X WHERE X eid %(x)s", {'x': eid})
         self.execute("Folder X WHERE X eid %s" %eid)
         self.execute("DELETE Folder T WHERE T eid %s"%eid)
         self.commit()
-        rset = self.execute("Any X WHERE X eid %(x)s", {'x': eid}, 'x')
+        rset = self.execute("Any X WHERE X eid %(x)s", {'x': eid})
         self.assertEquals(rset.rows, [])
         rset = self.execute("Any X WHERE X eid %s" %eid)
         self.assertEquals(rset.rows, [])
-        rset = self.execute("Folder X WHERE X eid %(x)s", {'x': eid}, 'x')
+        rset = self.execute("Folder X WHERE X eid %(x)s", {'x': eid})
         self.assertEquals(rset.rows, [])
         rset = self.execute("Folder X WHERE X eid %s" %eid)
         self.assertEquals(rset.rows, [])
@@ -1086,7 +1086,7 @@ class QuerierTC(BaseQuerierTC):
     def test_update_string_concat(self):
         beid = self.execute("INSERT Bookmark Y: Y title 'toto', Y path '/view'")[0][0]
         self.execute('SET X title XN + %(suffix)s WHERE X is Bookmark, X title XN', {'suffix': u'-moved'})
-        newname = self.execute('Any XN WHERE X eid %(x)s, X title XN', {'x': beid}, 'x')[0][0]
+        newname = self.execute('Any XN WHERE X eid %(x)s, X title XN', {'x': beid})[0][0]
         self.assertEquals(newname, 'toto-moved')
 
     def test_update_query_error(self):
@@ -1203,7 +1203,7 @@ class QuerierTC(BaseQuerierTC):
                         'creation_date': '2000/07/03 11:00'})
         rset = self.execute('Any lower(N) ORDERBY LOWER(N) WHERE X is Tag, X name N,'
                             'X owned_by U, U eid %(x)s',
-                            {'x':self.session.user.eid}, 'x')
+                            {'x':self.session.user.eid})
         self.assertEquals(rset.rows, [[u'\xe9name0']])
 
 
@@ -1286,7 +1286,7 @@ class QuerierTC(BaseQuerierTC):
         ueid = self.execute("INSERT CWUser X: X login 'bob', X upassword 'toto'")[0][0]
         self.execute("SET E in_group G, E firstname %(firstname)s, E surname %(surname)s "
                       "WHERE E eid %(x)s, G name 'users'",
-                      {'x':ueid, 'firstname': u'jean', 'surname': u'paul'}, 'x')
+                      {'x':ueid, 'firstname': u'jean', 'surname': u'paul'})
 
     def test_nonregr_u_owned_by_u(self):
         ueid = self.execute("INSERT CWUser X: X login 'bob', X upassword 'toto', X in_group G "

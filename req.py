@@ -137,7 +137,6 @@ class RequestSessionBase(object):
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = set()
-        cachekey = []
         pending_relations = []
         for attr, value in kwargs.items():
             if isinstance(value, (tuple, list, set, frozenset)):
@@ -157,7 +156,6 @@ class RequestSessionBase(object):
                 restriction = '%s eid %%(%s)s' % (rvar, attr)
                 if not restriction in restrictions:
                     restrictions.add(restriction)
-                cachekey.append(attr)
                 kwargs[attr] = value.eid
             else: # attribute
                 relations.append('X %s %%(%s)s' % (attr, attr))
@@ -165,7 +163,7 @@ class RequestSessionBase(object):
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, kwargs, cachekey).get_entity(0, 0)
+        created = execute(rql, kwargs).get_entity(0, 0)
         for attr, values in pending_relations:
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
@@ -173,7 +171,7 @@ class RequestSessionBase(object):
                 restr = 'X %s Y' % attr
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
-                    {'x': created.eid}, 'x', build_descr=False)
+                    {'x': created.eid}, build_descr=False)
         return created
 
     def ensure_ro_rql(self, rql):

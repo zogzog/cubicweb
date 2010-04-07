@@ -515,16 +515,20 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
+        # rql st and solution cache
+        self._rql_cache = Cache(repo.config['rql-cache-size'])
+        # rql cache key cache
+        self._rql_ck_cache = Cache(repo.config['rql-cache-size'])
+        # some cache usage stats
+        self.cache_hit, self.cache_miss = 0, 0
         # rql parsing / analysing helper
         self.solutions = repo.vreg.solutions
-        self._rql_cache = Cache(repo.config['rql-cache-size'])
-        self.cache_hit, self.cache_miss = 0, 0
-        # rql planner
-        # note: don't use repo.sources, may not be built yet, and also "admin"
-        #       isn't an actual source
         rqlhelper = repo.vreg.rqlhelper
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
+        # rql planner
+        # note: don't use repo.sources, may not be built yet, and also "admin"
+        #       isn't an actual source
         if len([uri for uri in repo.config.sources() if uri != 'admin']) < 2:
             from cubicweb.server.ssplanner import SSPlanner
             self._planner = SSPlanner(schema, rqlhelper)
@@ -547,7 +551,7 @@ class QuerierHelper(object):
             return InsertPlan(self, rqlst, args, session)
         return ExecutionPlan(self, rqlst, args, session)
 
-    def execute(self, session, rql, args=None, eid_key=None, build_descr=True):
+    def execute(self, session, rql, args=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
@@ -556,12 +560,6 @@ class QuerierHelper(object):
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty
           list)
-        * `eid_key` must be both a key in args and a substitution in the rql
-          query. It should be used to enhance cacheability of rql queries.
-          It may be a tuple for keys in args.
-          `eid_key` must be provided in cases where a eid substitution is provided
-          and resolves ambiguities in the possible solutions inferred for each
-          variable in the query.
 
         on INSERT queries, there will be one row with the eid of each inserted
         entity
@@ -577,40 +575,33 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', rql, args
         # parse the query and binds variables
-        if eid_key is not None:
-            if not isinstance(eid_key, (tuple, list)):
-                eid_key = (eid_key,)
-            cachekey = [rql]
-            for key in eid_key:
-                try:
-                    etype = self._repo.type_from_eid(args[key], session)
-                except KeyError:
-                    raise QueryError('bad cache key %s (no value)' % key)
-                except TypeError:
-                    raise QueryError('bad cache key %s (value: %r)' % (
-                        key, args[key]))
-                except UnknownEid:
-                    # we want queries such as "Any X WHERE X eid 9999"
-                    # return an empty result instead of raising UnknownEid
-                    return empty_rset(rql, args)
-                cachekey.append(etype)
-                # ensure eid is correctly typed in args
-                args[key] = typed_eid(args[key])
-            cachekey = tuple(cachekey)
-        else:
-            cachekey = rql
         try:
+            cachekey = rql
+            if args:
+                eidkeys = self._rql_ck_cache[rql]
+                if eidkeys:
+                    try:
+                        cachekey = self._repo.querier_cache_key(session, rql,
+                                                                args, eidkeys)
+                    except UnknownEid:
+                        # we want queries such as "Any X WHERE X eid 9999"
+                        # return an empty result instead of raising UnknownEid
+                        return empty_rset(rql, args)
             rqlst = self._rql_cache[cachekey]
             self.cache_hit += 1
         except KeyError:
             self.cache_miss += 1
             rqlst = self.parse(rql)
             try:
-                self.solutions(session, rqlst, args)
+                eidkeys = self.solutions(session, rqlst, args)
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
+            self._rql_ck_cache[rql] = eidkeys
+            if eidkeys:
+                cachekey = self._repo.querier_cache_key(session, rql, args,
+                                                        eidkeys)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if rqlst.TYPE != 'select':
@@ -670,7 +661,7 @@ class QuerierHelper(object):
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
         # return a result set object
-        return ResultSet(results, rql, args, descr, eid_key, orig_rqlst)
+        return ResultSet(results, rql, args, descr, orig_rqlst)
 
 from logging import getLogger
 from cubicweb import set_log_methods

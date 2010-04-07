@@ -705,14 +705,14 @@ class RepoEnforcedRQLConstraintMixIn(object):
         if eidto is None:
             # checking constraint for an attribute relation
             restriction = 'S eid %(s)s, ' + self.restriction
-            args, ck = {'s': eidfrom}, 's'
+            args = {'s': eidfrom}
         else:
             restriction = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
-            args, ck = {'s': eidfrom, 'o': eidto}, ('s', 'o')
+            args = {'s': eidfrom, 'o': eidto}
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.execute(rql, args, ck, build_descr=False)
+        return session.execute(rql, args, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -839,9 +839,8 @@ class RQLExpression(object):
             return False
         if keyarg is None:
             kwargs.setdefault('u', session.user.eid)
-            cachekey = kwargs.keys()
             try:
-                rset = session.execute(rql, kwargs, cachekey, build_descr=True)
+                rset = session.execute(rql, kwargs, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:

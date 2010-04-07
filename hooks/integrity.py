@@ -77,7 +77,7 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
                 continue
             if rtype in pendingrtypes:
                 continue
-            if not session.execute(self.base_rql % rtype, {'x': eid}, 'x'):
+            if not session.execute(self.base_rql % rtype, {'x': eid}):
                 etype = session.describe(eid)[0]
                 _ = session._
                 msg = _('at least one relation %(rtype)s is required on '
@@ -304,7 +304,7 @@ class _DelayedDeleteOp(hook.Operation):
             # don't do anything if the entity is being created or deleted
             if not (eid in pendingeids or eid in neweids):
                 etype = session.describe(eid)[0]
-                session.execute(self.base_rql % (etype, rtype), {'x': eid}, 'x')
+                session.execute(self.base_rql % (etype, rtype), {'x': eid})
 
 class _DelayedDeleteSEntityOp(_DelayedDeleteOp):
     """delete orphan subject entity of a composite relation"""

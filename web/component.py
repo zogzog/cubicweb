@@ -169,7 +169,7 @@ class RelatedObjectsVComponent(EntityVComponent):
             rset = entity.related(self.rtype, role(self))
         else:
             eid = self.cw_rset[row][col]
-            rset = self._cw.execute(self.rql(), {'x': eid}, 'x')
+            rset = self._cw.execute(self.rql(), {'x': eid})
         if not rset.rowcount:
             return
         self.w(u'<div class="%s">' % self.div_class())

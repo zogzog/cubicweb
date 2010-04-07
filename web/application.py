@@ -190,7 +190,7 @@ class CookieSessionHandler(object):
     def _update_last_login_time(self, req):
         try:
             req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
-                        {'x' : req.user.eid}, 'x')
+                        {'x' : req.user.eid})
             req.cnx.commit()
         except (RepositoryError, Unauthorized):
             # ldap user are not writeable for instance

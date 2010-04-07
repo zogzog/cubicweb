@@ -29,7 +29,7 @@ class FakeMapping:
 class MockCursor:
     def __init__(self):
         self.executed = []
-    def execute(self, rql, args=None, cachekey=None):
+    def execute(self, rql, args=None, build_descr=False):
         args = args or {}
         self.executed.append(rql % args)
 

@@ -457,7 +457,7 @@ class FTITC(CubicWebTC):
         # our sqlite datetime adapter is ignore seconds fraction, so we have to
         # ensure update is done the next seconds
         time.sleep(1 - (ts.second - int(ts.second)))
-        self.execute('SET X nom "tata" WHERE X eid %(x)s', {'x': eidp}, 'x')
+        self.execute('SET X nom "tata" WHERE X eid %(x)s', {'x': eidp})
         self.commit()
         self.assertEquals(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
         self.session.set_pool()

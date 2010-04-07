@@ -15,6 +15,7 @@ import re
 from urllib import unquote
 from math import log
 from contextlib import contextmanager
+from warnings import warn
 
 import simplejson
 
@@ -289,7 +290,7 @@ class CubicWebTC(TestCase):
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),
-                    {'x': user.eid}, 'x')
+                    {'x': user.eid})
         user.clear_related_cache('in_group', 'subject')
         if commit:
             req.cnx.commit()
@@ -328,8 +329,11 @@ class CubicWebTC(TestCase):
         """executes <rql>, builds a resultset, and returns a couple (rset, req)
         where req is a FakeRequest
         """
+        if eidkey is not None:
+            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
         req = req or self.request(rql=rql)
-        return self.cnx.cursor(req).execute(unicode(rql), args, eidkey)
+        return req.execute(unicode(rql), args)
 
     @nocoverage
     def commit(self):
@@ -350,13 +354,13 @@ class CubicWebTC(TestCase):
     # # server side db api #######################################################
 
     def sexecute(self, rql, args=None, eid_key=None):
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
         self.session.set_pool()
-        return self.session.execute(rql, args, eid_key)
+        return self.session.execute(rql, args)
 
     # other utilities #########################################################
-
-    def entity(self, rql, args=None, eidkey=None, req=None):
-        return self.execute(rql, args, eidkey, req=req).get_entity(0, 0)
 
     @contextmanager
     def temporary_appobjects(self, *appobjects):
@@ -681,28 +685,18 @@ class CubicWebTC(TestCase):
 
     # deprecated ###############################################################
 
+    @deprecated('[3.8] use self.execute(...).get_entity(0, 0)')
+    def entity(self, rql, args=None, eidkey=None, req=None):
+        if eidkey is not None:
+            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        return self.execute(rql, args, req=req).get_entity(0, 0)
+
     @deprecated('[3.6] use self.request().create_entity(...)')
     def add_entity(self, etype, req=None, **kwargs):
         if req is None:
             req = self.request()
         return req.create_entity(etype, **kwargs)
-
-    @deprecated('[3.4] use self.vreg["etypes"].etype_class(etype)(self.request())')
-    def etype_instance(self, etype, req=None):
-        req = req or self.request()
-        e = self.vreg['etypes'].etype_class(etype)(req)
-        e.eid = None
-        return e
-
-    @nocoverage
-    @deprecated('[3.4] use req = self.request(); rset = req.execute()',
-                stacklevel=3)
-    def rset_and_req(self, rql, optional_args=None, args=None, eidkey=None):
-        """executes <rql>, builds a resultset, and returns a
-        couple (rset, req) where req is a FakeRequest
-        """
-        return (self.execute(rql, args, eidkey),
-                self.request(rql=rql, **optional_args or {}))
 
 
 # auto-populating test classes and utilities ###################################

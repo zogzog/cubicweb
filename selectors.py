@@ -1030,7 +1030,7 @@ class rql_condition(EntitySelector):
     def score(self, req, rset, row, col):
         try:
             return len(req.execute(self.rql, {'x': rset[row][col],
-                                              'u': req.user.eid}, 'x'))
+                                              'u': req.user.eid}))
         except Unauthorized:
             return 0
 

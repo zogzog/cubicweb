@@ -14,6 +14,7 @@ __docformat__ = "restructuredtext en"
 from logging import getLogger
 from time import time, clock
 from itertools import count
+from warnings import warn
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
@@ -282,9 +283,11 @@ class DBAPIRequest(RequestSessionBase):
         if user:
             self.set_entity_cache(user)
 
-    def execute(self, *args, **kwargs):
-        """Session interface compatibility"""
-        return self.cursor.execute(*args, **kwargs)
+    def execute(self, rql, args=None, eid_key=None, build_descr=True):
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        return self.cursor.execute(rql, args, build_descr=build_descr)
 
 set_log_methods(DBAPIRequest, getLogger('cubicweb.dbapi'))
 
@@ -706,34 +709,42 @@ class Cursor(object):
         self._closed = True
 
 
-    def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
-        """Prepare and execute a database operation (query or command).
-        Parameters may be provided as sequence or mapping and will be bound to
-        variables in the operation.  Variables are specified in a
-        database-specific notation (see the module's paramstyle attribute for
-        details).
+    def execute(self, rql, args=None, eid_key=None, build_descr=True):
+        """execute a rql query, return resulting rows and their description in
+        a :class:`~cubicweb.rset.ResultSet` object
 
-        A reference to the operation will be retained by the cursor.  If the
-        same operation object is passed in again, then the cursor can optimize
-        its behavior.  This is most effective for algorithms where the same
-        operation is used, but different parameters are bound to it (many
-        times).
+        * `rql` should be an Unicode string or a plain ASCII string, containing
+          the rql query
 
-        For maximum efficiency when reusing an operation, it is best to use the
-        setinputsizes() method to specify the parameter types and sizes ahead
-        of time.  It is legal for a parameter to not match the predefined
-        information; the implementation should compensate, possibly with a loss
-        of efficiency.
+        * `args` the optional args dictionary associated to the query, with key
+          matching named substitution in `rql`
 
-        The parameters may also be specified as list of tuples to e.g. insert
-        multiple rows in a single operation, but this kind of usage is
-        depreciated: executemany() should be used instead.
+        * `build_descr` is a boolean flag indicating if the description should
+          be built on select queries (if false, the description will be en empty
+          list)
 
-        Return values are not defined by the DB-API, but this here it returns a
-        ResultSet object.
+        on INSERT queries, there will be one row for each inserted entity,
+        containing its eid
+
+        on SET queries, XXX describe
+
+        DELETE queries returns no result.
+
+        .. Note::
+          to maximize the rql parsing/analyzing cache performance, you should
+          always use substitute arguments in queries, i.e. avoid query such as::
+
+            execute('Any X WHERE X eid 123')
+
+          use::
+
+            execute('Any X WHERE X eid %(x)s', {'x': 123})
         """
-        self._res = rset = self._repo.execute(self._sessid, operation,
-                                              parameters, eid_key, build_descr)
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        self._res = rset = self._repo.execute(self._sessid, rql,
+                                              args, build_descr)
         rset.req = self.req
         self._index = 0
         return rset

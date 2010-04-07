@@ -286,7 +286,7 @@ repository (default to 5 minutes).',
             session.set_shared_data('sources_error', msg % self.uri)
             return []
         try:
-            rql, cachekey = RQL2RQL(self).generate(session, union, args)
+            rql = RQL2RQL(self).generate(session, union, args)
         except UnknownEid, ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
@@ -294,7 +294,7 @@ repository (default to 5 minutes).',
         if server.DEBUG & server.DBG_RQL:
             print '  translated rql', rql
         try:
-            rset = cu.execute(rql, args, cachekey)
+            rset = cu.execute(rql, args)
         except Exception, ex:
             self.exception(str(ex))
             msg = session._("error while querying source %s, some data may be missing")
@@ -396,9 +396,8 @@ class RQL2RQL(object):
     def generate(self, session, rqlst, args):
         self._session = session
         self.kwargs = args
-        self.cachekey = []
         self.need_translation = False
-        return self.visit_union(rqlst), self.cachekey
+        return self.visit_union(rqlst)
 
     def visit_union(self, node):
         s = self._accept_children(node)
@@ -547,7 +546,6 @@ class RQL2RQL(object):
                 # ensure we have not yet translated the value...
                 if not key in self._const_var:
                     self.kwargs[key] = self.eid2extid(self.kwargs[key])
-                    self.cachekey.append(key)
                     self._const_var[key] = None
         return node.as_string()
 

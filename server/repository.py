@@ -33,7 +33,7 @@ from yams import BadSchemaDefinition
 from yams.schema import role_name
 from rql import RQLSyntaxError
 
-from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
@@ -76,12 +76,12 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
             with security_enabled(session, read=False):
                 session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                                 'NOT Y eid %%(y)s' % rtype,
-                                {'x': eidfrom, 'y': eidto}, 'x')
+                                {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
         with security_enabled(session, read=False):
             session.execute('DELETE X %sY WHERE Y eid %%(y)s, '
                             'NOT X eid %%(x)s' % rtype,
-                            {'x': eidfrom, 'y': eidto}, 'y')
+                            {'x': eidfrom, 'y': eidto})
 
 
 class Repository(object):
@@ -408,7 +408,7 @@ class Repository(object):
         """return a CWUser entity for user with the given eid"""
         cls = self.vreg['etypes'].etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
-        rset = session.execute(rql, {'x': eid}, 'x')
+        rset = session.execute(rql, {'x': eid})
         assert len(rset) == 1, rset
         cwuser = rset.get_entity(0, 0)
         # pylint: disable-msg=W0104
@@ -567,7 +567,7 @@ class Repository(object):
         session.commit()
         return session.id
 
-    def execute(self, sessionid, rqlstring, args=None, eid_key=None, build_descr=True):
+    def execute(self, sessionid, rqlstring, args=None, build_descr=True):
         """execute a RQL query
 
         * rqlstring should be an unicode string or a plain ascii string
@@ -578,7 +578,7 @@ class Repository(object):
         session = self._get_session(sessionid, setpool=True)
         try:
             try:
-                return self.querier.execute(session, rqlstring, args, eid_key,
+                return self.querier.execute(session, rqlstring, args,
                                             build_descr)
             except (Unauthorized, RQLSyntaxError):
                 raise
@@ -836,6 +836,21 @@ class Repository(object):
         """return the source for the given entity's eid"""
         return self.sources_by_uri[self.type_and_source_from_eid(eid, session)[1]]
 
+    def querier_cache_key(self, session, rql, args, eidkeys):
+        cachekey = [rql]
+        for key in sorted(eidkeys):
+            try:
+                etype = self.type_from_eid(args[key], session)
+            except KeyError:
+                raise QueryError('bad cache key %s (no value)' % key)
+            except TypeError:
+                raise QueryError('bad cache key %s (value: %r)' % (
+                    key, args[key]))
+            cachekey.append(etype)
+            # ensure eid is correctly typed in args
+            args[key] = typed_eid(args[key])
+        return tuple(cachekey)
+
     def eid2extid(self, source, eid, session=None):
         """get local id from an eid"""
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
@@ -901,7 +916,7 @@ class Repository(object):
             else:
                 # minimal meta-data
                 session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
-                                {'x': entity.eid, 'name': entity.__regid__}, 'x')
+                                {'x': entity.eid, 'name': entity.__regid__})
             session.commit(reset_pool)
             return eid
         except:
@@ -949,7 +964,7 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                session.execute(rql, {'x': eid}, 'x', build_descr=False)
+                session.execute(rql, {'x': eid}, build_descr=False)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
     def locate_relation_source(self, session, subject, rtype, object):

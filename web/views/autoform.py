@@ -289,7 +289,7 @@ def delete_relations(req, rdefs):
     execute = req.execute
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+        execute(rql, {'x': subj, 'y': obj})
     req.set_message(req._('relations deleted'))
 
 def insert_relations(req, rdefs):
@@ -297,7 +297,7 @@ def insert_relations(req, rdefs):
     execute = req.execute
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+        execute(rql, {'x': subj, 'y': obj})
 
 
 class GenericRelationsWidget(fw.FieldWidget):

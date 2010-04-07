@@ -332,9 +332,9 @@ class VocabularyFacet(AbstractFacet):
     def support_and(self):
         return False
 
-    def rqlexec(self, rql, args=None, cachekey=None):
+    def rqlexec(self, rql, args=None):
         try:
-            return self._cw.execute(rql, args, cachekey)
+            return self._cw.execute(rql, args)
         except Unauthorized:
             return []
 
@@ -375,7 +375,7 @@ class RelationFacet(VocabularyFacet):
             if self.target_type is not None:
                 rqlst.add_type_restriction(var, self.target_type)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
@@ -464,7 +464,7 @@ class AttributeFacet(RelationFacet):
             newvar = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
