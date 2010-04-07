@@ -459,17 +459,27 @@ this option is set to yes",
         """return cubicweb cubes used by the given cube"""
         pkginfo = cls.cube_pkginfo(cube)
         try:
+            # explicit __xxx_cubes__ attribute
             deps = getattr(pkginfo, key)
         except AttributeError:
-            if hasattr(pkginfo, oldkey):
-                warn('[3.6] %s is deprecated, use %s dict' % (oldkey, key),
-                     DeprecationWarning)
-                deps = getattr(pkginfo, oldkey)
+            # deduce cubes from generic __xxx__ attribute
+            try:
+                gendeps = getattr(pkginfo, key.replace('_cubes', ''))
+            except AttributeError:
+                # bw compat
+                if hasattr(pkginfo, oldkey):
+                    warn('[3.8] %s is deprecated, use %s dict' % (oldkey, key),
+                         DeprecationWarning)
+                    deps = getattr(pkginfo, oldkey)
+                else:
+                    deps = {}
             else:
-                deps = {}
+                deps = dict( (x[len('cubicweb-'):], v)
+                             for x, v in gendeps.iteritems()
+                             if x.startswith('cubicweb-'))
         if not isinstance(deps, dict):
             deps = dict((key, None) for key in deps)
-            warn('[3.6] cube %s should define %s as a dict' % (cube, key),
+            warn('[3.8] cube %s should define %s as a dict' % (cube, key),
                  DeprecationWarning)
         return deps
 

@@ -40,10 +40,6 @@ for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n'
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
-__depends__ = {'cubicweb': '>= 3.6.0'}
-__depends_cubes__ = dict( (x[len('cubicweb-):], v) for x, v in __depends__
-                          if x.startswith('cubicweb-'))
+__depends__ = {'cubicweb': '>= 3.8.0'}
 __recommends__ = {}
-__recommends_cubes__ = dict( (x[len('cubicweb-):], v) for x, v in __recommends__
-                             if x.startswith('cubicweb-'))
 
