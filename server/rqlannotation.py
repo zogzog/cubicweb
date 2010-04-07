@@ -339,11 +339,7 @@ class IsAmbData(object):
     def set_rel_constraint(self, term, rel, etypes_func):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):
             var = term.variable
-            if var.stinfo['typerel'] is not None:
-                sub = 1
-            else:
-                sub = 0
-            if len(var.stinfo['relations']) - sub == 1 \
+            if len(var.stinfo['relations']) == 1 \
                    or rel.sqlscope is var.sqlscope or rel.r_type == 'identity':
                 self.restrict(var, frozenset(etypes_func()))
                 try:
