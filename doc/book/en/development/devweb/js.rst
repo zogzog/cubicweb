@@ -4,9 +4,8 @@ Javascript
 ----------
 
 *CubicWeb* uses quite a bit of javascript in its user interface and
-ships with jquery (1.3.x) and parts of the jquery UI
-library, plus a number of homegrown files and also other thirparty
-libraries.
+ships with jquery (1.3.x) and parts of the jquery UI library, plus a
+number of homegrown files and also other thir party libraries.
 
 All javascript files are stored in cubicweb/web/data/. There are
 around thirty js files there. In a cube it goes to data/.
@@ -23,7 +22,7 @@ the cube, like this : 'cube.mycube.js', so as to avoid name clashes.
 
 XXX external_resources variable (which needs love)
 
-CubicWeb javascript api
+CubicWeb javascript API
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Javascript resources are typically loaded on demand, from views. The
@@ -57,13 +56,18 @@ CubicWeb javascript events
 Important AJAX APIS
 ~~~~~~~~~~~~~~~~~~~
 
+* `asyncRemoteExec` and `remoteExec` are the base building blocks for
+  doing arbitrary async (resp. sync) communications with the server
+
+* `reloadComponent` is a convenience function to replace a DOM node
+  with server supplied content coming from a specific registry (this
+  is quite handy to refresh the content of some boxes for instances)
+
 * `jQuery.fn.loadxhtml` is an important extension to jQuery which
-  allow proper loading and in-place DOM update of xhtml views. It is
+  allows proper loading and in-place DOM update of xhtml views. It is
   suitably augmented to trigger necessary events, and process CubicWeb
   specific elements such as the facet system, fckeditor, etc.
 
-* `asyncRemoteExec` and `remoteExec` are the base building blocks for
-  doing arbitrary async (resp. sync) communications with the server
 
 A simple example with asyncRemoteExec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,19 +93,107 @@ methods.
 
 .. sourcecode: javascript
 
-    function async_hello(name) {
+    function asyncHello(name) {
         var deferred = asyncRemoteExec('say_hello', name);
         deferred.addCallback(function (response) {
             alert(response);
         });
-        deferred.addErrback(function () {
+        deferred.addErrback(function (error) {
             alert('something fishy happened');
         });
      }
 
-     function sync_hello(name) {
+     function syncHello(name) {
          alert( remoteExec('say_hello', name) );
      }
+
+Anatomy of a reloadComponent call
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`reloadComponent` allows to dynamically replace some DOM node with new
+elements. It has the following signature:
+
+* `compid` (mandatory) is the name of the component to be reloaded
+
+* `rql` (optional) will be used to generate a result set given as
+  argument to the selected component
+
+* `registry` (optional) defaults to 'components' but can be any other
+  valid registry name
+
+* `nodeid` (optional) defaults to compid + 'Component' but can be any
+  explicitly specified DOM node id
+
+* `extraargs` (optional) should be a dictionary of values that will be
+  given to the cell_call method of the component
+
+A simple reloadComponent example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The server side implementation of `reloadComponent` is the
+js_component method of the JSonController.
+
+The following function implements a two-steps method to delete a
+standard bookmark and refresh the UI, while keeping the UI responsive.
+
+.. sourcecode:: javascript
+
+    function removeBookmark(beid) {
+        d = asyncRemoteExec('delete_bookmark', beid);
+        d.addCallback(function(boxcontent) {
+	    reloadComponent('bookmarks_box', '', 'boxes', 'bookmarks_box');
+            document.location.hash = '#header';
+            updateMessage(_("bookmark has been removed"));
+         });
+    }
+
+`reloadComponent` is called with the id of the bookmark box as
+argument, no rql expression (because the bookmarks display is actually
+independant of any dataset context), a reference to the 'boxes'
+registry (which hosts all left, right and contextual boxes) and
+finally an explicit 'bookmarks_box' nodeid argument that stipulates
+the target DOM node.
+
+Anatomy of a loadxhtml call
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`jQuery.fn.loadxhtml` is an important extension to jQuery which allows
+proper loading and in-place DOM update of xhtml views. The existing
+`jQuery.load`_ function does not handle xhtml, hence the addition. The
+API of loadxhtml is roughly similar to that of `jQuery.load`_.
+
+.. _`jQuery.load`: http://api.jquery.com/load/
+
+
+* `url` (mandatory) should be a complete url (typically referencing
+  the JSonController, but this is not strictly mandatory)
+
+* `data` (optional) is a dictionary of values given to the
+  controller specified through an `url` argument; some keys may have a
+  special meaning depending on the choosen controller (such as `fname`
+  for the JSonController); the `callback` key, if present, must refer
+  to a function to be called at the end of loadxhtml (more on this
+  below)
+
+* `reqtype` (optional) specifies the request method to be used (get or
+  post); if the argument is 'post', then the post method is used,
+  otherwise the get method is used
+
+* `mode` (optional) is one of `replace` (the default) which means the
+  loaded node will replace the current node content, `swap` to replace
+  the current node with the loaded node, and `append` which will
+  append the loaded node to the current node content
+
+About the `callback` option:
+
+* it is called with two parameters: the current node, and a list
+  containing the loaded (and post-processed node)
+
+* whenever is returns another function, this function is called in
+  turn with the same parameters as above
+
+This mechanism allows callback chaining.
+
 
 A simple example with loadxhtml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,7 +202,7 @@ Here we are concerned with the retrieval of a specific view to be
 injected in the live DOM. The view will be of course selected
 server-side using an entity eid provided by the client side.
 
-.. sourcecode: python
+.. sourcecode:: python
 
     from cubicweb import typed_eid
     from cubicweb.web.views.basecontrollers import JSonController, xhtmlize
@@ -121,7 +213,7 @@ server-side using an entity eid provided by the client side.
         entity = self._cw.entity_from_eid(typed_eid(eid))
         return entity.view('frob', name=frobname)
 
-.. sourcecode: javascript
+.. sourcecode:: javascript
 
     function update_some_div(divid, eid, frobname) {
         var params = {fname:'frob_status', eid: eid, frobname:frobname};
@@ -131,7 +223,7 @@ server-side using an entity eid provided by the client side.
 In this example, the url argument is the base json url of a cube
 instance (it should contain something like
 `http://myinstance/json?`). The actual JSonController method name is
-encoded in the `params` dictionnary using the `fname` key.
+encoded in the `params` dictionary using the `fname` key.
 
 A more real-life example from CubicWeb
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,7 +236,7 @@ and proper use of loadxhtml.
 We present here a skeletal version of the mecanism used in CubicWeb
 and available in web/views/tabs.py, in the `LazyViewMixin` class.
 
-.. sourcecode: python
+.. sourcecode:: python
 
     def lazyview(self, vid, rql=None):
         """ a lazy version of wview """
@@ -161,7 +253,7 @@ and available in web/views/tabs.py, in the `LazyViewMixin` class.
                    load_now('#lazy-%(vid)s');});"""
             % {'event': 'load_%s' % vid, 'vid': vid})
 
-This creates a `div` with an specific event associated to it.
+This creates a `div` with a specific event associated to it.
 
 The full version deals with:
 
@@ -177,7 +269,7 @@ The full version deals with:
 
 The javascript side is quite simple, due to loadxhtml awesomeness.
 
-.. sourcecode: javascript
+.. sourcecode:: javascript
 
     function load_now(eltsel) {
         var lazydiv = jQuery(eltsel);
@@ -205,10 +297,10 @@ to force the loading of a lazy view (for instance, a very
 computation-intensive web page could be scinded into one fast-loading
 part and a delayed part).
 
-In the server side, a simple call to a javascript function is
+On the server side, a simple call to a javascript function is
 sufficient.
 
-.. sourcecode: python
+.. sourcecode:: python
 
     def forceview(self, vid):
         """trigger an event that will force immediate loading of the view
@@ -218,49 +310,17 @@ sufficient.
 
 The browser-side definition follows.
 
-.. sourcecode: javascript
+.. sourcecode:: javascript
 
     function trigger_load(divid) {
         jQuery('#lazy-' + divd).trigger('load_' + divid);
     }
 
 
-Anatomy of a lodxhtml call
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The loadxhtml extension to jQuery accept many parameters with rich
-semantics. Let us detail these.
-
-* `url` (mandatory) should be a complete url, typically based on the
-  JSonController, but this is not strictly mandatory
-
-* `data` (optional) is a dictionnary of values given to the
-  controller specified through an `url` argument; some keys may have a
-  special meaning depending on the choosen controller (such as `fname`
-  for the JSonController); the `callback` key, if present, must refer
-  to a function to be called at the end of loadxhtml (more on this
-  below)
-
-* `reqtype` (optional) specifies the request method to be used (get or
-  post); if the argument is 'post', then the post method is used,
-  otherwise the get method is used
-
-* `mode` (optional) is one of `replace` (the default) which means the
-  loaded node will replace the current node content, `swap` to replace
-  the current node with the loaded node, and `append` which will
-  append the loaded node to the current node content
 
 
-About the `callback` option:
-
-* it is called with two parameters: the current node, and a list
-  containing the loaded (and post-processed node)
-
-* whenever is returns another function, this function is called in
-  turn with the same parameters as above
-
-This mecanism allows callback chaining.
-
+XXX reloadComponent
+XXX userCallback / user_callback
 
 Javascript library: overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

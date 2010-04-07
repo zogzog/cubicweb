@@ -197,6 +197,8 @@ def init_test_database(config=None, configdir='data'):
         init_test_database_sqlite(config)
     elif driver == 'postgres':
         init_test_database_postgres(config)
+    elif driver == 'sqlserver2005':
+        init_test_database_sqlserver2005(config, source)
     else:
         raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
@@ -219,10 +221,18 @@ def reset_test_database(config):
 ### postgres test database handling ############################################
 
 def init_test_database_postgres(config):
-    """initialize a fresh sqlite databse used for testing purpose"""
+    """initialize a fresh postgresql databse used for testing purpose"""
     if config.init_repository:
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, drop=True)
+
+### sqlserver2005 test database handling ############################################
+
+def init_test_database_sqlserver2005(config):
+    """initialize a fresh sqlserver databse used for testing purpose"""
+    if config.init_repository:
+        from cubicweb.server import init_repository
+        init_repository(config, interactive=False, drop=True, vreg=vreg)
 
 
 ### sqlite test database handling ##############################################

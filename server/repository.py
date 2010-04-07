@@ -593,7 +593,7 @@ class Repository(object):
                 raise
             except:
                 # FIXME: check error to catch internal errors
-                self.exception('unexpected error')
+                self.exception('unexpected error while executing %s with %s', rqlstring, args)
                 raise
         finally:
             session.reset_pool()
