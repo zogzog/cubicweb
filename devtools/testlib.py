@@ -261,6 +261,12 @@ class CubicWebTC(TestCase):
         self.setup_database()
         self.commit()
         MAILBOX[:] = [] # reset mailbox
+        self._cnxs = []
+
+    def tearDown(self):
+        for cnx in self._cnxs:
+            if not cnx._closed:
+                cnx.close()
 
     def setup_database(self):
         """add your database setup code by overriding this method"""
@@ -302,6 +308,7 @@ class CubicWebTC(TestCase):
             self.cnx = repo_connect(self.repo, unicode(login),
                                     cnxprops=ConnectionProperties('inmemory'),
                                     **kwargs)
+            self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
         return self.cnx
@@ -310,6 +317,7 @@ class CubicWebTC(TestCase):
         if not self.cnx is self._orig_cnx:
             try:
                 self.cnx.close()
+                self._cnxs.remove(self.cnx)
             except ProgrammingError:
                 pass # already closed
         self.cnx = self._orig_cnx
