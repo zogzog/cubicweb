@@ -515,8 +515,10 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
-        # rql st and solution cache
-        self._rql_cache = Cache(repo.config['rql-cache-size'])
+        # rql st and solution cache. Don't bother using a Cache instance: we
+        # should have a limited number of queries in there, since there are no
+        # entries in this cache for user queries (which have no args)
+        self._rql_cache = {}
         # rql cache key cache
         self._rql_ck_cache = Cache(repo.config['rql-cache-size'])
         # some cache usage stats
