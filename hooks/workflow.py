@@ -193,7 +193,7 @@ class FireTransitionHook(WorkflowHook):
             raise ValidationError(entity.eid, {None: msg})
         # True if we are coming back from subworkflow
         swtr = session.transaction_data.pop((forentity.eid, 'subwfentrytr'), None)
-        cowpowers = ('managers' in session.user.groups
+        cowpowers = (session.user.is_in_group('managers')
                      or not session.write_security)
         # no investigate the requested state change...
         try:
