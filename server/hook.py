@@ -202,7 +202,7 @@ class Hook(AppObject):
             for event in cls.events:
                 if event not in ALL_HOOKS:
                     raise Exception('bad event %s on %s.%s' % (
-                        event, obj.__module__, obj.__name__))
+                        event, cls.__module__, cls.__name__))
         except AttributeError:
             raise
         except TypeError:
