@@ -339,5 +339,5 @@ cubicweb application.
 .. Note:
    RQL queries executed in hooks and operations are *unsafe* by default, e.g. the
    read and write security is deactivated unless explicitly asked.
-  
+
 .. |cubicweb| replace:: *CubicWeb*
