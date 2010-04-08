@@ -61,19 +61,22 @@ of a cache on the RQL server side:
    self._cw.execute('Any T WHERE T in_conf C, C eid %(x)s', {'x': entity.eid})
 
 The syntax tree is built once for the "generic" RQL and can be re-used
-with a number of different eids.
+with a number of different eids. There rql IN operator is an exception
+to this rule.
 
-Alternativelly, some of the common data related to an entity can be obtained from
-the top-level `entity.related()` method (which is used under the hood by the orm
-when you use attribute access notation on an entity to get a relation. The above
-would then be translated to:
+.. sourcecode:: python
+
+   self._cw.execute('Any T WHERE T in_conf C, C name IN (%s)' % ','.join(['foo', 'bar']))
+
+Alternativelly, some of the common data related to an entity can be
+obtained from the `entity.related()` method (which is used under the
+hood by the orm when you use attribute access notation on an entity to
+get a relation. The initial request would then be translated to:
 
 .. sourcecode:: python
 
    entity.related('in_conf', 'object')
 
-The `related()` method, as more generally others orm methods, makes extensive use
-of the cache mechanisms so you don't have to worry about them. Additionnaly this
-use will get you commonly used attributes that you will be able to use in your
-view generation without having to ask the data backend.
-
+Additionnaly this benefits from the fetch_attrs policy eventually
+defined on the class element, which says which attributes must be also
+loaded when the entity is loaded through the orm.
