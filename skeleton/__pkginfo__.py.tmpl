@@ -7,7 +7,7 @@ distname = '%(distname)s'
 numversion = (0, 1, 0)
 version = '.'.join(str(num) for num in numversion)
 
-license = 'LCL'
+license = '%(license)s'
 
 author = '%(author)s'
 author_email = '%(author-email)s'
@@ -40,6 +40,6 @@ for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n'
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
-__depends__ = {'cubicweb': '>= 3.8.0'}
+__depends__ = {'cubicweb': '>= %(version)s'}
 __recommends__ = {}
 

@@ -43,6 +43,8 @@ from __pkginfo__ import modname, version, license, description, web, \
 
 if exists('README'):
    long_description = file('README').read()
+else:
+   long_description = ''
 
 # import optional features
 import __pkginfo__

@@ -103,10 +103,9 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
     else:
         print 'no diff between %s and %s' % (appl_file, ref_file)
 
-
+SKEL_EXCLUDE = ('*.py[co]', '*.orig', '*~', '*_flymake.py')
 def copy_skeleton(skeldir, targetdir, context,
-                  exclude=('*.py[co]', '*.orig', '*~', '*_flymake.py'),
-                  askconfirm=False):
+                  exclude=SKEL_EXCLUDE, askconfirm=False):
     import shutil
     from fnmatch import fnmatch
     skeldir = normpath(skeldir)
