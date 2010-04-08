@@ -311,8 +311,9 @@ class specializes(RelationType):
 def post_build_callback(schema):
     """set attributes permissions for schema/workflow entities"""
     from cubicweb.schema import SCHEMA_TYPES, WORKFLOW_TYPES, META_RTYPES
+    wftypes = WORKFLOW_TYPES - set(('TrInfo',))
     for eschema in schema.entities():
-        if eschema in SCHEMA_TYPES or eschema in WORKFLOW_TYPES:
+        if eschema in SCHEMA_TYPES or eschema in wftypes:
             for rschema in eschema.subject_relations():
                 if rschema.final and not rschema in META_RTYPES:
                     rdef = eschema.rdef(rschema)
