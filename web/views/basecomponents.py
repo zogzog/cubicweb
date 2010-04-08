@@ -2,7 +2,6 @@
 
 * the rql input form
 * the logged user link
-* pdf view link
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

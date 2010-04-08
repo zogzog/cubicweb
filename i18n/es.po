@@ -376,9 +376,6 @@ msgstr "Autorización de suprimir"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
 
-msgid "Download page as pdf"
-msgstr ""
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
 msgstr ""
@@ -1607,12 +1604,6 @@ msgid "contentnavigation_metadata"
 msgstr ""
 
 msgid "contentnavigation_metadata_description"
-msgstr ""
-
-msgid "contentnavigation_pdfview"
-msgstr ""
-
-msgid "contentnavigation_pdfview_description"
 msgstr ""
 
 msgid "contentnavigation_prevnext"

@@ -46,8 +46,6 @@ __recommends__ = {
     'PIL': '',                  # for captcha
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
-    'pysixt': '>= 0.1.0',       # XXX for pdf export
-    'python-gettext': '>= 1.0', # XXX for pdf export
     'vobject': '>= 0.6.0',      # for ical view
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',

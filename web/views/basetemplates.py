@@ -14,7 +14,7 @@ from logilab.common.deprecation import class_renamed
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
-from cubicweb.utils import UStringIO, can_do_pdf_conversion
+from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
 from cubicweb.web import component, formfields as ff, formwidgets as fw
 from cubicweb.web.views import forms
@@ -268,61 +268,6 @@ class SimpleMainTemplate(TheMainTemplate):
             self.w(u'</td>\n')
             self.w(u'</tr></table>\n')
 
-if can_do_pdf_conversion():
-    try:
-        from xml.etree.cElementTree import ElementTree
-    except ImportError: #python2.4
-        from elementtree import ElementTree
-    from subprocess import Popen as sub
-    from StringIO import StringIO
-    from tempfile import NamedTemporaryFile
-    from cubicweb.ext.xhtml2fo import ReportTransformer
-
-
-    class PdfViewComponent(component.EntityVComponent):
-        __regid__ = 'pdfview'
-
-        context = 'ctxtoolbar'
-
-        def cell_call(self, row, col, view):
-            entity = self.cw_rset.get_entity(row, col)
-            url = entity.absolute_url(vid=view.__regid__, __template='pdf-main-template')
-            iconurl = self._cw.build_url('data/pdf_icon.gif')
-            label = self._cw._('Download page as pdf')
-            self.w(u'<a href="%s" title="%s" class="toolbarButton"><img src="%s" alt="%s"/></a>' %
-                   (xml_escape(url), label, xml_escape(iconurl), label))
-
-    class PdfMainTemplate(TheMainTemplate):
-        __regid__ = 'pdf-main-template'
-
-        def call(self, view):
-            """build the standard view, then when it's all done, convert xhtml to pdf
-            """
-            super(PdfMainTemplate, self).call(view)
-            section = self._cw.form.pop('section', 'contentmain')
-            pdf = self.to_pdf(self._stream, section)
-            self._cw.set_content_type('application/pdf', filename='report.pdf')
-            self.binary = True
-            self.w = None
-            self.set_stream()
-            # pylint needs help
-            self.w(pdf)
-
-        def to_pdf(self, stream, section):
-            # XXX see ticket/345282
-            stream = stream.getvalue().replace('&nbsp;', '&#160;').encode('utf-8')
-            xmltree = ElementTree()
-            xmltree.parse(StringIO(stream))
-            foptree = ReportTransformer(section).transform(xmltree)
-            foptmp = NamedTemporaryFile()
-            pdftmp = NamedTemporaryFile()
-            foptree.write(foptmp)
-            foptmp.flush()
-            fopproc = sub(['/usr/bin/fop', foptmp.name, pdftmp.name])
-            fopproc.wait()
-            pdftmp.seek(0)
-            pdf = pdftmp.read()
-            return pdf
 
 # page parts templates ########################################################
 
