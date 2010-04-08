@@ -30,7 +30,6 @@ Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
 
 Session hooks (eg session_open, session_close) have no special attribute.
 
-
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
