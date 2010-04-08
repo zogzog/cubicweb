@@ -130,7 +130,7 @@ class PrimaryView(EntityView):
                 display_attributes.append( (rschema, role, dispctrl, value) )
         if display_attributes:
             self.w(u'<table>')
-            for rschema, role, dispctrl, value in entity_attributes:
+            for rschema, role, dispctrl, value in display_attributes:
                 try:
                     self._render_attribute(dispctrl, rschema, value,
                                            role=role, table=True)
