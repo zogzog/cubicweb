@@ -57,6 +57,11 @@ class StorageTC(CubicWebTC):
         return req.create_entity('File', data=Binary(content),
                                  data_format=u'text/plain', data_name=u'foo')
 
+    def fspath(self, entity):
+        fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
+                              {'f': entity.eid})[0][0]
+        return fspath.getvalue()
+
     def test_bfss_storage(self):
         f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
@@ -81,18 +86,14 @@ class StorageTC(CubicWebTC):
     def test_bfss_sqlite_fspath(self):
         f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
-        fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
-                              {'f': f1.eid})[0][0]
-        self.assertEquals(fspath.getvalue(), expected_filepath)
+        self.assertEquals(self.fspath(f1), expected_filepath)
 
     def test_bfss_fs_importing_doesnt_touch_path(self):
         self.session.transaction_data['fs_importing'] = True
         filepath = osp.abspath(__file__)
         f1 = self.session.create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
-        fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
-                              {'f': f1.eid})[0][0]
-        self.assertEquals(fspath.getvalue(), filepath)
+        self.assertEquals(self.fspath(f1), filepath)
 
     def test_source_storage_transparency(self):
         with self.temporary_appobjects(DummyBeforeHook, DummyAfterHook):
@@ -178,6 +179,22 @@ class StorageTC(CubicWebTC):
         self.commit()
         f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         self.assertEquals(f2.data.getvalue(), 'some other data')
+
+
+    def test_bfss_update_with_fs_importing(self):
+        # use self.session to use server-side cache
+        f1 = self.session.create_entity('File', data=Binary('some data'),
+                                        data_format=u'text/plain', data_name=u'foo')
+        old_fspath = self.fspath(f1)
+        self.session.transaction_data['fs_importing'] = True
+        new_fspath = osp.join(self.tempdir, 'newfile.txt')
+        file(new_fspath, 'w').write('the new data')
+        self.execute('SET F data %(d)s WHERE F eid %(f)s',
+                     {'d': Binary(new_fspath), 'f': f1.eid})
+        self.commit()
+        self.assertEquals(f1.data.getvalue(), 'the new data')
+        self.assertEquals(self.fspath(f1), new_fspath)
+        self.failIf(osp.isfile(old_fspath))
 
 
 if __name__ == '__main__':

@@ -85,9 +85,16 @@ class BytesFileSystemStorage(Storage):
 
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
-        binary = entity.pop(attr)
-        fpath = self.current_fs_path(entity, attr)
-        UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
+        if entity._cw.transaction_data.get('fs_importing'):
+            oldpath = self.current_fs_path(entity, attr)
+            fpath = entity[attr].getvalue()
+            if oldpath != fpath:
+                DeleteFileOp(entity._cw, filepath=oldpath)
+            binary = Binary(file(fpath).read())
+        else:
+            binary = entity.pop(attr)
+            fpath = self.current_fs_path(entity, attr)
+            UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
         return binary
 
     def entity_deleted(self, entity, attr):

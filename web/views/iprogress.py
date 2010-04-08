@@ -264,4 +264,4 @@ class ProgressBarView(EntityView):
                                           int(100.*budget/maxi), color))
         self.w(u'%s<br/>'
                u'<canvas class="progressbar" id="canvas%s" width="100" height="10"></canvas>'
-               % (short_title.replace(' ','&nbsp;'), cid))
+               % (xml_escape(short_title), cid))

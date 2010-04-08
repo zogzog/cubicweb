@@ -5,7 +5,7 @@ Javascript
 
 *CubicWeb* uses quite a bit of javascript in its user interface and
 ships with jquery (1.3.x) and parts of the jquery UI library, plus a
-number of homegrown files and also other thir party libraries.
+number of homegrown files and also other third party libraries.
 
 All javascript files are stored in cubicweb/web/data/. There are
 around thirty js files there. In a cube it goes to data/.

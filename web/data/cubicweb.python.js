@@ -237,9 +237,9 @@ function attrgetter(attrname) {
  * ['d', 'e', 'f']
  */
 function sliceList(lst, start, stop, step) {
-    var start = start || 0;
-    var stop = stop || lst.length;
-    var step = step || 1;
+    start = start || 0;
+    stop = stop || lst.length;
+    step = step || 1;
     if (stop < 0) {
 	stop = max(lst.length+stop, 0);
     }
@@ -256,6 +256,7 @@ function sliceList(lst, start, stop, step) {
 /* returns a partial func that calls a mehod on its argument
  * py-equiv: return lambda obj: getattr(obj, methname)(*args)
  */
+// XXX looks completely unused (candidate for removal)
 function methodcaller(methname) {
     var args = sliceList(arguments, 1);
     return function(obj) {
@@ -398,6 +399,7 @@ jQuery(document).ready(function() {
     jQuery(CubicWeb).trigger('server-response', [false, document]);
 });
 
+// XXX as of 2010-04-07, no known cube uses this
 jQuery(CubicWeb).bind('ajax-loaded', function() {
     log('[3.7] "ajax-loaded" event is deprecated, use "server-response" instead');
     jQuery(CubicWeb).trigger('server-response', [false, document]);
