@@ -6,22 +6,26 @@ function forEach(array, func) {
     }
 }
 
+// XXX looks completely unused (candidate for removal)
 function getElementsByTagAndClassName(tag, klass, root) {
     root = root || document;
     // FIXME root is not used in this compat implementation
     return jQuery(tag + '.' + klass);
 }
 
+/* jQUery flattens arrays returned by the mapping function:
+   >>> y = ['a:b:c', 'd:e']
+   >>> jQuery.map(y, function(y) { return y.split(':');})
+   ["a", "b", "c", "d", "e"]
+   // where one would expect:
+   [ ["a", "b", "c"], ["d", "e"] ]
+   XXX why not the same argument order as $.map and forEach ?
+*/
 function map(func, array) {
-    // XXX jQUery tends to simplify lists with only one element :
-    // >>> y = ['a:b:c']
-    // >>> jQuery.map(y, function(y) { return y.split(':');})
-    // ["a", "b", "c"]
-    // where I would expect :
-    // [ ["a", "b", "c"] ]
-    // return jQuery.map(array, func);
     var result = [];
-    for (var i=0,length=array.length;i<length;i++) {
+    for (var i=0, length=array.length;
+         i<length;
+         i++) {
 	result.push(func(array[i]));
     }
     return result;
@@ -41,6 +45,7 @@ function addElementClass(node, klass) {
     jQuery(node).addClass(klass);
 }
 
+// XXX looks completely unused (candidate for removal)
 function toggleElementClass(node, klass) {
     jQuery(node).toggleClass(klass);
 }
@@ -281,26 +286,35 @@ function Deferred() {
 
 jQuery.extend(Deferred.prototype, {
     __init__: function() {
-	this.onSuccess = [];
-	this.onFailure = [];
-	this.req = null;
+	this._onSuccess = [];
+	this._onFailure = [];
+	this._req = null;
+        this._result = null;
+        this._error = null;
     },
 
     addCallback: function(callback) {
-	this.onSuccess.push([callback, sliceList(arguments, 1)]);
+        if (this._req.readyState == 4) {
+            if (this._result) { callback.apply(null, this._result, this._req); }
+        }
+        else { this._onSuccess.push([callback, sliceList(arguments, 1)]); }
 	return this;
     },
 
     addErrback: function(callback) {
-	this.onFailure.push([callback, sliceList(arguments, 1)]);
+        if (this._req.readyState == 4) {
+            if (this._error) { callback.apply(null, this._error, this._req); }
+        }
+        else { this._onFailure.push([callback, sliceList(arguments, 1)]); }
 	return this;
     },
 
     success: function(result) {
+        this._result = result;
 	try {
-	    for (var i=0; i<this.onSuccess.length; i++) {
-		var callback = this.onSuccess[i][0];
-		var args = merge([result, this.req], this.onSuccess[i][1]);
+	    for (var i=0; i<this._onSuccess.length; i++) {
+		var callback = this._onSuccess[i][0];
+		var args = merge([result, this._req], this._onSuccess[i][1]);
 		callback.apply(null, args);
 	    }
 	} catch (error) {
@@ -309,14 +323,55 @@ jQuery.extend(Deferred.prototype, {
     },
 
     error: function(xhr, status, error) {
-	for (var i=0; i<this.onFailure.length; i++) {
-	    var callback = this.onFailure[i][0];
-	    var args = merge([error, this.req], this.onFailure[i][1]);
+        this._error = error;
+	for (var i=0; i<this._onFailure.length; i++) {
+	    var callback = this._onFailure[i][0];
+	    var args = merge([error, this._req], this._onFailure[i][1]);
 	    callback.apply(null, args);
 	}
     }
 
 });
+
+
+/*
+ * Asynchronously load an url and return a deferred
+ * whose callbacks args are decoded according to
+ * the Content-Type response header
+ */
+function loadRemote(url, data, reqtype) {
+    var d = new Deferred();
+    jQuery.ajax({
+	url: url,
+	type: reqtype,
+	data: data,
+
+	beforeSend: function(xhr) {
+	    d._req = xhr;
+	},
+
+	success: function(data, status) {
+            if (d._req.getResponseHeader("content-type") == 'application/json') {
+              data = evalJSON(data);
+            }
+	    d.success(data);
+	},
+
+	error: function(xhr, status, error) {
+          try {
+            if (xhr.status == 500) {
+                var reason_dict = evalJSON(xhr.responseText);
+                d.error(xhr, status, reason_dict['reason']);
+                return;
+            }
+          } catch(exc) {
+            log('error with server side error report:' + exc);
+          }
+          d.error(xhr, status, null);
+	}
+    });
+    return d;
+}
 
 
 /** @id MochiKit.DateTime.toISOTime */
@@ -366,36 +421,6 @@ toISOTimestamp = function (date, realISO/* = false*/) {
 };
 
 
-/*
- * Asynchronously load an url and return a deferred
- * whose callbacks args are decoded according to
- * the Content-Type response header
- */
-function loadRemote(url, data, reqtype) {
-    var d = new Deferred();
-    jQuery.ajax({
-	url: url,
-	type: reqtype,
-	data: data,
-
-	beforeSend: function(xhr) {
-	    d.req = xhr;
-	},
-
-	success: function(data, status) {
-            if (d.req.getResponseHeader("content-type") == 'application/json') {
-              data = evalJSON(data);
-            }
-	    d.success(data);
-	},
-
-	error: function(xhr, status, error) {
-	    error = evalJSON(xhr.responseText);
-	    d.error(xhr, status, error['reason']);
-	}
-    });
-    return d;
-}
 
 /* depth-first implementation of the nodeWalk function found
  * in MochiKit.Base

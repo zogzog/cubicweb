@@ -24,6 +24,10 @@ XXX FILLME describe API
 In most of the cases, you will inherit `EnvBasedTC` to write Unittest or
 functional tests for your entities, views, hooks, etc...
 
+XXX pytestconf.py & options (e.g --source to use a different db
+backend than sqlite)
+
+
 Managing connections or users
 +++++++++++++++++++++++++++++
 
@@ -33,10 +37,12 @@ simulating security, changing users.
 
 By default, tests run with a user with admin privileges. This
 user/connection must never be closed.
-qwq
-Before a self.login, one has to release the connection pool in use with a self.commit, self.rollback or self.close.
 
-When one is logged in as a normal user and wants to switch back to the admin user, one has to use self.restore_connection().
+Before a self.login, one has to release the connection pool in use
+with a self.commit, self.rollback or self.close.
+
+When one is logged in as a normal user and wants to switch back to the
+admin user, one has to use self.restore_connection().
 
 Usually it looks like this:
 
