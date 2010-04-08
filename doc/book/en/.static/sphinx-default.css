@@ -3,7 +3,7 @@
  */
 
 html, body {
-    background: white;	
+    background: white;
 }
 
 body {
@@ -115,7 +115,7 @@ div.sphinxsidebar {
 }
 
 div.sphinxsidebar h3 {
-    font-family: 'Verdanda', sans-serif;
+    font-family: Verdana, sans-serif;
     color: black;
     font-size: 1.2em;
     font-weight: normal;
@@ -126,7 +126,7 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h4 {
-    font-family: 'Verdana', sans-serif;
+    font-family: Verdana, sans-serif;
     color: black;
     font-size: 1.1em;
     font-weight: normal;
