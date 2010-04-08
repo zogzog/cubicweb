@@ -115,11 +115,8 @@ class PrimaryView(EntityView):
         return u''
 
     def render_entity_attributes(self, entity, siderelations=None):
-        entity_attributes = self._section_def(entity, 'attributes')
-        if not entity_attributes:
-            return
-        self.w(u'<table>')
-        for rschema, tschemas, role, dispctrl in entity_attributes:
+        display_attributes = []
+        for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
             if rschema.final or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
@@ -129,16 +126,19 @@ class PrimaryView(EntityView):
                     value = self._cw.view(vid, rset)
                 else:
                     value = None
-            if self.skip_none and (value is None or value == ''):
-                continue
-            try:
-                self._render_attribute(dispctrl, rschema, value,
-                                       role=role, table=True)
-            except TypeError:
-                warn('[3.6] _render_attribute prototype has changed, '
-                     'please update %s' % self.__class___, DeprecationWarning)
-                self._render_attribute(rschema, value, role=role, table=True)
-        self.w(u'</table>')
+            if not self.skip_none or (value is not None and value != ''):
+                display_attributes.append( (rschema, role, dispctrl, value) )
+        if display_attributes:
+            self.w(u'<table>')
+            for rschema, role, dispctrl, value in entity_attributes:
+                try:
+                    self._render_attribute(dispctrl, rschema, value,
+                                           role=role, table=True)
+                except TypeError:
+                    warn('[3.6] _render_attribute prototype has changed, please'
+                         ' update %s' % self.__class___, DeprecationWarning)
+                    self._render_attribute(rschema, value, role=role, table=True)
+            self.w(u'</table>')
 
     def render_entity_relations(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
