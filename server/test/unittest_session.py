@@ -37,6 +37,7 @@ class InternalSessionTC(CubicWebTC):
     def test_dbapi_query(self):
         session = self.repo.internal_session()
         self.assertFalse(session.running_dbapi_query)
+        session.close()
 
 if __name__ == '__main__':
     unittest_main()

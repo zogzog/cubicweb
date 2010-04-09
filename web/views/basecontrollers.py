@@ -91,11 +91,11 @@ class LogoutController(Controller):
         #   anonymous connection is allowed and the page will be displayed or
         #   we'll be redirected to the login form
         msg = self._cw._('you have been logged out')
-        if self._cw.https:
-            # XXX hack to generate an url on the http version of the site
-            self._cw._base_url =  self._cw.vreg.config['base-url']
-            self._cw.https = False
-        return self._cw.build_url('view', vid='index', __message=msg)
+        # force base_url so on dual http/https configuration, we generate an url
+        # on the http version of the site
+        return self._cw.build_url('view', vid='index', __message=msg,
+                                  base_url=self._cw.vreg.config['base-url'])
+
 
 class ViewController(Controller):
     """standard entry point :
@@ -595,25 +595,14 @@ class SendMailController(Controller):
         for entity in rset.entities():
             yield entity
 
-    @property
-    @cached
-    def smtp(self):
-        mailhost, port = self._cw.config['smtp-host'], self._cw.config['smtp-port']
-        try:
-            return SMTP(mailhost, port)
-        except Exception, ex:
-            self.exception("can't connect to smtp server %s:%s (%s)",
-                             mailhost, port, ex)
-            url = self._cw.build_url(__message=self._cw._('could not connect to the SMTP server'))
-            raise Redirect(url)
-
     def sendmail(self, recipient, subject, body):
-        helo_addr = '%s <%s>' % (self._cw.config['sender-name'],
-                                 self._cw.config['sender-addr'])
         msg = format_mail({'email' : self._cw.user.get_email(),
                            'name' : self._cw.user.dc_title(),},
                           [recipient], body, subject)
-        self.smtp.sendmail(helo_addr, [recipient], msg.as_string())
+        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
+            msg = self._cw._('could not connect to the SMTP server')
+            url = self._cw.build_url(__message=msg)
+            raise Redirect(url)
 
     def publish(self, rset=None):
         # XXX this allows users with access to an cubicweb instance to use it as
