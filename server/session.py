@@ -946,6 +946,7 @@ class Session(RequestSessionBase):
 class InternalSession(Session):
     """special session created internaly by the repository"""
     is_internal_session = True
+    running_dbapi_query = False
 
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
