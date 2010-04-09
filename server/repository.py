@@ -1119,7 +1119,7 @@ class Repository(object):
                                       eidfrom=entity.eid, rtype=attr, eidto=value)
                     if not only_inline_rels:
                         hm.call_hooks('before_update_entity', session, entity=entity)
-                source.update_entity(session, entity)
+            source.update_entity(session, entity)
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
                 if not only_inline_rels:

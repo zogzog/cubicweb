@@ -119,9 +119,6 @@ class RequestSessionBase(object):
     def set_entity_cache(self, entity):
         pass
 
-    # XXX move to CWEntityManager or even better as factory method (unclear
-    # where yet...)
-
     def create_entity(self, etype, **kwargs):
         """add a new entity of the given type
 
@@ -133,46 +130,8 @@ class RequestSessionBase(object):
 
         """
         _check_cw_unsafe(kwargs)
-        execute = self.execute
-        rql = 'INSERT %s X' % etype
-        relations = []
-        restrictions = set()
-        pending_relations = []
-        for attr, value in kwargs.items():
-            if isinstance(value, (tuple, list, set, frozenset)):
-                if len(value) == 1:
-                    value = iter(value).next()
-                else:
-                    del kwargs[attr]
-                    pending_relations.append( (attr, value) )
-                    continue
-            if hasattr(value, 'eid'): # non final relation
-                rvar = attr.upper()
-                # XXX safer detection of object relation
-                if attr.startswith('reverse_'):
-                    relations.append('%s %s X' % (rvar, attr[len('reverse_'):]))
-                else:
-                    relations.append('X %s %s' % (attr, rvar))
-                restriction = '%s eid %%(%s)s' % (rvar, attr)
-                if not restriction in restrictions:
-                    restrictions.add(restriction)
-                kwargs[attr] = value.eid
-            else: # attribute
-                relations.append('X %s %%(%s)s' % (attr, attr))
-        if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
-        if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, kwargs).get_entity(0, 0)
-        for attr, values in pending_relations:
-            if attr.startswith('reverse_'):
-                restr = 'Y %s X' % attr[len('reverse_'):]
-            else:
-                restr = 'X %s Y' % attr
-            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                restr, ','.join(str(r.eid) for r in values)),
-                    {'x': created.eid}, build_descr=False)
-        return created
+        cls = self.vreg['etypes'].etype_class(etype)
+        return cls.cw_instantiate(self.execute, **kwargs)
 
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
