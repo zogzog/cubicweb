@@ -158,6 +158,9 @@ class TestServerConfiguration(ServerConfiguration):
         sources = super(TestServerConfiguration, self).sources()
         if not sources:
             sources = DEFAULT_SOURCES
+        if sources['system']['db-driver'] == 'sqlite':
+            # we need an abspath in case tests are changing the cwd
+            sources['system']['db-name'] = abspath(sources['system']['db-name'])
         return sources
 
 

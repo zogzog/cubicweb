@@ -7,6 +7,7 @@
 """
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.session import _make_description
 
 class Variable:
@@ -31,6 +32,11 @@ class MakeDescriptionTC(TestCase):
         solution = {'A': 'Int', 'B': 'CWUser'}
         self.assertEquals(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
                           ['Int','CWUser'])
+
+class InternalSessionTC(CubicWebTC):
+    def test_dbapi_query(self):
+        session = self.repo.internal_session()
+        self.assertFalse(session.running_dbapi_query)
 
 if __name__ == '__main__':
     unittest_main()
