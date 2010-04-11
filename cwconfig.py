@@ -1019,7 +1019,9 @@ the repository',
         return i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs)
 
     def sendmails(self, msgs):
-        """msgs: list of 2-uple (message object, recipients)"""
+        """msgs: list of 2-uple (message object, recipients). Return False
+        if connection to the smtp server failed, else True.
+        """
         server, port = self['smtp-host'], self['smtp-port']
         SMTP_LOCK.acquire()
         try:
@@ -1028,7 +1030,7 @@ the repository',
             except Exception, ex:
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
-                return
+                return False
             heloaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
             for msg, recipients in msgs:
                 try:
@@ -1039,6 +1041,7 @@ the repository',
             smtp.close()
         finally:
             SMTP_LOCK.release()
+        return True
 
 set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration'))
 
