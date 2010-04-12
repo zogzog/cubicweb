@@ -113,8 +113,6 @@ def sqldropschema(schema, driver, text_index=True,
     from cubicweb.server.sources import native
     output = []
     w = output.append
-    w(native.sql_drop_schema(driver))
-    w('')
     if text_index:
         dbhelper = db.get_db_helper(driver)
         w(dbhelper.sql_drop_fti())
@@ -122,6 +120,8 @@ def sqldropschema(schema, driver, text_index=True,
     w(dropschema2sql(schema, prefix=SQL_PREFIX,
                      skip_entities=skip_entities,
                      skip_relations=skip_relations))
+    w('')
+    w(native.sql_drop_schema(driver))
     return '\n'.join(output)
 
 
