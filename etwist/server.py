@@ -11,6 +11,7 @@ import sys
 import os
 import select
 import errno
+from os.path import join
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
@@ -28,9 +29,8 @@ from cubicweb import ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.web import (AuthenticationError, NotFound, Redirect,
                           RemoteCallFailed, DirectResponse, StatusResponse,
                           ExplicitLogin)
-
 from cubicweb.web.application import CubicWebPublisher
-
+from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 from cubicweb.etwist.http import HTTPResponse
 
@@ -98,15 +98,12 @@ class LongTimeExpiringFile(File):
 
     """
     def render(self, request):
-        def setExpireHeader(response):
-            # Don't provide additional resource information to error responses
-            if response.code < 400:
-                # the HTTP RFC recommands not going further than 1 year ahead
-                expires = date.today() + timedelta(days=6*30)
-                response.headers.setHeader('Expires', mktime(expires.timetuple()))
-            return response
-        d = maybeDeferred(super(LongTimeExpiringFile, self).render, request)
-        return d.addCallback(setExpireHeader)
+        # XXX: Don't provide additional resource information to error responses
+        #
+        # the HTTP RFC recommands not going further than 1 year ahead
+        expires = date.today() + timedelta(days=6*30)
+        request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
+        return File.render(self, request)
 
 
 class CubicWebRootResource(resource.Resource):
@@ -118,9 +115,9 @@ class CubicWebRootResource(resource.Resource):
         self.appli = CubicWebPublisher(config, debug=self.debugmode)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
-        self.versioned_datadir = 'data%s' % config.instance_md5_version()
         self.children = {}
-
+        self.static_directories = set(('data%s' % config.instance_md5_version(),
+                                       'data', 'static', 'fckeditor'))
     def init_publisher(self):
         config = self.config
         # when we have an in-memory repository, clean unused sessions every XX
@@ -163,31 +160,30 @@ class CubicWebRootResource(resource.Resource):
 
     def getChild(self, path, request):
         """Indicate which resource to use to process down the URL's path"""
-        pre_path = request.prePathURL()
-        # XXX testing pre_path[0] not enough?
-        if any(s in pre_path
-               for s in (self.versioned_datadir, 'data', 'static')):
-            # Anything in data/, static/ is treated as static files
-
-            if 'static' in pre_path:
-                # instance static directory
+        pre_path = request.path.split('/')[1:]
+        if pre_path[0] == 'https':
+            pre_path.pop(0)
+        directory = pre_path[0]
+        # Anything in data/, static/, fckeditor/ and the generated versioned
+        # data directory is treated as static files
+        if directory in self.static_directories:
+            if path == directory: # recurse
+                return self
+            cls = File
+            if directory == 'static':
                 datadir = self.config.static_directory
-            elif 'fckeditor' in pre_path:
-                fckeditordir = self.config.ext_resources['FCKEDITOR_PATH']
-                return File(fckeditordir)
+            elif directory == 'fckeditor':
+                datadir = self.config.ext_resources['FCKEDITOR_PATH']
             else:
-                # cube static data file
                 datadir = self.config.locate_resource(path)
                 if datadir is None:
                     return self
-            self.info('static file %s from %s', path, datadir)
-            if 'data' in pre_path:
-                return File(os.path.join(datadir, path))
-            else:
-                return LongTimeExpiringFile(datadir)
-        elif path == 'fckeditor':
-            fckeditordir = self.config.ext_resources['FCKEDITOR_PATH']
-            return File(fckeditordir)
+                if directory != 'data':
+                    # versioned directory, use specific file with http cache
+                    # headers so their are cached for a very long time
+                    cls = LongTimeExpiringFile
+            self.debug('static file %s from %s', path, datadir)
+            return cls(join(datadir, path))
         # Otherwise we use this single resource
         return self
 
