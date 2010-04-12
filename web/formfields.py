@@ -70,7 +70,7 @@ class Field(object):
     :required:
        bool flag telling if the field is required or not.
     :value:
-       field's value, used when no value specified by other means. XXX explain
+       field value (may be an actual value, a default value or nothing)
     :choices:
        static vocabulary for this field. May be a list of values or a list of
        (label, value) tuples if specified.

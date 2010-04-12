@@ -36,19 +36,19 @@ Oracle and PostgreSQL but not SqlServer nor Sqlite).
 Data hooks can serve the following purposes:
 
 * enforcing constraints that the static schema cannot express
-  (spanning several entities/relations, specific value ranges, exotic
+  (spanning several entities/relations, exotic value ranges and
   cardinalities, etc.)
 
-* implement computed attributes (an example could be the maintenance
-  of a relation representing the transitive closure of another relation)
+* implement computed attributes
 
 Operations are Hook-like objects that are created by Hooks and
 scheduled to happen just before (or after) the `commit` event. Hooks
 being fired immediately on data operations, it is sometime necessary
-to delay the actual work down to a time where all other Hooks have run
-and the application state converges towards consistency. Also while
-the order of execution of Hooks is data dependant (and thus hard to
-predict), it is possible to force an order on Operations.
+to delay the actual work down to a time where all other Hooks have
+run, for instance a validation check which needs that all relations be
+already set on an entity. Also while the order of execution of Hooks
+is data dependant (and thus hard to predict), it is possible to force
+an order on Operations.
 
 Operations are subclasses of the Operation class in `server/hook.py`,
 implementing `precommit_event` and other standard methods (wholly
@@ -90,7 +90,7 @@ over the following events:
 * before_delete_relation
 
 This is an occasion to remind us that relations support the add/delete
-operation, but no delete.
+operation, but no update.
 
 Non data events also exist. These are called SYSTEM HOOKS.
 
@@ -109,8 +109,29 @@ Non data events also exist. These are called SYSTEM HOOKS.
 * session_close
 
 
-Using Hooks
------------
+Using dataflow Hooks
+--------------------
+
+XXX blabla
+
+Validation Errors
+~~~~~~~~~~~~~~~~~
+
+When a condition is not met in a Hook/Operation, it must raise a
+`ValidationError`. Raising anything but a (subclass of)
+ValidationError is a programming error. Raising a ValidationError
+entails aborting the current transaction.
+
+The ValidationError exception is used to convey enough information up
+to the user interface. Hence its constructor is different from the
+default Exception constructor. It accepts, positionally:
+
+* an entity eid,
+
+* a dict whose keys represent attribute (or relation) names and values
+  an end-user facing message (hence properly translated) relating the
+  problem.
+
 
 We will use a very simple example to show hooks usage. Let us start
 with the following schema.
@@ -150,25 +171,13 @@ __select__ class attribute. The base __select__ is augmented with an
 `implements` selector matching the desired entity type. The `events`
 tuple is used by the Hook.__select__ base selector to dispatch the
 hook on the right events. In an entity hook, it is possible to
-dispatch on any entity event at once if needed.
+dispatch on any entity event (e.g. 'before_add_entity',
+'before_update_entity') at once if needed.
 
-Like all appobjects, hooks have the self._cw attribute which
-represents the current session. In entity hooks, a self.entity
+Like all appobjects, hooks have the `self._cw` attribute which
+represents the current session. In entity hooks, a `self.entity`
 attribute is also present.
 
-When a condition is not met in a Hook, it must raise a
-ValidationError. Raising anything but a (subclass of) ValidationError
-is a programming error.
-
-The ValidationError exception is used to convey enough information up
-to the user interface. Hence its constructor is different from the
-default Exception constructor.It accepts, positionally:
-
-* an entity eid,
-
-* a dict whose keys represent attributes and values a message relating
-  the problem; such a message will be presented to the end-users;
-  hence it must be properly translated.
 
 A relation hook
 ~~~~~~~~~~~~~~~
@@ -205,8 +214,201 @@ The essential difference with respect to an entity hook is that there
 is no self.entity, but `self.eidfrom` and `self.eidto` hook attributes
 which represent the subject and object eid of the relation.
 
+Using Operations
+----------------
 
-# XXX talk about
+Let's augment our example with a new `subsidiary_of` relation on Company.
 
-dict access to entities in before_[add|update]
-set_operation
+.. sourcecode:: python
+
+   class Company(EntityType):
+        name = String(required=True)
+        boss = SubjectRelation('Person', cardinality='1*')
+        subsidiary_of = SubjectRelation('Company', cardinality='*?')
+
+Base example
+~~~~~~~~~~~~
+
+We would like to check that there is no cycle by the `subsidiary_of`
+relation. This is best achieved in an Operation since all relations
+are likely to be set at commit time.
+
+.. sourcecode:: python
+
+    def check_cycle(self, session, eid, rtype, role='subject'):
+        parents = set([eid])
+        parent = session.entity_from_eid(eid)
+        while parent.related(rtype, role):
+            parent = parent.related(rtype, role)[0]
+            if parent.eid in parents:
+                msg = session._('detected %s cycle' % rtype)
+                raise ValidationError(eid, {rtype: msg})
+            parents.add(parent.eid)
+
+    class CheckSubsidiaryCycleOp(Operation):
+
+        def precommit_event(self):
+            check_cycle(self.session, self.eidto, 'subsidiary_of')
+
+
+    class CheckSubsidiaryCycleHook(Hook):
+        __regid__ = 'check_no_subsidiary_cycle'
+        events = ('after_add_relation',)
+        __select__ = Hook.__select__ & match_rtype('subsidiary_of')
+
+        def __call__(self):
+            CheckSubsidiaryCycleOp(self._cw, eidto=self.eidto)
+
+The operation is instantiated in the Hook.__call__ method.
+
+An operation always takes a session object as first argument
+(accessible as `.session` from the operation instance), and optionally
+all keyword arguments needed by the operation. These keyword arguments
+will be accessible as attributes from the operation instance.
+
+Like in Hooks, ValidationError can be raised in Operations. Other
+exceptions are programming errors.
+
+Notice how our hook will instantiate an operation each time the Hook
+is called, i.e. each time the `subsidiary_of` relation is set.
+
+Using set_operation
+~~~~~~~~~~~~~~~~~~~
+
+There is an alternative method to schedule an Operation from a Hook,
+using the `set_operation` function.
+
+.. sourcecode:: python
+
+   class CheckSubsidiaryCycleHook(Hook):
+       __regid__ = 'check_no_subsidiary_cycle'
+       events = ('after_add_relation',)
+       __select__ = Hook.__select__ & match_rtype('subsidiary_of')
+
+       def __call__(self):
+           set_operation(self._cw, 'subsidiary_cycle_detection', self.eidto,
+                         CheckCycleOp, rtype=self.rtype)
+
+   class CheckSubsidiaryCycleOp(Operation):
+
+       def precommit_event(self):
+           for eid in self._cw.transaction_data['subsidiary_cycle_detection']:
+               check_cycle(self.session, eid, self.rtype)
+
+Here, we call set_operation with a session object, a specially forged
+key, a value that is the actual payload of an individual operation (in
+our case, the object of the subsidiary_of relation) , the class of the
+Operation, and more optional parameters to give to the operation (here
+the rtype which do not vary accross operations).
+
+The body of the operation must then iterate over the values that have
+been mapped in the transaction_data dictionary to the forged key.
+
+This mechanism is especially useful on two occasions (not shown in our
+example):
+
+* massive data import (reduced memory consumption within a large
+  transaction)
+
+* when several hooks need to instantiate the same operation (e.g. an
+  entity and a relation hook).
+
+Operation: a small API overview
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: cubicweb.server.hook.Operation
+.. autoclass:: cubicweb.server.hook.LateOperation
+.. autofunction:: cubicweb.server.hook.set_operation
+
+Hooks writing rules
+-------------------
+
+Remainder
+~~~~~~~~~
+
+Never, ever use the `entity.foo = 42` notation to update an entity. It
+will not work.
+
+How to choose between a before and an after event ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before hooks give you access to the old attribute (or relation)
+values. By definition the database is not yet updated in a before
+hook.
+
+To access old and new values in an before_update_entity hook, one can
+use the `server.hook.entity_oldnewvalue` function which returns a
+tuple of the old and new values. This function takes an entity and an
+attribute name as parameters.
+
+In a 'before_add|update_entity' hook the self.entity contains the new
+values. One is allowed to further modify them before database
+operations, using the dictionary notation.
+
+.. sourcecode:: python
+
+   self.entity['age'] = 42
+
+This is because using self.entity.set_attributes(age=42) will
+immediately update the database (which does not make sense in a
+pre-database hook), and will trigger any existing
+before_add|update_entity hook, thus leading to infinite hook loops or
+such awkward situations.
+
+Beyond these specific cases, updating an entity attribute or relation
+must *always* be done using `set_attributes` and `set_relations`
+methods.
+
+(Of course, ValidationError will always abort the current transaction,
+whetever the event).
+
+Peculiarities of inlined relations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some relations are defined in the schema as `inlined` (see
+:ref:`RelationType` for details). In this case, they are inserted in
+the database at the same time as entity attributes.
+
+Hence in the case of before_add_relation, such relations already exist
+in the database.
+
+Edited attributes
+~~~~~~~~~~~~~~~~~
+
+On udpates, it is possible to ask the `entity.edited_attributes`
+variable whether one attribute has been updated.
+
+.. sourcecode:: python
+
+  if 'age' not in entity.edited_attribute:
+      return
+
+Deleted in transaction
+~~~~~~~~~~~~~~~~~~~~~~
+
+The session object has a deleted_in_transaction method, which can help
+writing deletion Hooks.
+
+.. sourcecode:: python
+
+   if self._cw.deleted_in_transaction(self.eidto):
+      return
+
+Given this predicate, we can avoid scheduling an operation.
+
+Disabling hooks
+~~~~~~~~~~~~~~~
+
+It is sometimes convenient to disable some hooks. For instance to
+avoid infinite Hook loops. One uses the `hooks_control` context
+manager.
+
+This can be controlled more finely through the `category` Hook class
+attribute.
+
+.. sourcecode:: python
+
+   with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, <category>):
+       # ... do stuff
+
+.. autoclass:: cubicweb.server.session.hooks_control
