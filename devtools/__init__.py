@@ -220,7 +220,7 @@ def reset_test_database(config):
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)
-    if driver == 'sqlserver2005':
+    elif driver == 'sqlserver2005':
         reset_test_database_sqlserver2005(config)
     else:
         raise ValueError('no reset function for driver %r' % driver)
@@ -241,7 +241,7 @@ def init_test_database_sqlserver2005(config):
     if config.init_repository:
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, drop=True, vreg=vreg)
-        
+
 def reset_test_database_sqlserver2005(config):
     pass
 
