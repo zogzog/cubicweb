@@ -74,8 +74,9 @@ def uniquify_path(dirpath, basename):
 
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
-    def __init__(self, defaultdir):
+    def __init__(self, defaultdir, fsencoding='utf-8'):
         self.default_directory = defaultdir
+        self.fsencoding = fsencoding
 
     def callback(self, source, value):
         """sql generator callback when some attribute with a custom storage is
@@ -120,19 +121,19 @@ class BytesFileSystemStorage(Storage):
         DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
 
     def new_fs_path(self, entity, attr):
+        # We try to get some hint about how to name the file using attribute's
+        # name metadata, so we use the real file name and extension when
+        # available. Keeping the extension is useful for example in the case of
+        # PIL processing that use filename extension to detect content-type, as
+        # well as providing more understandable file names on the fs.
         basename = [str(entity.eid), attr]
-        # We try to get some hint about how to name the file using attributes
-        # metadata. Using the real file name and extension when available.
-        #
-        # Keeping the extension might be usefull for exemple in the case of PIL
-        # processing that use filename extension to detect content-type.
         name = entity.attr_metadata(attr, 'name')
         if name is not None:
-            basename.append(name.encode(entity._cw.encoding))
+            basename.append(name.encode(self.fsencoding))
         fspath = uniquify_path(self.default_directory, '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
-                dirpath, basename)
+                dirpath, '_'.join(basename))
             raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
         return fspath
 
