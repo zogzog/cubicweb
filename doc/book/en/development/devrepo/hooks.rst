@@ -41,7 +41,7 @@ Data hooks can serve the following purposes:
 
 * implement computed attributes
 
-Operations are Hook-like objects that are created by Hooks and
+Operations are Hook-like objects that maye be created by Hooks and
 scheduled to happen just before (or after) the `commit` event. Hooks
 being fired immediately on data operations, it is sometime necessary
 to delay the actual work down to a time where all other Hooks have
@@ -49,6 +49,10 @@ run, for instance a validation check which needs that all relations be
 already set on an entity. Also while the order of execution of Hooks
 is data dependant (and thus hard to predict), it is possible to force
 an order on Operations.
+
+Operations also may be used to process various side effects associated
+with a transaction such as filesystem udpates, mail notifications,
+etc.
 
 Operations are subclasses of the Operation class in `server/hook.py`,
 implementing `precommit_event` and other standard methods (wholly
