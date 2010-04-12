@@ -475,13 +475,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         etype = entity.__regid__
         for attr, storage in self._storages.get(etype, {}).items():
             try:
-                if attr in entity.edited_attributes:
-                    handler = getattr(storage, 'entity_%s' % event)
-                    real_value = handler(entity, attr)
-                    restore_values[attr] = real_value
+                edited = entity.edited_attributes
             except AttributeError:
                 assert event == 'deleted'
                 getattr(storage, 'entity_deleted')(entity, attr)
+            else:
+                if attr in edited:
+                    handler = getattr(storage, 'entity_%s' % event)
+                    real_value = handler(entity, attr)
+                    restore_values[attr] = real_value
         try:
             yield # 2/ execute the source's instructions
         finally:
