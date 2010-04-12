@@ -1248,9 +1248,9 @@ def sql_drop_schema(driver):
 %s
 DROP TABLE entities;
 DROP TABLE deleted_entities;
-DROP TABLE transactions;
 DROP TABLE tx_entity_actions;
 DROP TABLE tx_relation_actions;
+DROP TABLE transactions;
 """ % helper.sql_drop_sequence('entities_id_seq')
 
 
