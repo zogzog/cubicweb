@@ -102,7 +102,6 @@ class PrimaryView(EntityView):
         self.content_navigation_components('ctxtoolbar')
 
     def render_entity_metadata(self, entity):
-        # XXX deprecated
         entity.view('metadata', w=self.w)
 
     def render_entity_summary(self, entity):

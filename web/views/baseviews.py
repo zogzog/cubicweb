@@ -297,7 +297,7 @@ class SimpleListView(ListItemView):
 
 
 class SameETypeListView(EntityView):
-    """list of entities of the same type, when asked explicitly for adapted list
+    """list of entities of the same type, when asked explicitly for same etype list
     view (for instance, display gallery if only images)
     """
     __regid__ = 'sameetypelist'

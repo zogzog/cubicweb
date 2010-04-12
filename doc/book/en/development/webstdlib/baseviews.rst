@@ -12,6 +12,7 @@ each others and the main ones are:
 
 HTML views
 ~~~~~~~~~~
+
 Special views
 `````````````
 
@@ -43,6 +44,7 @@ Entity views
 
 List
 `````
+
 *list*
     This view displays a list of entities by creating a HTML list (`<ul>`)
     and call the view `listitem` for each entity of the result set.
@@ -50,12 +52,12 @@ List
 *listitem*
     This view redirects by default to the `outofcontext` view.
 
-*adaptedlist*
+*sameetypelist*
     This view displays a list of entities of the same type, in HTML section (`<div>`)
-    and call the view `adaptedlistitem` for each entity of the result set.
+    and call the view `sameetypelistitem` for each entity of the result set.
 
-*adaptedlistitem*
-    This view redirects by default to the `outofcontext` view.
+*sameetypelistitem*
+    This view redirects by default to the `listitem` view.
 
 *csv*
     This view applies to entity groups, which are individually

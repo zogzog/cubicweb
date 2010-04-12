@@ -9,7 +9,7 @@ the development of a web application and how it has been implemented
 in *CubicWeb*.
 
 We'll start with a description of the interface providing you with a basic
-understanding of the classes and methods available, then detail the view
+understanding of the available classes and methods, then detail the view
 selection principle which makes *CubicWeb* web interface very flexible.
 
 A `View` is an object applied to another object such as an entity.
@@ -26,19 +26,21 @@ renderable object such as views, templates, graphic components, etc.
 A `View` is instantiated to render a result set or part of a result set. `View`
 subclasses may be parametrized using the following class attributes:
 
-    * `templatable` indicates if the view may be embeded in a main
-      template or if it has to be rendered standalone (i.e. XML views
-      must not be embeded in the main template for HTML pages)
-    * if the view is not templatable, it should set the `content_type` class
-      attribute to the correct MIME type (text/xhtml by default)
-    * the `category` attribute may be used in the interface to regroup related
-      objects together
+* `templatable` indicates if the view may be embedded in a main
+  template or if it has to be rendered standalone (i.e. XML views must
+  not be embedded in the main template for HTML pages)
 
-At instantiation time, the standard `_cw` and `cw_rset` attributes are
-added and the `w` attribute will be set at rendering time.
+* if the view is not templatable, it should set the `content_type`
+  class attribute to the correct MIME type (text/xhtml by default)
+
+* the `category` attribute may be used in the interface to regroup
+  related objects together
 
 A view writes to its output stream thanks to its attribute `w` (an
 `UStreamIO`, except for binary views).
+
+At instantiation time, the standard `_cw` and `cw_rset` attributes are
+added and the `w` attribute will be set at rendering time.
 
 The basic interface for views is as follows (remember that the result set has a
 tabular structure with rows and columns, hence cells):
@@ -51,23 +53,20 @@ tabular structure with rows and columns, hence cells):
   result set)
 
 * `cell_call(row, col, **kwargs)`, call the view for a given cell of a
-  result set
+  result set (`row` and `col` being integers used to access the cell)
 
 * `url()`, returns the URL enabling us to get the view with the current
   result set
 
-* `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier
-  `__vid` on the given result set. It is possible to give a view identifier
-  of fallback that will be used if the view requested is not applicable to the
-  result set. This is actually defined on the AppObject class.
+* `wview(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of
+  identifier `__vid` on the given result set. It is possible to give a
+  fallback view identifier that will be used if the requested view is
+  not applicable to the result set.
 
-* `wview(__vid, rset, __fallback_vid=None, **kwargs)`, similar to `view` except
-  the flow is automatically passed in the parameters
-
-* `html_headers()`, returns a list of HTML headers to set by the main template
+* `html_headers()`, returns a list of HTML headers to be set by the
+  main template
 
 * `page_title()`, returns the title to use in the HTML header `title`
-
 
 Other basic view classes
 ````````````````````````
@@ -77,8 +76,6 @@ that are more concrete as they relate to data rendering within the application:
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
 * `StartupView`, start view that does not require a result set to apply to
 * `AnyRsetView`, view applicable to any result set
-* `EmptyRsetView`, view applicable to an empty result set
-
 
 Examples of views class
 -----------------------
@@ -107,6 +104,7 @@ Examples of views class
         __regid__ = 'search-associate'
         title = _('search for association')
         __select__ = one_line_rset() & match_search_state('linksearch') & implements('Any')
+
 
 
 Example of view customization and creation

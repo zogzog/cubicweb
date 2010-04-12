@@ -1,5 +1,5 @@
-Configuring the generated interface
------------------------------------
+Configuring the user interface
+------------------------------
 
 
 Relation tags

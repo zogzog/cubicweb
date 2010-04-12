@@ -37,7 +37,7 @@ marked in one of the following ways :
 
  * by using the equivalent request's method ::
 
-     class NoResultView(EmptyRsetView):
+     class NoResultView(View):
          """default view when no result has been found"""
          __regid__ = 'noresult'
 
