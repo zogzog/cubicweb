@@ -12,6 +12,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import action, uicfg
+from cubicweb.web.views import tabs
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWUser', 'login'), 'hidden')

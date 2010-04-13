@@ -1774,6 +1774,9 @@ msgstr "creating workflow-transition of workflow %(linkto)s"
 msgid "creation"
 msgstr ""
 
+msgid "creation date"
+msgstr ""
+
 msgid "creation time of an entity"
 msgstr ""
 
@@ -1810,19 +1813,37 @@ msgid "custom_workflow_object"
 msgstr "custom workflow of"
 
 msgid "cwetype-box"
-msgstr "box"
+msgstr "\"box\" view"
 
-msgid "cwetype-schema-permissions"
-msgstr "permissions"
-
-msgid "cwetype-schema-text"
+msgid "cwetype-description"
 msgstr "description"
+
+msgid "cwetype-permissions"
+msgstr "permissions"
 
 msgid "cwetype-views"
 msgstr "views"
 
 msgid "cwetype-workflow"
 msgstr "workflow"
+
+msgid "cwgroup-main"
+msgstr "description"
+
+msgid "cwgroup-permissions"
+msgstr "permissions"
+
+msgid "cwrdef-description"
+msgstr "description"
+
+msgid "cwrdef-permissions"
+msgstr "permissions"
+
+msgid "cwrtype-description"
+msgstr "description"
+
+msgid "cwrtype-permissions"
+msgstr "permissions"
 
 msgid "cwuri"
 msgstr "internal uri"
@@ -2293,6 +2314,9 @@ msgctxt "CWRType"
 msgid "final"
 msgstr ""
 
+msgid "first name"
+msgstr ""
+
 msgid "firstname"
 msgstr ""
 
@@ -2517,12 +2541,6 @@ msgstr ""
 msgid "image"
 msgstr ""
 
-msgid "in memory entity schema"
-msgstr ""
-
-msgid "in memory relation schema"
-msgstr ""
-
 msgid "in_group"
 msgstr "in group"
 
@@ -2676,6 +2694,12 @@ msgid "language of the user interface"
 msgstr ""
 
 msgid "last connection date"
+msgstr ""
+
+msgid "last login time"
+msgstr ""
+
+msgid "last name"
 msgstr ""
 
 msgid "last usage"
@@ -3166,6 +3190,9 @@ msgstr ""
 msgid "related entity has no workflow set"
 msgstr ""
 
+msgid "relation"
+msgstr ""
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr ""
@@ -3238,6 +3265,9 @@ msgstr "require permission"
 msgid "require_permission_object"
 msgstr "required by"
 
+msgid "required"
+msgstr ""
+
 msgid "required attribute"
 msgstr ""
 
@@ -3281,14 +3311,14 @@ msgstr ""
 msgid "schema's permissions definitions"
 msgstr ""
 
+msgid "schema-description"
+msgstr "entity and relation types"
+
 msgid "schema-image"
-msgstr "schema"
+msgstr "image"
 
 msgid "schema-security"
 msgstr "permissions"
-
-msgid "schema-text"
-msgstr "description"
 
 msgid "search"
 msgstr ""
@@ -3877,6 +3907,9 @@ msgid ""
 msgstr ""
 
 msgid "used to grant a permission to a group"
+msgstr ""
+
+msgid "user"
 msgstr ""
 
 #, python-format

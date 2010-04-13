@@ -57,20 +57,16 @@ class SecurityViewMixIn(object):
         w(u'<table class="schemaInfo">')
         w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
-        w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n' %
-                (_('permission'), _('granted to groups'),
-                _('rql expressions')))
         for action in erschema.ACTIONS:
             w(u'<tr><td>%s</td><td>' % _(action))
             if permissions is None:
                 groups = erschema.get_groups(action)
             else:
-                groups = permissions[action][1]
+                groups = permissions[action][0]
             # XXX get group entity and call it's incontext view
             groups = [u'<a class="%s" href="%s">%s</a>' % (
                 group, self._cw.build_url('cwgroup/%s' % group), label)
-                      for group, label in sorted((_(g), g) for group in groups)]
+                      for group, label in sorted((_(g), g) for g in groups)]
             w(u'<br/>'.join(groups))
             w(u'</td><td>')
             if permissions is None:
@@ -99,8 +95,8 @@ class SecurityViewMixIn(object):
         # definition
         w = self.w
         w(u'<div style="margin: 0px 1.5em">')
-        tmpl = u'[<strong>%s</strong> %s <strong>%s</strong>]'
-        for perm, rdefs in perms:
+        tmpl = u'<strong>%s</strong> %s <strong>%s</strong>'
+        for perm, rdefs in perms.iteritems():
             w(u'<div>%s</div>' % u', '.join(
                 tmpl % (_(s.type), _(rschema.type), _(o.type)) for s, o in rdefs))
             # accessing rdef from previous loop by design: only used to get
@@ -272,16 +268,17 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
     __select__ = tabs.PrimaryTab.__select__ & implements('CWEType')
 
     def render_entity_attributes(self, entity, siderelations=None):
+        _ = self._cw._
         self.w(u'<div>%s</div>' % xml_escape(entity.description or u''))
         # entity schema image
         url = entity.absolute_url(vid='schemagraph')
         self.w(u'<img src="%s" alt="%s"/>' % (
             xml_escape(url),
-            xml_escape(self._cw._('graphical schema for %s') % entity.name)))
+            xml_escape(_('graphical schema for %s') % entity.name)))
         # entity schema attributes
         self.w(u'<h2>%s</h2>' % _('Attributes'))
         rset = self._cw.execute(
-            'Any A,F,DE,D,C, I,J,A ORDERBY AA WHERE A is CWAttribute, '
+            'Any A,F,D,C,I,J,A,DE ORDERBY AA WHERE A is CWAttribute, '
             'A ordernum AA, A defaultval D, A description DE, A cardinality C, '
             'A fulltextindexed I, A internationalizable J, '
             'A relation_type R, R name N, A to_entity O, O name F, '
@@ -289,48 +286,46 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
             {'x': entity.eid})
         self.wview('table', rset, 'null',
                    cellvids={0: 'rdef-name-cell',
-                             4: 'etype-attr-cardinality-cell',
-                             7: 'rdef-constraints-cell'},
-                   headers=(_(u'name'), _(u'type'), _(u'description'),
+                             3: 'etype-attr-cardinality-cell',
+                             6: 'rdef-constraints-cell'},
+                   headers=(_(u'name'), _(u'type'),
                             _(u'default value'), _(u'required'),
                             _(u'fulltext indexed'), _(u'internationalizable'),
-                            _(u'constraints')),
+                            _(u'constraints'), _(u'description')),
                    mainindex=0)
         # entity schema relations
         self.w(u'<h2>%s</h2>' % _('Relations'))
         rset = self._cw.execute(
-            'Any A, TT, "i18ncard_"+SUBSTRING(C, 1, 1),K,D,A,A,RN,TTN ORDERBY RN '
-            'WHERE A is CWRelation, A description D, A composite K, '
-            'A relation_type R, R name RN, A to_entity TT, TT name TTN, '
-            'A cardinality C, A from_entity S, S eid %(x)s',
+            'Any A,TT,"i18ncard_"+SUBSTRING(C, 1, 1),K,A,TTN ORDERBY RN '
+            'WHERE A is CWRelation, A composite K, A cardinality C, '
+            'A relation_type R, R name RN, '
+            'A to_entity TT, TT name TTN, A from_entity S, S eid %(x)s',
             {'x': entity.eid})
         if rset:
             self.w(u'<h5>%s %s</h5>' % (entity.name, _('is subject of:')))
         self.wview('table', rset, 'null',
                    cellvids={0: 'rdef-name-cell',
                              2: 'etype-rel-cardinality-cell',
-                             5: 'rdef-constraints-cell'},
+                             4: 'rdef-constraints-cell'},
                    headers=(_(u'name'), _(u'object type'), _(u'cardinality'),
-                            _(u'composite'), _(u'description'),
-                            _(u'constraints'), _(u'relation direction')),
-                   displaycols=range(5), mainindex=0)
+                            _(u'composite'), _(u'constraints')),
+                   displaycols=range(5))
         self.w(u'<br/>')
         rset = self._cw.execute(
-            'Any A, TT, "i18ncard_"+SUBSTRING(C, 2, 1),K,D,A,A,RN,TTN ORDERBY RN '
-            'WHERE A is CWRelation, A description D, A composite K, '
-            'A relation_type R, R name RN, A from_entity TT, TT name TTN, '
-            'A cardinality C, A to_entity O, O eid %(x)s',
+            'Any A,TT,"i18ncard_"+SUBSTRING(C, 2, 1),K,A,TTN ORDERBY RN '
+            'WHERE A is CWRelation, A composite K, A cardinality C, '
+            'A relation_type R, R name RN, '
+            'A from_entity TT, TT name TTN, A to_entity O, O eid %(x)s',
             {'x': entity.eid})
         if rset:
             self.w(u'<h5>%s %s</h5>' % (entity.name, _('is object of:')))
         self.wview('table', rset, 'null',
                    cellvids={0: 'rdef-object-name-cell',
                              2: 'etype-rel-cardinality-cell',
-                             5: 'rdef-constraints-cell'},
+                             4: 'rdef-constraints-cell'},
                    headers=(_(u'name'), _(u'subject type'), _(u'cardinality'),
-                            _(u'composite'), _(u'description'),
-                            _(u'constraints'), _(u'relation direction')),
-                   displaycols=range(5), mainindex=0)
+                            _(u'composite'), _(u'constraints')),
+                   displaycols=range(5))
 
 
 class CWETypeAttributeCardinalityCell(baseviews.FinalView):
@@ -338,7 +333,9 @@ class CWETypeAttributeCardinalityCell(baseviews.FinalView):
 
     def cell_call(self, row, col):
         if self.cw_rset.rows[row][col][0] == '1':
-            self.w(self._cw._(u'required'))
+            self.w(self._cw._(u'yes'))
+        else:
+            self.w(self._cw._(u'no'))
 
 
 class CWETypeRelationCardinalityCell(baseviews.FinalView):
@@ -421,7 +418,7 @@ class CWETypeViewsTab(EntityView):
         _ = self._cw._
         # possible views for this entity type
         views = [(_(view.title),) for view in self.possible_views(etype)]
-        self.wview('pyvaltable', pyvalue=views, headers=(_(u'views'),))
+        self.wview('pyvaltable', pyvalue=sorted(views), headers=(_(u'views'),))
 
     def possible_views(self, etype):
         rset = self._cw.etype_rset(etype)
@@ -454,22 +451,21 @@ class CWRTypeDescriptionTab(tabs.PrimaryTab):
     __select__ = implements('CWRType')
 
     def render_entity_attributes(self, entity, siderelations=None):
+        _ = self._cw._
         self.w(u'<div>%s</div>' % xml_escape(entity.description or u''))
         rschema = self._cw.vreg.schema.rschema(entity.name)
         if not rschema.final:
-            msg = self._cw._('graphical schema for %s') % entity.name
+            msg = _('graphical schema for %s') % entity.name
             self.w(tags.img(src=entity.absolute_url(vid='schemagraph'),
                             alt=msg))
-        rset = self._cw.execute('Any R,ST,OT,C,CC,R WHERE R is CWRelation, '
+        rset = self._cw.execute('Any R,C,CC,R WHERE R is CWRelation, '
                                 'R relation_type RT, RT eid %(x)s, '
-                                'R from_type ST, R to_type OT, '
                                 'R cardinality C, R composite CC',
                                 {'x': entity.eid})
         self.wview('table', rset, 'null',
-                   headers=(_(u'relation'), _(u'subject'), _(u'object'),
-                            _(u'cardinality'), _(u'composite'),
+                   headers=(_(u'relation'),  _(u'cardinality'), _(u'composite'),
                             _(u'constraints')),
-                   cellvids={5: 'rdef-constraints-cell'})
+                   cellvids={3: 'rdef-constraints-cell'})
 
 
 class CWRTypePermTab(SecurityViewMixIn, EntityView):
@@ -502,7 +498,7 @@ class CWRDEFPermTab(SecurityViewMixIn, EntityView):
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema.rschema(entity.rtype.name)
         rdef = rschema.rdefs[(entity.stype.name, entity.otype.name)]
-        self.display_permission(rdef)
+        self.permissions_table(rdef)
 
 
 class CWRDEFNameView(tableview.CellView):
@@ -513,10 +509,12 @@ class CWRDEFNameView(tableview.CellView):
     __regid__ = 'rdef-name-cell'
     __select__ = implements('CWRelation', 'CWAttribute')
 
-    def cell_content(self, entity):
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
         rtype = entity.relation_type[0].name
         # XXX use contect entity + pgettext
-        return u'%s (%s)' % (rtype, self._cw._(rtype))
+        self.w(u'<a href="%s">%s</a> (%s)' % (
+            entity.absolute_url(), rtype, self._cw._(rtype)))
 
 class CWRDEFObjectNameView(tableview.CellView):
     """same as CWRDEFNameView but when the context is the object entity
@@ -524,10 +522,12 @@ class CWRDEFObjectNameView(tableview.CellView):
     __regid__ = 'rdef-object-name-cell'
     __select__ = implements('CWRelation', 'CWAttribute')
 
-    def cell_content(self, entity):
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
         rtype = entity.relation_type[0].name
         # XXX use contect entity + pgettext
-        return u'%s (%s)' % (rtype, self._cw.__(rtype + '_object'))
+        self.w(u'<a href="%s">%s</a> (%s)' % (
+            entity.absolute_url(), rtype, self._cw.__(rtype + '_object')))
 
 class CWRDEFConstraintsCell(EntityView):
     __regid__ = 'rdef-constraints-cell'
@@ -538,7 +538,7 @@ class CWRDEFConstraintsCell(EntityView):
         rschema = self._cw.vreg.schema.rschema(entity.rtype.name)
         rdef = rschema.rdefs[(entity.stype.name, entity.otype.name)]
         constraints = [xml_escape(str(c)) for c in getattr(rdef, 'constraints')]
-        self.w(u', '.join(constraints))
+        self.w(u'<br/>'.join(constraints))
 
 
 # schema images ###############################################################

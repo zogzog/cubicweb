@@ -434,7 +434,7 @@ msgid "Help"
 msgstr "Aide"
 
 msgid "Index"
-msgstr ""
+msgstr "Index"
 
 msgid "Instance"
 msgstr "Instance"
@@ -1255,7 +1255,7 @@ msgid "attribute"
 msgstr "attribut"
 
 msgid "attributes permissions:"
-msgstr ""
+msgstr "permissions des attributs :"
 
 msgid "august"
 msgstr "août"
@@ -1838,6 +1838,9 @@ msgstr "création d'une transition workflow du workflow %(linkto)s"
 msgid "creation"
 msgstr "création"
 
+msgid "creation date"
+msgstr "date de création"
+
 msgid "creation time of an entity"
 msgstr "date de création d'une entité"
 
@@ -1874,19 +1877,37 @@ msgid "custom_workflow_object"
 msgstr "workflow de"
 
 msgid "cwetype-box"
-msgstr "boîte"
+msgstr "vue \"boîte\""
 
-msgid "cwetype-schema-permissions"
-msgstr "permissions"
-
-msgid "cwetype-schema-text"
+msgid "cwetype-description"
 msgstr "description"
+
+msgid "cwetype-permissions"
+msgstr "permissions"
 
 msgid "cwetype-views"
 msgstr "vues"
 
 msgid "cwetype-workflow"
 msgstr "workflow"
+
+msgid "cwgroup-main"
+msgstr "description"
+
+msgid "cwgroup-permissions"
+msgstr "permissions"
+
+msgid "cwrdef-description"
+msgstr "description"
+
+msgid "cwrdef-permissions"
+msgstr "permissions"
+
+msgid "cwrtype-description"
+msgstr "description"
+
+msgid "cwrtype-permissions"
+msgstr "permissions"
 
 msgid "cwuri"
 msgstr "uri interne"
@@ -2377,6 +2398,9 @@ msgctxt "CWRType"
 msgid "final"
 msgstr "final"
 
+msgid "first name"
+msgstr "prénom"
+
 msgid "firstname"
 msgstr "prénom"
 
@@ -2612,12 +2636,6 @@ msgstr ""
 msgid "image"
 msgstr "image"
 
-msgid "in memory entity schema"
-msgstr "schéma de l'entité en mémoire"
-
-msgid "in memory relation schema"
-msgstr "schéma de la relation en mémoire"
-
 msgid "in_group"
 msgstr "dans le groupe"
 
@@ -2778,6 +2796,12 @@ msgstr "langue pour l'interface utilisateur"
 
 msgid "last connection date"
 msgstr "dernière date de connexion"
+
+msgid "last login time"
+msgstr "dernière date de connexion"
+
+msgid "last name"
+msgstr "nom"
 
 msgid "last usage"
 msgstr "dernier usage"
@@ -3275,6 +3299,9 @@ msgstr "l'entité lié n'a pas d'état"
 msgid "related entity has no workflow set"
 msgstr "l'entité lié n'a pas de workflow"
 
+msgid "relation"
+msgstr "relation"
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relation %(relname)s de %(ent)s"
@@ -3347,6 +3374,9 @@ msgstr "require permission"
 msgid "require_permission_object"
 msgstr "permission of"
 
+msgid "required"
+msgstr "requis"
+
 msgid "required attribute"
 msgstr "attribut requis"
 
@@ -3395,14 +3425,14 @@ msgstr "entités définissant le schéma"
 msgid "schema's permissions definitions"
 msgstr "permissions définies dans le schéma"
 
+msgid "schema-description"
+msgstr "types d'entité et de relation"
+
 msgid "schema-image"
-msgstr "schéma"
+msgstr "image"
 
 msgid "schema-security"
 msgstr "permissions"
-
-msgid "schema-text"
-msgstr "description"
 
 msgid "search"
 msgstr "rechercher"
@@ -4007,6 +4037,9 @@ msgstr "associe les états à un type d'entité pour définir un workflow"
 msgid "used to grant a permission to a group"
 msgstr "utiliser pour donner une permission à un groupe"
 
+msgid "user"
+msgstr "utilisateur"
+
 #, python-format
 msgid ""
 "user %s has made the following change(s):\n"
@@ -4175,9 +4208,3 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
-
-#~ msgid "Delete permissions"
-#~ msgstr "Permissions de supprimer"
-
-#~ msgid "attributes with modified permissions:"
-#~ msgstr "attributs ayant des permissions modifiées :"

@@ -1815,6 +1815,9 @@ msgstr ""
 msgid "creation"
 msgstr "Creación"
 
+msgid "creation date"
+msgstr ""
+
 msgid "creation time of an entity"
 msgstr "Fecha de creación de una entidad"
 
@@ -1853,17 +1856,35 @@ msgstr ""
 msgid "cwetype-box"
 msgstr ""
 
-msgid "cwetype-schema-permissions"
-msgstr "Autorizaciónes"
+msgid "cwetype-description"
+msgstr ""
 
-msgid "cwetype-schema-text"
-msgstr "Modelo de datos"
+msgid "cwetype-permissions"
+msgstr ""
 
 msgid "cwetype-views"
 msgstr ""
 
 msgid "cwetype-workflow"
-msgstr "Workflow"
+msgstr ""
+
+msgid "cwgroup-main"
+msgstr ""
+
+msgid "cwgroup-permissions"
+msgstr ""
+
+msgid "cwrdef-description"
+msgstr ""
+
+msgid "cwrdef-permissions"
+msgstr ""
+
+msgid "cwrtype-description"
+msgstr ""
+
+msgid "cwrtype-permissions"
+msgstr ""
 
 msgid "cwuri"
 msgstr ""
@@ -2343,6 +2364,9 @@ msgctxt "CWRType"
 msgid "final"
 msgstr ""
 
+msgid "first name"
+msgstr ""
+
 msgid "firstname"
 msgstr "Nombre"
 
@@ -2575,12 +2599,6 @@ msgstr ""
 msgid "image"
 msgstr "Imagen"
 
-msgid "in memory entity schema"
-msgstr "Esquema de la entidad en memoria"
-
-msgid "in memory relation schema"
-msgstr "Esquema de la relación en memoria"
-
 msgid "in_group"
 msgstr "En el grupo"
 
@@ -2740,6 +2758,12 @@ msgstr "Idioma para la interface del usuario"
 
 msgid "last connection date"
 msgstr "Ultima fecha de conexión"
+
+msgid "last login time"
+msgstr ""
+
+msgid "last name"
+msgstr ""
 
 msgid "last usage"
 msgstr ""
@@ -3239,6 +3263,9 @@ msgstr ""
 msgid "related entity has no workflow set"
 msgstr ""
 
+msgid "relation"
+msgstr ""
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
@@ -3311,6 +3338,9 @@ msgstr "Requiere autorización"
 msgid "require_permission_object"
 msgstr "Requerido por autorización"
 
+msgid "required"
+msgstr ""
+
 msgid "required attribute"
 msgstr "Atributo requerido"
 
@@ -3358,14 +3388,14 @@ msgstr "entidades del esquema"
 msgid "schema's permissions definitions"
 msgstr "definiciones de permisos del esquema"
 
+msgid "schema-description"
+msgstr ""
+
 msgid "schema-image"
 msgstr "esquema imagen"
 
 msgid "schema-security"
 msgstr ""
-
-msgid "schema-text"
-msgstr "esquema text"
 
 msgid "search"
 msgstr "buscar"
@@ -3964,6 +3994,9 @@ msgstr ""
 msgid "used to grant a permission to a group"
 msgstr "utilizado para otorgar permisos a un grupo"
 
+msgid "user"
+msgstr ""
+
 #, python-format
 msgid ""
 "user %s has made the following change(s):\n"
@@ -4448,6 +4481,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "rql expression allowing to update entities of this type"
 #~ msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
+
+#~ msgid "schema-text"
+#~ msgstr "esquema text"
 
 #~ msgid "server debug information"
 #~ msgstr "server debug information"
