@@ -9,6 +9,23 @@ and
 http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973aef5/c28cd6934dd72457
 ]
 
+Generalities
+````````````
+
+Why do you use the LGPL license to prevent me from doing X ?
+------------------------------------------------------------
+
+LGPL means that *if* you redistribute your application, you need to
+redistribute the changes you made to CubicWeb under the LGPL licence.
+
+Publishing a web site has nothing to do with redistributing source
+code according to the terms of the LGPL. A fair amount of companies
+use modified LGPL code for internal use. And someone could publish a
+*CubicWeb* component under a BSD licence for others to plug into a
+LGPL framework without any problem. The only thing we are trying to
+prevent here is someone taking the framework and packaging it as
+closed source to his own clients.
+
 Why does not CubicWeb have a template language ?
 ------------------------------------------------
 
@@ -44,27 +61,16 @@ makes it to maintain with real functions/classes/contexts without the need of
 learning a new dialect. By using Python, we use standard OOP techniques and
 this is a key factor in a robust application.
 
-Why do you use the LGPL license to prevent me from doing X ?
-------------------------------------------------------------
-
-LGPL means that *if* you redistribute your application, you need to
-redistribute the changes you made to CubicWeb under the LGPL licence.
-
-Publishing a web site has nothing to do with redistributing source
-code according to the terms of the LGPL. A fair amount of companies
-use modified LGPL code for internal use. And someone could publish a
-*CubicWeb* component under a BSD licence for others to plug into a
-LGPL framework without any problem. The only thing we are trying to
-prevent here is someone taking the framework and packaging it as
-closed source to his own clients.
-
-
 CubicWeb looks pretty recent. Is it stable ?
 --------------------------------------------
 
 It is constantly evolving, piece by piece.  The framework has evolved since
 2001 and data has been migrated from one schema to the other ever since. There
 is a well-defined way to handle data and schema migration.
+
+You can see the roadmap there:
+http://www.cubicweb.org/project/cubicweb?tab=projectroadmap_tab.
+
 
 Why is the RQL query language looking similar to X ?
 -----------------------------------------------------
@@ -95,58 +101,64 @@ CubicWeb uses jQuery and provides a few helpers on top of
 that. Additionally, some jQuery plugins are provided (some are
 provided in specific cubes).
 
+Development
+```````````
 
-How is security implemented ?
-------------------------------
+How to load data from a script ?
+--------------------------------
 
-The basis for security is a mapping from operations to groups or
-arbitrary RQL expressions. These mappings are scoped to entities and
-relations.
-
-This is an example for an Entity Type definition:
-
-.. sourcecode:: python
-
-    class Version(EntityType):
-        """a version is defining the content of a particular project's
-        release"""
-        # definition of attributes is voluntarily missing
-        __permissions__ = {'read': ('managers', 'users', 'guests',),
-                           'update': ('managers', 'logilab', 'owners'),
-                           'delete': ('managers',),
-                           'add': ('managers', 'logilab',
-                                   ERQLExpression('X version_of PROJ, U in_group G, '
-                                                  'PROJ require_permission P, '
-                                                  'P name "add_version", P require_group G'),)}
-
-The above means that permission to read a Version is granted to any
-user that is part of one of the groups 'managers', 'users', 'guests'.
-The 'add' permission is granted to users in group 'managers' or
-'logilab' or to users in group G, if G is linked by a permission
-entity named "add_version" to the version's project.
-
-An example for a Relation Definition (RelationType both defines a
-relation type and implicitly one relation definition, on which the
-permissions actually apply):
+The following script aims at loading data within a script assuming pyro-nsd is
+running and your instance is configured with ``pyro-server=yes``, otherwise
+you would not be able to use dbapi.
 
 .. sourcecode:: python
 
-    class version_of(RelationType):
-        """link a version to its project. A version is necessarily linked
-        to one and only one project. """
-        # some lines voluntarily missing
-        __permissions__ = {'read': ('managers', 'users', 'guests',),
-                           'delete': ('managers', ),
-                           'add': ('managers', 'logilab',
-                                   RRQLExpression('O require_permission P, P name "add_version", '
-                                                  'U in_group G, P require_group G'),) }
+    from cubicweb import dbapi
 
-The main difference lies in the basic available operations (there is
-no 'update' operation) and the usage of an RRQLExpression (rql
-expression for a relation) instead of an ERQLExpression (rql
-expression for an entity).
+    cnx = dbapi.connection(database='instance-id', user='admin', password='admin')
+    cur = cnx.cursor()
+    for name in ('Personal', 'Professional', 'Computers'):
+        cur.execute('INSERT Blog B: B name %s', name)
+    cnx.commit()
 
-You can find additional information in the section :ref:`securitymodel`.
+
+How to format an entity date attribute ?
+----------------------------------------
+
+If your schema has an attribute of type Date or Datetime, you might
+want to format it. First, you should define your preferred format using
+the site configuration panel ``http://appurl/view?vid=systempropertiesform``
+and then set ``ui.date`` and/or ``ui.datetime``.
+Then in the view code, use:
+
+.. sourcecode:: python
+
+    self.format_date(entity.date_attribute)
+
+What is the CubicWeb datatype corresponding to GAE datastore's UserProperty ?
+-----------------------------------------------------------------------------
+
+If you take a look at your instance schema and
+click on "display detailed view of metadata" you will see that there
+is a Euser entity in there. That's the one that is modeling users. The
+thing that corresponds to a UserProperty is a relationship between
+your entity and the Euser entity. As in:
+
+.. sourcecode:: python
+
+    class TodoItem(EntityType):
+       text = String()
+       todo_by = SubjectRelation('Euser')
+
+[XXX check that cw handle users better by mapping Google Accounts to local Euser
+entities automatically]
+
+
+How do I translate an msg id defined (and translated) in another cube ?
+-----------------------------------------------------------------------
+
+You should put these translations in the `i18n/static-messages.pot`
+file of your own cube.
 
 
 What is `Error while publishing rest text ...` ?
@@ -246,6 +258,8 @@ There are two ways of changing the logo.
 
    where DATADIR is ``mycube/data``.
 
+Configuration
+`````````````
 
 How to configure a LDAP source ?
 --------------------------------
@@ -304,63 +318,8 @@ This will yield additional WARNINGs, like this::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
 
-How to format an entity date attribute ?
-----------------------------------------
-
-If your schema has an attribute of type Date or Datetime, you might
-want to format it. First, you should define your preferred format using
-the site configuration panel ``http://appurl/view?vid=systempropertiesform``
-and then set ``ui.date`` and/or ``ui.datetime``.
-Then in the view code, use:
-
-.. sourcecode:: python
-
-    self.format_date(entity.date_attribute)
-
-Can PostgreSQL and CubicWeb authentication work with kerberos ?
-----------------------------------------------------------------
-
-If you have PostgreSQL set up to accept kerberos authentication, you can set
-the db-host, db-name and db-user parameters in the `sources` configuration
-file while leaving the password blank. It should be enough for your
-instance to connect to postgresql with a kerberos ticket.
-
-
-How to load data from a script ?
---------------------------------
-
-The following script aims at loading data within a script assuming pyro-nsd is
-running and your instance is configured with ``pyro-server=yes``, otherwise
-you would not be able to use dbapi.
-
-.. sourcecode:: python
-
-    from cubicweb import dbapi
-
-    cnx = dbapi.connection(database='instance-id', user='admin', password='admin')
-    cur = cnx.cursor()
-    for name in ('Personal', 'Professional', 'Computers'):
-        cur.execute('INSERT Blog B: B name %s', name)
-    cnx.commit()
-
-What is the CubicWeb datatype corresponding to GAE datastore's UserProperty ?
------------------------------------------------------------------------------
-
-If you take a look at your instance schema and
-click on "display detailed view of metadata" you will see that there
-is a Euser entity in there. That's the one that is modeling users. The
-thing that corresponds to a UserProperty is a relationship between
-your entity and the Euser entity. As in:
-
-.. sourcecode:: python
-
-    class TodoItem(EntityType):
-       text = String()
-       todo_by = SubjectRelation('Euser')
-
-[XXX check that cw handle users better by mapping Google Accounts to local Euser
-entities automatically]
-
+Security
+````````
 
 How to reset the password for user joe ?
 ----------------------------------------
@@ -392,8 +351,64 @@ You are probably getting errors such as ::
 
 This is because you have to put your user in the "users" group. The user has to be in both groups.
 
-How do I translate an msg id defined (and translated) in another cube ?
------------------------------------------------------------------------
+How is security implemented ?
+------------------------------
 
-You should put these translations in the `i18n/static-messages.pot`
-file of your own cube.
+The basis for security is a mapping from operations to groups or
+arbitrary RQL expressions. These mappings are scoped to entities and
+relations.
+
+This is an example for an Entity Type definition:
+
+.. sourcecode:: python
+
+    class Version(EntityType):
+        """a version is defining the content of a particular project's
+        release"""
+        # definition of attributes is voluntarily missing
+        __permissions__ = {'read': ('managers', 'users', 'guests',),
+                           'update': ('managers', 'logilab', 'owners'),
+                           'delete': ('managers',),
+                           'add': ('managers', 'logilab',
+                                   ERQLExpression('X version_of PROJ, U in_group G, '
+                                                  'PROJ require_permission P, '
+                                                  'P name "add_version", P require_group G'),)}
+
+The above means that permission to read a Version is granted to any
+user that is part of one of the groups 'managers', 'users', 'guests'.
+The 'add' permission is granted to users in group 'managers' or
+'logilab' or to users in group G, if G is linked by a permission
+entity named "add_version" to the version's project.
+
+An example for a Relation Definition (RelationType both defines a
+relation type and implicitly one relation definition, on which the
+permissions actually apply):
+
+.. sourcecode:: python
+
+    class version_of(RelationType):
+        """link a version to its project. A version is necessarily linked
+        to one and only one project. """
+        # some lines voluntarily missing
+        __permissions__ = {'read': ('managers', 'users', 'guests',),
+                           'delete': ('managers', ),
+                           'add': ('managers', 'logilab',
+                                   RRQLExpression('O require_permission P, P name "add_version", '
+                                                  'U in_group G, P require_group G'),) }
+
+The main difference lies in the basic available operations (there is
+no 'update' operation) and the usage of an RRQLExpression (rql
+expression for a relation) instead of an ERQLExpression (rql
+expression for an entity).
+
+You can find additional information in the section :ref:`securitymodel`.
+
+Can PostgreSQL and CubicWeb authentication work with kerberos ?
+----------------------------------------------------------------
+
+If you have PostgreSQL set up to accept kerberos authentication, you can set
+the db-host, db-name and db-user parameters in the `sources` configuration
+file while leaving the password blank. It should be enough for your
+instance to connect to postgresql with a kerberos ticket.
+
+
