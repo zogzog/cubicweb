@@ -116,7 +116,9 @@ Non data events also exist. These are called SYSTEM HOOKS.
 Using dataflow Hooks
 --------------------
 
-XXX blabla
+Dataflow hooks either automate data operations or maintain the
+consistency of the data model. In the later case, we must use a
+specific exception named ValidationError
 
 Validation Errors
 ~~~~~~~~~~~~~~~~~
@@ -136,6 +138,8 @@ default Exception constructor. It accepts, positionally:
   an end-user facing message (hence properly translated) relating the
   problem.
 
+An entity hook
+~~~~~~~~~~~~~~
 
 We will use a very simple example to show hooks usage. Let us start
 with the following schema.
@@ -144,9 +148,6 @@ with the following schema.
 
    class Person(EntityType):
        age = Int(required=True)
-
-An entity hook
-~~~~~~~~~~~~~~
 
 We would like to add a range constraint over a person's age. Let's
 write an hook. It shall be placed into mycube/hooks.py. If this file
@@ -284,6 +285,8 @@ using the `set_operation` function.
 
 .. sourcecode:: python
 
+   from cubicweb.server.hook import set_operation
+
    class CheckSubsidiaryCycleHook(Hook):
        __regid__ = 'check_no_subsidiary_cycle'
        events = ('after_add_relation',)
@@ -291,7 +294,7 @@ using the `set_operation` function.
 
        def __call__(self):
            set_operation(self._cw, 'subsidiary_cycle_detection', self.eidto,
-                         CheckCycleOp, rtype=self.rtype)
+                         CheckSubsidiaryCycleOp, rtype=self.rtype)
 
    class CheckSubsidiaryCycleOp(Operation):
 

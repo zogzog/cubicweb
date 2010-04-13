@@ -74,12 +74,12 @@ The following identifiers are pre-defined in migration scripts:
   if the user answers yes, false otherwise (always returns true in
   non-interactive mode)
 
-* the function `_`, it is equivalent to `unicode` allowing to flag the strings
-  to internationalize in the migration scripts.
+* `_()` is equivalent to `unicode` allowing to flag the strings to
+  internationalize in the migration scripts.
 
 In the `repository` scripts, the following identifiers are also defined:
 
-* `checkpoint`, request confirming and executing a "commit" at checking point
+* `commit(ask_confirm=True)`, request confirming and executing a "commit"
 
 * `schema`, instance schema (readen from the database)
 
