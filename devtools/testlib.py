@@ -130,18 +130,17 @@ cwconfig.SMTP = MockSMTP
 
 class CubicWebTC(TestCase):
     """abstract class for test using an apptest environment
-
     attributes:
-    `vreg`, the vregistry
-    `schema`, self.vreg.schema
-    `config`, cubicweb configuration
-    `cnx`, dbapi connection to the repository using an admin user
-    `session`, server side session associated to `cnx`
-    `app`, the cubicweb publisher (for web testing)
-    `repo`, the repository object
 
-    `admlogin`, login of the admin user
-    `admpassword`, password of the admin user
+    * `vreg`, the vregistry
+    * `schema`, self.vreg.schema
+    * `config`, cubicweb configuration
+    * `cnx`, dbapi connection to the repository using an admin user
+    * `session`, server side session associated to `cnx`
+    * `app`, the cubicweb publisher (for web testing)
+    * `repo`, the repository object
+    * `admlogin`, login of the admin user
+    * `admpassword`, password of the admin user
 
     """
     appid = 'data'
