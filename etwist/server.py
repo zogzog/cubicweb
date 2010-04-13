@@ -25,10 +25,8 @@ from twisted.web.server import NOT_DONE_YET
 
 from logilab.common.decorators import monkeypatch
 
-from cubicweb import ConfigurationError, CW_EVENT_MANAGER
-from cubicweb.web import (AuthenticationError, NotFound, Redirect,
-                          RemoteCallFailed, DirectResponse, StatusResponse,
-                          ExplicitLogin)
+from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
+from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
@@ -221,11 +219,9 @@ class CubicWebRootResource(resource.Resource):
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
         try:
             self.appli.connect(req)
-        except AuthenticationError:
-            return self.request_auth(request=req)
         except Redirect, ex:
             return self.redirect(request=req, location=ex.location)
-        if https and req.cnx.anonymous_connection:
+        if https and req.session.anonymous_session:
             # don't allow anonymous on https connection
             return self.request_auth(request=req)
         if self.url_rewriter is not None:
@@ -247,19 +243,10 @@ class CubicWebRootResource(resource.Resource):
             return HTTPResponse(stream=ex.content, code=ex.status,
                                 twisted_request=req._twreq,
                                 headers=req.headers_out)
-        except RemoteCallFailed, ex:
-            req.set_header('content-type', 'application/json')
-            return HTTPResponse(twisted_request=req._twreq, code=http.INTERNAL_SERVER_ERROR,
-                                stream=ex.dumps(), headers=req.headers_out)
-        except NotFound:
-            result = self.appli.notfound_content(req)
-            return HTTPResponse(twisted_request=req._twreq, code=http.NOT_FOUND,
-                                stream=result, headers=req.headers_out)
-
-        except ExplicitLogin:  # must be before AuthenticationError
+        except AuthenticationError:
             return self.request_auth(request=req)
-        except AuthenticationError, ex:
-            if self.config['auth-mode'] == 'cookie' and getattr(ex, 'url', None):
+        except LogOut, ex:
+            if self.config['auth-mode'] == 'cookie' and ex.url:
                 return self.redirect(request=req, location=ex.url)
             # in http we have to request auth to flush current http auth
             # information

@@ -256,7 +256,7 @@ def get_pending_inserts(req, eid=None):
     This is where are stored relations being added while editing
     an entity. This used to be stored in a temporary cookie.
     """
-    pending = req.get_session_data('pending_insert') or ()
+    pending = req.session.data.get('pending_insert', ())
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
 
@@ -266,7 +266,7 @@ def get_pending_deletes(req, eid=None):
     This is where are stored relations being removed while editing
     an entity. This used to be stored in a temporary cookie.
     """
-    pending = req.get_session_data('pending_delete') or ()
+    pending = req.session.data.get('pending_delete', ())
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
 

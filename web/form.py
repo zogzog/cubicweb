@@ -191,7 +191,7 @@ class Form(AppObject):
             warn('[3.6.1] restore_previous_post already called, remove this call',
                  DeprecationWarning, stacklevel=2)
             return
-        forminfo = self._cw.get_session_data(sessionkey, pop=True)
+        forminfo = self._cw.session.data.pop(sessionkey, None)
         if forminfo:
             self._form_previous_values = forminfo['values']
             self._form_valerror = forminfo['error']

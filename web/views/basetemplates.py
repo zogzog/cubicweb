@@ -12,7 +12,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import match_kwargs
+from cubicweb.selectors import match_kwargs, no_cnx
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
@@ -77,7 +77,6 @@ def templatable_view(cls, req, rset, *args, **kwargs):
     if req.form.has_key('__notemplate'):
         return 0
     return view.templatable
-
 
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
@@ -192,9 +191,9 @@ class TheMainTemplate(MainTemplate):
 
 
 class ErrorTemplate(TheMainTemplate):
-    """fallback template if an internal error occured during displaying the
-    main template. This template may be called for authentication error,
-    which means that req.cnx and req.user may not be set.
+    """fallback template if an internal error occured during displaying the main
+    template. This template may be called for authentication error, which means
+    that req.cnx and req.user may not be set.
     """
     __regid__ = 'error-template'
 
@@ -350,7 +349,7 @@ class HTMLPageHeader(View):
         self.w(u'<td id="lastcolumn">')
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
-        if self._cw.cnx.anonymous_connection:
+        if self._cw.session.anonymous_session:
             self.wview('logform', rset=self.cw_rset, id='popupLoginBox',
                        klass='hidden', title=False, showmessage=False)
 

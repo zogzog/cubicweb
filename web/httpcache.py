@@ -43,6 +43,8 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     """
 
     def etag(self):
+        if self.req.cnx is None:
+            return self.view.__regid__
         return self.view.__regid__ + '/' + ','.join(sorted(self.req.user.groups))
 
     def max_age(self):

@@ -247,7 +247,7 @@ class EditControllerTC(CubicWebTC):
         tmpgroup = self.request().create_entity('CWGroup', name=u"test")
         user = self.user()
         req = self.request(**req_form(user))
-        req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
+        req.session.data['pending_insert'] = set([(user.eid, 'in_group', tmpgroup.eid)])
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -266,7 +266,7 @@ class EditControllerTC(CubicWebTC):
         self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
         # now try to delete the relation
         req = self.request(**req_form(user))
-        req.set_session_data('pending_delete', set([(user.eid, 'in_group', groupeid)]))
+        req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -554,17 +554,21 @@ class JSONControllerTC(CubicWebTC):
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
-        self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
-                             ['python', 'cubicweb'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
-                          [['python']])
+        self.assertUnorderedIterableEquals(
+            [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
+            ['python', 'cubicweb'])
+        self.assertEquals(
+            self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
+            [['python']])
 
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
-        self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
-                             ['python', 'cubicweb', 'javascript'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
-                          [['javascript']])
+        self.assertUnorderedIterableEquals(
+            [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
+            ['python', 'cubicweb', 'javascript'])
+        self.assertEquals(
+            self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
+            [['javascript']])
 
     def test_pending_insertion(self):
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])

@@ -1,7 +1,7 @@
 """
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -18,10 +18,10 @@ class BookmarkHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE X bookmarked_by U WHERE U login "admin"')
         self.commit()
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': beid}, 'x'))
+        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
         self.execute('DELETE X bookmarked_by U WHERE U login "anon"')
         self.commit()
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': beid}, 'x'))
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
 
 if __name__ == '__main__':
     unittest_main()

@@ -20,7 +20,8 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ETYPE_NAME_MAP, ConnectionError, cwvreg, cwconfig
+from cubicweb import ETYPE_NAME_MAP, ConnectionError, AuthenticationError,\
+     cwvreg, cwconfig
 from cubicweb.req import RequestSessionBase
 
 
@@ -156,9 +157,25 @@ def in_memory_cnx(config, login, **kwargs):
     return repo, cnx
 
 
+class DBAPISession(object):
+    def __init__(self, cnx, login=None, authinfo=None):
+        self.cnx = cnx
+        self.data = {}
+        self.login = login
+        self.authinfo = authinfo
+
+    @property
+    def anonymous_session(self):
+        return self.cnx is None or self.cnx.anonymous_connection
+
+    @property
+    def sessionid(self):
+        return self.cnx.sessionid
+
+
 class DBAPIRequest(RequestSessionBase):
 
-    def __init__(self, vreg, cnx=None):
+    def __init__(self, vreg, session=None):
         super(DBAPIRequest, self).__init__(vreg)
         try:
             # no vreg or config which doesn't handle translations
@@ -168,12 +185,12 @@ class DBAPIRequest(RequestSessionBase):
         self.set_default_language(vreg)
         # cache entities built during the request
         self._eid_cache = {}
-        # these args are initialized after a connection is
-        # established
-        self.cnx = None   # connection associated to the request
-        self._user = None # request's user, set at authentication
-        if cnx is not None:
-            self.set_connection(cnx)
+        if session is not None:
+            self.set_session(session)
+        else:
+            # these args are initialized after a connection is
+            # established
+            self.session = self.cnx = self._user = None
 
     def base_url(self):
         return self.vreg.config['base-url']
@@ -181,13 +198,21 @@ class DBAPIRequest(RequestSessionBase):
     def from_controller(self):
         return 'view'
 
-    def set_connection(self, cnx, user=None):
+    def set_session(self, session, user=None):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
         """
-        self.cnx = cnx
-        self.cursor = cnx.cursor(self)
+        self.session = session
+        if session.cnx is not None:
+            self.cnx = session.cnx
+            self.execute = session.cnx.cursor(self).execute
         self.set_user(user)
+
+    def execute(self, *args, **kwargs):
+        """overriden when session is set. By default raise authentication error
+        so authentication is requested.
+        """
+        raise AuthenticationError()
 
     def set_default_language(self, vreg):
         try:
@@ -204,14 +229,6 @@ class DBAPIRequest(RequestSessionBase):
             self._ = self.__ = unicode
             self.pgettext = lambda x, y: y
         self.debug('request default language: %s', self.lang)
-
-    def describe(self, eid):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self.cnx.describe(eid)
-
-    def source_defs(self):
-        """return the definition of sources used by the repository."""
-        return self.cnx.source_defs()
 
     # entities cache management ###############################################
 
@@ -232,26 +249,10 @@ class DBAPIRequest(RequestSessionBase):
 
     # low level session data management #######################################
 
-    def session_data(self):
-        """return a dictionnary containing session data"""
-        return self.cnx.session_data()
-
-    def get_session_data(self, key, default=None, pop=False):
-        """return value associated to `key` in session data"""
-        if self.cnx is None:
-            return default # before the connection has been established
-        return self.cnx.get_session_data(key, default, pop)
-
-    def set_session_data(self, key, value):
-        """set value associated to `key` in session data"""
-        return self.cnx.set_session_data(key, value)
-
-    def del_session_data(self, key):
-        """remove value associated to `key` in session data"""
-        return self.cnx.del_session_data(key)
-
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
+        if self.cnx is None:
+            return default # before the connection has been established
         return self.cnx.get_shared_data(key, default, pop)
 
     def set_shared_data(self, key, value, querydata=False):
@@ -266,10 +267,18 @@ class DBAPIRequest(RequestSessionBase):
 
     # server session compat layer #############################################
 
+    def describe(self, eid):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        return self.cnx.describe(eid)
+
+    def source_defs(self):
+        """return the definition of sources used by the repository."""
+        return self.cnx.source_defs()
+
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         req = DBAPIRequest(self.vreg)
-        req.set_connection(self.cnx, user)
+        req.set_session(self.session, user)
         return req
 
     @property
@@ -283,11 +292,25 @@ class DBAPIRequest(RequestSessionBase):
         if user:
             self.set_entity_cache(user)
 
-    def execute(self, rql, args=None, eid_key=None, build_descr=True):
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        return self.cursor.execute(rql, args, build_descr=build_descr)
+    @deprecated('[3.8] use direct access to req.session.data dictionary')
+    def session_data(self):
+        """return a dictionnary containing session data"""
+        return self.session.data
+
+    @deprecated('[3.8] use direct access to req.session.data dictionary')
+    def get_session_data(self, key, default=None, pop=False):
+        if pop:
+            return self.session.data.pop(key, default)
+        return self.session.data.get(key, default)
+
+    @deprecated('[3.8] use direct access to req.session.data dictionary')
+    def set_session_data(self, key, value):
+        self.session.data[key] = value
+
+    @deprecated('[3.8] use direct access to req.session.data dictionary')
+    def del_session_data(self, key):
+        self.session.data.pop(key, None)
+
 
 set_log_methods(DBAPIRequest, getLogger('cubicweb.dbapi'))
 
@@ -302,68 +325,104 @@ class ProgrammingError(Exception): #DatabaseError):
     etc.
     """
 
-# module level objects ########################################################
+
+# cursor / connection objects ##################################################
+
+class Cursor(object):
+    """These objects represent a database cursor, which is used to manage the
+    context of a fetch operation. Cursors created from the same connection are
+    not isolated, i.e., any changes done to the database by a cursor are
+    immediately visible by the other cursors. Cursors created from different
+    connections are isolated.
+    """
+
+    def __init__(self, connection, repo, req=None):
+        """This read-only attribute return a reference to the Connection
+        object on which the cursor was created.
+        """
+        self.connection = connection
+        """optionnal issuing request instance"""
+        self.req = req
+        self._repo = repo
+        self._sessid = connection.sessionid
+
+    def close(self):
+        """no effect"""
+        pass
+
+    def execute(self, rql, args=None, eid_key=None, build_descr=True):
+        """execute a rql query, return resulting rows and their description in
+        a :class:`~cubicweb.rset.ResultSet` object
+
+        * `rql` should be an Unicode string or a plain ASCII string, containing
+          the rql query
+
+        * `args` the optional args dictionary associated to the query, with key
+          matching named substitution in `rql`
+
+        * `build_descr` is a boolean flag indicating if the description should
+          be built on select queries (if false, the description will be en empty
+          list)
+
+        on INSERT queries, there will be one row for each inserted entity,
+        containing its eid
+
+        on SET queries, XXX describe
+
+        DELETE queries returns no result.
+
+        .. Note::
+          to maximize the rql parsing/analyzing cache performance, you should
+          always use substitute arguments in queries, i.e. avoid query such as::
+
+            execute('Any X WHERE X eid 123')
+
+          use::
+
+            execute('Any X WHERE X eid %(x)s', {'x': 123})
+        """
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        rset = self._repo.execute(self._sessid, rql, args, build_descr)
+        rset.req = self.req
+        return rset
 
 
-apilevel = '2.0'
+class LogCursor(Cursor):
+    """override the standard cursor to log executed queries"""
 
-"""Integer constant stating the level of thread safety the interface supports.
-Possible values are:
+    def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
+        """override the standard cursor to log executed queries"""
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        tstart, cstart = time(), clock()
+        rset = Cursor.execute(self, operation, parameters, build_descr=build_descr)
+        self.connection.executed_queries.append((operation, parameters,
+                                                 time() - tstart, clock() - cstart))
+        return rset
 
-                0     Threads may not share the module.
-                1     Threads may share the module, but not connections.
-                2     Threads may share the module and connections.
-                3     Threads may share the module, connections and
-                      cursors.
-
-Sharing in the above context means that two threads may use a resource without
-wrapping it using a mutex semaphore to implement resource locking. Note that
-you cannot always make external resources thread safe by managing access using
-a mutex: the resource may rely on global variables or other external sources
-that are beyond your control.
-"""
-threadsafety = 1
-
-"""String constant stating the type of parameter marker formatting expected by
-the interface. Possible values are :
-
-                'qmark'         Question mark style,
-                                e.g. '...WHERE name=?'
-                'numeric'       Numeric, positional style,
-                                e.g. '...WHERE name=:1'
-                'named'         Named style,
-                                e.g. '...WHERE name=:name'
-                'format'        ANSI C printf format codes,
-                                e.g. '...WHERE name=%s'
-                'pyformat'      Python extended format codes,
-                                e.g. '...WHERE name=%(name)s'
-"""
-paramstyle = 'pyformat'
-
-
-# connection object ###########################################################
 
 class Connection(object):
     """DB-API 2.0 compatible Connection object for CubicWeb
     """
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError
+    # attributes that may be overriden per connection instance
+    anonymous_connection = False
+    cursor_class = Cursor
+    vreg = None
+    _closed = None
 
     def __init__(self, repo, cnxid, cnxprops=None):
         self._repo = repo
         self.sessionid = cnxid
         self._close_on_del = getattr(cnxprops, 'close_on_del', True)
         self._cnxtype = getattr(cnxprops, 'cnxtype', 'pyro')
-        self._closed = None
         if cnxprops and cnxprops.log_queries:
             self.executed_queries = []
             self.cursor_class = LogCursor
-        else:
-            self.cursor_class = Cursor
-        self.anonymous_connection = False
-        self.vreg = None
-        # session's data
-        self.data = {}
 
     def __repr__(self):
         if self.anonymous_connection:
@@ -381,29 +440,7 @@ class Connection(object):
             return False #propagate the exception
 
     def request(self):
-        return DBAPIRequest(self.vreg, self)
-
-    def session_data(self):
-        """return a dictionnary containing session data"""
-        return self.data
-
-    def get_session_data(self, key, default=None, pop=False):
-        """return value associated to `key` in session data"""
-        if pop:
-            return self.data.pop(key, default)
-        else:
-            return self.data.get(key, default)
-
-    def set_session_data(self, key, value):
-        """set value associated to `key` in session data"""
-        self.data[key] = value
-
-    def del_session_data(self, key):
-        """remove value associated to `key` in session data"""
-        try:
-            del self.data[key]
-        except KeyError:
-            pass
+        return DBAPIRequest(self.vreg, DBAPISession(self))
 
     def check(self):
         """raise `BadConnectionId` if the connection is no more valid"""
@@ -476,8 +513,6 @@ class Connection(object):
             # instance specific hooks
             if self._repo.config.instance_hooks:
                 hm.register_hooks(config.load_hooks(self.vreg))
-
-    load_vobjects = deprecated()(load_appobjects)
 
     def use_web_compatible_requests(self, baseurl, sitetitle=None):
         """monkey patch DBAPIRequest to fake a cw.web.request, so you should
@@ -662,220 +697,3 @@ class Connection(object):
         him).
         """
         return self._repo.undo_transaction(self.sessionid, txuuid)
-
-
-# cursor object ###############################################################
-
-class Cursor(object):
-    """These objects represent a database cursor, which is used to manage the
-    context of a fetch operation. Cursors created from the same connection are
-    not isolated, i.e., any changes done to the database by a cursor are
-    immediately visible by the other cursors. Cursors created from different
-    connections can or can not be isolated, depending on how the transaction
-    support is implemented (see also the connection's rollback() and commit()
-    methods.)
-    """
-
-    def __init__(self, connection, repo, req=None):
-        """This read-only attribute return a reference to the Connection
-        object on which the cursor was created.
-        """
-        self.connection = connection
-        """optionnal issuing request instance"""
-        self.req = req
-
-        """This read/write attribute specifies the number of rows to fetch at a
-        time with fetchmany(). It defaults to 1 meaning to fetch a single row
-        at a time.
-
-        Implementations must observe this value with respect to the fetchmany()
-        method, but are free to interact with the database a single row at a
-        time. It may also be used in the implementation of executemany().
-        """
-        self.arraysize = 1
-
-        self._repo = repo
-        self._sessid = connection.sessionid
-        self._res = None
-        self._closed = None
-        self._index = 0
-
-
-    def close(self):
-        """Close the cursor now (rather than whenever __del__ is called).  The
-        cursor will be unusable from this point forward; an Error (or subclass)
-        exception will be raised if any operation is attempted with the cursor.
-        """
-        self._closed = True
-
-
-    def execute(self, rql, args=None, eid_key=None, build_descr=True):
-        """execute a rql query, return resulting rows and their description in
-        a :class:`~cubicweb.rset.ResultSet` object
-
-        * `rql` should be an Unicode string or a plain ASCII string, containing
-          the rql query
-
-        * `args` the optional args dictionary associated to the query, with key
-          matching named substitution in `rql`
-
-        * `build_descr` is a boolean flag indicating if the description should
-          be built on select queries (if false, the description will be en empty
-          list)
-
-        on INSERT queries, there will be one row for each inserted entity,
-        containing its eid
-
-        on SET queries, XXX describe
-
-        DELETE queries returns no result.
-
-        .. Note::
-          to maximize the rql parsing/analyzing cache performance, you should
-          always use substitute arguments in queries, i.e. avoid query such as::
-
-            execute('Any X WHERE X eid 123')
-
-          use::
-
-            execute('Any X WHERE X eid %(x)s', {'x': 123})
-        """
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        self._res = rset = self._repo.execute(self._sessid, rql,
-                                              args, build_descr)
-        rset.req = self.req
-        self._index = 0
-        return rset
-
-
-    def executemany(self, operation, seq_of_parameters):
-        """Prepare a database operation (query or command) and then execute it
-        against all parameter sequences or mappings found in the sequence
-        seq_of_parameters.
-
-        Modules are free to implement this method using multiple calls to the
-        execute() method or by using array operations to have the database
-        process the sequence as a whole in one call.
-
-        Use of this method for an operation which produces one or more result
-        sets constitutes undefined behavior, and the implementation is
-        permitted (but not required) to raise an exception when it detects that
-        a result set has been created by an invocation of the operation.
-
-        The same comments as for execute() also apply accordingly to this
-        method.
-
-        Return values are not defined.
-        """
-        for parameters in seq_of_parameters:
-            self.execute(operation, parameters)
-            if self._res.rows is not None:
-                self._res = None
-                raise ProgrammingError('Operation returned a result set')
-
-
-    def fetchone(self):
-        """Fetch the next row of a query result set, returning a single
-        sequence, or None when no more data is available.
-
-        An Error (or subclass) exception is raised if the previous call to
-        execute*() did not produce any result set or no call was issued yet.
-        """
-        if self._res is None:
-            raise ProgrammingError('No result set')
-        row = self._res.rows[self._index]
-        self._index += 1
-        return row
-
-
-    def fetchmany(self, size=None):
-        """Fetch the next set of rows of a query result, returning a sequence
-        of sequences (e.g. a list of tuples). An empty sequence is returned
-        when no more rows are available.
-
-        The number of rows to fetch per call is specified by the parameter.  If
-        it is not given, the cursor's arraysize determines the number of rows
-        to be fetched. The method should try to fetch as many rows as indicated
-        by the size parameter. If this is not possible due to the specified
-        number of rows not being available, fewer rows may be returned.
-
-        An Error (or subclass) exception is raised if the previous call to
-        execute*() did not produce any result set or no call was issued yet.
-
-        Note there are performance considerations involved with the size
-        parameter.  For optimal performance, it is usually best to use the
-        arraysize attribute.  If the size parameter is used, then it is best
-        for it to retain the same value from one fetchmany() call to the next.
-        """
-        if self._res is None:
-            raise ProgrammingError('No result set')
-        if size is None:
-            size = self.arraysize
-        rows = self._res.rows[self._index:self._index + size]
-        self._index += size
-        return rows
-
-
-    def fetchall(self):
-        """Fetch all (remaining) rows of a query result, returning them as a
-        sequence of sequences (e.g. a list of tuples).  Note that the cursor's
-        arraysize attribute can affect the performance of this operation.
-
-        An Error (or subclass) exception is raised if the previous call to
-        execute*() did not produce any result set or no call was issued yet.
-        """
-        if self._res is None:
-            raise ProgrammingError('No result set')
-        if not self._res.rows:
-            return []
-        rows = self._res.rows[self._index:]
-        self._index = len(self._res)
-        return rows
-
-
-    def setinputsizes(self, sizes):
-        """This can be used before a call to execute*() to predefine memory
-        areas for the operation's parameters.
-
-        sizes is specified as a sequence -- one item for each input parameter.
-        The item should be a Type Object that corresponds to the input that
-        will be used, or it should be an integer specifying the maximum length
-        of a string parameter.  If the item is None, then no predefined memory
-        area will be reserved for that column (this is useful to avoid
-        predefined areas for large inputs).
-
-        This method would be used before the execute*() method is invoked.
-
-        Implementations are free to have this method do nothing and users are
-        free to not use it.
-        """
-        pass
-
-
-    def setoutputsize(self, size, column=None):
-        """Set a column buffer size for fetches of large columns (e.g. LONGs,
-        BLOBs, etc.).  The column is specified as an index into the result
-        sequence.  Not specifying the column will set the default size for all
-        large columns in the cursor.
-
-        This method would be used before the execute*() method is invoked.
-
-        Implementations are free to have this method do nothing and users are
-        free to not use it.
-        """
-        pass
-
-
-class LogCursor(Cursor):
-    """override the standard cursor to log executed queries"""
-
-    def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
-        """override the standard cursor to log executed queries"""
-        tstart, cstart = time(), clock()
-        rset = Cursor.execute(self, operation, parameters, eid_key, build_descr)
-        self.connection.executed_queries.append((operation, parameters,
-                                                 time() - tstart, clock() - cstart))
-        return rset
-
