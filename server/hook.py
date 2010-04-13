@@ -369,14 +369,14 @@ class Operation(object):
       revert things (including the operation which made fail the commit)
 
     rollback:
-      the transaction has been either rollbacked either
-      * intentionaly
-      * a precommit event failed, all operations are rollbacked
-      * a commit event failed, all operations which are not been triggered for
-        commit are rollbacked
+      the transaction has been either rollbacked either:
+       * intentionaly
+       * a precommit event failed, all operations are rollbacked
+       * a commit event failed, all operations which are not been triggered for
+         commit are rollbacked
 
-    order of operations may be important, and is controlled according to:
-    * operation's class
+    order of operations may be important, and is controlled according to
+    the insert_index's method output
     """
 
     def __init__(self, session, **kwargs):
@@ -475,7 +475,7 @@ def set_operation(session, datakey, value, opcls, **opkwargs):
     try:
         session.transaction_data[datakey].add(value)
     except KeyError:
-        opcls(session, *opkwargs)
+        opcls(session, **opkwargs)
         session.transaction_data[datakey] = set((value,))
 
 

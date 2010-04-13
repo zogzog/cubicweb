@@ -577,7 +577,7 @@ class UpdateStep(Step):
             result[i] = newrow
         # update entities
         for eid, edef in edefs.iteritems():
-            repo.glob_update_entity(session, edef, self.attributes)
+            repo.glob_update_entity(session, edef, set(self.attributes))
         return result
 
 def _handle_relterm(info, row, newrow):

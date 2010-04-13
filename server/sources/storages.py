@@ -1,6 +1,8 @@
 """custom storages for the system source"""
 from os import unlink, path as osp
 
+from yams.schema import role_name
+
 from cubicweb import Binary
 from cubicweb.server.hook import Operation
 
@@ -54,10 +56,27 @@ class Storage(object):
 # * better file path attribution
 # * handle backup/restore
 
+def uniquify_path(dirpath, basename):
+    """return a unique file name for `basename` in `dirpath`, or None
+    if all attemps failed.
+
+    XXX subject to race condition.
+    """
+    path = osp.join(dirpath, basename)
+    if not osp.isfile(path):
+        return path
+    base, ext = osp.splitext(path)
+    for i in xrange(1, 256):
+        path = '%s%s%s' % (base, i, ext)
+        if not osp.isfile(path):
+            return path
+    return None
+
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
-    def __init__(self, defaultdir):
+    def __init__(self, defaultdir, fsencoding='utf-8'):
         self.default_directory = defaultdir
+        self.fsencoding = fsencoding
 
     def callback(self, source, value):
         """sql generator callback when some attribute with a custom storage is
@@ -102,16 +121,27 @@ class BytesFileSystemStorage(Storage):
         DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
 
     def new_fs_path(self, entity, attr):
-        fspath = osp.join(self.default_directory, '%s_%s' % (entity.eid, attr))
-        while osp.exists(fspath):
-            fspath = '_' + fspath
+        # We try to get some hint about how to name the file using attribute's
+        # name metadata, so we use the real file name and extension when
+        # available. Keeping the extension is useful for example in the case of
+        # PIL processing that use filename extension to detect content-type, as
+        # well as providing more understandable file names on the fs.
+        basename = [str(entity.eid), attr]
+        name = entity.attr_metadata(attr, 'name')
+        if name is not None:
+            basename.append(name.encode(self.fsencoding))
+        fspath = uniquify_path(self.default_directory, '_'.join(basename))
+        if fspath is None:
+            msg = entity._cw._('failed to uniquify path (%s, %s)') % (
+                dirpath, '_'.join(basename))
+            raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
         return fspath
 
     def current_fs_path(self, entity, attr):
         sysource = entity._cw.pool.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
-                                 attr, entity.__regid__, entity.eid))
+                             attr, entity.__regid__, entity.eid))
         rawvalue = cu.fetchone()[0]
         if rawvalue is None: # no previous value
             return self.new_fs_path(entity, attr)

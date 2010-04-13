@@ -382,7 +382,9 @@ class RelationFacet(VocabularyFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        return rset and self.rset_vocabulary(rset)
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
@@ -471,7 +473,9 @@ class AttributeFacet(RelationFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        return rset and self.rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
         _ = self._cw._

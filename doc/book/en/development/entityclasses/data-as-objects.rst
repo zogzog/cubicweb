@@ -16,15 +16,15 @@ classes are registered in order to initialize the class according to its schema:
 
 :Formatting and output generation:
 
-  * `view(vid, **kwargs)`, applies the given view to the entity
+  * `view(__vid, __registry='views', **kwargs)`, applies the given view to the entity
     (and returns an unicode string)
 
-  * `absolute_url(**kwargs)`, returns an absolute URL to access the primary view
+  * `absolute_url(*args, **kwargs)`, returns an absolute URL to access the primary view
     of an entity
 
   * `rest_path()`, returns a relative REST URL to get the entity
 
-  * `printable_value(attr, value=_marker, attrtype=None, format='text/html')`,
+  * `printable_value(attr, value=_marker, attrtype=None, format='text/html', displaytime=True)`,
     returns a string enabling the display of an attribute value in a given format
     (the value is automatically recovered if necessary)
 

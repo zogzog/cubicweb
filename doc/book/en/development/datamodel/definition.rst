@@ -37,14 +37,18 @@ extends :class:`yams.schema.Schema`.
 
 Entity type
 ~~~~~~~~~~~
+
 An entity type is an instance of :class:`yams.schema.EntitySchema`. Each entity type has
 a set of attributes and relations, and some permissions which define who can add, read,
 update or delete entities of this type.
 
 XXX yams inheritance
 
+.. _RelationType:
+
 Relation type
 ~~~~~~~~~~~~~
+
 A relation type is an instance of :class:`yams.schema.RelationSchema`. A relation type is simply
 a semantic definition of a kind of relationship that may occur in an application.
 
@@ -66,6 +70,7 @@ relation definitions of that type):
 
 Relation definition
 ~~~~~~~~~~~~~~~~~~~
+
 A relation definition is an instance of :class:`yams.schema.RelationDefinition`. It is a complete triplet
 "<subject entity type> <relation type> <object entity type>".
 
@@ -147,14 +152,27 @@ General Constraints
 * `SizeConstraint`: allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
 
-* `BoundConstraint`: allows to specify a minimum and/or maximum value on
-  numeric types
+* `BoundConstraint`: allows to specify a minimum and/or maximum value
+  on numeric types and date
+
+.. sourcecode:: python
+
+   from yams.constraints import BoundConstraint, TODAY
+   BoundConstraint('<=', TODAY())
+
+* `IntervalBoundConstraint`: allows to specify an interval with
+  included values
+
+.. sourcecode:: python
+
+     class Node(EntityType):
+         latitude = Float(constraints=[IntervalBoundConstraint(-90, +90)])
 
 * `UniqueConstraint`: identical to "unique=True"
 
 * `StaticVocabularyConstraint`: identical to "vocabulary=(...)"
 
-XXX Attribute, TODAY, NOW
+XXX Attribute, NOW
 
 RQL Based Constraints
 ......................
@@ -463,7 +481,7 @@ the entity type for the object of the relation.
  Although this way of defining relations uses a Python class, the
  naming convention defined earlier prevails over the PEP8 conventions
  used in the framework: relation type class names use
- ``underscore_separated_words``. 
+ ``underscore_separated_words``.
 
 :Historical note:
 

@@ -277,7 +277,7 @@ class Session(RequestSessionBase):
 
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
-        if not sql.split(None, 1)[0].upper() == 'SELECT':
+        if sql.split(None, 1)[0].upper() != 'SELECT':
             self.mode = 'write'
         source = self.pool.source('system')
         try:

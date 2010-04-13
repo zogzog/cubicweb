@@ -1,5 +1,3 @@
-
-
 The `Request` class (`cubicweb.web`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -57,3 +55,7 @@ will be provided by the *frontend* web used (in particular *twisted* as of
 today). For the views or others that are executed on the server side,
 most of the interface of `Request` is defined in the session associated
 to the client.
+
+
+XXX autoclass !
+XXX create_entity

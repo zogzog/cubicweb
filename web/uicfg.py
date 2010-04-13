@@ -11,6 +11,8 @@ To configure the interface generation, we use ``RelationTag`` objects.
 Primary view configuration
 ``````````````````````````
 
+XXX section moved to the doc, is maintained there
+
 If you want to customize the primary view of an entity, overriding the primary
 view class may not be necessary. For simple adjustments (attributes or relations
 display locations and styles), a much simpler way is to use uicfg.

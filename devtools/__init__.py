@@ -201,7 +201,7 @@ def init_test_database(config=None, configdir='data'):
     elif driver == 'postgres':
         init_test_database_postgres(config)
     elif driver == 'sqlserver2005':
-        init_test_database_sqlserver2005(config, source)
+        init_test_database_sqlserver2005(config)
     else:
         raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
@@ -217,6 +217,8 @@ def reset_test_database(config):
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)
+    elif driver == 'sqlserver2005':
+        reset_test_database_sqlserver2005(config)
     else:
         raise ValueError('no reset function for driver %r' % driver)
 
@@ -237,6 +239,8 @@ def init_test_database_sqlserver2005(config):
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, drop=True, vreg=vreg)
 
+def reset_test_database_sqlserver2005(config):
+    pass
 
 ### sqlite test database handling ##############################################
 

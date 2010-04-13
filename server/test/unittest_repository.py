@@ -400,6 +400,27 @@ class RepositoryTC(CubicWebTC):
             self.assertRaises(AssertionError, req.create_entity,
                               'EmailAddress', address=u'a@b.fr')
 
+    def test_multiple_edit_set_attributes(self):
+        """make sure edited_attributes doesn't get cluttered
+        by previous entities on multiple set
+        """
+        # local hook
+        class DummyBeforeHook(Hook):
+            _test = self # keep reference to test instance
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('Affaire')
+            events = ('before_update_entity',)
+            def __call__(self):
+                # invoiced attribute shouldn't be considered "edited" before the hook
+                self._test.failIf('invoiced' in self.entity.edited_attributes,
+                                  'edited_attributes cluttered by previous update')
+                self.entity['invoiced'] = 10
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            req.create_entity('Affaire', ref=u'AFF01')
+            req.create_entity('Affaire', ref=u'AFF02')
+            req.execute('SET A duration 10 WHERE A is Affaire')
+
 
 class DataHelpersTC(CubicWebTC):
 

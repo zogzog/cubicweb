@@ -8,7 +8,6 @@ Repository customization
    sessions
    hooks
    notifications
-   operations
    tasks
 
 
