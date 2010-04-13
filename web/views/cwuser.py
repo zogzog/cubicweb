@@ -123,8 +123,8 @@ class CWGroupPermTab(EntityView):
         for access_type in objtype_access[objtype]:
             rset = self._cw.execute(rql % access_type, {'e': entity.eid})
             if rset:
-                self.w(u'<div>Can %s:</div>' % access_type)
-                self.w(u'<div>%s</div><br/>' % self.view('csv', rset, 'null'))
+                self.w(u'<div>%s:</div>' % self._cw.__(access_type + '_permission'))
+                self.w(u'<div>%s</div><br/>' % self._cw.view('csv', rset, 'null'))
 
 class CWGroupInContextView(EntityView):
     __regid__ = 'incontext'
