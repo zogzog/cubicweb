@@ -32,7 +32,7 @@ from cubicweb import __pkginfo__ as cw
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'logilab.common.sphinx_ext', 'sphinxcontrib.aafig']
+extensions = ['sphinx.ext.autodoc', 'logilab.common.sphinx_ext']#, 'sphinxcontrib.aafig']
 autoclass_content = 'both'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -92,11 +92,13 @@ pygments_style = 'sphinx'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'sphinx-default.css'
+#html_style = 'sphinx-default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 html_title = '%s %s' % (project, release)
+html_theme = 'lglb_doc'
+html_theme_path = ['_theme']
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -186,5 +188,5 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
-aafig_format = dict(latex='pdf', html='svg', text=None)
+#aafig_format = dict(latex='pdf', html='svg', text=None)
 
