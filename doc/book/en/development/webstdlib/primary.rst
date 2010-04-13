@@ -1,52 +1,162 @@
 .. _primary:
 
-The Primary View (:mod:`cubicweb.web.views.primary`)
----------------------------------------------------------------
+The Primary View
+-----------------
 
-The primary view of an entity is the view called by default when a
-single entity is in the result set and needs to be displayed.
+(:mod:`cubicweb.web.views.primary`)
+
+By default, *CubicWeb* provides a view that fits every available
+entity type. This is the first view you might be interested in
+modifying. It is also one of the richest and most complex.
+
+It is automatically selected on a one line result set containing an
+entity.
 
 This view is supposed to render a maximum of informations about the
 entity.
 
-Rendering methods and attributes for ``PrimaryView``
-----------------------------------------------------
+.. _primary_view_layout:
 
-By default, *CubicWeb* provides a primary view that fits every available
-entity type. This is the first view you might be interested in
-modifying. It is also one of the richest and most complex.
+Layout
+``````
 
-The basic layout of a primary view is as follows. This layout is
-actually set up by the `render_entity` method.
+The primary view has the following layout.
 
-.. aafig::
+.. image:: ../../images/primaryview_template.png
 
- +------------------------------------+
- |"content navigation (top)"          |
- +------------------------------------+
- |"title, toolbox"                    |
- +------------------------------------+
- |"metadata"                          |
- +----------------------+-------------+
- |"attributes"          |"side boxes" |
- |                      |             |
- |                      |             |
- +----------------------+             |
- |"relations"           |             |
- |                      |             |
- |                      |             |
- +----------------------+-------------+
- |"content navigation (bottom)"       |
- +------------------------------------+
+.. _primary_view_configuration:
 
-The methods you may want to modify while customizing a ``PrimaryView`` are:
+Primary view configuration
+``````````````````````````
+
+If you want to customize the primary view of an entity, overriding the primary
+view class may not be necessary. For simple adjustments (attributes or relations
+display locations and styles), a much simpler way is to use uicfg.
+
+Attributes/relations display location
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the primary view, there are 3 sections where attributes and
+relations can be displayed (represented in pink in the image above):
+
+* attributes
+* relations
+* sideboxes
+
+**Attributes** can only be displayed in the attributes section (default
+  behavior). They can also be hidden.
+
+For instance, to hide the ``title`` attribute of the ``Blog`` entity:
+
+.. sourcecode:: python
+
+   from cubicweb.web import uicfg
+   uicfg.primaryview_section.tag_attribute(('Blog', 'title'), 'hidden')
+
+**Relations** can be either displayed in one of the three sections or hidden.
+
+For relations, there are two methods:
+
+* ``tag_object_of`` for modifying the primary view of the object
+* ``tag_subject_of`` for modifying the primary view of the subject
+
+These two methods take two arguments:
+
+* a triplet ``(subject, relation_name, object)``, where subject or object can be replaced with ``'*'``
+* the section name or ``hidden``
+
+.. sourcecode:: python
+
+   pv_section = uicfg.primaryview_section
+   # hide every relation `entry_of` in the `Blog` primary view
+   pv_section.tag_object_of(('*', 'entry_of', 'Blog'), 'hidden')
+
+   # display `entry_of` relations in the `relations`
+   # section in the `BlogEntry` primary view
+   pv_section.tag_subject_of(('BlogEntry', 'entry_of', '*'), 'relations')
+
+
+Display content
+^^^^^^^^^^^^^^^
+
+You can use ``primaryview_display_ctrl`` to customize the display of attributes
+or relations. Values of ``primaryview_display_ctrl`` are dictionaries.
+
+
+Common keys for attributes and relations are:
+
+* ``vid``: specifies the regid of the view for displaying the attribute or the relation.
+
+  If ``vid`` is not specified, the default value depends on the section:
+    * ``attributes`` section: 'reledit' view
+    * ``relations`` section: 'autolimited' view
+    * ``sideboxes`` section: 'sidebox' view
+
+* ``order``: int used to control order within a section. When not specified,
+  automatically set according to order in which tags are added.
+
+.. sourcecode:: python
+
+   # let us remind the schema of a blog entry
+   class BlogEntry(EntityType):
+       title = String(required=True, fulltextindexed=True, maxsize=256)
+       publish_date = Date(default='TODAY')
+       content = String(required=True, fulltextindexed=True)
+       entry_of = SubjectRelation('Blog', cardinality='?*')
+
+   # now, we want to show attributes
+   # with an order different from that in the schema definition
+   view_ctrl = uicfg.primaryview_display_ctrl
+   for index, attr in enumerate('title', 'content', 'publish_date'):
+       view_ctrl.tag_attribute(('BlogEntry', attr), {'order': index})
+
+Keys for relations only:
+
+* ``label``: label for the relations section or side box
+
+* ``showlabel``: boolean telling whether the label is displayed
+
+* ``limit``: boolean telling if the results should be limited. If so, a link to all results is displayed
+
+* ``filter``: callback taking the related result set as argument and returning it filtered
+
+.. sourcecode:: python
+
+   pv_section = uicfg.primaryview_section
+   # in `CWUser` primary view, display `created_by`
+   # relations in relations section
+   pv_section.tag_object_of(('*', 'created_by', 'CWUser'), 'relations')
+
+   # display this relation as a list, sets the label,
+   # limit the number of results and filters on comments
+   def filter_comment(rset):
+       return rset.filtered_rset(lambda x: x.e_schema == 'Comment')
+   pv_ctrl = uicfg.primaryview_display_ctrl
+   pv_ctrl.tag_object_of(('*', 'created_by', 'CWUser'),
+                         {'vid': 'list', 'label': _('latest comment(s):'),
+                          'limit': True,
+                          'filter': filter_comment})
+
+.. warning:: with the ``primaryview_display_ctrl`` rtag, the subject or the
+   object of the relation is ignored for respectively ``tag_object_of`` or
+   ``tag_subject_of``. To avoid warnings during execution, they should be set to
+   ``'*'``.
+
+Rendering methods and attributes
+````````````````````````````````
+
+The basic layout of a primary view is as in the
+:ref:`primary_view_layout` section. This layout is actually drawn by
+the `render_entity` method.
+
+The methods you may want to modify while customizing a ``PrimaryView``
+are:
 
 *render_entity_title(self, entity)*
-    Renders the entity title based on the assumption that the method
-    ``def dc_title(self)`` is implemented for the given entity type.
+    Renders the entity title using the ``def dc_title(self)`` method.
 
 *render_entity_metadata(self, entity)*
-    Renders the entity metadata by calling the 'metadata' view on the
+    Renders the entity metadata by calling the ``metadata`` view on the
     entity. This generic view is in cubicweb.views.baseviews.
 
 *render_entity_attributes(self, entity)*
@@ -61,7 +171,7 @@ The methods you may want to modify while customizing a ``PrimaryView`` are:
     Renders relations of the entity in a side box.
 
 The placement of relations in the relations section or in side boxes
-can be controlled through the uicfg mechanism.
+can be controlled through the :ref:`primary_view_configuration` mechanism.
 
 *content_navigation_components(self, context)*
     This method is applicable only for entity type implementing the interface
@@ -91,107 +201,3 @@ A good practice is for you to identify the content of your entity type for which
 the default rendering does not answer your need so that you can focus on the specific
 method (from the list above) that needs to be modified. We do not advise you to
 overwrite ``render_entity`` unless you want a completely different layout.
-
-Also, a lot of customisation can be achieved using the
-`primaryview_section` and `primaryview_display_ctrl` relation tags of
-the uicfg module.
-
-Primary view configuration
-``````````````````````````
-
-If you want to customize the primary view of an entity, overriding the primary
-view class may not be necessary. For simple adjustments (attributes or relations
-display locations and styles), a much simpler way is to use uicfg.
-
-Attributes/relations display location
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In the primary view, there are 3 sections where attributes and relations can be
-displayed (represented in pink in the image below):
-
-* attributes
-* relations
-* sideboxes
-
-.. image:: ../../images/primaryview_template.png
-
-
-**Attributes** can only be displayed in the attributes section (default
-  behavior). They can also be hidden.
-
-For instance, to hide the ``title`` attribute of the ``Blog`` entity:
-
-.. sourcecode:: python
-
-   from cubicweb.web import uicfg
-   uicfg.primaryview_section.tag_attribute(('Blog', 'title'), 'hidden')
-
-
-**Relations** can be either displayed in one of the three sections or hidden.
-
-For relations, there are two methods:
-
-* ``tag_object_of`` for modifying the primary view of the object
-* ``tag_subject_of`` for modifying the primary view of the subject
-
-These two methods take two arguments:
-
-* a triplet ``(subject, relation_name, object)``, where subject or object can be replaced with ``'*'``
-* the section name or ``hidden``
-
-.. sourcecode:: python
-
-   # hide every relation ``entry_of`` in the ``Blog`` primary view
-   uicfg.primaryview_section.tag_object_of(('*', 'entry_of', 'Blog'), 'hidden')
-
-   # display ``entry_of`` relations in the ``relations`` section in the ``BlogEntry`` primary view
-   uicfg.primaryview_section.tag_subject_of(('BlogEntry', 'entry_of', '*'),
-                                             'relations')
-
-
-Display content
-^^^^^^^^^^^^^^^
-
-You can use ``primaryview_display_ctrl`` to customize the display of attributes
-or relations. Values of ``primaryview_display_ctrl`` are dictionaries.
-
-
-Common keys for attributes and relations are:
-* ``vid``: specifies the regid of the view for displaying the attribute or the relation.
-
-  If ``vid`` is not specified, the default value depends on the section:
-  * ``attributes`` section: 'reledit' view
-  * ``relations`` section: 'autolimited' view
-  * ``sideboxes`` section: 'sidebox' view
-
-* ``order``: int used to control order within a section. When not specified,
-  automatically set according to order in which tags are added.
-
-
-Keys for relations only:
-
-* ``label``: label for the relations section or side box
-
-* ``showlabel``: boolean telling whether the label is displayed
-
-* ``limit``: boolean telling if the results should be limited. If so, a link to all results is displayed
-
-* ``filter``: callback taking the related result set as argument and returning it filtered
-
-.. sourcecode:: python
-
-   # in ``CWUser`` primary view, display ``created_by`` relations in relations section
-   uicfg.primaryview_section.tag_object_of(('*', 'created_by', 'CWUser'), 'relations')
-
-   # displays this relation as a list, sets the label, limits the number of results and filters on comments
-   uicfg.primaryview_display_ctrl.tag_object_of(
-       ('*', 'created_by', 'CWUser'),
-       {'vid': 'list', 'label': _('latest comment(s):'), 'limit': True,
-        'filter': lambda rset: rset.filtered_rset(lambda x: x.e_schema == 'Comment')})
-
-.. Warning:: with the ``primaryview_display_ctrl`` rtag, the subject or the
-   object of the relation is ignored for respectively ``tag_object_of`` or
-   ``tag_subject_of``. To avoid warnings during execution, they should be set to
-   ``'*'``.
-
-
