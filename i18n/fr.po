@@ -35,6 +35,9 @@ msgstr ""
 msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  de l'état %(fromstate)s vers l'état %(tostate)s\n"
 
+msgid " :"
+msgstr ""
+
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr "%(attr)s modifié à %(newvalue)s"
@@ -621,6 +624,9 @@ msgstr "La vue %s ne peut être appliquée à cette requête"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vue %s est introuvable"
+
+msgid "There is no default workflow"
+msgstr "Ce type d'entité n'a pas de workflow par défault"
 
 msgid "This BaseTransition"
 msgstr "Cette transition abstraite"
@@ -1565,15 +1571,15 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr "condition"
 
-msgid "condition:"
-msgstr "condition :"
-
 msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr "condition de"
 
 msgid "condition_object"
 msgstr "condition de"
+
+msgid "conditions"
+msgstr "conditions"
 
 msgid "config mode"
 msgstr "mode de configuration"
@@ -2374,7 +2380,7 @@ msgid "follow this link for more information on this %s"
 msgstr "suivez ce lien pour plus d'information sur ce %s"
 
 msgid "follow this link if javascript is deactivated"
-msgstr ""
+msgstr "suivez ce lien si javascript est désactivé"
 
 msgid "for_user"
 msgstr "pour l'utilisateur"
@@ -2471,10 +2477,6 @@ msgstr "retourner sur la page d'accueil"
 msgid "granted to groups"
 msgstr "accordée aux groupes"
 
-#, python-format
-msgid "graphical representation of %s"
-msgstr "représentation graphique de %s"
-
 msgid "graphical representation of the instance'schema"
 msgstr "représentation graphique du schéma de l'instance"
 
@@ -2498,9 +2500,6 @@ msgstr "les groupes donnent des permissions à l'utilisateur"
 
 msgid "groups to which the permission is granted"
 msgstr "groupes auquels cette permission est donnée"
-
-msgid "groups:"
-msgstr "groupes :"
 
 msgid "guests"
 msgstr "invités"
@@ -2896,6 +2895,9 @@ msgstr "lundi"
 msgid "more actions"
 msgstr "plus d'actions"
 
+msgid "more info about this workflow"
+msgstr "plus d'information sur ce workflow"
+
 msgid "multiple edit"
 msgstr "édition multiple"
 
@@ -3121,6 +3123,9 @@ msgstr "chemin"
 
 msgid "permission"
 msgstr "permission"
+
+msgid "permissions"
+msgstr "permissions"
 
 msgid "permissions for entities"
 msgstr "permissions pour les entités"
@@ -4061,6 +4066,12 @@ msgstr "historique de"
 
 msgid "wf_info_for_object"
 msgstr "historique des transitions"
+
+msgid "wf_tab_info"
+msgstr "description"
+
+msgid "wfgraph"
+msgstr "image du workflow"
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "

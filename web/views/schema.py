@@ -313,18 +313,25 @@ class CWETypeSWorkflowView(EntityView):
         entity = self.cw_rset.get_entity(row, col)
         if entity.default_workflow:
             wf = entity.default_workflow[0]
-            self.w(u'<h1>%s (%s)</h1>' % (wf.name, self._cw._('default')))
-            self.wf_image(wf)
+            if len(entity.reverse_workflow_of) > 1:
+                self.w(u'<h1>%s (%s)</h1>'
+                       % (wf.name, self._cw._('default_workflow')))
+            self.display_workflow(wf)
+            defaultwfeid = wf.eid
+        else:
+            self.w(u'<div class="error">%s</div>'
+                   % self._cw._('There is no default workflow'))
+            defaultwfeid = None
         for altwf in entity.reverse_workflow_of:
-            if altwf.eid == wf.eid:
+            if altwf.eid == defaultwfeid:
                 continue
             self.w(u'<h1>%s</h1>' % altwf.name)
-            self.wf_image(altwf)
+            self.display_workflow(altwf)
 
-    def wf_image(self, wf):
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(wf.absolute_url(vid='wfgraph')),
-            xml_escape(self._cw._('graphical representation of %s') % wf.name)))
+    def display_workflow(self, wf):
+        self.w(wf.view('wfgraph'))
+        self.w('<a href="%s">%s</a>' % (
+            wf.absolute_url(), self._cw._('more info about this workflow')))
 
 
 # CWRType ######################################################################

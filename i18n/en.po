@@ -30,6 +30,9 @@ msgstr ""
 msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr ""
 
+msgid " :"
+msgstr ""
+
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr ""
@@ -601,6 +604,9 @@ msgstr ""
 
 #, python-format
 msgid "The view %s could not be found"
+msgstr ""
+
+msgid "There is no default workflow"
 msgstr ""
 
 msgid "This BaseTransition"
@@ -1514,15 +1520,15 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr "condition"
 
-msgid "condition:"
-msgstr "condtion:"
-
 msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr "condition of"
 
 msgid "condition_object"
 msgstr "condition of"
+
+msgid "conditions"
+msgstr ""
 
 msgid "config mode"
 msgstr ""
@@ -2385,10 +2391,6 @@ msgstr ""
 msgid "granted to groups"
 msgstr ""
 
-#, python-format
-msgid "graphical representation of %s"
-msgstr ""
-
 msgid "graphical representation of the instance'schema"
 msgstr ""
 
@@ -2410,9 +2412,6 @@ msgid "groups grant permissions to the user"
 msgstr ""
 
 msgid "groups to which the permission is granted"
-msgstr ""
-
-msgid "groups:"
 msgstr ""
 
 msgid "guests"
@@ -2790,6 +2789,9 @@ msgstr ""
 msgid "more actions"
 msgstr ""
 
+msgid "more info about this workflow"
+msgstr ""
+
 msgid "multiple edit"
 msgstr ""
 
@@ -3011,6 +3013,9 @@ msgid "path"
 msgstr "path"
 
 msgid "permission"
+msgstr ""
+
+msgid "permissions"
 msgstr ""
 
 msgid "permissions for entities"
@@ -3930,6 +3935,12 @@ msgstr "record for"
 
 msgid "wf_info_for_object"
 msgstr "workflow history"
+
+msgid "wf_tab_info"
+msgstr ""
+
+msgid "wfgraph"
+msgstr ""
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "

@@ -71,3 +71,12 @@ class FoafView(EntityView):
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
+
+class CWGroupInContextView(EntityView):
+    __regid__ = 'incontext'
+    __select__ = implements('CWGroup')
+    def cell_call(self, row, col):
+        self._cw.add_css('cubicweb.acl.css')
+        entity = self.cw_rset.complete_entity(row, col)
+        self.w(u'<a href="%s" class="%s">%s</a>' % (
+            entity.absolute_url(), entity.name, entity.printable_value('name')))

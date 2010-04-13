@@ -162,6 +162,9 @@ class RQLExpression(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
     def dc_title(self):
+        return self.expression or u''
+
+    def dc_long_title(self):
         return '%s(%s)' % (self.exprtype, self.expression or u'')
 
     @property

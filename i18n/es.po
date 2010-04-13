@@ -35,6 +35,9 @@ msgstr ""
 msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  del estado %(fromstate)s hacia el estado %(tostate)s\n"
 
+msgid " :"
+msgstr ""
+
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr ""
@@ -610,6 +613,9 @@ msgstr "La vista %s no puede ser aplicada a esta búsqueda"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vista %s no ha podido ser encontrada"
+
+msgid "There is no default workflow"
+msgstr ""
 
 msgid "This BaseTransition"
 msgstr ""
@@ -1545,15 +1551,15 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr ""
 
-msgid "condition:"
-msgstr "condición:"
-
 msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr ""
 
 msgid "condition_object"
 msgstr "condición de"
+
+msgid "conditions"
+msgstr ""
 
 msgid "config mode"
 msgstr ""
@@ -2435,10 +2441,6 @@ msgstr "Regresar a la página de inicio"
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
 
-#, python-format
-msgid "graphical representation of %s"
-msgstr ""
-
 msgid "graphical representation of the instance'schema"
 msgstr ""
 
@@ -2461,9 +2463,6 @@ msgstr "Los grupos otorgan las autorizaciones al usuario"
 
 msgid "groups to which the permission is granted"
 msgstr "Grupos quienes tienen otorgada esta autorización"
-
-msgid "groups:"
-msgstr "Grupos :"
 
 msgid "guests"
 msgstr "Invitados"
@@ -2858,6 +2857,9 @@ msgstr "Lundi"
 msgid "more actions"
 msgstr "mas acciones"
 
+msgid "more info about this workflow"
+msgstr ""
+
 msgid "multiple edit"
 msgstr "Edicion multiple"
 
@@ -3085,6 +3087,9 @@ msgstr ""
 
 msgid "permission"
 msgstr "Permiso"
+
+msgid "permissions"
+msgstr ""
 
 msgid "permissions for entities"
 msgstr "autorizaciónes para entidades"
@@ -4018,6 +4023,12 @@ msgstr "historial de"
 msgid "wf_info_for_object"
 msgstr "historial de transiciones"
 
+msgid "wf_tab_info"
+msgstr ""
+
+msgid "wfgraph"
+msgstr ""
+
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "
 "and python-projects@lists.logilab.org), set this to indicate which is the "
@@ -4219,6 +4230,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "comment:"
 #~ msgstr "Comentario:"
 
+#~ msgid "condition:"
+#~ msgstr "condición:"
+
 #~ msgid "copy edition"
 #~ msgstr "Edición de una copia"
 
@@ -4313,6 +4327,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "groups allowed to update entities of this type"
 #~ msgstr "Grupos autorizados a actualizar entidades de este tipo"
+
+#~ msgid "groups:"
+#~ msgstr "Grupos :"
 
 #~ msgid "home"
 #~ msgstr "Inicio"

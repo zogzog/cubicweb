@@ -174,7 +174,7 @@ class BaseTransition(AnyEntity):
     fired by the logged user
     """
     __regid__ = 'BaseTransition'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
 
     def __init__(self, *args, **kwargs):
         if self.__regid__ == 'BaseTransition':
