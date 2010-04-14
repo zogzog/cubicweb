@@ -806,174 +806,6 @@ msgstr ""
 msgid "actions"
 msgstr ""
 
-msgid "actions_about"
-msgstr ""
-
-msgid "actions_about_description"
-msgstr ""
-
-msgid "actions_addentity"
-msgstr "add an entity of this type"
-
-msgid "actions_addentity_description"
-msgstr ""
-
-msgid "actions_addrelated"
-msgstr ""
-
-msgid "actions_addrelated_description"
-msgstr ""
-
-msgid "actions_cancel"
-msgstr "cancel the selection"
-
-msgid "actions_cancel_description"
-msgstr ""
-
-msgid "actions_changelog"
-msgstr ""
-
-msgid "actions_changelog_description"
-msgstr ""
-
-msgid "actions_copy"
-msgstr "copy"
-
-msgid "actions_copy_description"
-msgstr ""
-
-msgid "actions_delete"
-msgstr "delete"
-
-msgid "actions_delete_description"
-msgstr ""
-
-msgid "actions_download_as_owl"
-msgstr "download as owl"
-
-msgid "actions_download_as_owl_description"
-msgstr ""
-
-msgid "actions_edit"
-msgstr "modify"
-
-msgid "actions_edit_description"
-msgstr ""
-
-msgid "actions_embed"
-msgstr "embed"
-
-msgid "actions_embed_description"
-msgstr ""
-
-msgid "actions_entitiesoftype"
-msgstr ""
-
-msgid "actions_entitiesoftype_description"
-msgstr ""
-
-msgid "actions_follow"
-msgstr "follow"
-
-msgid "actions_follow_description"
-msgstr ""
-
-msgid "actions_help"
-msgstr ""
-
-msgid "actions_help_description"
-msgstr ""
-
-msgid "actions_logout"
-msgstr "logout"
-
-msgid "actions_logout_description"
-msgstr ""
-
-msgid "actions_manage"
-msgstr "manage"
-
-msgid "actions_manage_description"
-msgstr ""
-
-msgid "actions_managepermission"
-msgstr "manage permissions"
-
-msgid "actions_managepermission_description"
-msgstr ""
-
-msgid "actions_muledit"
-msgstr "modify all"
-
-msgid "actions_muledit_description"
-msgstr ""
-
-msgid "actions_myinfos"
-msgstr "my profile"
-
-msgid "actions_myinfos_description"
-msgstr ""
-
-msgid "actions_myprefs"
-msgstr "my preferences"
-
-msgid "actions_myprefs_description"
-msgstr ""
-
-msgid "actions_poweredby"
-msgstr ""
-
-msgid "actions_poweredby_description"
-msgstr ""
-
-msgid "actions_prefs"
-msgstr "preferences"
-
-msgid "actions_prefs_description"
-msgstr ""
-
-msgid "actions_schema"
-msgstr "schema"
-
-msgid "actions_schema_description"
-msgstr ""
-
-msgid "actions_select"
-msgstr "select"
-
-msgid "actions_select_description"
-msgstr ""
-
-msgid "actions_sendemail"
-msgstr "send email"
-
-msgid "actions_sendemail_description"
-msgstr ""
-
-msgid "actions_siteconfig"
-msgstr "site configuration"
-
-msgid "actions_siteconfig_description"
-msgstr ""
-
-msgid "actions_siteinfo"
-msgstr "site information"
-
-msgid "actions_siteinfo_description"
-msgstr ""
-
-msgid "actions_view"
-msgstr "view"
-
-msgid "actions_view_description"
-msgstr ""
-
-msgid "actions_workflow"
-msgstr "see workflow"
-
-msgid "actions_workflow_description"
-msgstr ""
-
 msgid "activate"
 msgstr ""
 
@@ -2104,16 +1936,10 @@ msgstr "destination of"
 msgid "detach attached file"
 msgstr ""
 
-msgid "display order of the action"
-msgstr ""
-
 msgid "display order of the box"
 msgstr ""
 
 msgid "display order of the component"
-msgstr ""
-
-msgid "display the action or not"
 msgstr ""
 
 msgid "display the box or not"
@@ -4090,6 +3916,3 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
-
-#~ msgid "schema-description"
-#~ msgstr "entity and relation types"

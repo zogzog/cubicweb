@@ -386,6 +386,10 @@ VRegistry.REGISTRY_FACTORY['views'] = ViewsRegistry
 
 
 class ActionsRegistry(CWRegistry):
+    def poss_visible_objects(self, *args, **kwargs):
+        """return an ordered list of possible actions"""
+        return sorted(self.possible_objects(*args, **kwargs),
+                      key=lambda x: x.order)
 
     def possible_actions(self, req, rset=None, **kwargs):
         if rset is None:
