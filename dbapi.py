@@ -156,6 +156,11 @@ def in_memory_cnx(config, login, **kwargs):
     cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     return repo, cnx
 
+class _NeedAuthAccessMock(object):
+    def __getattribute__(self, attr):
+        raise AuthenticationError()
+    def __nonzero__(self):
+        return False
 
 class DBAPISession(object):
     def __init__(self, cnx, login=None, authinfo=None):
@@ -166,7 +171,7 @@ class DBAPISession(object):
 
     @property
     def anonymous_session(self):
-        return self.cnx is None or self.cnx.anonymous_connection
+        return not self.cnx or self.cnx.anonymous_connection
 
     @property
     def sessionid(self):
@@ -190,7 +195,8 @@ class DBAPIRequest(RequestSessionBase):
         else:
             # these args are initialized after a connection is
             # established
-            self.session = self.cnx = self._user = None
+            self.session = None
+            self.cnx = self._user = _NeedAuthAccessMock()
 
     def base_url(self):
         return self.vreg.config['base-url']
@@ -203,7 +209,7 @@ class DBAPIRequest(RequestSessionBase):
         or an anonymous connection is open
         """
         self.session = session
-        if session.cnx is not None:
+        if session.cnx:
             self.cnx = session.cnx
             self.execute = session.cnx.cursor(self).execute
         self.set_user(user)
@@ -251,8 +257,6 @@ class DBAPIRequest(RequestSessionBase):
 
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
-        if self.cnx is None:
-            return default # before the connection has been established
         return self.cnx.get_shared_data(key, default, pop)
 
     def set_shared_data(self, key, value, querydata=False):
@@ -283,7 +287,7 @@ class DBAPIRequest(RequestSessionBase):
 
     @property
     def user(self):
-        if self._user is None and self.cnx:
+        if not self._user and self.cnx:
             self.set_user(self.cnx.user(self, {'lang': self.lang}))
         return self._user
 

@@ -173,7 +173,6 @@ class CookieSessionHandler(object):
 
         :raise Redirect: if authentication has occured and succeed
         """
-        assert req.cnx is None # at this point no cnx should be set on the request
         cookie = req.get_cookie()
         try:
             sessionid = str(cookie[self.SESSION_VAR].value)
@@ -306,7 +305,7 @@ class CubicWebPublisher(object):
             return self.main_publish(path, req)
         finally:
             cnx = req.cnx
-            if cnx is not None:
+            if cnx:
                 with self._logfile_lock:
                     try:
                         result = ['\n'+'*'*80]
@@ -357,12 +356,13 @@ class CubicWebPublisher(object):
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)
-                if req.cnx is not None:
-                    # req.cnx is None if anonymous aren't allowed and we are
-                    # displaying the cookie authentication form
+                if req.cnx:
+                    # no req.cnx if anonymous aren't allowed and we are
+                    # displaying some anonymous enabled view such as the cookie
+                    # authentication form
                     req.cnx.commit()
             except (StatusResponse, DirectResponse):
-                if req.cnx is not None:
+                if req.cnx:
                     req.cnx.commit()
                 raise
             except (AuthenticationError, LogOut):
@@ -401,7 +401,7 @@ class CubicWebPublisher(object):
             except Exception, ex:
                 self.error_handler(req, ex, tb=True)
         finally:
-            if req.cnx is not None:
+            if req.cnx:
                 try:
                     req.cnx.rollback()
                 except:

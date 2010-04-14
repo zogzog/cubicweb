@@ -1044,7 +1044,7 @@ def no_cnx(cls, req, rset, *args, **kwargs):
 
     May only be used on the web side, not on the data repository side.
     """
-    if req.cnx is None:
+    if not req.cnx:
         return 1
     return 0
 

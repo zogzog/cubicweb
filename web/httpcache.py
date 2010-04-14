@@ -43,7 +43,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     """
 
     def etag(self):
-        if self.req.cnx is None:
+        if not self.req.cnx: # session without established connection to the repo
             return self.view.__regid__
         return self.view.__regid__ + '/' + ','.join(sorted(self.req.user.groups))
 

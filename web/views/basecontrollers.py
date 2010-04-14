@@ -116,10 +116,10 @@ class ViewController(Controller):
         req = self._cw
         if rset is None and not hasattr(req, '_rql_processed'):
             req._rql_processed = True
-            if req.cnx is None:
-                rset = None
-            else:
+            if req.cnx:
                 rset = self.process_rql(req.form.get('rql'))
+            else:
+                rset = None
         if rset and rset.rowcount == 1 and '__method' in req.form:
             entity = rset.get_entity(0, 0)
             try:
