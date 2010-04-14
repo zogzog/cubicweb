@@ -201,8 +201,8 @@ msgstr "ET"
 msgid "Any"
 msgstr "N'importe"
 
-msgid "Attributes"
-msgstr "Attributs"
+msgid "Attributes permissions:"
+msgstr "Permissions des attributs"
 
 msgid "Attributes with non default permissions:"
 msgstr "Attributs ayant des permissions non-standard"
@@ -529,8 +529,14 @@ msgstr "Nouvelle transition workflow"
 msgid "No result matching query"
 msgstr "aucun résultat"
 
+msgid "Non exhaustive list of views that may apply to entities of this type"
+msgstr "Liste non exhausite des vues s'appliquant à ce type d'entité"
+
 msgid "OR"
 msgstr "OU"
+
+msgid "Parent classes:"
+msgstr "Classes parentes :"
 
 msgid "Password"
 msgstr "Mot de passe"
@@ -610,6 +616,9 @@ msgstr "Chaîne de caractères"
 
 msgid "String_plural"
 msgstr "Chaînes de caractères"
+
+msgid "Sub-classes:"
+msgstr "Classes filles :"
 
 msgid "SubWorkflowExitPoint"
 msgstr "Sortie de sous-workflow"
@@ -705,6 +714,9 @@ msgstr "Ce workflow"
 
 msgid "This WorkflowTransition"
 msgstr "Cette transition workflow"
+
+msgid "This entity type permissions:"
+msgstr "Permissions pour ce type d'endité"
 
 msgid "Time"
 msgstr "Heure"
@@ -827,9 +839,6 @@ msgstr "à propos de ce site"
 
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
-
-msgid "access type"
-msgstr "type d'accès"
 
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
@@ -1254,9 +1263,6 @@ msgstr ""
 msgid "attribute"
 msgstr "attribut"
 
-msgid "attributes permissions:"
-msgstr "permissions des attributs :"
-
 msgid "august"
 msgstr "août"
 
@@ -1626,6 +1632,9 @@ msgstr "contraintes"
 msgid "constraints applying on this relation"
 msgstr "contraintes s'appliquant à cette relation"
 
+msgid "content type"
+msgstr "type MIME"
+
 msgid "contentnavigation"
 msgstr "composants contextuels"
 
@@ -1895,12 +1904,6 @@ msgid "cwgroup-main"
 msgstr "description"
 
 msgid "cwgroup-permissions"
-msgstr "permissions"
-
-msgid "cwrdef-description"
-msgstr "description"
-
-msgid "cwrdef-permissions"
 msgstr "permissions"
 
 msgid "cwrtype-description"
@@ -2381,6 +2384,10 @@ msgstr "facette \"dans l'état\""
 msgid "facets_in_state-facet_description"
 msgstr ""
 
+#, python-format
+msgid "failed to uniquify path (%s, %s)"
+msgstr ""
+
 msgid "february"
 msgstr "février"
 
@@ -2482,9 +2489,6 @@ msgstr "transitions depuis cet état"
 
 msgid "full text or RQL query"
 msgstr "texte à rechercher ou requête RQL"
-
-msgid "fulltext indexed"
-msgstr "indexation du texte"
 
 msgid "fulltext_container"
 msgstr "conteneur du texte indexé"
@@ -3125,6 +3129,9 @@ msgstr "sessions ouvertes"
 msgid "opened web sessions"
 msgstr "sessions web ouvertes"
 
+msgid "options"
+msgstr "options"
+
 msgid "order"
 msgstr "ordre"
 
@@ -3258,6 +3265,12 @@ msgstr "barre d'avancement"
 msgid "project"
 msgstr "projet"
 
+msgid "rdef-description"
+msgstr "description"
+
+msgid "rdef-permissions"
+msgstr "permissions"
+
 msgid "read"
 msgstr "lecture"
 
@@ -3308,9 +3321,6 @@ msgstr "relation %(relname)s de %(ent)s"
 
 msgid "relation add"
 msgstr "ajout de relation"
-
-msgid "relation direction"
-msgstr "sens de la relation"
 
 msgid "relation removal"
 msgstr "suppression de relation"
@@ -3425,11 +3435,14 @@ msgstr "entités définissant le schéma"
 msgid "schema's permissions definitions"
 msgstr "permissions définies dans le schéma"
 
-msgid "schema-description"
-msgstr "types d'entité et de relation"
+msgid "schema-entity-types"
+msgstr "types d'entités"
 
 msgid "schema-image"
 msgstr "image"
+
+msgid "schema-relation-types"
+msgstr "types de relations"
 
 msgid "schema-security"
 msgstr "permissions"
@@ -4098,14 +4111,17 @@ msgstr "voir les détails de cette entité"
 msgid "view history"
 msgstr "voir l'historique"
 
+msgid "view identifier"
+msgstr "identifiant"
+
+msgid "view title"
+msgstr "titre"
+
 msgid "view workflow"
 msgstr "voir les états possibles"
 
 msgid "view_index"
 msgstr "accueil"
-
-msgid "views"
-msgstr "vues"
 
 msgid "visible"
 msgstr "visible"

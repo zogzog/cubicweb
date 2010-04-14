@@ -26,19 +26,6 @@ class SchemaViewer(object):
                 encoding = req.encoding
         self.encoding = encoding
 
-    def format_acls(self, schema, access_types):
-        """return a layout displaying access control lists"""
-        data = [self.req._('access type'), self.req._('groups')]
-        for access_type in access_types:
-            data.append(self.req._(access_type))
-            acls = [Link(self.req.build_url('cwgroup/%s' % group), self.req._(group))
-                    for group in schema.get_groups(access_type)]
-            acls += (Text(rqlexp.expression) for rqlexp in schema.get_rqlexprs(access_type))
-            acls = [n for _n in acls for n in (_n, Text(', '))][:-1]
-            data.append(Span(children=acls))
-        return Section(children=(Table(cols=2, cheaders=1, rheaders=1, children=data),),
-                       klass='acl')
-
     def visit_schema(self, schema, display_relations=0, skiptypes=()):
         """get a layout for a whole schema"""
         title = Title(self.req._('Schema %s') % schema.name,
@@ -103,7 +90,7 @@ class SchemaViewer(object):
         layout = Section(children=' ', klass='clear')
         layout.append(Link(etype,'&#160;' , id=etype)) # anchor
         title = Link(self.eschema_link_url(eschema), etype)
-        boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
+        boxchild = [Section(children=(title,), klass='title')]
         data = []
         data.append(Section(children=boxchild, klass='box'))
         data.append(Section(children='', klass='vl'))
@@ -125,9 +112,8 @@ class SchemaViewer(object):
                 else:
                     cards = rschema.rproperty(oeschema, eschema, 'cardinality')
                     cards = cards[::-1]
-                label = '%s %s (%s) %s' % (CARD_MAP[cards[1]], label,
-                                           display_name(self.req, label, role),
-                                           CARD_MAP[cards[0]])
+                label = '%s %s %s' % (CARD_MAP[cards[1]], label,
+                                      CARD_MAP[cards[0]])
                 rlink = Link(rschemaurl, label)
                 elink = Link(self.eschema_link_url(oeschema), oeschema.type)
                 if first:
@@ -197,8 +183,6 @@ class SchemaViewer(object):
                     data.append(Text(val))
         table = Table(cols=cols, rheaders=1, children=data, klass='listing')
         layout.append(Section(children=(table,), klass='relationDefinition'))
-        #if self.req.user.matching_groups('managers'):
-        #    layout.append(self.format_acls(rschema, ('read', 'add', 'delete')))
         layout.append(Section(children='', klass='clear'))
         return layout
 

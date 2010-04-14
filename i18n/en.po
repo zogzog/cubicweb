@@ -194,7 +194,7 @@ msgstr ""
 msgid "Any"
 msgstr ""
 
-msgid "Attributes"
+msgid "Attributes permissions:"
 msgstr ""
 
 msgid "Attributes with non default permissions:"
@@ -510,7 +510,13 @@ msgstr "New workflow-transition"
 msgid "No result matching query"
 msgstr ""
 
+msgid "Non exhaustive list of views that may apply to entities of this type"
+msgstr ""
+
 msgid "OR"
+msgstr ""
+
+msgid "Parent classes:"
 msgstr ""
 
 msgid "Password"
@@ -591,6 +597,9 @@ msgstr "String"
 
 msgid "String_plural"
 msgstr "Strings"
+
+msgid "Sub-classes:"
+msgstr ""
 
 msgid "SubWorkflowExitPoint"
 msgstr "Subworkflow exit-point"
@@ -686,6 +695,9 @@ msgstr "This workflow"
 
 msgid "This WorkflowTransition"
 msgstr "This workflow-transition"
+
+msgid "This entity type permissions:"
+msgstr ""
 
 msgid "Time"
 msgstr "Time"
@@ -786,9 +798,6 @@ msgid "about this site"
 msgstr ""
 
 msgid "abstract base class for transitions"
-msgstr ""
-
-msgid "access type"
 msgstr ""
 
 msgid "action(s) on this selection"
@@ -1210,9 +1219,6 @@ msgstr ""
 msgid "attribute"
 msgstr ""
 
-msgid "attributes permissions:"
-msgstr ""
-
 msgid "august"
 msgstr ""
 
@@ -1575,6 +1581,9 @@ msgstr ""
 msgid "constraints applying on this relation"
 msgstr ""
 
+msgid "content type"
+msgstr ""
+
 msgid "contentnavigation"
 msgstr "contextual components"
 
@@ -1831,12 +1840,6 @@ msgid "cwgroup-main"
 msgstr "description"
 
 msgid "cwgroup-permissions"
-msgstr "permissions"
-
-msgid "cwrdef-description"
-msgstr "description"
-
-msgid "cwrdef-permissions"
 msgstr "permissions"
 
 msgid "cwrtype-description"
@@ -2297,6 +2300,10 @@ msgstr "\"in state\" facet"
 msgid "facets_in_state-facet_description"
 msgstr ""
 
+#, python-format
+msgid "failed to uniquify path (%s, %s)"
+msgstr ""
+
 msgid "february"
 msgstr ""
 
@@ -2397,9 +2404,6 @@ msgid "from_state_object"
 msgstr "transitions from this state"
 
 msgid "full text or RQL query"
-msgstr ""
-
-msgid "fulltext indexed"
 msgstr ""
 
 msgid "fulltext_container"
@@ -3017,6 +3021,9 @@ msgstr ""
 msgid "opened web sessions"
 msgstr ""
 
+msgid "options"
+msgstr ""
+
 msgid "order"
 msgstr ""
 
@@ -3149,6 +3156,12 @@ msgstr ""
 msgid "project"
 msgstr ""
 
+msgid "rdef-description"
+msgstr "description"
+
+msgid "rdef-permissions"
+msgstr "permissions"
+
 msgid "read"
 msgstr ""
 
@@ -3198,9 +3211,6 @@ msgid "relation %(relname)s of %(ent)s"
 msgstr ""
 
 msgid "relation add"
-msgstr ""
-
-msgid "relation direction"
 msgstr ""
 
 msgid "relation removal"
@@ -3311,11 +3321,14 @@ msgstr ""
 msgid "schema's permissions definitions"
 msgstr ""
 
-msgid "schema-description"
-msgstr "entity and relation types"
+msgid "schema-entity-types"
+msgstr ""
 
 msgid "schema-image"
 msgstr "image"
+
+msgid "schema-relation-types"
+msgstr ""
 
 msgid "schema-security"
 msgstr "permissions"
@@ -3968,14 +3981,17 @@ msgstr ""
 msgid "view history"
 msgstr ""
 
+msgid "view identifier"
+msgstr ""
+
+msgid "view title"
+msgstr ""
+
 msgid "view workflow"
 msgstr ""
 
 msgid "view_index"
 msgstr "index"
-
-msgid "views"
-msgstr ""
 
 msgid "visible"
 msgstr ""
@@ -4074,3 +4090,6 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
+
+#~ msgid "schema-description"
+#~ msgstr "entity and relation types"

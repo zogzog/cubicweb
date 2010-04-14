@@ -122,6 +122,9 @@ class CWRelation(AnyEntity):
     def otype(self):
         return self.to_entity[0]
 
+    def yams_schema(self):
+        rschema = self._cw.vreg.schema.rschema(self.rtype.name)
+        return rschema.rdefs[(self.stype.name, self.otype.name)]
 
 class CWAttribute(CWRelation):
     __regid__ = 'CWAttribute'

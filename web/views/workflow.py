@@ -33,6 +33,11 @@ _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
 _pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
 _pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'wf_info_for', '*'), 'hidden')
+for rtype in ('in_state', 'by_transition', 'from_state', 'to_state'):
+    _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
+    _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+_pvs.tag_object_of(('*', 'wf_info_for', '*'), 'hidden')
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)

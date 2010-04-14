@@ -87,10 +87,12 @@ class TableView(AnyRsetView):
                 continue
         return None
 
-    def displaycols(self, displaycols):
+    def displaycols(self, displaycols, headers):
         if displaycols is None:
             if 'displaycols' in self._cw.form:
                 displaycols = [int(idx) for idx in self._cw.form['displaycols']]
+            elif headers is not None:
+                displaycols = range(len(headers))
             else:
                 displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
         return displaycols
@@ -127,7 +129,7 @@ class TableView(AnyRsetView):
                     hidden = False
             if displayactions is None and 'displayactions' in req.form:
                 displayactions = True
-        displaycols = self.displaycols(displaycols)
+        displaycols = self.displaycols(displaycols, headers)
         fromformfilter = 'fromformfilter' in req.form
         # if fromformfilter is true, this is an ajax call and we only want to
         # replace the inner div, so don't regenerate everything under the if
@@ -297,7 +299,7 @@ class InitialTableView(TableView):
         """Dumps a table displaying a composite query"""
         actrql = self._cw.form['actualrql']
         self._cw.ensure_ro_rql(actrql)
-        displaycols = self.displaycols(displaycols)
+        displaycols = self.displaycols(displaycols, headers)
         if displayactions is None and 'displayactions' in self._cw.form:
             displayactions = True
         if divid is None and 'divid' in self._cw.form:

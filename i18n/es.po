@@ -202,8 +202,8 @@ msgstr "Y"
 msgid "Any"
 msgstr "Cualquiera"
 
-msgid "Attributes"
-msgstr "Atributos"
+msgid "Attributes permissions:"
+msgstr ""
 
 msgid "Attributes with non default permissions:"
 msgstr ""
@@ -518,8 +518,14 @@ msgstr ""
 msgid "No result matching query"
 msgstr "Ningún resultado corresponde a su búsqueda"
 
+msgid "Non exhaustive list of views that may apply to entities of this type"
+msgstr ""
+
 msgid "OR"
 msgstr "O"
+
+msgid "Parent classes:"
+msgstr ""
 
 msgid "Password"
 msgstr "Contraseña"
@@ -599,6 +605,9 @@ msgstr "Cadena de caracteres"
 
 msgid "String_plural"
 msgstr "Cadenas de caracteres"
+
+msgid "Sub-classes:"
+msgstr ""
 
 msgid "SubWorkflowExitPoint"
 msgstr ""
@@ -693,6 +702,9 @@ msgid "This Workflow"
 msgstr ""
 
 msgid "This WorkflowTransition"
+msgstr ""
+
+msgid "This entity type permissions:"
 msgstr ""
 
 msgid "Time"
@@ -810,9 +822,6 @@ msgstr "Sobre este Espacio"
 
 msgid "abstract base class for transitions"
 msgstr ""
-
-msgid "access type"
-msgstr "Tipo de Acceso"
 
 msgid "action(s) on this selection"
 msgstr "acción(es) en esta selección"
@@ -1235,9 +1244,6 @@ msgstr ""
 msgid "attribute"
 msgstr "Atributo"
 
-msgid "attributes permissions:"
-msgstr ""
-
 msgid "august"
 msgstr "Agosto"
 
@@ -1606,6 +1612,9 @@ msgstr "Restricciones"
 msgid "constraints applying on this relation"
 msgstr "Restricciones que se aplican a esta relación"
 
+msgid "content type"
+msgstr ""
+
 msgid "contentnavigation"
 msgstr "Componentes contextuales"
 
@@ -1872,12 +1881,6 @@ msgid "cwgroup-main"
 msgstr ""
 
 msgid "cwgroup-permissions"
-msgstr ""
-
-msgid "cwrdef-description"
-msgstr ""
-
-msgid "cwrdef-permissions"
 msgstr ""
 
 msgid "cwrtype-description"
@@ -2347,6 +2350,10 @@ msgstr "faceta \"en el estado\""
 msgid "facets_in_state-facet_description"
 msgstr "faceta en el estado"
 
+#, python-format
+msgid "failed to uniquify path (%s, %s)"
+msgstr ""
+
 msgid "february"
 msgstr "Febrero"
 
@@ -2448,9 +2455,6 @@ msgstr "Transiciones desde este estado"
 
 msgid "full text or RQL query"
 msgstr "Texto de búsqueda o demanda RQL"
-
-msgid "fulltext indexed"
-msgstr ""
 
 msgid "fulltext_container"
 msgstr "Contenedor de texto indexado"
@@ -3091,6 +3095,9 @@ msgstr ""
 msgid "opened web sessions"
 msgstr ""
 
+msgid "options"
+msgstr ""
+
 msgid "order"
 msgstr "orden"
 
@@ -3222,6 +3229,12 @@ msgstr "Barra de progreso de avance"
 msgid "project"
 msgstr "Proyecto"
 
+msgid "rdef-description"
+msgstr ""
+
+msgid "rdef-permissions"
+msgstr ""
+
 msgid "read"
 msgstr "Lectura"
 
@@ -3271,9 +3284,6 @@ msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
 
 msgid "relation add"
-msgstr ""
-
-msgid "relation direction"
 msgstr ""
 
 msgid "relation removal"
@@ -3388,11 +3398,14 @@ msgstr "entidades del esquema"
 msgid "schema's permissions definitions"
 msgstr "definiciones de permisos del esquema"
 
-msgid "schema-description"
+msgid "schema-entity-types"
 msgstr ""
 
 msgid "schema-image"
 msgstr "esquema imagen"
+
+msgid "schema-relation-types"
+msgstr ""
 
 msgid "schema-security"
 msgstr ""
@@ -4055,14 +4068,17 @@ msgstr "ver detalle de esta entidad"
 msgid "view history"
 msgstr ""
 
+msgid "view identifier"
+msgstr ""
+
+msgid "view title"
+msgstr ""
+
 msgid "view workflow"
 msgstr "ver workflow"
 
 msgid "view_index"
 msgstr ""
-
-msgid "views"
-msgstr "vistas"
 
 msgid "visible"
 msgstr "visible"
@@ -4171,6 +4187,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "Application"
 #~ msgstr "Aplicación"
 
+#~ msgid "Attributes"
+#~ msgstr "Atributos"
+
 #~ msgid "Debug level set to %s"
 #~ msgstr "Nivel de debug puesto a %s"
 
@@ -4201,6 +4220,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "__msg state changed"
 #~ msgstr "El estado a cambiado"
+
+#~ msgid "access type"
+#~ msgstr "Tipo de Acceso"
 
 #~ msgid "account state"
 #~ msgstr "Estado de la Cuenta"
@@ -4501,6 +4523,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgstr ""
 #~ "usuario para el cual aplica esta propiedad. Si no se establece esta "
 #~ "relación, la propiedad es considerada como una propiedad global."
+
+#~ msgid "views"
+#~ msgstr "vistas"
 
 #~ msgid ""
 #~ "when multiple addresses are equivalent (such as python-projects@logilab."

@@ -90,7 +90,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
     __regid__ = 'cwgroup-main'
     __select__ = tabs.PrimaryTab.__select__ & implements('CWGroup')
 
-    def render_entity_attributes(self, entity, siderelations=None):
+    def render_entity_attributes(self, entity):
         rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
               'U login L, U firstname FN, U surname LN, U creation_date CD, ' \
               'U last_login_time LL, G eid %(x)s'
