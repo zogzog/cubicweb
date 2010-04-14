@@ -304,7 +304,7 @@ What's important in there:
   - `guests` is the group of anonymous users
 
 
-.. _ adv_tuto_security_propagation:
+.. _adv_tuto_security_propagation:
 
 Step 2: security propagation in hooks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
