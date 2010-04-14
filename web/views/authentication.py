@@ -5,7 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
+
+from threading import Lock
 
 from logilab.common.decorators import clear_cache
 
@@ -76,25 +80,32 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         """
         # with this authentication manager, session is actually a dbapi
         # connection
-        cnx = session.cnx
         login = req.get_authorization()[0]
-        # check cnx.login and not user.login, since in case of login by
+        # check session.login and not user.login, since in case of login by
         # email, login and cnx.login are the email while user.login is the
         # actual user login
         if login and session.login != login:
             raise InvalidSession('login mismatch')
         try:
-            # calling cnx.user() check connection validity, raise
-            # BadConnectionId on failure
-            user = cnx.user(req)
-        except BadConnectionId:
-            # check if a connection should be automatically restablished
-            if (login is None or login == session.login):
-                cnx = self._authenticate(session.login, session.authinfo)
+            lock = session.reconnection_lock
+        except AttributeError:
+            lock = session.reconnection_lock = Lock()
+        # need to be locked two avoid duplicated reconnections on concurrent
+        # requests
+        with lock:
+            cnx = session.cnx
+            try:
+                # calling cnx.user() check connection validity, raise
+                # BadConnectionId on failure
                 user = cnx.user(req)
-                session.cnx = cnx
-            else:
-                raise InvalidSession('bad connection id')
+            except BadConnectionId:
+                # check if a connection should be automatically restablished
+                if (login is None or login == session.login):
+                    cnx = self._authenticate(session.login, session.authinfo)
+                    user = cnx.user(req)
+                    session.cnx = cnx
+                else:
+                    raise InvalidSession('bad connection id')
         return user
 
     def authenticate(self, req):

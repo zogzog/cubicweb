@@ -168,14 +168,17 @@ class DBAPISession(object):
         self.data = {}
         self.login = login
         self.authinfo = authinfo
+        # dbapi session identifier is the same as the first connection
+        # identifier, but may later differ in case of auto-reconnection as done
+        # by the web authentication manager (in cw.web.views.authentication)
+        if cnx is not None:
+            self.sessionid = cnx.sessionid
+        else:
+            self.sessionid = None
 
     @property
     def anonymous_session(self):
         return not self.cnx or self.cnx.anonymous_connection
-
-    @property
-    def sessionid(self):
-        return self.cnx.sessionid
 
 
 class DBAPIRequest(RequestSessionBase):
