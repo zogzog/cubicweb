@@ -2,6 +2,7 @@
 
 .. _Tutorial:
 
+.. _tuto_blog:
 
 Building a simple blog
 ======================
