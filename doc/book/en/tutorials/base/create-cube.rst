@@ -1,6 +1,5 @@
 .. -*- coding: utf-8 -*-
 
-
 .. _Steps:
 
 Steps for creating your cube
@@ -10,10 +9,12 @@ The following steps will help you to create and customize a new cube.
 
 1. :ref:`CreateYourCube`
 
-Create the directory to hold the code of your cube. The most important files that will be useful to customize your newly created cube are:
+Create the directory to hold the code of your cube. The most important
+files that will be useful to customize your newly created cube are:
+
   * schema.py: contains the data model
   * views.py: contains your custom views
-  * entities.py: contains XXX 
+  * entities.py: contains XXX
 
 The detailed structure of the code directory is described in :ref:`cubelayout`.
 
@@ -27,7 +28,7 @@ Create, run, and explore an instance of your cube.
 
 4. :ref:`DefineViews`
 
-Customize the views of your data: how and which part of your data are showed. 
+Customize the views of your data: how and which part of your data are showed.
 
 Note: views don't concern the look'n'feel or design of the site. For that, you should use CSS instead, and default CSS or your new cube are located in 'blog/data/'.
 
@@ -96,8 +97,8 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
     content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*')
 
-The first step is the import of the EntityType (generic class for entity and 
-attributes that will be used in both Blog and BlogEntry entities. 
+The first step is the import of the EntityType (generic class for entity and
+attributes that will be used in both Blog and BlogEntry entities.
 
 A Blog has a title and a description. The title is a string that is
 required and must be less than 50 characters.  The
@@ -242,7 +243,7 @@ Define your entity views
 ------------------------
 
 Each entity defined in a model is associated with default views
-allowing different rendering of the data. You can redefine each of
+allowing different renderings of the data. You can redefine each of
 them according to your needs and preferences. So let's see how the
 views are defined.
 
@@ -348,10 +349,10 @@ example HTML output.
 Write entities to add logic in your data
 ----------------------------------------
 
-By default, CubicWeb provides a default entity for each data type defined in the schema. 
-A default entity mainly contains the attributes defined in the data model. 
+By default, CubicWeb provides a default entity for each data type defined in the schema.
+A default entity mainly contains the attributes defined in the data model.
 
-You can redefine each entity to provide additional functions to help you write your views. 
+You can redefine each entity to provide additional functions to help you write your views.
 
 .. sourcecode:: python
 
@@ -360,12 +361,12 @@ You can redefine each entity to provide additional functions to help you write y
     class BlogEntry(AnyEntity):
         """customized class for BlogEntry entities"""
     	__regid__ = 'BlogEntry'
-    	__implements__ = AnyEntity.__implements__ 
+    	__implements__ = AnyEntity.__implements__
 
         def display_cw_logo(self):
             if 'CW' in self.title:
                 return True
-            else:	
+            else:
                 return False
 
 Customizing an entity requires that your entity:
@@ -422,7 +423,7 @@ The required steps are:
 
  add_attribute('Blog', 'category')
 
-5. you can restart your instance, modify a blog entity and check that the new attribute 
+5. you can restart your instance, modify a blog entity and check that the new attribute
 ``category`` has been added.
 
 Of course, you may also want to add relations, entity types, ... See :ref:`migration`
