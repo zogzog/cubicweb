@@ -53,7 +53,7 @@ classes are registered in order to initialize the class according to its schema:
 
   * `set_relations(**kwargs)`, add relations to the given object. To
      set a relation where this entity is the object of the relation,
-     use 'reverse_'<relation> as argument name.  Values may be an
+     use `reverse_<relation>` as argument name.  Values may be an
      entity, a list of entities, or None (meaning that all relations of
      the given type from or to this object should be deleted).
 

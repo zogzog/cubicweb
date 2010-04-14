@@ -8,6 +8,7 @@ with a Connection object having the methods cursor, rollback and commit essentia
 The most important method is the `execute` method of a cursor.
 
 .. sourcecode:: python
+
   execute(rqlstring, args=None, cachekey=None, build_descr=True)
 
 :rqlstring: the RQL query to execute (unicode)

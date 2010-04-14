@@ -62,9 +62,7 @@ Table of Contents
 
 See also:
 
-* the complete :ref:`TOC`,
 * the :ref:`genindex`,
 * the :ref:`modindex`,
-* and the :ref:`search`.
 
 .. |cubicweb| replace:: *CubicWeb*
