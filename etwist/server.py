@@ -11,11 +11,13 @@ import sys
 import os
 import select
 import errno
+import traceback
 from os.path import join
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 from cgi import FieldStorage, parse_header
+from cStringIO import StringIO
 
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
@@ -197,6 +199,15 @@ class CubicWebRootResource(resource.Resource):
             return NOT_DONE_YET
 
     def render_request(self, request):
+        try:
+            return self._render_request(request)
+        except:
+            errorstream = StringIO()
+            traceback.print_exc(file=errorstream)
+            return HTTPResponse(stream='<pre>%s</pre>' % errorstream.getvalue(),
+                                code=500, twisted_request=request)
+
+    def _render_request(self, request):
         origpath = request.path
         host = request.host
         # dual http/https access handling: expect a rewrite rule to prepend
@@ -256,7 +267,6 @@ class CubicWebRootResource(resource.Resource):
         # request may be referenced by "onetime callback", so clear its entity
         # cache to avoid memory usage
         req.drop_entity_cache()
-
         return HTTPResponse(twisted_request=req._twreq, code=http.OK,
                             stream=result, headers=req.headers_out)
 
