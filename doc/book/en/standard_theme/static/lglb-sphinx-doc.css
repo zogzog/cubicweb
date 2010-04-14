@@ -46,6 +46,7 @@ div.header {
     padding: 5px 5px 25px 5px;
     background-color: #FFFFFF;
     text-align: left;
+    line-height: 80%;
  }
 
 div.related {
@@ -94,13 +95,13 @@ div.sphinxsidebar h3, div.sphinxsidebar h4 {
     margin: 1em 0 0.5em 0;
     font-size: 1em;
     padding: 0.1em 0 0.1em 0.5em;
-    color: #444444;
+    color: white;
     border: 1px solid #CCBCA7;
-    background-color: #F0F0F0;
+    background-color: #909090;
 }
 
 div.sphinxsidebar h3 a {
-    color:  #444444;
+    color: white;
 }
 
 div.sphinxsidebar ul {
@@ -108,10 +109,16 @@ div.sphinxsidebar ul {
     margin-top: 7px;
     padding: 0;
     line-height: 130%;
+    font-weight: bold;
 }
 
 div.sphinxsidebar ul ul {
     margin-left: 20px;
+    font-weight: normal;
+}
+
+div.sphinxsidebar li {
+    margin: 0;
 }
 
 div.sphinxsidebar input {
@@ -137,7 +144,15 @@ div.footer a {
 /* -- body styles ----------------------------------------------------------- */
 
 p {
-    margin: 0.8em 0 0.5em 0;
+    margin: 0.8em 0 0 0;
+}
+
+ul, ol {
+    margin: 0;
+}
+
+li {
+    margin: 0.2em 0 0 0;
 }
 
 a {
@@ -154,6 +169,7 @@ div.body a {
 }
 
 h1 {
+    margin: 0;
     padding: 0.7em 0 0.3em 0;
     font-size: 1.5em;
     border-bottom: 3px solid #CC8B00;
@@ -237,6 +253,7 @@ tt.descname, tt.descclassname, tt.xref {
     font-weight: normal;
     font-size: 1em;
     border: 1px solid #D0D0D0;
+    border: 0;
 }
 
 hr {
@@ -287,7 +304,7 @@ div.topic {
 
 table {
     border-collapse: collapse;
-    margin: 0 -0.5em 0 -0.5em;
+    margin: 0.8em -0.5em 0em -0.5em;
 }
 
 table td, table th {
@@ -351,3 +368,9 @@ div.versioninfo {
     line-height: 1.3em;
     font-size: 0.9em;
 }
+
+/* TOC trees */
+
+li.toctree-l1 {
+    margin-top: 0.4em;
+ }
