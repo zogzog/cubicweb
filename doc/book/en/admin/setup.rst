@@ -141,6 +141,15 @@ The python drivers for posgtresql are to be found there::
 
 Please be careful to select the right python (2.5) and postgres (8.4) versions.
 
+A windows compiled recent version of gettext::
+
+  http://ftp.logilab.org/pub/gettext/gettext-0.17-win32-setup.exe
+
+A pre-compiled version of rql for windows (take care of retrieving the
+most recent version available there)::
+
+  http://ftp.logilab.org/pub/rql/rql-0.23.0.win32-py2.5.exe
+
 Pyro enables remote access to cubicweb repository instances. Get it there::
 
   http://sourceforge.net/projects/pyro/files/

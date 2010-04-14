@@ -2,9 +2,9 @@
 
 .. _Part4:
 
---------------------
-Part IV - Appendixes
---------------------
+----------
+Appendixes
+----------
 
 The following chapters are reference material.
 

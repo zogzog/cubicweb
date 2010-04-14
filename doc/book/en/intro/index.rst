@@ -2,9 +2,9 @@
 
 .. _Part1:
 
------------------------------------
-Part I - Introduction to *CubicWeb*
------------------------------------
+--------------------------
+Introduction to *CubicWeb*
+--------------------------
 
 This first part of the book offers different reading path to
 discover the *CubicWeb* framework, provides a tutorial to get a quick
@@ -15,7 +15,5 @@ overview of its features and lists its key concepts.
    :maxdepth: 2
    :numbered:
 
-   book-map
    history
    concepts.rst
-   tutorial/index

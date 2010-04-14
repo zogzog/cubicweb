@@ -35,7 +35,7 @@ from cubicweb import __pkginfo__ as cw
 extensions = ['sphinx.ext.autodoc', 'logilab.common.sphinx_ext']#, 'sphinxcontrib.aafig']
 autoclass_content = 'both'
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+#templates_path = []
 
 # The suffix of source filenames.
 source_suffix = '.rst'

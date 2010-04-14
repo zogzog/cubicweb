@@ -44,10 +44,19 @@ Table of Contents
 =================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    intro/index
+   tutorials/index
+
+.. toctree::
+   :maxdepth: 3
+
    development/index
+
+.. toctree::
+   :maxdepth: 2
+
    admin/index
    annexes/index
 

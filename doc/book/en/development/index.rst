@@ -1,8 +1,8 @@
 .. _Part2:
 
----------------------
-Part II - Development
----------------------
+-----------
+Development
+-----------
 
 This part is about developing web applications with the *CubicWeb* framework.
 
