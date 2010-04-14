@@ -18,7 +18,6 @@ them or not for you're own application.
    xmlrss
    autoform
    editforms
-   editcontroller
    urlpublish
    breadcrumbs
    facets
