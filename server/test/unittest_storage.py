@@ -55,7 +55,7 @@ class StorageTC(CubicWebTC):
     def create_file(self, content='the-data'):
         req = self.request()
         return req.create_entity('File', data=Binary(content),
-                                 data_format=u'text/plain', data_name=u'foo')
+                                 data_format=u'text/plain', data_name=u'foo.pdf')
 
     def fspath(self, entity):
         fspath = self.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
@@ -64,7 +64,8 @@ class StorageTC(CubicWebTC):
 
     def test_bfss_storage(self):
         f1 = self.create_file()
-        expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
+        expected_filepath = osp.join(self.tempdir, '%s_data_%s' %
+                                     (f1.eid, f1.data_name))
         self.failUnless(osp.isfile(expected_filepath))
         self.assertEquals(file(expected_filepath).read(), 'the-data')
         self.rollback()
@@ -85,7 +86,7 @@ class StorageTC(CubicWebTC):
 
     def test_bfss_sqlite_fspath(self):
         f1 = self.create_file()
-        expected_filepath = osp.join(self.tempdir, '%s_data' % f1.eid)
+        expected_filepath = osp.join(self.tempdir, '%s_data_%s' % (f1.eid, f1.data_name))
         self.assertEquals(self.fspath(f1), expected_filepath)
 
     def test_bfss_fs_importing_doesnt_touch_path(self):
