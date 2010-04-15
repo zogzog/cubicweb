@@ -15,7 +15,7 @@ class BreadCrumbsTC(CubicWebTC):
         ibc = self.vreg['components'].select('breadcrumbs', self.request(), rset=childrset)
         self.assertEquals(ibc.render(),
                           """<span id="breadcrumbs" class="pathbar">&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/Folder">folder_plural</a>&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/folder/%s" title="">par&amp;ent</a>&#160;&gt;&#160;
-chi&amp;ld</span>""" % f1.eid)
+<a href="http://testing.fr/cubicweb/folder/%s" title="">chi&amp;ld</a></span>""" % (f1.eid, f2.eid))
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

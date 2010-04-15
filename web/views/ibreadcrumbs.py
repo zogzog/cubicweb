@@ -62,10 +62,7 @@ class BreadCrumbEntityVComponent(Component):
 
     def wpath_part(self, part, contextentity, last=False):
         if isinstance(part, Entity):
-            if last and part.eid == contextentity.eid:
-                self.w(xml_escape(part.view('breadcrumbtext')))
-            else:
-                self.w(part.view('breadcrumbs'))
+            self.w(part.view('breadcrumbs'))
         elif isinstance(part, tuple):
             url, title = part
             textsize = self._cw.property_value('navigation.short-line-size')
