@@ -16,7 +16,7 @@ find the base templates used to generate HTML for your application.
 
 A page is composed as indicated on the schema below :
 
-.. image:: ../../../images/lax-book.06-main-template-layout.en.png
+.. image:: ../../../images/main_template.png
 
 In this section we will go through a couple of the primary templates
 you must be interested in, that is to say, the HTMLPageHeader,

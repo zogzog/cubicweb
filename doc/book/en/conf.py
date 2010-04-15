@@ -189,4 +189,3 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_use_modindex = True
 #aafig_format = dict(latex='pdf', html='svg', text=None)
-

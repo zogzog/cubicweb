@@ -1,16 +1,12 @@
 
 .. _Views:
 
-Views
------
+Principles
+----------
 
-This chapter aims to describe the concept of a `view` used all along
-the development of a web application and how it has been implemented
-in *CubicWeb*.
-
-We'll start with a description of the interface providing you with a
-basic understanding of the available classes and methods, then detail
-the view selection principle.
+We'll start with a description of the interface providing a basic
+understanding of the available classes and methods, then detail the
+view selection principle.
 
 A `View` is an object responsible for the rendering of data from the
 model into an end-user consummable form. They typically churn out an
@@ -83,7 +79,7 @@ that are more concrete as they relate to data rendering within the application:
 * `AnyRsetView`, view applicable to any result set
 
 Examples of views class
------------------------
+```````````````````````
 
 - Using `templatable`, `content_type` and HTTP cache configuration
 
