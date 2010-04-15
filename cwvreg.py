@@ -185,7 +185,7 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      RegistryOutOfDate, CW_EVENT_MANAGER, onevent)
+                      CW_EVENT_MANAGER, onevent)
 from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
@@ -456,8 +456,8 @@ class CubicWebVRegistry(VRegistry):
     def itervalues(self):
         return (value for key, value in self.items())
 
-    def reset(self, path=None, force_reload=None):
-        super(CubicWebVRegistry, self).reset(path, force_reload)
+    def reset(self):
+        super(CubicWebVRegistry, self).reset()
         self._needs_iface = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
@@ -467,23 +467,12 @@ class CubicWebVRegistry(VRegistry):
             self['propertyvalues'] = self.eprop_values = {}
             for key, propdef in self.config.eproperty_definitions():
                 self.register_property(key, **propdef)
-        if path is not None and force_reload:
-            cleanup_sys_modules(path)
-            cubes = self.config.cubes()
-            # if the fs code use some cubes not yet registered into the instance
-            # we should cleanup sys.modules for those as well to avoid potential
-            # bad class reference pb after reloading
-            cfg = self.config
-            for cube in cfg.expand_cubes(cubes, with_recommends=True):
-                if not cube in cubes:
-                    cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
-                    cleanup_sys_modules(cpath)
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
         self._set_schema(schema)
         # now we can load application's web objects
-        self._reload(self.config.vregistry_path(), force_reload=False)
+        self.reload(self.config.vregistry_path())
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for eschema in self.schema.entities():
@@ -492,12 +481,26 @@ class CubicWebVRegistry(VRegistry):
             clear_cache(eschema, 'ordered_relations')
             clear_cache(eschema, 'meta_attributes')
 
-    def _reload(self, path, force_reload):
+    def reload_if_needed(self):
+        path = self.config.vregistry_path()
+        if self.is_reload_needed(path):
+            self.reload(path)
+
+    def reload(self, path):
+        """modification detected, reset and reload the vreg"""
         CW_EVENT_MANAGER.emit('before-registry-reload')
-        # modification detected, reset and reload
-        self.reset(path, force_reload)
-        super(CubicWebVRegistry, self).register_objects(
-            path, force_reload, self.config.extrapath)
+        cleanup_sys_modules(path)
+        cubes = self.config.cubes()
+        # if the fs code use some cubes not yet registered into the instance we
+        # should cleanup sys.modules for those as well to avoid potential bad
+        # class reference pb after reloading
+        cfg = self.config
+        for cube in cfg.expand_cubes(cubes, with_recommends=True):
+            if not cube in cubes:
+                cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
+                cleanup_sys_modules(cpath)
+        self.reset()
+        self.register_objects(path, True)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
@@ -542,15 +545,10 @@ class CubicWebVRegistry(VRegistry):
         if ifaces:
             self._needs_iface[obj] = ifaces
 
-    def register_objects(self, path, force_reload=None):
+    def register_objects(self, path, force_reload=False):
         """overriden to remove objects requiring a missing interface"""
-        if force_reload is None:
-            force_reload = self.config.debugmode
-        try:
-            super(CubicWebVRegistry, self).register_objects(
-                path, force_reload, self.config.extrapath)
-        except RegistryOutOfDate:
-            self._reload(path, force_reload)
+        super(CubicWebVRegistry, self).register_objects(
+            path, force_reload, self.config.extrapath)
 
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:
