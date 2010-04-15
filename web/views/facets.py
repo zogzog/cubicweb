@@ -69,7 +69,7 @@ class FilterBox(BoxTemplate):
         rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
-        rqlst = self.cw_rset.syntax_tree()
+        rqlst = rset.syntax_tree()
         # union not yet supported
         if len(rqlst.children) != 1:
             return ()
