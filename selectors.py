@@ -202,7 +202,7 @@ from cubicweb.schema import split_expression
 SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
 TRACED_OIDS = None
 
-def _trace_selector(cls, ret):
+def _trace_selector(cls, selector, args, ret):
     # /!\ lltrace decorates pure function or __call__ method, this
     #     means argument order may be different
     if isinstance(cls, Selector):
@@ -225,7 +225,7 @@ def lltrace(selector):
     def traced(cls, *args, **kwargs):
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS is not None:
-            _trace_selector(cls, ret)
+            _trace_selector(cls, selector, args, ret)
         return ret
     traced.__name__ = selector.__name__
     traced.__doc__ = selector.__doc__
