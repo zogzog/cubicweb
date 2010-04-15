@@ -328,7 +328,7 @@ def requestReceived(self, command, path, version):
 
     This method is not intended for users.
     """
-    self.content.seek(0,0)
+    self.content.seek(0, 0)
     self.args = {}
     self.files = {}
     self.stack = []
@@ -351,7 +351,7 @@ def requestReceived(self, command, path, version):
         if key == 'application/x-www-form-urlencoded':
             self.args.update(http.parse_qs(self.content.read(), 1))
         elif key == 'multipart/form-data':
-            self.content.seek(0,0)
+            self.content.seek(0, 0)
             form = FieldStorage(self.content, self.received_headers,
                                 environ={'REQUEST_METHOD': 'POST'},
                                 keep_blank_values=1,
