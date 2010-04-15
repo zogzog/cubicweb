@@ -232,9 +232,11 @@ class ConfigurationProblem(object):
                 if not isinstance(use, dict):
                     use = dict((key, None) for key in use)
                     self.warnings.append('cube %s should define __depends_cubes__ as a dict not a list')
-            else:
+            elif hasattr(info, '__use__'):
                 self.warnings.append('cube %s should define __depends_cubes__' % cube)
                 use = dict((key, None) for key in info.__use__)
+            else:
+                continue
             for name, constraint in use.items():
                 self.constraints.setdefault(name,set())
                 if constraint:
