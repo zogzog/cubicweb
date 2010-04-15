@@ -472,7 +472,7 @@ class CubicWebVRegistry(VRegistry):
         """set instance'schema and load application objects"""
         self._set_schema(schema)
         # now we can load application's web objects
-        self.reload(self.config.vregistry_path())
+        self.reload(self.config.vregistry_path(), force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for eschema in self.schema.entities():
@@ -486,21 +486,22 @@ class CubicWebVRegistry(VRegistry):
         if self.is_reload_needed(path):
             self.reload(path)
 
-    def reload(self, path):
+    def reload(self, path, force_reload=True):
         """modification detected, reset and reload the vreg"""
         CW_EVENT_MANAGER.emit('before-registry-reload')
-        cleanup_sys_modules(path)
-        cubes = self.config.cubes()
-        # if the fs code use some cubes not yet registered into the instance we
-        # should cleanup sys.modules for those as well to avoid potential bad
-        # class reference pb after reloading
-        cfg = self.config
-        for cube in cfg.expand_cubes(cubes, with_recommends=True):
-            if not cube in cubes:
-                cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
-                cleanup_sys_modules(cpath)
+        if force_reload:
+            cleanup_sys_modules(path)
+            cubes = self.config.cubes()
+            # if the fs code use some cubes not yet registered into the instance
+            # we should cleanup sys.modules for those as well to avoid potential
+            # bad class reference pb after reloading
+            cfg = self.config
+            for cube in cfg.expand_cubes(cubes, with_recommends=True):
+                if not cube in cubes:
+                    cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
+                    cleanup_sys_modules(cpath)
         self.reset()
-        self.register_objects(path, True)
+        self.register_objects(path, force_reload)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
