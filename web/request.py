@@ -523,6 +523,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def add_css(self, cssfiles, media=u'all', localfile=True, ieonly=False,
                 iespec=u'[if lt IE 8]'):
         """specify a CSS file to include in the HTML headers
+
         :param cssfiles: a CSS filename or a list of CSS filenames
         :param media: the CSS's media if necessary
         :param localfile: if True, the default data dir prefix is added to the
@@ -550,15 +551,17 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
                                **extraparams):
-        """builds an ajax url that will replace `nodeid`s content
+        """builds an ajax url that will replace nodeid's content
+
         :param nodeid: the dom id of the node to replace
         :param rql: rql to execute
         :param vid: the view to apply on the resultset
         :param replacemode: defines how the replacement should be done.
+
         Possible values are :
-         - 'replace' to replace the node's content with the generated HTML
-         - 'swap' to replace the node itself with the generated HTML
-         - 'append' to append the generated HTML to the node's content
+        - 'replace' to replace the node's content with the generated HTML
+        - 'swap' to replace the node itself with the generated HTML
+        - 'append' to append the generated HTML to the node's content
         """
         url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
                              **extraparams)

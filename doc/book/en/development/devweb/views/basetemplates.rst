@@ -108,4 +108,6 @@ Other standard templates include:
 
 * `login` and `logout`
 
-* `error-template` 
+* `error-template` specializes TheMainTemplate to do proper end-user
+  output if an error occurs during the computation of TheMainTemplate
+  (it is a fallback view).
