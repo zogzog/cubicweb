@@ -13,6 +13,8 @@ model into an end-user consummable form. They typically churn out an
 XHTML stream, but there are views concerned with email other non-html
 outputs.
 
+.. _views_base_class:
+
 Basic class for views
 ~~~~~~~~~~~~~~~~~~~~~
 
