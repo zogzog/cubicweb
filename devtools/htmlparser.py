@@ -74,6 +74,21 @@ class SaxOnlyValidator(Validator):
         Validator.__init__(self)
         self.parser = etree.XMLParser()
 
+class XMLDemotingValidator(SaxOnlyValidator):
+    """ some views produce html instead of xhtml, using demote_to_html
+
+    this is typically related to the use of external dependencies
+    which do not produce valid xhtml (google maps, ...)
+    """
+
+    def preprocess_data(self, data):
+        if data.startswith('<?xml'):
+            self.parser = etree.XMLParser()
+        else:
+            self.parser = etree.HTMLParser()
+        return data
+
+
 class HTMLValidator(Validator):
 
     def __init__(self):
