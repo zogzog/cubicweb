@@ -976,7 +976,13 @@ class ServerMigrationHelper(MigrationHelper):
                 if syncprops:
                     self._synchronize_eschema(etype, syncperms=syncperms)
                 else:
-                    self._synchronize_permissions(self.fs_schema[etype], etype.eid)
+                    try:
+                        fseschema = self.fs_schema[etype]
+                    except KeyError:
+                        # entity type in the repository schema but not anymore
+                        # on the fs schema
+                        continue
+                    self._synchronize_permissions(fseschema, etype.eid)
         if commit:
             self.commit()
 
