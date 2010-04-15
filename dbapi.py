@@ -199,7 +199,7 @@ class DBAPIRequest(RequestSessionBase):
             # these args are initialized after a connection is
             # established
             self.session = None
-            self.cnx = self._user = _NeedAuthAccessMock()
+            self.cnx = self.user = _NeedAuthAccessMock()
 
     def base_url(self):
         return self.vreg.config['base-url']
@@ -215,7 +215,11 @@ class DBAPIRequest(RequestSessionBase):
         if session.cnx:
             self.cnx = session.cnx
             self.execute = session.cnx.cursor(self).execute
-        self.set_user(user)
+            if user is None:
+                user = self.cnx.user(self, {'lang': self.lang})
+        if user is not None:
+            self.user = user
+            self.set_entity_cache(user)
 
     def execute(self, *args, **kwargs):
         """overriden when session is set. By default raise authentication error
@@ -287,17 +291,6 @@ class DBAPIRequest(RequestSessionBase):
         req = DBAPIRequest(self.vreg)
         req.set_session(self.session, user)
         return req
-
-    @property
-    def user(self):
-        if not self._user and self.cnx:
-            self.set_user(self.cnx.user(self, {'lang': self.lang}))
-        return self._user
-
-    def set_user(self, user):
-        self._user = user
-        if user:
-            self.set_entity_cache(user)
 
     @deprecated('[3.8] use direct access to req.session.data dictionary')
     def session_data(self):
