@@ -152,15 +152,13 @@ name those parameters as *qualified*.
    * If the parameter `__action_delete` is found, all the entities specified
      as to be edited will be deleted.
 
-   * If the parameter`__action_cancel` is found, no action is completed.
+   * If the parameter `__action_cancel` is found, no action is completed.
 
-   * If the parameter `__action_apply` is found, the editing is applied
-     normally but the redirection is done on the form
-     (see :ref:`RedirectionControl`).
+   * If the parameter `__action_apply` is found, the editing is
+     applied normally but the redirection is done on the form (see
+     :ref:`RedirectionControl`).
 
    * The parameter `__method` is also supported as for the main template
-     (XXX not very consistent, maybe __method should be dealed in the view
-     controller).
 
    * If no entity is found to be edited and if there is no parameter
      `__action_delete`, `__action_cancel`, `__linkto`, `__delete` or

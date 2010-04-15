@@ -1,9 +1,7 @@
 .. -*- coding: utf-8 -*-
+
 Tests
 =====
-
-.. toctree::
-   :maxdepth: 1
 
 Unit tests
 ----------
@@ -89,8 +87,9 @@ preventing cycles amongst Keyword entities.
 You can see an example of security tests in the
 :ref:`adv_tuto_security`.
 
-It is possible to have these tests run continuously using `apycot`
-(http://www.logilab.org/project/apycot).
+It is possible to have these tests run continuously using `apycot`_.
+
+.. _apycot: http://www.logilab.org/project/apycot
 
 Managing connections or users
 +++++++++++++++++++++++++++++
@@ -220,9 +219,12 @@ Test APIS
 Using Pytest
 ````````````
 
-`pytest` is an utility that extends the Python unittest functionality
-and is the preferred way to run the CubicWeb test suites. Bare
-unittests also work the usual way.
+The `pytest` utility (shipping with `logilab-common`_, which is a
+mandatory dependency of CubicWeb) extends the Python unittest
+functionality and is the preferred way to run the CubicWeb test
+suites. Bare unittests also work the usual way.
+
+.. _logilab-common: http://www.logilab.org/project/logilab-common
 
 To use it, you may:
 
@@ -254,4 +256,3 @@ CubicWebTC API
 ``````````````
 .. autoclass:: cubicweb.devtools.testlib.CubicWebTC
    :members:
-

@@ -19,5 +19,4 @@ This part is about developing web applications with the *CubicWeb* framework.
    devrepo/index
    testing.rst
    migration.rst
-   webstdlib/index
    profiling.rst

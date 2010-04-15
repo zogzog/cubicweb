@@ -4,14 +4,14 @@ Web development
 In this chapter, we will describe the core api for web development in the *CubicWeb* framework.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    request
    publisher
    controllers
    property
    rtags
-   views
+   views/index
    form
    facets
    httpcaching
