@@ -118,6 +118,9 @@ class CubicWebRootResource(resource.Resource):
         self.children = {}
         self.static_directories = set(('data%s' % config.instance_md5_version(),
                                        'data', 'static', 'fckeditor'))
+        global MAX_POST_LENGTH
+        MAX_POST_LENGTH = config['max-post-length'] * 1024 * 1024
+
     def init_publisher(self):
         config = self.config
         # when we have an in-memory repository, clean unused sessions every XX
@@ -295,8 +298,29 @@ class CubicWebRootResource(resource.Resource):
                             stream=content, code=code,
                             headers=request.headers_out)
 
-#TODO
-# # XXX max upload size in the configuration
+
+orig_gotLength = http.Request.gotLength
+@monkeypatch(http.Request)
+def gotLength(self, length):
+    orig_gotLength(self, length)
+    if length > MAX_POST_LENGTH: # length is 0 on GET
+        self.clientproto = 'HTTP/1.1' # not yet initialized
+        self.channel.persistent = 0   # force connection close on cleanup
+        body = ("<html><head><title>Processing Failed</title></head><body>"
+                "<b>request max size exceeded</b></body></html>")
+        self.setResponseCode(http.BAD_REQUEST)
+        self.setHeader('content-type',"text/html")
+        self.setHeader('content-length', str(len(body)))
+        self.write(body)
+        # see request.finish(). Done here since we get error due to not full
+        # initialized request
+        self.finished = 1
+        if not self.queued:
+            self._cleanup()
+        for d in self.notifications:
+            d.callback(None)
+        self.notifications = []
+
 
 @monkeypatch(http.Request)
 def requestReceived(self, command, path, version):

@@ -51,6 +51,12 @@ class TwistedConfiguration(WebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'inputlevel': WebConfiguration.mode == 'system'
           }),
+        ('max-post-length',
+         {'type' : 'int',
+          'default': 100,
+          'help': 'maximum length of HTTP request, in Mo. Default to 100 Mo.',
+          'group': 'main', 'inputlevel': 1,
+          }),
         ('session-time',
          {'type' : 'int',
           'default': 30*60,
