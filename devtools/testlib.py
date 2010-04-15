@@ -134,6 +134,7 @@ cwconfig.SMTP = MockSMTP
 
 class CubicWebTC(TestCase):
     """abstract class for test using an apptest environment
+
     attributes:
 
     * `vreg`, the vregistry
@@ -145,7 +146,6 @@ class CubicWebTC(TestCase):
     * `repo`, the repository object
     * `admlogin`, login of the admin user
     * `admpassword`, password of the admin user
-
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration

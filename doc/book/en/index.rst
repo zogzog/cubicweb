@@ -44,18 +44,25 @@ Table of Contents
 =================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    intro/index
+   tutorials/index
+
+.. toctree::
+   :maxdepth: 3
+
    development/index
+
+.. toctree::
+   :maxdepth: 2
+
    admin/index
    annexes/index
 
 See also:
 
-* the complete :ref:`TOC`,
 * the :ref:`genindex`,
 * the :ref:`modindex`,
-* and the :ref:`search`.
 
 .. |cubicweb| replace:: *CubicWeb*

@@ -1,4 +1,4 @@
-.. _primary:
+.. _primary_view:
 
 The Primary View
 -----------------
@@ -22,7 +22,7 @@ Layout
 
 The primary view has the following layout.
 
-.. image:: ../../images/primaryview_template.png
+.. image:: ../../../images/primaryview_template.png
 
 .. _primary_view_configuration:
 
@@ -201,3 +201,112 @@ A good practice is for you to identify the content of your entity type for which
 the default rendering does not answer your need so that you can focus on the specific
 method (from the list above) that needs to be modified. We do not advise you to
 overwrite ``render_entity`` unless you want a completely different layout.
+
+Example of customization and creation
+-------------------------------------
+
+We'll show you now an example of a ``primary`` view and how to customize it.
+
+We continue along the basic tutorial :ref:`tuto_blog`.
+
+If you want to change the way a ``BlogEntry`` is displayed, just override
+the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``:
+
+.. sourcecode:: python
+
+  from cubicweb.selectors import implements
+  from cubicweb.web.views.primary improt Primaryview
+
+  class BlogEntryPrimaryView(PrimaryView):
+    __select__ = PrimaryView.__select__ & implements('BlogEntry')
+
+      def render_entity_attributes(self, entity):
+          self.w(u'<p>published on %s</p>' %
+                 entity.publish_date.strftime('%Y-%m-%d'))
+          super(BlogEntryPrimaryView, self).render_entity_attributes(entity)
+
+The above source code defines a new primary view for
+``BlogEntry``. The `id` class attribute is not repeated there since it
+is inherited through the `primary.PrimaryView` class.
+
+The selector for this view chains the selector of the inherited class
+with its own specific criterion.
+
+The view method ``self.w()`` is used to output data. Here `lines
+08-09` output HTML for the publication date of the entry.
+
+.. image:: ../../../images/lax-book.09-new-view-blogentry.en.png
+   :alt: blog entries now look much nicer
+
+Let us now improve the primary view of a blog
+
+.. sourcecode:: python
+
+ from logilab.mtconverter import xml_escape
+ from cubicweb.selectors import implements, one_line_rset
+ from cubicweb.web.views.primary import Primaryview
+
+ class BlogPrimaryView(PrimaryView):
+     __regid__ = 'primary'
+     __select__ = PrimaryView.__select__ & implements('Blog')
+     rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
+
+     def render_entity_relations(self, entity):
+         rset = self._cw.execute(self.rql, {'b' : entity.eid})
+         for entry in rset.entities():
+             self.w(u'<p>%s</p>' % entry.view('inblogcontext'))
+
+ class BlogEntryInBlogView(EntityView):
+     __regid__ = 'inblogcontext'
+     __select__ = implements('BlogEntry')
+
+     def cell_call(self, row, col):
+         entity = self.cw_rset.get_entity(row, col)
+         self.w(u'<a href="%s" title="%s">%s</a>' %
+                entity.absolute_url(),
+                xml_escape(entity.content[:50]),
+                xml_escape(entity.description))
+
+This happens in two places. First we override the
+render_entity_relations method of a Blog's primary view. Here we want
+to display our blog entries in a custom way.
+
+At `line 10`, a simple request is made to build a result set with all
+the entities linked to the current ``Blog`` entity by the relationship
+``entry_of``. The part of the framework handling the request knows
+about the schema and infers that such entities have to be of the
+``BlogEntry`` kind and retrieves them (in the prescribed publish_date
+order).
+
+The request returns a selection of data called a result set. Result
+set objects have an .entities() method returning a generator on
+requested entities (going transparently through the `ORM` layer).
+
+At `line 13` the view 'inblogcontext' is applied to each blog entry to
+output HTML. (Note that the 'inblogcontext' view is not defined
+whatsoever in *CubicWeb*. You are absolutely free to define whole view
+families.) We juste arrange to wrap each blogentry output in a 'p'
+html element.
+
+Next, we define the 'inblogcontext' view. This is NOT a primary view,
+with its well-defined sections (title, metadata, attribtues,
+relations/boxes). All a basic view has to define is cell_call.
+
+Since views are applied to result sets which can be tables of data, we
+have to recover the entity from its (row,col)-coordinates (`line
+20`). Then we can spit some HTML.
+
+.. warning::
+
+  Be careful: all strings manipulated in *CubicWeb* are actually
+  unicode strings. While web browsers are usually tolerant to
+  incoherent encodings they are being served, we should not abuse
+  it. Hence we have to properly escape our data. The xml_escape()
+  function has to be used to safely fill (X)HTML elements from Python
+  unicode strings.
+
+Assuming we added entries to the blog titled `MyLife`, displaying it
+now allows to read its description and all its entries.
+
+.. image:: ../../../images/lax-book.10-blog-with-two-entries.en.png
+   :alt: a blog and all its entries

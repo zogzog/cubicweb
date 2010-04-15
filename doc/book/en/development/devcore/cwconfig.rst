@@ -1,5 +1,5 @@
-:mod:`Configuration <cubicweb.cwconfig>`
-----------------------------------------
+Configuration
+-------------
 
-.. .. automodule:: cubicweb.cwconfig
-..   :members:
+.. automodule:: cubicweb.cwconfig
+      :members:

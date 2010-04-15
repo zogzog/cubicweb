@@ -16,7 +16,7 @@ find the base templates used to generate HTML for your application.
 
 A page is composed as indicated on the schema below :
 
-.. image:: ../../images/lax-book.06-main-template-layout.en.png
+.. image:: ../../../images/main_template.png
 
 In this section we will go through a couple of the primary templates
 you must be interested in, that is to say, the HTMLPageHeader,
@@ -76,7 +76,7 @@ login component such as follows : ::
 
 
 
-.. image:: ../../images/lax-book.06-header-no-login.en.png
+.. image:: ../../../images/lax-book.06-header-no-login.en.png
 
 Let's now move the search box in the top-right header area. To do so, we will
 first create a method to get the search box display and insert it in the header
@@ -164,7 +164,7 @@ It defines the template of ``__regid__ = main`` that is used by the instance.
 The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
 builds the page based on the following pattern:
 
-.. image:: ../../images/main_template_layout.png
+.. image:: ../../../images/main_template_layout.png
 
 The rectangle containing `view.dispatch()` represents the area where the content
 view has to be displayed. The others represents sub-templates called to complete

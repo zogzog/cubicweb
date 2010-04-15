@@ -320,6 +320,11 @@ example):
 * when several hooks need to instantiate the same operation (e.g. an
   entity and a relation hook).
 
+.. note::
+
+  A more realistic example can be found in the advanced tutorial
+  chapter :ref:`adv_tuto_security_propagation`.
+
 Operation: a small API overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

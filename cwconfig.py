@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-#:organization: Logilab
-#:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-#:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
-
-# docstring included in doc/book/en/admin/setup.rst
+# organization: Logilab
+# copyright 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Licensed under the GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 .. _ResourceMode:
 
@@ -13,7 +11,7 @@ Resource mode
 
 A resource *mode* is a predifined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
-framework. There are two running modes with |cubicweb|:
+framework. There are two running modes with *CubicWeb*:
 
 * 'user', resources are searched / created in the user home directory:
 
@@ -80,7 +78,7 @@ Environment configuration
 Python
 ``````
 
-If you installed |cubicweb| by cloning the Mercurial forest or from source
+If you installed *CubicWeb* by cloning the Mercurial forest or from source
 distribution, then you will need to update the environment variable PYTHONPATH by
 adding the path to the forest `cubicweb`:
 
@@ -89,7 +87,7 @@ configure your development environment ::
 
     export PYTHONPATH=/full/path/to/cubicweb-forest
 
-If you installed |cubicweb| with packages, no configuration is required and your
+If you installed *CubicWeb* with packages, no configuration is required and your
 new cubes will be placed in `/usr/share/cubicweb/cubes` and your instances will
 be placed in `/etc/cubicweb.d`.
 
@@ -97,11 +95,11 @@ be placed in `/etc/cubicweb.d`.
 CubicWeb
 ````````
 
-Here are all environment variables that may be used to configure |cubicweb|:
+Here are all environment variables that may be used to configure *CubicWeb*:
 
 .. envvar:: CW_MODE
 
-   Resource mode: user or system, as explained in :ref:ResourceMode.
+   Resource mode: user or system, as explained in :ref:`ResourceMode`.
 
 .. envvar:: CW_CUBES_PATH
 

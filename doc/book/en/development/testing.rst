@@ -3,9 +3,6 @@
 Tests
 =====
 
-.. toctree::
-   :maxdepth: 1
-
 Unit tests
 ----------
 
@@ -87,9 +84,12 @@ pre-populated database.
 The test case itself checks that an Operation does it job of
 preventing cycles amongst Keyword entities.
 
+You can see an example of security tests in the
+:ref:`adv_tuto_security`.
 
-XXX ref to advanced use case
-XXX apycot plug
+It is possible to have these tests run continuously using `apycot`_.
+
+.. _apycot: http://www.logilab.org/project/apycot
 
 Managing connections or users
 +++++++++++++++++++++++++++++
@@ -104,17 +104,31 @@ user/connection must never be closed.
 Before a self.login, one has to release the connection pool in use
 with a self.commit, self.rollback or self.close.
 
-When one is logged in as a normal user and wants to switch back to the
-admin user, one has to use self.restore_connection().
+The `login` method returns a connection object that can be used as a
+context manager:
 
-Usually it looks like this:
+.. sourcecode:: python
+
+   with self.login('user1') as user:
+       req = user.req
+       req.execute(...)
+
+On exit of the context manager, either a commit or rollback is issued,
+which releases the connection.
+
+When one is logged in as a normal user and wants to switch back to the
+admin user without committing, one has to use
+self.restore_connection().
+
+Usage with restore_connection:
 
 .. sourcecode:: python
 
     # execute using default admin connection
     self.execute(...)
     # I want to login with another user, ensure to free admin connection pool
-    # (could have used rollback but not close here, we should never close defaut admin connection)
+    # (could have used rollback but not close here
+    # we should never close defaut admin connection)
     self.commit()
     cnx = self.login('user')
     # execute using user connection
@@ -129,8 +143,6 @@ Usually it looks like this:
 
    Do not use the references kept to the entities created with a
    connection from another !
-
-XXX the new context manager ?
 
 Email notifications tests
 -------------------------
@@ -182,21 +194,65 @@ creation time, the mycube/test/test_mycube.py file contains such a
 test. The code here has to be uncommented to be usable, without
 further modification.
 
-XXX more to come
+The ``auto_populate`` method uses a smart algorithm to create
+pseudo-random data in the database, thus enabling the views to be
+invoked and tested.
 
+Depending on the schema, hooks and operations constraints, it is not
+always possible for the automatic auto_populate to proceed.
+
+It is possible of course to completely redefine auto_populate. A
+lighter solution is to give hints (fill some class attributes) about
+what entities and relations have to be skipped by the auto_populate
+mechanism. These are:
+
+* `no_auto_populate`, may contain a list of entity types to skip
+* `ignored_relations`, may contain a list of relation types to skip
+* `application_rql`, may contain a list of rql expressions that
+  auto_populate cannot guess by itself; these must yield resultsets
+  against which views may be selected.
+
+
+Test APIS
+---------
 
 Using Pytest
 ````````````
 
-.. automodule:: logilab.common.testlib
+The `pytest` utility (shipping with `logilab-common`_, which is a
+mandatory dependency of CubicWeb) extends the Python unittest
+functionality and is the preferred way to run the CubicWeb test
+suites. Bare unittests also work the usual way.
+
+.. _logilab-common: http://www.logilab.org/project/logilab-common
+
+To use it, you may:
+
+* just launch `pytest` in your cube to execute all tests (it will
+  discover them automatically)
+* launch `pytest unittest_foo.py` to execute one test file
+* launch `pytest unittest_foo.py bar` to execute all test methods and
+  all test cases whose name contain `bar`
+
+Additionally, the `-x` option tells pytest to exit at the first error
+or failure. The `-i` option tells pytest to drop into pdb whenever an
+exception occurs in a test.
+
+When the `-x` option has been used and the run stopped on a test, it
+is possible, after having fixed the test, to relaunch pytest with the
+`-R` option to tell it to start testing again from where it previously
+failed.
+
+Using the `TestCase` base class
+```````````````````````````````
+
+The base class of CubicWebTC is logilab.common.testlib.TestCase, which
+provides a lot of convenient assertion methods.
+
 .. autoclass:: logilab.common.testlib.TestCase
    :members:
-
-XXX pytestconf.py & options (e.g --source to use a different db
-backend than sqlite)
 
 CubicWebTC API
 ``````````````
 .. autoclass:: cubicweb.devtools.testlib.CubicWebTC
    :members:
-

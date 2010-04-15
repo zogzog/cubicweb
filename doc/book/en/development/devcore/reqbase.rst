@@ -1,3 +1,5 @@
+Request and ResultSet methods
+-----------------------------
 
 Those are methods you'll find on both request objects and on repository session:
 

@@ -2,8 +2,10 @@
 
 .. _Tutorial:
 
-Tutorial
-========
+.. _tuto_blog:
+
+Building a simple blog
+======================
 
 *CubicWeb* is a semantic web application framework that favors reuse and
 object-oriented design.

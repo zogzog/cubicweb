@@ -2,9 +2,9 @@
 
 .. _Part3:
 
--------------------------
-Part III - Administration
--------------------------
+--------------
+Administration
+--------------
 
 This part is for installation and administration of the *CubicWeb* framework and
 instances based on that framework.
