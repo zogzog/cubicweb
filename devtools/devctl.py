@@ -523,7 +523,7 @@ layout, and a full featured cube with "full" layout.',
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
         skeldir = join(BASEDIR, 'skeleton')
-        default_name = 'cubicweb-%s' % cubename.lower()
+        default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:
             distname = raw_input('Debian name for your cube ? [%s]): ' % default_name).strip()
             if not distname:
@@ -533,7 +533,8 @@ layout, and a full featured cube with "full" layout.',
                     distname = 'cubicweb-' + distname
         else:
             distname = default_name
-
+        if not re.match('[a-z][-a-z0-9]*$', distname):
+            raise BadCommandUsage("cube distname should be a valid debian package name")
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
