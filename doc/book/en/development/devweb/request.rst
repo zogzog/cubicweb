@@ -62,8 +62,8 @@ today). For the views or others that are executed on the server side,
 most of the interface of `Request` is defined in the session associated
 to the client.
 
-Automatic API
-`````````````
+API
+```
 
 The elements we gave in overview for above are built in three layers,
 from ``cubicweb.req.RequestSessionBase``, ``cubicweb.dbapi.DBAPIRequest`` and

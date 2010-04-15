@@ -1,4 +1,4 @@
-"""Rules based url rewriter component, to get configurable RESTful urls
+"""Rules based url rewriter component, to get configurable RESTful urls.
 
 :organization: Logilab
 :copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -40,17 +40,17 @@ class metarewriter(type):
 
 
 class URLRewriter(AppObject):
-    """base class for URL rewriters
+    """Base class for URL rewriters.
 
-    url rewriters should have a `rules` dict that maps an input URI
+    Url rewriters should have a `rules` dict that maps an input URI
     to something that should be used for rewriting.
 
     The actual logic that defines how the rules dict is used is implemented
-    in the `rewrite` method
+    in the `rewrite` method.
 
     A `priority` attribute might be used to indicate which rewriter
     should be tried first. The higher the priority is, the earlier the
-    rewriter will be tried
+    rewriter will be tried.
     """
     __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
@@ -62,11 +62,11 @@ class URLRewriter(AppObject):
 
 
 class SimpleReqRewriter(URLRewriter):
-    """The SimpleReqRewriters uses a `rules` dict that maps
-    input URI (regexp or plain string) to a dictionary to update the
-    request's form
+    """The SimpleReqRewriters uses a `rules` dict that maps input URI
+    (regexp or plain string) to a dictionary to update the request's
+    form.
 
-    If the input uri is a regexp, group substitution is allowed
+    If the input uri is a regexp, group substitution is allowed.
     """
     __regid__ = 'simple'
 

@@ -1,7 +1,27 @@
 .. -*- coding: utf-8 -*-
 
-URL Rewriting (:mod:`cubicweb.web.views.urlpublish`) and (:mod:`cubicweb.web.views.urlrewrite`)
-------------------------------------------------------------------------------------------------
+URL publishing
+--------------
 
-XXX feed me
-show how urls are mapped to selections and views and explain URLRewriting
+(:mod:`cubicweb.web.views.urlpublishing`)
+
+.. automodule:: cubicweb.web.views.urlpublishing
+
+.. autoclass:: cubicweb.web.views.urlpublishing.URLPublisherComponent
+   :members:
+
+URL rewriting
+-------------
+
+(:mod:`cubicweb.web.views.urlrewrite`)
+
+.. autoclass:: cubicweb.web.views.urlrewrite.URLRewriter
+   :members:
+
+.. autoclass:: cubicweb.web.views.urlrewrite.SimpleReqRewriter
+   :members:
+
+.. autoclass:: cubicweb.web.views.urlrewrite.SchemaBasedRewriter
+   :members:
+
+
