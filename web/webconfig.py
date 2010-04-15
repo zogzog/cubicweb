@@ -115,27 +115,28 @@ class WebConfiguration(CubicWebConfiguration):
         ('http-session-time',
          {'type' : 'int',
           'default': 0,
-          'help': 'duration in seconds for HTTP sessions. 0 mean no expiration. '\
-          'Should be greater than RQL server\'s session-time.',
+          'help': "duration in minutes of the cookie used to store session "
+          "identifier. If 0, the cookie will expire when the user exist its "
+          "browser. Should be 0 or greater than repository\'s session-time.",
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-session-time',
          {'type' : 'int',
-          'default': 43200,
-          'help': 'duration in seconds for which unused connections should be '\
-          'closed, to limit memory consumption. This is different from '\
-          'http-session-time since in some cases you may have an unexpired http '\
-          'session (e.g. valid session cookie) which will trigger transparent '\
-          'creation of a new session. In other cases, sessions may never expire \
-          and cause memory leak. Should be smaller than http-session-time, '\
-          'unless it\'s 0. Default to 12 h.',
+          'default': 1440,
+          'help': 'duration of inactivity in minutes after which a connection '
+          'will be closed, to limit memory consumption (avoid sessions that '
+          'never expire and cause memory leak when http-session-time is 0). '
+          'So even if http-session-time is 0 and the user don\'t close his '
+          'browser, he will have to reauthenticate after this time of '
+          'inactivity. Default to 24h.',
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-anonymous-session-time',
          {'type' : 'int',
-          'default': 120,
-          'help': 'Same as cleanup-session-time but specific to anonymous '\
-          'sessions. Default to 2 min.',
+          'default': 5,
+          'help': 'Same as cleanup-session-time but specific to anonymous '
+          'sessions. You can have a much smaller timeout here since it will be '
+          'transparent to the user. Default to 5min.',
           'group': 'web', 'inputlevel': 2,
           }),
         ('force-html-content-type',
