@@ -1,5 +1,8 @@
-Startup views (:mod:`cubicweb.web.views.startup`)
--------------------------------------------------
+Startup views
+-------------
+
+ (:mod:`cubicweb.web.views.startup`)
+
 Usual selector: no_rset or yes.
 
 Views that don't apply to a result set

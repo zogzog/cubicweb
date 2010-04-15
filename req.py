@@ -43,12 +43,10 @@ class RequestSessionBase(object):
 
     request/session is the main resources accessor, mainly through it's vreg
     attribute:
-    :vreg:
-      the instance's registry
-    :vreg.schema:
-      the instance's schema
-    :vreg.config:
-      the instance's configuration
+
+    :attribute vreg: the instance's registry
+    :attribute vreg.schema: the instance's schema
+    :attribute vreg.config: the instance's configuration
     """
     def __init__(self, vreg):
         self.vreg = vreg
@@ -140,8 +138,8 @@ class RequestSessionBase(object):
             raise Unauthorized(self._('only select queries are authorized'))
 
     def get_cache(self, cachename):
-        """
-        NOTE: cachename should be dotted names as in :
+        """cachename should be dotted names as in :
+
         - cubicweb.mycache
         - cubes.blog.mycache
         - etc.

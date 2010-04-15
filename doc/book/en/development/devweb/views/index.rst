@@ -1,5 +1,5 @@
-The views system
-================
+The View system
+===============
 
 .. |cubicweb| replace:: *CubicWeb*
 
@@ -20,11 +20,15 @@ in |cubicweb|.
    table
    xmlrss
    autoform
-   editforms
+..   editforms
+
+.. toctree::
+   :maxdepth: 3
+
    urlpublish
    breadcrumbs
-   facets
-   wdoc
-   embedding
-   idownloadable
+..   facets
+..   wdoc
+..   embedding
+..   idownloadable
 

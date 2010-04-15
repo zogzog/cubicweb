@@ -23,6 +23,12 @@ SQL queries optimization
 Potential optimization information is collected by the querier, sql generation
 is done according to this information
 
+cross RDMS note : read `Comparison of different SQL implementations`_
+by Troels Arvin. Features SQL ISO Standard, PG, mysql, Oracle, MS SQL, DB2
+and Informix.
+
+.. _Comparison of different SQL implementations: http://www.troels.arvin.dk/db/rdbms 
+
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

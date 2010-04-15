@@ -1,12 +1,38 @@
 The facets system
 -----------------
-XXX feed me more (below is the extracted of adim blog)
+
+Facets allow to restrict searches according to some criteria. CubicWeb has a builtin `facet`_ system to define restrictions
+`filters`_ really as easily as possible. A few base classes for facets
+are provided in ``cubicweb.web.facet.py``. All classes inherits from
+the base class ``AbstractFacet``. 
+
+Here is an overview of the facets rendering pick from the `tracker` cube:
+
+.. image:: ../../images/facet_overview.png
+
+Facets will appear on each page presenting more than one entity.
 
 
-Recently, for internal purposes, we've made a little cubicweb application to
-help us
-organizing visits to find new office locations. Here's an *excerpt* of the
-schema:
+
+VocabularyFacet
+~~~~~~~~~~~~~~~~
+The ``VocabularyFacet`` inherits from the ``AbstractFacet``.
+A class which inherits from VocabularyFacets must redefine these methods:
+
+.. automethod:: cubicweb.web.facet.VocabularyFacet.vocabulary
+.. automethod:: cubicweb.web.facet.VocabularyFacet.possible_values
+
+RelationFacet
+~~~~~~~~~~~~~~
+
+The ``RelationFacet`` inherits from the ``VocabularyFacet``. It allows to filter entities according to certain relation's values. Generally, you just have to define some class attributes like:
+
+- rtype: the name of the relation
+- role: the default value is set to `subject`
+- target_attr: needed if it is not the default attribute of the entity
+
+
+To illustrate this facet, let's take for example an *excerpt* of the schema of an office location search application:
 
 .. sourcecode:: python
 
@@ -14,30 +40,25 @@ schema:
       price = Int(description='euros / m2 / HC / HT')
       surface = Int(description='m2')
       description = RichString(fulltextindexed=True)
-      has_address = SubjectRelation('PostalAddress', cardinality='1?', composite='subject')
+      has_address = SubjectRelation('PostalAddress',
+                                    cardinality='1?',
+                                    composite='subject')
       proposed_by = SubjectRelation('Agency')
-      comments = ObjectRelation('Comment', cardinality='1*', composite='object')
-      screenshots = SubjectRelation(('File', 'Image'), cardinality='*1',
+      comments = ObjectRelation('Comment',
+                                cardinality='1*',
+                                composite='object')
+      screenshots = SubjectRelation(('File', 'Image'),
+                                    cardinality='*1',
                                     composite='subject')
 
-The two other entity types defined in the schema are `Visit` and `Agency` but we
-can also guess from the above that this application uses the two cubes
-`comment`_ and
-`addressbook`_ (remember, cubicweb is only a game where you assemble cubes !).
 
-While we know that just defining the schema in enough to have a full, usable,
-(testable !) application, we also know that every application needs to be
-customized to fulfill the needs it was built for. So in this case, what we
-needed most was some custom filters that would let us restrict searches
-according
-to surfaces, prices or zipcodes. Fortunately for us, Cubicweb provides the
-**facets** (image_) mechanism and a few base classes that make the task quite
-easy:
+We define a facet to filter offices according to the attribute
+`postalcode` of their associated `PostalAdress`.
 
 .. sourcecode:: python
 
   class PostalCodeFacet(RelationFacet):
-      __regid__ = 'postalcode-facet'             # every registered class must have an id
+      __regid__ = 'postalcode-facet'      # every registered class must have an id
       __select__ = implements('Office')   # this facet should only be selected when
                                           # visualizing offices
       rtype = 'has_address'               # this facet is a filter on the entity linked to
@@ -46,18 +67,19 @@ easy:
       target_attr = 'postalcode'          # the filter's key is the attribute "postal_code"
                                           # of the target PostalAddress entity
 
-This is a typical `RelationFacet`: we want to be able to filter offices
-according
-to the attribute `postalcode` of their associated `PostalAdress`. Each line in
-the class is explained by the comment on its right.
 
-Now, here is the code to define a filter based on the `surface` attribute of the
-`Office`:
+AttributeFacet
+~~~~~~~~~~~~~~
+
+The ``AttributeFacet`` inherits from the ``RelationFacet``. It allows to filter entities according to certain attribute's values.
+
+The example below resumes the former schema. We define now a filter based on the `surface` attribute of the
+`Office`.
 
 .. sourcecode:: python
 
   class SurfaceFacet(AttributeFacet):
-      __regid__ = 'surface-facet'              # every registered class must have an id
+      __regid__ = 'surface-facet'       # every registered class must have an id
       __select__ = implements('Office') # this facet should only be selected when
                                         # visualizing offices
       rtype = 'surface'                 # the filter's key is the attribute "surface"
@@ -75,35 +97,30 @@ Now, here is the code to define a filter based on the `surface` attribute of the
           return [('> 200', '200'), ('> 250', '250'),
                   ('> 275', '275'), ('> 300', '300')]
 
+RangeFacet
+~~~~~~~~~~
+The ``RangeFacet`` inherits from the ``AttributeFacet``. It allows to filter entities according to certain attributes of numerical type.
 
-And that's it: we have two filter boxes automatically displayed on each page
-presenting more than one office. The `price` facet is basically the same as the
-`surface` one but with a different vocabulary and with ``rtype = 'price'``.
+The ``RangeFacet`` displays a slider using `jquery`_ to choose a lower bound and an upper bound.
 
-(The cube also benefits from the builtin google map views defined by
-cubicweb but that's for another blog).
+The example below defines a facet to filter a selection of books according to their number of pages.
 
-.. _image: http://www.cubicweb.org/image/197646?vid=download
-.. _comment: http://www.cubicweb.org/project/cubicweb-comment
-.. _addressbook: http://www.cubicweb.org/project/cubicweb-addressbook
+.. sourcecode:: python
 
-CubicWeb has this really nice builtin `facet`_ system to
-define restrictions `filters`_ really as easily as possible.
+   class BookPagesFacet(RangeFacet):
+       __regid__ = 'priority-facet'
+       __select__ = RangeFacet.__select__ & implements('Book')
+       rtype = 'pages'
 
-We've just added two new kind of facets in CubicWeb :
+The image below display the rendering of the ``RangeFacet``:
 
-- The **RangeFacet** which displays a slider using `jquery`_
-  to choose a lower bound and an upper bound. The **RangeWidget**
-  works with either numerical values or date values
+.. image:: ../../images/facet_range.png
 
-- The **HasRelationFacet** which displays a simple checkbox and
-  lets you refine your selection in order to get only entities
-  that actually use this relation.
+DateRangeFacet
+~~~~~~~~~~~~~~
+The ``DateRangeFacet`` inherits from the ``RangeFacet``. It allows to filter entities according to certain attributes of date type.
 
-.. image :: http://www.cubicweb.org/Image/343498?vid=download
-
-
-Here's an example of code that defines a facet to filter
+Here is an example of code that defines a facet to filter
 musical works according to their composition date:
 
 .. sourcecode:: python
@@ -116,14 +133,39 @@ musical works according to their composition date:
         # 3. specify the attribute name that actually stores the date in the DB
         rtype = 'composition_date'
 
-And that's it, on each page displaying tracks, you'll be able to filter them
+With this facet, on each page displaying tracks, you'll be able to filter them
 according to their composition date with a jquery slider.
 
-All this, brought by CubicWeb (in the next 3.3 version)
+The image below display the rendering of the ``DateRangeFacet``:
+
+.. image:: ../../images/facet_date_range.png
+
+
+HasRelationFacet
+~~~~~~~~~~~~~~~~
+
+The ``DateRangeFacet`` inherits from the ``AbstractFacet``. It will
+display a simple checkbox and lets you refine your selection in order
+to get only entities that actually use this relation.
+
+Here is an example of the rendering of the ``HasRelationFacet`` to
+filter entities with image and the corresponding code:
+
+.. image:: ../../images/facet_has_image.png
+
+.. sourcecode:: python
+
+  class HasImageFacet(HasRelationFacet):
+      __regid__ = 'hasimage-facet'
+      __select__ = HasRelationFacet.__select__ & implements('Book')
+      rtype = 'has_image'
+
+
+
+To use ``HasRelationFacet`` on a reverse relation add ``role = 'object'`` in
+it's definitions.
 
 .. _facet: http://en.wikipedia.org/wiki/Faceted_browser
 .. _filters: http://www.cubicweb.org/blogentry/154152
 .. _jquery: http://www.jqueryui.com/
 
-To use **HasRelationFacet** on a reverse relation add ``role = 'object'`` in
-it's definitions.

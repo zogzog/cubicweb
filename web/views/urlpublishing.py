@@ -1,28 +1,26 @@
-"""associate url's path to view identifier / rql queries
+# organization: Logilab
+# copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""Associate url's path to view identifier / rql queries.
 
-It currently handle url's path with the forms
+It currently handles url path with the forms:
 
 * <publishing_method>
-
 * minimal REST publishing:
+
   * <eid>
   * <etype>[/<attribute name>/<attribute value>]*
-
 * folder navigation
 
+You can actually control URL (more exactly path) resolution using an
+URL path evaluator.
 
-You can actually control URL (more exactly path) resolution using URL path
-evaluator.
+.. note::
 
-XXX actionpath and folderpath execute a query whose results is lost
-because of redirecting instead of direct traversal
-
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+ Actionpath and Folderpath execute a query whose results is lost
+ because of redirecting instead of direct traversal.
 """
-
 __docformat__ = "restructuredtext en"
 
 from rql import TypeResolverException
@@ -37,17 +35,18 @@ class PathDontMatch(Exception):
     """
 
 class URLPublisherComponent(component.Component):
-    """associate url's path to view identifier / rql queries,
-    by applying a chain of urlpathevaluator components.
+    """Associate url path to view identifier / rql queries, by
+    applying a chain of urlpathevaluator components.
 
-    An evaluator is a URLPathEvaluator subclass with a .evaluate_path
+    An evaluator is a URLPathEvaluator subclass with an .evaluate_path
     method taking the request object and the path to publish as
-    argument.  It will either returns a publishing method identifier
-    and a rql query on success or raises a `PathDontMatch` exception
-    on failure. URL evaluators are called according to their `priority`
-    attribute, with 0 as the greatest priority and greater values as
-    lower priority.  The first evaluator returning a result or raising
-    something else than `PathDontMatch` will stop the handlers chain.
+    argument.  It will either return a publishing method identifier
+    and an rql query on success or raise a `PathDontMatch` exception
+    on failure. URL evaluators are called according to their
+    `priority` attribute, with 0 as the greatest priority and greater
+    values as lower priority. The first evaluator returning a result
+    or raising something else than `PathDontMatch` will stop the
+    handlers chain.
     """
     __regid__ = 'urlpublisher'
     vreg = None # XXX necessary until property for deprecation warning is on appobject
@@ -64,18 +63,18 @@ class URLPublisherComponent(component.Component):
         self.evaluators = sorted(evaluators, key=lambda x: x.priority)
 
     def process(self, req, path):
-        """given an url (essentialy caracterized by a path on the server,
-        but additional information may be found in the request object), return
-        a publishing method identifier (eg controller) and an optional result
-        set
+        """Given an url (essentialy caracterized by a path on the
+        server, but additional information may be found in the request
+        object), return a publishing method identifier
+        (e.g. controller) and an optional result set.
 
-        :type req: `cubicweb.web.Request`
+        :type req: `cubicweb.web.request.CubicWebRequestBase`
         :param req: the request object
 
         :type path: str
         :param path: the path of the resource to publish
 
-        :rtype: tuple(str, `cubicweb.utils.ResultSet` or None)
+        :rtype: tuple(str, `cubicweb.rset.ResultSet` or None)
         :return: the publishing method identifier and an optional result set
 
         :raise NotFound: if no handler is able to decode the given path

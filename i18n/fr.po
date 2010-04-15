@@ -2212,7 +2212,7 @@ msgstr ""
 
 #, python-format
 msgid "failed to uniquify path (%s, %s)"
-msgstr ""
+msgstr "ne peut obtenir un nom de fichier unique (%s, %s)"
 
 msgid "february"
 msgstr "février"

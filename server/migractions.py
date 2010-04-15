@@ -712,7 +712,14 @@ class ServerMigrationHelper(MigrationHelper):
         execute = self._cw.execute
         ss.execschemarql(execute, eschema, ss.eschema2rql(eschema, groupmap))
         # add specializes relation if needed
-        self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
+        specialized = eschema.specializes()
+        if specialized:
+            try:
+                specialized.eid = instschema[specialized].eid
+            except KeyError:
+                raise Exception('trying to add entity type but parent type is '
+                                'not yet in the database schema')
+            self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
         # register entity's attributes
         for rschema, attrschema in eschema.attribute_definitions():
             # ignore those meta relations, they will be automatically added
@@ -975,7 +982,13 @@ class ServerMigrationHelper(MigrationHelper):
                 if syncprops:
                     self._synchronize_eschema(etype, syncperms=syncperms)
                 else:
-                    self._synchronize_permissions(self.fs_schema[etype], etype.eid)
+                    try:
+                        fseschema = self.fs_schema[etype]
+                    except KeyError:
+                        # entity type in the repository schema but not anymore
+                        # on the fs schema
+                        continue
+                    self._synchronize_permissions(fseschema, etype.eid)
         if commit:
             self.commit()
 

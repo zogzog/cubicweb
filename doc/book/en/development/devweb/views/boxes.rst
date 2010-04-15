@@ -1,5 +1,7 @@
-Boxes (:mod:`cubicweb.web.views.boxes`)
----------------------------------------------------------------
+Boxes
+-----
+
+(:mod:`cubicweb.web.views.boxes`)
 
 *sidebox*
   This view displays usually a side box of some related entities
@@ -22,7 +24,6 @@ but it is possible to explicitly specify them thanks to the
 * `create`, indicates that a relation is in general created pointing
   to new entities and that we should display a link to create a new
   entity and link to it automatically
-
 
 
 If necessary, it is possible to overwrite the method

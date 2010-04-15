@@ -1091,6 +1091,7 @@ class Repository(object):
                 entity.check()
             only_inline_rels, need_fti_update = True, False
             relations = []
+            source = self.source_from_eid(entity.eid, session)
             for attr in list(edited_attributes):
                 if attr == 'eid':
                     continue
@@ -1106,19 +1107,18 @@ class Repository(object):
                         previous_value = previous_value[0][0] # got a result set
                         if previous_value == entity[attr]:
                             previous_value = None
-                        else:
+                        elif source.should_call_hooks:
                             hm.call_hooks('before_delete_relation', session,
                                           eidfrom=entity.eid, rtype=attr,
                                           eidto=previous_value)
                     relations.append((attr, entity[attr], previous_value))
-                source = self.source_from_eid(entity.eid, session)
-                if source.should_call_hooks:
-                    # call hooks for inlined relations
-                    for attr, value, _ in relations:
-                        hm.call_hooks('before_add_relation', session,
-                                      eidfrom=entity.eid, rtype=attr, eidto=value)
-                    if not only_inline_rels:
-                        hm.call_hooks('before_update_entity', session, entity=entity)
+            if source.should_call_hooks:
+                # call hooks for inlined relations
+                for attr, value, _ in relations:
+                    hm.call_hooks('before_add_relation', session,
+                                  eidfrom=entity.eid, rtype=attr, eidto=value)
+                if not only_inline_rels:
+                    hm.call_hooks('before_update_entity', session, entity=entity)
             source.update_entity(session, entity)
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:

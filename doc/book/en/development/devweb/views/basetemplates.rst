@@ -1,176 +1,93 @@
 .. -*- coding: utf-8 -*-
 
+.. |cubicweb| replace:: *CubicWeb*
+
 .. _templates:
 
 Templates
 =========
 
-[WRITE ME]
+Templates are the entry point for the |cubicweb| view system. As seen
+in :ref:`views_base_class`, there are two kinds of views: the
+templatable and non-templatable.
 
-* talk about main templates, etc.
+Non-templatable views are standalone. They are responsible for all the
+details such as setting a proper content type (or mime type), the
+proper document headers, namespaces, etc. Examples are pure xml views
+such as RSS or Semantic Web views (`SIOC`_, `DOAP`_, `FOAF`_, `Linked
+Data`_, etc.).
+
+.. _`SIOC`: http://sioc-project.org/
+.. _`DOAP`: http://trac.usefulinc.com/doap
+.. _`FOAF`: http://www.foaf-project.org/
+.. _`Linked Data`: http://linkeddata.org/
+
+Templatable views are not concerned with such pesky details. They
+leave it to the template. Conversely, the template's main job is to:
+
+* set up the proper document header and content type
+* define the general layout of a document
+* invoke adequate views in the various sections of the document
 
 
+Look at :mod:`cubicweb.web.views.basetemplates` and you will find the
+base templates used to generate (X)HTML for your application. The most
+important template there is `TheMainTemplate`.
 
-Look at ``cubicweb/web/views/basetemplates.py`` and you will
-find the base templates used to generate HTML for your application.
+.. _the_main_template_layout:
+
+TheMainTemplate
+---------------
+
+Layout and sections
+```````````````````
 
 A page is composed as indicated on the schema below :
 
 .. image:: ../../../images/main_template.png
 
-In this section we will go through a couple of the primary templates
-you must be interested in, that is to say, the HTMLPageHeader,
-the HTMLPageFooter and the TheMainTemplate.
+The sections dispatches specific views:
 
+* `header`: the rendering of the header is delegated to the
+  `htmlheader` view, whose default implementation can be found in
+  ``basetemplates.py`` and which does the following things:
 
-HTMLPageHeader
---------------
+    * inject the favicon if there is one
+    * inject the global style sheets and javascript resources
+    * call and display a link to an rss component if there is one available
 
-Customize header
-~~~~~~~~~~~~~~~~
+  it also sets up the page title, and fills the actual
+  `header` section with top-level components, using the `header` view, which:
 
-Let's now move the search box in the header and remove the login form
-from the header. We'll show how to move it to the left column of the application.
+    * tries to display a logo, the name of the application and the `breadcrumbs`
+    * provides a login status area
+    * provides a login box (hiden by default)
 
-Let's say we do not want anymore the login menu to be in the header, but we
-prefer it to be in the left column just below the logo. As the left column is
-rendered by ``TheMainTemplate``, we will show how to do it in TheMainTemplate_.
+* `left column`: this is filled with all selectable boxes matching the
+  `left` context (there is also a right column but nowadays it is
+  seldom used due to bad usability)
 
-First, to remove the login menu, we just need to comment out the display of the
-login component such as follows : ::
+* `contentcol`: this is the central column; it is filled with:
 
-  class MyHTMLPageHeader(HTMLPageHeader):
+    * the `rqlinput` view (hidden by default)
+    * the `applmessages` component
+    * the `contentheader` view which in turns dispatches all available
+      content navigation components having the `navtop` context (this
+      is used to navigate through entities implementing the IPrevNext
+      interface)
+    * the view that was given as input to the template's `call`
+      method, also dealing with pagination concerns
+    * the `contentfooter`
 
-      def main_header(self, view):
-          """build the top menu with authentification info and the rql box"""
-          self.w(u'<table id="header"><tr>\n')
-          self.w(u'<td id="firstcolumn">')
-          self._cw.vreg.select_component('logo', self._cw, self.cw_rset).dispatch(w=self.w)
-          self.w(u'</td>\n')
-          # appliname and breadcrumbs
-          self.w(u'<td id="headtext">')
-          comp = self._cw.vreg.select_component('appliname', self._cw, self.cw_rset)
-          if comp and comp.propval('visible'):
-              comp.dispatch(w=self.w)
-          comp = self._cw.vreg.select_component('breadcrumbs', self._cw, self.cw_rset, view=view)
-          if comp and comp.propval('visible'):
-              comp.dispatch(w=self.w, view=view)
-          self.w(u'</td>')
-          # logged user and help
-          #self.w(u'<td>\n')
-          #comp = self._cw.vreg.select_component('loggeduserlink', self._cw, self.cw_rset)
-          #comp.dispatch(w=self.w)
-          #self.w(u'</td><td>')
+* `footer`: adds all footer actions
 
-          self.w(u'<td>')
-          helpcomp = self._cw.vreg.select_component('help', self._cw, self.cw_rset)
-          if helpcomp: # may not be available if Card is not defined in the schema
-              helpcomp.dispatch(w=self.w)
-          self.w(u'</td>')
-          # lastcolumn
-          self.w(u'<td id="lastcolumn">')
-          self.w(u'</td>\n')
-          self.w(u'</tr></table>\n')
-          self.template('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
-                        title=False, message=False)
+.. note::
 
+  How and why a view object is given to the main template is explained
+  in the :ref:`publisher` chapter.
 
-
-.. image:: ../../../images/lax-book.06-header-no-login.en.png
-
-Let's now move the search box in the top-right header area. To do so, we will
-first create a method to get the search box display and insert it in the header
-table.
-
-::
-
- from cubicweb.web.views.basetemplates import HTMLPageHeader
- class MyHTMLPageHeader(HTMLPageHeader):
-    def main_header(self, view):
-        """build the top menu with authentification info and the rql box"""
-        self.w(u'<table id="header"><tr>\n')
-        self.w(u'<td id="firstcolumn">')
-        self._cw.vreg.select_component('logo', self._cw, self.cw_rset).dispatch(w=self.w)
-        self.w(u'</td>\n')
-        # appliname and breadcrumbs
-        self.w(u'<td id="headtext">')
-        comp = self._cw.vreg.select_component('appliname', self._cw, self.cw_rset)
-        if comp and comp.propval('visible'):
-            comp.dispatch(w=self.w)
-        comp = self._cw.vreg.select_component('breadcrumbs', self._cw, self.cw_rset, view=view)
-        if comp and comp.propval('visible'):
-            comp.dispatch(w=self.w, view=view)
-        self.w(u'</td>')
-
-        # logged user and help
-        #self.w(u'<td>\n')
-        #comp = self._cw.vreg.select_component('loggeduserlink', self._cw, self.cw_rset)
-        #comp.dispatch(w=self.w)
-        #self.w(u'</td><td>')
-
-        # search box
-        self.w(u'<td>')
-        self.get_searchbox(view, 'left')
-        self.w(u'</td>')
-
-        self.w(u'<td>')
-        helpcomp = self._cw.vreg.select_component('help', self._cw, self.cw_rset)
-        if helpcomp: # may not be available if Card is not defined in the schema
-            helpcomp.dispatch(w=self.w)
-        self.w(u'</td>')
-        # lastcolumn
-        self.w(u'<td id="lastcolumn">')
-        self.w(u'</td>\n')
-        self.w(u'</tr></table>\n')
-        self.template('logform', rset=self.cw_rset, id='popupLoginBox', klass='hidden',
-                      title=False, message=False)
-
-    def get_searchbox(self, view, context):
-        boxes = list(self._cw.vreg.poss_visible_objects('boxes', self._cw, self.cw_rset,
-                                                    view=view, context=context))
-        if boxes:
-            for box in boxes:
-                if box.__regid__ == 'search_box':
-                    box.dispatch(w=self.w, view=view)
-
-
-
-
-HTMLPageFooter
---------------
-
-If you want to change the footer for example, look
-for HTMLPageFooter and override it in your views file as in :
-::
-
-  form cubicweb.web.views.basetemplates import HTMLPageFooter
-  class MyHTMLPageFooter(HTMLPageFooter):
-      def call(self, **kwargs):
-          self.w(u'<div class="footer">')
-          self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
-          self.w(u'</div>')
-
-Updating a view does not require any restart of the server. By reloading
-the page you can see your new page footer.
-
-
-TheMainTemplate
----------------
-.. _TheMainTemplate:
-
-TheMainTemplate is responsible for the general layout of the entire application.
-It defines the template of ``__regid__ = main`` that is used by the instance.
-
-The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
-builds the page based on the following pattern:
-
-.. image:: ../../../images/main_template_layout.png
-
-The rectangle containing `view.dispatch()` represents the area where the content
-view has to be displayed. The others represents sub-templates called to complete
-the page. A default implementation of those is provided in
-`cubicweb.views.basetemplates`. You can, of course, overload those sub-templates
-to implement your own customization of the HTML page.
+Class attributes
+````````````````
 
 We can also control certain aspects of the main template thanks to the following
 forms parameters:
@@ -184,6 +101,13 @@ forms parameters:
   the dictionary of the forms parameters, before going the classic way (through
   step 1 and 2 described juste above)
 
-The MainTemplate is a bit complex as it tries to accomodate many
-different cases. We are now about to go through it and cutomize entirely
-our application.
+Other templates
+---------------
+
+Other standard templates include:
+
+* `login` and `logout`
+
+* `error-template` specializes TheMainTemplate to do proper end-user
+  output if an error occurs during the computation of TheMainTemplate
+  (it is a fallback view).

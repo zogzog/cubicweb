@@ -1,5 +1,8 @@
 The `Request` class (`cubicweb.web`)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
+
+Overview
+````````
 
 A request instance is created when an HTTP request is sent to the web server.
 It contains informations such as form parameters, user authenticated, etc.
@@ -16,15 +19,16 @@ An instance of `Request` has the following attributes:
 
 But also:
 
-:Session data handling:
+* `Session data handling`
+
   * `session_data()`, returns a dictionary containing all the session data
   * `get_session_data(key, default=None)`, returns a value associated to the given
     key or the value `default` if the key is not defined
   * `set_session_data(key, value)`, assign a value to a key
   * `del_session_data(key)`,  suppress the value associated to a key
 
+*  `Cookies handling`
 
-:Cookies handling:
   * `get_cookie()`, returns a dictionary containing the value of the header
     HTTP 'Cookie'
   * `set_cookie(cookie, key, maxage=300)`, adds a header HTTP `Set-Cookie`,
@@ -33,12 +37,14 @@ But also:
     window)
   * `remove_cookie(cookie, key)`, forces a value to expire
 
-:URL handling:
+* `URL handling`
+
   * `url()`, returns the full URL of the HTTP request
   * `base_url()`, returns the root URL of the web application
   * `relative_path()`, returns the relative path of the request
 
-:And more...:
+* `And more...`
+
   * `set_content_type(content_type, filename=None)`, adds the header HTTP
     'Content-Type'
   * `get_header(header)`, returns the value associated to an arbitrary header
@@ -56,6 +62,18 @@ today). For the views or others that are executed on the server side,
 most of the interface of `Request` is defined in the session associated
 to the client.
 
+API
+```
 
-XXX autoclass !
-XXX create_entity
+The elements we gave in overview for above are built in three layers,
+from ``cubicweb.req.RequestSessionBase``, ``cubicweb.dbapi.DBAPIRequest`` and
+``cubicweb.web.CubicWebRequestBase``.
+
+.. autoclass:: cubicweb.req.RequestSessionBase
+   :members:
+
+.. autoclass:: cubicweb.dbapi.DBAPIRequest
+   :members:
+
+.. autoclass:: cubicweb.web.request.CubicWebRequestBase
+   :members:
