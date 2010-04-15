@@ -31,8 +31,7 @@ from logilab.common.deprecation import deprecated, class_moved
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb import (RegistryNotFound, ObjectNotFound, NoSelectableObject,
-                      RegistryOutOfDate)
+from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 from cubicweb.appobject import AppObject
 
 def _toload_info(path, extrapath, _toload=None):
@@ -246,8 +245,18 @@ class VRegistry(dict):
     def __init__(self, config):
         super(VRegistry, self).__init__()
         self.config = config
+        # need to clean sys.path this to avoid import confusion pb (i.e.  having
+        # the same module loaded as 'cubicweb.web.views' subpackage and as
+        # views' or 'web.views' subpackage. This is mainly for testing purpose,
+        # we should'nt need this in production environment
+        for webdir in (join(dirname(realpath(__file__)), 'web'),
+                       join(dirname(__file__), 'web')):
+            if webdir in sys.path:
+                sys.path.remove(webdir)
+        if CW_SOFTWARE_ROOT in sys.path:
+            sys.path.remove(CW_SOFTWARE_ROOT)
 
-    def reset(self, path=None, force_reload=None):
+    def reset(self):
         # don't use self.clear, we want to keep existing subdictionaries
         for subdict in self.itervalues():
             subdict.clear()
@@ -392,31 +401,44 @@ class VRegistry(dict):
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload, extrapath=None):
-        # need to clean sys.path this to avoid import confusion pb (i.e.
-        # having the same module loaded as 'cubicweb.web.views' subpackage and
-        # as views'  or 'web.views' subpackage
-        # this is mainly for testing purpose, we should'nt need this in
-        # production environment
-        for webdir in (join(dirname(realpath(__file__)), 'web'),
-                       join(dirname(__file__), 'web')):
-            if webdir in sys.path:
-                sys.path.remove(webdir)
-        if CW_SOFTWARE_ROOT in sys.path:
-            sys.path.remove(CW_SOFTWARE_ROOT)
+    def register_objects(self, path, force_reload=False, extrapath=None):
         # load views from each directory in the instance's path
         filemods = self.init_registration(path, extrapath)
-        change = False
         for filepath, modname in filemods:
-            if self.load_file(filepath, modname, force_reload):
-                change = True
-        if change:
-            self.initialization_completed()
-        return change
+            self.load_file(filepath, modname, force_reload)
+        self.initialization_completed()
 
     def initialization_completed(self):
         for regname, reg in self.iteritems():
             reg.initialization_completed()
+
+    def _mdate(self, filepath):
+        try:
+            return stat(filepath)[-2]
+        except OSError:
+            # this typically happens on emacs backup files (.#foo.py)
+            self.warning('Unable to load %s. It is likely to be a backup file',
+                         filepath)
+            return None
+
+    def is_reload_needed(self, path):
+        """return True if something module changed and the registry should be
+        reloaded
+        """
+        lastmodifs = self._lastmodifs
+        for fileordir in path:
+            if isdir(fileordir) and exists(join(fileordir, '__init__.py')):
+                if self.is_reload_needed([join(fileordir, fname)
+                                          for fname in listdir(fileordir)]):
+                    return True
+            elif fileordir[-3:] == '.py':
+                mdate = self._mdate(fileordir)
+                if mdate is None:
+                    continue # backup file, see _mdate implementation
+                if fileordir not in lastmodifs or lastmodifs[fileordir] < mdate:
+                    self.info('File %s changed since last visit', fileordir)
+                    return True
+        return False
 
     def load_file(self, filepath, modname, force_reload=False):
         """load app objects from a python file"""
@@ -424,28 +446,16 @@ class VRegistry(dict):
         if modname in self._loadedmods:
             return
         self._loadedmods[modname] = {}
-        try:
-            modified_on = stat(filepath)[-2]
-        except OSError:
-            # this typically happens on emacs backup files (.#foo.py)
-            self.warning('Unable to load %s. It is likely to be a backup file',
-                         filepath)
-            return False
-        if filepath in self._lastmodifs:
-            # only load file if it was modified
-            if modified_on <= self._lastmodifs[filepath]:
-                return
-            # if it was modified, raise RegistryOutOfDate to reload everything
-            self.info('File %s changed since last visit', filepath)
-            raise RegistryOutOfDate()
+        mdate = self._mdate(filepath)
+        if mdate is None:
+            return # backup file, see _mdate implementation
         # set update time before module loading, else we get some reloading
         # weirdness in case of syntax error or other error while importing the
         # module
-        self._lastmodifs[filepath] = modified_on
+        self._lastmodifs[filepath] = mdate
         # load the module
         module = load_module_from_name(modname, use_sys=not force_reload)
         self.load_module(module)
-        return True
 
     def load_module(self, module):
         self.info('loading %s', module)
