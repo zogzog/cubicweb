@@ -283,7 +283,7 @@ class CubicWebRootResource(resource.PostableResource):
 from twisted.internet import defer
 from twisted.web2 import fileupload
 
-# XXX set max file size to 200Mo: put max upload size in the configuration
+# XXX set max file size to 200MB: put max upload size in the configuration
 # line below for twisted >= 8.0, default param value for earlier version
 resource.PostableResource.maxSize = 200*1024*1024
 def parsePOSTData(request, maxMem=100*1024, maxFields=1024,
