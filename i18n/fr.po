@@ -2348,6 +2348,10 @@ msgstr "facette \"dans l'état\""
 msgid "facets_in_state-facet_description"
 msgstr ""
 
+#, python-format
+msgid "failed to uniquify path (%s, %s)"
+msgstr "ne peut obtenir un nom de fichier unique (%s, %s)"
+
 msgid "february"
 msgstr "février"
 

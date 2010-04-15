@@ -2264,6 +2264,10 @@ msgstr "\"in state\" facet"
 msgid "facets_in_state-facet_description"
 msgstr ""
 
+#, python-format
+msgid "failed to uniquify path (%s, %s)"
+msgstr ""
+
 msgid "february"
 msgstr ""
 
