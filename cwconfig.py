@@ -385,16 +385,20 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
+        import re
         cubes = set()
         for directory in cls.cubes_search_path():
             if not exists(directory):
                 cls.error('unexistant directory in cubes search path: %s'
-                           % directory)
+                          % directory)
                 continue
             for cube in os.listdir(directory):
-                if cube in ('CVS', '.svn', 'shared', '.hg'):
+                if cube == 'shared':
                     continue
-                if isdir(join(directory, cube)):
+                if not re.match('[_A-Za-z][_A-Za-z0-9]*$', cube):
+                    continue # skip invalid python package name
+                cubedir = join(directory, cube)
+                if isdir(cubedir) and exists(join(cubedir, '__init__.py')):
                     cubes.add(cube)
         return sorted(cubes)
 
