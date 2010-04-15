@@ -492,9 +492,9 @@ class CubicWebTC(TestCase):
     def app_publish(self, req, path='view'):
         return self.app.publish(path, req)
 
-    def ctrl_publish(self, req):
+    def ctrl_publish(self, req, ctrl='edit'):
         """call the publish method of the edit controller"""
-        ctrl = self.vreg['controllers'].select('edit', req)
+        ctrl = self.vreg['controllers'].select(ctrl, req)
         try:
             result = ctrl.publish()
             req.cnx.commit()

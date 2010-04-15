@@ -165,5 +165,5 @@ class GCView(StartupView):
         self.wview('pyvaltable', pyvalue=values[:self._cw.form.get('nb', 20)])
         if garbage:
             self.w(u'<h3>%s</h3>' % _('Unreachable objects'))
-            values = sorted(xml_escape(repr(o) for o in garbage))
+            values = sorted(xml_escape(repr(o)) for o in garbage)
             self.wview('pyvallist', pyvalue=values)
