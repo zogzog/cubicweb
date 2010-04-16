@@ -1,4 +1,4 @@
-
+.. _dbapi:
 
 API Python/RQL
 ~~~~~~~~~~~~~~
@@ -13,18 +13,12 @@ The most important method is the `execute` method of a cursor.
 
 :rqlstring: the RQL query to execute (unicode)
 :args: if the query contains substitutions, a dictionary containing the values to use
-:cachekey:
-   an implementation detail of the RQL cache implies that if a substitution
-   is used to introduce an eid *susceptible to raise the ambiguities in the query
-   type resolution*, then we have to specify the corresponding key in the dictionary
-   through this argument
-
 
 The `Connection` object owns the methods `commit` and `rollback`. You
 *should never need to use them* during the development of the web
 interface based on the *CubicWeb* framework as it determines the end
 of the transaction depending on the query execution success. They are
-however useful in other contexts such as tests.
+however useful in other contexts such as tests or custom controllers.
 
 .. note::
   While executing update queries (SET, INSERT, DELETE), if a query generates
@@ -67,7 +61,8 @@ to this rule.
 
 .. sourcecode:: python
 
-   self._cw.execute('Any T WHERE T in_conf C, C name IN (%s)' % ','.join(['foo', 'bar']))
+   self._cw.execute('Any T WHERE T in_conf C, C name IN (%s)'
+                    % ','.join(['foo', 'bar']))
 
 Alternativelly, some of the common data related to an entity can be
 obtained from the `entity.related()` method (which is used under the
@@ -78,6 +73,16 @@ get a relation. The initial request would then be translated to:
 
    entity.related('in_conf', 'object')
 
-Additionnaly this benefits from the fetch_attrs policy eventually
-defined on the class element, which says which attributes must be also
-loaded when the entity is loaded through the orm.
+Additionnaly this benefits from the fetch_attrs policy (see
+:ref:`FetchAttrs`) eventually defined on the class element, which says
+which attributes must be also loaded when the entity is loaded through
+the orm.
+
+
+The `Cursor` API
+~~~~~~~~~~~~~~~~
+
+The whole cursor API is developped below.
+
+.. autoclass:: cubicweb.dbapi.Cursor
+   :members:

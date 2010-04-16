@@ -664,7 +664,7 @@ class Connection(object):
 # cursor object ###############################################################
 
 class Cursor(object):
-    """These objects represent a database cursor, which is used to manage the
+    """This represents a database cursor, which is used to manage the
     context of a fetch operation. Cursors created from the same connection are
     not isolated, i.e., any changes done to the database by a cursor are
     immediately visible by the other cursors. Cursors created from different
@@ -674,21 +674,18 @@ class Cursor(object):
     """
 
     def __init__(self, connection, repo, req=None):
-        """This read-only attribute return a reference to the Connection
-        object on which the cursor was created.
-        """
+        # This read-only attribute returns a reference to the Connection
+        # object on which the cursor was created.
         self.connection = connection
-        """optionnal issuing request instance"""
+        # optionnal issuing request instance
         self.req = req
 
-        """This read/write attribute specifies the number of rows to fetch at a
-        time with fetchmany(). It defaults to 1 meaning to fetch a single row
-        at a time.
-
-        Implementations must observe this value with respect to the fetchmany()
-        method, but are free to interact with the database a single row at a
-        time. It may also be used in the implementation of executemany().
-        """
+        # This read/write attribute specifies the number of rows to fetch at a
+        # time with fetchmany(). It defaults to 1 meaning to fetch a single row
+        # at a time.
+        # Implementations must observe this value with respect to the fetchmany()
+        # method, but are free to interact with the database a single row at a
+        # time. It may also be used in the implementation of executemany().
         self.arraysize = 1
 
         self._repo = repo
@@ -696,7 +693,6 @@ class Cursor(object):
         self._res = None
         self._closed = None
         self._index = 0
-
 
     def close(self):
         """Close the cursor now (rather than whenever __del__ is called).  The
@@ -867,4 +863,3 @@ class LogCursor(Cursor):
         self.connection.executed_queries.append((operation, parameters,
                                                  time() - tstart, clock() - cstart))
         return rset
-
