@@ -8,7 +8,7 @@ Display
 ~~~~~~~
 
 Breadcrumbs are displayed by default in the header section (see
-:ref:`the_main_template_sections chapter`).  With the default main
+:ref:`the_main_template_sections`).  With the default main
 template, the header section is composed by the logo, the application
 name, breadcrumbs and, at the most right, the login box. Breadcrumbs
 are displayed just next to the application name, thus breadcrumbs

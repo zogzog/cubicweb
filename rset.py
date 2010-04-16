@@ -1,4 +1,4 @@
-"""The `ResultSet` class which is returned as result of a rql query
+"""The `ResultSet` class which is returned as result of an rql query
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -15,7 +15,7 @@ from cubicweb import NotAnEntity
 
 
 class ResultSet(object):
-    """a result set wrap a RQL query result. This object implements a partial
+    """A result set wraps a RQL query result. This object implements a partial
     list protocol to allow direct use as a list of result rows.
 
     :type rowcount: int
@@ -204,7 +204,7 @@ class ResultSet(object):
         return rset
 
     def split_rset(self, keyfunc=None, col=0, return_dict=False):
-        """Splits the result set in multiple result set according to a given key
+        """splits the result set in multiple result set according to a given key
 
         :type keyfunc: callable(entity or FinalType)
         :param keyfunc:

@@ -1,6 +1,6 @@
 .. _dbapi:
 
-API Python/RQL
+Python/RQL API
 ~~~~~~~~~~~~~~
 
 The Python API developped to interface with RQL is inspired from the standard db-api,
@@ -9,7 +9,7 @@ The most important method is the `execute` method of a cursor.
 
 .. sourcecode:: python
 
-  execute(rqlstring, args=None, cachekey=None, build_descr=True)
+  execute(rqlstring, args=None, build_descr=True)
 
 :rqlstring: the RQL query to execute (unicode)
 :args: if the query contains substitutions, a dictionary containing the values to use
@@ -21,6 +21,7 @@ of the transaction depending on the query execution success. They are
 however useful in other contexts such as tests or custom controllers.
 
 .. note::
+
   While executing update queries (SET, INSERT, DELETE), if a query generates
   an error related to security, a rollback is automatically done on the current
   transaction.
@@ -79,10 +80,38 @@ which attributes must be also loaded when the entity is loaded through
 the orm.
 
 
+The `ResultSet` API
+~~~~~~~~~~~~~~~~~~~
+
+ResultSet instances are a very commonly manipulated object. They have
+a rich API as seen below, but we would like to highlight a bunch of
+methods that are quite useful in day-to-day practice:
+
+* `__str__()` (applied by `print`) gives a very useful overview of both
+  the underlying RQL expression and the data inside; unavoidable for
+  debugging purposes
+
+* `printable_rql()` produces back a well formed RQL expression as a
+  string; it is very useful to build views
+
+* `entities()` returns a generator on all entities of the result set
+
+* `get_entity(row, col)` gets the entity at row, col coordinates; one
+  of the most used result set method
+
+.. autoclass:: cubicweb.rset.ResultSet
+   :members:
+
+
 The `Cursor` API
 ~~~~~~~~~~~~~~~~
 
 The whole cursor API is developped below.
+
+.. note:
+
+  In practice we use the `.execute` method on the _cw object of
+  appobjects. Usage of other methods is quite rare.
 
 .. autoclass:: cubicweb.dbapi.Cursor
    :members:

@@ -69,10 +69,6 @@ and then create your new cube using:
   cubicweb-ctl newcube --directory=~/src/cubes blog
 
 
-
-
-
-
 .. _DefineDataModel:
 
 Define your data model
