@@ -35,7 +35,7 @@ def objectify_selector(selector_func):
     class::
 
         @objectify_selector
-        def one(cls, *args, **kwargs):
+        def one(cls, req, rset=None, **kwargs):
             return 1
 
         class MyView(View):
