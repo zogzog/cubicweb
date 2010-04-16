@@ -43,12 +43,13 @@ just type ::
 
   cubicweb-ctl start -D myinstance
 
-The option `-D` specify the *debug mode* : the instance is not running in
-server mode and does not disconnect from the termnial, which simplifies debugging
-in case the instance is not properly launched. You can see how it looks by
-visiting the URL `http://localhost:8080` (the port number depends of your
-configuration). To login, please use the cubicweb administrator login/psswd you
-defined when you created the instance.
+The option `-D` specifies the *debug mode* : the instance is not
+running in server mode and does not disconnect from the terminal,
+which simplifies debugging in case the instance is not properly
+launched. You can see how it looks by visiting the URL
+`http://localhost:8080` (the port number depends of your
+configuration). To login, please use the cubicweb administrator
+login/psswd you defined when you created the instance.
 
 To shutdown the instance, Crtl-C in the terminal window is enough.
 If you did not use the option `-D`, then type ::
@@ -71,5 +72,27 @@ The command is::
 
   cubicweb-ctl upgrade myinstance
 
-XXX write me
+A series of questions will be asked. It always starts with a proposal
+to make a backup of your sources (where it applies). Unless you know
+exactly what you are doing (i.e. typically fiddling in debug mode, but
+definitely NOT migrating a production instance), you should answer YES
+to that.
+
+The remaining questions concern the migration steps of |cubicweb|,
+then of the cubes that form the whole application, in reverse
+dependency order.
+
+In principle, if the migration scripts have been properly written and
+tested, you should answer YES to all questions.
+
+Somtimes, typically while debugging a migration script, something goes
+wrong and the migration fails. Unfortunately the databse may be in an
+incoherent state. You have two options here:
+
+* fix the bug, restore the database and restart the migration process
+  from scratch (quite recommended in a production environement)
+
+* try to replay the migration up to the last successful commit, that
+  is answering NO to all question up to the step that failed, and
+  finish by answering YES to the remaining questions.
 
