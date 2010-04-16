@@ -36,8 +36,10 @@ Instance administration
 
 start / stop
 ~~~~~~~~~~~~
+
 When this command is completed, the definition of your instance is
-located in :file:`~/etc/cubicweb.d/myinstance/*`. To launch it, you just type ::
+located in :file:`~/etc/cubicweb.d/myinstance/*`. To launch it, you
+just type ::
 
   cubicweb-ctl start -D myinstance
 
@@ -55,6 +57,12 @@ If you did not use the option `-D`, then type ::
 
 This is it! All is settled down to start developping your data model...
 
+.. note::
+
+  The output of `cubicweb-ctl start -D myinstance` can be
+  overwhelming. It is possible to reduce the log level with the
+  `--loglevel` parameter as in `cubicweb-ctl start -D myinstance -l
+  info` to filter out all logs under `info` gravity.
 
 upgrade
 ~~~~~~~
