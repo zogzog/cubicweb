@@ -39,6 +39,8 @@ important template there is `TheMainTemplate`.
 TheMainTemplate
 ---------------
 
+.. _the_main_template_sections:
+
 Layout and sections
 ```````````````````
 
