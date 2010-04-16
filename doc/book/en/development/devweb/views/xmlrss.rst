@@ -1,7 +1,9 @@
 .. _XmlAndRss:
 
-XML and RSS views (:mod:`cubicweb.web.views.xmlrss`)
-----------------------------------------------------
+XML and RSS views
+-----------------
+
+(:mod:`cubicweb.web.views.xmlrss`)
 
 Overview
 +++++++++
@@ -13,7 +15,6 @@ Overview
 *rssitem*
     Create a RSS/XML view for each entity based on the results of the dublin core
     methods of the entity (`dc_*`)
-
 
 RSS Channel Example
 ++++++++++++++++++++
@@ -57,6 +58,3 @@ comments posted.
   of blog entries, thus providing a RSS channel
 
 * show that a different selection (by category) means a different channel
-
-
-

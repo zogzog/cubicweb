@@ -80,6 +80,8 @@ which attributes must be also loaded when the entity is loaded through
 the orm.
 
 
+.. _resultset:
+
 The `ResultSet` API
 ~~~~~~~~~~~~~~~~~~~
 

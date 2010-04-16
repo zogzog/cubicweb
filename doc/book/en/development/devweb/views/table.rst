@@ -1,5 +1,7 @@
-Table views (:mod:`cubicweb.web.views.table`)
-----------------------------------------------
+Table view
+----------
+
+(:mod:`cubicweb.web.views.tableview`)
 
 *table*
     Creates a HTML table (`<table>`) and call the view `cell` for each cell of
@@ -8,3 +10,10 @@ Table views (:mod:`cubicweb.web.views.table`)
 *cell*
     By default redirects to the `final` view if this is a final entity or
     `outofcontext` view otherwise
+
+
+API
+```
+
+.. autoclass:: cubicweb.web.views.tableview.TableView
+   :members:

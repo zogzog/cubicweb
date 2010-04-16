@@ -15,14 +15,29 @@ outputs.
 
 .. _views_base_class:
 
+Discovering possible views
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to configure the web user interface to have a left box
+showing all the views than can be applied to the current result set.
+
+To enable this, click on your login at the top right corner. Chose
+"user preferences", then "boxes", then "possible views box" and check
+"visible = yes" before validating your changes.
+
+The views listed there we either not selected because of a lower
+score, or they were deliberately excluded by the main template logic.
+
+
 Basic class for views
 ~~~~~~~~~~~~~~~~~~~~~
 
 Class `View` (`cubicweb.view`)
 ```````````````````````````````
 
-This class is an abstraction of a view class, used as a base class for every
-renderable object such as views, templates, graphic components, etc.
+This class is an abstraction of a view class, used as a base class for
+every renderable object such as views, templates and other user
+interface components.
 
 A `View` is instantiated to render a result set or part of a result
 set. `View` subclasses may be parametrized using the following class
@@ -107,8 +122,6 @@ Examples of views class
         __regid__ = 'search-associate'
         title = _('search for association')
         __select__ = one_line_rset() & match_search_state('linksearch') & implements('Any')
-
-
 
 
 XML views, binaries views...

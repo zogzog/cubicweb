@@ -1,11 +1,10 @@
 Startup views
 -------------
 
- (:mod:`cubicweb.web.views.startup`)
+(:mod:`cubicweb.web.views.startup`)
 
-Usual selector: no_rset or yes.
-
-Views that don't apply to a result set
+The usual selectors are no_rset or yes. These views don't apply to a
+result set.
 
 *index*
     This view defines the home page of your application. It does not require
