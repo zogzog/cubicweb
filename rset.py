@@ -382,7 +382,7 @@ class ResultSet(object):
         """convenience method for query retrieving a single entity, returns a
         partially initialized Entity instance.
 
-        .. warning:
+        .. warning::
 
           Due to the cache wrapping this function, you should NEVER
           give row as a named parameter (i.e. rset.get_entity(req, 0)
