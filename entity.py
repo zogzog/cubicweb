@@ -269,6 +269,14 @@ class Entity(AppObject, dict):
         return '<Entity %s %s %s at %s>' % (
             self.e_schema, self.eid, self.keys(), id(self))
 
+    def __json_encode__(self):
+        """custom json dumps hook to dump the entity's eid
+        which is not part of dict structure itself
+        """
+        dumpable = dict(self)
+        dumpable['eid'] = self.eid
+        return dumpable
+
     def __nonzero__(self):
         return True
 
