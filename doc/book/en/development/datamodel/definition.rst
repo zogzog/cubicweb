@@ -3,37 +3,72 @@
 Yams *schema*
 -------------
 
-The **schema** is the core piece of a *CubicWeb* instance as it defines
-the handled data model. It is based on entity types that are either already
-defined in the *CubicWeb* standard library; or more specific types defined
-in cubes. The schema for a cube is defined in a :file:schema.py file or in
-one or more Python files under the :file:`schema` directory (python package).
+The **schema** is the core piece of a *CubicWeb* instance as it
+defines and handles the data model. It is based on entity types that
+are either already defined in `Yams`_ and the *CubicWeb* standard
+library; or more specific types defined in cubes. The schema for a
+cube is defined in a `schema` python module or package.
 
-At this point, it is important to make clear the difference between
-*relation type* and *relation definition*: a *relation type* is only a relation
-name with potentially other additional properties (see below), whereas a
-*relation definition* is a complete triplet
-"<subject entity type> <relation type> <object entity type>".
+.. _`Yams`: http://www.logilab.org/project/yams
 
-Also, it should be clear that to properly handle data migration, an
-instance's schema
-is stored in the database, so the python schema file used to defined it is only read
-when the instance is created or upgraded.
+Overview
+~~~~~~~~
 
-The following built-in types are available: `String`, `Int`, `Float`,
-`Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte`
-and `Password`.
+The core idea of the yams schema is not far from the classical
+`Entity-relationship`_ model. But while an E/R model (or `logical
+model`) traditionally has to be manually translated to a lower-level
+data description language (such as the SQL `create table`
+sublanguage), also often described as the `physical model`, no such
+step is required with |yams| and |cubicweb|.
 
-You'll also have access to :ref:`base CubicWeb entity types <CWBaseEntityTypes>`.
+.. _`Entity-relationship`: http://en.wikipedia.org/wiki/Entity-relationship_model
 
-The instance schema is accessible through the .schema attribute of the
-`vregistry`.  It's an instance of :class:`cubicweb.schema.Schema`, which
-extends :class:`yams.schema.Schema`.
+This is because in addition to high-level, logical |yams| models, one
+uses the |rql| data manipulation language to query, insert, update and
+delete data. |rql| abstracts as much of the underlying SQL database as
+a |yams| schema abstracts from the physical layout. The vagaries of
+SQL are avoided.
 
-:note:
-  In previous yams versions, almost all classes where available without
-  any import, but the should now be explicitly imported.
+As a bonus point, such abstraction make it quite comfortable to build
+or use different backends to which |rql| queries apply.
 
+So, as in the E/R formalism, the building blocks are ``entities``
+(:ref:`EntityType`), ``relationships`` (:ref:`RelationType`,
+:ref:`RelationDefinition`) and ``attributes`` (handled like relation
+with |yams|).
+
+Let us detail a little the divergences between E/R and |yams|:
+
+* all relationship are binary which means that to represent a
+  non-binary relationship, one has to use an entity,
+* relationships do not support attributes (yet, see:
+  https://www.logilab.net/cwo/ticket/341318), hence the need to reify
+  it as an entity if need arises,
+* all entities have an `eid` attribute (an integer) that is its
+  primary key (but it is possible to declare uniqueness on other
+  attributes)
+
+Also |yams| supports the notions of:
+
+* entity inheritance,
+* relation type: that is, relationships can be established over a set
+  of couple of entity types (henre the distinction made between
+  `RelationType` and `RelationDefinition` below)
+
+Finally |yams| has a few concepts of its own:
+
+* relationships being oriented and binary, we call the left hand
+  entity type the `subject` and the right hand entity type the
+  `object`
+
+.. note::
+
+   The |yams| schema is available at run time through the .schema
+   attribute of the `vregistry`.  It's an instance of
+   :class:`cubicweb.schema.Schema`, which extends
+   :class:`yams.schema.Schema`.
+
+.. _EntityType:
 
 Entity type
 ~~~~~~~~~~~
@@ -42,21 +77,34 @@ An entity type is an instance of :class:`yams.schema.EntitySchema`. Each entity 
 a set of attributes and relations, and some permissions which define who can add, read,
 update or delete entities of this type.
 
-XXX yams inheritance
+The following built-in types are available: ``String``, ``Int``,
+``Float``, ``Decimal``, ``Boolean``, ``Date``, ``Datetime``, ``Time``,
+``Interval``, ``Byte`` and ``Password``. They can only be used as
+attributes of an other entity type.
+
+You can find more base entity types in
+:ref:`pre_defined_entity_types`.
+
+.. XXX yams inheritance
 
 .. _RelationType:
 
 Relation type
 ~~~~~~~~~~~~~
 
-A relation type is an instance of :class:`yams.schema.RelationSchema`. A relation type is simply
-a semantic definition of a kind of relationship that may occur in an application.
+A relation type is an instance of
+:class:`yams.schema.RelationSchema`. A relation type is simply a
+semantic definition of a kind of relationship that may occur in an
+application.
 
-It is important to choose a good name, at least to avoid conflicts with some semantically
-different relation defined in other cubes (since we've no name space yet).
+It may be referenced by zero, one or more relation definitions.
 
-A relation type holds the following properties (which are hence shared between all
-relation definitions of that type):
+It is important to choose a good name, at least to avoid conflicts
+with some semantically different relation defined in other cubes
+(since there's only a shared name space for these names).
+
+A relation type holds the following properties (which are hence shared
+between all relation definitions of that type):
 
 * `inlined`: boolean handling the physical optimization for archiving
   the relation in the subject entity table, instead of creating a specific
@@ -67,79 +115,91 @@ relation definitions of that type):
 * `symmetric`: boolean indicating that the relation is symmetrical, which
   means that `X relation Y` implies `Y relation X`.
 
+.. _RelationDefinition:
 
 Relation definition
 ~~~~~~~~~~~~~~~~~~~
 
-A relation definition is an instance of :class:`yams.schema.RelationDefinition`. It is a complete triplet
+A relation definition is an instance of
+:class:`yams.schema.RelationDefinition`. It is a complete triplet
 "<subject entity type> <relation type> <object entity type>".
 
 When creating a new instance of that class, the corresponding
 :class:`RelationType` instance is created on the fly if necessary.
 
-
 Properties
 ``````````
 
-* Optional properties for attributes and relations:
+The available properties for relation definitions are enumerated
+here. There are several kind of properties, as some relation
+definitions are actually attribute definitions, and other are not.
 
-  - `description`: a string describing an attribute or a relation. By default
-    this string will be used in the editing form of the entity, which means
-    that it is supposed to help the end-user and should be flagged by the
-    function `_` to be properly internationalized.
+Some properties may be completely optional, other may have a default
+value.
 
-  - `constraints`: a list of conditions/constraints that the relation has to
-    satisfy (c.f. `Constraints`_)
+Common properties for attributes and relations:
 
-  - `cardinality`: a two character string specifying the cardinality of the
-    relation. The first character defines the cardinality of the relation on
-    the subject, and the second on the object. When a relation can have
-    multiple subjects or objects, the cardinality applies to all,
-    not on a one-to-one basis (so it must be consistent...). The possible
-    values are inspired from regular expression syntax:
+* `description`: an unicode string describing an attribute or a
+  relation. By default this string will be used in the editing form of
+  the entity, which means that it is supposed to help the end-user and
+  should be flagged by the function `_` to be properly
+  internationalized.
+
+* `constraints`: a list of conditions/constraints that the relation has to
+  satisfy (c.f. `Constraints`_)
+
+* `cardinality`: a two character string specifying the cardinality of
+  the relation. The first character defines the cardinality of the
+  relation on the subject, and the second on the object. When a
+  relation can have multiple subjects or objects, the cardinality
+  applies to all, not on a one-to-one basis (so it must be
+  consistent...). Default value is '**'. The possible values are
+  inspired from regular expression syntax:
 
     * `1`: 1..1
     * `?`: 0..1
     * `+`: 1..n
     * `*`: 0..n
 
-* optional properties for attributes:
+Attributes properties:
 
-  - `unique`: boolean indicating if the value of the attribute has to be unique
-    or not within all entities of the same type (false by default)
+* `unique`: boolean indicating if the value of the attribute has to be
+  unique or not within all entities of the same type (false by
+  default)
 
-  - `indexed`: boolean indicating if an index needs to be created for this
-    attribute in the database (false by default). This is useful only if
-    you know that you will have to run numerous searches on the value of this
-    attribute.
+* `indexed`: boolean indicating if an index needs to be created for
+  this attribute in the database (false by default). This is useful
+  only if you know that you will have to run numerous searches on the
+  value of this attribute.
 
-  - `default`: default value of the attribute. In case of date types, the values
-    which could be used correspond to the RQL keywords `TODAY` and `NOW`.
+* `default`: default value of the attribute. In case of date types, the values
+  which could be used correspond to the RQL keywords `TODAY` and `NOW`.
 
-* optional properties for type `String` attributes:
+Properties for `String` attributes:
 
-  - `fulltextindexed`: boolean indicating if the attribute is part of
-    the full text index (false by default) (*applicable on the type `Byte`
-    as well*)
+* `fulltextindexed`: boolean indicating if the attribute is part of
+  the full text index (false by default) (*applicable on the type
+  `Byte` as well*)
 
-  - `internationalizable`: boolean indicating if the value of the attribute
-    is internationalizable (false by default)
+* `internationalizable`: boolean indicating if the value of the
+  attribute is internationalizable (false by default)
 
-* optional properties for relations:
+Relation properties:
 
-  - `composite`: string indicating that the subject (composite == 'subject')
-    is composed of the objects of the relations. For the opposite case (when
-    the object is composed of the subjects of the relation), we just set
-    'object' as value. The composition implies that when the relation
-    is deleted (so when the composite is deleted, at least), the composed are also deleted.
+* `composite`: string indicating that the subject (composite ==
+  'subject') is composed of the objects of the relations. For the
+  opposite case (when the object is composed of the subjects of the
+  relation), we just set 'object' as value. The composition implies
+  that when the relation is deleted (so when the composite is deleted,
+  at least), the composed are also deleted.
 
-  - `fulltext_container`: string indicating if the value if the full text
-    indexation of the entity on one end of the relation should be used
-    to find the entity on the other end. The possible values are
-    'subject' or 'object'. For instance the use_email relation has
-    that property set to 'subject', since when performing a full text
-    search people want to find the entity using an email address, and not
-    the entity representing the email address.
+* `fulltext_container`: string indicating if the value if the full
+  text indexation of the entity on one end of the relation should be
+  used to find the entity on the other end. The possible values are
+  'subject' or 'object'. For instance the use_email relation has that
+  property set to 'subject', since when performing a full text search
+  people want to find the entity using an email address, and not the
+  entity representing the email address.
 
 Constraints
 ```````````
@@ -172,7 +232,7 @@ General Constraints
 
 * `StaticVocabularyConstraint`: identical to "vocabulary=(...)"
 
-XXX Attribute, NOW
+.. XXX Attribute, NOW
 
 RQL Based Constraints
 ......................
@@ -200,7 +260,9 @@ third argument is not available.
   than a single result to be satisfied. In this query the variables `S` is
   reserved for the relation subject entity. The other variables should be
   specified with the second constructor argument (mainvars). This constraints
-  should be used when UniqueConstraint doesn't fit. Here is a simple example ::
+  should be used when UniqueConstraint doesn't fit. Here is a simple example.
+
+.. sourcecode:: python
 
     # Check that in the same Workflow each state's name is unique.  Using
     # UniqueConstraint (or unique=True) here would prevent states in different
@@ -210,14 +272,11 @@ third argument is not available.
 
     RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N',
                         mainvars='Y',
-                        msg=_('workflow already have a state of that name'))
+                        msg=_('workflow already has a state of that name'))
 
-
-
-XXX note about how to add new constraint
+.. XXX note about how to add new constraint
 
 .. _securitymodel:
-
 
 The security model
 ~~~~~~~~~~~~~~~~~~
@@ -557,3 +616,15 @@ new versions on this project to specific groups. It is important to notice that:
 * because of the genericity of the entity type `CWPermission`, we have to execute
   a unification with the groups and/or the states if necessary in the expression
   ("U in_group G, P require_group G" in the above example)
+
+
+
+Handling schema changes
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Also, it should be clear that to properly handle data migration, an
+instance's schema is stored in the database, so the python schema file
+used to defined it is only read when the instance is created or
+upgraded.
+
+.. XXX complete me

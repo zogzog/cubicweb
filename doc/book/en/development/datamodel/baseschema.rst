@@ -1,4 +1,4 @@
-.. _CWBaseEntityTypes:
+.. _pre_defined_entity_types:
 
 Pre-defined entities in the library
 -----------------------------------

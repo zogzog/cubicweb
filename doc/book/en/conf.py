@@ -193,4 +193,6 @@ latex_documents = [
 
 rst_epilog = """
 .. |cubicweb| replace:: *CubicWeb*
+.. |yams| replace:: *Yams*
+.. |rql| replace:: *RQL*
 """
