@@ -1,11 +1,8 @@
-"""mixins of entity/views organized somewhat in a graph or tree structure
-
-
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
-"""
+# organization: Logilab
+# copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""mixins of entity/views organized somewhat in a graph or tree structure"""
 __docformat__ = "restructuredtext en"
 
 from itertools import chain
@@ -17,7 +14,7 @@ from cubicweb.interfaces import IEmailable, ITree
 
 
 class TreeMixIn(object):
-    """base tree-mixin providing the tree interface
+    """base tree-mixin implementing the tree interface
 
     This mixin has to be inherited explicitly and configured using the
     tree_attribute, parent_target and children_target class attribute to
@@ -275,8 +272,7 @@ class TreePathMixIn(object):
 
 
 class ProgressMixIn(object):
-    """provide default implementations for IProgress interface methods"""
-    # This is an adapter isn't it ?
+    """provide a default implementations for IProgress interface methods"""
 
     @property
     def cost(self):
