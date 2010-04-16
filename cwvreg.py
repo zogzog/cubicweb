@@ -7,18 +7,19 @@
 The `VRegistry`
 ---------------
 
-The `VRegistry` can be seen as a two level dictionary. It contains all objects
-loaded dynamically to build a |cubicweb| application. Basically:
+The `VRegistry` can be seen as a two levels dictionary. It contains
+all dynamically loaded objects (subclasses of :ref:`appobject`) to
+build a |cubicweb| application. Basically:
 
-* first level key return a *registry*. This key corresponds to the `__registry__`
-  attribute of application object classes
+* the first level key returns a *registry*. This key corresponds to the
+  `__registry__` attribute of application object classes
 
-* second level key return a list of application objects which share the same
-  identifier. This key corresponds to the `__regid__` attribute of application
-  object classes.
+* the second level key returns a list of application objects which
+  share the same identifier. This key corresponds to the `__regid__`
+  attribute of application object classes.
 
-A *registry* hold a specific kind of application objects. You've for instance
-a registry for entity classes, another for views, etc...
+A *registry* holds a specific kind of application objects. There is
+for instance a registry for entity classes, another for views, etc...
 
 The `VRegistry` has two main responsibilities:
 
@@ -26,7 +27,6 @@ The `VRegistry` has two main responsibilities:
 
 - handling the registration process at startup time, and during automatic
   reloading in debug mode.
-
 
 .. _AppObjectRecording:
 
@@ -36,21 +36,22 @@ Details of the recording process
 .. index::
    vregistry: registration_callback
 
-On startup, |cubicweb| have to load application objects defined in its library
-and in cubes used by the instance. Application objects from the library are
-loaded first, then those provided by cubes are loaded in an ordered way (e.g. if
-your cube depends on an other, objects from the dependancy will be loaded
-first). Cube's modules or packages where appobject are looked at is explained in
-:ref:`cubelayout`.
+On startup |cubicweb| loads application objects defined in its library
+and in cubes used by the instance. Application objects from the
+library are loaded first, then those provided by cubes are loaded in
+dependency order (e.g. if your cube depends on an other, objects from
+the dependency will be loaded first). Cube's modules or packages where
+appobject are looked for is explained in :ref:`cubelayout`.
 
 For each module:
 
 * by default all objects are registered automatically
 
-* if some objects have to replace other objects, or be included only if some
-  condition is true, you'll have to define a `registration_callback(vreg)`
-  function in your module and explicitly register **all objects** in this module,
-  using the api defined below.
+* if some objects have to replace other objects, or have to be
+  included only if some condition is met, you'll have to define a
+  `registration_callback(vreg)` function in your module and explicitly
+  register **all objects** in this module, using the api defined
+  below.
 
 .. Note::
     Once the function `registration_callback(vreg)` is implemented in a module,
@@ -70,7 +71,6 @@ named `vreg`):
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_if_interface_found
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.unregister
-
 
 Examples:
 
@@ -115,13 +115,15 @@ to the `register_all` method.
 Runtime objects selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now that we've all application objects loaded, the question is : when I want some
-specific object, for instance the primary view for a given entity, how do I get
-the proper object ? This is what we call the **selection mechanism**.
+Now that we have all application objects loaded, the question is : when
+I want some specific object, for instance the primary view for a given
+entity, how do I get the proper object ? This is what we call the
+**selection mechanism**.
 
 As explained in the :ref:`Concepts` section:
 
-* each application object has a **selector**, defined by its `__select__` class attribute
+* each application object has a **selector**, defined by its
+  `__select__` class attribute
 
 * this selector is responsible to return a **score** for a given context
 
@@ -141,9 +143,9 @@ As explained in the :ref:`Concepts` section:
   In such cases you would need to review your design and make sure your selectors
   or appobjects are properly defined.
 
-For instance, if you are selecting the primary (eg `__regid__ = 'primary'`) view (eg
-`__registry__ = 'views'`) for a result set containing a `Card` entity, 2 objects
-will probably be selectable:
+For instance, if you are selecting the primary (eg `__regid__ =
+'primary'`) view (eg `__registry__ = 'views'`) for a result set
+containing a `Card` entity, two objects will probably be selectable:
 
 * the default primary view (`__select__ = implements('Any')`), meaning
   that the object is selectable for any kind of entity type
