@@ -66,7 +66,7 @@ class SQLiteAbstractSource(AbstractSource):
           'default': None,
           'help': 'path to the sqlite database file used to do queries on the \
 repository.',
-          'inputlevel': 2,
+          'level': 2,
           }),
     )
 

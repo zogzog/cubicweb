@@ -337,7 +337,7 @@ repository and the web server.',
         helper.bootstrap(cubes, self.config.config_level)
         # input for cubes specific options
         for section in set(sect.lower() for sect, opt, optdict in config.all_options()
-                           if optdict.get('inputlevel') <= self.config.config_level):
+                           if optdict.get('level') <= self.config.config_level):
             if section not in ('main', 'email', 'pyro'):
                 print '\n' + underline_title('%s options' % section)
                 config.input_config(section, self.config.config_level)
