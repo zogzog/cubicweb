@@ -522,7 +522,7 @@ this option is set to yes",
         """reorder cubes from the top level cubes to inner dependencies
         cubes
         """
-        from logilab.common.graph import get_cycles
+        from logilab.common.graph import ordered_nodes, UnorderableGraph
         graph = {}
         for cube in cubes:
             cube = CW_MIGRATION_MAP.get(cube, cube)
@@ -530,24 +530,11 @@ this option is set to yes",
                               if dep in cubes)
             graph[cube] |= set(dep for dep in cls.cube_recommends(cube)
                                if dep in cubes)
-        cycles = get_cycles(graph)
-        if cycles:
-            cycles = '\n'.join(' -> '.join(cycle) for cycle in cycles)
+        try:
+            return ordered_nodes(graph)
+        except UnorderableGraph, ex:
             raise ConfigurationError('cycles in cubes dependencies: %s'
-                                     % cycles)
-        cubes = []
-        while graph:
-            # sorted to get predictable results
-            for cube, deps in sorted(graph.items()):
-                if not deps:
-                    cubes.append(cube)
-                    del graph[cube]
-                    for deps in graph.itervalues():
-                        try:
-                            deps.remove(cube)
-                        except KeyError:
-                            continue
-        return tuple(reversed(cubes))
+                                     % ex.cycles)
 
     @classmethod
     def cls_adjust_sys_path(cls):
