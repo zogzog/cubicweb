@@ -119,7 +119,7 @@ class CubicWebRootResource(resource.Resource):
         self.static_directories = set(('data%s' % config.instance_md5_version(),
                                        'data', 'static', 'fckeditor'))
         global MAX_POST_LENGTH
-        MAX_POST_LENGTH = config['max-post-length'] * 1024 * 1024
+        MAX_POST_LENGTH = config['max-post-length']
 
     def init_publisher(self):
         config = self.config
