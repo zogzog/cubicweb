@@ -41,8 +41,7 @@ except ImportError:
 from __pkginfo__ import modname, version, license, description, web, \
      author, author_email
 
-if exists('README'):
-   long_description = file('README').read()
+long_description = file('README').read()
 
 # import optional features
 import __pkginfo__
@@ -179,14 +178,14 @@ def install(**kwargs):
     else:
         kwargs['package_dir'] = {modname : '.'}
         packages = [modname] + get_packages(os.getcwd(), modname)
+    if USE_SETUPTOOLS:
+       kwargs['install_requires'] = install_requires
     kwargs['packages'] = packages
     return setup(name=distname, version=version, license=license, url=web,
                  description=description, long_description=long_description,
                  author=author, author_email=author_email,
                  scripts=ensure_scripts(scripts), data_files=data_files,
                  ext_modules=ext_modules,
-                 install_requires=install_requires,
-                 #dependency_links=["http://alain:alain@intranet.logilab.fr/~alain/"],
                  cmdclass={'install_lib': MyInstallLib},
                  **kwargs
                  )
