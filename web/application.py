@@ -43,6 +43,15 @@ class AbstractSessionManager(component.Component):
         self.cleanup_anon_session_time = (vreg.config['cleanup-anonymous-session-time'] or 5) * 60
         assert self.cleanup_anon_session_time > 0
         self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
+        if vreg.config.anonymous_user() is not None:
+            self.clean_sessions_interval = min(
+                5 * 60,
+                self.cleanup_session_time / 2.,
+                self.cleanup_anon_session_time / 2.)
+        else:
+            self.clean_sessions_interval = min(
+                5 * 60,
+                self.cleanup_session_time / 2.)
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
@@ -137,6 +146,10 @@ class CookieSessionHandler(object):
         self.session_manager.restore_data(data)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
+
+    @property
+    def clean_sessions_interval(self):
+        return self.session_manager.clean_sessions_interval
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of

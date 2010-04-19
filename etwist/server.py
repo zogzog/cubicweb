@@ -124,10 +124,8 @@ class CubicWebRootResource(resource.PostableResource):
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
 
     def start_service(self):
-        config = self.config
-        interval = min(config['cleanup-session-time'] or 120,
-                       config['cleanup-anonymous-session-time'] or 720) / 2.
-        start_task(interval, self.appli.session_handler.clean_sessions)
+        start_task(self.appli.session_handler.clean_sessions_interval,
+                   self.appli.session_handler.clean_sessions)
 
     def set_url_rewriter(self):
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
