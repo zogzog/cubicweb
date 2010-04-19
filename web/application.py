@@ -35,12 +35,11 @@ class AbstractSessionManager(component.Component):
         self.session_time = vreg.config['http-session-time'] or None
         if self.session_time is not None:
             assert self.session_time > 0
-            self.session_time *= 60 # convert minutes to seconds
             self.cleanup_session_time = self.session_time
         else:
-            self.cleanup_session_time = (vreg.config['cleanup-session-time'] or 1440) * 60
+            self.cleanup_session_time = vreg.config['cleanup-session-time'] or 1440 * 60
             assert self.cleanup_session_time > 0
-        self.cleanup_anon_session_time = (vreg.config['cleanup-anonymous-session-time'] or 5) * 60
+        self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
         assert self.cleanup_anon_session_time > 0
         self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
         if vreg.config.anonymous_user() is not None:

@@ -113,17 +113,17 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'inputlevel': 2,
           }),
         ('http-session-time',
-         {'type' : 'int',
+         {'type' : 'time',
           'default': 0,
-          'help': "duration in minutes of the cookie used to store session "
-          "identifier. If 0, the cookie will expire when the user exist its "
-          "browser. Should be 0 or greater than repository\'s session-time.",
+          'help': "duration of the cookie used to store session identifier. "
+          "If 0, the cookie will expire when the user exist its browser. "
+          "Should be 0 or greater than repository\'s session-time.",
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-session-time',
-         {'type' : 'int',
-          'default': 1440,
-          'help': 'duration of inactivity in minutes after which a connection '
+         {'type' : 'time',
+          'default': '24h',
+          'help': 'duration of inactivity after which a connection '
           'will be closed, to limit memory consumption (avoid sessions that '
           'never expire and cause memory leak when http-session-time is 0). '
           'So even if http-session-time is 0 and the user don\'t close his '
@@ -132,8 +132,8 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-anonymous-session-time',
-         {'type' : 'int',
-          'default': 5,
+         {'type' : 'time',
+          'default': '5min',
           'help': 'Same as cleanup-session-time but specific to anonymous '
           'sessions. You can have a much smaller timeout here since it will be '
           'transparent to the user. Default to 5min.',
@@ -330,7 +330,6 @@ have the python imaging library installed to use captcha)',
             if isinstance(val, str):
                 files = [w.strip() for w in val.split(',') if w.strip()]
                 self.ext_resources[resource] = files
-
 
     # static files handling ###################################################
 
