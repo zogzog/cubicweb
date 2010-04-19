@@ -1,11 +1,16 @@
-"""Specific views for entities implementing IDownloadable
-
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+# organization: Logilab
+# copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+Standard interfaces.
 
+.. note::
+
+  The `implements` selector matches not only entity classes but also
+  their interfaces. Writing __select__ = implements('IGeocodable') is
+  a perfectly fine thing to do.
+"""
 __docformat__ = "restructuredtext en"
 
 from logilab.common.interface import Interface
@@ -159,6 +164,7 @@ class IPrevNext(Interface):
 class IBreadCrumbs(Interface):
     """interface for entities which can be "located" on some path"""
 
+    # XXX fix recurs !
     def breadcrumbs(self, view, recurs=False):
         """return a list containing some:
 

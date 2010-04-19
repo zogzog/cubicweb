@@ -203,7 +203,7 @@ method (from the list above) that needs to be modified. We do not advise you to
 overwrite ``render_entity`` unless you want a completely different layout.
 
 Example of customization and creation
--------------------------------------
+`````````````````````````````````````
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 

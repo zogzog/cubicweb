@@ -33,3 +33,4 @@ compute a relation creation category.
 Please note that if at least one action belongs to the `addrelated` category,
 the automatic behavior is desactivated in favor of an explicit behavior
 (e.g. display of `addrelated` category actions only).
+

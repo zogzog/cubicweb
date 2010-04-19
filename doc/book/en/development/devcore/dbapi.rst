@@ -1,6 +1,6 @@
+.. _dbapi:
 
-
-API Python/RQL
+Python/RQL API
 ~~~~~~~~~~~~~~
 
 The Python API developped to interface with RQL is inspired from the standard db-api,
@@ -9,24 +9,19 @@ The most important method is the `execute` method of a cursor.
 
 .. sourcecode:: python
 
-  execute(rqlstring, args=None, cachekey=None, build_descr=True)
+  execute(rqlstring, args=None, build_descr=True)
 
 :rqlstring: the RQL query to execute (unicode)
 :args: if the query contains substitutions, a dictionary containing the values to use
-:cachekey:
-   an implementation detail of the RQL cache implies that if a substitution
-   is used to introduce an eid *susceptible to raise the ambiguities in the query
-   type resolution*, then we have to specify the corresponding key in the dictionary
-   through this argument
-
 
 The `Connection` object owns the methods `commit` and `rollback`. You
 *should never need to use them* during the development of the web
 interface based on the *CubicWeb* framework as it determines the end
 of the transaction depending on the query execution success. They are
-however useful in other contexts such as tests.
+however useful in other contexts such as tests or custom controllers.
 
 .. note::
+
   While executing update queries (SET, INSERT, DELETE), if a query generates
   an error related to security, a rollback is automatically done on the current
   transaction.
@@ -67,7 +62,8 @@ to this rule.
 
 .. sourcecode:: python
 
-   self._cw.execute('Any T WHERE T in_conf C, C name IN (%s)' % ','.join(['foo', 'bar']))
+   self._cw.execute('Any T WHERE T in_conf C, C name IN (%s)'
+                    % ','.join(['foo', 'bar']))
 
 Alternativelly, some of the common data related to an entity can be
 obtained from the `entity.related()` method (which is used under the
@@ -78,6 +74,46 @@ get a relation. The initial request would then be translated to:
 
    entity.related('in_conf', 'object')
 
-Additionnaly this benefits from the fetch_attrs policy eventually
-defined on the class element, which says which attributes must be also
-loaded when the entity is loaded through the orm.
+Additionnaly this benefits from the fetch_attrs policy (see
+:ref:`FetchAttrs`) eventually defined on the class element, which says
+which attributes must be also loaded when the entity is loaded through
+the orm.
+
+
+.. _resultset:
+
+The `ResultSet` API
+~~~~~~~~~~~~~~~~~~~
+
+ResultSet instances are a very commonly manipulated object. They have
+a rich API as seen below, but we would like to highlight a bunch of
+methods that are quite useful in day-to-day practice:
+
+* `__str__()` (applied by `print`) gives a very useful overview of both
+  the underlying RQL expression and the data inside; unavoidable for
+  debugging purposes
+
+* `printable_rql()` produces back a well formed RQL expression as a
+  string; it is very useful to build views
+
+* `entities()` returns a generator on all entities of the result set
+
+* `get_entity(row, col)` gets the entity at row, col coordinates; one
+  of the most used result set method
+
+.. autoclass:: cubicweb.rset.ResultSet
+   :members:
+
+
+The `Cursor` API
+~~~~~~~~~~~~~~~~
+
+The whole cursor API is developped below.
+
+.. note:
+
+  In practice we use the `.execute` method on the _cw object of
+  appobjects. Usage of other methods is quite rare.
+
+.. autoclass:: cubicweb.dbapi.Cursor
+   :members:

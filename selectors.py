@@ -12,37 +12,33 @@ Using and combining existant selectors
 
 You can combine selectors using the `&`, `|` and `~` operators.
 
-When two selectors are combined using the `&` operator (formerly `chainall`), it
-means that both should return a positive score. On success, the sum of scores is returned.
+When two selectors are combined using the `&` operator, it means that
+both should return a positive score. On success, the sum of scores is
+returned.
 
-When two selectors are combined using the `|` operator (former `chainfirst`), it
-means that one of them should return a positive score. On success, the first
+When two selectors are combined using the `|` operator, it means that
+one of them should return a positive score. On success, the first
 positive score is returned.
 
 You can also "negate" a selector by precedeing it by the `~` unary operator.
 
-Of course you can use parens to balance expressions.
-
-.. Note:
-  When one chains selectors, the final score is the sum of the score of each
-  individual selector (unless one of them returns 0, in which case the object is
-  non selectable)
-
+Of course you can use parenthesis to balance expressions.
 
 Example
 ~~~~~~~
 
-The goal: when on a Blog, one wants the RSS link to refer to blog entries, not to
+The goal: when on a blog, one wants the RSS link to refer to blog entries, not to
 the blog entity itself.
 
-To do that, one defines a method on entity classes that returns the RSS stream
-url for a given entity. The default implementation on
-:class:`~cubicweb.entities.AnyEntity` (the generic entity class used as base for
-all others) and a specific implementation on Blog will do what we want.
+To do that, one defines a method on entity classes that returns the
+RSS stream url for a given entity. The default implementation on
+:class:`~cubicweb.entities.AnyEntity` (the generic entity class used
+as base for all others) and a specific implementation on `Blog` will
+do what we want.
 
-But when we have a result set containing several Blog entities (or different
-entities), we don't know on which entity to call the aforementioned method. In
-this case, we keep the generic behaviour.
+But when we have a result set containing several `Blog` entities (or
+different entities), we don't know on which entity to call the
+aforementioned method. In this case, we keep the generic behaviour.
 
 Hence we have two cases here, one for a single-entity rsets, the other for
 multi-entities rsets.
@@ -52,7 +48,7 @@ In web/views/boxes.py lies the RSSIconBox class. Look at its selector:
 .. sourcecode:: python
 
   class RSSIconBox(ExtResourcesBoxTemplate):
-    '''just display the RSS icon on uniform result set'''
+    ''' just display the RSS icon on uniform result set '''
     __select__ = ExtResourcesBoxTemplate.__select__ & non_final_entity()
 
 It takes into account:
@@ -116,8 +112,9 @@ Here is a quick example:
 
 The proper way to implement this with |cubicweb| is two have two different
 classes sharing the same identifier but with different selectors so you'll get
-the correct one according to the context:
+the correct one according to the context.
 
+.. sourcecode:: python
 
     class UserLink(component.Component):
 	'''display a link to the connected user object with a loggout link'''
@@ -137,8 +134,9 @@ the correct one according to the context:
 	    # display login link
             ...
 
-The big advantage, aside readibily once you're familiar with the system, is that
-your cube becomes much more easily customizable by improving componentization.
+The big advantage, aside readability once you're familiar with the
+system, is that your cube becomes much more easily customizable by
+improving componentization.
 
 
 .. _CustomSelectors:
@@ -148,7 +146,7 @@ Defining your own selectors
 
 .. autodocstring:: cubicweb.appobject::objectify_selector
 
-In other case, you can take a look at the following abstract base classes:
+In other cases, you can take a look at the following abstract base classes:
 
 .. autoclass:: cubicweb.selectors.ExpectedValueSelector
 .. autoclass:: cubicweb.selectors.EClassSelector
@@ -160,7 +158,7 @@ traceable when :class:`traced_selection` is activated (see :ref:`DebuggingSelect
 
 .. autofunction:: cubicweb.selectors.lltrace
 
-.. Note::
+.. note::
   Selectors __call__ should *always* return a positive integer, and shall never
   return `None`.
 
@@ -254,11 +252,14 @@ class traced_selection(object):
 
     .. sourcecode:: python
 
-        >>> with traced_selection( ('oid1', 'oid2') ):
+        >>> with traced_selection( ('regid1', 'regid2') ):
         ...     # some code in which you want to debug selectors
-        ...     # for objects with id 'oid1' and 'oid2'
+        ...     # for objects with __regid__ 'regid1' and 'regid2'
 
+    A potentially usefull point to set up such a tracing function is
+    the `cubicweb.vregistry.Registry.select` method body.
     """
+
     def __init__(self, traced='all'):
         self.traced = traced
 

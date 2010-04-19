@@ -1,4 +1,4 @@
-"""The `ResultSet` class which is returned as result of a rql query
+"""The `ResultSet` class which is returned as result of an rql query
 
 :organization: Logilab
 :copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -15,21 +15,22 @@ from cubicweb import NotAnEntity
 
 
 class ResultSet(object):
-    """a result set wrap a RQL query result. This object implements a partial
-    list protocol to allow direct use as a list of result rows.
+    """A result set wraps a RQL query result. This object implements
+    partially the list protocol to allow direct use as a list of
+    result rows.
 
     :type rowcount: int
-    :ivar rowcount: number of rows in the result
+    :param rowcount: number of rows in the result
 
     :type rows: list
-    :ivar rows: list of rows of result
+    :param rows: list of rows of result
 
     :type description: list
-    :ivar description:
+    :param description:
       result's description, using the same structure as the result itself
 
     :type rql: str or unicode
-    :ivar rql: the original RQL query string
+    :param rql: the original RQL query string
     """
     def __init__(self, results, rql, args=None, description=(), rqlst=None):
         self.rows = results
@@ -202,7 +203,8 @@ class ResultSet(object):
         return rset
 
     def split_rset(self, keyfunc=None, col=0, return_dict=False):
-        """Splits the result set in multiple result set according to a given key
+        """splits the result set in multiple result sets according to
+        a given key
 
         :type keyfunc: callable(entity or FinalType)
         :param keyfunc:
@@ -250,7 +252,7 @@ class ResultSet(object):
             return result
 
     def limited_rql(self):
-        """return a printable rql for the result set associated to the object,
+        """returns a printable rql for the result set associated to the object,
         with limit/offset correctly set according to maximum page size and
         currently displayed page when necessary
         """
@@ -375,12 +377,14 @@ class ResultSet(object):
 
     @cached
     def get_entity(self, row, col):
-        """special method for query retreiving a single entity, returns a
+        """convenience method for query retrieving a single entity, returns a
         partially initialized Entity instance.
 
-        WARNING: due to the cache wrapping this function, you should NEVER
-                 give row as a named parameter (i.e. rset.get_entity(req, 0)
-                 is OK but rset.get_entity(row=0, req=req) isn't
+        .. warning::
+
+          Due to the cache wrapping this function, you should NEVER
+          give row as a named parameter (i.e. rset.get_entity(req, 0)
+          is OK but rset.get_entity(row=0, req=req) isn't)
 
         :type row,col: int, int
         :param row,col:

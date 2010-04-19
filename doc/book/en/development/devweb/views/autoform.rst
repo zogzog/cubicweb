@@ -1,69 +1,92 @@
-The automatic entity form (:mod:`cubicweb.web.views.autoform`)
----------------------------------------------------------------
+The automatic entity form
+-------------------------
+
+(:mod:`cubicweb.web.views.autoform`)
 
 Tags declaration
-~~~~~~~~~~~~~~~~~~~~
+````````````````
 
 It is possible to manage attributes/relations in the simple or multiple
-editing form thanks of the methods bellow ::
+editing form using proper uicfg tags.
+
+.. sourcecode:: python
 
   uicfg.autoform_section.tag_subject_of(<relation>, tag)
   uicfg.autoform_section.tag_object_of(<relation>, tag)
   uicfg.autoform_field.tag_attribute(<attribut_def>, tag)
 
-Where ``<relation>`` is a three elements tuple ``(Subject Entity Type,
-relation_type, Object Entity Type)``. ``<attribut_def>`` is a two elements tuple
-``(Entity Type, Attribut Name)``. Wildcard ``*`` could be used in place of
-``Entity Type``
+The details of the uicfg syntax can be found in the :ref:`uicfg`
+chapter.
 
 Possible tags are detailled below
 
-Simple Tags
-~~~~~~~~~~~~~~~~~~~~
+Automatic form configuration
+````````````````````````````
 
-* `primary`, indicates that an attribute or a relation has to be
-  inserted **in the simple or multiple editing forms**. In the case of
-  a relation, the related entity editing form will be included in the
-  editing form and represented as a combobox. Each item of the
-  combobox is a link to an existing entity.
+Attributes/relations display location
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* `secondary`, indicates that an attribute or a relation has to be
-  inserted **in the simple editing form only**. In the case of a
-  relation, the related entity editing form will be included in the
-  editing form and represented as a combobox. Each item of the combobox
-  is a link to an existing entity.
+``uicfg.autoform_section`` specifies where to display a relation in
+creation/edition entity form for a given form type.  ``tag_attribute``,
+``tag_subject_of`` and ``tag_object_of`` methods for this relation tag expect
+two arguments additionally to the relation key: a ``formtype`` and a
+``section``.
 
-* `inlineview`, includes the target entity's form in the editing form
-  of the current entity. It allows to create the target entity in the
-  same time as the current entity.
+``formtype`` may be one of:
 
-* `generic`, indicates that a relation has to be inserted in the simple
-  editing form, in the generic box of relation creation.
+* ``main``, the main entity form (via the modify action)
+* ``inlined``, the form for an entity inlined into another form
+* ``muledit``, the table form to edit multiple entities
 
-* `generated`, indicates that an attribute is dynamically computed
-  or other,  and that it should not be displayed in the editing form.
+section may be one of:
 
-If necessary, it is possible to overwrite the method
-`relation_category(rtype, x='subject')` to dynamically compute
-a relation editing category.
+* ``hidden``, don't display
+
+* ``attributes``, display in the attributes section
+
+* ``relations``, display in the relations section, using the generic relation
+  selector combobox (available in main form only, and not for attribute
+  relation)
+
+* ``inlined``, display target entity of the relation in an inlined form
+  (available in main form only, and not for attribute relation)
+
+* ``metadata``, display in a special metadata form (NOT YET IMPLEMENTED, subject
+  to changes)
+
+By default, mandatory relations are displayed in the ``attributes`` section,
+others in ``relations`` section.
+
+Change default fields
+^^^^^^^^^^^^^^^^^^^^^
+
+Use ``autoform_field`` to replace the default field type of an attribute.
+
+.. warning::
+
+   ``autoform_field_kwargs`` should usually be used instead of
+   ``autoform_field``. Do not use both methods for the same relation!
 
 
-Advanced Tags
-~~~~~~~~~~~~~~~~~~~~
+Customize field options
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Tag can also reference a custom Field crafted with the help of
-``cubicweb.web.formfields`` and ``cubicweb.web.formwidget``. In the example
-bellow, the field ``path`` of ``ExecData`` entities will be done with a standard
-file input dialogue ::
+In order to customize field options (see :class:`cubicweb.web.formfields.Field`
+for a detailed list of options), use ``autoform_field_kwargs``. This rtag takes
+a relation triplet and a dictionary as arguments.
 
-  from cubicweb.web import uicfg, formfields, formwidgets
+.. sourcecode:: python
 
-  uicfg.autoform_field.tag_attribute(('Execdata', 'path'),
-      formfields.FileField(name='path', widget=formwidgets.FileInput()))
-
-
-
-
+   # Change the content of the combobox
+   # here ``ticket_done_in_choices`` is a function which returns a list of
+   # elements to populate the combobox
+   uicfg.autoform_field_kwargs.tag_subject_of(('Ticket', 'done_in', '*'), {'sort': False,
+                                                  'choices': ticket_done_in_choices})
 
 
 
+Overriding permissions
+^^^^^^^^^^^^^^^^^^^^^^
+
+``autoform_permissions_overrides`` provides a way to by-pass security checking
+for dark-corner case where it can't be verified properly. XXX documents.

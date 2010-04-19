@@ -1,8 +1,6 @@
 The View system
 ===============
 
-.. |cubicweb| replace:: *CubicWeb*
-
 This chapter aims to describe the concept of a `view` used all along
 the development of a web application and how it has been implemented
 in |cubicweb|.
@@ -27,7 +25,6 @@ in |cubicweb|.
 
    urlpublish
    breadcrumbs
-..   facets
 ..   wdoc
 ..   embedding
 ..   idownloadable

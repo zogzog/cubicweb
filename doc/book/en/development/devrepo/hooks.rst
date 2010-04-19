@@ -41,7 +41,7 @@ Data hooks can serve the following purposes:
 
 * implement computed attributes
 
-Operations are Hook-like objects that maye be created by Hooks and
+Operations are Hook-like objects that may be created by Hooks and
 scheduled to happen just before (or after) the `commit` event. Hooks
 being fired immediately on data operations, it is sometime necessary
 to delay the actual work down to a time where all other Hooks have
@@ -56,7 +56,7 @@ etc.
 
 Operations are subclasses of the Operation class in `server/hook.py`,
 implementing `precommit_event` and other standard methods (wholly
-described later in this chapter).
+described in :ref:`operations_api`).
 
 Events
 ------
@@ -219,6 +219,7 @@ The essential difference with respect to an entity hook is that there
 is no self.entity, but `self.eidfrom` and `self.eidto` hook attributes
 which represent the subject and object eid of the relation.
 
+
 Using Operations
 ----------------
 
@@ -325,6 +326,8 @@ example):
   A more realistic example can be found in the advanced tutorial
   chapter :ref:`adv_tuto_security_propagation`.
 
+.. _operations_api:
+
 Operation: a small API overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -416,7 +419,7 @@ avoid infinite Hook loops. One uses the `hooks_control` context
 manager.
 
 This can be controlled more finely through the `category` Hook class
-attribute.
+attribute, which is a string.
 
 .. sourcecode:: python
 
@@ -424,3 +427,10 @@ attribute.
        # ... do stuff
 
 .. autoclass:: cubicweb.server.session.hooks_control
+
+The existing categories are: ``email``, ``syncsession``,
+``syncschema``, ``bookmark``, ``security``, ``worfklow``,
+``metadata``, ``notification``, ``integrity``, ``activeintegrity``.
+
+Nothing precludes one to invent new categories and use the
+hooks_control context manager to filter them (in or out).

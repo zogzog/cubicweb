@@ -45,7 +45,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'CubicWeb'
-copyright = '2008-2010, Logilab'
+copyright = '2001-2010, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -188,4 +188,11 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
 #aafig_format = dict(latex='pdf', html='svg', text=None)
+
+rst_epilog = """
+.. |cubicweb| replace:: *CubicWeb*
+.. |yams| replace:: *Yams*
+.. |rql| replace:: *RQL*
+"""

@@ -181,8 +181,8 @@ Application objects are stored in the vregistry using a two-level hierarchy :
 
   object's `__registry__` : object's `__regid__` : [list of app objects]
 
-E.g. The `vregistry` contains several registries which hold a list of
-appobjects associated to an identifier.
+E.g. the `vregistry` contains several (sub-)registries which hold a
+list of appobjects associated to an identifier.
 
 The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
 
@@ -214,7 +214,6 @@ packages:
 - `entities`
 - `views`
 - `sobjects`
-- `hooks`
 
 
 Once initialized, there are three common ways to retrieve some application object
@@ -238,7 +237,8 @@ from a registry:
 The RQL query language
 ----------------------
 
-**No need for a complicated ORM when you have a powerful query language**
+**No need for a complicated ORM when you have a powerful data
+  manipulation language**
 
 All the persistent data in a |cubicweb| instance is retrieved and modified by
 using the Relation Query Language.
@@ -247,7 +247,7 @@ This query language is inspired by SQL but is on a higher level in order to
 emphasize browsing relations.
 
 
-db-api
+DB-API
 ~~~~~~
 
 The repository exposes a `db-api`_ like api but using the RQL instead of SQL.

@@ -3,6 +3,8 @@
 # :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+.. _appobject:
+
 The `AppObject` class
 ---------------------
 
@@ -33,7 +35,7 @@ def objectify_selector(selector_func):
     class::
 
         @objectify_selector
-        def one(cls, *args, **kwargs):
+        def one(cls, req, rset=None, **kwargs):
             return 1
 
         class MyView(View):

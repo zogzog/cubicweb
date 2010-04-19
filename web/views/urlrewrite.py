@@ -188,8 +188,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
 
 
 class SchemaBasedRewriter(URLRewriter):
-    """Here, the rules dict maps regexps or plain strings to
-    callbacks that will be called with (input, uri, req, schema)
+    """Here, the rules dict maps regexps or plain strings to callbacks
+    that will be called with inputurl, uri, req, schema as parameters.
     """
     __regid__ = 'schemabased'
     rules = [

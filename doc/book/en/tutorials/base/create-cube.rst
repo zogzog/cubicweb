@@ -69,10 +69,6 @@ and then create your new cube using:
   cubicweb-ctl newcube --directory=~/src/cubes blog
 
 
-
-
-
-
 .. _DefineDataModel:
 
 Define your data model
@@ -302,7 +298,7 @@ point calls the following sequence of (redefinable) methods:
 
 Excepted side boxes, we can see all of them already in action in the
 blog entry view. This is all described in more details in
-:ref:`primary`.
+:ref:`primary_view`.
 
 We can for example add in front of the publication date a prefix
 specifying that the date we see is the publication date.

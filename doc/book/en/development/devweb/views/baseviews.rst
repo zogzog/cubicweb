@@ -1,14 +1,14 @@
 .. -*- coding: utf-8 -*-
 
-Base views (:mod:`cubicweb.web.views.baseviews`)
-------------------------------------------------
+Base views
+----------
 
-*CubicWeb* provides a lot of standard views. You can find them in
-``cubicweb/web/views/``.
+*CubicWeb* provides a lot of standard views, that can be found in
+ :mod:`cubicweb.web.views` and :mod:`cubicweb.web.views.baseviews`.
 
-A certain number of views are used to build the web interface, which apply
-to one or more entities. Their identifier is what distinguish them from
-each others and the main ones are:
+A certain number of views are used to build the web interface, which
+apply to one or more entities. Their identifier is what distinguish
+them from each others and the main ones are:
 
 HTML views
 ~~~~~~~~~~
@@ -24,22 +24,27 @@ Special views
     Display the value of a cell without trasnformation (in case of a non final
     entity, we see the eid). Applicable on any result set.
 
+.. note::
+
+   `final` entities are merely attributes.
+
 *null*
     This view is the default view used when nothing needs to be rendered.
-    It is always applicable and it does not return anything
+    It is always applicable.
 
 Entity views
 ````````````
+
 *incontext, outofcontext*
     Those are used to display a link to an entity, depending on the
     entity having to be displayed in or out of context
-    (of another entity).  By default it respectively returns the
+    (of another entity).  By default it respectively produces the
     result of `textincontext` and `textoutofcontext` wrapped in a link
     leading to the primary view of the entity.
 
 *oneline*
     This view is used when we can't tell if the entity should be considered as
-    displayed in or out of context.  By default it returns the result of `text`
+    displayed in or out of context.  By default it produces the result of `text`
     in a link leading to the primary view of the entity.
 
 List
@@ -67,6 +72,7 @@ List
 
 Text entity views
 ~~~~~~~~~~~~~~~~~
+
 *text*
     This is the simplest text view for an entity. By default it returns the
     result of the `.dc_title` method, which is cut to fit the

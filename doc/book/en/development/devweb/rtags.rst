@@ -7,7 +7,7 @@ Relation tags
 ~~~~~~~~~~~~~
 .. automodule:: cubicweb.rtags
 
-.. _uicfg_module:
+.. _uicfg:
 
 The ``uicfg`` module
 ~~~~~~~~~~~~~~~~~~~~

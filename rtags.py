@@ -4,7 +4,10 @@
 #:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 
 """
-A RelationTag object is an object which allows to link a configuration information to a relation definition. For instance, the standard primary view uses a RelationTag object (uicfg.primaryview_section) to get the section to display relations.
+A RelationTag object is an object which allows to link a configuration
+information to a relation definition. For instance, the standard
+primary view uses a RelationTag object (uicfg.primaryview_section) to
+get the section to display relations.
 
 .. sourcecode:: python
 

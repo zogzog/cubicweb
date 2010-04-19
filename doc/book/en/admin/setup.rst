@@ -457,6 +457,3 @@ Cubicweb resources configuration
 --------------------------------
 
 .. autodocstring:: cubicweb.cwconfig
-
-
-.. |cubicweb| replace:: *CubicWeb*

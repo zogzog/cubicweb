@@ -7,8 +7,11 @@ A little history...
 developing in 2001 as an offspring of its Narval_ research project. *CubicWeb*
 is written in Python and includes a data server and a web engine.
 
-Its data server publishes data federated from different sources like SQL
-databases, LDAP directories or even from other CubicWeb data servers.
+Its data server publishes data federated from different sources like
+SQL databases, LDAP directories, `VCS`_ repositories or even from other
+CubicWeb data servers.
+
+.. _`VCS`: http://en.wikipedia.org/wiki/Revision_control
 
 Its web engine was designed to let the final user control what content to select
 and how to display it. It allows one to browse the federated data sources and
