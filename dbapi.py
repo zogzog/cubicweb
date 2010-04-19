@@ -560,9 +560,13 @@ class Connection(object):
         if req is None:
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
-        user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
-                                                         groups=groups,
-                                                         properties=properties)
+        if 'etypes' in self.vreg:
+            user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
+                                                             groups=groups,
+                                                             properties=properties)
+        else:
+            from cubicweb.entity import Entity
+            user = Entity(req, rset, row=0)
         user['login'] = login # cache login
         return user
 
