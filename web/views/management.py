@@ -198,7 +198,7 @@ class ErrorView(AnyRsetView):
         # creates a bug submission link if submit-mail is set
         if self._cw.vreg.config['submit-mail']:
             form = self._cw.vreg['forms'].select('base', self._cw, rset=None,
-                                             mainform=False)
+                                                 mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.add_hidden('description', binfo,
                             # we must use a text area to keep line breaks

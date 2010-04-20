@@ -117,14 +117,16 @@ class Form(AppObject):
     def form_valerror(self):
         """the validation error exception if any"""
         if self.parent_form is None:
-            return self._form_valerror
+            # unset if restore_previous_post has not be called
+            return getattr(self, '_form_valerror', None)
         return self.parent_form.form_valerror
 
     @property
     def form_previous_values(self):
         """previously posted values (on validation error)"""
         if self.parent_form is None:
-            return self._form_previous_values
+            # unset if restore_previous_post has not be called
+            return getattr(self, '_form_previous_values', {})
         return self.parent_form.form_previous_values
 
     @iclassmethod
