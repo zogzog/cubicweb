@@ -35,7 +35,7 @@ following environment variables::
 I can now create the cube which will hold custom code for this web
 site using::
 
-  c-c newcube --directory=~/src/cubes sytweb
+  cubicweb-ctl newcube --directory=~/src/cubes sytweb
 
 
 .. _adv_tuto_assemble_cubes:
@@ -141,19 +141,19 @@ Step 4: creating the instance
 Now that I've a schema, I want to create an instance so I can start To
 create an instance using this new 'sytweb' cube, I run::
 
-  c-c create sytweb sytweb_instance
+  cubicweb-ctl create sytweb sytweb_instance
 
 hint : if you get an error while the database is initialized, you can
 avoid having to reanswer to questions by runing ::
 
-   c-c db-create sytweb_instance
+   cubicweb-ctl db-create sytweb_instance
 
 This will use your already configured instance and start directly from the create
 database step, thus skipping questions asked by the 'create' command.
 
 Once the instance and database are fully initialized, run ::
 
-  c-c start sytweb_instance
+  cubicweb-ctl start sytweb_instance
 
 to start the instance, check you can connect on it, etc...
 

@@ -2,7 +2,7 @@ Form construction
 ------------------
 
 CubicWeb provides usual form/field/widget/renderer abstraction to
-provde some generic building blocks which will greatly help you in
+provide some generic building blocks which will greatly help you in
 building forms properly integrated with CubicWeb (coherent display,
 error handling, etc...).
 
