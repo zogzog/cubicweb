@@ -45,9 +45,10 @@ for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n'
 
 # a dict; you might want to provide a version specification
 # of the form '>= x.y.z'
-__depends_cubes__ = %(dependencies)s
 __depends__ = {'cubicweb': '>= 3.7.0'}
+__depends_cubes__ = %(dependencies)s
+__recommends_cubes__ = {}
 # obsolete (will be gone in cw 3.8.0)
 __use__ = tuple(__depends_cubes__)
-__recommend__ = ()
+__recommend__ = tuple(__recommends_cubes__)
 
