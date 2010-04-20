@@ -139,19 +139,12 @@ class MyInstallLib(install_lib.install_lib):
 
 def install(**kwargs):
     """setup entry point"""
-    try:
-        if USE_SETUPTOOLS:
+    if USE_SETUPTOOLS:
+        if '--force-manifest' in sys.argv:
             sys.argv.remove('--force-manifest')
-    except:
-        pass
-    try:
-        if not USE_SETUPTOOLS:
-            # install-layout option was introduced in 2.5.3-1~exp1
-            if sys.versioninfo < (2, 5, 4):
-                sys.argv.remove('--install-layout=deb')
-                print "W: remove '--install-layout=deb' option"
-    except:
-        pass
+    # install-layout option was introduced in 2.5.3-1~exp1
+    elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
+        sys.argv.remove('--install-layout=deb')
     kwargs['package_dir'] = {modname : '.'}
     packages = [modname] + get_packages(os.getcwd(), modname)
     if USE_SETUPTOOLS and install_requires:
