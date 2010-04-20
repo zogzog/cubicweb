@@ -19,7 +19,7 @@ from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.session import security_enabled
 
-def has_eid(sqlcursor, eid, eids):
+def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
     if eids.has_key(eid):
         return eids[eid]
@@ -30,9 +30,17 @@ def has_eid(sqlcursor, eid, eids):
         eids[eid] = False
         return False
     if source and source != 'system':
-        # XXX what to do...
-        eids[eid] = True
-        return True
+        try:
+            # insert eid *and* etype to attempt checking entity has not been
+            # replaced by another subsquently to a restore of an old dump
+            if session.execute('Any X WHERE X is %s, X eid %%(x)s' % etype,
+                               {'x': eid}):
+                eids[eid] = True
+                return True
+        except: # TypeResolverError, Unauthorized...
+            pass
+        eids[eid] = False
+        return False
     sqlcursor.execute('SELECT * FROM %s%s WHERE %seid=%s' % (SQL_PREFIX, etype,
                                                              SQL_PREFIX, eid))
     result = sqlcursor.fetchall()
@@ -130,7 +138,7 @@ def check_text_index(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the text index but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -146,7 +154,7 @@ def check_entities(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT eid FROM entities;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the system table but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -199,7 +207,7 @@ def check_relations(schema, session, eids, fix=1):
                 cursor = session.system_sql(sql)
                 for row in cursor.fetchall():
                     eid = row[0]
-                    if not has_eid(cursor, eid, eids):
+                    if not has_eid(session, cursor, eid, eids):
                         bad_related_msg(rschema, 'object', eid, fix)
                         if fix:
                             sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
@@ -209,7 +217,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'subject', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_from=%s;' % (
@@ -218,7 +226,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_to FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'object', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_to=%s;' % (
