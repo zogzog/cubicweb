@@ -397,7 +397,6 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     var descr = result[1];
     // Unknown structure
     if ( !isArrayLike(descr) || descr.length != 2 ) {
-	log('got strange error :', descr);
 	updateMessage(descr);
 	return false;
     }
