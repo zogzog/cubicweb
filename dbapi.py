@@ -423,7 +423,8 @@ class Cursor(object):
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
-        rset = self._repo.execute(self._sessid, rql, args, build_descr)
+        # XXX use named argument for build_descr in case repo is < 3.8
+        rset = self._repo.execute(self._sessid, rql, args, build_descr=build_descr)
         rset.req = self.req
         return rset
 
