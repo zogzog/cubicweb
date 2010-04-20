@@ -19,9 +19,9 @@ from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.session import security_enabled
 
-def has_eid(sqlcursor, eid, eids):
+def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
-    if eids.has_key(eid):
+    if eid in eids:
         return eids[eid]
     sqlcursor.execute('SELECT type, source FROM entities WHERE eid=%s' % eid)
     try:
@@ -30,9 +30,17 @@ def has_eid(sqlcursor, eid, eids):
         eids[eid] = False
         return False
     if source and source != 'system':
-        # XXX what to do...
-        eids[eid] = True
-        return True
+        try:
+            # insert eid *and* etype to attempt checking entity has not been
+            # replaced by another subsquently to a restore of an old dump
+            if session.execute('Any X WHERE X is %s, X eid %%(x)s' % etype,
+                               {'x': eid}):
+                eids[eid] = True
+                return True
+        except: # TypeResolverError, Unauthorized...
+            pass
+        eids[eid] = False
+        return False
     sqlcursor.execute('SELECT * FROM %s%s WHERE %seid=%s' % (SQL_PREFIX, etype,
                                                              SQL_PREFIX, eid))
     result = sqlcursor.fetchall()
@@ -111,16 +119,16 @@ def check_schema(schema, session, eids, fix=1):
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
                           'VocabularyConstraint', 'RQLConstraint',
                           'RQLVocabularyConstraint')
-    rql = ('Any COUNT(X),RN,EN,ECTN GROUPBY RN,EN,ECTN ORDERBY 1 '
+    rql = ('Any COUNT(X),RN,SN,ON,CTN GROUPBY RN,SN,ON,CTN ORDERBY 1 '
            'WHERE X is CWConstraint, R constrained_by X, '
-           'R relation_type RT, R from_entity ET, RT name RN, '
-           'ET name EN, X cstrtype ECT, ECT name ECTN')
-    for count, rn, en, cstrname in session.execute(rql):
+           'R relation_type RT, RT name RN, R from_entity ST, ST name SN, '
+           'R to_entity OT, OT name ON, X cstrtype CT, CT name CTN')
+    for count, rn, sn, on, cstrname in session.execute(rql):
         if count == 1:
             continue
         if cstrname in unique_constraints:
-            print "ERROR: got %s %r constraints on relation %s.%s" % (
-                count, cstrname, en, rn)
+            print "ERROR: got %s %r constraints on relation %s.%s.%s" % (
+                count, cstrname, sn, rn, on)
 
 
 
@@ -130,7 +138,7 @@ def check_text_index(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the text index but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -146,7 +154,7 @@ def check_entities(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT eid FROM entities;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the system table but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -163,7 +171,7 @@ def check_entities(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT %s FROM %s;' % (column, table))
         for row in cursor.fetchall():
             eid = row[0]
-            # eids is full since we have fetched everyting from the entities table,
+            # eids is full since we have fetched everything from the entities table,
             # no need to call has_eid
             if not eid in eids or not eids[eid]:
                 msg = '  Entity with eid %s exists in the %s table but not in the system table'
@@ -199,7 +207,7 @@ def check_relations(schema, session, eids, fix=1):
                 cursor = session.system_sql(sql)
                 for row in cursor.fetchall():
                     eid = row[0]
-                    if not has_eid(cursor, eid, eids):
+                    if not has_eid(session, cursor, eid, eids):
                         bad_related_msg(rschema, 'object', eid, fix)
                         if fix:
                             sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
@@ -209,7 +217,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'subject', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_from=%s;' % (
@@ -218,7 +226,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_to FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'object', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_to=%s;' % (
@@ -257,7 +265,7 @@ def check_metadata(schema, session, eids, fix=1):
     assert default_user_eid is not None, 'no user defined !'
     for rel, default in ( ('owned_by', default_user_eid), ):
         cursor = session.system_sql("SELECT eid, type FROM entities "
-                                    "WHERE NOT EXISTS "
+                                    "WHERE source='system' AND NOT EXISTS "
                                     "(SELECT 1 FROM %s_relation WHERE eid_from=eid);"
                                     % rel)
         for eid, etype in cursor.fetchall():
