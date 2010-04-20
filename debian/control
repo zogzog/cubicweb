@@ -68,7 +68,7 @@ Package: cubicweb-twisted
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Provides: cubicweb-web-frontend
-Depends: ${python:Depends}, cubicweb-web (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-twisted-web2
+Depends: ${python:Depends}, cubicweb-web (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-twisted-web
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: twisted-based web interface for the CubicWeb framework
  CubicWeb is a semantic web application framework.
