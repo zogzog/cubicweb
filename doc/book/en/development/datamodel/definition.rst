@@ -42,8 +42,8 @@ Let us detail a little the divergences between E/R and |yams|:
 * all relationship are binary which means that to represent a
   non-binary relationship, one has to use an entity,
 * relationships do not support attributes (yet, see:
-  https://www.logilab.net/cwo/ticket/341318), hence the need to reify
-  it as an entity if need arises,
+  http://www.cubicweb.org/ticket/341318), hence the need to reify it
+  as an entity if need arises,
 * all entities have an `eid` attribute (an integer) that is its
   primary key (but it is possible to declare uniqueness on other
   attributes)
