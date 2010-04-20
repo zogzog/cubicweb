@@ -346,8 +346,7 @@ repository (default to 5 minutes).',
         """update an entity in the source"""
         relations, kwargs = self._entity_relations_and_kwargs(session, entity)
         cu = session.pool[self.uri]
-        cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                   kwargs, 'x')
+        cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs)
         self._query_cache.clear()
         entity.clear_all_caches()
 
@@ -355,7 +354,7 @@ repository (default to 5 minutes).',
         """delete an entity from the source"""
         cu = session.pool[self.uri]
         cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
-                   {'x': self.eid2extid(entity.eid, session)}, 'x')
+                   {'x': self.eid2extid(entity.eid, session)})
         self._query_cache.clear()
 
     def add_relation(self, session, subject, rtype, object):
@@ -363,7 +362,7 @@ repository (default to 5 minutes).',
         cu = session.pool[self.uri]
         cu.execute('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)}, ('x', 'y'))
+                    'y': self.eid2extid(object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).clear_all_caches()
         session.entity_from_eid(object).clear_all_caches()
@@ -373,7 +372,7 @@ repository (default to 5 minutes).',
         cu = session.pool[self.uri]
         cu.execute('DELETE X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)}, ('x', 'y'))
+                    'y': self.eid2extid(object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).clear_all_caches()
         session.entity_from_eid(object).clear_all_caches()
