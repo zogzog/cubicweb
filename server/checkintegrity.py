@@ -111,16 +111,16 @@ def check_schema(schema, session, eids, fix=1):
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
                           'VocabularyConstraint', 'RQLConstraint',
                           'RQLVocabularyConstraint')
-    rql = ('Any COUNT(X),RN,EN,ECTN GROUPBY RN,EN,ECTN ORDERBY 1 '
+    rql = ('Any COUNT(X),RN,SN,ON,CTN GROUPBY RN,SN,ON,CTN ORDERBY 1 '
            'WHERE X is CWConstraint, R constrained_by X, '
-           'R relation_type RT, R from_entity ET, RT name RN, '
-           'ET name EN, X cstrtype ECT, ECT name ECTN')
-    for count, rn, en, cstrname in session.execute(rql):
+           'R relation_type RT, RT name RN, R from_entity ST, ST name SN, '
+           'R to_entity OT, OT name ON, X cstrtype CT, CT name CTN')
+    for count, rn, sn, on, cstrname in session.execute(rql):
         if count == 1:
             continue
         if cstrname in unique_constraints:
-            print "ERROR: got %s %r constraints on relation %s.%s" % (
-                count, cstrname, en, rn)
+            print "ERROR: got %s %r constraints on relation %s.%s.%s" % (
+                count, cstrname, sn, rn, on)
 
 
 
