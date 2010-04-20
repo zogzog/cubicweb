@@ -17,7 +17,7 @@ What main_publish does:
   delegated to the `urlpublisher` component)
 
 * the controller is then selected (if not, this is considered an
-  authorization failure and signaled as sich) and called
+  authorization failure and signaled as such) and called
 
 * then either a proper result is returned, in which case the
   request/connection object issues a ``commit`` and returns the result
@@ -42,7 +42,7 @@ the following:
   can be forced from the url GET parameters), that is:
 
     * compute the `vid` using the result set and the schema (see
-      `cubicweb.web.views.vid_from_rst`)
+      `cubicweb.web.views.vid_from_rset`)
     * handle all error cases that could happen in this phase
 
 * do some cache management chores
