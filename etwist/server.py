@@ -170,21 +170,25 @@ class CubicWebRootResource(resource.Resource):
         # Anything in data/, static/, fckeditor/ and the generated versioned
         # data directory is treated as static files
         if directory in self.static_directories:
+            # take care fckeditor may appears as root directory or as a data
+            # subdirectory
+            if directory == 'static':
+                return File(self.config.static_directory)
+            if directory == 'fckeditor':
+                return File(self.config.ext_resources['FCKEDITOR_PATH'])
+            if directory != 'data':
+                # versioned directory, use specific file with http cache
+                # headers so their are cached for a very long time
+                cls = LongTimeExpiringFile
+            else:
+                cls = File
+            if path == 'fckeditor':
+                return cls(self.config.ext_resources['FCKEDITOR_PATH'])
             if path == directory: # recurse
                 return self
-            cls = File
-            if directory == 'static':
-                datadir = self.config.static_directory
-            elif directory == 'fckeditor':
-                datadir = self.config.ext_resources['FCKEDITOR_PATH']
-            else:
-                datadir = self.config.locate_resource(path)
-                if datadir is None:
-                    return self
-                if directory != 'data':
-                    # versioned directory, use specific file with http cache
-                    # headers so their are cached for a very long time
-                    cls = LongTimeExpiringFile
+            datadir = self.config.locate_resource(path)
+            if datadir is None:
+                return self # recurse
             self.debug('static file %s from %s', path, datadir)
             return cls(join(datadir, path))
         # Otherwise we use this single resource
