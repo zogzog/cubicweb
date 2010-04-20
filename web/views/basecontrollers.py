@@ -239,7 +239,6 @@ class FormValidatorController(Controller):
         self._cw.set_content_type('text/html')
         jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
- wp = window.parent;
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
 
