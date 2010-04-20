@@ -515,19 +515,14 @@ class NewCubeCommand(Command):
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
+        dependencies = {}
         if verbose:
-            includes = self._ask_for_dependancies()
-            if len(includes) == 1:
-                dependancies = '%r,' % includes[0]
-            else:
-                dependancies = ', '.join(repr(cube) for cube in includes)
-        else:
-            dependancies = ''
+            dependencies = self._ask_for_dependencies()
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
-                   'dependancies' : dependancies,
+                   'dependencies' : dict((dep, None) for dep in dependencies),
                    'version'  : cubicwebversion,
                    'year'  : str(datetime.now().year),
                    'author': self['author'],
@@ -536,7 +531,7 @@ class NewCubeCommand(Command):
                    }
         copy_skeleton(skeldir, cubedir, context)
 
-    def _ask_for_dependancies(self):
+    def _ask_for_dependencies(self):
         from logilab.common.shellutils import ASK
         from logilab.common.textutils import splitstrip
         includes = []
@@ -546,7 +541,7 @@ class NewCubeCommand(Command):
             if answer == 'y':
                 includes.append(stdtype)
             if answer == 'type':
-                includes = splitstrip(raw_input('type dependancies: '))
+                includes = splitstrip(raw_input('type dependencies: '))
                 break
             elif answer == 'skip':
                 break

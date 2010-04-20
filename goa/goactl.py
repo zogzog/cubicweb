@@ -195,7 +195,7 @@ class NewGoogleAppCommand(Command):
         # goa instance'skeleton
         copy_skeleton(join(CW_SOFTWARE_ROOT, 'goa', 'skel'),
                       appldir, context, askconfirm=True)
-        # cubicweb core dependancies
+        # cubicweb core dependencies
         for directory, subdirectory in slink_directories():
             subdirectory = join(appldir, subdirectory)
             if not exists(split(subdirectory)[0]):
