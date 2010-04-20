@@ -36,7 +36,7 @@ scripts = getattr(__pkginfo__, 'scripts', [])
 data_files = getattr(__pkginfo__, 'data_files', None)
 include_dirs = getattr(__pkginfo__, 'include_dirs', [])
 ext_modules = getattr(__pkginfo__, 'ext_modules', None)
-dependency_links = getattr(__pkginfo__, 'dependency_links', None)
+dependency_links = getattr(__pkginfo__, 'dependency_links', [])
 
 STD_BLACKLIST = ('CVS', '.svn', '.hg', 'debian', 'dist', 'build')
 
