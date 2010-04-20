@@ -599,7 +599,7 @@ class Connection(object):
         if req is None:
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
-        if 'etypes' in self.vreg:
+        if self.vreg is not None and 'etypes' in self.vreg:
             user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
                                                              groups=groups,
                                                              properties=properties)
