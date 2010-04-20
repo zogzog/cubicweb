@@ -50,7 +50,7 @@ Depends: python-psycopg2, postgresql-client
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependancies to use postgres for the
+ This virtual package provides dependencies to use postgres for the
  cubicweb repository.
 
 Package: cubicweb-mysql-support
@@ -60,7 +60,7 @@ Depends: python-mysqldb, mysql-client
 Description: mysql support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependancies to use mysql for the
+ This virtual package provides dependencies to use mysql for the
  cubicweb repository.
 
 

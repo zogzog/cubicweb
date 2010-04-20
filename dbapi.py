@@ -108,11 +108,50 @@ def repo_connect(repo, login, **kwargs):
 def connect(database=None, login=None, host=None, group=None,
             cnxprops=None, setvreg=True, mulcnx=True, initlog=True, **kwargs):
     """Constructor for creating a connection to the CubicWeb repository.
-    Returns a Connection object.
+    Returns a :class:`Connection` object.
 
-    When method is 'pyro', setvreg is True, try to deal with connections to
-    differents instances in the same process unless specified otherwise by
-    setting the mulcnx to False.
+    Typical usage::
+
+      cnx = connect('myinstance', login='me', password='toto')
+
+    Arguments:
+
+    :database:
+      the instance's pyro identifier.
+
+    :login:
+      the user login to use to authenticate.
+
+    :host:
+      the pyro nameserver host. Will be detected using broadcast query if
+      unspecified.
+
+    :group:
+      the instance's pyro nameserver group. You don't have to specify it unless
+      tweaked in instance's configuration.
+
+    :cnxprops:
+      an optional :class:`ConnectionProperties` instance, allowing to specify
+      the connection method (eg in memory or pyro). A Pyro connection will be
+      established if you don't specify that argument.
+
+    :setvreg:
+      flag telling if a registry should be initialized for the connection.
+      Don't change this unless you know what you're doing.
+
+    :mulcnx:
+      Will disappear at some point. Try to deal with connections to differents
+      instances in the same process unless specified otherwise by setting this
+      flag to False. Don't change this unless you know what you're doing.
+
+    :initlog:
+      flag telling if logging should be initialized. You usually don't want
+      logging initialization when establishing the connection from a process
+      where it's already initialized.
+
+    :kwargs:
+      there goes authentication tokens. You usually have to specify for
+      instance a password for the given user, using a named 'password' argument.
     """
     config = cwconfig.CubicWebNoAppConfiguration()
     if host:

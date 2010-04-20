@@ -538,19 +538,14 @@ layout, and a full featured cube with "full" layout.',
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
+        dependencies = {'cubicweb': '>= %s' % cubicwebversion}
         if verbose:
-            includes = self._ask_for_dependancies()
-            if len(includes) == 1:
-                dependancies = '%r,' % includes[0]
-            else:
-                dependancies = ', '.join(repr(cube) for cube in includes)
-        else:
-            dependancies = ''
+            dependencies.update(self._ask_for_dependencies())
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
-                   'dependancies' : dependancies,
+                   'dependencies' : dependencies,
                    'version'  : cubicwebversion,
                    'year'  : str(datetime.now().year),
                    'author': self['author'],
@@ -565,21 +560,22 @@ layout, and a full featured cube with "full" layout.',
                         'cubes.*', 'external_resources*')
         copy_skeleton(skeldir, cubedir, context, exclude=exclude)
 
-    def _ask_for_dependancies(self):
+    def _ask_for_dependencies(self):
         from logilab.common.shellutils import ASK
         from logilab.common.textutils import splitstrip
-        includes = []
-        for stdtype in ServerConfiguration.available_cubes():
-            answer = ASK.ask("Depends on cube %s? " % stdtype,
+        depcubes = []
+        for cube in ServerConfiguration.available_cubes():
+            answer = ASK.ask("Depends on cube %s? " % cube,
                              ('N','y','skip','type'), 'N')
             if answer == 'y':
-                includes.append(stdtype)
+                depcubes.append(cube)
             if answer == 'type':
-                includes = splitstrip(raw_input('type dependancies: '))
+                depcubes = splitstrip(raw_input('type dependencies: '))
                 break
             elif answer == 'skip':
                 break
-        return includes
+        return dict(('cubicweb-' + cube, ServerConfiguration.cube_version(cube))
+                    for cube in depcubes)
 
 
 class ExamineLogCommand(Command):
