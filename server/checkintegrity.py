@@ -21,7 +21,7 @@ from cubicweb.server.session import security_enabled
 
 def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
-    if eids.has_key(eid):
+    if eid in eids:
         return eids[eid]
     sqlcursor.execute('SELECT type, source FROM entities WHERE eid=%s' % eid)
     try:
@@ -171,7 +171,7 @@ def check_entities(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT %s FROM %s;' % (column, table))
         for row in cursor.fetchall():
             eid = row[0]
-            # eids is full since we have fetched everyting from the entities table,
+            # eids is full since we have fetched everything from the entities table,
             # no need to call has_eid
             if not eid in eids or not eids[eid]:
                 msg = '  Entity with eid %s exists in the %s table but not in the system table'
