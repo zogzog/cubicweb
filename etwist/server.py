@@ -25,6 +25,8 @@ from twisted.web import http, server
 from twisted.web import static, resource
 from twisted.web.server import NOT_DONE_YET
 
+from simplejson import dumps
+
 from logilab.common.decorators import monkeypatch
 
 from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
@@ -297,17 +299,30 @@ class CubicWebRootResource(resource.Resource):
                             headers=request.headers_out)
 
 
+JSON_PATHS = set(('json',))
+FRAME_POST_PATHS = set(('validateform',))
+
 orig_gotLength = http.Request.gotLength
 @monkeypatch(http.Request)
 def gotLength(self, length):
     orig_gotLength(self, length)
     if length > MAX_POST_LENGTH: # length is 0 on GET
+        path = self.channel._path.split('?', 1)[0].rstrip('/').rsplit('/', 1)[-1]
         self.clientproto = 'HTTP/1.1' # not yet initialized
         self.channel.persistent = 0   # force connection close on cleanup
-        body = ("<html><head><title>Processing Failed</title></head><body>"
-                "<b>request max size exceeded</b></body></html>")
         self.setResponseCode(http.BAD_REQUEST)
-        self.setHeader('content-type',"text/html")
+        if path in JSON_PATHS: # XXX better json path detection
+            self.setHeader('content-type',"application/json")
+            body = dumps({'reason': 'request max size exceeded'})
+        elif path in FRAME_POST_PATHS: # XXX better frame post path detection
+            self.setHeader('content-type',"text/html")
+            body = ('<script type="text/javascript">'
+                    'window.parent.handleFormValidationResponse(null, null, null, %s, null);'
+                    '</script>' % dumps( (False, 'request max size exceeded', None) ))
+        else:
+            self.setHeader('content-type',"text/html")
+            body = ("<html><head><title>Processing Failed</title></head><body>"
+                    "<b>request max size exceeded</b></body></html>")
         self.setHeader('content-length', str(len(body)))
         self.write(body)
         # see request.finish(). Done here since we get error due to not full
