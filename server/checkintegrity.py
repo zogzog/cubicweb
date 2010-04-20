@@ -265,7 +265,7 @@ def check_metadata(schema, session, eids, fix=1):
     assert default_user_eid is not None, 'no user defined !'
     for rel, default in ( ('owned_by', default_user_eid), ):
         cursor = session.system_sql("SELECT eid, type FROM entities "
-                                    "WHERE NOT EXISTS "
+                                    "WHERE source='system' AND NOT EXISTS "
                                     "(SELECT 1 FROM %s_relation WHERE eid_from=eid);"
                                     % rel)
         for eid, etype in cursor.fetchall():
