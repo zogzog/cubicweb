@@ -14,8 +14,10 @@ from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 logger = getLogger('cubicweb.twisted')
 logger.handlers = [handlers.NTEventLogHandler('cubicweb')]
 
-os.environ['CW_INSTANCES_DIR'] = r'C:\etc\cubicweb.d'
-os.environ['USERNAME'] = 'cubicweb'
+if not os.environ.get('CW_INSTANCES_DIR'):
+    os.environ['CW_INSTANCES_DIR'] = r'C:\etc\cubicweb.d'
+if not os.environ.get('USERNAME'):
+    os.environ['USERNAME'] = 'cubicweb'
 
 class CWService(object, win32serviceutil.ServiceFramework):
     _svc_name_ = None
