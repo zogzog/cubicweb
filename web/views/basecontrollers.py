@@ -579,7 +579,7 @@ class JSonController(Controller):
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
 
-
+# XXX move to massmailing
 class SendMailController(Controller):
     __regid__ = 'sendmail'
     __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
@@ -587,13 +587,12 @@ class SendMailController(Controller):
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
         eids = self._cw.form['recipient']
-        # make sure we have a list even though only one recipient was specified
+        # eids may be a string if only one recipient was specified
         if isinstance(eids, basestring):
-            eids = (eids,)
-        rql = 'Any X WHERE X eid in (%s)' % (','.join(eids))
-        rset = self._cw.execute(rql)
-        for entity in rset.entities():
-            yield entity
+            rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
+        else:
+            rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
+        return rset.entities()
 
     def sendmail(self, recipient, subject, body):
         msg = format_mail({'email' : self._cw.user.get_email(),
@@ -612,7 +611,6 @@ class SendMailController(Controller):
         for recipient in self.recipients():
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)
-        # breadcrumbs = self._cw.get_session_data('breadcrumbs', None)
         url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
         raise Redirect(url)
 
