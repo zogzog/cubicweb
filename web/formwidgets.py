@@ -1,9 +1,75 @@
-"""widget classes for form construction
+# organization: Logilab
+# copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+Widgets
+~~~~~~~
 
-:organization: Logilab
-:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. Note::
+   A widget is responsible for the display of a field. It may use more than one
+   HTML input tags. When the form is posted, a widget is also reponsible to give
+   back to the field something it can understand.
+
+   Of course you can not use any widget with any field...
+
+.. autoclass:: cubicweb.web.formwidgets.FieldWidget
+
+HTML <input> based widgets
+''''''''''''''''''''''''''
+
+.. autoclass:: cubicweb.web.formwidgets.HiddenInput
+.. autoclass:: cubicweb.web.formwidgets.TextInput
+.. autoclass:: cubicweb.web.formwidgets.PasswordSingleInput
+.. autoclass:: cubicweb.web.formwidgets.FileInput
+.. autoclass:: cubicweb.web.formwidgets.ButtonInput
+
+Other standard HTML widgets
+'''''''''''''''''''''''''''
+
+.. autoclass:: cubicweb.web.formwidgets.TextArea
+.. autoclass:: cubicweb.web.formwidgets.Select
+.. autoclass:: cubicweb.web.formwidgets.CheckBox
+.. autoclass:: cubicweb.web.formwidgets.Radio
+
+Date and time widgets
+'''''''''''''''''''''
+
+.. autoclass:: cubicweb.web.formwidgets.DateTimePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryDateTimePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryDatePicker
+.. autoclass:: cubicweb.web.formwidgets.JQueryTimePicker
+
+Ajax / javascript widgets
+'''''''''''''''''''''''''
+
+.. autoclass:: cubicweb.web.formwidgets.FCKEditor
+.. autoclass:: cubicweb.web.formwidgets.AjaxWidget
+.. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
+
+.. kill or document AddComboBoxWidget
+.. kill or document StaticFileAutoCompletionWidget
+.. kill or document LazyRestrictedAutoCompletionWidget
+.. kill or document RestrictedAutoCompletionWidget
+
+Other widgets
+'''''''''''''
+.. autoclass:: cubicweb.web.formwidgets.PasswordInput
+.. autoclass:: cubicweb.web.formwidgets.IntervalWidget
+.. autoclass:: cubicweb.web.formwidgets.HorizontalLayoutWidget
+.. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
+
+Form controls
+'''''''''''''
+Those classes are not proper widget (they are not associated to
+field) but are used as form controls. Their API is similar
+to widgets except that `field` argument given to :meth:`render`
+will be `None`.
+
+.. autoclass:: cubicweb.web.formwidgets.Button
+.. autoclass:: cubicweb.web.formwidgets.SubmitButton
+.. autoclass:: cubicweb.web.formwidgets.ResetButton
+.. autoclass:: cubicweb.web.formwidgets.ImgButton
 """
 __docformat__ = "restructuredtext en"
 
@@ -19,14 +85,50 @@ from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 
 class FieldWidget(object):
-    """abstract widget class"""
-    # javascript / css files required by the widget
+    """The abstract base class for widgets.
+
+    **Attributes**
+
+    Here are standard attributes of a widget, that may be set on concret
+    class to override default behaviours:
+
+    :attr:`needs_js`
+       list of javascript files needed by the widget.
+    :attr:`needs_css`
+       list of css files needed by the widget.
+    :attr:`setdomid`
+       flag telling if HTML DOM identifier should be set on input.
+    :attr:`settabindex`
+       flag telling if HTML tabindex attribute of inputs should be set.
+    :attr:`suffix`
+       string to use a suffix when generating input, to ease usage as a
+       sub-widgets (eg widget used by another widget)
+    :attr:`vocabulary_widget`
+       flag telling if this widget expect a vocabulary
+
+    Also, widget instances takes as first argument a `attrs` dictionary which
+    will be stored in the attribute of the same name. It contains HTML
+    attributes that should be set in the widget's input tag (though concret
+    classes may ignore it).
+
+    .. currentmodule:: cubicweb.web.formwidgets
+
+    **Form generation methods**
+
+    .. automethod:: render
+    .. automethod:: _render
+    .. automethod:: values
+    .. automethod:: attributes
+
+    **Post handling methods**
+
+    .. automethod:: process_field_data
+
+    """
     needs_js = ()
     needs_css = ()
-    # automatically set id and tabindex attributes ?
     setdomid = True
     settabindex = True
-    # to ease usage as a sub-widgets (eg widget used by another widget)
     suffix = None
     # does this widget expect a vocabulary
     vocabulary_widget = False
@@ -51,12 +153,19 @@ class FieldWidget(object):
         if self.needs_css:
             form._cw.add_css(self.needs_css)
 
-
     def render(self, form, field, renderer=None):
+        """Called to render the widget for the given `field` in the given
+        `form`.  Return a unicode string containing the HTML snippet.
+
+        You will usually prefer to override the :meth:`_render` method so you
+        don't have to handle addition of needed javascript / css files.
+        """
         self.add_media(form)
         return self._render(form, field, renderer)
 
     def _render(self, form, field, renderer):
+        """This is the method you have to implement in concret widget classes.
+        """
         raise NotImplementedError()
 
     def format_value(self, form, field, value):
@@ -75,6 +184,30 @@ class FieldWidget(object):
         return attrs
 
     def values(self, form, field):
+        """Return the current *string* values (i.e. for display in an HTML
+        string) for the given field. This method returns a list of values since
+        it's suitable for all kind of widgets, some of them taking multiple
+        values, but you'll get a single value in the list in most cases.
+
+        Those values are searched in:
+
+        1. previously submitted form values if any (on validation error)
+
+        2. req.form (specified using request parameters)
+
+        3. extra form values given to form.render call (specified the code
+           generating the form)
+
+        4. field's typed value (returned by its
+          :meth:`~cubicweb.web.formfields.Field.typed_value` method)
+
+        Values found in 1. and 2. are expected te be already some 'display
+        value' (eg a string) while those found in 3. and 4. are expected to be
+        correctly typed value.
+
+        3 and 4 are handle by the :meth:`typed_value` method to ease reuse in
+        concret classes.
+        """
         values = None
         if not field.ignore_req_params:
             qname = field.input_name(form, self.suffix)
@@ -112,6 +245,10 @@ class FieldWidget(object):
         return field.typed_value(form)
 
     def process_field_data(self, form, field):
+        """Return process posted value(s) for widget and return something
+        understandable by the associated `field`. That value may be correctly
+        typed or a string that the field may parse.
+        """
         posted = form._cw.form
         val = posted.get(field.input_name(form, self.suffix))
         if isinstance(val, basestring):
@@ -152,13 +289,29 @@ class Input(FieldWidget):
 # basic html widgets ###########################################################
 
 class TextInput(Input):
-    """<input type='text'>"""
+    """Simple <input type='text'>, will return an unicode string."""
     type = 'text'
 
 
+class PasswordSingleInput(Input):
+    """Simple <input type='password'>, will return an utf-8 encoded string.
+
+    You may prefer using the :class:`~cubicweb.web.formwidgets.PasswordInput`
+    widget which handles password confirmation.
+    """
+    type = 'password'
+
+    def process_field_data(self, form, field):
+        value = super(PasswordSingleInput, self).process_field_data(form, field)
+        if value is not None:
+            return value.encode('utf-8')
+        return value
+
+
 class PasswordInput(Input):
-    """<input type='password'> and its confirmation field (using
-    <field's name>-confirm as name)
+    """<input type='password'> and a confirmation input. Form processing will
+    fail if password and confirmation differs, else it will return the password
+    as an utf-8 encoded string.
     """
     type = 'password'
 
@@ -186,19 +339,11 @@ class PasswordInput(Input):
         raise ProcessFormError(form._cw._("password and confirmation don't match"))
 
 
-class PasswordSingleInput(Input):
-    """<input type='password'> without a confirmation field"""
-    type = 'password'
-
-    def process_field_data(self, form, field):
-        value = super(PasswordSingleInput, self).process_field_data(form, field)
-        if value is not None:
-            return value.encode('utf-8')
-        return value
-
-
 class FileInput(Input):
-    """<input type='file'>"""
+    """Simple <input type='file'>, will return a tuple (name, stream) where
+    name is the posted file name and stream a file like object containing the
+    posted file data.
+    """
     type = 'file'
 
     def values(self, form, field):
@@ -207,23 +352,25 @@ class FileInput(Input):
 
 
 class HiddenInput(Input):
-    """<input type='hidden'>"""
+    """Simple <input type='hidden'> for hidden value, will return an unicode
+    string.
+    """
     type = 'hidden'
     setdomid = False # by default, don't set id attribute on hidden input
     settabindex = False
 
 
 class ButtonInput(Input):
-    """<input type='button'>
+    """Simple <input type='button'>, will return an unicode string.
 
-    if you want a global form button, look at the Button, SubmitButton,
-    ResetButton and ImgButton classes below.
+    If you want a global form button, look at the :class:`Button`,
+    :class:`SubmitButton`, :class:`ResetButton` and :class:`ImgButton` below.
     """
     type = 'button'
 
 
 class TextArea(FieldWidget):
-    """<textarea>"""
+    """Simple <textarea>, will return an unicode string."""
 
     def _render(self, form, field, renderer):
         values, attrs = self.values_and_attributes(form, field)
@@ -245,7 +392,9 @@ class TextArea(FieldWidget):
 
 
 class FCKEditor(TextArea):
-    """FCKEditor enabled <textarea>"""
+    """FCKEditor enabled <textarea>, will return an unicode string containing
+    HTML formated text.
+    """
     def __init__(self, *args, **kwargs):
         super(FCKEditor, self).__init__(*args, **kwargs)
         self.attrs['cubicweb:type'] = 'wysiwyg'
@@ -256,7 +405,9 @@ class FCKEditor(TextArea):
 
 
 class Select(FieldWidget):
-    """<select>, for field having a specific vocabulary"""
+    """Simple <select>, for field having a specific vocabulary. Will return
+    an unicode string, or a list of unicode strings.
+    """
     vocabulary_widget = True
 
     def __init__(self, attrs=None, multiple=False, **kwargs):
@@ -294,8 +445,11 @@ class Select(FieldWidget):
 
 
 class CheckBox(Input):
-    """<input type='checkbox'>, for field having a specific vocabulary. One
-    input will be generated for each possible value.
+    """Simple <input type='checkbox'>, for field having a specific
+    vocabulary. One input will be generated for each possible value.
+
+    You can specify separator using the `separator` constructor argument, by
+    default <br/> is used.
     """
     type = 'checkbox'
     vocabulary_widget = True
@@ -334,8 +488,11 @@ class CheckBox(Input):
 
 
 class Radio(CheckBox):
-    """<input type='radio'>, for field having a specific vocabulary. One
+    """Simle <input type='radio'>, for field having a specific vocabulary. One
     input will be generated for each possible value.
+
+    You can specify separator using the `separator` constructor argument, by
+    default <br/> is used.
     """
     type = 'radio'
     
@@ -343,8 +500,8 @@ class Radio(CheckBox):
 # javascript widgets ###########################################################
 
 class DateTimePicker(TextInput):
-    """<input type='text' + javascript date/time picker for date or datetime
-    fields
+    """<input type='text'> + javascript date/time picker for date or datetime
+    fields. Will return the date or datetime as an unicode string.
     """
     monthnames = ('january', 'february', 'march', 'april',
                   'may', 'june', 'july', 'august',
@@ -386,7 +543,9 @@ class DateTimePicker(TextInput):
 
 
 class JQueryDatePicker(FieldWidget):
-    """use jquery.ui.datepicker to define a date time picker"""
+    """Use jquery.ui.datepicker to define a date picker. Will return the date as
+    an unicode string.
+    """
     needs_js = ('jquery.ui.js', )
     needs_css = ('jquery.ui.css',)
 
@@ -413,7 +572,9 @@ class JQueryDatePicker(FieldWidget):
 
 
 class JQueryTimePicker(FieldWidget):
-    """use jquery.timePicker.js to define a js time picker"""
+    """Use jquery.timePicker to define a time picker. Will return the time as an
+    unicode string.
+    """
     needs_js = ('jquery.timePicker.js',)
     needs_css = ('jquery.timepicker.css',)
 
@@ -437,6 +598,10 @@ class JQueryTimePicker(FieldWidget):
 
 
 class JQueryDateTimePicker(FieldWidget):
+    """Compound widget using :class:`JQueryDatePicker` and
+    :class:`JQueryTimePicker` widgets to define a date and time picker. Will
+    return the date and time as python datetime instance.
+    """
     def __init__(self, initialtime=None, timesteps=15, **kwargs):
         super(JQueryDateTimePicker, self).__init__(**kwargs)
         self.initialtime = initialtime
@@ -496,7 +661,9 @@ def init_ajax_attributes(attrs, wdgtype, loadtype=u'auto'):
 
 
 class AjaxWidget(FieldWidget):
-    """simple <div> based ajax widget"""
+    """Simple <div> based ajax widget, requiring a `wdgtype` argument telling
+    which javascript widget should be used.
+    """
     def __init__(self, wdgtype, inputid=None, **kwargs):
         super(AjaxWidget, self).__init__(**kwargs)
         init_ajax_attributes(self.attrs, wdgtype)
@@ -509,8 +676,10 @@ class AjaxWidget(FieldWidget):
 
 
 class AutoCompletionWidget(TextInput):
-    """ajax widget for StringField, proposing matching existing values as you
-    type.
+    """<input type='text'> based ajax widget, taking a `autocomplete_initfunc`
+    argument which should specify the name of a method of the json
+    controller. This method is expected to return allowed values for the input,
+    that the widget will use to propose matching values as you type.
     """
     needs_js = ('cubicweb.widgets.js', 'jquery.autocomplete.js')
     needs_css = ('jquery.autocomplete.css',)
@@ -616,10 +785,10 @@ class AddComboBoxWidget(Select):
 # buttons ######################################################################
 
 class Button(Input):
-    """<input type='button'>, base class for global form buttons
+    """Simple <input type='button'>, base class for global form buttons.
 
-    note label is a msgid which will be translated at form generation time, you
-    should not give an already translated string.
+    Note that `label` is a msgid which will be translated at form generation
+    time, you should not give an already translated string.
     """
     type = 'button'
     def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
@@ -662,23 +831,20 @@ class Button(Input):
 
 
 class SubmitButton(Button):
-    """<input type='submit'>, main button to submit a form"""
+    """Simple <input type='submit'>, main button to submit a form"""
     type = 'submit'
 
 
 class ResetButton(Button):
-    """<input type='reset'>, main button to reset a form.
-    You usually don't want this.
+    """Simple <input type='reset'>, main button to reset a form. You usually
+    don't want to use this.
     """
     type = 'reset'
 
 
 class ImgButton(object):
-    """<img> wrapped into a <a> tag with href triggering something (usually a
-    javascript call)
-
-    note label is a msgid which will be translated at form generation time, you
-    should not give an already translated string.
+    """Simple <img> wrapped into a <a> tag with href triggering something (usually a
+    javascript call).
     """
     def __init__(self, domid, href, label, imgressource):
         self.domid = domid
@@ -697,17 +863,53 @@ class ImgButton(object):
 
 # more widgets #################################################################
 
+class IntervalWidget(FieldWidget):
+    """Custom widget to display an interval composed by 2 fields. This widget is
+    expected to be used with a :class:`CompoundField` containing the two actual
+    fields.
+
+    Exemple usage::
+
+      class MyForm(FieldsForm):
+         price = CompoundField(fields=(IntField(name='minprice'),
+                                       IntField(name='maxprice')),
+                               label=_('price'),
+                               widget=IntervalWidget())
+    """
+    def _render(self, form, field, renderer):
+        actual_fields = field.fields
+        assert len(actual_fields) == 2
+        return u'<div>%s %s %s %s</div>' % (
+            form._cw._('from_interval_start'),
+            actual_fields[0].render(form, renderer),
+            form._cw._('to_interval_end'),
+            actual_fields[1].render(form, renderer),
+            )
+
+
+class HorizontalLayoutWidget(FieldWidget):
+    """Custom widget to display a set of fields grouped together horizontally in
+    a form. See `IntervalWidget` for example usage.
+    """
+    def _render(self, form, field, renderer):
+        if self.attrs.get('display_label', True):
+            subst = self.attrs.get('label_input_substitution', '%(label)s %(input)s')
+            fields = [subst % {'label': renderer.render_label(form, f),
+                              'input': f.render(form, renderer)}
+                      for f in field.subfields(form)]
+        else:
+            fields = [f.render(form, renderer) for f in field.subfields(form)]
+        return u'<div>%s</div>' % ' '.join(fields)
+
+
 class EditableURLWidget(FieldWidget):
-    """custom widget to edit separatly an url path / query string (used by
-    default for Bookmark.path for instance), dealing with url quoting nicely
-    (eg user edit the unquoted value).
+    """Custom widget to edit separatly an url path / query string (used by
+    default for the `path` attribute of `Bookmark` entities).
+
+    It deals with url quoting nicely so that the user edit the unquoted value.
     """
 
     def _render(self, form, field, renderer):
-        """render the widget for the given `field` of `form`.
-
-        Generate one <input> tag for each field's value
-        """
         assert self.suffix is None, 'not supported'
         req = form._cw
         pathqname = field.input_name(form, 'path')

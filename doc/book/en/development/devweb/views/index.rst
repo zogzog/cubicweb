@@ -17,7 +17,6 @@ in |cubicweb|.
    boxes
    table
    xmlrss
-   autoform
 ..   editforms
 
 .. toctree::

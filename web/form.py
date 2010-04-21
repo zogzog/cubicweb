@@ -137,8 +137,9 @@ class Form(AppObject):
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None):
-        """return field with the given name and role.
-        Raise FieldNotFound if the field can't be found.
+        """Return field with the given name and role.
+
+        Raise :exc:`FieldNotFound` if the field can't be found.
         """
         for field in cls_or_self._fieldsattr():
             if field.name == name and field.role == role:
@@ -147,18 +148,18 @@ class Form(AppObject):
 
     @iclassmethod
     def fields_by_name(cls_or_self, name, role=None):
-        """return a list of fields with the given name and role"""
+        """Return a list of fields with the given name and role."""
         return [field for field in cls_or_self._fieldsattr()
                 if field.name == name and field.role == role]
 
     @iclassmethod
     def remove_field(cls_or_self, field):
-        """remove a field from form class or instance"""
+        """Remove the given field."""
         cls_or_self._fieldsattr().remove(field)
 
     @iclassmethod
     def append_field(cls_or_self, field):
-        """append a field to form class or instance"""
+        """Append the given field."""
         cls_or_self._fieldsattr().append(field)
 
     @iclassmethod
