@@ -62,24 +62,17 @@ class FieldWidget(object):
     def format_value(self, form, field, value):
         return field.format_value(form._cw, value)
 
-    def values_and_attributes(self, form, field):
-        """found field's *string* value in:
-        1. previously submitted form values if any (eg on validation error)
-        2. req.form
-        3. extra form values given to render()
-        4. field's typed value
-
-        values found in 1. and 2. are expected te be already some 'display'
-        value while those found in 3. and 4. are expected to be correctly typed.
-
-        3 and 4 are handle by the .typed_value(form, field) method
+    def attributes(self, form, field):
+        """Return HTML attributes for the widget, automatically setting DOM
+        identifier and tabindex when desired (see :attr:`setdomid` and
+        :attr:`settabindex` attributes)
         """
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = field.dom_id(form, self.suffix)
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
-        return self.values(form, field), attrs
+        return attrs
 
     def values(self, form, field):
         values = None
@@ -124,6 +117,10 @@ class FieldWidget(object):
         if isinstance(val, basestring):
             val = val.strip()
         return val
+
+    # XXX deprecates
+    def values_and_attributes(self, form, field):
+        return self.values(form, field), self.attributes(form, field)
 
     @deprecated('[3.6] use values_and_attributes')
     def _render_attrs(self, form, field):
@@ -204,10 +201,9 @@ class FileInput(Input):
     """<input type='file'>"""
     type = 'file'
 
-    def values_and_attributes(self, form, field):
+    def values(self, form, field):
         # ignore value which makes no sense here (XXX even on form validation error?)
-        values, attrs = super(FileInput, self).values_and_attributes(form, field)
-        return ('',), attrs
+        return ('',)
 
 
 class HiddenInput(Input):
@@ -267,7 +263,7 @@ class Select(FieldWidget):
         super(Select, self).__init__(attrs, **kwargs)
         self._multiple = multiple
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
         if not 'size' in attrs:
             attrs['size'] = self._multiple and '5' or '1'
@@ -304,10 +300,20 @@ class CheckBox(Input):
     type = 'checkbox'
     vocabulary_widget = True
 
-    def render(self, form, field, renderer):
+    def __init__(self, attrs=None, separator=u'<br/>\n', **kwargs):
+        super(CheckBox, self).__init__(attrs, **kwargs)
+        self.separator = separator
+
+    def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
         domid = attrs.pop('id', None)
-        sep = attrs.pop('separator', u'<br/>\n')
+        # XXX turn this as initializer argument
+        try:
+            sep = attrs.pop('separator')
+            warn('[3.8] separator should be specified using initializer argument',
+                 DeprecationWarning)
+        except KeyError:
+            sep = self.separator
         options = []
         for i, option in enumerate(field.vocabulary(form)):
             try:
@@ -332,52 +338,7 @@ class Radio(CheckBox):
     input will be generated for each possible value.
     """
     type = 'radio'
-
-
-# compound widgets #############################################################
-
-class IntervalWidget(FieldWidget):
-    """custom widget to display an interval composed by 2 fields. This widget
-    is expected to be used with a CompoundField containing the two actual
-    fields.
-
-    Exemple usage::
-
-from uicfg import autoform_field, autoform_section
-autoform_field.tag_attribute(('Concert', 'minprice'),
-                              CompoundField(fields=(IntField(name='minprice'),
-                                                    IntField(name='maxprice')),
-                                            label=_('price'),
-                                            widget=IntervalWidget()
-                                            ))
-# we've to hide the other field manually for now
-autoform_section.tag_attribute(('Concert', 'maxprice'), 'generated')
-    """
-    def render(self, form, field, renderer):
-        actual_fields = field.fields
-        assert len(actual_fields) == 2
-        return u'<div>%s %s %s %s</div>' % (
-            form._cw._('from_interval_start'),
-            actual_fields[0].render(form, renderer),
-            form._cw._('to_interval_end'),
-            actual_fields[1].render(form, renderer),
-            )
-
-
-class HorizontalLayoutWidget(FieldWidget):
-    """custom widget to display a set of fields grouped together horizontally
-    in a form. See `IntervalWidget` for example usage.
-    """
-    def render(self, form, field, renderer):
-        if self.attrs.get('display_label', True):
-            subst = self.attrs.get('label_input_substitution', '%(label)s %(input)s')
-            fields = [subst % {'label': renderer.render_label(form, f),
-                              'input': f.render(form, renderer)}
-                      for f in field.subfields(form)]
-        else:
-            fields = [f.render(form, renderer) for f in field.subfields(form)]
-        return u'<div>%s</div>' % ' '.join(fields)
-
+    
 
 # javascript widgets ###########################################################
 
@@ -404,7 +365,7 @@ class DateTimePicker(TextInput):
         req.html_headers.define_var('MONTHNAMES', monthnames)
         req.html_headers.define_var('DAYNAMES', daynames)
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         txtwidget = super(DateTimePicker, self).render(form, field, renderer)
         self.add_localized_infos(form._cw)
         cal_button = self._render_calendar_popup(form, field)
@@ -560,21 +521,25 @@ class AutoCompletionWidget(TextInput):
         try:
             self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         except KeyError:
-            warn('use autocomplete_initfunc argument of %s constructor '
+            warn('[3.6] use autocomplete_initfunc argument of %s constructor '
                  'instead of relying on autocomplete_initfuncs dictionary on '
                  'the entity class' % self.__class__.__name__,
                  DeprecationWarning)
             self.autocomplete_initfunc = None
         super(AutoCompletionWidget, self).__init__(*args, **kwargs)
 
-    def values_and_attributes(self, form, field):
-        values, attrs = super(AutoCompletionWidget, self).values_and_attributes(form, field)
+    def values(self, form, field):
+        values = super(AutoCompletionWidget, self).values(form, field)
+        if not values:
+            values = ('',)
+        return values
+
+    def attributes(self, form, field):
+        attrs = super(AutoCompletionWidget, self).attributes(form, field)
         init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
         attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
-        if not values:
-            values = ('',)
-        return values, attrs
+        return attrs
 
     def _get_url(self, entity, field):
         if self.autocomplete_initfunc is None:
@@ -609,8 +574,6 @@ class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
     wdgtype = 'LazySuggestField'
 
     def values_and_attributes(self, form, field):
-        self.add_media(form)
-
         """override values_and_attributes to handle initial displayed values"""
         values, attrs = super(LazyRestrictedAutoCompletionWidget, self).values_and_attributes(form, field)
         assert len(values) == 1, "multiple selection is not supported yet by LazyWidget"
@@ -628,22 +591,22 @@ class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
         return values, attrs
 
     def display_value_for(self, form, value):
-        entity =form._cw.entity_from_eid(value)
+        entity = form._cw.entity_from_eid(value)
         return entity.view('combobox')
 
 
 class AddComboBoxWidget(Select):
-    def values_and_attributes(self, form, field):
-        values, attrs = super(AddComboBoxWidget, self).values_and_attributes(form, field)
-        init_ajax_attributes(self.attrs, 'AddComboBox')
+    def attributes(self, form, field):
+        attrs = super(AddComboBoxWidget, self).attributes(form, field)
+        init_ajax_attributes(attrs, 'AddComboBox')
         # XXX entity form specific
         entity = form.edited_entity
         attrs['cubicweb:etype_to'] = entity.e_schema
         etype_from = entity.e_schema.subjrels[field.name].objects(entity.e_schema)[0]
         attrs['cubicweb:etype_from'] = etype_from
-        return values, attrs
+        return attrs
 
-    def render(self, form, field, renderer):
+    def _render(self, form, field, renderer):
         return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''
 <div id="newvalue">
   <input type="text" id="newopt" />

@@ -162,16 +162,34 @@ class Form(AppObject):
         cls_or_self._fieldsattr().append(field)
 
     @iclassmethod
-    def insert_field_before(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
+    def insert_field_before(cls_or_self, field, name, role=None):
+        """Insert the given field before the field of given name and role."""
+        bfield = cls_or_self.field_by_name(name, role)
         fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field), new_field)
+        fields.insert(fields.index(bfield), field)
 
     @iclassmethod
-    def insert_field_after(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
+    def insert_field_after(cls_or_self, field, name, role=None):
+        """Insert the given field after the field of given name and role."""
+        afield = cls_or_self.field_by_name(name, role)
         fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field)+1, new_field)
+        fields.insert(fields.index(afield)+1, field)
+
+    @iclassmethod
+    def add_hidden(cls_or_self, name, value=None, **kwargs):
+        """Append an hidden field to the form. `name`, `value` and extra keyword
+        arguments will be given to the field constructor. The inserted field is
+        returned.
+        """
+        kwargs.setdefault('ignore_req_params', True)
+        kwargs.setdefault('widget', fwdgs.HiddenInput)
+        field = formfields.StringField(name=name, value=value, **kwargs)
+        if 'id' in kwargs:
+            # by default, hidden input don't set id attribute. If one is
+            # explicitly specified, ensure it will be set
+            field.widget.setdomid = True
+        cls_or_self.append_field(field)
+        return field
 
     def session_key(self):
         """return the key that may be used to store / retreive data about a

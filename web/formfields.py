@@ -13,6 +13,7 @@ from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import xml_escape
+from logilab.common import nullobject
 from logilab.common.date import ustrftime
 
 from yams.schema import KNOWN_METAATTRIBUTES, role_name
@@ -45,7 +46,7 @@ def vocab_sort(vocab):
     result += sorted(partresult)
     return result
 
-_MARKER = object()
+_MARKER = nullobject()
 
 class Field(object):
     """This class is the abstract base class for all fields. It hold a bunch
@@ -601,6 +602,7 @@ class FileField(StringField):
         return value
 
 
+# XXX turn into a widget
 class EditableFileField(FileField):
     editable_formats = ('text/plain', 'text/html', 'text/rest')
 

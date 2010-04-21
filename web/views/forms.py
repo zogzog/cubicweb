@@ -16,7 +16,7 @@ from logilab.common.deprecation import deprecated
 from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
-from cubicweb.web.formfields import StringField, relvoc_unrelated, guess_field
+from cubicweb.web.formfields import relvoc_unrelated, guess_field
 
 
 class FieldsForm(form.Form):
@@ -74,18 +74,6 @@ class FieldsForm(form.Form):
     def needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
         return any(field.needs_multipart for field in self.fields)
-
-    def add_hidden(self, name, value=None, **kwargs):
-        """add an hidden field to the form"""
-        kwargs.setdefault('ignore_req_params', True)
-        kwargs.setdefault('widget', fwdgs.HiddenInput)
-        field = StringField(name=name, value=value, **kwargs)
-        if 'id' in kwargs:
-            # by default, hidden input don't set id attribute. If one is
-            # explicitly specified, ensure it will be set
-            field.widget.setdomid = True
-        self.append_field(field)
-        return field
 
     def add_media(self):
         """adds media (CSS & JS) required by this widget"""
