@@ -152,6 +152,5 @@ class RepoThread(Thread):
         self.daemon = True
         Thread.start(self)
 
-    @property
-    def name(self):
+    def getName(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
