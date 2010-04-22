@@ -161,7 +161,7 @@ def guess_rrqlexpr_mainvars(expression):
         mainvars.append('U')
     if not mainvars:
         raise Exception('unable to guess selection variables')
-    return ','.join(mainvars)
+    return ','.join(sorted(mainvars))
 
 def split_expression(rqlstring):
     for expr in rqlstring.split(','):
