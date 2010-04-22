@@ -14,10 +14,13 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
 
 try:
-    import simplejson
+    try:
+        import json 
+    except ImportError:
+        import simplejson as json
     from cubicweb.utils import CubicWebJsonEncoder
 except ImportError:
-    simplejson = None
+    json = None
 
 class MakeUidTC(TestCase):
     def test_1(self):
@@ -107,11 +110,11 @@ class SizeConstrainedListTC(TestCase):
 
 class JSONEncoderTC(TestCase):
     def setUp(self):
-        if simplejson is None:
-            self.skip('simplejson not available')
+        if json is None:
+            self.skip('json not available')
 
     def encode(self, value):
-        return simplejson.dumps(value, cls=CubicWebJsonEncoder)
+        return json.dumps(value, cls=CubicWebJsonEncoder)
 
     def test_encoding_dates(self):
         self.assertEquals(self.encode(datetime.datetime(2009, 9, 9, 20, 30)),

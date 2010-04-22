@@ -11,7 +11,10 @@ _ = unicode
 
 from copy import copy
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached

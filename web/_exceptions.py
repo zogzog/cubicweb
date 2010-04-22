@@ -57,5 +57,8 @@ class RemoteCallFailed(RequestError):
         self.reason = reason
 
     def dumps(self):
-        import simplejson
-        return simplejson.dumps({'reason': self.reason})
+        try:
+            from json import dumps
+        except ImportError:
+            from simplejson import dumps
+        return dumps({'reason': self.reason})

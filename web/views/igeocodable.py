@@ -7,7 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from cubicweb.interfaces import IGeocodable
 from cubicweb.view import EntityView
@@ -39,7 +42,7 @@ class GeocodingJsonView(EntityView):
             'center': center,
             'markers': markers,
             }
-        self.w(simplejson.dumps(geodata))
+        self.w(json.dumps(geodata))
 
     def build_marker_data(self, row, extraparams):
         entity = self.cw_rset.get_entity(row, 0)

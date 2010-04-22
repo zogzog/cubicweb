@@ -10,7 +10,10 @@ publisher to get a full CubicWeb web application
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 from urllib import quote as urlquote
 
 from logilab.common.deprecation import deprecated

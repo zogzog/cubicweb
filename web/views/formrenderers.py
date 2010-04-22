@@ -25,7 +25,10 @@ from warnings import warn
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from cubicweb import tags
 from cubicweb.appobject import AppObject

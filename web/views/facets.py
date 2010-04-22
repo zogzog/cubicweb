@@ -7,7 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 

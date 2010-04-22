@@ -5,7 +5,10 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from logilab.common.testlib import unittest_main, mock_object
 
@@ -550,7 +553,7 @@ class JSONControllerTC(CubicWebTC):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
 #         ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
 #         self.assertEquals(ctrl.publish(),
-#                           simplejson.dumps(self.execute(rql).rows))
+#                           json.dumps(self.execute(rql).rows))
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
@@ -627,14 +630,14 @@ class JSONControllerTC(CubicWebTC):
     # silly tests
     def test_external_resource(self):
         self.assertEquals(self.remote_call('external_resource', 'RSS_LOGO')[0],
-                          simplejson.dumps(self.request().external_resource('RSS_LOGO')))
+                          json.dumps(self.request().external_resource('RSS_LOGO')))
     def test_i18n(self):
         self.assertEquals(self.remote_call('i18n', ['bimboom'])[0],
-                          simplejson.dumps(['bimboom']))
+                          json.dumps(['bimboom']))
 
     def test_format_date(self):
         self.assertEquals(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
-                          simplejson.dumps('2007/01/01'))
+                          json.dumps('2007/01/01'))
 
 
 

@@ -515,7 +515,6 @@ class DateTimePicker(TextInput):
     @classmethod
     def add_localized_infos(cls, req):
         """inserts JS variables defining localized months and days"""
-        # import here to avoid dependancy from cubicweb to simplejson
         _ = req._
         monthnames = [_(mname) for mname in cls.monthnames]
         daynames = [_(dname) for dname in cls.daynames]

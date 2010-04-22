@@ -12,7 +12,10 @@ __docformat__ = "restructuredtext en"
 
 from smtplib import SMTP
 
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
@@ -34,7 +37,7 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 def jsonize(func):
-    """decorator to sets correct content_type and calls `simplejson.dumps` on
+    """decorator to sets correct content_type and calls `json.dumps` on
     results
     """
     def wrapper(self, *args, **kwargs):
@@ -236,7 +239,7 @@ class FormValidatorController(Controller):
         errback = str(self._cw.form.get('__onfailure', 'null'))
         cbargs = str(self._cw.form.get('__cbargs', 'null'))
         self._cw.set_content_type('text/html')
-        jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
  wp = window.parent;
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
@@ -277,7 +280,7 @@ class JSonController(Controller):
         if not isinstance(args, (list, tuple)):
             args = (args,)
         try:
-            args = [simplejson.loads(arg) for arg in args]
+            args = [json.loads(arg) for arg in args]
         except ValueError, exc:
             self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
             raise RemoteCallFailed(repr(exc))
@@ -441,7 +444,7 @@ class JSonController(Controller):
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land
         args['default'] = self._cw.form['default_value']
-        args['reload'] = simplejson.loads(args['reload'])
+        args['reload'] = json.loads(args['reload'])
         rset = req.eid_rset(int(self._cw.form['eid']))
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         stream = view.set_stream()
