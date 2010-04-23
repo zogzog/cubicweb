@@ -6,8 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, ObjectRelation,
+from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
                             String, Int, Datetime, Boolean, Float)
 from yams.constraints import IntervalBoundConstraint
 
@@ -20,7 +19,7 @@ class tags(RelationDefinition):
     subject = 'Tag'
     object = ('BlogEntry', 'CWUser')
 
-class checked_by(RelationType):
+class checked_by(RelationDefinition):
     subject = 'BlogEntry'
     object = 'CWUser'
     cardinality = '?*'
@@ -45,7 +44,10 @@ class Personne(EntityType):
     description = String()
     salary = Float()
     travaille = SubjectRelation('Societe')
-    connait = ObjectRelation('CWUser')
+
+class connait(RelationDefinition):
+    subject = 'CWUser'
+    object = 'Personne'
 
 class Societe(EntityType):
     nom  = String(maxsize=64, fulltextindexed=True)
