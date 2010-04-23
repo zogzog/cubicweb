@@ -222,7 +222,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value -10'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value must be >= 0'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -231,7 +231,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value 110'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value must be <= 100'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',

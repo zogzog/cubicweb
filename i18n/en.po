@@ -58,18 +58,6 @@ msgid "%(value)r doesn't match the %(regexp)r regular expression"
 msgstr ""
 
 #, python-format
-msgid "%(value)r must be %(op)s %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "%(value)r must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "%(value)r must be >= %(boundary)s"
-msgstr ""
-
-#, python-format
 msgid "%d days"
 msgstr ""
 
@@ -3810,6 +3798,18 @@ msgid "value"
 msgstr ""
 
 msgid "value associated to this key is not editable manually"
+msgstr ""
+
+#, python-format
+msgid "value must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value must be >= %(boundary)s"
 msgstr ""
 
 #, python-format
