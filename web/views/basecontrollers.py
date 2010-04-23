@@ -12,11 +12,6 @@ __docformat__ = "restructuredtext en"
 
 from smtplib import SMTP
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
@@ -25,7 +20,7 @@ from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
 from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
+from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps, json
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 from cubicweb.web.views.formrenderers import FormRenderer

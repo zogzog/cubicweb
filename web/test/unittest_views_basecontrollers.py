@@ -5,10 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 from logilab.common.testlib import unittest_main, mock_object
 
@@ -16,7 +12,7 @@ from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
+from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, json
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 u = unicode

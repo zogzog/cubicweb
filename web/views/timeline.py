@@ -9,16 +9,12 @@ cf. http://code.google.com/p/simile-widgets/
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView, StartupView
+from cubicweb.web import json
 
 _ = unicode
 

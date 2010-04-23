@@ -7,16 +7,12 @@
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 from logilab.mtconverter import xml_escape
 from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
+from cubicweb.web import json
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
