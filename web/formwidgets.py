@@ -495,7 +495,7 @@ class Radio(CheckBox):
     default <br/> is used.
     """
     type = 'radio'
-    
+
 
 # javascript widgets ###########################################################
 
@@ -781,85 +781,6 @@ class AddComboBoxWidget(Select):
   <a href="javascript:noop()" id="add_newopt">&#160;</a></div>
 '''
 
-# buttons ######################################################################
-
-class Button(Input):
-    """Simple <input type='button'>, base class for global form buttons.
-
-    Note that `label` is a msgid which will be translated at form generation
-    time, you should not give an already translated string.
-    """
-    type = 'button'
-    def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
-                 setdomid=None, settabindex=None,
-                 name='', value='', onclick=None, cwaction=None):
-        super(Button, self).__init__(attrs, setdomid, settabindex)
-        if isinstance(label, tuple):
-            self.label = label[0]
-            self.icon = label[1]
-        else:
-            self.label = label
-            self.icon = None
-        self.name = name
-        self.value = ''
-        self.onclick = onclick
-        self.cwaction = cwaction
-        self.attrs.setdefault('class', 'validateButton')
-
-    def render(self, form, field=None, renderer=None):
-        label = form._cw._(self.label)
-        attrs = self.attrs.copy()
-        if self.cwaction:
-            assert self.onclick is None
-            attrs['onclick'] = "postForm('__action_%s', \'%s\', \'%s\')" % (
-                self.cwaction, self.label, form.domid)
-        elif self.onclick:
-            attrs['onclick'] = self.onclick
-        if self.name:
-            attrs['name'] = self.name
-            if self.setdomid:
-                attrs['id'] = self.name
-        if self.settabindex and not 'tabindex' in attrs:
-            attrs['tabindex'] = form._cw.next_tabindex()
-        if self.icon:
-            img = tags.img(src=form._cw.external_resource(self.icon), alt=self.icon)
-        else:
-            img = u''
-        return tags.button(img + xml_escape(label), escapecontent=False,
-                           value=label, type=self.type, **attrs)
-
-
-class SubmitButton(Button):
-    """Simple <input type='submit'>, main button to submit a form"""
-    type = 'submit'
-
-
-class ResetButton(Button):
-    """Simple <input type='reset'>, main button to reset a form. You usually
-    don't want to use this.
-    """
-    type = 'reset'
-
-
-class ImgButton(object):
-    """Simple <img> wrapped into a <a> tag with href triggering something (usually a
-    javascript call).
-    """
-    def __init__(self, domid, href, label, imgressource):
-        self.domid = domid
-        self.href = href
-        self.imgressource = imgressource
-        self.label = label
-
-    def render(self, form, field=None, renderer=None):
-        label = form._cw._(self.label)
-        imgsrc = form._cw.external_resource(self.imgressource)
-        return '<a id="%(domid)s" href="%(href)s">'\
-               '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
-            'label': label, 'imgsrc': imgsrc,
-            'domid': self.domid, 'href': self.href}
-
-
 # more widgets #################################################################
 
 class IntervalWidget(FieldWidget):
@@ -977,3 +898,83 @@ class EditableURLWidget(FieldWidget):
         if not values:
             return path
         return u'%s?%s' % (path, req.build_url_params(**values))
+
+
+# form controls ######################################################################
+
+class Button(Input):
+    """Simple <input type='button'>, base class for global form buttons.
+
+    Note that `label` is a msgid which will be translated at form generation
+    time, you should not give an already translated string.
+    """
+    type = 'button'
+    def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
+                 setdomid=None, settabindex=None,
+                 name='', value='', onclick=None, cwaction=None):
+        super(Button, self).__init__(attrs, setdomid, settabindex)
+        if isinstance(label, tuple):
+            self.label = label[0]
+            self.icon = label[1]
+        else:
+            self.label = label
+            self.icon = None
+        self.name = name
+        self.value = ''
+        self.onclick = onclick
+        self.cwaction = cwaction
+        self.attrs.setdefault('class', 'validateButton')
+
+    def render(self, form, field=None, renderer=None):
+        label = form._cw._(self.label)
+        attrs = self.attrs.copy()
+        if self.cwaction:
+            assert self.onclick is None
+            attrs['onclick'] = "postForm('__action_%s', \'%s\', \'%s\')" % (
+                self.cwaction, self.label, form.domid)
+        elif self.onclick:
+            attrs['onclick'] = self.onclick
+        if self.name:
+            attrs['name'] = self.name
+            if self.setdomid:
+                attrs['id'] = self.name
+        if self.settabindex and not 'tabindex' in attrs:
+            attrs['tabindex'] = form._cw.next_tabindex()
+        if self.icon:
+            img = tags.img(src=form._cw.external_resource(self.icon), alt=self.icon)
+        else:
+            img = u''
+        return tags.button(img + xml_escape(label), escapecontent=False,
+                           value=label, type=self.type, **attrs)
+
+
+class SubmitButton(Button):
+    """Simple <input type='submit'>, main button to submit a form"""
+    type = 'submit'
+
+
+class ResetButton(Button):
+    """Simple <input type='reset'>, main button to reset a form. You usually
+    don't want to use this.
+    """
+    type = 'reset'
+
+
+class ImgButton(object):
+    """Simple <img> wrapped into a <a> tag with href triggering something (usually a
+    javascript call).
+    """
+    def __init__(self, domid, href, label, imgressource):
+        self.domid = domid
+        self.href = href
+        self.imgressource = imgressource
+        self.label = label
+
+    def render(self, form, field=None, renderer=None):
+        label = form._cw._(self.label)
+        imgsrc = form._cw.external_resource(self.imgressource)
+        return '<a id="%(domid)s" href="%(href)s">'\
+               '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
+            'label': label, 'imgsrc': imgsrc,
+            'domid': self.domid, 'href': self.href}
+
