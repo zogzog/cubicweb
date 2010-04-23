@@ -75,6 +75,7 @@ def uniquify_path(dirpath, basename):
             return path
     return None
 
+
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
     def __init__(self, defaultdir, fsencoding='utf-8'):

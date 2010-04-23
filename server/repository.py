@@ -875,6 +875,7 @@ class Repository(object):
         if eid is not None:
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
+            # XXX used with extlite (eg vcsfile), probably not needed anymore
             if recreate:
                 entity = source.before_entity_insertion(session, extid, etype, eid)
                 entity._cw_recreating = True
@@ -903,10 +904,8 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
-            if not hasattr(entity, 'edited_attributes'):
-                entity.edited_attributes = set()
+            entity.edited_attributes = set(entity)
             if source.should_call_hooks:
-                entity.edited_attributes = set(entity)
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, extid)
