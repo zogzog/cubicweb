@@ -92,8 +92,7 @@ Comparison operators
     Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
-XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than
-"NOT A trick 'bar'" ?
+.. XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than "NOT A trick 'bar'" ?
 
 .. _PriorityOperators:
 

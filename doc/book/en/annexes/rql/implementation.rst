@@ -128,7 +128,7 @@ Known limitations
 
 - The current implementation does not support linking two relations of type 'is'
   with an OR. I do not think that the negation is supported on this type of
-  relation (XXX FIXME to be confirmed).
+  relation (XXX to be confirmed).
 
 - Relations defining the variables must be left to those using them.  For
   example::

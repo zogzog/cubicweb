@@ -40,9 +40,6 @@ The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blo
 .. _`mailing-list`: http://lists.cubicweb.org/mailman/listinfo/cubicweb
 .. _blog: http://www.cubicweb.org/blog/1238
 
-Table of Contents
-=================
-
 .. toctree::
    :maxdepth: 2
 

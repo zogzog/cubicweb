@@ -96,13 +96,7 @@ where :
   the cube.
 
 
-At least you should have:
-
-* the file ``__pkginfo__.py``
-* the schema definition
-  XXX false, we may want to have cubes which are only adding a service,
-  no persistent data (eg embedding for instance)
-
+At least you should have the file ``__pkginfo__.py``.
 
 
 The :file:`__init__.py` and :file:`site_cubicweb.py` files
@@ -110,30 +104,31 @@ The :file:`__init__.py` and :file:`site_cubicweb.py` files
 
 The :file:`__pkginfo__.py` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-XXX contains metadata describing your cubes
-    distname / modname
-    version / numversion
-    __use__
-    __recommend__
+
+It contains metadata describing your cubes, mostly useful for
+packaging.
 
 
 :file:`migration/precreate.py` and :file:`migration/postcreate.py`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-XXX detail steps of instance creation
+
+.. XXX detail steps of instance creation
 
 
 External resources such as image, javascript and css files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-XXX naming convention external_resources file
+
+.. XXX naming convention external_resources file
 
 
 Out-of the box testing
 ~~~~~~~~~~~~~~~~~~~~~~
-XXX MANIFEST.in, __pkginfo__.include_dirs, debian
 
+.. XXX MANIFEST.in, __pkginfo__.include_dirs, debian
 
 
 Packaging and distribution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-XXX MANIFEST.in, __pkginfo__.include_dirs, debian
+
+.. XXX MANIFEST.in, __pkginfo__.include_dirs, debian
 
