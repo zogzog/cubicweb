@@ -49,7 +49,8 @@ The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blo
 .. toctree::
    :maxdepth: 3
 
-   development/index
+   devrepo/index
+   devweb/index
 
 .. toctree::
    :maxdepth: 2
