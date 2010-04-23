@@ -470,8 +470,8 @@ this option is set to yes",
             except AttributeError:
                 # bw compat
                 if hasattr(pkginfo, oldkey):
-                    warn('[3.8] %s is deprecated, use %s dict' % (oldkey, key),
-                         DeprecationWarning)
+                    warn('[3.8] cube %s: %s is deprecated, use %s dict'
+                         % (cube, oldkey, key), DeprecationWarning)
                     deps = getattr(pkginfo, oldkey)
                 else:
                     deps = {}
