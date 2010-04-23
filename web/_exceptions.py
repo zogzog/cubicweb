@@ -57,8 +57,5 @@ class RemoteCallFailed(RequestError):
         self.reason = reason
 
     def dumps(self):
-        try:
-            from json import dumps
-        except ImportError:
-            from simplejson import dumps
-        return dumps({'reason': self.reason})
+        from cubicweb.web import json
+        return json.dumps({'reason': self.reason})

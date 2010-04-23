@@ -11,11 +11,6 @@ _ = unicode
 
 from copy import copy
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
@@ -23,7 +18,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, implements, yes)
 from cubicweb.view import EntityView
 from cubicweb import tags
-from cubicweb.web import uicfg, stdmsgs, eid_param, \
+from cubicweb.web import uicfg, stdmsgs, eid_param, dumps, \
      formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.views import forms

@@ -7,16 +7,12 @@
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
+from cubicweb.web import dumps
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,

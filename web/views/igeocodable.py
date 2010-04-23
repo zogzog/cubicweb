@@ -7,14 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 from cubicweb.interfaces import IGeocodable
 from cubicweb.view import EntityView
 from cubicweb.selectors import implements
+from cubicweb.web import json
 
 class GeocodingJsonView(EntityView):
     __regid__ = 'geocoding-json'

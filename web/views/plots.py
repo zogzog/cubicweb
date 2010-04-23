@@ -7,17 +7,13 @@
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import multi_columns_rset
+from cubicweb.web import dumps
 from cubicweb.web.views import baseviews
 
 @objectify_selector

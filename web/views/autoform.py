@@ -109,11 +109,6 @@ _ = unicode
 
 from warnings import warn
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 
@@ -123,7 +118,7 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
-from cubicweb.web import stdmsgs, uicfg, eid_param, \
+from cubicweb.web import stdmsgs, uicfg, eid_param, dumps, \
      form as f, formwidgets as fw, formfields as ff
 from cubicweb.web.views import forms
 

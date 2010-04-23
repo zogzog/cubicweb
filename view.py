@@ -12,11 +12,7 @@ _ = unicode
 from cStringIO import StringIO
 from warnings import warn
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
+from cubicweb.utils import json
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
@@ -487,11 +483,11 @@ class ReloadableMixIn(object):
     def build_update_js_call(self, cbname, msg):
         rql = self.cw_rset.printable_rql()
         return "javascript:userCallbackThenUpdateUI('%s', '%s', %s, %s, '%s', '%s')" % (
-            cbname, self.id, dumps(rql), dumps(msg),
+            cbname, self.id, json.dumps(rql), json.dumps(msg),
             self.__registry__, self.div_id())
 
     def build_reload_js_call(self, cbname, msg):
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, dumps(msg))
+        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, json.dumps(msg))
 
     build_js = build_update_js_call # expect updatable component by default
 
