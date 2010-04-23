@@ -17,5 +17,5 @@ the *CubicWeb* framework.
    form
    facets
    internationalization
-   property
+..   property
    httpcaching

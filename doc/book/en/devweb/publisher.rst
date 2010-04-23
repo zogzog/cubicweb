@@ -11,6 +11,8 @@ dependant on the used HTTP library. With `twisted`_ however,
 ``cubicweb.etwist.server.CubicWebRootResource.render_request`` is the
 real entry point.
 
+.. _`twisted`: http://twistedmatrix.com/trac/
+
 What main_publish does:
 
 * get a controller id and a result set from the path (this is actually

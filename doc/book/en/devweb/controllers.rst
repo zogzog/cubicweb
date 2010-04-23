@@ -10,24 +10,25 @@ Controllers are responsible for taking action upon user requests
 (loosely following the terminology of the MVC meta pattern).
 
 The following controllers are provided out-of-the box in CubicWeb. We
-list them by category.
+list them by category. They are all defined in
+(:mod:`cubicweb.web.views.basecontrollers`).
 
 `Browsing`:
 
-* the View controller (web/views/basecontrollers.py) is associated
-  with most browsing actions within a CubicWeb application: it always
-  instantiates a `main template` and lets the ResultSet/Views dispatch
+* the View controlleris associated with most browsing actions within a
+  CubicWeb application: it always instantiates a
+  :ref:`the_main_template` and lets the ResultSet/Views dispatch
   system build up the whole content; it handles ObjectNotFound and
   NoSelectableObject errors that may bubble up to its entry point, in
   an end-user-friendly way (but other programming errors will slip
   through)
 
-* the JSon controller (web/views/basecontrollers.py) provides services
-  for Ajax calls, typically using JSON as a serialization format for
-  input, and sometimes using either JSON or XML for output;
+* the JSon controller (same module) provides services for Ajax calls,
+  typically using JSON as a serialization format for input, and
+  sometimes using either JSON or XML for output;
 
-* the Login/Logout controllers (web/views/basecontrollers.py) make
-  effective user login or logout requests
+* the Login/Logout controllers make effective user login or logout
+  requests
 
 `Edition`:
 
@@ -35,12 +36,12 @@ list them by category.
   operations in response to a form being submitted; it works in close
   association with the Forms, to which it delegates some of the work
 
-* the Form validator controller (web/views/basecontrollers.py)
-  provides form validation from Ajax context, using the Edit
-  controller, to implement the classic form handling loop (user edits,
-  hits 'submit/apply', validation occurs server-side by way of the
-  Form validator controller, and the UI is decorated with failure
-  information, either global or per-field , until it is valid)
+* the Form validator controller provides form validation from Ajax
+  context, using the Edit controller, to implement the classic form
+  handling loop (user edits, hits 'submit/apply', validation occurs
+  server-side by way of the Form validator controller, and the UI is
+  decorated with failure information, either global or per-field ,
+  until it is valid)
 
 `Other`:
 
@@ -88,8 +89,9 @@ It can be found in (:mod:`cubicweb.web.views.editcontroller`).
 Editing control
 ~~~~~~~~~~~~~~~~
 
-Re-requisites: the parameters related to entities to edit are
-specified as follows ::
+.. XXX this look obsolete
+
+The parameters related to entities to edit are specified as follows ::
 
   <field name>:<entity eid>
 

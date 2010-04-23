@@ -14,8 +14,8 @@ sent back by the browser.
 
 The **field** should be used according to the type of what you want to edit.
 E.g. if you want to edit some date, you'll have to use the
-:class:`~cubicweb.web.formfields.DateField`. Then you can choose among multiple
-widgets to edit it, for instance :class:`~cubicweb.web.formwidgets.TextInput` (a
+:class:`cubicweb.web.formfields.DateField`. Then you can choose among multiple
+widgets to edit it, for instance :class:`cubicweb.web.formwidgets.TextInput` (a
 bare text field), :class:`~cubicweb.web.formwidgets.DateTimePicker` (a simple
 calendar) or even :class:`~cubicweb.web.formwidgets.JQueryDatePicker` (the JQuery
 calendar).  You can of course also write your own widget.
@@ -129,28 +129,28 @@ Here is what it looks like:
 
 .. sourcecode:: python
 
-    class SendMailController(Controller):
-        __regid__ = 'sendmail'
-        __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
+   class SendMailController(Controller):
+       __regid__ = 'sendmail'
+       __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
-        def publish(self, rset=None):
-            body = self._cw.form['mailbody']
-            subject = self._cw.form['subject']
-            eids = self._cw.form['recipient']
-            # eids may be a string if only one recipient was specified
-            if isinstance(eids, basestring):
-                rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
-            else:
-                rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
-            recipients = list(rset.entities())
-            msg = format_mail({'email' : self._cw.user.get_email(),
-                               'name' : self._cw.user.dc_title()},
-                              recipients, body, subject)
-            if not self._cw.vreg.config.sendmails([(msg, recipients]):
-                msg = self._cw._('could not connect to the SMTP server')
-            else:
-                msg = self._cw._('emails successfully sent')
-            raise Redirect(self._cw.build_url(__message=msg))
+       def publish(self, rset=None):
+           body = self._cw.form['mailbody']
+           subject = self._cw.form['subject']
+           eids = self._cw.form['recipient']
+           # eids may be a string if only one recipient was specified
+           if isinstance(eids, basestring):
+               rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
+           else:
+               rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
+           recipients = list(rset.entities())
+           msg = format_mail({'email' : self._cw.user.get_email(),
+                              'name' : self._cw.user.dc_title()},
+                             recipients, body, subject)
+           if not self._cw.vreg.config.sendmails([(msg, recipients]):
+               msg = self._cw._('could not connect to the SMTP server')
+           else:
+               msg = self._cw._('emails successfully sent')
+           raise Redirect(self._cw.build_url(__message=msg))
 
 
 The entry point of a controller is the publish method. In that case we simply get

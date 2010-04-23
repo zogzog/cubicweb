@@ -3,9 +3,10 @@ Creating a new cube from scratch using :command:`cubicweb-ctl newcube`
 
 Let's start by creating the cube environment in which we will develop ::
 
-  cd ~/hg
+  cd ~/cubes
   # use cubicweb-ctl to generate a template for the cube
-  cubicweb-ctl newcube mycube  # will ask some questions, most with nice default
+  # will ask some questions, most with nice default
+  cubicweb-ctl newcube mycube
   # makes the cube source code managed by mercurial
   cd mycube
   hg init
@@ -16,11 +17,12 @@ If all went well, you should see the cube you just created in the list
 returned by ``cubicweb-ctl list`` in the section *Available cubes*,
 and if it is not the case please refer to :ref:`ConfigurationEnv`.
 
-To reuse an existing cube, add it to the list named ``__use__`` and defined in
-:file:`__pkginfo__.py`.  This variable is used for the instance packaging
-(dependencies handled by system utility tools such as APT) and the usable cubes
-at the time the base is created (import_erschema('MyCube') will not properly
-work otherwise).
+To reuse an existing cube, add it to the list named
+``__depends_cubes__`` and defined in :file:`__pkginfo__.py`.  This
+variable is used for the instance packaging (dependencies handled by
+system utility tools such as APT) and the usable cubes at the time the
+base is created (import_erschema('MyCube') will not properly work
+otherwise).
 
 .. note::
 

@@ -2,22 +2,23 @@
 
 .. _Workflow:
 
-Define a Workflow
-=================
+Defining a Workflow
+===================
 
 General
 -------
 
 A workflow describes how certain entities have to evolve between
-different states. Hence we have a set of states, and a "transition graph",
-i.e. a set of possible transitions from one state to another state.
+different states. Hence we have a set of states, and a "transition
+graph", i.e. a set of possible transitions from one state to another
+state.
 
 We will define a simple workflow for a blog, with only the following
 two states: `submitted` and `published`. So first, we create a simple
-*CubicWeb* instance in ten minutes (see :ref:`BlogFiveMinutes`).
+|cubicweb| instance in five minutes (see :ref:`BlogFiveMinutes`).
 
-Set-up a workflow
------------------
+Setting up a workflow
+---------------------
 
 We want to create a workflow to control the quality of the BlogEntry
 submitted on the instance. When a BlogEntry is created by a user
@@ -50,13 +51,13 @@ About our example of BlogEntry, we must have:
       ...
 
 
-Create states, transitions and group permissions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating states, transitions and group permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``postcreate.py`` script is executed in a special environment, adding
-several *CubicWeb* primitives that can be used.
+The :mod:`postcreate` script is executed in a special environment,
+adding several |cubicweb| primitives that can be used.
 
-They are all defined in the ``class ServerMigrationHelper``.
+They are all defined in the :class:`ServerMigrationHelper` class.
 We will only discuss the methods we use to create a workflow in this example.
 
 A workflow is a collection of entities of type ``State`` and of type
@@ -115,8 +116,9 @@ created before.
   checkpoint()
 
 .. note::
-  Do not forget to add the `_()` in front of all states and transitions names while creating
-  a workflow so that they will be identified by the i18n catalog scripts.
+  Do not forget to add the `_()` in front of all states and
+  transitions names while creating a workflow so that they will be
+  identified by the i18n catalog scripts.
 
 In addition to the user groups (one of which the user needs to belong
 to), we could have added a RQL condition.  In this case, the user can

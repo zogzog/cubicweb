@@ -50,7 +50,8 @@ Let us detail a little the divergences between E/R and |yams|:
 
 Also |yams| supports the notions of:
 
-* entity inheritance,
+* entity inheritance (quite experimental yet, and completely
+  undocumented),
 * relation type: that is, relationships can be established over a set
   of couple of entity types (henre the distinction made between
   `RelationType` and `RelationDefinition` below)

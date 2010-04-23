@@ -16,8 +16,8 @@ Cubes
 -----
 
 A cube is a software component made of three parts: its data model
-(:file:`schema`), its logic (:file:`entities`) and its user interface
-(:file:`views`).
+(:mod:`schema`), its logic (:mod:`entities`) and its user interface
+(:mod:`views`).
 
 A cube can use other cubes as building blocks and assemble them to provide a
 whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_ and
@@ -70,7 +70,7 @@ directory is looked up, as well as the paths in :envvar:`CW_INSTANCES_DIR`
 environment variable.
 
 
-.. Note::
+.. note::
 
   The term application is used to refer to "something that should do something as
   a whole", eg more like a project and so can refer to an instance or to a cube,
@@ -101,13 +101,13 @@ client for instance): you don't have the same abilities on both side. On the
 repository side, you can for instance by-pass security checks, which isn't
 possible from client code.
 
-Some logic can be attached to events that happen in the repository, like
-creation of entities, deletion of relations, etc. This is used for example to
-send email notifications when the state of an object changes. See :ref:`HookIntro` below.
+Some logic can be attached to events that happen in the repository,
+like creation of entities, deletion of relations, etc. This is used
+for example to send email notifications when the state of an object
+changes. See :ref:`HookIntro` below.
 
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
 .. _`Python Remote Objects`: http://pyro.sourceforge.net/
-
 
 .. _WebEngineIntro:
 
@@ -237,11 +237,11 @@ from a registry:
 The RQL query language
 ----------------------
 
-**No need for a complicated ORM when you have a powerful data
-  manipulation language**
+No need for a complicated ORM when you have a powerful data
+manipulation language.
 
-All the persistent data in a |cubicweb| instance is retrieved and modified by
-using the Relation Query Language.
+All the persistent data in a |cubicweb| instance is retrieved and
+modified using RQL (see :ref:`rql_intro`).
 
 This query language is inspired by SQL but is on a higher level in order to
 emphasize browsing relations.
@@ -251,6 +251,8 @@ DB-API
 ~~~~~~
 
 The repository exposes a `db-api`_ like api but using the RQL instead of SQL.
+
+.. _`db-api`: http://www.python.org/dev/peps/pep-0249/
 
 You basically get a connection using :func:`cubicweb.dbapi.connect` , then
 get a cursor to call its `execute` method which will return result set for the
@@ -336,8 +338,6 @@ safely at the hook execution time.
 Hooks and operation are an essential building block of any moderately complicated
 cubicweb application.
 
-.. Note:
+.. note::
    RQL queries executed in hooks and operations are *unsafe* by default, e.g. the
    read and write security is deactivated unless explicitly asked.
-
-.. |cubicweb| replace:: *CubicWeb*
