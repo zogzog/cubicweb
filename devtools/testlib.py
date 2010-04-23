@@ -14,11 +14,6 @@ from urllib import unquote
 from math import log
 from contextlib import contextmanager
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 import yams.schema
 
 from logilab.common.testlib import TestCase, InnerTest
@@ -35,7 +30,7 @@ from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser
-
+from cubicweb.utils import json
 
 # low-level utilities ##########################################################
 

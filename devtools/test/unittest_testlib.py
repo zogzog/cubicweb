@@ -21,7 +21,7 @@ class WebTestTC(TestCase):
     def setUp(self):
         output = StringIO()
         self.runner = SkipAwareTextTestRunner(stream=output)
-
+        self.output = output
     def test_error_raised(self):
         class MyWebTest(CubicWebTC):
 
@@ -34,6 +34,7 @@ class WebTestTC(TestCase):
 
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))
+        print self.output.getvalue()
         self.assertEquals(result.testsRun, 2)
         self.assertEquals(len(result.errors), 0)
         self.assertEquals(len(result.failures), 1)
