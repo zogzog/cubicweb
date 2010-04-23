@@ -522,7 +522,7 @@ class DateTimePicker(TextInput):
         req.html_headers.define_var('DAYNAMES', daynames)
 
     def _render(self, form, field, renderer):
-        txtwidget = super(DateTimePicker, self).render(form, field, renderer)
+        txtwidget = super(DateTimePicker, self)._render(form, field, renderer)
         self.add_localized_infos(form._cw)
         cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
@@ -632,8 +632,8 @@ class JQueryDateTimePicker(FieldWidget):
         timepicker = JQueryTimePicker(timestr=timestr, timesteps=self.timesteps,
                                       suffix='time')
         return u'<div id="%s">%s%s</div>' % (field.dom_id(form),
-                                            datepicker.render(form, field),
-                                            timepicker.render(form, field))
+                                            datepicker.render(form, field, renderer),
+                                            timepicker.render(form, field, renderer))
 
     def process_field_data(self, form, field):
         req = form._cw
@@ -775,7 +775,7 @@ class AddComboBoxWidget(Select):
         return attrs
 
     def _render(self, form, field, renderer):
-        return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''
+        return super(AddComboBoxWidget, self)._render(form, field, renderer) + u'''
 <div id="newvalue">
   <input type="text" id="newopt" />
   <a href="javascript:noop()" id="add_newopt">&#160;</a></div>
