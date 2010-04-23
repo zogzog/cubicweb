@@ -982,6 +982,15 @@ class workflowable_definition(ybo.metadefinition):
             make_workflowable(cls)
         return cls
 
+class WorkflowableEntityType(ybo.EntityType):
+    """Use this base class instead of :class:`EntityType` to have workflow
+    relations (i.e. `in_state`, `wf_info_for` and `custom_workflow`) on your
+    entity type.
+    """
+    __metaclass__ = workflowable_definition
+    __abstract__ = True
+
+
 def make_workflowable(cls, in_state_descr=None):
     """Adds workflow relations as :class:`WorkflowableEntityType`, but usable on
     existing classes which are not using that base class.
@@ -989,19 +998,17 @@ def make_workflowable(cls, in_state_descr=None):
     existing_rels = set(rdef.name for rdef in cls.__relations__)
     # let relation types defined in cw.schemas.workflow carrying
     # cardinality, constraints and other relation definition properties
+    etype = getattr(cls, 'name', cls.__name__)
     if 'custom_workflow' not in existing_rels:
-        rdef = ybo.SubjectRelation('Workflow')
-        yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
+        rdef = ybo.RelationDefinition(etype, 'custom_workflow', 'Workflow')
+        yams_add_relation(cls.__relations__, rdef)
     if 'in_state' not in existing_rels:
-        rdef = ybo.SubjectRelation('State', description=in_state_descr)
-        yams_add_relation(cls.__relations__, rdef, 'in_state')
+        rdef = ybo.RelationDefinition(etype, 'in_state', 'State',
+                                      description=in_state_descr)
+        yams_add_relation(cls.__relations__, rdef)
     if 'wf_info_for' not in existing_rels:
-        rdef = ybo.ObjectRelation('TrInfo')
-        yams_add_relation(cls.__relations__, rdef, 'wf_info_for')
-
-class WorkflowableEntityType(ybo.EntityType):
-    __metaclass__ = workflowable_definition
-    __abstract__ = True
+        rdef = ybo.RelationDefinition('TrInfo', 'wf_info_for', etype)
+        yams_add_relation(cls.__relations__, rdef)
 
 
 # schema loading ##############################################################

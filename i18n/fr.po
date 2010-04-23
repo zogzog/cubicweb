@@ -59,6 +59,22 @@ msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 
 #, python-format
+msgid "%(value)r doesn't match the %(regexp)r regular expression"
+msgstr "%(value)r ne correspond pas à l'expression régulière %(regexp)r"
+
+#, python-format
+msgid "%(value)r must be %(op)s %(boundary)s"
+msgstr "%(value)r doit être %(op)s %(boundary)s"
+
+#, python-format
+msgid "%(value)r must be <= %(boundary)s"
+msgstr "%(value)r doit être <= %(boundary)s"
+
+#, python-format
+msgid "%(value)r must be >= %(boundary)s"
+msgstr "%(value)r doit être >= %(boundary)s"
+
+#, python-format
 msgid "%d days"
 msgstr "%d jours"
 
@@ -229,6 +245,9 @@ msgid "Boolean_plural"
 msgstr "Booléen"
 
 msgid "BoundConstraint"
+msgstr "contrainte de bornes"
+
+msgid "BoundaryConstraint"
 msgstr "contrainte de bornes"
 
 msgid "Browse by category"
@@ -2566,6 +2585,10 @@ msgstr "internationalisable"
 msgid "invalid action %r"
 msgstr "action %r invalide"
 
+#, python-format
+msgid "invalid value %(value)s, it must be one of %(choices)s"
+msgstr "valeur %(value)s incorrect, doit être parmi %(choices)s"
+
 msgid "is"
 msgstr "de type"
 
@@ -3918,6 +3941,14 @@ msgstr "valeur"
 
 msgid "value associated to this key is not editable manually"
 msgstr "la valeur associée à cette clé n'est pas éditable manuellement"
+
+#, python-format
+msgid "value should have maximum size of %s"
+msgstr "la valeur doit être de taille %s au maximum"
+
+#, python-format
+msgid "value should have minimum size of %s"
+msgstr "la valeur doit être de taille %s au minimum"
 
 msgid "vcard"
 msgstr "vcard"

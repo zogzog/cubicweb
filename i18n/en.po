@@ -54,6 +54,22 @@ msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr ""
 
 #, python-format
+msgid "%(value)r doesn't match the %(regexp)r regular expression"
+msgstr ""
+
+#, python-format
+msgid "%(value)r must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "%(value)r must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "%(value)r must be >= %(boundary)s"
+msgstr ""
+
+#, python-format
 msgid "%d days"
 msgstr ""
 
@@ -223,6 +239,9 @@ msgstr "Booleans"
 
 msgid "BoundConstraint"
 msgstr "bound constraint"
+
+msgid "BoundaryConstraint"
+msgstr ""
 
 msgid "Browse by category"
 msgstr ""
@@ -2470,6 +2489,10 @@ msgstr ""
 msgid "invalid action %r"
 msgstr ""
 
+#, python-format
+msgid "invalid value %(value)s, it must be one of %(choices)s"
+msgstr ""
+
 msgid "is"
 msgstr ""
 
@@ -3787,6 +3810,14 @@ msgid "value"
 msgstr ""
 
 msgid "value associated to this key is not editable manually"
+msgstr ""
+
+#, python-format
+msgid "value should have maximum size of %s"
+msgstr ""
+
+#, python-format
+msgid "value should have minimum size of %s"
 msgstr ""
 
 msgid "vcard"
