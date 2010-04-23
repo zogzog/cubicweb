@@ -9,7 +9,10 @@ cf. http://code.google.com/p/simile-widgets/
 """
 __docformat__ = "restructuredtext en"
 
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from logilab.mtconverter import xml_escape
 
@@ -40,7 +43,7 @@ class TimelineJsonView(EntityView):
                 events.append(event)
         timeline_data = {'dateTimeFormat': self.date_fmt,
                          'events': events}
-        self.w(simplejson.dumps(timeline_data))
+        self.w(json.dumps(timeline_data))
 
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):

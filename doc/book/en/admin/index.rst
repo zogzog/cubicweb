@@ -21,6 +21,7 @@ instances based on that framework.
    ldap
    pyro
    gae
+   migration
    additional-tips
 
 RQL logs

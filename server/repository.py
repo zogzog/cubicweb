@@ -320,9 +320,9 @@ class Repository(object):
                 looptask.join()
                 self.info('task %s finished', looptask.name)
         for thread in self._running_threads:
-            self.info('waiting thread %s...', thread.name)
+            self.info('waiting thread %s...', thread.getName())
             thread.join()
-            self.info('thread %s finished', thread.name)
+            self.info('thread %s finished', thread.getName())
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):
             self.hm.call_hooks('server_shutdown', repo=self)

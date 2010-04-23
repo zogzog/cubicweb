@@ -310,14 +310,17 @@ class HTMLStream(object):
 
 
 try:
-    # may not be there if cubicweb-web not installed
-    from simplejson import dumps, JSONEncoder
+    try:
+        # may not be there if cubicweb-web not installed
+        from json import dumps, JSONEncoder
+    except ImportError:
+        from simplejson import dumps, JSONEncoder
 except ImportError:
     pass
 else:
 
     class CubicWebJsonEncoder(JSONEncoder):
-        """define a simplejson encoder to be able to encode yams std types"""
+        """define a json encoder to be able to encode yams std types"""
 
         # _iterencode is the only entry point I've found to use a custom encode
         # hook early enough: .default() is called if nothing else matched before,

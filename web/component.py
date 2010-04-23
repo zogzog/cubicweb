@@ -8,7 +8,10 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape

@@ -210,12 +210,12 @@ We'll show you now an example of a ``primary`` view and how to customize it.
 We continue along the basic tutorial :ref:`tuto_blog`.
 
 If you want to change the way a ``BlogEntry`` is displayed, just override
-the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``:
+the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``.
 
 .. sourcecode:: python
 
   from cubicweb.selectors import implements
-  from cubicweb.web.views.primary improt Primaryview
+  from cubicweb.web.views.primary import Primaryview
 
   class BlogEntryPrimaryView(PrimaryView):
     __select__ = PrimaryView.__select__ & implements('BlogEntry')

@@ -1,9 +1,22 @@
-"""form renderers, responsible to layout a form to html
+# organization: Logilab
+# copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+Renderers
+---------
 
-:organization: Logilab
-:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. Note::
+   Form renderers are responsible to layout a form to HTML.
+
+Here are the base renderers available:
+
+.. autoclass:: cubicweb.web.views.formrenderers.FormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.HTableFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityCompositeFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
+
 """
 __docformat__ = "restructuredtext en"
 
@@ -12,7 +25,10 @@ from warnings import warn
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from cubicweb import tags
 from cubicweb.appobject import AppObject
@@ -37,7 +53,7 @@ def field_label(form, field):
 
 
 class FormRenderer(AppObject):
-    """basic renderer displaying fields in a two columns table label | value
+    """This is the 'default' renderer, displaying fields in a two columns table:
 
     +--------------+--------------+
     | field1 label | field1 input |
@@ -256,7 +272,7 @@ class BaseFormRenderer(FormRenderer):
 
 
 class HTableFormRenderer(FormRenderer):
-    """display fields horizontally in a table
+    """The 'htable' form renderer display fields horizontally in a table:
 
     +--------------+--------------+---------+
     | field1 label | field2 label |         |
@@ -300,7 +316,13 @@ class HTableFormRenderer(FormRenderer):
 
 
 class EntityCompositeFormRenderer(FormRenderer):
-    """specific renderer for multiple entities edition form (muledit)"""
+    """This is a specific renderer for the multiple entities edition form
+    ('muledit').
+
+    Each entity form will be displayed in row off a table, with a check box for
+    each entities to indicate which ones are edited. Those checkboxes should be
+    automatically updated when something is edited.
+    """
     __regid__ = 'composite'
 
     _main_display_fields = None
@@ -359,7 +381,11 @@ class EntityCompositeFormRenderer(FormRenderer):
 
 
 class EntityFormRenderer(BaseFormRenderer):
-    """specific renderer for entity edition form (edition)"""
+    """This is the 'default' renderer for entity's form.
+
+    You can still use form_renderer_id = 'base' if you want base FormRenderer
+    layout even when selected for an entity.
+    """
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
     __select__ = implements('Any') & yes()
@@ -396,8 +422,8 @@ class EntityFormRenderer(BaseFormRenderer):
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
-    """specific renderer for entity inlined edition form
-    (inline-[creation|edition])
+    """This is a specific renderer for entity's form inlined into another
+    entity's form.
     """
     __regid__ = 'inline'
 

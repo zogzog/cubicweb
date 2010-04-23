@@ -17,7 +17,11 @@ from cubicweb.cwconfig import CubicWebConfiguration
 
 
 def slink_directories():
-    import rql, yams, yapps, simplejson, docutils, roman
+    import rql, yams, yapps, docutils, roman
+    try:
+        import json as simplejson
+    except ImportError:
+        import simplejson
     from logilab import common as lgc
     from logilab import constraint as lgcstr
     from logilab import mtconverter as lgmtc

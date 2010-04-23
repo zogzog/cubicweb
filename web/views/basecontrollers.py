@@ -10,7 +10,10 @@ object to handle publication.
 """
 __docformat__ = "restructuredtext en"
 
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
@@ -32,7 +35,7 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 def jsonize(func):
-    """decorator to sets correct content_type and calls `simplejson.dumps` on
+    """decorator to sets correct content_type and calls `json.dumps` on
     results
     """
     def wrapper(self, *args, **kwargs):
@@ -237,7 +240,7 @@ class FormValidatorController(Controller):
         errback = str(self._cw.form.get('__onfailure', 'null'))
         cbargs = str(self._cw.form.get('__cbargs', 'null'))
         self._cw.set_content_type('text/html')
-        jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
@@ -277,7 +280,7 @@ class JSonController(Controller):
         if not isinstance(args, (list, tuple)):
             args = (args,)
         try:
-            args = [simplejson.loads(arg) for arg in args]
+            args = [json.loads(arg) for arg in args]
         except ValueError, exc:
             self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
             raise RemoteCallFailed(repr(exc))
@@ -441,7 +444,7 @@ class JSonController(Controller):
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land
         args['default'] = self._cw.form['default_value']
-        args['reload'] = simplejson.loads(args['reload'])
+        args['reload'] = json.loads(args['reload'])
         rset = req.eid_rset(int(self._cw.form['eid']))
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         stream = view.set_stream()
@@ -577,7 +580,7 @@ class JSonController(Controller):
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
 
-
+# XXX move to massmailing
 class SendMailController(Controller):
     __regid__ = 'sendmail'
     __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
@@ -585,13 +588,12 @@ class SendMailController(Controller):
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
         eids = self._cw.form['recipient']
-        # make sure we have a list even though only one recipient was specified
+        # eids may be a string if only one recipient was specified
         if isinstance(eids, basestring):
-            eids = (eids,)
-        rql = 'Any X WHERE X eid in (%s)' % (','.join(eids))
-        rset = self._cw.execute(rql)
-        for entity in rset.entities():
-            yield entity
+            rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
+        else:
+            rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
+        return rset.entities()
 
     def sendmail(self, recipient, subject, body):
         msg = format_mail({'email' : self._cw.user.get_email(),
@@ -610,7 +612,6 @@ class SendMailController(Controller):
         for recipient in self.recipients():
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)
-        #breadcrumbs = self._cw.session.data.get('breadcrumbs', None)
         url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
         raise Redirect(url)
 

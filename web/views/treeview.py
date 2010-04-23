@@ -7,7 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-import simplejson as json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from logilab.mtconverter import xml_escape
 from cubicweb.utils import make_uid

@@ -590,47 +590,48 @@ class ExamineLogCommand(Command):
     chances are the lines at the top are the ones that will bring the higher
     benefit after optimisation. Start there.
     """
-    arguments = '< rql.log'
+    arguments = 'rql.log'
     name = 'exlog'
     options = (
         )
 
     def run(self, args):
-        if args:
-            raise BadCommandUsage("no argument expected")
         import re
         requests = {}
-        for lineno, line in enumerate(sys.stdin):
-            if not ' WHERE ' in line:
-                continue
-            #sys.stderr.write( line )
+        for filepath in args:
             try:
-                rql, time = line.split('--')
-                rql = re.sub("(\'\w+': \d*)", '', rql)
-                if '{' in rql:
-                    rql = rql[:rql.index('{')]
-                req = requests.setdefault(rql, [])
-                time.strip()
-                chunks = time.split()
-                clocktime = float(chunks[0][1:])
-                cputime = float(chunks[-3])
-                req.append( (clocktime, cputime) )
-            except Exception, exc:
-                sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
-
+                stream = file(filepath)
+            except OSError, ex:
+                raise BadCommandUsage("can't open rql log file %s: %s"
+                                      % (filepath, ex))
+            for lineno, line in enumerate(file):
+                if not ' WHERE ' in line:
+                    continue
+                try:
+                    rql, time = line.split('--')
+                    rql = re.sub("(\'\w+': \d*)", '', rql)
+                    if '{' in rql:
+                        rql = rql[:rql.index('{')]
+                    req = requests.setdefault(rql, [])
+                    time.strip()
+                    chunks = time.split()
+                    clocktime = float(chunks[0][1:])
+                    cputime = float(chunks[-3])
+                    req.append( (clocktime, cputime) )
+                except Exception, exc:
+                    sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
         stat = []
-        for rql, times in requests.items():
+        for rql, times in requests.iteritems():
             stat.append( (sum(time[0] for time in times),
                           sum(time[1] for time in times),
                           len(times), rql) )
-
         stat.sort()
         stat.reverse()
-
-        total_time = sum(clocktime for clocktime, cputime, occ, rql in stat)*0.01
+        total_time = sum(clocktime for clocktime, cputime, occ, rql in stat) * 0.01
         print 'Percentage;Cumulative Time (clock);Cumulative Time (CPU);Occurences;Query'
         for clocktime, cputime, occ, rql in stat:
-            print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime, cputime, occ, rql)
+            print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime,
+                                            cputime, occ, rql)
 
 
 class GenerateSchema(Command):

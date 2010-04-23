@@ -17,7 +17,10 @@ from math import log
 from contextlib import contextmanager
 from warnings import warn
 
-import simplejson
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 import yams.schema
 
@@ -488,7 +491,7 @@ class CubicWebTC(TestCase):
 
     def remote_call(self, fname, *args):
         """remote json call simulation"""
-        dump = simplejson.dumps
+        dump = json.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
         ctrl = self.vreg['controllers'].select('json', req)

@@ -12,7 +12,10 @@ _ = unicode
 from cStringIO import StringIO
 from warnings import warn
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape

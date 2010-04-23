@@ -1,9 +1,32 @@
-"""some base form classes for CubicWeb web client
+# organization: Logilab
+# copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+# contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
+Base form classes
+-----------------
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. Note:
+
+   Form is the glue that bind a context to a set of fields, and is rendered
+   using a form renderer. No display is actually done here, though you'll find
+   some attributes of form that are used to control the rendering process.
+
+Besides the automagic form we'll see later, they are barely two form
+classes in |cubicweb|:
+
+.. autoclass:: cubicweb.web.views.forms.FieldsForm
+.. autoclass:: cubicweb.web.views.forms.EntityFieldsForm
+
+As you have probably guessed, choosing between them is easy. Simply ask you the
+question 'I am editing an entity or not?'. If the answer is yes, use
+:class:`EntityFieldsForm`, else use :class:`FieldsForm`.
+
+Actually there exists a third form class:
+
+.. autoclass:: cubicweb.web.views.forms.CompositeForm
+
+but you'll use this one rarely.
 """
 __docformat__ = "restructuredtext en"
 
@@ -16,43 +39,77 @@ from logilab.common.deprecation import deprecated
 from cubicweb import typed_eid
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
-from cubicweb.web.formfields import StringField, relvoc_unrelated, guess_field
+from cubicweb.web.formfields import relvoc_unrelated, guess_field
 
 
 class FieldsForm(form.Form):
-    """base class for fields based forms.
+    """This is the base class for fields based forms.
+
+    **Attributes**
 
     The following attributes may be either set on subclasses or given on
     form selection to customize the generated form:
 
-    * `needs_js`: sequence of javascript files that should be added to handle
-      this form (through `req.add_js`)
+    :attr:`needs_js`
+      sequence of javascript files that should be added to handle this form
+      (through :meth:`~cubicweb.web.request.Request.add_js`)
 
-    * `needs_css`: sequence of css files that should be added to handle this
-      form (through `req.add_css`)
+    :attr:`needs_css`
+      sequence of css files that should be added to handle this form (through
+      :meth:`~cubicweb.web.request.Request.add_css`)
 
-    * `domid`: value for the "id" attribute of the <form> tag
+    :attr:`domid`
+      value for the "id" attribute of the <form> tag
 
-    * `action`: value for the "action" attribute of the <form> tag
+    :attr:`action`
+      value for the "action" attribute of the <form> tag
 
-    * `onsubmit`: value for the "onsubmit" attribute of the <form> tag
+    :attr:`onsubmit`
+      value for the "onsubmit" attribute of the <form> tag
 
-    * `cssclass`: value for the "class" attribute of the <form> tag
+    :attr:`cssclass`
+      value for the "class" attribute of the <form> tag
 
-    * `cssstyle`: value for the "style" attribute of the <form> tag
+    :attr:`cssstyle`
+      value for the "style" attribute of the <form> tag
 
-    * `cwtarget`: value for the "cubicweb:target" attribute of the <form> tag
+    :attr:`cwtarget`
+      value for the "cubicweb:target" attribute of the <form> tag
 
-    * `redirect_path`: relative to redirect to after submitting the form
+    :attr:`redirect_path`
+      relative to redirect to after submitting the form
 
-    * `copy_nav_params`: flag telling if navigation paramenters should be copied
-      back in hidden input
+    :attr:`copy_nav_params`
+      flag telling if navigation parameters should be copied back in hidden
+      inputs
 
-    * `form_buttons`:  form buttons sequence (button widgets instances)
+    :attr:`form_buttons`
+      sequence of form control (:class:`~cubicweb.web.formwidgets.Button`
+      widgets instances)
 
-    * `form_renderer_id`: id of the form renderer to use to render the form
+    :attr:`form_renderer_id`
+      identifier of the form renderer to use to render the form
 
-    * `fieldsets_in_order`: fieldset name sequence, to control order
+    :attr:`fieldsets_in_order`
+      sequence of fieldset names , to control order
+
+    **Generic methods**
+
+    .. automethod:: cubicweb.web.form.Form.field_by_name(name, role=None)
+    .. automethod:: cubicweb.web.form.Form.fields_by_name(name, role=None)
+
+    **Form construction methods**
+
+    .. automethod:: cubicweb.web.form.Form.remove_field(field)
+    .. automethod:: cubicweb.web.form.Form.append_field(field)
+    .. automethod:: cubicweb.web.form.Form.insert_field_before(field, name, role=None)
+    .. automethod:: cubicweb.web.form.Form.insert_field_after(field, name, role=None)
+    .. automethod:: cubicweb.web.form.Form.add_hidden(name, value=None, **kwargs)
+
+    **Form rendering methods**
+
+    .. automethod:: cubicweb.web.views.forms.FieldsForm.render
+
     """
     __regid__ = 'base'
 
@@ -75,18 +132,6 @@ class FieldsForm(form.Form):
         """true if the form needs enctype=multipart/form-data"""
         return any(field.needs_multipart for field in self.fields)
 
-    def add_hidden(self, name, value=None, **kwargs):
-        """add an hidden field to the form"""
-        kwargs.setdefault('ignore_req_params', True)
-        kwargs.setdefault('widget', fwdgs.HiddenInput)
-        field = StringField(name=name, value=value, **kwargs)
-        if 'id' in kwargs:
-            # by default, hidden input don't set id attribute. If one is
-            # explicitly specified, ensure it will be set
-            field.widget.setdomid = True
-        self.append_field(field)
-        return field
-
     def add_media(self):
         """adds media (CSS & JS) required by this widget"""
         if self.needs_js:
@@ -95,8 +140,16 @@ class FieldsForm(form.Form):
             self._cw.add_css(self.needs_css)
 
     def render(self, formvalues=None, rendervalues=None, renderer=None, **kwargs):
-        """render this form, using the renderer given in args or the default
-        FormRenderer()
+        """Render this form, using the `renderer` given as argument or the
+        default according to :attr:`form_renderer_id`. The rendered form is
+        returned as an unicode string.
+
+        `formvalues` is an optional dictionary containing values that will be
+        considered as field's value.
+
+        Extra keyword arguments will be given to renderer's :meth:`render` method.
+
+        `rendervalues` is deprecated.
         """
         if rendervalues is not None:
             warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
@@ -148,6 +201,11 @@ _AFF = uicfg.autoform_field
 _AFF_KWARGS = uicfg.autoform_field_kwargs
 
 class EntityFieldsForm(FieldsForm):
+    """This class is designed for forms used to edit some entities. It should
+    handle for you all the underlying stuff necessary to properly work with the
+    generic :class:`~cubicweb.web.views.editcontroller.EditController`.
+    """
+
     __regid__ = 'base'
     __select__ = (match_kwargs('entity')
                   | (one_line_rset() & non_final_entity()))
@@ -267,7 +325,6 @@ class EntityFieldsForm(FieldsForm):
 
 
 class CompositeFormMixIn(object):
-    """form composed of sub-forms"""
     __regid__ = 'composite'
     form_renderer_id = __regid__
 
@@ -287,7 +344,9 @@ class CompositeFormMixIn(object):
 
 
 class CompositeForm(CompositeFormMixIn, FieldsForm):
-    pass
+    """Form composed of sub-forms. Typical usage is edition of multiple entities
+    at once.
+    """
 
 class CompositeEntityForm(CompositeFormMixIn, EntityFieldsForm):
     pass # XXX why is this class necessary?

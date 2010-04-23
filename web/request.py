@@ -16,7 +16,10 @@ from datetime import date
 from urlparse import urlsplit
 from itertools import count
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from rql.utils import rqlvar_maker
 

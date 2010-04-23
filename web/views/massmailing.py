@@ -11,7 +11,7 @@ _ = unicode
 import operator
 
 from cubicweb.interfaces import IEmailable
-from cubicweb.selectors import implements, match_user_groups
+from cubicweb.selectors import implements, authenticated_user
 from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs, action, form, formfields as ff
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
@@ -22,7 +22,7 @@ class SendEmailAction(action.Action):
     __regid__ = 'sendemail'
     # XXX should check email is set as well
     __select__ = (action.Action.__select__ & implements(IEmailable)
-                  & match_user_groups('managers', 'users'))
+                  & authenticated_user())
 
     title = _('send email')
     category = 'mainactions'
@@ -41,6 +41,11 @@ def recipient_vocabulary(form, field):
 
 class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
+
+    needs_js = ('cubicweb.widgets.js', 'cubicweb.massmailing.js')
+    needs_css = ('cubicweb.mailform.css')
+    domid = 'sendmail'
+    action = 'sendmail'
 
     sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
                             label=_('From:'),
@@ -81,7 +86,6 @@ class MassMailingForm(forms.FieldsForm):
 
 class MassMailingFormRenderer(formrenderers.FormRenderer):
     __regid__ = 'massmailing'
-    button_bar_class = u'toolbar'
 
     def _render_fields(self, fields, w, form):
         w(u'<table class="headersform">')
@@ -115,15 +119,12 @@ class MassMailingFormRenderer(formrenderers.FormRenderer):
     def render_buttons(self, w, form):
         pass
 
+
 class MassMailingFormView(form.FormViewMixIn, EntityView):
     __regid__ = 'massmailing'
-    __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
+    __select__ = implements(IEmailable) & authenticated_user()
 
     def call(self):
-        req = self._cw
-        req.add_js('cubicweb.widgets.js', 'cubicweb.massmailing.js')
-        req.add_css('cubicweb.mailform.css')
-        from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
-        form = self._cw.vreg['forms'].select('massmailing', self._cw, rset=self.cw_rset,
-                                             action='sendmail', domid='sendmail')
+        form = self._cw.vreg['forms'].select('massmailing', self._cw,
+                                             rset=self.cw_rset)
         self.w(form.render())

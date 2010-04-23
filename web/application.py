@@ -413,6 +413,9 @@ class CubicWebPublisher(object):
                 self.error_handler(req, ex, tb=False)
             except Exception, ex:
                 self.error_handler(req, ex, tb=True)
+            except:
+                self.critical('Catch all triggered!!!')
+                self.exception('this is what happened')
         finally:
             if req.cnx:
                 try:

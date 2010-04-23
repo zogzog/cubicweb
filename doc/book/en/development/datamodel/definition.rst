@@ -42,8 +42,8 @@ Let us detail a little the divergences between E/R and |yams|:
 * all relationship are binary which means that to represent a
   non-binary relationship, one has to use an entity,
 * relationships do not support attributes (yet, see:
-  https://www.logilab.net/cwo/ticket/341318), hence the need to reify
-  it as an entity if need arises,
+  http://www.cubicweb.org/ticket/341318), hence the need to reify it
+  as an entity if need arises,
 * all entities have an `eid` attribute (an integer) that is its
   primary key (but it is possible to declare uniqueness on other
   attributes)
@@ -381,20 +381,20 @@ for the following:
   - the permissions `add` and `delete` are equivalent. Only `add`/`read`
     are actually taken in consideration.
 
-:Note on the use of RQL expression for `add` permission:
+.. note::
 
-  Potentially, the use of an RQL expression to add an entity or a
-  relation can cause problems for the user interface, because if the
+  Potentially, the `use of an RQL expression to add an entity or a
+  relation` can cause problems for the user interface, because if the
   expression uses the entity or the relation to create, then we are
   not able to verify the permissions before we actually add the entity
   (please note that this is not a problem for the RQL server at all,
   because the permissions checks are done after the creation). In such
   case, the permission check methods (CubicWebEntitySchema.check_perm
   and has_perm) can indicate that the user is not allowed to create
-  this entity but can obtain the permission.
-  To compensate this problem, it is usually necessary, for such case,
-  to use an action that reflects the schema permissions but which enables
-  to check properly the permissions so that it would show up if necessary.
+  this entity but can obtain the permission.  To compensate this
+  problem, it is usually necessary, for such case, to use an action
+  that reflects the schema permissions but which enables to check
+  properly the permissions so that it would show up if necessary.
 
 
 Use of RQL expression for reading rights
