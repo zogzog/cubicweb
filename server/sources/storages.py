@@ -50,6 +50,9 @@ class Storage(object):
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         raise NotImplementedError()
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        raise NotImplementedError()
 
 # TODO
 # * make it configurable without code
@@ -150,6 +153,16 @@ class BytesFileSystemStorage(Storage):
         return sysource._process_value(rawvalue, cu.description[0],
                                        binarywrap=str)
 
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        entity.edited_attributes = set()
+        self.entity_added(entity, attribute)
+        session = entity._cw
+        source = session.repo.system_source
+        attrs = source.preprocess_entity(entity)
+        sql = source.sqlgen.update('cw_' + entity.__regid__, attrs,
+                                   ['cw_eid'])
+        source.doexec(session, sql, attrs)
 
 
 class AddFileOp(hook.Operation):

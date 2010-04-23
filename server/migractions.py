@@ -1179,6 +1179,23 @@ class ServerMigrationHelper(MigrationHelper):
             return session
         return self.cnx.request()
 
+    def cmd_storage_changed(self, etype, attribute):
+        """migrate entities to a custom storage. The new storage is expected to
+        be set, it will be temporarily removed for the migration.
+        """
+        from logilab.common.shellutils import ProgressBar
+        source = self.repo.system_source
+        storage = source.storage(etype, attribute)
+        source.unset_storage(etype, attribute)
+        rset = self.rqlexec('Any X,A WHERE X is %s, X %s A'
+                            % (etype, attribute), ask_confirm=False)
+        pb = ProgressBar(len(rset))
+        for entity in rset.entities():
+            storage.migrate_entity(entity, attribute)
+            pb.update()
+        print
+        source.set_storage(etype, attribute, storage)
+
     def cmd_create_entity(self, etype, commit=False, **kwargs):
         """add a new entity of the given type"""
         entity = self._cw.create_entity(etype, **kwargs)

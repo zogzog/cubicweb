@@ -328,6 +328,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             del self._storages[etype]
         self.unmap_attribute(etype, attr)
 
+    def storage(self, etype, attr):
+        """return the storage for the given entity type / attribute
+        """
+        try:
+            return self._storages[etype][attr]
+        except KeyError:
+            raise Exception('no custom storage set for %s.%s' % (etype, attr))
+
     # ISource interface #######################################################
 
     def compile_rql(self, rql, sols):
