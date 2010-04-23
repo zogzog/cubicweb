@@ -8,7 +8,7 @@ find the base templates used to generate HTML for your application.
 
 A page is composed as indicated on the schema below:
 
-.. image:: ../../images/lax-book.06-main-template-layout.en.png
+.. image:: ../../images/lax-book_06-main-template-layout_en.png
 
 In this section we will demonstrate a change in one of the main
 interesting template from the three you will look for,
@@ -83,7 +83,7 @@ login graphic component such as follows:
 
 
 
-.. image:: ../../images/lax-book.06-header-no-login.en.png
+.. image:: ../../images/lax-book_06-header-no-login_en.png
 
 Customize footer
 ````````````````
@@ -121,7 +121,7 @@ also defined in ``cubicweb/web/views/basetemplates.py`` another template that ca
 be used based on TheMainTemplate called SimpleMainTemplate which does not have
 a top section.
 
-.. image:: ../../images/lax-book.06-simple-main-template.en.png
+.. image:: ../../images/lax-book_06-simple-main-template_en.png
 
 XXX
 [WRITE ME]

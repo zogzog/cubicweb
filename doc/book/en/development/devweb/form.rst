@@ -99,7 +99,7 @@ Last but not least, we add two buttons control: one to post the form using
 javascript (`$('#sendmail')` being the jQuery call to get the element with DOM id
 set to 'sendmail', which is our form DOM id as specified by its `domid`
 attribute), another to cancel the form which will go back to the previous page
-using another javascript call. Also we specify image to used as button icon a
+using another javascript call. Also we specify an image to use as button icon as a
 resource identifier (see :ref:`external_resources`) given as last argument to
 :class:`cubicweb.web.formwidgets.ImgButton`.
 
@@ -162,7 +162,7 @@ to inform the user.
 
 Also notice that our controller has a selector that deny access to it to
 anonymous users (we don't want our instance to be used as a spam relay), but also
-check expected parameters are specified in forms. That avoid later defensive
+check expected parameters are specified in forms. That avoids later defensive
 programming (though it's not enough to handle all possible error cases).
 
 To conclude our example, suppose we wish a different form layout and that existent

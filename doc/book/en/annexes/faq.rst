@@ -249,7 +249,7 @@ There are two ways of changing the logo.
    By default all instance will look for a ``logo.png`` to be
    rendered in the logo section.
 
-   .. image:: ../images/lax-book.06-main-template-logo.en.png
+   .. image:: ../images/lax-book_06-main-template-logo_en.png
 
 2. In your cube directory, you can specify which file to use for the logo.
    This is configurable in ``mycube/data/external_resources``: ::
