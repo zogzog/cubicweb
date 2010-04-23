@@ -615,13 +615,13 @@ class BaseRQLConstraint(BaseConstraint):
         # start with a comma for bw compat, see below
         return ';' + self.mainvars + ';' + self.restriction
 
+    @classmethod
     def deserialize(cls, value):
         # XXX < 3.5.10 bw compat
         if not value.startswith(';'):
             return cls(value)
         _, mainvars, restriction = value.split(';', 2)
         return cls(restriction, mainvars)
-    deserialize = classmethod(deserialize)
 
     def check(self, entity, rtype, value):
         """return true if the value satisfy the constraint, else false"""
@@ -971,8 +971,8 @@ from yams.buildobjs import _add_relation as yams_add_relation
 
 class workflowable_definition(ybo.metadefinition):
     """extends default EntityType's metaclass to add workflow relations
-    (i.e. in_state and wf_info_for).
-    This is the default metaclass for WorkflowableEntityType
+    (i.e. in_state, wf_info_for and custom_workflow). This is the default
+    metaclass for WorkflowableEntityType.
     """
     def __new__(mcs, name, bases, classdict):
         abstract = classdict.pop('__abstract__', False)
@@ -983,6 +983,9 @@ class workflowable_definition(ybo.metadefinition):
         return cls
 
 def make_workflowable(cls, in_state_descr=None):
+    """Adds workflow relations as :class:`WorkflowableEntityType`, but usable on
+    existing classes which are not using that base class.
+    """
     existing_rels = set(rdef.name for rdef in cls.__relations__)
     # let relation types defined in cw.schemas.workflow carrying
     # cardinality, constraints and other relation definition properties
