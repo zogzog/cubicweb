@@ -120,29 +120,33 @@ class InstanceCommand(Command):
         self.run_args(args, askconfirm)
 
     def run_args(self, args, askconfirm):
+        status = 0
         for appid in args:
             if askconfirm:
                 print '*'*72
                 if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
-            self.run_arg(appid)
+            status = max(status, self.run_arg(appid))
+        sys.exit(status)
 
     def run_arg(self, appid):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
-            cmdmeth(appid)
+            status = cmdmeth(appid)
         except (KeyboardInterrupt, SystemExit):
             print >> sys.stderr, '%s aborted' % self.name
-            sys.exit(2) # specific error code
+            return 2 # specific error code
         except (ExecutionError, ConfigurationError), ex:
             print >> sys.stderr, 'instance %s not %s: %s' % (
                 appid, self.actionverb, ex)
+            status = 4
         except Exception, ex:
             import traceback
             traceback.print_exc()
             print >> sys.stderr, 'instance %s not %s: %s' % (
                 appid, self.actionverb, ex)
-
+            status = 8
+        return status
 
 class InstanceCommandFork(InstanceCommand):
     """Same as `InstanceCommand`, but command is forked in a new environment
@@ -594,6 +598,7 @@ class StatusCommand(InstanceCommand):
     @staticmethod
     def status_instance(appid):
         """print running status information for an instance"""
+        status = 0
         for mode in cwcfg.possible_configurations(appid):
             config = cwcfg.config_for(appid, mode)
             print '[%s-%s]' % (appid, mode),
@@ -604,6 +609,7 @@ class StatusCommand(InstanceCommand):
                 continue
             if not exists(pidf):
                 print "doesn't seem to be running"
+                status = 1
                 continue
             pid = int(open(pidf).read().strip())
             # trick to guess whether or not the process is running
@@ -611,9 +617,10 @@ class StatusCommand(InstanceCommand):
                 getpgid(pid)
             except OSError:
                 print "should be running with pid %s but the process can not be found" % pid
+                status = 1
                 continue
             print "running with pid %s" % (pid)
-
+        return status
 
 class UpgradeInstanceCommand(InstanceCommandFork):
     """Upgrade an instance after cubicweb and/or component(s) upgrade.
