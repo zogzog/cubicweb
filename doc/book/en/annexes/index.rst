@@ -13,7 +13,6 @@ The following chapters are reference material.
    :numbered:
 
    faq
-   cookbook
    cubicweb-ctl
    rql/index
    mercurial

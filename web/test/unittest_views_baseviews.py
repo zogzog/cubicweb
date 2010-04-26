@@ -5,11 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-try:
-    from json import loads
-except ImportError:
-    from simplejson import loads
-
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
@@ -17,6 +12,8 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
+from cubicweb.web import json
+loads = json.loads
 
 def loadjson(value):
     return loads(html_unescape(value))

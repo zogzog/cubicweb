@@ -1,14 +1,15 @@
 The facets system
 -----------------
 
-Facets allow to restrict searches according to some criteria. CubicWeb has a builtin `facet`_ system to define restrictions
-`filters`_ really as easily as possible. A few base classes for facets
-are provided in ``cubicweb.web.facet.py``. All classes inherits from
-the base class ``AbstractFacet``. 
+Facets allow to restrict searches according to some criteria. CubicWeb
+has a builtin `facet`_ system to define restrictions `filters`_ really
+as easily as possible. A few base classes for facets are provided in
+``cubicweb.web.facet.py``. All classes inherits from the base class
+``AbstractFacet``.
 
 Here is an overview of the facets rendering pick from the `tracker` cube:
 
-.. image:: ../../images/facet_overview.png
+.. image:: ../images/facet_overview.png
 
 Facets will appear on each page presenting more than one entity.
 
@@ -114,7 +115,7 @@ The example below defines a facet to filter a selection of books according to th
 
 The image below display the rendering of the ``RangeFacet``:
 
-.. image:: ../../images/facet_range.png
+.. image:: ../images/facet_range.png
 
 DateRangeFacet
 ~~~~~~~~~~~~~~
@@ -138,7 +139,7 @@ according to their composition date with a jquery slider.
 
 The image below display the rendering of the ``DateRangeFacet``:
 
-.. image:: ../../images/facet_date_range.png
+.. image:: ../images/facet_date_range.png
 
 
 HasRelationFacet
@@ -151,7 +152,7 @@ to get only entities that actually use this relation.
 Here is an example of the rendering of the ``HasRelationFacet`` to
 filter entities with image and the corresponding code:
 
-.. image:: ../../images/facet_has_image.png
+.. image:: ../images/facet_has_image.png
 
 .. sourcecode:: python
 

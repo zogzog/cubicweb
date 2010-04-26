@@ -174,7 +174,7 @@ link Blog on the home page. Call this new Blog ``Tech-blog`` and type in
 ``everything about technology`` as the description, then validate the form by
 clicking on ``Validate``.
 
-.. image:: ../../images/cbw-create-blog.en.png
+.. image:: ../../images/cbw-create-blog_en.png
    :alt: from to create blog
 
 Click on the logo at top left to get back to the home page, then
@@ -182,7 +182,7 @@ follow the Blog link that will list for you all the existing Blog.
 You should be seeing a list with a single item ``Tech-blog`` you
 just created.
 
-.. image:: ../../images/cbw-list-one-blog.en.png
+.. image:: ../../images/cbw-list-one-blog_en.png
    :alt: displaying a list of a single blog
 
 Clicking on this item will get you to its detailed description except
@@ -194,7 +194,7 @@ create a new Blog called ``MyLife`` and get back to the home page
 again to follow the Blog link for the second time. The list now
 has two items.
 
-.. image:: ../../images/cbw-list-two-blog.en.png
+.. image:: ../../images/cbw-list-two-blog_en.png
    :alt: displaying a list of two blogs
 
 Add a BlogEntry
@@ -215,21 +215,21 @@ new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the
 combobox titled ``add relation`` would have showed up.
 
 
-.. image:: ../../images/cbw-add-relation-entryof.en.png
+.. image:: ../../images/cbw-add-relation-entryof_en.png
    :alt: editing a blog entry to add a relation to a blog
 
 Validate the changes by clicking ``Validate``. The entity BlogEntry
 that is displayed now includes a link to the entity Blog named
 ``MyLife``.
 
-.. image:: ../../images/cbw-detail-one-blogentry.en.png
+.. image:: ../../images/cbw-detail-one-blogentry_en.png
    :alt: displaying the detailed view of a blogentry
 
 Note that all of this was handled by the framework and that the only input
 that was provided so far is the schema. To get a graphical view of the schema,
 point your browser to the URL http://localhost:8080/schema
 
-.. image:: ../../images/cbw-schema.en.png
+.. image:: ../../images/cbw-schema_en.png
    :alt: graphical view of the schema (aka data-model)
 
 
@@ -325,7 +325,7 @@ To do so, please apply the following changes:
 
 You can now see that the publication date has a prefix.
 
-.. image:: ../../images/cbw-update-primary-view.en.png
+.. image:: ../../images/cbw-update-primary-view_en.png
    :alt: modified primary view
 
 

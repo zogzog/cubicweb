@@ -3,4 +3,4 @@
 Notifications management
 ========================
 
-XXX FILLME
+.. XXX FILLME

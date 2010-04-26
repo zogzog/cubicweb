@@ -17,11 +17,6 @@ from math import log
 from contextlib import contextmanager
 from warnings import warn
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 import yams.schema
 
 from logilab.common.testlib import TestCase, InnerTest
@@ -39,7 +34,7 @@ from cubicweb.web import Redirect, application
 from cubicweb.server.session import security_enabled
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser
-
+from cubicweb.utils import json
 
 # low-level utilities ##########################################################
 
@@ -263,10 +258,10 @@ class CubicWebTC(TestCase):
             self.__class__._repo_init_failed = ex
             raise
         resume_tracing()
+        self._cnxs = []
         self.setup_database()
         self.commit()
         MAILBOX[:] = [] # reset mailbox
-        self._cnxs = []
 
     def tearDown(self):
         for cnx in self._cnxs:

@@ -116,10 +116,10 @@ class ServerMigrationHelper(MigrationHelper):
                 return super(ServerMigrationHelper, self).cmd_process_script(
                     migrscript, funcname, *args, **kwargs)
             else:
-                print
-                print ('-> ignoring %s, only .py .sql and .txt scripts are considered' %
+                print >> sys.stderr
+                print >> sys.stderr, ('-> ignoring %s, only .py .sql and .txt scripts are considered' %
                        migrscript)
-                print
+                print >> sys.stderr
             self.commit()
         except:
             self.rollback()

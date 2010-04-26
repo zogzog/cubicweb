@@ -242,7 +242,7 @@ PERSISTENT_OPTIONS = (
       }),
     ('short-line-size',
      {'type' : 'int',
-      'default': 40,
+      'default': 80,
       'help': _('maximum number of characters in short description'),
       'group': 'navigation',
       }),

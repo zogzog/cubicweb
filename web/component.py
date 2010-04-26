@@ -8,15 +8,11 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import role
+from cubicweb.web import json
 from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
@@ -125,8 +121,8 @@ class NavigationComponent(Component):
             rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-                dumps(params.get('divid', 'paginated-content')),
-                dumps(rql), dumps(params.pop('vid', None)), dumps(params))
+                json.dumps(params.get('divid', 'paginated-content')),
+                json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
         else:
             url = self._cw.build_url(path, **params)
         return url

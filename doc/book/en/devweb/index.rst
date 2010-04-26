@@ -1,5 +1,5 @@
-Web development
-===============
+Web side development
+====================
 
 In this chapter, we will describe the core APIs for web development in
 the *CubicWeb* framework.
@@ -17,5 +17,5 @@ the *CubicWeb* framework.
    form
    facets
    internationalization
-   property
+..   property
    httpcaching

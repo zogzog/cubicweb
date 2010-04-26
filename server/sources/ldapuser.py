@@ -67,7 +67,6 @@ class LDAPUserSource(AbstractSource):
           'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
           'group': 'ldap-source', 'level': 1,
           }),
-
         ('auth-mode',
          {'type' : 'choice',
           'default': 'simple',
@@ -422,6 +421,9 @@ directory (default to once a day).',
             hostport = self.host
         self.info('connecting %s://%s as %s', self.protocol, hostport,
                   user and user['dn'] or 'anonymous')
+        # don't require server certificate when using ldaps (will
+        # enable self signed certs)
+        ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         url = LDAPUrl(urlscheme=self.protocol, hostport=hostport)
         conn = ReconnectLDAPObject(url.initializeUrl())
         # Set the protocol version - version 3 is preferred

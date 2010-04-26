@@ -5,9 +5,9 @@ CSS Stylesheet
 Conventions
 ~~~~~~~~~~~
 
-XXX external_resources variable
-    naming convention
-    request.add_css
+.. XXX external_resources variable
+..    naming convention
+..    request.add_css
 
 
 Extending / overriding existing styles
@@ -26,4 +26,5 @@ Customized CSS will not be read first.
 
 CubicWeb stylesheets
 ~~~~~~~~~~~~~~~~~~~~
-XXX explain diffenrent files and main classes
+
+.. XXX explain diffenrent files and main classes

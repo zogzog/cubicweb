@@ -240,7 +240,7 @@ class HTMLHead(UStringIO):
         if self.jsvars:
             w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
             for var, value, override in self.jsvars:
-                vardecl = u'%s = %s;' % (var, dumps(value))
+                vardecl = u'%s = %s;' % (var, json.dumps(value))
                 if not override:
                     vardecl = (u'if (typeof %s == "undefined") {%s}' %
                                (var, vardecl))
@@ -310,16 +310,16 @@ class HTMLStream(object):
 
 
 try:
-    try:
-        # may not be there if cubicweb-web not installed
-        from json import dumps, JSONEncoder
-    except ImportError:
-        from simplejson import dumps, JSONEncoder
+    # may not be there if cubicweb-web not installed
+    if sys.version_info < (2,6):
+        import simplejson as json
+    else:
+        import json
 except ImportError:
     pass
 else:
 
-    class CubicWebJsonEncoder(JSONEncoder):
+    class CubicWebJsonEncoder(json.JSONEncoder):
         """define a json encoder to be able to encode yams std types"""
 
         # _iterencode is the only entry point I've found to use a custom encode
@@ -327,14 +327,14 @@ else:
         # .iterencode() is called once on the main structure to encode and then
         # never gets called again.
         # For the record, our main use case is in FormValidateController with:
-        #   dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        #   json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         # where we want all the entity attributes, including eid, to be part
         # of the json object dumped.
         # This would have once more been easier if Entity didn't extend dict.
         def _iterencode(self, obj, markers=None):
             if hasattr(obj, '__json_encode__'):
                 obj = obj.__json_encode__()
-            return JSONEncoder._iterencode(self, obj, markers)
+            return json.JSONEncoder._iterencode(self, obj, markers)
 
         def default(self, obj):
             if isinstance(obj, datetime.datetime):
@@ -348,7 +348,7 @@ else:
             elif isinstance(obj, decimal.Decimal):
                 return float(obj)
             try:
-                return JSONEncoder.default(self, obj)
+                return json.JSONEncoder.default(self, obj)
             except TypeError:
                 # we never ever want to fail because of an unknown type,
                 # just return None in those cases.

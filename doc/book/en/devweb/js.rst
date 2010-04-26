@@ -20,7 +20,7 @@ Conventions
 It is good practice to name cube specific js files after the name of
 the cube, like this : 'cube.mycube.js', so as to avoid name clashes.
 
-XXX external_resources variable (which needs love)
+.. XXX external_resources variable (which needs love)
 
 CubicWeb javascript API
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -319,8 +319,8 @@ The browser-side definition follows.
 
 
 
-XXX reloadComponent
-XXX userCallback / user_callback
+.. XXX reloadComponent
+.. XXX userCallback / user_callback
 
 Javascript library: overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

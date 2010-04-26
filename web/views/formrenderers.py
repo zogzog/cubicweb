@@ -25,15 +25,10 @@ from warnings import warn
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import implements, yes
-from cubicweb.web import eid_param, formwidgets as fwdgs
+from cubicweb.web import dumps, eid_param, formwidgets as fwdgs
 
 
 def checkbox(name, value, attrs='', checked=None):
@@ -58,7 +53,7 @@ class FormRenderer(AppObject):
     +--------------+--------------+
     | field1 label | field1 input |
     +--------------+--------------+
-    | field1 label | field2 input |
+    | field2 label | field2 input |
     +--------------+--------------+
 
     +---------+

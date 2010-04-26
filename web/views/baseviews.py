@@ -311,7 +311,8 @@ class SameETypeListView(EntityView):
 
     def call(self, **kwargs):
         """display a list of entities by calling their <item_vid> view"""
-        if not 'vtitle' in self._cw.form:
+        showtitle = kwargs.pop('showtitle', not 'vtitle' in self._cw.form)
+        if showtitle:
             self.w(u'<h1>%s</h1>' % self.title)
         super(SameETypeListView, self).call(**kwargs)
 

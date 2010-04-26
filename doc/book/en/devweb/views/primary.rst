@@ -3,8 +3,6 @@
 The Primary View
 -----------------
 
-(:mod:`cubicweb.web.views.primary`)
-
 By default, *CubicWeb* provides a view that fits every available
 entity type. This is the first view you might be interested in
 modifying. It is also one of the richest and most complex.
@@ -15,6 +13,8 @@ entity.
 This view is supposed to render a maximum of informations about the
 entity.
 
+It lives in the :mod:`cubicweb.web.views.primary` module.
+
 .. _primary_view_layout:
 
 Layout
@@ -22,7 +22,7 @@ Layout
 
 The primary view has the following layout.
 
-.. image:: ../../../images/primaryview_template.png
+.. image:: ../../images/primaryview_template.png
 
 .. _primary_view_configuration:
 
@@ -209,21 +209,23 @@ We'll show you now an example of a ``primary`` view and how to customize it.
 
 We continue along the basic tutorial :ref:`tuto_blog`.
 
-If you want to change the way a ``BlogEntry`` is displayed, just override
-the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``.
+If you want to change the way a ``BlogEntry`` is displayed, just
+override the method ``cell_call()`` of the view ``primary`` in
+``BlogDemo/views.py``.
 
 .. sourcecode:: python
 
-  from cubicweb.selectors import implements
-  from cubicweb.web.views.primary import Primaryview
+   from cubicweb.selectors import implements
+   from cubicweb.web.views.primary import Primaryview
 
-  class BlogEntryPrimaryView(PrimaryView):
-    __select__ = PrimaryView.__select__ & implements('BlogEntry')
+   class BlogEntryPrimaryView(PrimaryView):
+     __select__ = PrimaryView.__select__ & implements('BlogEntry')
 
-      def render_entity_attributes(self, entity):
-          self.w(u'<p>published on %s</p>' %
-                 entity.publish_date.strftime('%Y-%m-%d'))
-          super(BlogEntryPrimaryView, self).render_entity_attributes(entity)
+       def render_entity_attributes(self, entity):
+           self.w(u'<p>published on %s</p>' %
+                  entity.publish_date.strftime('%Y-%m-%d'))
+           super(BlogEntryPrimaryView, self).render_entity_attributes(entity)
+
 
 The above source code defines a new primary view for
 ``BlogEntry``. The `id` class attribute is not repeated there since it
@@ -235,7 +237,7 @@ with its own specific criterion.
 The view method ``self.w()`` is used to output data. Here `lines
 08-09` output HTML for the publication date of the entry.
 
-.. image:: ../../../images/lax-book.09-new-view-blogentry.en.png
+.. image:: ../../images/lax-book_09-new-view-blogentry_en.png
    :alt: blog entries now look much nicer
 
 Let us now improve the primary view of a blog
@@ -308,5 +310,5 @@ have to recover the entity from its (row,col)-coordinates (`line
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.
 
-.. image:: ../../../images/lax-book.10-blog-with-two-entries.en.png
+.. image:: ../../images/lax-book_10-blog-with-two-entries_en.png
    :alt: a blog and all its entries

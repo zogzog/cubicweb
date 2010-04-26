@@ -9,7 +9,7 @@ The most important method is the `execute` method of a cursor.
 
 .. sourcecode:: python
 
-  execute(rqlstring, args=None, build_descr=True)
+   execute(rqlstring, args=None, build_descr=True)
 
 :rqlstring: the RQL query to execute (unicode)
 :args: if the query contains substitutions, a dictionary containing the values to use
@@ -33,6 +33,8 @@ When you're within code of the web interface, the db-api like connexion is
 handled by the request object. You should not have to access it directly, but
 use the `execute` method directly available on the request, eg:
 
+.. sourcecode:: python
+
    rset = self._cw.execute(rqlstring, kwargs)
 
 Similarly, on the server side (eg in hooks), there is no db-api connexion (since
@@ -40,8 +42,8 @@ you're directly inside the data-server), so you'll have to use the execute metho
 of the session object.
 
 
-Important note about proper usage of .execute
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Proper usage of `.execute`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's say you want to get T which is in configuration C, this translates to:
 
@@ -110,7 +112,7 @@ The `Cursor` API
 
 The whole cursor API is developped below.
 
-.. note:
+.. note::
 
   In practice we use the `.execute` method on the _cw object of
   appobjects. Usage of other methods is quite rare.

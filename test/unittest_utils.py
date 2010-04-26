@@ -14,11 +14,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
 
 try:
-    try:
-        import json 
-    except ImportError:
-        import simplejson as json
-    from cubicweb.utils import CubicWebJsonEncoder
+    from cubicweb.utils import CubicWebJsonEncoder, json
 except ImportError:
     json = None
 

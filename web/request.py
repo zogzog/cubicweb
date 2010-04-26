@@ -1,3 +1,4 @@
+
 """abstract class for http request
 
 :organization: Logilab
@@ -16,11 +17,6 @@ from datetime import date
 from urlparse import urlsplit
 from itertools import count
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
-
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
@@ -33,8 +29,10 @@ from cubicweb.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
-                          RequestError, StatusResponse)
+                          RequestError, StatusResponse, json)
 from cubicweb.web.http_headers import Headers
+
+dumps = json.dumps
 
 _MARKER = object()
 

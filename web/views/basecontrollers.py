@@ -10,10 +10,7 @@ object to handle publication.
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
+from smtplib import SMTP
 
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
@@ -23,7 +20,7 @@ from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
 from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, json_dumps
+from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, json_dumps, json
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
