@@ -177,7 +177,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         ('db-driver',
          {'type' : 'string',
           'default': 'postgres',
-          'help': 'database driver (postgres or sqlite)',
+          'help': 'database driver (postgres, sqlite, sqlserver2005)',
           'group': 'native-source', 'inputlevel': 1,
           }),
         ('db-host',

@@ -175,11 +175,11 @@ class RepositoryCreateHandler(CommandHandler):
                     break
                 print '-> unknown source type, use one of the available types.'
             while True:
-                sourceuri = raw_input('source uri: ').strip()
+                sourceuri = raw_input('source identifier (a unique name used to tell sources apart): ').strip()
                 if sourceuri != 'admin' and sourceuri not in sourcescfg:
                     break
                 print '-> uri already used, choose another one.'
-            sourcescfg[sourceuri] = ask_source_config(sourcetype)
+            sourcescfg[sourceuri] = ask_source_config(sourcetype, inputlevel)
             sourcemodule = SOURCE_TYPES[sourcetype].module
             if not sourcemodule.startswith('cubicweb.'):
                 # module names look like cubes.mycube.themodule
