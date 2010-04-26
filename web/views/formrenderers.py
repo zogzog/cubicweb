@@ -53,7 +53,7 @@ class FormRenderer(AppObject):
     +--------------+--------------+
     | field1 label | field1 input |
     +--------------+--------------+
-    | field1 label | field2 input |
+    | field2 label | field2 input |
     +--------------+--------------+
 
     +---------+
