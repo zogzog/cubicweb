@@ -255,10 +255,10 @@ class CubicWebTC(TestCase):
             self.__class__._repo_init_failed = ex
             raise
         resume_tracing()
+        self._cnxs = []
         self.setup_database()
         self.commit()
         MAILBOX[:] = [] # reset mailbox
-        self._cnxs = []
 
     def tearDown(self):
         for cnx in self._cnxs:
