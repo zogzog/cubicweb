@@ -21,15 +21,11 @@ calendar) or even :class:`~cubicweb.web.formwidgets.JQueryDatePicker` (the JQuer
 calendar).  You can of course also write your own widget.
 
 
-.. automodule:: cubicweb.web.formfields
-.. automodule:: cubicweb.web.formwidgets
-.. automodule:: cubicweb.web.views.forms
 .. automodule:: cubicweb.web.views.autoform
-.. automodule:: cubicweb.web.views.formrenderers
 
 
-Now what ? Example of bare fields form
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example of bare fields form
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We want to define a form doing something else than editing an entity. The idea is
 to propose a form to send an email to entities in a resultset which implements
@@ -209,5 +205,12 @@ To bind this renderer to our form, we should add to our form definition above:
 
     form_renderer_id = 'massmailing'
 
+API
+~~~
+
+.. automodule:: cubicweb.web.formfields
+.. automodule:: cubicweb.web.formwidgets
+.. automodule:: cubicweb.web.views.forms
+.. automodule:: cubicweb.web.views.formrenderers
 
 .. Example of entity fields form
