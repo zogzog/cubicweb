@@ -18,7 +18,7 @@ class WebCreateHandler(CommandHandler):
         """bootstrap this configuration"""
         print '\n' + underline_title('Generic web configuration')
         config = self.config
-        if config.repo_method == 'pyro':
+        if config.repo_method == 'pyro' or config.pyro_enabled():
             print '\n' + underline_title('Pyro configuration')
             config.input_config('pyro', inputlevel)
         if ASK.confirm('Allow anonymous access ?', False):
