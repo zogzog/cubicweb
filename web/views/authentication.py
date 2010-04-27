@@ -58,7 +58,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         self.log_queries = vreg.config['query-log-file']
         self.authinforetreivers = sorted(vreg['webauth'].possible_objects(vreg),
                                     key=lambda x: x.order)
-        assert self.authinforetreivers
         self.anoninfo = vreg.config.anonymous_user()
 
     def validate_session(self, req, session):
