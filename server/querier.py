@@ -48,7 +48,16 @@ def check_no_password_selected(rqlst):
         if 'Password' in solution.itervalues():
             raise Unauthorized('Password selection is not allowed')
 
-def check_read_access(schema, user, rqlst, solution):
+def term_etype(session, term, solution, args):
+    """return the entity type for the given term (a VariableRef or a Constant
+    node)
+    """
+    try:
+        return solution[term.name]
+    except AttributeError:
+        return session.describe(term.eval(args))[0]
+
+def check_read_access(session, rqlst, solution, args):
     """check that the given user has credentials to access data read the
     query
 
@@ -56,6 +65,10 @@ def check_read_access(schema, user, rqlst, solution):
     in the schema), keys are variable names and values associated rql expression
     for the associated variable with the given solution
     """
+    # use `term_etype` since we've to deal with rewritten constants here,
+    # when used as an external source by another repository.
+    # XXX what about local read security w/ those rewritten constants...
+    schema = session.repo.schema
     if rqlst.where is not None:
         for rel in rqlst.where.iget_nodes(Relation):
             # XXX has_text may have specific perm ?
@@ -63,12 +76,15 @@ def check_read_access(schema, user, rqlst, solution):
                 continue
             rschema = schema.rschema(rel.r_type)
             if rschema.final:
-                eschema = schema.eschema(solution[rel.children[0].name])
+                eschema = schema.eschema(term_etype(session, rel.children[0],
+                                                    solution, args))
                 rdef = eschema.rdef(rschema)
             else:
-                rdef = rschema.rdef(solution[rel.children[0].name],
-                                    solution[rel.children[1].children[0].name])
-            if not user.matching_groups(rdef.get_groups('read')):
+                rdef = rschema.rdef(term_etype(session, rel.children[0],
+                                               solution, args),
+                                    term_etype(session, rel.children[1].children[0],
+                                               solution, args))
+            if not session.user.matching_groups(rdef.get_groups('read')):
                 # XXX rqlexpr not allowed
                 raise Unauthorized('read', rel.r_type)
     localchecks = {}
@@ -77,7 +93,7 @@ def check_read_access(schema, user, rqlst, solution):
         eschema = schema.eschema(solution[varname])
         if eschema.final:
             continue
-        if not user.matching_groups(eschema.get_groups('read')):
+        if not session.user.matching_groups(eschema.get_groups('read')):
             erqlexprs = eschema.get_rqlexprs('read')
             if not erqlexprs:
                 ex = Unauthorized('read', solution[varname])
@@ -319,8 +335,6 @@ class ExecutionPlan(object):
         note: rqlst should not have been simplified at this point
         """
         session = self.session
-        user = session.user
-        schema = self.schema
         msgs = []
         neweids = session.transaction_data.get('neweids', ())
         varkwargs = {}
@@ -342,10 +356,10 @@ class ExecutionPlan(object):
         newsolutions = []
         for solution in rqlst.solutions:
             try:
-                localcheck = check_read_access(schema, user, rqlst, solution)
+                localcheck = check_read_access(session, rqlst, solution, self.args)
             except Unauthorized, ex:
                 msg = 'remove %s from solutions since %s has no %s access to %s'
-                msg %= (solution, user.login, ex.args[0], ex.args[1])
+                msg %= (solution, session.user.login, ex.args[0], ex.args[1])
                 msgs.append(msg)
                 LOGGER.info(msg)
             else:

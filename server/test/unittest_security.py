@@ -32,12 +32,12 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         self.schema['Personne'].set_action_permissions('read', ('users', 'managers'))
         self.repo.vreg.solutions(self.session, rqlst, None)
         solution = rqlst.solutions[0]
-        check_read_access(self.schema, self.session.user, rqlst, solution)
+        check_read_access(self.session, rqlst, solution, {})
         cnx = self.login('anon')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
                           check_read_access,
-                          self.schema, cnx.user(self.session), rqlst, solution)
+                          self.session, rqlst, solution, {})
         self.assertRaises(Unauthorized, cu.execute, rql)
 
     def test_upassword_not_selectable(self):
