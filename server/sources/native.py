@@ -216,6 +216,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           'help': 'database encoding',
           'group': 'native-source', 'inputlevel': 1,
           }),
+        ('db-extra-arguments',
+         {'type' : 'string',
+          'default': '',
+          'help': 'set to "Trusted_Connection" if you are using SQLServer and '
+                  'want trusted authentication for the database connection',
+          'group': 'native-source', 'inputlevel': 2,
+          }),
     )
 
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
