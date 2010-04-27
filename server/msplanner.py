@@ -350,8 +350,11 @@ class PartPlanInformation(object):
                             source.support_relation, (r.r_type for r in rels))):
                             self.needsplit = True
         # add source for rewritten constants to sourcesterms
+        self._const_vars = {}
         for vconsts in self.rqlst.stinfo['rewritten'].itervalues():
-            const = vconsts[0]
+            # remember those consts come from the same variable
+            for const in vconsts:
+                self._const_vars[const] = vconsts
             source = self._session.source_from_eid(const.eval(self.plan.args))
             if source is self.system_source:
                 for const in vconsts:
@@ -537,6 +540,11 @@ class PartPlanInformation(object):
                                                     rel in self._crossrelations[s]))
         if invalid_sources:
             self._remove_sources(term, invalid_sources)
+            # if term is a rewritten const, we can apply the same changes to
+            # all other consts inserted from the same original variable
+            for const in self._const_vars.get(term, ()):
+                if const is not term:
+                    self._remove_sources(const, invalid_sources)
             termsources -= invalid_sources
             self._remove_sources_until_stable(term, termssources)
             if isinstance(oterm, Constant):
