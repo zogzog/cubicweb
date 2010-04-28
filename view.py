@@ -1,10 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract views and templates classes for CubicWeb web client
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -12,8 +25,7 @@ _ = unicode
 from cStringIO import StringIO
 from warnings import warn
 
-from simplejson import dumps
-
+from cubicweb.utils import json
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
@@ -484,11 +496,11 @@ class ReloadableMixIn(object):
     def build_update_js_call(self, cbname, msg):
         rql = self.cw_rset.printable_rql()
         return "javascript:userCallbackThenUpdateUI('%s', '%s', %s, %s, '%s', '%s')" % (
-            cbname, self.id, dumps(rql), dumps(msg),
+            cbname, self.id, json.dumps(rql), json.dumps(msg),
             self.__registry__, self.div_id())
 
     def build_reload_js_call(self, cbname, msg):
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, dumps(msg))
+        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, json.dumps(msg))
 
     build_js = build_update_js_call # expect updatable component by default
 

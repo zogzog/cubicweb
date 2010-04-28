@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb-ctl commands and command handlers specific to the server.serverconfig
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = 'restructuredtext en'
 
@@ -66,14 +79,13 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     cnx = get_connection(driver, dbhost, dbname, user, password=password,
                          port=source.get('db-port'),
                          **extra)
-    if not hasattr(cnx, 'logged_user'): # XXX logilab.db compat
-        try:
-            cnx.logged_user = user
-        except AttributeError:
-            # C object, __slots__
-            from logilab.database import _SimpleConnectionWrapper
-            cnx = _SimpleConnectionWrapper(cnx)
-            cnx.logged_user = user
+    try:
+        cnx.logged_user = user
+    except AttributeError:
+        # C object, __slots__
+        from logilab.database import _SimpleConnectionWrapper
+        cnx = _SimpleConnectionWrapper(cnx)
+        cnx.logged_user = user
     return cnx
 
 def system_source_cnx(source, dbms_system_base=False,
@@ -84,8 +96,8 @@ def system_source_cnx(source, dbms_system_base=False,
     create/drop the instance database)
     """
     if dbms_system_base:
-        from logilab.common.adbh import get_adv_func_helper
-        system_db = get_adv_func_helper(source['db-driver']).system_database()
+        from logilab.database import get_db_helper
+        system_db = get_db_helper(source['db-driver']).system_database()
         return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
     return source_cnx(source, special_privs=special_privs, verbose=verbose)
 
@@ -94,11 +106,11 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
     or a database
     """
     import logilab.common as lgp
-    from logilab.common.adbh import get_adv_func_helper
+    from logilab.database import get_db_helper
     lgp.USE_MX_DATETIME = False
     special_privs = ''
     driver = source['db-driver']
-    helper = get_adv_func_helper(driver)
+    helper = get_db_helper(driver)
     if user is not None and helper.users_support:
         special_privs += '%s USER' % what
     if db is not None:
@@ -176,11 +188,11 @@ class RepositoryCreateHandler(CommandHandler):
                     break
                 print '-> unknown source type, use one of the available types.'
             while True:
-                sourceuri = raw_input('source uri: ').strip()
+                sourceuri = raw_input('source identifier (a unique name used to tell sources apart): ').strip()
                 if sourceuri != 'admin' and sourceuri not in sourcescfg:
                     break
                 print '-> uri already used, choose another one.'
-            sourcescfg[sourceuri] = ask_source_config(sourcetype)
+            sourcescfg[sourceuri] = ask_source_config(sourcetype, inputlevel)
             sourcemodule = SOURCE_TYPES[sourcetype].module
             if not sourcemodule.startswith('cubicweb.'):
                 # module names look like cubes.mycube.themodule
@@ -211,10 +223,10 @@ class RepositoryDeleteHandler(CommandHandler):
 
     def cleanup(self):
         """remove instance's configuration and database"""
-        from logilab.common.adbh import get_adv_func_helper
+        from logilab.database import get_db_helper
         source = self.config.sources()['system']
         dbname = source['db-name']
-        helper = get_adv_func_helper(source['db-driver'])
+        helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
             user = source['db-user'] or None
             cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
@@ -294,8 +306,7 @@ class CreateInstanceDBCommand(Command):
         )
     def run(self, args):
         """run the command with its specific arguments"""
-        from logilab.common.adbh import get_adv_func_helper
-        from indexer import get_indexer
+        from logilab.database import get_db_helper
         verbose = self.get('verbose')
         automatic = self.get('automatic')
         appid = pop_arg(args, msg='No instance specified !')
@@ -304,7 +315,7 @@ class CreateInstanceDBCommand(Command):
         dbname = source['db-name']
         driver = source['db-driver']
         create_db = self.config.create_db
-        helper = get_adv_func_helper(driver)
+        helper = get_db_helper(driver)
         if driver == 'sqlite':
             if os.path.exists(dbname) and automatic or \
                    ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
@@ -330,13 +341,8 @@ class CreateInstanceDBCommand(Command):
                     helper.create_database(cursor, dbname, source['db-user'],
                                            source['db-encoding'])
                 else:
-                    try:
-                        helper.create_database(cursor, dbname,
-                                               encoding=source['db-encoding'])
-                    except TypeError:
-                        # logilab.database
-                        helper.create_database(cursor, dbname,
-                                               dbencoding=source['db-encoding'])
+                    helper.create_database(cursor, dbname,
+                                           dbencoding=source['db-encoding'])
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
@@ -344,8 +350,7 @@ class CreateInstanceDBCommand(Command):
                 raise
         cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose)
         cursor = cnx.cursor()
-        indexer = get_indexer(driver)
-        indexer.init_extensions(cursor)
+        helper.init_fti_extensions(cursor)
         # postgres specific stuff
         if driver == 'postgres':
             # install plpythonu/plpgsql language if not installed by the cube
@@ -397,7 +402,7 @@ tables, indexes... (no by default)'}),
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
-                user=system.get('db-user'), password=system.get('db-password'), 
+                user=system.get('db-user'), password=system.get('db-password'),
                 **extra)
         except Exception, ex:
             raise ConfigurationError(
@@ -580,17 +585,16 @@ def _remote_dump(host, appid, output, sudo=False):
 
 def _local_dump(appid, output):
     config = ServerConfiguration.config_for(appid)
-    # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
+    config.quick_start = True
+    mih = config.migration_handler(connect=False, verbosity=1)
     mih.backup_database(output, askconfirm=False)
     mih.shutdown()
 
 def _local_restore(appid, backupfile, drop, systemonly=True):
     config = ServerConfiguration.config_for(appid)
     config.verbosity = 1 # else we won't be asked for confirmation on problems
-    config.repairing = 1 # don't check versions
-    # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
+    config.quick_start = True
+    mih = config.migration_handler(connect=False, verbosity=1)
     mih.restore_database(backupfile, drop, systemonly, askconfirm=False)
     repo = mih.repo_connect()
     # version of the database

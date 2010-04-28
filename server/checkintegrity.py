@@ -1,11 +1,26 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Check integrity of a CubicWeb repository. Hum actually only the system database
 is checked.
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -15,10 +30,11 @@ from logilab.common.shellutils import ProgressBar
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.session import security_enabled
 
-def has_eid(sqlcursor, eid, eids):
+def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
-    if eids.has_key(eid):
+    if eid in eids:
         return eids[eid]
     sqlcursor.execute('SELECT type, source FROM entities WHERE eid=%s' % eid)
     try:
@@ -27,9 +43,17 @@ def has_eid(sqlcursor, eid, eids):
         eids[eid] = False
         return False
     if source and source != 'system':
-        # XXX what to do...
-        eids[eid] = True
-        return True
+        try:
+            # insert eid *and* etype to attempt checking entity has not been
+            # replaced by another subsquently to a restore of an old dump
+            if session.execute('Any X WHERE X is %s, X eid %%(x)s' % etype,
+                               {'x': eid}):
+                eids[eid] = True
+                return True
+        except: # TypeResolverError, Unauthorized...
+            pass
+        eids[eid] = False
+        return False
     sqlcursor.execute('SELECT * FROM %s%s WHERE %seid=%s' % (SQL_PREFIX, etype,
                                                              SQL_PREFIX, eid))
     result = sqlcursor.fetchall()
@@ -70,15 +94,9 @@ def reindex_entities(schema, session, withpb=True):
     # to be updated due to the reindexation
     repo = session.repo
     cursor = session.pool['system']
-    if not repo.system_source.indexer.has_fti_table(cursor):
-        from indexer import get_indexer
+    if not repo.system_source.dbhelper.has_fti_table(cursor):
         print 'no text index table'
-        indexer = get_indexer(repo.system_source.dbdriver)
-        # XXX indexer.init_fti(cursor) once index 0.7 is out
-        indexer.init_extensions(cursor)
-        cursor.execute(indexer.sql_init_fti())
-    repo.config.disabled_hooks_categories.add('metadata')
-    repo.config.disabled_hooks_categories.add('integrity')
+        dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():
@@ -94,9 +112,6 @@ def reindex_entities(schema, session, withpb=True):
     if withpb:
         pb = ProgressBar(len(etypes) + 1)
     # first monkey patch Entity.check to disable validation
-    from cubicweb.entity import Entity
-    _check = Entity.check
-    Entity.check = lambda self, creation=False: True
     # clear fti table first
     session.system_sql('DELETE FROM %s' % session.repo.system_source.dbhelper.fti_table)
     if withpb:
@@ -106,14 +121,9 @@ def reindex_entities(schema, session, withpb=True):
     source = repo.system_source
     for eschema in etypes:
         for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
-            source.fti_unindex_entity(session, entity.eid)
             source.fti_index_entity(session, entity)
         if withpb:
             pb.update()
-    # restore Entity.check
-    Entity.check = _check
-    repo.config.disabled_hooks_categories.remove('metadata')
-    repo.config.disabled_hooks_categories.remove('integrity')
 
 
 def check_schema(schema, session, eids, fix=1):
@@ -122,16 +132,16 @@ def check_schema(schema, session, eids, fix=1):
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
                           'VocabularyConstraint', 'RQLConstraint',
                           'RQLVocabularyConstraint')
-    rql = ('Any COUNT(X),RN,EN,ECTN GROUPBY RN,EN,ECTN ORDERBY 1 '
+    rql = ('Any COUNT(X),RN,SN,ON,CTN GROUPBY RN,SN,ON,CTN ORDERBY 1 '
            'WHERE X is CWConstraint, R constrained_by X, '
-           'R relation_type RT, R from_entity ET, RT name RN, '
-           'ET name EN, X cstrtype ECT, ECT name ECTN')
-    for count, rn, en, cstrname in session.execute(rql):
+           'R relation_type RT, RT name RN, R from_entity ST, ST name SN, '
+           'R to_entity OT, OT name ON, X cstrtype CT, CT name CTN')
+    for count, rn, sn, on, cstrname in session.execute(rql):
         if count == 1:
             continue
         if cstrname in unique_constraints:
-            print "ERROR: got %s %r constraints on relation %s.%s" % (
-                count, cstrname, en, rn)
+            print "ERROR: got %s %r constraints on relation %s.%s.%s" % (
+                count, cstrname, sn, rn, on)
 
 
 
@@ -141,7 +151,7 @@ def check_text_index(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the text index but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -157,7 +167,7 @@ def check_entities(schema, session, eids, fix=1):
     cursor = session.system_sql('SELECT eid FROM entities;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(cursor, eid, eids):
+        if not has_eid(session, cursor, eid, eids):
             msg = '  Entity with eid %s exists in the system table but in no source'
             print >> sys.stderr, msg % eid,
             if fix:
@@ -174,7 +184,7 @@ def check_entities(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT %s FROM %s;' % (column, table))
         for row in cursor.fetchall():
             eid = row[0]
-            # eids is full since we have fetched everyting from the entities table,
+            # eids is full since we have fetched everything from the entities table,
             # no need to call has_eid
             if not eid in eids or not eids[eid]:
                 msg = '  Entity with eid %s exists in the %s table but not in the system table'
@@ -210,7 +220,7 @@ def check_relations(schema, session, eids, fix=1):
                 cursor = session.system_sql(sql)
                 for row in cursor.fetchall():
                     eid = row[0]
-                    if not has_eid(cursor, eid, eids):
+                    if not has_eid(session, cursor, eid, eids):
                         bad_related_msg(rschema, 'object', eid, fix)
                         if fix:
                             sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
@@ -220,7 +230,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'subject', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_from=%s;' % (
@@ -229,7 +239,7 @@ def check_relations(schema, session, eids, fix=1):
         cursor = session.system_sql('SELECT eid_to FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(cursor, eid, eids):
+            if not has_eid(session, cursor, eid, eids):
                 bad_related_msg(rschema, 'object', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_to=%s;' % (
@@ -268,7 +278,7 @@ def check_metadata(schema, session, eids, fix=1):
     assert default_user_eid is not None, 'no user defined !'
     for rel, default in ( ('owned_by', default_user_eid), ):
         cursor = session.system_sql("SELECT eid, type FROM entities "
-                                    "WHERE NOT EXISTS "
+                                    "WHERE source='system' AND NOT EXISTS "
                                     "(SELECT 1 FROM %s_relation WHERE eid_from=eid);"
                                     % rel)
         for eid, etype in cursor.fetchall():
@@ -291,9 +301,10 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        for check in checks:
-            check_func = globals()['check_%s' % check]
-            check_func(repo.schema, session, eids_cache, fix=fix)
+        with security_enabled(session, read=False): # ensure no read security
+            for check in checks:
+                check_func = globals()['check_%s' % check]
+                check_func(repo.schema, session, eids_cache, fix=fix)
         if fix:
             cnx.commit()
         else:

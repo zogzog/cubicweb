@@ -1,9 +1,22 @@
-"""The `ResultSet` class which is returned as result of a rql query
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""The `ResultSet` class which is returned as result of an rql query
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -15,21 +28,22 @@ from cubicweb import NotAnEntity
 
 
 class ResultSet(object):
-    """a result set wrap a RQL query result. This object implements a partial
-    list protocol to allow direct use as a list of result rows.
+    """A result set wraps a RQL query result. This object implements
+    partially the list protocol to allow direct use as a list of
+    result rows.
 
     :type rowcount: int
-    :ivar rowcount: number of rows in the result
+    :param rowcount: number of rows in the result
 
     :type rows: list
-    :ivar rows: list of rows of result
+    :param rows: list of rows of result
 
     :type description: list
-    :ivar description:
+    :param description:
       result's description, using the same structure as the result itself
 
     :type rql: str or unicode
-    :ivar rql: the original RQL query string
+    :param rql: the original RQL query string
     """
     def __init__(self, results, rql, args=None, description=(), cachekey=None,
                  rqlst=None):
@@ -50,7 +64,6 @@ class ResultSet(object):
         # .limit method
         self.limited = None
         # set by the cursor which returned this resultset
-        self.vreg = None
         self.req = None
         # actions cache
         self._rsetactions = None
@@ -83,7 +96,7 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg['actions'].poss_visible_objects(
+            actions = self.req.vreg['actions'].poss_visible_objects(
                 self.req, rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
@@ -114,15 +127,17 @@ class ResultSet(object):
         # but I tend to think that since we have that, we should not need this
         # method anymore (syt)
         rset = ResultSet(self.rows+rset.rows, self.rql, self.args,
-                         self.description +rset.description)
-        return self.req.decorate_rset(rset)
+                         self.description + rset.description)
+        rset.req = self.req
+        return rset
 
     def copy(self, rows=None, descr=None):
         if rows is None:
             rows = self.rows[:]
             descr = self.description[:]
         rset = ResultSet(rows, self.rql, self.args, descr)
-        return self.req.decorate_rset(rset)
+        rset.req = self.req
+        return rset
 
     def transformed_rset(self, transformcb):
         """ the result set according to a given column types
@@ -203,7 +218,8 @@ class ResultSet(object):
         return rset
 
     def split_rset(self, keyfunc=None, col=0, return_dict=False):
-        """Splits the result set in multiple result set according to a given key
+        """splits the result set in multiple result sets according to
+        a given key
 
         :type keyfunc: callable(entity or FinalType)
         :param keyfunc:
@@ -251,15 +267,15 @@ class ResultSet(object):
             return result
 
     def limited_rql(self):
-        """return a printable rql for the result set associated to the object,
+        """returns a printable rql for the result set associated to the object,
         with limit/offset correctly set according to maximum page size and
         currently displayed page when necessary
         """
         # try to get page boundaries from the navigation component
         # XXX we should probably not have a ref to this component here (eg in
         #     cubicweb)
-        nav = self.vreg['components'].select_or_none('navigation', self.req,
-                                                     rset=self)
+        nav = self.req.vreg['components'].select_or_none('navigation', self.req,
+                                                         rset=self)
         if nav:
             start, stop = nav.page_boundaries()
             rql = self._limit_offset_rql(stop - start, start)
@@ -376,12 +392,14 @@ class ResultSet(object):
 
     @cached
     def get_entity(self, row, col):
-        """special method for query retreiving a single entity, returns a
+        """convenience method for query retrieving a single entity, returns a
         partially initialized Entity instance.
 
-        WARNING: due to the cache wrapping this function, you should NEVER
-                 give row as a named parameter (i.e. rset.get_entity(req, 0)
-                 is OK but rset.get_entity(row=0, req=req) isn't
+        .. warning::
+
+          Due to the cache wrapping this function, you should NEVER
+          give row as a named parameter (i.e. rset.get_entity(req, 0)
+          is OK but rset.get_entity(row=0, req=req) isn't)
 
         :type row,col: int, int
         :param row,col:
@@ -391,7 +409,7 @@ class ResultSet(object):
         """
         etype = self.description[row][col]
         try:
-            eschema = self.vreg.schema.eschema(etype)
+            eschema = self.req.vreg.schema.eschema(etype)
             if eschema.final:
                 raise NotAnEntity(etype)
         except KeyError:
@@ -435,8 +453,8 @@ class ResultSet(object):
             return entity
         # build entity instance
         etype = self.description[row][col]
-        entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
-                                                        row=row, col=col)
+        entity = self.req.vreg['etypes'].etype_class(etype)(req, rset=self,
+                                                            row=row, col=col)
         entity.set_eid(eid)
         # cache entity
         req.set_entity_cache(entity)
@@ -472,7 +490,7 @@ class ResultSet(object):
                         else:
                             rql = 'Any Y WHERE Y %s X, X eid %s'
                         rrset = ResultSet([], rql % (attr, entity.eid))
-                        req.decorate_rset(rrset)
+                        rrset.req = req
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
                     entity.set_related_cache(attr, role, rrset)
@@ -489,10 +507,10 @@ class ResultSet(object):
             rqlst = self._rqlst.copy()
             # to avoid transport overhead when pyro is used, the schema has been
             # unset from the syntax tree
-            rqlst.schema = self.vreg.schema
-            self.vreg.rqlhelper.annotate(rqlst)
+            rqlst.schema = self.req.vreg.schema
+            self.req.vreg.rqlhelper.annotate(rqlst)
         else:
-            rqlst = self.vreg.parse(self.req, self.rql, self.args)
+            rqlst = self.req.vreg.parse(self.req, self.rql, self.args)
         return rqlst
 
     @cached
@@ -532,7 +550,7 @@ class ResultSet(object):
         etype = self.description[row][col]
         # final type, find a better one to locate the correct subquery
         # (ambiguous if possible)
-        eschema = self.vreg.schema.eschema
+        eschema = self.req.vreg.schema.eschema
         if eschema(etype).final:
             for select in rqlst.children:
                 try:

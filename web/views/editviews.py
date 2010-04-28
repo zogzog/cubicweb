@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some views used to help to the edition process
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -15,7 +28,7 @@ from cubicweb import typed_eid
 from cubicweb.view import EntityView, StartupView
 from cubicweb.selectors import (one_line_rset, non_final_entity,
                                 match_search_state)
-from cubicweb.web import httpcache, captcha
+from cubicweb.web import httpcache
 from cubicweb.web.views import baseviews, linksearch_select_url
 
 
@@ -95,17 +108,23 @@ class EditableFinalView(baseviews.FinalView):
         else:
             super(EditableFinalView, self).cell_call(row, col, props)
 
+try:
+    from cubicweb.web import captcha
+except ImportError:
+    # PIL not installed
+    pass
+else:
+    class CaptchaView(StartupView):
+        __regid__ = 'captcha'
 
-class CaptchaView(StartupView):
-    __regid__ = 'captcha'
+        http_cache_manager = httpcache.NoHTTPCacheManager
+        binary = True
+        templatable = False
+        content_type = 'image/jpg'
 
-    http_cache_manager = httpcache.NoHTTPCacheManager
-    binary = True
-    templatable = False
-    content_type = 'image/jpg'
-
-    def call(self):
-        text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
-                                     self._cw.vreg.config['captcha-font-size'])
-        self._cw.set_session_data('captcha', text)
-        self.w(data.read())
+        def call(self):
+            text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
+                                         self._cw.vreg.config['captcha-font-size'])
+            key = self._cw.form.get('captchakey', 'captcha')
+            self._cw.set_session_data(key, text)
+            self.w(data.read())

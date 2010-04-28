@@ -1,11 +1,63 @@
-"""Fields are used to control what's displayed in forms. It makes the link
-between something to edit and its display in the form. Actual display is handled
-by a widget associated to the field.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+The Field class and basic fields
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:organization: Logilab
-:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. Note::
+  Fields are used to control what's edited in forms. They makes the link between
+  something to edit and its display in the form. Actual display is handled by a
+  widget associated to the field.
+
+Let first see the base class for fields:
+
+.. autoclass:: cubicweb.web.formfields.Field
+
+Now, you usually don't use that class but one of the concret field classes
+described below, according to what you want to edit.
+
+Basic fields
+''''''''''''
+
+.. autoclass:: cubicweb.web.formfields.StringField()
+.. autoclass:: cubicweb.web.formfields.PasswordField()
+.. autoclass:: cubicweb.web.formfields.IntField()
+.. autoclass:: cubicweb.web.formfields.FloatField()
+.. autoclass:: cubicweb.web.formfields.BooleanField()
+.. autoclass:: cubicweb.web.formfields.DateField()
+.. autoclass:: cubicweb.web.formfields.DateTimeField()
+.. autoclass:: cubicweb.web.formfields.TimeField()
+
+Compound fields
+''''''''''''''''
+
+.. autoclass:: cubicweb.web.formfields.RichTextField()
+.. autoclass:: cubicweb.web.formfields.FileField()
+.. autoclass:: cubicweb.web.formfields.CompoundField()
+
+.. autoclass cubicweb.web.formfields.EditableFileField() XXX should be a widget
+
+Entity specific fields and function
+'''''''''''''''''''''''''''''''''''
+
+.. autoclass:: cubicweb.web.formfields.RelationField()
+.. autofunction:: cubicweb.web.formfields.guess_field
+
 """
 __docformat__ = "restructuredtext en"
 
@@ -13,15 +65,16 @@ from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import xml_escape
+from logilab.common import nullobject
 from logilab.common.date import ustrftime
 
-from yams.schema import KNOWN_METAATTRIBUTES
+from yams.schema import KNOWN_METAATTRIBUTES, role_name
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb import Binary, tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
-     formwidgets as fw
+     formwidgets as fw, uicfg
 
 
 class UnmodifiedField(Exception):
@@ -45,55 +98,80 @@ def vocab_sort(vocab):
     result += sorted(partresult)
     return result
 
-_MARKER = object()
+_MARKER = nullobject()
 
 class Field(object):
     """This class is the abstract base class for all fields. It hold a bunch
     of attributes which may be used for fine control of the behaviour of a
     concret field.
 
-    All the attributes described below have sensible default value which may be
-    overriden by value given to field's constructor.
+    **Attributes**
 
-    :name:
-       name of the field (basestring), should be unique in a form.
-    :id:
-       dom identifier (default to the same value as `name`), should be unique in
+    All the attributes described below have sensible default value which may be
+    overriden by named arguments given to field's constructor.
+
+    :attr:`name`
+       base name of the field (basestring). The actual input name is returned by
+       the :meth:`input_name` method and may differ from that name (for instance
+       if `eidparam` is true).
+    :attr:`id`
+       DOM identifier (default to the same value as `name`), should be unique in
        a form.
-    :label:
+    :attr:`label`
        label of the field (default to the same value as `name`).
-    :help:
+    :attr:`help`
        help message about this field.
-    :widget:
+    :attr:`widget`
        widget associated to the field. Each field class has a default widget
        class which may be overriden per instance.
-    :required:
+    :attr:`value`
+       field value. May be an actual value or a callable which should take the
+       form as argument and return a value.
+    :attr:`choices`
+       static vocabulary for this field. May be a list of values, a list of
+       (label, value) tuples or a callable which should take the form and field
+       as arguments and return a list of values or a list of (label, value).
+    :attr:`required`
        bool flag telling if the field is required or not.
-    :value:
-       field's value, used when no value specified by other means. XXX explain
-    :choices:
-       static vocabulary for this field. May be a list of values or a list of
-       (label, value) tuples if specified.
-    :sort:
+    :attr:`sort`
        bool flag telling if the vocabulary (either static vocabulary specified
        in `choices` or dynamic vocabulary fetched from the form) should be
        sorted on label.
-    :internationalizable:
+    :attr:`internationalizable`
        bool flag telling if the vocabulary labels should be translated using the
        current request language.
-    :eidparam:
+    :attr:`eidparam`
        bool flag telling if this field is linked to a specific entity
-    :role:
+    :attr:`role`
        when the field is linked to an entity attribute or relation, tells the
        role of the entity in the relation (eg 'subject' or 'object')
-    :fieldset:
+    :attr:`fieldset`
        optional fieldset to which this field belongs to
-    :order:
+    :attr:`order`
        key used by automatic forms to sort fields
-    :ignore_req_params:
+    :attr:`ignore_req_params`
        when true, this field won't consider value potentialy specified using
        request's form parameters (eg you won't be able to specify a value using for
        instance url like http://mywebsite.com/form?field=value)
+
+    .. currentmodule:: cubicweb.web.formfields
+
+    **Generic methods**
+
+    .. automethod:: Field.input_name
+    .. automethod:: Field.dom_id
+    .. automethod:: Field.actual_fields
+
+    **Form generation methods**
+
+    .. automethod:: form_init
+    .. automethod:: typed_value
+
+    **Post handling methods**
+
+    .. automethod:: process_posted
+    .. automethod:: process_form_value
+
     """
     # default widget associated to this class of fields. May be overriden per
     # instance
@@ -163,8 +241,11 @@ class Field(object):
         return not isinstance(self.widget, fw.HiddenInput)
 
     def actual_fields(self, form):
-        """return actual fields composing this field in case of a compound
-        field, usually simply return self
+        """Fields may be composed of other fields. For instance the
+        :class:`~cubicweb.web.formfields.RichTextField` is containing a format
+        field to define the text format. This method returns actual fields that
+        should be considered for display / edition. It usually simply return
+        self.
         """
         yield self
 
@@ -189,7 +270,10 @@ class Field(object):
         return self.widget
 
     def input_name(self, form, suffix=None):
-        """return 'qualified name' for this field"""
+        """Return the 'qualified name' for this field, e.g. something suitable
+        to use as HTML input name. You can specify a suffix that will be
+        included in the name when widget needs several inputs.
+        """
         # caching is necessary else we get some pb on entity creation :
         # entity.eid is modified from creation mark (eg 'X') to its actual eid
         # (eg 123), and then `field.input_name()` won't return the right key
@@ -214,11 +298,14 @@ class Field(object):
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
         if self.role is not None:
-            return '%s-%s' % (self.name, self.role)
+            return role_name(self.name, self.role)
         return self.name
 
     def dom_id(self, form, suffix=None):
-        """return an html dom identifier for this field"""
+        """Return the HTML DOM identifier for this field, e.g. something
+        suitable to use as HTML input id. You can specify a suffix that will be
+        included in the name when widget needs several inputs.
+        """
         id = self.id or self.role_name()
         if suffix is not None:
             id += suffix
@@ -227,6 +314,8 @@ class Field(object):
         return id
 
     def typed_value(self, form, load_bytes=False):
+        """Return the correctly typed value for this field in the form context.
+        """
         if self.eidparam and self.role is not None:
             entity = form.edited_entity
             if form._cw.vreg.schema.rschema(self.name).final:
@@ -323,8 +412,8 @@ class Field(object):
         return form._cw.encoding
 
     def form_init(self, form):
-        """method called before by build_context to trigger potential field
-        initialization requiring the form instance
+        """Method called at form initialization to trigger potential field
+        initialization requiring the form instance. Do nothing by default.
         """
         pass
 
@@ -358,7 +447,7 @@ class Field(object):
         return True
 
     def process_form_value(self, form):
-        """process posted form and return correctly typed value"""
+        """Return the correctly typed value posted for this field."""
         try:
             return form.formvalues[(self, form)]
         except KeyError:
@@ -378,10 +467,16 @@ class Field(object):
         return value or None
 
     def process_posted(self, form):
+        """Return an iterator on (field, value) that has been posted for
+        field returned by :meth:`~cubicweb.web.formfields.Field.actual_fields`.
+        """
         for field in self.actual_fields(form):
             if field is self:
                 try:
-                    yield field, field.process_form_value(form)
+                    value = field.process_form_value(form)
+                    if value is None and field.required:
+                        raise ProcessFormError(form._cw._("required field"))
+                    yield field, value
                 except UnmodifiedField:
                     continue
             else:
@@ -392,6 +487,20 @@ class Field(object):
 
 
 class StringField(Field):
+    """Use this field to edit unicode string (`String` yams type). This field
+    additionaly support a `max_length` attribute that specify a maximum size for
+    the string (`None` meaning no limit).
+
+    Unless explicitly specified, the widget for this field will be:
+
+    * :class:`~cubicweb.web.formwidgets.Select` if some vocabulary is specified
+      using `choices` attribute
+
+    * :class:`~cubicweb.web.formwidgets.TextInput` if maximum size is specified
+      using `max_length` attribute and this length is inferior to 257.
+
+    * :class:`~cubicweb.web.formwidgets.TextArea` in all other cases
+    """
     widget = fw.TextArea
     size = 45
 
@@ -424,6 +533,12 @@ class StringField(Field):
 
 
 class PasswordField(StringField):
+    """Use this field to edit password (`Password` yams type, encoded python
+    string).
+
+    Unless explicitly specified, the widget for this field will be
+    a :class:`~cubicweb.web.formwidgets.PasswordInput`.
+    """
     widget = fw.PasswordInput
     def form_init(self, form):
         if self.eidparam and form.edited_entity.has_eid():
@@ -441,6 +556,17 @@ class PasswordField(StringField):
 
 
 class RichTextField(StringField):
+    """This compound field allow edition of text (unicode string) in
+    a particular format. It has an inner field holding the text format,
+    that can be specified using `format_field` argument. If not specified
+    one will be automaticall generated.
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.FCKEditor` or a
+    :class:`~cubicweb.web.formwidgets.TextArea`. according to the field's
+    format and to user's preferences.
+    """
+
     widget = None
     def __init__(self, format_field=None, **kwargs):
         super(RichTextField, self).__init__(**kwargs)
@@ -512,6 +638,17 @@ class RichTextField(StringField):
 
 
 class FileField(StringField):
+    """This compound field allow edition of binary stream (`Bytes` yams
+    type). Three inner fields may be specified:
+
+    * `format_field`, holding the file's format.
+    * `encoding_field`, holding the file's content encoding.
+    * `name_field`, holding the file's name.
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.FileInput`. Inner fields, if any,
+    will be added to a drop down menu at the right of the file input.
+    """
     widget = fw.FileInput
     needs_multipart = True
 
@@ -598,7 +735,17 @@ class FileField(StringField):
         return value
 
 
+# XXX turn into a widget
 class EditableFileField(FileField):
+    """This compound field allow edition of binary stream as
+    :class:`~cubicweb.web.formfields.FileField` but expect that stream to
+    actually contains some text.
+
+    If the stream format is one of text/plain, text/html, text/rest,
+    then a :class:`~cubicweb.web.formwidgets.TextArea` will be additionaly
+    displayed, allowing to directly the file's content when desired, instead
+    of choosing a file from user's file system.
+    """
     editable_formats = ('text/plain', 'text/html', 'text/rest')
 
     def render(self, form, renderer):
@@ -636,6 +783,13 @@ class EditableFileField(FileField):
 
 
 class IntField(Field):
+    """Use this field to edit integers (`Int` yams type). This field additionaly
+    support `min` and `max` attributes that specify a minimum and/or maximum
+    value for the integer (`None` meaning no boundary).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.TextInput`.
+    """
     def __init__(self, min=None, max=None, **kwargs):
         super(IntField, self).__init__(**kwargs)
         self.min = min
@@ -657,6 +811,12 @@ class IntField(Field):
 
 
 class BooleanField(Field):
+    """Use this field to edit booleans (`Boolean` yams type).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.Radio` with yes/no values. You
+    can change that values by specifing `choices`.
+    """
     widget = fw.Radio
 
     def vocabulary(self, form):
@@ -669,6 +829,13 @@ class BooleanField(Field):
 
 
 class FloatField(IntField):
+    """Use this field to edit floats (`Float` yams type). This field additionaly
+    support `min` and `max` attributes as the
+    :class:`~cubicweb.web.formfields.IntField`.
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.TextInput`.
+    """
     def format_single_value(self, req, value):
         formatstr = req.property_value('ui.float-format')
         if value is None:
@@ -691,6 +858,11 @@ class FloatField(IntField):
 
 
 class DateField(StringField):
+    """Use this field to edit date (`Date` yams type).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.JQueryDatePicker`.
+    """
     widget = fw.JQueryDatePicker
     format_prop = 'ui.date-format'
     etype = 'Date'
@@ -716,15 +888,45 @@ class DateField(StringField):
 
 
 class DateTimeField(DateField):
+    """Use this field to edit datetime (`Datetime` yams type).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.JQueryDateTimePicker`.
+    """
     widget = fw.JQueryDateTimePicker
     format_prop = 'ui.datetime-format'
     etype = 'Datetime'
 
 
 class TimeField(DateField):
+    """Use this field to edit time (`Time` yams type).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.JQueryTimePicker`.
+    """
     widget = fw.JQueryTimePicker
     format_prop = 'ui.time-format'
     etype = 'Time'
+
+
+# XXX use cases where we don't actually want a better widget?
+class CompoundField(Field):
+    """This field shouldn't be used directly, it's designed to hold inner
+    fields that should be conceptually groupped together.
+    """
+    def __init__(self, fields, *args, **kwargs):
+        super(CompoundField, self).__init__(*args, **kwargs)
+        self.fields = fields
+
+    def subfields(self, form):
+        return self.fields
+
+    def actual_fields(self, form):
+        # don't add [self] to actual fields, compound field is usually kinda
+        # virtual, all interesting values are in subfield. Skipping it may avoid
+        # error when processed by the editcontroller : it may be marked as required
+        # while it has no value, hence generating a false error.
+        return list(self.fields)
 
 
 # relation vocabulary helper functions #########################################
@@ -781,7 +983,11 @@ def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
 
 
 class RelationField(Field):
-    """the relation field to edit non final relations of an entity"""
+    """Use this field to edit a relation of an entity.
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.Select`.
+    """
 
     @staticmethod
     def fromcardinality(card, **kwargs):
@@ -865,21 +1071,20 @@ class RelationField(Field):
         return eids
 
 
-class CompoundField(Field):
-    def __init__(self, fields, *args, **kwargs):
-        super(CompoundField, self).__init__(*args, **kwargs)
-        self.fields = fields
-
-    def subfields(self, form):
-        return self.fields
-
-    def actual_fields(self, form):
-        return [self] + list(self.fields)
-
+_AFF_KWARGS = uicfg.autoform_field_kwargs
 
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
-    """return the most adapated widget to edit the relation
-    'subjschema rschema objschema' according to information found in the schema
+    """This function return the most adapted field to edit the given relation
+    (`rschema`) where the given entity type (`eschema`) is the subject or object
+    (`role`).
+
+    The field is initialized according to information found in the schema,
+    though any value can be explicitly specified using `kwargs`.
+
+    The `skip_meta_attr` flag is used to specify wether this function should
+    return a field for attributes considered as a meta-attributes
+    (e.g. describing an other attribute, such as the format or file name of a
+    file (`Bytes`) attribute).
     """
     fieldclass = None
     rdef = eschema.rdef(rschema, role)
@@ -891,14 +1096,14 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     else:
         targetschema = rdef.subject
     card = rdef.role_cardinality(role)
-    kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
     kwargs['role'] = role
+    kwargs['eidparam'] = True
+    kwargs.setdefault('required', card in '1+')
     if role == 'object':
         kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
         kwargs.setdefault('label', (eschema.type, rschema.type))
-    kwargs['eidparam'] = True
     kwargs.setdefault('help', rdef.description)
     if rschema.final:
         if skip_meta_attr and rschema in eschema.meta_attributes():
@@ -926,8 +1131,10 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             for metadata in KNOWN_METAATTRIBUTES:
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
+                    metakwargs = _AFF_KWARGS.etype_get(eschema, metaschema, 'subject')
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                skip_meta_attr=False)
+                                                                skip_meta_attr=False,
+                                                                **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)
 

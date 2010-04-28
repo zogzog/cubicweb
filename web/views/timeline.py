@@ -1,21 +1,33 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """basic support for SIMILE's timline widgets
 
 cf. http://code.google.com/p/simile-widgets/
 
-:organization: Logilab
-:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
-
-import simplejson
 
 from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView, StartupView
+from cubicweb.web import json
 
 _ = unicode
 
@@ -40,7 +52,7 @@ class TimelineJsonView(EntityView):
                 events.append(event)
         timeline_data = {'dateTimeFormat': self.date_fmt,
                          'events': events}
-        self.w(simplejson.dumps(timeline_data))
+        self.w(json.dumps(timeline_data))
 
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):

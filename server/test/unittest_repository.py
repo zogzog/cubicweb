@@ -1,11 +1,27 @@
 # -*- coding: iso-8859-1 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.repository
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
+from __future__ import with_statement
 
 import os
 import sys
@@ -20,12 +36,14 @@ from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError)
+from cubicweb.selectors import implements
 from cubicweb.schema import CubicWebSchema, RQLConstraint
-from cubicweb.dbapi import connect, repo_connect, multiple_connections_unfix
+from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
 
 # start name server anyway, process will fail if already running
@@ -38,25 +56,29 @@ class RepositoryTC(CubicWebTC):
     """
 
     def test_fill_schema(self):
-        self.repo.schema = CubicWebSchema(self.repo.config.appid)
-        self.repo.config._cubes = None # avoid assertion error
-        self.repo.config.repairing = True # avoid versions checking
-        self.repo.fill_schema()
-        table = SQL_PREFIX + 'CWEType'
-        namecol = SQL_PREFIX + 'name'
-        finalcol = SQL_PREFIX + 'final'
-        self.session.set_pool()
-        cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
-            namecol, table, finalcol))
-        self.assertEquals(cu.fetchall(), [])
-        cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
-                          % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
-        self.assertEquals(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
-                                          (u'Date',), (u'Datetime',),
-                                          (u'Decimal',),(u'Float',),
-                                          (u'Int',),
-                                          (u'Interval',), (u'Password',),
-                                          (u'String',), (u'Time',)])
+        origshema = self.repo.schema
+        try:
+            self.repo.schema = CubicWebSchema(self.repo.config.appid)
+            self.repo.config._cubes = None # avoid assertion error
+            self.repo.config.repairing = True # avoid versions checking
+            self.repo.fill_schema()
+            table = SQL_PREFIX + 'CWEType'
+            namecol = SQL_PREFIX + 'name'
+            finalcol = SQL_PREFIX + 'final'
+            self.session.set_pool()
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
+                namecol, table, finalcol))
+            self.assertEquals(cu.fetchall(), [])
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
+                                         % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
+            self.assertEquals(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
+                                              (u'Date',), (u'Datetime',),
+                                              (u'Decimal',),(u'Float',),
+                                              (u'Int',),
+                                              (u'Interval',), (u'Password',),
+                                              (u'String',), (u'Time',)])
+        finally:
+            self.repo.set_schema(origshema)
 
     def test_schema_has_owner(self):
         repo = self.repo
@@ -180,7 +202,9 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         # rollback state change which trigger TrInfo insertion
-        user = repo._get_session(cnxid).user
+        session = repo._get_session(cnxid)
+        session.set_pool()
+        user = session.user
         user.fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
@@ -263,9 +287,13 @@ class RepositoryTC(CubicWebTC):
                 self.fail('something went wrong, thread still alive')
         finally:
             repository.pyro_unregister(self.repo.config)
+            from logilab.common import pyro_ext
+            pyro_ext._DAEMONS.clear()
+
 
     def _pyro_client(self, done):
-        cnx = connect(self.repo.config.appid, u'admin', password='gingkow')
+        cnx = connect(self.repo.config.appid, u'admin', password='gingkow',
+                      initlog=False) # don't reset logging configuration
         try:
             # check we can get the schema
             schema = cnx.get_schema()
@@ -275,7 +303,7 @@ class RepositoryTC(CubicWebTC):
             cnx.close()
             done.append(True)
         finally:
-            # connect monkey path some method by default, remove them
+            # connect monkey patch some method by default, remove them
             multiple_connections_unfix()
 
     def test_internal_api(self):
@@ -349,6 +377,64 @@ class RepositoryTC(CubicWebTC):
         self.assertEquals(rset.rows[0][0], p2.eid)
 
 
+    def test_set_attributes_in_before_update(self):
+        # local hook
+        class DummyBeforeHook(Hook):
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('EmailAddress')
+            events = ('before_update_entity',)
+            def __call__(self):
+                # safety belt: avoid potential infinite recursion if the test
+                #              fails (i.e. RuntimeError not raised)
+                pendings = self._cw.transaction_data.setdefault('pending', set())
+                if self.entity.eid not in pendings:
+                    pendings.add(self.entity.eid)
+                    self.entity.set_attributes(alias=u'foo')
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            addr = req.create_entity('EmailAddress', address=u'a@b.fr')
+            addr.set_attributes(address=u'a@b.com')
+            rset = self.execute('Any A,AA WHERE X eid %(x)s, X address A, X alias AA',
+                                {'x': addr.eid})
+            self.assertEquals(rset.rows, [[u'a@b.com', u'foo']])
+
+    def test_set_attributes_in_before_add(self):
+        # local hook
+        class DummyBeforeHook(Hook):
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('EmailAddress')
+            events = ('before_add_entity',)
+            def __call__(self):
+                # set_attributes is forbidden within before_add_entity()
+                self.entity.set_attributes(alias=u'foo')
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            # XXX will fail with python -O
+            self.assertRaises(AssertionError, req.create_entity,
+                              'EmailAddress', address=u'a@b.fr')
+
+    def test_multiple_edit_set_attributes(self):
+        """make sure edited_attributes doesn't get cluttered
+        by previous entities on multiple set
+        """
+        # local hook
+        class DummyBeforeHook(Hook):
+            _test = self # keep reference to test instance
+            __regid__ = 'dummy-before-hook'
+            __select__ = Hook.__select__ & implements('Affaire')
+            events = ('before_update_entity',)
+            def __call__(self):
+                # invoiced attribute shouldn't be considered "edited" before the hook
+                self._test.failIf('invoiced' in self.entity.edited_attributes,
+                                  'edited_attributes cluttered by previous update')
+                self.entity['invoiced'] = 10
+        with self.temporary_appobjects(DummyBeforeHook):
+            req = self.request()
+            req.create_entity('Affaire', ref=u'AFF01')
+            req.create_entity('Affaire', ref=u'AFF02')
+            req.execute('SET A duration 10 WHERE A is Affaire')
+
+
 class DataHelpersTC(CubicWebTC):
 
     def test_create_eid(self):
@@ -377,14 +463,14 @@ class DataHelpersTC(CubicWebTC):
         entity.eid = -1
         entity.complete = lambda x: None
         self.session.set_pool()
-        self.repo.add_info(self.session, entity, self.repo.sources_by_uri['system'])
+        self.repo.add_info(self.session, entity, self.repo.system_source)
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
         self.assertIsInstance(data[0][3], datetime)
         data[0] = list(data[0])
         data[0][3] = None
         self.assertEquals(tuplify(data), [(-1, 'Personne', 'system', None, None)])
-        self.repo.delete_info(self.session, -1)
+        self.repo.delete_info(self.session, entity, 'system', None)
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
@@ -394,6 +480,7 @@ class DataHelpersTC(CubicWebTC):
 class FTITC(CubicWebTC):
 
     def test_reindex_and_modified_since(self):
+        self.repo.system_source.multisources_etypes.add('Personne')
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
         self.commit()
         ts = datetime.now()
@@ -470,20 +557,12 @@ class DBInitTC(CubicWebTC):
                            u'system.version.tag'])
 
 CALLED = []
-class EcritParHook(hook.Hook):
-    __regid__ = 'inlinedrelhook'
-    __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
-    events = ('before_add_relation', 'after_add_relation',
-              'before_delete_relation', 'after_delete_relation')
-    def __call__(self):
-        CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
 class InlineRelHooksTC(CubicWebTC):
     """test relation hooks are called for inlined relations
     """
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.hm = self.repo.hm
         CALLED[:] = ()
 
     def _after_relation_hook(self, pool, fromeid, rtype, toeid):
@@ -491,20 +570,28 @@ class InlineRelHooksTC(CubicWebTC):
 
     def test_inline_relation(self):
         """make sure <event>_relation hooks are called for inlined relation"""
-        self.hm.register(EcritParHook)
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_delete_relation', eidn, 'ecrit_par', eidp)])
-        CALLED[:] = ()
-        eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
-        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
+        class EcritParHook(hook.Hook):
+            __regid__ = 'inlinedrelhook'
+            __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
+            events = ('before_add_relation', 'after_add_relation',
+                      'before_delete_relation', 'after_delete_relation')
+            def __call__(self):
+                CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
+
+        with self.temporary_appobjects(EcritParHook):
+            eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
+            eidn = self.execute('INSERT Note X: X type "T"')[0][0]
+            self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
+            self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_delete_relation', eidn, 'ecrit_par', eidp)])
+            CALLED[:] = ()
+            eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+            self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
 
 if __name__ == '__main__':

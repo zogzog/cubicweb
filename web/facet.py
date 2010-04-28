@@ -1,10 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """contains utility functions and some visual component to restrict results of
 a search
 
-:organization: Logilab
-:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -338,10 +351,11 @@ class VocabularyFacet(AbstractFacet):
 
 class RelationFacet(VocabularyFacet):
     __select__ = partial_relation_possible() & match_context_prop()
-    # class attributes to configure the rel ation facet
+    # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
     target_attr = 'eid'
+    target_type = None
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -365,8 +379,11 @@ class RelationFacet(VocabularyFacet):
             sort = self.sortasc
         try:
             mainvar = self.filtered_variable
-            insert_attr_select_relation(rqlst, mainvar, self.rtype, self.role,
-                                        self.target_attr, self.sortfunc, sort)
+            var = insert_attr_select_relation(
+                rqlst, mainvar, self.rtype, self.role, self.target_attr,
+                self.sortfunc, sort)
+            if self.target_type is not None:
+                rqlst.add_type_restriction(var, self.target_type)
             try:
                 rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
             except:
@@ -375,7 +392,9 @@ class RelationFacet(VocabularyFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        return rset and self.rset_vocabulary(rset)
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
@@ -464,7 +483,9 @@ class AttributeFacet(RelationFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        return rset and self.rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
         _ = self._cw._

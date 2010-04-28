@@ -210,7 +210,7 @@ and administrator login but you will get the cookie value as well.
 This cookie values needs to be provided to ``laxctl`` commands
 in order to handle datastore administration requests.
 
-.. image:: ../images/lax-book.02-cookie-values.en.png
+.. image:: ../images/lax-book_02-cookie-values_en.png
    :alt: displaying the detailed view of the cookie values returned
 
 

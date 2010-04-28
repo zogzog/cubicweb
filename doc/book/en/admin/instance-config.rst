@@ -157,7 +157,7 @@ RQL queries.
 
 :`ui.encoding`:
     Character encoding to use for the web
-:`navigation.short-line-size`: # XXX should be in ui
+:`navigation.short-line-size`:
     number of characters for "short" display
 :`navigation.page-size`:
     maximum number of entities to show per results page

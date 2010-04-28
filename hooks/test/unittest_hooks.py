@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for core hooks
 
 note: most schemahooks.py hooks are actually tested in unittest_migrations.py
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from logilab.common.testlib import TestCase, unittest_main
@@ -102,9 +118,9 @@ class CoreHooksTC(CubicWebTC):
                               'WHERE FE name "CWUser", RT name "in_group", TE name "String"')[0][0]
         self.execute('SET X read_permission Y WHERE X eid %(x)s, Y name "managers"',
                      {'x': releid}, 'x')
-        ex = self.assertRaises(ValidationError,
-                               self.commit)
-        self.assertEquals(ex.errors, {'to_entity': 'RQLConstraint O final FALSE failed'})
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors,
+                          {'to_entity-object': 'RQLConstraint O final FALSE failed'})
 
     def test_html_tidy_hook(self):
         req = self.request()
@@ -217,23 +233,23 @@ class CWPropertyHooksTC(CubicWebTC):
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'pkey': 'unknown property key'})
+        self.assertEquals(ex.errors, {'pkey-subject': 'unknown property key'})
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEquals(ex.errors, {'pkey': 'unknown property key'})
+        self.assertEquals(ex.errors, {'pkey-subject': 'unknown property key'})
 
     def test_site_wide_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'for_user': "site-wide property can't be set for user"})
+        self.assertEquals(ex.errors, {'for_user-subject': "site-wide property can't be set for user"})
 
     def test_bad_type_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'value': u'unauthorized value'})
+        self.assertEquals(ex.errors, {'value-subject': u'unauthorized value'})
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop"')
-        self.assertEquals(ex.errors, {'value': u'unauthorized value'})
+        self.assertEquals(ex.errors, {'value-subject': u'unauthorized value'})
 
 
 class SchemaHooksTC(CubicWebTC):
@@ -253,7 +269,7 @@ class SchemaHooksTC(CubicWebTC):
             self.execute('INSERT CWUser X: X login "admin"')
         except ValidationError, ex:
             self.assertIsInstance(ex.entity, int)
-            self.assertEquals(ex.errors, {'login': 'the value "admin" is already used, use another one'})
+            self.assertEquals(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
 
 if __name__ == '__main__':

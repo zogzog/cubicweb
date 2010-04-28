@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb server sources support
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -100,7 +113,7 @@ class AbstractSource(object):
         """method called by the repository once ready to handle request"""
         pass
 
-    def backup(self, backupfile):
+    def backup(self, backupfile, confirm):
         """method called to create a backup of source's data"""
         pass
 
@@ -351,7 +364,7 @@ class AbstractSource(object):
         """update an entity in the source"""
         raise NotImplementedError()
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise NotImplementedError()
 
@@ -372,11 +385,15 @@ class AbstractSource(object):
     def create_eid(self, session):
         raise NotImplementedError()
 
-    def add_info(self, session, entity, source, extid=None):
+    def add_info(self, session, entity, source, extid):
         """add type and source info for an eid into the system table"""
         raise NotImplementedError()
 
-    def delete_info(self, session, eid, etype, uri, extid):
+    def update_info(self, session, entity, need_fti_update):
+        """mark entity as being modified, fulltext reindex if needed"""
+        raise NotImplementedError()
+
+    def delete_info(self, session, entity, uri, extid, attributes, relations):
         """delete system information on deletion of an entity by transfering
         record from the entities table to the deleted_entities table
         """

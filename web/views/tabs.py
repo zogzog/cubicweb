@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base classes to handle tabbed views
 
-:organization: Logilab
-:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 __docformat__ = "restructuredtext en"
@@ -32,9 +45,7 @@ class LazyViewMixin(object):
 
     def lazyview(self, vid, rql=None, eid=None, rset=None, tabid=None,
                  reloadable=False, show_spinbox=True, w=None):
-        """a lazy version of wview
-        first version only support lazy viewing for an entity at a time
-        """
+        """ a lazy version of wview """
         w = w or self.w
         self._cw.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'fname' : 'view'}
@@ -49,6 +60,8 @@ class LazyViewMixin(object):
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (tabid or vid, self._cw._('(loading ...)')))
+        else:
+            w(u'<div id="%s-hole"></div>' % (tabid or vid))
         w(u'<noscript><p><a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
           % (tabid or vid, xml_escape(self._cw.build_url(**urlparams)), xml_escape('%s (%s)') %
              (tabid or vid, self._cw._('follow this link if javascript is deactivated'))))

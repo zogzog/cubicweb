@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some hooks to handle notification on entity's changes
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -103,29 +116,28 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
 class EntityUpdateHook(NotificationHook):
     __regid__ = 'notifentityupdated'
     __abstract__ = True # do not register by default
-
+    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
     events = ('before_update_entity',)
     skip_attrs = set()
 
     def __call__(self):
         session = self._cw
-        if self.entity.eid in session.transaction_data.get('neweids', ()):
+        if session.added_in_transaction(self.entity.eid):
             return # entity is being created
-        if session.is_super_session:
-            return # ignore changes triggered by hooks
         # then compute changes
-        changes = session.transaction_data.setdefault('changes', {})
-        thisentitychanges = changes.setdefault(self.entity.eid, set())
-        attrs = [k for k in self.entity.edited_attributes if not k in self.skip_attrs]
+        attrs = [k for k in self.entity.edited_attributes
+                 if not k in self.skip_attrs]
         if not attrs:
             return
+        changes = session.transaction_data.setdefault('changes', {})
+        thisentitychanges = changes.setdefault(self.entity.eid, set())
         rqlsel, rqlrestr = [], ['X eid %(x)s']
         for i, attr in enumerate(attrs):
             var = chr(65+i)
             rqlsel.append(var)
             rqlrestr.append('X %s %s' % (attr, var))
         rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
-        rset = session.unsafe_execute(rql, {'x': self.entity.eid}, 'x')
+        rset = session.execute(rql, {'x': self.entity.eid}, 'x')
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
             newvalue = self.entity[attr]
@@ -139,13 +151,11 @@ class EntityUpdateHook(NotificationHook):
 
 class SomethingChangedHook(NotificationHook):
     __regid__ = 'supervising'
+    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
     events = ('before_add_relation', 'before_delete_relation',
               'after_add_entity', 'before_update_entity')
 
     def __call__(self):
-        # XXX use proper selectors
-        if self._cw.is_super_session or self._cw.repo.config.repairing:
-            return # ignore changes triggered by hooks or maintainance shell
         dest = self._cw.vreg.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return

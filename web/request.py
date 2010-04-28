@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract class for http request
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -15,8 +28,6 @@ import base64
 from datetime import date
 from urlparse import urlsplit
 from itertools import count
-
-from simplejson import dumps
 
 from rql.utils import rqlvar_maker
 
@@ -30,7 +41,8 @@ from cubicweb.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
-                          RequestError, StatusResponse)
+                          RequestError, StatusResponse, json)
+dumps = json.dumps
 
 _MARKER = object()
 
@@ -68,7 +80,6 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
-        self.message = None
         self.authmode = vreg.config['auth-mode']
         self.https = https
         # raw html headers that can be added from any view
@@ -126,35 +137,24 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         super(CubicWebRequestBase, self).set_connection(cnx, user)
         # set request language
-        try:
-            vreg = self.vreg
-            if self.user:
-                try:
-                    # 1. user specified language
-                    lang = vreg.typed_value('ui.language',
-                                            self.user.properties['ui.language'])
+        vreg = self.vreg
+        if self.user:
+            try:
+                # 1. user specified language
+                lang = vreg.typed_value('ui.language',
+                                        self.user.properties['ui.language'])
+                self.set_language(lang)
+                return
+            except KeyError:
+                pass
+        if vreg.config['language-negociation']:
+            # 2. http negociated language
+            for lang in self.header_accept_language():
+                if lang in self.translations:
                     self.set_language(lang)
                     return
-                except KeyError:
-                    pass
-            if vreg.config['language-negociation']:
-                # 2. http negociated language
-                for lang in self.header_accept_language():
-                    if lang in self.translations:
-                        self.set_language(lang)
-                        return
-            # 3. default language
-            self.set_default_language(vreg)
-        finally:
-            # XXX code smell
-            # have to be done here because language is not yet set in setup_params
-            #
-            # special key for created entity, added in controller's reset method
-            # if no message set, we don't want this neither
-            if '__createdpath' in self.form and self.message:
-                self.message += ' (<a href="%s">%s</a>)' % (
-                    self.build_url(self.form.pop('__createdpath')),
-                    self._('click here to see created entity'))
+        # 3. default language
+        self.set_default_language(vreg)
 
     def set_language(self, lang):
         gettext, self.pgettext = self.translations[lang]
@@ -179,26 +179,27 @@ class CubicWebRequestBase(DBAPIRequest):
 
         subclasses should overrides to
         """
+        self.form = {}
         if params is None:
-            params = {}
-        self.form = params
+            return
         encoding = self.encoding
-        for k, v in params.items():
-            if isinstance(v, (tuple, list)):
-                v = [unicode(x, encoding) for x in v]
-                if len(v) == 1:
-                    v = v[0]
-            if k in self.no_script_form_params:
-                v = self.no_script_form_param(k, value=v)
-            if isinstance(v, str):
-                v = unicode(v, encoding)
-            if k == '__message':
-                self.set_message(v)
-                del self.form[k]
+        for param, val in params.iteritems():
+            if isinstance(val, (tuple, list)):
+                val = [unicode(x, encoding) for x in val]
+                if len(val) == 1:
+                    val = val[0]
+            elif isinstance(val, str):
+                val = unicode(val, encoding)
+            if param in self.no_script_form_params and val:
+                val = self.no_script_form_param(param, val)
+            if param == '_cwmsgid':
+                self.set_message_id(val)
+            elif param == '__message':
+                self.set_message(val)
             else:
-                self.form[k] = v
+                self.form[param] = val
 
-    def no_script_form_param(self, param, default=None, value=None):
+    def no_script_form_param(self, param, value):
         """ensure there is no script in a user form param
 
         by default return a cleaned string instead of raising a security
@@ -208,16 +209,12 @@ class CubicWebRequestBase(DBAPIRequest):
         that are at some point inserted in a generated html page to protect
         against script kiddies
         """
-        if value is None:
-            value = self.form.get(param, default)
-        if not value is default and value:
-            # safety belt for strange urls like http://...?vtitle=yo&vtitle=yo
-            if isinstance(value, (list, tuple)):
-                self.error('no_script_form_param got a list (%s). Who generated the URL ?',
-                           repr(value))
-                value = value[0]
-            return remove_html_tags(value)
-        return value
+        # safety belt for strange urls like http://...?vtitle=yo&vtitle=yo
+        if isinstance(value, (list, tuple)):
+            self.error('no_script_form_param got a list (%s). Who generated the URL ?',
+                       repr(value))
+            value = value[0]
+        return remove_html_tags(value)
 
     def list_form_param(self, param, form=None, pop=False):
         """get param from form parameters and return its value as a list,
@@ -245,9 +242,48 @@ class CubicWebRequestBase(DBAPIRequest):
 
     # web state helpers #######################################################
 
+    @property
+    def message(self):
+        try:
+            return self.get_session_data(self._msgid, default=u'', pop=True)
+        except AttributeError:
+            try:
+                return self._msg
+            except AttributeError:
+                return None
+
     def set_message(self, msg):
         assert isinstance(msg, unicode)
-        self.message = msg
+        self._msg = msg
+
+    def set_message_id(self, msgid):
+        self._msgid = msgid
+
+    @cached
+    def redirect_message_id(self):
+        return make_uid()
+
+    def set_redirect_message(self, msg):
+        assert isinstance(msg, unicode)
+        msgid = self.redirect_message_id()
+        self.set_session_data(msgid, msg)
+        return msgid
+
+    def append_to_redirect_message(self, msg):
+        msgid = self.redirect_message_id()
+        currentmsg = self.get_session_data(msgid)
+        if currentmsg is not None:
+            currentmsg = '%s %s' % (currentmsg, msg)
+        else:
+            currentmsg = msg
+        self.set_session_data(msgid, currentmsg)
+        return msgid
+
+    def reset_message(self):
+        if hasattr(self, '_msg'):
+            del self._msg
+        if hasattr(self, '_msgid'):
+            del self._msgid
 
     def update_search_state(self):
         """update the current search state"""
@@ -481,7 +517,7 @@ class CubicWebRequestBase(DBAPIRequest):
     # high level methods for HTML headers management ##########################
 
     def add_onload(self, jscode):
-        self.html_headers.add_onload(jscode, self.json_request)
+        self.html_headers.add_onload(jscode)
 
     def add_js(self, jsfiles, localfile=True):
         """specify a list of JS files to include in the HTML headers
@@ -499,6 +535,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def add_css(self, cssfiles, media=u'all', localfile=True, ieonly=False,
                 iespec=u'[if lt IE 8]'):
         """specify a CSS file to include in the HTML headers
+
         :param cssfiles: a CSS filename or a list of CSS filenames
         :param media: the CSS's media if necessary
         :param localfile: if True, the default data dir prefix is added to the
@@ -526,15 +563,17 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
                                **extraparams):
-        """builds an ajax url that will replace `nodeid`s content
+        """builds an ajax url that will replace nodeid's content
+
         :param nodeid: the dom id of the node to replace
         :param rql: rql to execute
         :param vid: the view to apply on the resultset
         :param replacemode: defines how the replacement should be done.
+
         Possible values are :
-         - 'replace' to replace the node's content with the generated HTML
-         - 'swap' to replace the node itself with the generated HTML
-         - 'append' to append the generated HTML to the node's content
+        - 'replace' to replace the node's content with the generated HTML
+        - 'swap' to replace the node itself with the generated HTML
+        - 'append' to append the generated HTML to the node's content
         """
         url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
                              **extraparams)

@@ -322,7 +322,7 @@ function restoreInlinedEntity(peid, rtype, eid) {
 
 function _clearPreviousErrors(formid) {
     jQuery('#' + formid + 'ErrorMessage').remove();
-    jQuery('#' + formid + ' span.error').remove();
+    jQuery('#' + formid + ' span.errorMsg').remove();
     jQuery('#' + formid + ' .error').removeClass('error');
 }
 
@@ -331,25 +331,30 @@ function _displayValidationerrors(formid, eid, errors) {
     var firsterrfield = null;
     for (fieldname in errors) {
 	var errmsg = errors[fieldname];
-	var fieldid = fieldname + ':' + eid;
-	var suffixes = ['', '-subject', '-object'];
-	var found = false;
-	for (var i=0, length=suffixes.length; i<length;i++) {
-	    var field = jqNode(fieldname + suffixes[i] + ':' + eid);
-	    if (field && getNodeAttribute(field, 'type') != 'hidden') {
-		if ( !firsterrfield ) {
-		    firsterrfield = 'err-' + fieldid;
+	if (!fieldname) {
+	    globalerrors.push(errmsg);
+	} else {
+	    var fieldid = fieldname + ':' + eid;
+	    var suffixes = ['', '-subject', '-object'];
+	    var found = false;
+	    // XXX remove suffixes at some point
+	    for (var i=0, length=suffixes.length; i<length;i++) {
+		var field = jqNode(fieldname + suffixes[i] + ':' + eid);
+		if (field && getNodeAttribute(field, 'type') != 'hidden') {
+		    if ( !firsterrfield ) {
+			firsterrfield = 'err-' + fieldid;
+		    }
+		    addElementClass(field, 'error');
+		    var span = SPAN({'id': 'err-' + fieldid, 'class': "errorMsg"}, errmsg);
+		    field.before(span);
+		    found = true;
+		    break;
 		}
-		addElementClass(field, 'error');
-		var span = SPAN({'id': 'err-' + fieldid, 'class': "error"}, errmsg);
-		field.before(span);
-		found = true;
-		break;
 	    }
-	}
-	if (!found) {
-	    firsterrfield = formid;
-	    globalerrors.push(_(fieldname) + ' : ' + errmsg);
+	    if (!found) {
+		firsterrfield = formid;
+		globalerrors.push(_(fieldname) + ' : ' + errmsg);
+	    }
 	}
     }
     if (globalerrors.length) {

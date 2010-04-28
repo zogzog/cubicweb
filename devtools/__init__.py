@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Test tools for cubicweb
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -81,7 +94,6 @@ class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
     set_language = False
     read_instance_schema = False
-    bootstrap_schema = False
     init_repository = True
     options = cwconfig.merge_options(ServerConfiguration.options + (
         ('anonymous-user',
@@ -106,8 +118,6 @@ class TestServerConfiguration(ServerConfiguration):
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
 
     anonymous_user = TwistedConfiguration.anonymous_user.im_func
 
@@ -123,6 +133,8 @@ class TestServerConfiguration(ServerConfiguration):
         super(TestServerConfiguration, self).load_configuration()
         self.global_set_option('anonymous-user', 'anon')
         self.global_set_option('anonymous-password', 'anon')
+        # no undo support in tests
+        self.global_set_option('undo-support', '')
 
     def main_config_file(self):
         """return instance's control configuration file"""
@@ -201,6 +213,8 @@ def init_test_database(config=None, configdir='data'):
         init_test_database_sqlite(config)
     elif driver == 'postgres':
         init_test_database_postgres(config)
+    elif driver == 'sqlserver2005':
+        init_test_database_sqlserver2005(config)
     else:
         raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
@@ -216,6 +230,10 @@ def reset_test_database(config):
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)
+    elif driver in ('sqlserver2005', 'postgres'):
+        # XXX do something with dump/restore ?
+        print 'resetting the database is not done for', driver
+        print 'you should handle it manually'
     else:
         raise ValueError('no reset function for driver %r' % driver)
 
@@ -223,11 +241,18 @@ def reset_test_database(config):
 ### postgres test database handling ############################################
 
 def init_test_database_postgres(config):
-    """initialize a fresh sqlite databse used for testing purpose"""
+    """initialize a fresh postgresql databse used for testing purpose"""
     if config.init_repository:
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, drop=True)
 
+### sqlserver2005 test database handling ############################################
+
+def init_test_database_sqlserver2005(config):
+    """initialize a fresh sqlserver databse used for testing purpose"""
+    if config.init_repository:
+        from cubicweb.server import init_repository
+        init_repository(config, interactive=False, drop=True, vreg=vreg)
 
 ### sqlite test database handling ##############################################
 

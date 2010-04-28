@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit/functional tests for cubicweb.server.hook
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object
@@ -69,6 +82,10 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 
+def teardown_module(*args):
+    global config, schema
+    del config, schema
+
 class AddAnyHook(hook.Hook):
     __regid__ = 'addany'
     category = 'cat1'
@@ -77,7 +94,7 @@ class AddAnyHook(hook.Hook):
         raise HookCalled()
 
 
-class HooksManagerTC(TestCase):
+class HooksRegistryTC(TestCase):
 
     def setUp(self):
         """ called before each test from this class """
@@ -88,29 +105,34 @@ class HooksManagerTC(TestCase):
         class _Hook(hook.Hook):
             events = ('before_add_entiti',)
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event before_add_entiti on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad event before_add_entiti on %s._Hook' % __name__)
 
     def test_register_bad_hook2(self):
         class _Hook(hook.Hook):
             events = None
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad .events attribute None on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad .events attribute None on %s._Hook' % __name__)
 
     def test_register_bad_hook3(self):
         class _Hook(hook.Hook):
             events = 'before_add_entity'
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event b on unittest_hook._Hook')
+        self.assertEquals(str(ex), 'bad event b on %s._Hook' % __name__)
 
     def test_call_hook(self):
         self.o.register(AddAnyHook)
-        cw = mock_object(vreg=self.vreg)
-        self.assertRaises(HookCalled, self.o.call_hooks, 'before_add_entity', cw)
-        self.o.call_hooks('before_delete_entity', cw) # nothing to call
-        config.disabled_hooks_categories.add('cat1')
+        dis = set()
+        cw = mock_object(vreg=self.vreg,
+                         set_read_security=lambda *a,**k: None,
+                         set_write_security=lambda *a,**k: None,
+                         is_hook_activated=lambda x, cls: cls.category not in dis)
+        self.assertRaises(HookCalled,
+                          self.o.call_hooks, 'before_add_entity', cw)
+        dis.add('cat1')
         self.o.call_hooks('before_add_entity', cw) # disabled hooks category, not called
-        config.disabled_hooks_categories.remove('cat1')
-        self.assertRaises(HookCalled, self.o.call_hooks, 'before_add_entity', cw)
+        dis.remove('cat1')
+        self.assertRaises(HookCalled,
+                          self.o.call_hooks, 'before_add_entity', cw)
         self.o.unregister(AddAnyHook)
         self.o.call_hooks('before_add_entity', cw) # nothing to call
 

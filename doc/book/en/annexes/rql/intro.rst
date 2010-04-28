@@ -1,14 +1,16 @@
 
+.. _rql_intro:
+
 Introduction
 ------------
 
 Goals of RQL
 ~~~~~~~~~~~~
 
-The goal is to have a language emphasizing the way of browsing relations. As
-such, attributes will be regarded as cases of special relations (in terms of
-implementation, the user should see no difference between an attribute and a
-relation).
+The goal is to have a language making relations browsing easy. As
+such, attributes will be regarded as cases of special relations (in
+terms of usage, the user should see no syntactic difference between an
+attribute and a relation).
 
 Comparison with existing languages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,10 +34,10 @@ Versa
 
 We should look in more detail, but here are already some ideas for the moment
 ... Versa_ is the language most similar to what we wanted to do, but the model
-underlying data being RDF, there is some number of things such as namespaces or
+underlying data being RDF, there are some things such as namespaces or
 handling of the RDF types which does not interest us. On the functionality
 level, Versa_ is very comprehensive including through many functions of
-conversion and basic types manipulation, which may need to be guided at one time
+conversion and basic types manipulation, which we may want to look at one time
 or another.  Finally, the syntax is a little esoteric.
 
 

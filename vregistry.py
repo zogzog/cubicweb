@@ -1,3 +1,20 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 * the vregistry handles various types of objects interacting
   together. The vregistry handles registration of dynamically loaded
@@ -14,10 +31,6 @@
   returned. The selector is instantiated at appobject registration
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -31,8 +44,7 @@ from logilab.common.deprecation import deprecated, class_moved
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb import (RegistryNotFound, ObjectNotFound, NoSelectableObject,
-                      RegistryOutOfDate)
+from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 from cubicweb.appobject import AppObject
 
 def _toload_info(path, extrapath, _toload=None):
@@ -48,7 +60,21 @@ def _toload_info(path, extrapath, _toload=None):
             subfiles = [join(fileordir, fname) for fname in listdir(fileordir)]
             _toload_info(subfiles, extrapath, _toload)
         elif fileordir[-3:] == '.py':
-            modname = '.'.join(modpath_from_file(fileordir, extrapath))
+            modpath = modpath_from_file(fileordir, extrapath)
+            # omit '__init__' from package's name to avoid loading that module
+            # once for each name when it is imported by some other appobject
+            # module. This supposes import in modules are done as::
+            #
+            #   from package import something
+            #
+            # not::
+            #
+            #  from package.__init__ import something
+            #
+            # which seems quite correct.
+            if modpath[-1] == '__init__':
+                modpath.pop()
+            modname = '.'.join(modpath)
             _toload[0][modname] = fileordir
             _toload[1].append((fileordir, modname))
     return _toload
@@ -67,6 +93,11 @@ def class_regid(cls):
     if hasattr(cls, 'id') and not isinstance(cls.id, property):
         return cls.id
     return cls.__regid__
+
+def class_registries(cls, registryname):
+    if registryname:
+        return (registryname,)
+    return cls.__registries__
 
 
 class Registry(dict):
@@ -142,11 +173,12 @@ class Registry(dict):
     # dynamic selection methods ################################################
 
     def object_by_id(self, oid, *args, **kwargs):
-        """return object with the given oid. Only one object is expected to be
-        found.
+        """return object with the `oid` identifier. Only one object is expected
+        to be found.
 
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `AssertionError` if there is more than one object there
+        raise :exc:`ObjectNotFound` if not object with id <oid> in <registry>
+
+        raise :exc:`AssertionError` if there is more than one object there
         """
         objects = self[oid]
         assert len(objects) == 1, objects
@@ -156,8 +188,9 @@ class Registry(dict):
         """return the most specific object among those with the given oid
         according to the given context.
 
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `NoSelectableObject` if not object apply
+        raise :exc:`ObjectNotFound` if not object with id <oid> in <registry>
+
+        raise :exc:`NoSelectableObject` if not object apply
         """
         return self._select_best(self[oid], *args, **kwargs)
 
@@ -191,25 +224,25 @@ class Registry(dict):
         if len(args) > 1:
             warn('[3.5] only the request param can not be named when calling select*',
                  DeprecationWarning, stacklevel=3)
-        score, winners = 0, []
+        score, winners = 0, None
         for appobject in appobjects:
             appobjectscore = appobject.__select__(appobject, *args, **kwargs)
             if appobjectscore > score:
                 score, winners = appobjectscore, [appobject]
             elif appobjectscore > 0 and appobjectscore == score:
                 winners.append(appobject)
-        if not winners:
+        if winners is None:
             raise NoSelectableObject('args: %s\nkwargs: %s %s'
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
         if len(winners) > 1:
+            # log in production environement, error while debugging
             if self.config.debugmode:
-                self.error('select ambiguity, args: %s\nkwargs: %s %s',
-                           args, kwargs.keys(), [repr(v) for v in winners])
-            else:
                 raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
                                 % (args, kwargs.keys(),
                                    [repr(v) for v in winners]))
+            self.error('select ambiguity, args: %s\nkwargs: %s %s',
+                       args, kwargs.keys(), [repr(v) for v in winners])
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
 
@@ -225,8 +258,18 @@ class VRegistry(dict):
     def __init__(self, config):
         super(VRegistry, self).__init__()
         self.config = config
+        # need to clean sys.path this to avoid import confusion pb (i.e.  having
+        # the same module loaded as 'cubicweb.web.views' subpackage and as
+        # views' or 'web.views' subpackage. This is mainly for testing purpose,
+        # we should'nt need this in production environment
+        for webdir in (join(dirname(realpath(__file__)), 'web'),
+                       join(dirname(__file__), 'web')):
+            if webdir in sys.path:
+                sys.path.remove(webdir)
+        if CW_SOFTWARE_ROOT in sys.path:
+            sys.path.remove(CW_SOFTWARE_ROOT)
 
-    def reset(self, path=None, force_reload=None):
+    def reset(self):
         # don't use self.clear, we want to keep existing subdictionaries
         for subdict in self.itervalues():
             subdict.clear()
@@ -299,36 +342,66 @@ class VRegistry(dict):
 #         self[regname].pop(oid, None)
 
     def register_all(self, objects, modname, butclasses=()):
+        """register all `objects` given. Objects which are not from the module
+        `modname` or which are in `butclasses` won't be registered.
+
+        Typical usage is:
+
+        .. sourcecode:: python
+
+            vreg.register_all(globals().values(), __name__, (ClassIWantToRegisterExplicitly,))
+
+        So you get partially automatic registration, keeping manual registration
+        for some object (to use
+        :meth:`~cubicweb.cwvreg.CubicWebRegistry.register_and_replace` for
+        instance)
+        """
         for obj in objects:
             try:
                 if obj.__module__ != modname or obj in butclasses:
                     continue
                 oid = class_regid(obj)
-                registryname = obj.__registry__
             except AttributeError:
                 continue
             if oid and not '__abstract__' in obj.__dict__:
-                self.register(obj, registryname)
+                self.register(obj, oid=oid)
 
     def register(self, obj, registryname=None, oid=None, clear=False):
-        """base method to add an object in the registry"""
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified, with identifier `oid` or
+        `obj.__regid__` if not specified.
+
+        If `clear` is true, all objects with the same identifier will be
+        previously unregistered.
+        """
         assert not '__abstract__' in obj.__dict__
-        registryname = registryname or obj.__registry__
-        registry = self.setdefault(registryname)
-        registry.register(obj, oid=oid, clear=clear)
         try:
             vname = obj.__name__
         except AttributeError:
+            # XXX may occurs?
             vname = obj.__class__.__name__
-        self.debug('registered appobject %s in registry %s with id %s',
-                   vname, registryname, oid or class_regid(obj))
+        for registryname in class_registries(obj, registryname):
+            registry = self.setdefault(registryname)
+            registry.register(obj, oid=oid, clear=clear)
+            self.debug('registered appobject %s in registry %s with id %s',
+                       vname, registryname, oid or class_regid(obj))
         self._loadedmods[obj.__module__][classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
-        self[registryname or obj.__registry__].unregister(obj)
+        """unregister `obj` application object from the registry `registryname` or
+        `obj.__registry__` if not specified.
+        """
+        for registryname in class_registries(obj, registryname):
+            self[registryname].unregister(obj)
 
     def register_and_replace(self, obj, replaced, registryname=None):
-        self[registryname or obj.__registry__].register_and_replace(obj, replaced)
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified. If found, the `replaced` object
+        will be unregistered first (else a warning will be issued as it's
+        generally unexpected).
+        """
+        for registryname in class_registries(obj, registryname):
+            self[registryname].register_and_replace(obj, replaced)
 
     # initialization methods ###################################################
 
@@ -341,31 +414,44 @@ class VRegistry(dict):
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload, extrapath=None):
-        # need to clean sys.path this to avoid import confusion pb (i.e.
-        # having the same module loaded as 'cubicweb.web.views' subpackage and
-        # as views'  or 'web.views' subpackage
-        # this is mainly for testing purpose, we should'nt need this in
-        # production environment
-        for webdir in (join(dirname(realpath(__file__)), 'web'),
-                       join(dirname(__file__), 'web')):
-            if webdir in sys.path:
-                sys.path.remove(webdir)
-        if CW_SOFTWARE_ROOT in sys.path:
-            sys.path.remove(CW_SOFTWARE_ROOT)
+    def register_objects(self, path, force_reload=False, extrapath=None):
         # load views from each directory in the instance's path
         filemods = self.init_registration(path, extrapath)
-        change = False
         for filepath, modname in filemods:
-            if self.load_file(filepath, modname, force_reload):
-                change = True
-        if change:
-            self.initialization_completed()
-        return change
+            self.load_file(filepath, modname, force_reload)
+        self.initialization_completed()
 
     def initialization_completed(self):
         for regname, reg in self.iteritems():
             reg.initialization_completed()
+
+    def _mdate(self, filepath):
+        try:
+            return stat(filepath)[-2]
+        except OSError:
+            # this typically happens on emacs backup files (.#foo.py)
+            self.warning('Unable to load %s. It is likely to be a backup file',
+                         filepath)
+            return None
+
+    def is_reload_needed(self, path):
+        """return True if something module changed and the registry should be
+        reloaded
+        """
+        lastmodifs = self._lastmodifs
+        for fileordir in path:
+            if isdir(fileordir) and exists(join(fileordir, '__init__.py')):
+                if self.is_reload_needed([join(fileordir, fname)
+                                          for fname in listdir(fileordir)]):
+                    return True
+            elif fileordir[-3:] == '.py':
+                mdate = self._mdate(fileordir)
+                if mdate is None:
+                    continue # backup file, see _mdate implementation
+                if fileordir not in lastmodifs or lastmodifs[fileordir] < mdate:
+                    self.info('File %s changed since last visit', fileordir)
+                    return True
+        return False
 
     def load_file(self, filepath, modname, force_reload=False):
         """load app objects from a python file"""
@@ -373,28 +459,16 @@ class VRegistry(dict):
         if modname in self._loadedmods:
             return
         self._loadedmods[modname] = {}
-        try:
-            modified_on = stat(filepath)[-2]
-        except OSError:
-            # this typically happens on emacs backup files (.#foo.py)
-            self.warning('Unable to load %s. It is likely to be a backup file',
-                         filepath)
-            return False
-        if filepath in self._lastmodifs:
-            # only load file if it was modified
-            if modified_on <= self._lastmodifs[filepath]:
-                return
-            # if it was modified, raise RegistryOutOfDate to reload everything
-            self.info('File %s changed since last visit', filepath)
-            raise RegistryOutOfDate()
+        mdate = self._mdate(filepath)
+        if mdate is None:
+            return # backup file, see _mdate implementation
         # set update time before module loading, else we get some reloading
         # weirdness in case of syntax error or other error while importing the
         # module
-        self._lastmodifs[filepath] = modified_on
+        self._lastmodifs[filepath] = mdate
         # load the module
         module = load_module_from_name(modname, use_sys=not force_reload)
         self.load_module(module)
-        return True
 
     def load_module(self, module):
         self.info('loading %s', module)
@@ -437,7 +511,7 @@ class VRegistry(dict):
             self._load_ancestors_then_object(modname, parent)
         if (appobjectcls.__dict__.get('__abstract__')
             or appobjectcls.__name__[0] == '_'
-            or not appobjectcls.__registry__
+            or not appobjectcls.__registries__
             or not class_regid(appobjectcls)):
             return
         try:

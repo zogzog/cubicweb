@@ -1,14 +1,30 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """generic table view, including filtering abilities
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
-from simplejson import dumps
+try:
+    from json import dumps
+except ImportError:
+    from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 
@@ -23,6 +39,11 @@ from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):
+    """The table view accepts any non-empty rset. It uses
+    introspection on the result set to compute column names and the
+    proper way to display the cells.
+    It is however highly configurable and accepts a wealth of options.
+    """
     __regid__ = 'table'
     title = _('table')
     finalview = 'final'
@@ -50,29 +71,30 @@ class TableView(AnyRsetView):
 
     def _generate_form(self, divid, baserql, fwidgets, hidden=True, vidargs={}):
         """display a form to filter table's content. This should only
-        occurs when a context eid is given
+        occur when a context eid is given
         """
+        w = self.w
         self._cw.add_css('cubicweb.facets.css')
         self._cw.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
-        self.w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
-               xml_escape(dumps([divid, 'table', False, vidargs])))
-        self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
-        self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
-        self.w(u'<input type="hidden" name="fromformfilter" value="1" />')
-        filter_hiddens(self.w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
+        w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
+          xml_escape(dumps([divid, 'table', False, vidargs])))
+        w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
+        w(u'<input type="hidden" name="divid" value="%s" />' % divid)
+        w(u'<input type="hidden" name="fromformfilter" value="1" />')
+        filter_hiddens(w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
                        baserql=baserql)
-        self.w(u'<table class="filter">\n')
-        self.w(u'<tr>\n')
+        w(u'<table class="filter">\n')
+        w(u'<tr>\n')
         for wdg in fwidgets:
-            self.w(u'<td>')
-            wdg.render(w=self.w)
-            self.w(u'</td>\n')
-        self.w(u'</tr>\n')
-        self.w(u'</table>\n')
-        self.w(u'</fieldset>\n')
-        self.w(u'</form>\n')
+            w(u'<td>')
+            wdg.render(w=w)
+            w(u'</td>\n')
+        w(u'</tr>\n')
+        w(u'</table>\n')
+        w(u'</fieldset>\n')
+        w(u'</form>\n')
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL
@@ -98,7 +120,7 @@ class TableView(AnyRsetView):
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None, mainindex=None):
-        """Dumps a table displaying a composite query
+        """Produces a table displaying a composite query
 
         :param title: title added before table
         :param subvid: cell view

@@ -1,19 +1,31 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of tree-building widgets, based on jQuery treeview plugin
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
-
-import simplejson as json
 
 from logilab.mtconverter import xml_escape
 from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
+from cubicweb.web import json
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
@@ -46,8 +58,7 @@ class TreeView(EntityView):
         self._cw.add_css('jquery.treeview.css')
         self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
         self._cw.html_headers.add_onload(u"""
-jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
-                                         jsoncall=toplevel_thru_ajax)
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
     def call(self, subvid=None, treeid=None,
              initial_load=True, initial_thru_ajax=False, **morekwargs):

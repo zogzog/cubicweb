@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """common web configuration for twisted/modpython instances
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -113,29 +126,30 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'inputlevel': 2,
           }),
         ('http-session-time',
-         {'type' : 'int',
+         {'type' : 'time',
           'default': 0,
-          'help': 'duration in seconds for HTTP sessions. 0 mean no expiration. '\
-          'Should be greater than RQL server\'s session-time.',
+          'help': "duration of the cookie used to store session identifier. "
+          "If 0, the cookie will expire when the user exist its browser. "
+          "Should be 0 or greater than repository\'s session-time.",
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-session-time',
-         {'type' : 'int',
-          'default': 43200,
-          'help': 'duration in seconds for which unused connections should be '\
-          'closed, to limit memory consumption. This is different from '\
-          'http-session-time since in some cases you may have an unexpired http '\
-          'session (e.g. valid session cookie) which will trigger transparent '\
-          'creation of a new session. In other cases, sessions may never expire \
-          and cause memory leak. Should be smaller than http-session-time, '\
-          'unless it\'s 0. Default to 12 h.',
+         {'type' : 'time',
+          'default': '24h',
+          'help': 'duration of inactivity after which a connection '
+          'will be closed, to limit memory consumption (avoid sessions that '
+          'never expire and cause memory leak when http-session-time is 0). '
+          'So even if http-session-time is 0 and the user don\'t close his '
+          'browser, he will have to reauthenticate after this time of '
+          'inactivity. Default to 24h.',
           'group': 'web', 'inputlevel': 2,
           }),
         ('cleanup-anonymous-session-time',
-         {'type' : 'int',
-          'default': 120,
-          'help': 'Same as cleanup-session-time but specific to anonymous '\
-          'sessions. Default to 2 min.',
+         {'type' : 'time',
+          'default': '5min',
+          'help': 'Same as cleanup-session-time but specific to anonymous '
+          'sessions. You can have a much smaller timeout here since it will be '
+          'transparent to the user. Default to 5min.',
           'group': 'web', 'inputlevel': 2,
           }),
         ('force-html-content-type',
@@ -303,11 +317,13 @@ have the python imaging library installed to use captcha)',
         baseurl = self['base-url'] or self.default_base_url()
         if baseurl and baseurl[-1] != '/':
             baseurl += '/'
-        self.global_set_option('base-url', baseurl)
+        if not self.repairing:
+            self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
         if httpsurl and httpsurl[-1] != '/':
             httpsurl += '/'
-            self.global_set_option('https-url', httpsurl)
+            if not self.repairing:
+                self.global_set_option('https-url', httpsurl)
 
     def _build_ext_resources(self):
         libresourcesfile = join(self.shared_dir(), 'data', 'external_resources')
@@ -327,7 +343,6 @@ have the python imaging library installed to use captcha)',
             if isinstance(val, str):
                 files = [w.strip() for w in val.split(',') if w.strip()]
                 self.ext_resources[resource] = files
-
 
     # static files handling ###################################################
 

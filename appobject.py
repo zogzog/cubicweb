@@ -1,11 +1,33 @@
-"""Base class for dynamically loaded objects accessible through the vregistry.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+.. _appobject:
 
-You'll also find some convenience classes to build selectors.
+The `AppObject` class
+---------------------
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+The AppObject class is the base class for all dynamically loaded objects
+(application objects) accessible through the vregistry.
+
+We can find a certain number of attributes and methods defined in this class and
+common to all the application objects.
+
+.. autoclass:: AppObject
 """
 __docformat__ = "restructuredtext en"
 
@@ -14,18 +36,23 @@ from logging import getLogger
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
+from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
 
 
 # selector base classes and operations ########################################
 
 def objectify_selector(selector_func):
-    """convenience decorator for simple selectors where a class definition
-    would be overkill::
+    """Most of the time, a simple score function is enough to build a selector.
+    The :func:`objectify_selector` decorator turn it into a proper selector
+    class::
 
         @objectify_selector
-        def one(cls, *args, **kwargs):
+        def one(cls, req, rset=None, **kwargs):
             return 1
+
+        class MyView(View):
+            __select__ = View.__select__ & one()
 
     """
     return type(selector_func.__name__, (Selector,),
@@ -48,7 +75,7 @@ def _instantiate_selector(selector):
 
 class Selector(object):
     """base class for selector classes providing implementation
-    for operators ``&`` and ``|``
+    for operators ``&``, ``|`` and  ``~``
 
     This class is only here to give access to binary operators, the
     selector logic itself should be implemented in the __call__ method
@@ -204,46 +231,87 @@ class AppObject(object):
     selected according to a context (usually at least a request and a result
     set).
 
-    Concrete application objects classes are designed to be loaded by the
-    vregistry and should be accessed through it, not by direct instantiation.
-
     The following attributes should be set on concret appobject classes:
-    :__registry__:
+
+    :attr:`__registry__`
       name of the registry for this object (string like 'views',
       'templates'...)
-    :__regid__:
+
+    :attr:`__regid__`
       object's identifier in the registry (string like 'main',
       'primary', 'folder_box')
-    :__select__:
+
+    :attr:`__select__`
       class'selector
 
-    Moreover, the `__abstract__` attribute may be set to True to indicate
-    that a appobject is abstract and should not be registered.
+    Moreover, the `__abstract__` attribute may be set to True to indicate that a
+    class is abstract and should not be registered.
 
     At selection time, the following attributes are set on the instance:
 
-    :_cw:
+    :attr:`_cw`
       current request
-    :cw_extra_kwargs:
+    :attr:`cw_extra_kwargs`
       other received arguments
 
-    only if rset is found in arguments (in which case rset/row/col will be
-    removed from cwextra_kwargs):
+    And also the following, only if `rset` is found in arguments (in which case
+    rset/row/col will be removed from `cwextra_kwargs`):
 
-    :cw_rset:
+    :attr:`cw_rset`
       context result set or None
-    :cw_row:
+
+    :attr:`cw_row`
       if a result set is set and the context is about a particular cell in the
       result set, and not the result set as a whole, specify the row number we
       are interested in, else None
-    :cw_col:
+
+    :attr:`cw_col`
       if a result set is set and the context is about a particular cell in the
       result set, and not the result set as a whole, specify the col number we
       are interested in, else None
+
+
+    .. Note::
+
+      * do not inherit directly from this class but from a more specific class
+        such as `AnyEntity`, `EntityView`, `AnyRsetView`, `Action`...
+
+      * to be recordable, a subclass has to define its registry (attribute
+        `__registry__`) and its identifier (attribute `__regid__`). Usually
+        you don't have to take care of the registry since it's set by the base
+        class, only the identifier `id`
+
+      * application objects are designed to be loaded by the vregistry and
+        should be accessed through it, not by direct instantiation, besides
+        to use it as base classe.
+
+
+      * When we inherit from `AppObject` (even not directly), you *always* have
+        to use **super()** to get the methods and attributes of the superclasses,
+        and not use the class identifier.
+
+        For example, instead of writting::
+
+          class Truc(PrimaryView):
+              def f(self, arg1):
+                  PrimaryView.f(self, arg1)
+
+        You must write::
+
+          class Truc(PrimaryView):
+              def f(self, arg1):
+                  super(Truc, self).f(arg1)
+
     """
     __registry__ = None
     __regid__ = None
     __select__ = yes()
+
+    @classproperty
+    def __registries__(cls):
+        if cls.__registry__ is None:
+            return ()
+        return (cls.__registry__,)
 
     @classmethod
     def __registered__(cls, registry):
@@ -258,7 +326,7 @@ class AppObject(object):
         except AttributeError:
             pdefs = getattr(cls, 'cw_property_defs', {})
         else:
-            warn('property_defs is deprecated, use cw_property_defs in %s'
+            warn('[3.6] property_defs is deprecated, use cw_property_defs in %s'
                  % cls, DeprecationWarning)
         for propid, pdef in pdefs.items():
             pdef = pdef.copy() # may be shared

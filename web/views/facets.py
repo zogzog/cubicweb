@@ -1,19 +1,31 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """the facets box and some basic facets
 
-:organization: Logilab
-:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
-
-from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
+from cubicweb.web import dumps
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
@@ -69,7 +81,7 @@ class FilterBox(BoxTemplate):
         rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
-        rqlst = self.cw_rset.syntax_tree()
+        rqlst = rset.syntax_tree()
         # union not yet supported
         if len(rqlst.children) != 1:
             return ()
@@ -105,7 +117,10 @@ class FilterBox(BoxTemplate):
     def display_bookmark_link(self, rset):
         eschema = self._cw.vreg.schema.eschema('Bookmark')
         if eschema.has_perm(self._cw, 'add'):
-            bk_path = 'view?rql=%s' % rset.printable_rql()
+            bk_path = 'rql=%s' % self._cw.url_quote(rset.printable_rql())
+            if self._cw.form.get('vid'):
+                bk_path += '&vid=%s' % self._cw.url_quote(self._cw.form['vid'])
+            bk_path = 'view?' + bk_path
             bk_title = self._cw._('my custom search')
             linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
             bk_add_url = self._cw.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)

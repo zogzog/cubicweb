@@ -1,11 +1,24 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """the cubicweb-ctl tool, based on logilab.common.clcommands to
 provide a pluggable commands system.
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -232,9 +245,11 @@ class ConfigurationProblem(object):
                 if not isinstance(use, dict):
                     use = dict((key, None) for key in use)
                     self.warnings.append('cube %s should define __depends_cubes__ as a dict not a list')
-            else:
+            elif hasattr(info, '__use__'):
                 self.warnings.append('cube %s should define __depends_cubes__' % cube)
                 use = dict((key, None) for key in info.__use__)
+            else:
+                continue
             for name, constraint in use.items():
                 self.constraints.setdefault(name,set())
                 if constraint:
@@ -383,7 +398,6 @@ repository and the web server.',
         cubes = splitstrip(pop_arg(args, 1))
         appid = pop_arg(args)
         # get the configuration and helper
-        cwcfg.creating = True
         config = cwcfg.config_for(appid, configname)
         config.set_language = False
         cubes = config.expand_cubes(cubes)
@@ -797,7 +811,7 @@ given, appropriate sources for migration will be automatically selected \
         # handle i18n upgrade:
         # * install new languages
         # * recompile catalogs
-        # in the first componant given
+        # XXX search available language in the first cube given
         from cubicweb import i18n
         templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
@@ -812,7 +826,12 @@ given, appropriate sources for migration will be automatically selected \
         print
         print '-> instance migrated.'
         if not (CWDEV or self.config.nostartstop):
-            StartInstanceCommand().start_instance(appid)
+            # restart instance through fork to get a proper environment, avoid
+            # uicfg pb (and probably gettext catalogs, to check...)
+            forkcmd = '%s start %s' % (sys.argv[0], appid)
+            status = system(forkcmd)
+            if status:
+                print '%s exited with status %s' % (forkcmd, status)
         print
 
 
@@ -932,20 +951,11 @@ class RecompileInstanceCatalogsCommand(InstanceCommand):
     def i18ninstance_instance(appid):
         """recompile instance's messages catalogs"""
         config = cwcfg.config_for(appid)
-        try:
-            config.bootstrap_cubes()
-        except IOError, ex:
-            import errno
-            if ex.errno != errno.ENOENT:
-                raise
-            # bootstrap_cubes files doesn't exist
-            # notify this is not a regular start
-            config.repairing = True
-            # create an in-memory repository, will call config.init_cubes()
-            config.repository()
-        except AttributeError:
+        config.quick_start = True # notify this is not a regular start
+        repo = config.repository()
+        if config._cubes is None:
             # web only config
-            config.init_cubes(config.repository().get_cubes())
+            config.init_cubes(repo.get_cubes())
         errors = config.i18ncompile()
         if errors:
             print '\n'.join(errors)

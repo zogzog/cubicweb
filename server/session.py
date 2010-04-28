@@ -1,27 +1,52 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Repository users' and internal' sessions.
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
 import threading
 from time import time
+from uuid import uuid4
 
 from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid
+from cubicweb import Binary, UnknownEid, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
+
+NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
+NO_UNDO_TYPES.add('CWCache')
+# is / is_instance_of are usually added by sql hooks except when using
+# dataimport.NoHookRQLObjectStore, and we don't want to record them
+# anyway in the later case
+NO_UNDO_TYPES.add('is')
+NO_UNDO_TYPES.add('is_instance_of')
+# XXX rememberme,forgotpwd,apycot,vcsfile
 
 def is_final(rqlst, variable, args):
     # try to find if this is a final var or not
@@ -42,10 +67,73 @@ def _make_description(selected, args, solution):
     return description
 
 
+class hooks_control(object):
+    """context manager to control activated hooks categories.
+
+    If mode is session.`HOOKS_DENY_ALL`, given hooks categories will
+    be enabled.
+
+    If mode is session.`HOOKS_ALLOW_ALL`, given hooks categories will
+    be disabled.
+    """
+    def __init__(self, session, mode, *categories):
+        self.session = session
+        self.mode = mode
+        self.categories = categories
+
+    def __enter__(self):
+        self.oldmode = self.session.set_hooks_mode(self.mode)
+        if self.mode is self.session.HOOKS_DENY_ALL:
+            self.changes = self.session.enable_hook_categories(*self.categories)
+        else:
+            self.changes = self.session.disable_hook_categories(*self.categories)
+
+    def __exit__(self, exctype, exc, traceback):
+        if self.changes:
+            if self.mode is self.session.HOOKS_DENY_ALL:
+                self.session.disable_hook_categories(*self.changes)
+            else:
+                self.session.enable_hook_categories(*self.changes)
+        self.session.set_hooks_mode(self.oldmode)
+
+INDENT = ''
+class security_enabled(object):
+    """context manager to control security w/ session.execute, since by
+    default security is disabled on queries executed on the repository
+    side.
+    """
+    def __init__(self, session, read=None, write=None):
+        self.session = session
+        self.read = read
+        self.write = write
+
+    def __enter__(self):
+#        global INDENT
+        if self.read is not None:
+            self.oldread = self.session.set_read_security(self.read)
+#            print INDENT + 'read', self.read, self.oldread
+        if self.write is not None:
+            self.oldwrite = self.session.set_write_security(self.write)
+#            print INDENT + 'write', self.write, self.oldwrite
+#        INDENT += '  '
+
+    def __exit__(self, exctype, exc, traceback):
+#        global INDENT
+#        INDENT = INDENT[:-2]
+        if self.read is not None:
+            self.session.set_read_security(self.oldread)
+#            print INDENT + 'reset read to', self.oldread
+        if self.write is not None:
+            self.session.set_write_security(self.oldwrite)
+#            print INDENT + 'reset write to', self.oldwrite
+
+
+
 class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
     together
     """
+    is_internal_session = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
@@ -56,9 +144,14 @@ class Session(RequestSessionBase):
         self.cnxtype = cnxprops.cnxtype
         self.creation = time()
         self.timestamp = self.creation
-        self.is_internal_session = False
-        self.is_super_session = False
         self.default_mode = 'read'
+        # support undo for Create Update Delete entity / Add Remove relation
+        if repo.config.creating or repo.config.repairing or self.is_internal_session:
+            self.undo_actions = ()
+        else:
+            self.undo_actions = set(repo.config['undo-support'].upper())
+            if self.undo_actions - set('CUDAR'):
+                raise Exception('bad undo-support string in configuration')
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -78,18 +171,16 @@ class Session(RequestSessionBase):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        session._threaddata = self.actual_session()._threaddata
+        threaddata = session._threaddata
+        threaddata.pool = self.pool
+        # share pending_operations, else operation added in the hi-jacked
+        # session such as SendMailOp won't ever be processed
+        threaddata.pending_operations = self.pending_operations
+        # everything in transaction_data should be copied back but the entity
+        # type cache we don't want to avoid security pb
+        threaddata.transaction_data = self.transaction_data.copy()
+        threaddata.transaction_data.pop('ecache', None)
         return session
-
-    def _super_call(self, __cb, *args, **kwargs):
-        if self.is_super_session:
-            __cb(self, *args, **kwargs)
-            return
-        self.is_super_session = True
-        try:
-            __cb(self, *args, **kwargs)
-        finally:
-            self.is_super_session = False
 
     def add_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to add a relation.
@@ -102,14 +193,13 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
-        if self.vreg.schema[rtype].inlined:
-            entity = self.entity_from_eid(fromeid)
-            entity[rtype] = toeid
-            self._super_call(self.repo.glob_update_entity,
-                             entity, set((rtype,)))
-        else:
-            self._super_call(self.repo.glob_add_relation,
-                             fromeid, rtype, toeid)
+        with security_enabled(self, False, False):
+            if self.vreg.schema[rtype].inlined:
+                entity = self.entity_from_eid(fromeid)
+                entity[rtype] = toeid
+                self.repo.glob_update_entity(self, entity, set((rtype,)))
+            else:
+                self.repo.glob_add_relation(self, fromeid, rtype, toeid)
 
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.
@@ -122,14 +212,13 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to delete.
         """
-        if self.vreg.schema[rtype].inlined:
-            entity = self.entity_from_eid(fromeid)
-            entity[rtype] = None
-            self._super_call(self.repo.glob_update_entity,
-                             entity, set((rtype,)))
-        else:
-            self._super_call(self.repo.glob_delete_relation,
-                             fromeid, rtype, toeid)
+        with security_enabled(self, False, False):
+            if self.vreg.schema[rtype].inlined:
+                entity = self.entity_from_eid(fromeid)
+                entity[rtype] = None
+                self.repo.glob_update_entity(self, entity, set((rtype,)))
+            else:
+                self.repo.glob_delete_relation(self, fromeid, rtype, toeid)
 
     # relations cache handling #################################################
 
@@ -198,16 +287,17 @@ class Session(RequestSessionBase):
 
     # resource accessors ######################################################
 
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
-        if not sql.split(None, 1)[0].upper() == 'SELECT':
+        if sql.split(None, 1)[0].upper() != 'SELECT':
             self.mode = 'write'
-        return self.pool.source('system').doexec(self, sql, args,
-                                                 rollback=rollback_on_failure)
+        source = self.pool.source('system')
+        try:
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+        except (source.OperationalError, source.InterfaceError):
+            source.warning("trying to reconnect")
+            self.pool.reconnect(self)
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
     def set_language(self, language):
         """i18n configuration for translation"""
@@ -250,6 +340,165 @@ class Session(RequestSessionBase):
         objtype = self.describe(eidto)[0]
         rdef = rschema.rdef(subjtype, objtype)
         return rdef.get(rprop)
+
+    # security control #########################################################
+
+    DEFAULT_SECURITY = object() # evaluated to true by design
+
+    @property
+    def read_security(self):
+        """return a boolean telling if read security is activated or not"""
+        try:
+            return self._threaddata.read_security
+        except AttributeError:
+            self._threaddata.read_security = self.DEFAULT_SECURITY
+            return self._threaddata.read_security
+
+    def set_read_security(self, activated):
+        """[de]activate read security, returning the previous value set for
+        later restoration.
+
+        you should usually use the `security_enabled` context manager instead
+        of this to change security settings.
+        """
+        oldmode = self.read_security
+        self._threaddata.read_security = activated
+        # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
+        # issued on the session). This is tricky since we the execution model of
+        # a (write) user query is:
+        #
+        # repository.execute (security enabled)
+        #  \-> querier.execute
+        #       \-> repo.glob_xxx (add/update/delete entity/relation)
+        #            \-> deactivate security before calling hooks
+        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
+        #                      \-> potentially, other calls to querier.execute
+        #
+        # so we can't rely on simply checking session.read_security, but
+        # recalling the first transition from DEFAULT_SECURITY to something
+        # else (False actually) is not perfect but should be enough
+        #
+        # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
+        self._threaddata.dbapi_query = (oldmode is self.DEFAULT_SECURITY
+                                        or activated is self.DEFAULT_SECURITY)
+        return oldmode
+
+    @property
+    def write_security(self):
+        """return a boolean telling if write security is activated or not"""
+        try:
+            return self._threaddata.write_security
+        except:
+            self._threaddata.write_security = self.DEFAULT_SECURITY
+            return self._threaddata.write_security
+
+    def set_write_security(self, activated):
+        """[de]activate write security, returning the previous value set for
+        later restoration.
+
+        you should usually use the `security_enabled` context manager instead
+        of this to change security settings.
+        """
+        oldmode = self.write_security
+        self._threaddata.write_security = activated
+        return oldmode
+
+    @property
+    def running_dbapi_query(self):
+        """return a boolean telling if it's triggered by a db-api query or by
+        a session query.
+
+        To be used in hooks, else may have a wrong value.
+        """
+        return getattr(self._threaddata, 'dbapi_query', True)
+
+    # hooks activation control #################################################
+    # all hooks should be activated during normal execution
+
+    HOOKS_ALLOW_ALL = object()
+    HOOKS_DENY_ALL = object()
+
+    @property
+    def hooks_mode(self):
+        return getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+
+    def set_hooks_mode(self, mode):
+        assert mode is self.HOOKS_ALLOW_ALL or mode is self.HOOKS_DENY_ALL
+        oldmode = getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+        self._threaddata.hooks_mode = mode
+        return oldmode
+
+    @property
+    def disabled_hook_categories(self):
+        try:
+            return getattr(self._threaddata, 'disabled_hook_cats')
+        except AttributeError:
+            cats = self._threaddata.disabled_hook_cats = set()
+            return cats
+
+    @property
+    def enabled_hook_categories(self):
+        try:
+            return getattr(self._threaddata, 'enabled_hook_cats')
+        except AttributeError:
+            cats = self._threaddata.enabled_hook_cats = set()
+            return cats
+
+    def disable_hook_categories(self, *categories):
+        """disable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
+        """
+        changes = set()
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            enablecats = self.enabled_hook_categories
+            for category in categories:
+                if category in enablecats:
+                    enablecats.remove(category)
+                    changes.add(category)
+        else:
+            disablecats = self.disabled_hook_categories
+            for category in categories:
+                if category not in disablecats:
+                    disablecats.add(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def enable_hook_categories(self, *categories):
+        """enable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
+        """
+        changes = set()
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            enablecats = self.enabled_hook_categories
+            for category in categories:
+                if category not in enablecats:
+                    enablecats.add(category)
+                    changes.add(category)
+        else:
+            disablecats = self.disabled_hook_categories
+            for category in categories:
+                if category in self.disabled_hook_categories:
+                    disablecats.remove(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def is_hook_category_activated(self, category):
+        """return a boolean telling if the given category is currently activated
+        or not
+        """
+        if self.hooks_mode is self.HOOKS_DENY_ALL:
+            return category in self.enabled_hook_categories
+        return category not in self.disabled_hook_categories
+
+    def is_hook_activated(self, hook):
+        """return a boolean telling if the given hook class is currently
+        activated or not
+        """
+        return self.is_hook_category_activated(hook.category)
 
     # connection management ###################################################
 
@@ -327,7 +576,7 @@ class Session(RequestSessionBase):
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
-        self.local_perm_cache.clear()
+        self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
         self._threaddata.mode = self.default_mode
 
     # shared data handling ###################################################
@@ -365,10 +614,7 @@ class Session(RequestSessionBase):
             ecache[entity.eid] = entity
 
     def entity_cache(self, eid):
-        try:
-            return self.transaction_data['ecache'][eid]
-        except:
-            raise
+        return self.transaction_data['ecache'][eid]
 
     def cached_entities(self):
         return self.transaction_data.get('ecache', {}).values()
@@ -408,46 +654,11 @@ class Session(RequestSessionBase):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
 
-    def decorate_rset(self, rset, propagate=False):
-        rset.vreg = self.vreg
-        rset.req = propagate and self or self.actual_session()
-        return rset
-
-    @property
-    def super_session(self):
-        try:
-            csession = self.childsession
-        except AttributeError:
-            if isinstance(self, (ChildSession, InternalSession)):
-                csession = self
-            else:
-                csession = ChildSession(self)
-            self.childsession = csession
-        # need shared pool set
-        self.set_pool(checkclosed=False)
-        return csession
-
-    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                       propagate=False):
-        """like .execute but with security checking disabled (this method is
-        internal to the server, it's not part of the db-api)
-
-        if `propagate` is true, the super_session will be attached to the result
-        set instead of the parent session, hence further query done through
-        entities fetched from this result set will bypass security as well
-        """
-        return self.super_session.execute(rql, kwargs, eid_key, build_descr,
-                                          propagate)
-
-    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                propagate=False):
-        """db-api like method directly linked to the querier execute method
-
-        Becare that unlike actual cursor.execute, `build_descr` default to
-        false
-        """
+    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+        """db-api like method directly linked to the querier execute method"""
         rset = self._execute(self, rql, kwargs, eid_key, build_descr)
-        return self.decorate_rset(rset, propagate)
+        rset.req = self
+        return rset
 
     def _clear_thread_data(self):
         """remove everything from the thread local storage, except pool
@@ -472,58 +683,61 @@ class Session(RequestSessionBase):
             return
         if self.commit_state:
             return
-        # on rollback, an operation should have the following state
-        # information:
-        # - processed by the precommit/commit event or not
-        # - if processed, is it the failed operation
-        try:
-            for trstate in ('precommit', 'commit'):
-                processed = []
-                self.commit_state = trstate
-                try:
-                    while self.pending_operations:
-                        operation = self.pending_operations.pop(0)
-                        operation.processed = trstate
-                        processed.append(operation)
+        # by default, operations are executed with security turned off
+        with security_enabled(self, False, False):
+            # on rollback, an operation should have the following state
+            # information:
+            # - processed by the precommit/commit event or not
+            # - if processed, is it the failed operation
+            try:
+                for trstate in ('precommit', 'commit'):
+                    processed = []
+                    self.commit_state = trstate
+                    try:
+                        while self.pending_operations:
+                            operation = self.pending_operations.pop(0)
+                            operation.processed = trstate
+                            processed.append(operation)
+                            operation.handle_event('%s_event' % trstate)
+                        self.pending_operations[:] = processed
+                        self.debug('%s session %s done', trstate, self.id)
+                    except:
+                        self.exception('error while %sing', trstate)
+                        # if error on [pre]commit:
+                        #
+                        # * set .failed = True on the operation causing the failure
+                        # * call revert<event>_event on processed operations
+                        # * call rollback_event on *all* operations
+                        #
+                        # that seems more natural than not calling rollback_event
+                        # for processed operations, and allow generic rollback
+                        # instead of having to implements rollback, revertprecommit
+                        # and revertcommit, that will be enough in mont case.
+                        operation.failed = True
+                        for operation in processed:
+                            operation.handle_event('revert%s_event' % trstate)
+                        # XXX use slice notation since self.pending_operations is a
+                        # read-only property.
+                        self.pending_operations[:] = processed + self.pending_operations
+                        self.rollback(reset_pool)
+                        raise
+                self.pool.commit()
+                self.commit_state = trstate = 'postcommit'
+                while self.pending_operations:
+                    operation = self.pending_operations.pop(0)
+                    operation.processed = trstate
+                    try:
                         operation.handle_event('%s_event' % trstate)
-                    self.pending_operations[:] = processed
-                    self.debug('%s session %s done', trstate, self.id)
-                except:
-                    self.exception('error while %sing', trstate)
-                    # if error on [pre]commit:
-                    #
-                    # * set .failed = True on the operation causing the failure
-                    # * call revert<event>_event on processed operations
-                    # * call rollback_event on *all* operations
-                    #
-                    # that seems more natural than not calling rollback_event
-                    # for processed operations, and allow generic rollback
-                    # instead of having to implements rollback, revertprecommit
-                    # and revertcommit, that will be enough in mont case.
-                    operation.failed = True
-                    for operation in processed:
-                        operation.handle_event('revert%s_event' % trstate)
-                    # XXX use slice notation since self.pending_operations is a
-                    # read-only property.
-                    self.pending_operations[:] = processed + self.pending_operations
-                    self.rollback(reset_pool)
-                    raise
-            self.pool.commit()
-            self.commit_state = trstate = 'postcommit'
-            while self.pending_operations:
-                operation = self.pending_operations.pop(0)
-                operation.processed = trstate
-                try:
-                    operation.handle_event('%s_event' % trstate)
-                except:
-                    self.critical('error while %sing', trstate,
-                                  exc_info=sys.exc_info())
-            self.info('%s session %s done', trstate, self.id)
-        finally:
-            self._clear_thread_data()
-            self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
+                    except:
+                        self.critical('error while %sing', trstate,
+                                      exc_info=sys.exc_info())
+                self.info('%s session %s done', trstate, self.id)
+                return self.transaction_uuid(set=False)
+            finally:
+                self._clear_thread_data()
+                self._touch()
+                if reset_pool:
+                    self.reset_pool(ignoremode=True)
 
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
@@ -533,21 +747,23 @@ class Session(RequestSessionBase):
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
             return
-        try:
-            while self.pending_operations:
-                try:
-                    operation = self.pending_operations.pop(0)
-                    operation.handle_event('rollback_event')
-                except:
-                    self.critical('rollback error', exc_info=sys.exc_info())
-                    continue
-            self.pool.rollback()
-            self.debug('rollback for session %s done', self.id)
-        finally:
-            self._clear_thread_data()
-            self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
+        # by default, operations are executed with security turned off
+        with security_enabled(self, False, False):
+            try:
+                while self.pending_operations:
+                    try:
+                        operation = self.pending_operations.pop(0)
+                        operation.handle_event('rollback_event')
+                    except:
+                        self.critical('rollback error', exc_info=sys.exc_info())
+                        continue
+                self.pool.rollback()
+                self.debug('rollback for session %s done', self.id)
+            finally:
+                self._clear_thread_data()
+                self._touch()
+                if reset_pool:
+                    self.reset_pool(ignoremode=True)
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
@@ -592,10 +808,31 @@ class Session(RequestSessionBase):
     def add_operation(self, operation, index=None):
         """add an observer"""
         assert self.commit_state != 'commit'
-        if index is not None:
-            self.pending_operations.insert(index, operation)
-        else:
+        if index is None:
             self.pending_operations.append(operation)
+        else:
+            self.pending_operations.insert(index, operation)
+
+    # undo support ############################################################
+
+    def undoable_action(self, action, ertype):
+        return action in self.undo_actions and not ertype in NO_UNDO_TYPES
+        # XXX elif transaction on mark it partial
+
+    def transaction_uuid(self, set=True):
+        try:
+            return self.transaction_data['tx_uuid']
+        except KeyError:
+            if not set:
+                return
+            self.transaction_data['tx_uuid'] = uuid = uuid4().hex
+            self.repo.system_source.start_undoable_transaction(self, uuid)
+            return uuid
+
+    def transaction_inc_action_counter(self):
+        num = self.transaction_data.setdefault('tx_action_count', 0) + 1
+        self.transaction_data['tx_action_count'] = num
+        return num
 
     # querier helpers #########################################################
 
@@ -615,7 +852,7 @@ class Session(RequestSessionBase):
             selected = rqlst.children[0].selection
             solution = rqlst.children[0].solutions[0]
             description = _make_description(selected, args, solution)
-            return [tuple(description)] * len(result)
+            return RepeatList(len(result), tuple(description))
         # hard, delegate the work :o)
         return self.manual_build_descr(rqlst, args, result)
 
@@ -644,7 +881,7 @@ class Session(RequestSessionBase):
                 etype = rqlst.children[0].solutions[0]
                 basedescription.append(term.get_type(etype, args))
         if not todetermine:
-            return [tuple(basedescription)] * len(result)
+            return RepeatList(len(result), tuple(basedescription))
         return self._build_descr(result, basedescription, todetermine)
 
     def _build_descr(self, result, basedescription, todetermine):
@@ -670,6 +907,28 @@ class Session(RequestSessionBase):
         return description
 
     # deprecated ###############################################################
+
+    @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
+                " can also control security with the security_enabled context "
+                "manager")
+    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
+                       propagate=False):
+        """like .execute but with security checking disabled (this method is
+        internal to the server, it's not part of the db-api)
+        """
+        with security_enabled(self, read=False, write=False):
+            return self.execute(rql, kwargs, eid_key, build_descr)
+
+    @property
+    @deprecated("[3.7] is_super_session is deprecated, test "
+                "session.read_security and or session.write_security")
+    def is_super_session(self):
+        return not self.read_security or not self.write_security
+
+    @deprecated("[3.7] session is actual session")
+    def actual_session(self):
+        """return the original parent session if any, else self"""
+        return self
 
     @property
     @deprecated("[3.6] use session.vreg.schema")
@@ -697,98 +956,17 @@ class Session(RequestSessionBase):
         return self.entity_from_eid(eid)
 
 
-class ChildSession(Session):
-    """child (or internal) session are used to hijack the security system
-    """
-    cnxtype = 'inmemory'
-
-    def __init__(self, parent_session):
-        self.id = None
-        self.is_internal_session = False
-        self.is_super_session = True
-        # session which has created this one
-        self.parent_session = parent_session
-        self.user = InternalManager()
-        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
-        self.repo = parent_session.repo
-        self.vreg = parent_session.vreg
-        self.data = parent_session.data
-        self.encoding = parent_session.encoding
-        self.lang = parent_session.lang
-        self._ = self.__ = parent_session._
-        # short cut to querier .execute method
-        self._execute = self.repo.querier.execute
-
-    @property
-    def super_session(self):
-        return self
-
-    def get_mode(self):
-        return self.parent_session.mode
-    def set_mode(self, value):
-        self.parent_session.set_mode(value)
-    mode = property(get_mode, set_mode)
-
-    def get_commit_state(self):
-        return self.parent_session.commit_state
-    def set_commit_state(self, value):
-        self.parent_session.set_commit_state(value)
-    commit_state = property(get_commit_state, set_commit_state)
-
-    @property
-    def pool(self):
-        return self.parent_session.pool
-    @property
-    def pending_operations(self):
-        return self.parent_session.pending_operations
-    @property
-    def transaction_data(self):
-        return self.parent_session.transaction_data
-
-    def set_pool(self):
-        """the session need a pool to execute some queries"""
-        self.parent_session.set_pool()
-
-    def reset_pool(self):
-        """the session has no longer using its pool, at least for some time
-        """
-        self.parent_session.reset_pool()
-
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self.parent_session
-
-    def commit(self, reset_pool=True):
-        """commit the current session's transaction"""
-        self.parent_session.commit(reset_pool)
-
-    def rollback(self, reset_pool=True):
-        """rollback the current session's transaction"""
-        self.parent_session.rollback(reset_pool)
-
-    def close(self):
-        """do not close pool on session close, since they are shared now"""
-        self.parent_session.close()
-
-    def user_data(self):
-        """returns a dictionnary with this user's information"""
-        return self.parent_session.user_data()
-
-
 class InternalSession(Session):
     """special session created internaly by the repository"""
+    is_internal_session = True
+    running_dbapi_query = False
 
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
-        self.is_internal_session = True
-        self.is_super_session = True
-
-    @property
-    def super_session(self):
-        return self
+        self.disable_hook_categories('integrity')
 
 
 class InternalManager(object):

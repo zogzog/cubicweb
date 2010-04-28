@@ -1,44 +1,195 @@
-"""This file contains some basic selectors required by application objects.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+""".. _Selectors:
 
-A selector is responsible to score how well an object may be used with a
-given context by returning a score.
+Selectors
+---------
 
-In CubicWeb Usually the context consists for a request object, a result set
-or None, a specific row/col in the result set, etc...
+Using and combining existant selectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can combine selectors using the `&`, `|` and `~` operators.
+
+When two selectors are combined using the `&` operator, it means that
+both should return a positive score. On success, the sum of scores is
+returned.
+
+When two selectors are combined using the `|` operator, it means that
+one of them should return a positive score. On success, the first
+positive score is returned.
+
+You can also "negate" a selector by precedeing it by the `~` unary operator.
+
+Of course you can use parenthesis to balance expressions.
+
+Example
+~~~~~~~
+
+The goal: when on a blog, one wants the RSS link to refer to blog entries, not to
+the blog entity itself.
+
+To do that, one defines a method on entity classes that returns the
+RSS stream url for a given entity. The default implementation on
+:class:`~cubicweb.entities.AnyEntity` (the generic entity class used
+as base for all others) and a specific implementation on `Blog` will
+do what we want.
+
+But when we have a result set containing several `Blog` entities (or
+different entities), we don't know on which entity to call the
+aforementioned method. In this case, we keep the generic behaviour.
+
+Hence we have two cases here, one for a single-entity rsets, the other for
+multi-entities rsets.
+
+In web/views/boxes.py lies the RSSIconBox class. Look at its selector:
+
+.. sourcecode:: python
+
+  class RSSIconBox(ExtResourcesBoxTemplate):
+    ''' just display the RSS icon on uniform result set '''
+    __select__ = ExtResourcesBoxTemplate.__select__ & non_final_entity()
+
+It takes into account:
+
+* the inherited selection criteria (one has to look them up in the class
+  hierarchy to know the details)
+
+* :class:`~cubicweb.selectors.non_final_entity`, which filters on result sets
+  containing non final entities (a 'final entity' being synonym for entity
+  attributes type, eg `String`, `Int`, etc)
+
+This matches our second case. Hence we have to provide a specific component for
+the first case:
+
+.. sourcecode:: python
+
+  class EntityRSSIconBox(RSSIconBox):
+    '''just display the RSS icon on uniform result set for a single entity'''
+    __select__ = RSSIconBox.__select__ & one_line_rset()
+
+Here, one adds the :class:`~cubicweb.selectors.one_line_rset` selector, which
+filters result sets of size 1. Thus, on a result set containing multiple
+entities, :class:`one_line_rset` makes the EntityRSSIconBox class non
+selectable. However for a result set with one entity, the `EntityRSSIconBox`
+class will have a higher score than `RSSIconBox`, which is what we wanted.
+
+Of course, once this is done, you have to:
+
+* fill in the call method of `EntityRSSIconBox`
+
+* provide the default implementation of the method returning the RSS stream url
+  on :class:`~cubicweb.entities.AnyEntity`
+
+* redefine this method on `Blog`.
 
 
-If you have trouble with selectors, especially if the objet (typically
-a view or a component) you want to use is not selected and you want to
-know which one(s) of its selectors fail (e.g. returns 0), you can use
-`traced_selection` or even direclty `TRACED_OIDS`.
+When to use selectors?
+~~~~~~~~~~~~~~~~~~~~~~
 
-`TRACED_OIDS` is a tuple of traced object ids. The special value
-'all' may be used to log selectors for all objects.
+Selectors are to be used whenever arises the need of dispatching on the shape or
+content of a result set or whatever else context (value in request form params,
+authenticated user groups, etc...). That is, almost all the time.
 
-For instance, say that the following code yields a `NoSelectableObject`
-exception::
+Here is a quick example:
 
-    self.view('calendar', myrset)
+.. sourcecode:: python
 
-You can log the selectors involved for *calendar* by replacing the line
-above by::
+    class UserLink(component.Component):
+	'''if the user is the anonymous user, build a link to login else a link
+	to the connected user object with a loggout link
+	'''
+	__regid__ = 'loggeduserlink'
 
-    # in Python2.5
-    from cubicweb.selectors import traced_selection
-    with traced_selection():
-        self.view('calendar', myrset)
+	def call(self):
+	    if self._cw.cnx.anonymous_connection:
+		# display login link
+		...
+	    else:
+		# display a link to the connected user object with a loggout link
+		...
 
-    # in Python2.4
-    from cubicweb import selectors
-    selectors.TRACED_OIDS = ('calendar',)
-    self.view('calendar', myrset)
-    selectors.TRACED_OIDS = ()
+The proper way to implement this with |cubicweb| is two have two different
+classes sharing the same identifier but with different selectors so you'll get
+the correct one according to the context.
+
+.. sourcecode:: python
+
+    class UserLink(component.Component):
+	'''display a link to the connected user object with a loggout link'''
+	__regid__ = 'loggeduserlink'
+	__select__ = component.Component.__select__ & authenticated_user()
+
+	def call(self):
+            # display useractions and siteactions
+	    ...
+
+    class AnonUserLink(component.Component):
+	'''build a link to login'''
+	__regid__ = 'loggeduserlink'
+	__select__ = component.Component.__select__ & anonymous_user()
+
+	def call(self):
+	    # display login link
+            ...
+
+The big advantage, aside readability once you're familiar with the
+system, is that your cube becomes much more easily customizable by
+improving componentization.
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. _CustomSelectors:
+
+Defining your own selectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autodocstring:: cubicweb.appobject::objectify_selector
+
+In other cases, you can take a look at the following abstract base classes:
+
+.. autoclass:: cubicweb.selectors.ExpectedValueSelector
+.. autoclass:: cubicweb.selectors.EClassSelector
+.. autoclass:: cubicweb.selectors.EntitySelector
+
+Also, think to use the :func:`lltrace` decorator on your selector class' :meth:`__call__` method
+or below the :func:`objectify_selector` decorator of your selector function so it gets
+traceable when :class:`traced_selection` is activated (see :ref:`DebuggingSelectors`).
+
+.. autofunction:: cubicweb.selectors.lltrace
+
+.. note::
+  Selectors __call__ should *always* return a positive integer, and shall never
+  return `None`.
+
+
+.. _DebuggingSelectors:
+
+Debugging selection
+~~~~~~~~~~~~~~~~~~~
+
+Once in a while, one needs to understand why a view (or any application object)
+is, or is not selected appropriately. Looking at which selectors fired (or did
+not) is the way. The :class:`cubicweb.selectors.traced_selection` context
+manager to help with that, *if you're running your instance in debug mode*.
+
+.. autoclass:: cubicweb.selectors.traced_selection
+
+
+.. |cubicweb| replace:: *CubicWeb*
 """
 __docformat__ = "restructuredtext en"
 
@@ -60,47 +211,68 @@ from cubicweb.schema import split_expression
 
 # helpers for debugging selectors
 SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
-TRACED_OIDS = ()
+TRACED_OIDS = None
+
+def _trace_selector(cls, selector, args, ret):
+    # /!\ lltrace decorates pure function or __call__ method, this
+    #     means argument order may be different
+    if isinstance(cls, Selector):
+        selname = str(cls)
+        vobj = args[0]
+    else:
+        selname = selector.__name__
+        vobj = cls
+    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
+        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
+        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
 
 def lltrace(selector):
+    """use this decorator on your selectors so the becomes traceable with
+    :class:`traced_selection`
+    """
     # don't wrap selectors if not in development mode
     if CubicWebConfiguration.mode == 'system': # XXX config.debug
         return selector
     def traced(cls, *args, **kwargs):
-        # /!\ lltrace decorates pure function or __call__ method, this
-        #     means argument order may be different
-        if isinstance(cls, Selector):
-            selname = str(cls)
-            vobj = args[0]
-        else:
-            selname = selector.__name__
-            vobj = cls
-        oid = class_regid(vobj)
         ret = selector(cls, *args, **kwargs)
-        if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
-            #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-            print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
+        if TRACED_OIDS is not None:
+            _trace_selector(cls, selector, args, ret)
         return ret
     traced.__name__ = selector.__name__
     traced.__doc__ = selector.__doc__
     return traced
 
 class traced_selection(object):
-    """selector debugging helper.
-
+    """
     Typical usage is :
 
-    >>> with traced_selection():
-    ...     # some code in which you want to debug selectors
-    ...     # for all objects
+    .. sourcecode:: python
 
-    or
+        >>> from cubicweb.selectors import traced_selection
+        >>> with traced_selection():
+        ...     # some code in which you want to debug selectors
+        ...     # for all objects
 
-    >>> with traced_selection( ('oid1', 'oid2') ):
-    ...     # some code in which you want to debug selectors
-    ...     # for objects with id 'oid1' and 'oid2'
+    Don't forget the 'from __future__ import with_statement' at the module top-level
+    if you're using python prior to 2.6.
 
+    This will yield lines like this in the logs::
+
+        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+    You can also give to :class:`traced_selection` the identifiers of objects on
+    which you want to debug selection ('oid1' and 'oid2' in the example above).
+
+    .. sourcecode:: python
+
+        >>> with traced_selection( ('regid1', 'regid2') ):
+        ...     # some code in which you want to debug selectors
+        ...     # for objects with __regid__ 'regid1' and 'regid2'
+
+    A potentially usefull point to set up such a tracing function is
+    the `cubicweb.vregistry.Registry.select` method body.
     """
+
     def __init__(self, traced='all'):
         self.traced = traced
 
@@ -110,7 +282,7 @@ class traced_selection(object):
 
     def __exit__(self, exctype, exc, traceback):
         global TRACED_OIDS
-        TRACED_OIDS = ()
+        TRACED_OIDS = None
         return traceback is None
 
 
@@ -260,12 +432,12 @@ class EntitySelector(EClassSelector):
       - `accept_none` is False and some cell in the column has a None value
         (this may occurs with outer join)
 
-    .. note::
-       using EntitySelector or EClassSelector as base selector class impacts
-       performance, since when no entity or row is specified the later works on
-       every different *entity class* found in the result set, while the former
-       works on each *entity* (eg each row of the result set), which may be much
-       more costly.
+    .. Note::
+       using :class:`EntitySelector` or :class:`EClassSelector` as base selector
+       class impacts performance, since when no entity or row is specified the
+       later works on every different *entity class* found in the result set,
+       while the former works on each *entity* (eg each row of the result set),
+       which may be much more costly.
     """
 
     @lltrace
@@ -306,8 +478,12 @@ class EntitySelector(EClassSelector):
 
 
 class ExpectedValueSelector(Selector):
-    """Take a list of expected values as initializer argument, check
-    _get_value method return one of these expected values.
+    """Take a list of expected values as initializer argument and store them
+    into the :attr:`expected` set attribute.
+
+    You should implements the :meth:`_get_value(cls, req, **kwargs)` method
+    which should return the value for the given context. The selector will then
+    return 1 if the value is expected, else 0.
     """
     def __init__(self, *expected):
         assert expected, self
@@ -345,10 +521,12 @@ class match_kwargs(ExpectedValueSelector):
 
 
 class appobject_selectable(Selector):
-    """return 1 if another appobject is selectable using the same input context.
+    """Return 1 if another appobject is selectable using the same input context.
 
     Initializer arguments:
+
     * `registry`, a registry name
+
     * `regid`, an object identifier in this registry
     """
     def __init__(self, registry, regid):
@@ -1079,6 +1257,24 @@ class match_transition(ExpectedValueSelector):
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
+
+class is_in_state(score_entity):
+    """return 1 if entity is in one of the states given as argument list
+
+    you should use this instead of your own score_entity x: x.state == 'bla'
+    selector to avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info, not entity.state for repository side
+      checking of the current state
+    """
+    def __init__(self, *states):
+        def score(entity, states=set(states)):
+            try:
+                return entity.latest_trinfo().new_state.name in states
+            except AttributeError:
+                return None
+        super(is_in_state, self).__init__(score)
 
 
 ## deprecated stuff ############################################################

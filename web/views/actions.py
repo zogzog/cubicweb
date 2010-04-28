@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML base actions
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -404,16 +417,8 @@ class PoweredByAction(action.Action):
 
 addmenu = uicfg.actionbox_appearsin_addmenu
 addmenu.tag_subject_of(('*', 'require_permission', '*'), False)
-addmenu.tag_subject_of(('*', 'wf_info_for', '*'), False)
-addmenu.tag_object_of(('*', 'wf_info_for', '*'), False)
-addmenu.tag_object_of(('*', 'state_of', 'CWEType'), True)
-addmenu.tag_object_of(('*', 'transition_of', 'CWEType'), True)
 addmenu.tag_object_of(('*', 'relation_type', 'CWRType'), True)
 addmenu.tag_object_of(('*', 'from_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'to_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'in_group', 'CWGroup'), True)
 addmenu.tag_object_of(('*', 'bookmarked_by', 'CWUser'), True)
-addmenu.tag_subject_of(('Transition', 'destination_state', '*'), True)
-addmenu.tag_object_of(('*', 'allowed_transition', 'Transition'), True)
-addmenu.tag_object_of(('*', 'destination_state', 'State'), True)
-addmenu.tag_subject_of(('State', 'allowed_transition', '*'), True)

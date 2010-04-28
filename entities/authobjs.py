@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entity classes user and group entities
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -93,15 +106,10 @@ class CWUser(AnyEntity):
         return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
-        if hasattr(self._cw, 'unsafe_execute'):
-            # use unsafe_execute on the repository side, in case
-            # session's user doesn't have access to CWUser
-            execute = self._cw.unsafe_execute
-        else:
-            execute = self._cw.execute
         try:
-            return execute('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
-                           {'x': eid, 'u': self.eid}, 'x')
+            return self._cw.execute(
+                'Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
+                {'x': eid, 'u': self.eid}, 'x')
         except Unauthorized:
             return False
     owns = cached(owns, keyarg=1)

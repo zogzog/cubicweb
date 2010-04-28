@@ -1,9 +1,35 @@
-"""form renderers, responsible to layout a form to html
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Renderers
+---------
 
-:organization: Logilab
-:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. Note::
+   Form renderers are responsible to layout a form to HTML.
+
+Here are the base renderers available:
+
+.. autoclass:: cubicweb.web.views.formrenderers.FormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.HTableFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityCompositeFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityFormRenderer
+.. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
+
 """
 __docformat__ = "restructuredtext en"
 
@@ -12,12 +38,10 @@ from warnings import warn
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
-from simplejson import dumps
-
 from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import implements, yes
-from cubicweb.web import eid_param, formwidgets as fwdgs
+from cubicweb.web import dumps, eid_param, formwidgets as fwdgs
 
 
 def checkbox(name, value, attrs='', checked=None):
@@ -37,12 +61,12 @@ def field_label(form, field):
 
 
 class FormRenderer(AppObject):
-    """basic renderer displaying fields in a two columns table label | value
+    """This is the 'default' renderer, displaying fields in a two columns table:
 
     +--------------+--------------+
     | field1 label | field1 input |
     +--------------+--------------+
-    | field1 label | field2 input |
+    | field2 label | field2 input |
     +--------------+--------------+
 
     +---------+
@@ -224,6 +248,8 @@ class FormRenderer(AppObject):
                     w(u' class="error"')
                 w(u'>')
                 w(field.render(form, self))
+                if error:
+                    self.render_error(w, error)
                 if self.display_help:
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
@@ -241,7 +267,7 @@ class FormRenderer(AppObject):
 
     def render_error(self, w, err):
         """return validation error for widget's field, if any"""
-        w(u'<span class="error">%s</span>' % err)
+        w(u'<span class="errorMsg">%s</span>' % err)
 
 
 
@@ -254,7 +280,7 @@ class BaseFormRenderer(FormRenderer):
 
 
 class HTableFormRenderer(FormRenderer):
-    """display fields horizontally in a table
+    """The 'htable' form renderer display fields horizontally in a table:
 
     +--------------+--------------+---------+
     | field1 label | field2 label |         |
@@ -298,7 +324,13 @@ class HTableFormRenderer(FormRenderer):
 
 
 class EntityCompositeFormRenderer(FormRenderer):
-    """specific renderer for multiple entities edition form (muledit)"""
+    """This is a specific renderer for the multiple entities edition form
+    ('muledit').
+
+    Each entity form will be displayed in row off a table, with a check box for
+    each entities to indicate which ones are edited. Those checkboxes should be
+    automatically updated when something is edited.
+    """
     __regid__ = 'composite'
 
     _main_display_fields = None
@@ -357,7 +389,11 @@ class EntityCompositeFormRenderer(FormRenderer):
 
 
 class EntityFormRenderer(BaseFormRenderer):
-    """specific renderer for entity edition form (edition)"""
+    """This is the 'default' renderer for entity's form.
+
+    You can still use form_renderer_id = 'base' if you want base FormRenderer
+    layout even when selected for an entity.
+    """
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
     __select__ = implements('Any') & yes()
@@ -394,8 +430,8 @@ class EntityFormRenderer(BaseFormRenderer):
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
-    """specific renderer for entity inlined edition form
-    (inline-[creation|edition])
+    """This is a specific renderer for entity's form inlined into another
+    entity's form.
     """
     __regid__ = 'inline'
 

@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb on appengine plugins for cubicweb-ctl
 
-:organization: Logilab
-:copyright: 2008-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -17,7 +30,11 @@ from cubicweb.cwconfig import CubicWebConfiguration
 
 
 def slink_directories():
-    import rql, yams, yapps, simplejson, docutils, roman
+    import rql, yams, yapps, docutils, roman
+    try:
+        import json as simplejson
+    except ImportError:
+        import simplejson
     from logilab import common as lgc
     from logilab import constraint as lgcstr
     from logilab import mtconverter as lgmtc
@@ -195,7 +212,7 @@ class NewGoogleAppCommand(Command):
         # goa instance'skeleton
         copy_skeleton(join(CW_SOFTWARE_ROOT, 'goa', 'skel'),
                       appldir, context, askconfirm=True)
-        # cubicweb core dependancies
+        # cubicweb core dependencies
         for directory, subdirectory in slink_directories():
             subdirectory = join(appldir, subdirectory)
             if not exists(split(subdirectory)[0]):

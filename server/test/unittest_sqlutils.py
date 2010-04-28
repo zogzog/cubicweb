@@ -1,5 +1,21 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sqlutils
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 import sys
@@ -20,13 +36,13 @@ class SQLAdapterMixInTC(TestCase):
 
     def test_init(self):
         o = SQLAdapterMixIn(BASE_CONFIG)
-        self.assertEquals(o.encoding, 'UTF-8')
+        self.assertEquals(o.dbhelper.dbencoding, 'UTF-8')
 
     def test_init_encoding(self):
         config = BASE_CONFIG.copy()
         config['db-encoding'] = 'ISO-8859-1'
         o = SQLAdapterMixIn(config)
-        self.assertEquals(o.encoding, 'ISO-8859-1')
+        self.assertEquals(o.dbhelper.dbencoding, 'ISO-8859-1')
 
 if __name__ == '__main__':
     unittest_main()

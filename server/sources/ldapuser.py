@@ -1,10 +1,24 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb ldap user source
 
 this source is for now limited to a read-only CWUser source
 
-:organization: Logilab
-:copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 
 Part of the code is coming form Zope's LDAPUserFolder
@@ -18,7 +32,6 @@ THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
 WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 FOR A PARTICULAR PURPOSE.
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from base64 import b64decode
@@ -64,10 +77,9 @@ class LDAPUserSource(AbstractSource):
          {'type' : 'choice',
           'default': 'ldap',
           'choices': ('ldap', 'ldaps', 'ldapi'),
-          'help': 'ldap protocol',
+          'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
           'group': 'ldap-source', 'inputlevel': 1,
           }),
-
         ('auth-mode',
          {'type' : 'choice',
           'default': 'simple',
@@ -136,15 +148,15 @@ You can set multiple groups by separating them by a comma.',
           }),
 
         ('synchronization-interval',
-         {'type' : 'int',
-          'default': 24*60*60,
+         {'type' : 'time',
+          'default': '1d',
           'help': 'interval between synchronization with the ldap \
 directory (default to once a day).',
           'group': 'ldap-source', 'inputlevel': 2,
           }),
         ('cache-life-time',
-         {'type' : 'int',
-          'default': 2*60,
+         {'type' : 'time',
+          'default': '2h',
           'help': 'life time of query cache in minutes (default to two hours).',
           'group': 'ldap-source', 'inputlevel': 2,
           }),
@@ -200,6 +212,7 @@ directory (default to once a day).',
         except KeyError:
             return # no email in ldap, we're done
         session = self.repo.internal_session()
+        execute = session.execute
         try:
             cursor = session.system_sql("SELECT eid, extid FROM entities WHERE "
                                         "source='%s'" % self.uri)
@@ -210,20 +223,29 @@ directory (default to once a day).',
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
-                        rset = session.execute('EmailAddress A WHERE '
-                                               'U use_email X, U eid %(u)s',
-                                               {'u': eid})
+                        rset = execute('Any X,A WHERE '
+                                       'X address A, U use_email X, U eid %(u)s',
+                                       {'u': eid})
                         ldapemailaddr = unicode(ldapemailaddr)
-                        for emailaddr, in rset:
+                        for emaileid, emailaddr, in rset:
                             if emailaddr == ldapemailaddr:
                                 break
                         else:
                             self.info('updating email address of user %s to %s',
                                       extid, ldapemailaddr)
-                            if rset:
-                                session.execute('SET X address %(addr)s WHERE '
-                                                'U primary_email X, U eid %(u)s',
-                                                {'addr': ldapemailaddr, 'u': eid})
+                            emailrset = execute('EmailAddress A WHERE A address %(addr)s',
+                                                {'addr': ldapemailaddr})
+                            if emailrset:
+                                execute('SET U use_email X WHERE '
+                                        'X eid %(x)s, U eid %(u)s',
+                                        {'x': emailrset[0][0], 'u': eid})
+                            elif rset:
+                                if not execute('SET X address %(addr)s WHERE '
+                                               'U primary_email X, U eid %(u)s',
+                                               {'addr': ldapemailaddr, 'u': eid}, 'u'):
+                                    execute('SET X address %(addr)s WHERE '
+                                            'X eid %(x)s',
+                                            {'addr': ldapemailaddr, 'x': rset[0][0]}, 'x')
                             else:
                                 # no email found, create it
                                 _insert_email(session, ldapemailaddr, eid)
@@ -412,6 +434,9 @@ directory (default to once a day).',
             hostport = self.host
         self.info('connecting %s://%s as %s', self.protocol, hostport,
                   user and user['dn'] or 'anonymous')
+        # don't require server certificate when using ldaps (will
+        # enable self signed certs)
+        ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         url = LDAPUrl(urlscheme=self.protocol, hostport=hostport)
         conn = ReconnectLDAPObject(url.initializeUrl())
         # Set the protocol version - version 3 is preferred
@@ -476,7 +501,8 @@ directory (default to once a day).',
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
-                self.repo.delete_info(session, eid)
+                entity = session.entity_from_eid(eid, 'CWUser')
+                self.repo.delete_info(session, entity, self.uri, base)
                 self._cache.pop(base, None)
             return []
 ##         except ldap.REFERRAL, e:
@@ -554,7 +580,7 @@ directory (default to once a day).',
         """replace an entity in the source"""
         raise RepositoryError('this source is read only')
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise RepositoryError('this source is read only')
 

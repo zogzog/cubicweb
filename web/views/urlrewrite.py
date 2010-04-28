@@ -1,9 +1,22 @@
-"""Rules based url rewriter component, to get configurable RESTful urls
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""Rules based url rewriter component, to get configurable RESTful urls.
 
-:organization: Logilab
-:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 import re
 
@@ -40,17 +53,17 @@ class metarewriter(type):
 
 
 class URLRewriter(AppObject):
-    """base class for URL rewriters
+    """Base class for URL rewriters.
 
-    url rewriters should have a `rules` dict that maps an input URI
+    Url rewriters should have a `rules` dict that maps an input URI
     to something that should be used for rewriting.
 
     The actual logic that defines how the rules dict is used is implemented
-    in the `rewrite` method
+    in the `rewrite` method.
 
     A `priority` attribute might be used to indicate which rewriter
     should be tried first. The higher the priority is, the earlier the
-    rewriter will be tried
+    rewriter will be tried.
     """
     __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
@@ -62,11 +75,11 @@ class URLRewriter(AppObject):
 
 
 class SimpleReqRewriter(URLRewriter):
-    """The SimpleReqRewriters uses a `rules` dict that maps
-    input URI (regexp or plain string) to a dictionary to update the
-    request's form
+    """The SimpleReqRewriters uses a `rules` dict that maps input URI
+    (regexp or plain string) to a dictionary to update the request's
+    form.
 
-    If the input uri is a regexp, group substitution is allowed
+    If the input uri is a regexp, group substitution is allowed.
     """
     __regid__ = 'simple'
 
@@ -188,8 +201,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
 
 
 class SchemaBasedRewriter(URLRewriter):
-    """Here, the rules dict maps regexps or plain strings to
-    callbacks that will be called with (input, uri, req, schema)
+    """Here, the rules dict maps regexps or plain strings to callbacks
+    that will be called with inputurl, uri, req, schema as parameters.
     """
     __regid__ = 'schemabased'
     rules = [

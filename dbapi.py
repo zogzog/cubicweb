@@ -1,13 +1,26 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """DB-API 2.0 compliant module
 
 Take a look at http://www.python.org/peps/pep-0249.html
 
 (most parts of this document are reported here in docstrings)
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -57,6 +70,7 @@ def multiple_connections_unfix():
     etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
+
 class ConnectionProperties(object):
     def __init__(self, cnxtype=None, lang=None, close=True, log=False):
         self.cnxtype = cnxtype or 'pyro'
@@ -105,11 +119,50 @@ def repo_connect(repo, login, **kwargs):
 def connect(database=None, login=None, host=None, group=None,
             cnxprops=None, setvreg=True, mulcnx=True, initlog=True, **kwargs):
     """Constructor for creating a connection to the CubicWeb repository.
-    Returns a Connection object.
+    Returns a :class:`Connection` object.
 
-    When method is 'pyro', setvreg is True, try to deal with connections to
-    differents instances in the same process unless specified otherwise by
-    setting the mulcnx to False.
+    Typical usage::
+
+      cnx = connect('myinstance', login='me', password='toto')
+
+    Arguments:
+
+    :database:
+      the instance's pyro identifier.
+
+    :login:
+      the user login to use to authenticate.
+
+    :host:
+      the pyro nameserver host. Will be detected using broadcast query if
+      unspecified.
+
+    :group:
+      the instance's pyro nameserver group. You don't have to specify it unless
+      tweaked in instance's configuration.
+
+    :cnxprops:
+      an optional :class:`ConnectionProperties` instance, allowing to specify
+      the connection method (eg in memory or pyro). A Pyro connection will be
+      established if you don't specify that argument.
+
+    :setvreg:
+      flag telling if a registry should be initialized for the connection.
+      Don't change this unless you know what you're doing.
+
+    :mulcnx:
+      Will disappear at some point. Try to deal with connections to differents
+      instances in the same process unless specified otherwise by setting this
+      flag to False. Don't change this unless you know what you're doing.
+
+    :initlog:
+      flag telling if logging should be initialized. You usually don't want
+      logging initialization when establishing the connection from a process
+      where it's already initialized.
+
+    :kwargs:
+      there goes authentication tokens. You usually have to specify for
+      instance a password for the given user, using a named 'password' argument.
     """
     config = cwconfig.CubicWebNoAppConfiguration()
     if host:
@@ -203,11 +256,6 @@ class DBAPIRequest(RequestSessionBase):
             self.pgettext = lambda x, y: y
         self.debug('request default language: %s', self.lang)
 
-    def decorate_rset(self, rset):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
-
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         return self.cnx.describe(eid)
@@ -242,7 +290,7 @@ class DBAPIRequest(RequestSessionBase):
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if self.cnx is None:
-            return None # before the connection has been established
+            return default # before the connection has been established
         return self.cnx.get_session_data(key, default, pop)
 
     def set_session_data(self, key, value):
@@ -371,6 +419,16 @@ class Connection(object):
             return '<Connection %s (anonymous)>' % self.sessionid
         return '<Connection %s>' % self.sessionid
 
+    def __enter__(self):
+        return self.cursor()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
+            return False #propagate the exception
+
     def request(self):
         return DBAPIRequest(self.vreg, self)
 
@@ -397,15 +455,21 @@ class Connection(object):
             pass
 
     def check(self):
-        """raise `BadSessionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         self._repo.check_session(self.sessionid)
 
     def set_session_props(self, **props):
-        """raise `BadSessionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         self._repo.set_session_props(self.sessionid, props)
 
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.get_shared_data(self.sessionid, key, default, pop)
 
     def set_shared_data(self, key, value, querydata=False):
@@ -416,6 +480,8 @@ class Connection(object):
         transaction, and won't be available through the connexion, only on the
         repository side.
         """
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.set_shared_data(self.sessionid, key, value, querydata)
 
     def get_schema(self):
@@ -501,6 +567,8 @@ class Connection(object):
     def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         # cnx validity is checked by the call to .user_info
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         eid, login, groups, properties = self._repo.user_info(self.sessionid,
                                                               props)
         if req is None:
@@ -521,6 +589,8 @@ class Connection(object):
                 pass
 
     def describe(self, eid):
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
         return self._repo.describe(self.sessionid, eid)
 
     def close(self):
@@ -535,19 +605,20 @@ class Connection(object):
         if self._closed:
             raise ProgrammingError('Connection is already closed')
         self._repo.close(self.sessionid)
+        del self._repo # necessary for proper garbage collection
         self._closed = 1
 
     def commit(self):
-        """Commit any pending transaction to the database. Note that if the
-        database supports an auto-commit feature, this must be initially off. An
-        interface method may be provided to turn it back on.
+        """Commit pending transaction for this connection to the repository.
 
-        Database modules that do not support transactions should implement this
-        method with void functionality.
+        may raises `Unauthorized` or `ValidationError` if we attempted to do
+        something we're not allowed to for security or integrity reason.
+
+        If the transaction is undoable, a transaction id will be returned.
         """
         if not self._closed is None:
             raise ProgrammingError('Connection is already closed')
-        self._repo.commit(self.sessionid)
+        return self._repo.commit(self.sessionid)
 
     def rollback(self):
         """This method is optional since not all databases provide transaction
@@ -574,11 +645,78 @@ class Connection(object):
             req = self.request()
         return self.cursor_class(self, self._repo, req=req)
 
+    # undo support ############################################################
+
+    def undoable_transactions(self, ueid=None, req=None, **actionfilters):
+        """Return a list of undoable transaction objects by the connection's
+        user, ordered by descendant transaction time.
+
+        Managers may filter according to user (eid) who has done the transaction
+        using the `ueid` argument. Others will only see their own transactions.
+
+        Additional filtering capabilities is provided by using the following
+        named arguments:
+
+        * `etype` to get only transactions creating/updating/deleting entities
+          of the given type
+
+        * `eid` to get only transactions applied to entity of the given eid
+
+        * `action` to get only transactions doing the given action (action in
+          'C', 'U', 'D', 'A', 'R'). If `etype`, action can only be 'C', 'U' or
+          'D'.
+
+        * `public`: when additional filtering is provided, their are by default
+          only searched in 'public' actions, unless a `public` argument is given
+          and set to false.
+        """
+        txinfos = self._repo.undoable_transactions(self.sessionid, ueid,
+                                                   **actionfilters)
+        if req is None:
+            req = self.request()
+        for txinfo in txinfos:
+            txinfo.req = req
+        return txinfos
+
+    def transaction_info(self, txuuid, req=None):
+        """Return transaction object for the given uid.
+
+        raise `NoSuchTransaction` if not found or if session's user is not
+        allowed (eg not in managers group and the transaction doesn't belong to
+        him).
+        """
+        txinfo = self._repo.transaction_info(self.sessionid, txuuid)
+        if req is None:
+            req = self.request()
+        txinfo.req = req
+        return txinfo
+
+    def transaction_actions(self, txuuid, public=True):
+        """Return an ordered list of action effectued during that transaction.
+
+        If public is true, return only 'public' actions, eg not ones triggered
+        under the cover by hooks, else return all actions.
+
+        raise `NoSuchTransaction` if the transaction is not found or if
+        session's user is not allowed (eg not in managers group and the
+        transaction doesn't belong to him).
+        """
+        return self._repo.transaction_actions(self.sessionid, txuuid, public)
+
+    def undo_transaction(self, txuuid):
+        """Undo the given transaction. Return potential restoration errors.
+
+        raise `NoSuchTransaction` if not found or if session's user is not
+        allowed (eg not in managers group and the transaction doesn't belong to
+        him).
+        """
+        return self._repo.undo_transaction(self.sessionid, txuuid)
+
 
 # cursor object ###############################################################
 
 class Cursor(object):
-    """These objects represent a database cursor, which is used to manage the
+    """This represents a database cursor, which is used to manage the
     context of a fetch operation. Cursors created from the same connection are
     not isolated, i.e., any changes done to the database by a cursor are
     immediately visible by the other cursors. Cursors created from different
@@ -588,21 +726,18 @@ class Cursor(object):
     """
 
     def __init__(self, connection, repo, req=None):
-        """This read-only attribute return a reference to the Connection
-        object on which the cursor was created.
-        """
+        # This read-only attribute returns a reference to the Connection
+        # object on which the cursor was created.
         self.connection = connection
-        """optionnal issuing request instance"""
+        # optionnal issuing request instance
         self.req = req
 
-        """This read/write attribute specifies the number of rows to fetch at a
-        time with fetchmany(). It defaults to 1 meaning to fetch a single row
-        at a time.
-
-        Implementations must observe this value with respect to the fetchmany()
-        method, but are free to interact with the database a single row at a
-        time. It may also be used in the implementation of executemany().
-        """
+        # This read/write attribute specifies the number of rows to fetch at a
+        # time with fetchmany(). It defaults to 1 meaning to fetch a single row
+        # at a time.
+        # Implementations must observe this value with respect to the fetchmany()
+        # method, but are free to interact with the database a single row at a
+        # time. It may also be used in the implementation of executemany().
         self.arraysize = 1
 
         self._repo = repo
@@ -610,7 +745,6 @@ class Cursor(object):
         self._res = None
         self._closed = None
         self._index = 0
-
 
     def close(self):
         """Close the cursor now (rather than whenever __del__ is called).  The
@@ -646,11 +780,11 @@ class Cursor(object):
         Return values are not defined by the DB-API, but this here it returns a
         ResultSet object.
         """
-        self._res = res = self._repo.execute(self._sessid, operation,
-                                             parameters, eid_key, build_descr)
-        self.req.decorate_rset(res)
+        self._res = rset = self._repo.execute(self._sessid, operation,
+                                              parameters, eid_key, build_descr)
+        rset.req = self.req
         self._index = 0
-        return res
+        return rset
 
 
     def executemany(self, operation, seq_of_parameters):
@@ -781,4 +915,3 @@ class LogCursor(Cursor):
         self.connection.executed_queries.append((operation, parameters,
                                                  time() - tstart, clock() - cstart))
         return rset
-

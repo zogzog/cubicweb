@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """CubicWeb web client application object
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -33,15 +46,24 @@ class AbstractSessionManager(component.Component):
 
     def __init__(self, vreg):
         self.session_time = vreg.config['http-session-time'] or None
-        assert self.session_time is None or self.session_time > 0
-        self.cleanup_session_time = vreg.config['cleanup-session-time'] or 43200
-        assert self.cleanup_session_time > 0
-        self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 120
+        if self.session_time is not None:
+            assert self.session_time > 0
+            self.cleanup_session_time = self.session_time
+        else:
+            self.cleanup_session_time = vreg.config['cleanup-session-time'] or 1440 * 60
+            assert self.cleanup_session_time > 0
+        self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
         assert self.cleanup_anon_session_time > 0
-        if self.session_time:
-            assert self.cleanup_session_time < self.session_time
-            assert self.cleanup_anon_session_time < self.session_time
         self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
+        if vreg.config.anonymous_user() is not None:
+            self.clean_sessions_interval = min(
+                5 * 60,
+                self.cleanup_session_time / 2.,
+                self.cleanup_anon_session_time / 2.)
+        else:
+            self.clean_sessions_interval = min(
+                5 * 60,
+                self.cleanup_session_time / 2.)
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
@@ -123,7 +145,11 @@ class CookieSessionHandler(object):
         SESSION_MANAGER = self.session_manager
         if not 'last_login_time' in self.vreg.schema:
             self._update_last_login_time = lambda x: None
-        CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_session_manager)
+        if self.vreg.config.mode != 'test':
+            # don't try to reset session manager during test, this leads to
+            # weird failures when running multiple tests
+            CW_EVENT_MANAGER.bind('after-registry-reload',
+                                  self.reset_session_manager)
 
     def reset_session_manager(self):
         data = self.session_manager.dump_data()
@@ -132,6 +158,10 @@ class CookieSessionHandler(object):
         self.session_manager.restore_data(data)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
+
+    @property
+    def clean_sessions_interval(self):
+        return self.session_manager.clean_sessions_interval
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
@@ -342,7 +372,11 @@ class CubicWebPublisher(object):
                 # redirect is raised by edit controller when everything went fine,
                 # so try to commit
                 try:
-                    req.cnx.commit()
+                    txuuid = req.cnx.commit()
+                    if txuuid is not None:
+                        msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
+                            req.build_url('undo', txuuid=txuuid), req._('undo'))
+                        req.append_to_redirect_message(msg)
                 except ValidationError, ex:
                     self.validation_error_handler(req, ex)
                 except Unauthorized, ex:
@@ -364,6 +398,9 @@ class CubicWebPublisher(object):
                 self.error_handler(req, ex, tb=False)
             except Exception, ex:
                 self.error_handler(req, ex, tb=True)
+            except:
+                self.critical('Catch all triggered!!!')
+                self.exception('this is what happened')
         finally:
             if req.cnx is not None:
                 try:
@@ -393,7 +430,7 @@ class CubicWebPublisher(object):
         self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
-        req.message = None
+        req.reset_message()
         req.reset_headers()
         if req.json_request:
             raise RemoteCallFailed(unicode(ex))

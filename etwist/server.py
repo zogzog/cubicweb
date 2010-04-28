@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """twisted server for CubicWeb web instances
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -11,7 +24,6 @@ import sys
 import os
 import select
 import errno
-import hotshot
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
@@ -113,8 +125,6 @@ class CubicWebRootResource(resource.PostableResource):
         if config.repo_method == 'inmemory':
             reactor.addSystemEventTrigger('before', 'shutdown',
                                           self.shutdown_event)
-            # monkey patch start_looping_task to get proper reactor integration
-            #self.appli.repo.__class__.start_looping_tasks = start_looping_tasks
             if config.pyro_enabled():
                 # if pyro is enabled, we have to register to the pyro name
                 # server, create a pyro daemon, and create a task to handle pyro
@@ -127,10 +137,8 @@ class CubicWebRootResource(resource.PostableResource):
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
 
     def start_service(self):
-        config = self.config
-        interval = min(config['cleanup-session-time'] or 120,
-                       config['cleanup-anonymous-session-time'] or 720) / 2.
-        start_task(interval, self.appli.session_handler.clean_sessions)
+        start_task(self.appli.session_handler.clean_sessions_interval,
+                   self.appli.session_handler.clean_sessions)
 
     def set_url_rewriter(self):
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
@@ -167,7 +175,7 @@ class CubicWebRootResource(resource.PostableResource):
                         datadir = self.config.locate_resource(segments[1])
                         if datadir is None:
                             return None, []
-                    self.info('static file %s from %s', segments[-1], datadir)
+                    self.debug('static file %s from %s', segments[-1], datadir)
                     if segments[0] == 'data':
                         return static.File(str(datadir)), segments[1:]
                     else:
@@ -182,7 +190,7 @@ class CubicWebRootResource(resource.PostableResource):
         """Render a page from the root resource"""
         # reload modified files in debug mode
         if self.debugmode:
-            self.appli.vreg.register_objects(self.config.vregistry_path())
+            self.appli.vreg.reload_if_needed()
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)
         else:
@@ -286,11 +294,11 @@ class CubicWebRootResource(resource.PostableResource):
 from twisted.internet import defer
 from twisted.web2 import fileupload
 
-# XXX set max file size to 100Mo: put max upload size in the configuration
+# XXX set max file size to 200MB: put max upload size in the configuration
 # line below for twisted >= 8.0, default param value for earlier version
-resource.PostableResource.maxSize = 100*1024*1024
+resource.PostableResource.maxSize = 200*1024*1024
 def parsePOSTData(request, maxMem=100*1024, maxFields=1024,
-                  maxSize=100*1024*1024):
+                  maxSize=200*1024*1024):
     if request.stream.length == 0:
         return defer.succeed(None)
 
@@ -337,32 +345,131 @@ from cubicweb import set_log_methods
 set_log_methods(CubicWebRootResource, getLogger('cubicweb.twisted'))
 
 
+listiterator = type(iter([]))
 
-def _gc_debug():
+def _gc_debug(all=True):
     import gc
     from pprint import pprint
     from cubicweb.appobject import AppObject
     gc.collect()
     count = 0
     acount = 0
+    fcount = 0
+    rcount = 0
+    ccount = 0
+    scount = 0
     ocount = {}
+    from rql.stmts import Union
+    from cubicweb.schema import CubicWebSchema
+    from cubicweb.rset import ResultSet
+    from cubicweb.dbapi import Connection, Cursor
+    from cubicweb.req import RequestSessionBase
+    from cubicweb.server.repository import Repository
+    from cubicweb.server.sources.native import NativeSQLSource
+    from cubicweb.server.session import Session
+    from cubicweb.devtools.testlib import CubicWebTC
+    from logilab.common.testlib import TestSuite
+    from optparse import Values
+    import types, weakref
     for obj in gc.get_objects():
-        if isinstance(obj, CubicWebTwistedRequestAdapter):
+        if isinstance(obj, RequestSessionBase):
             count += 1
+            if isinstance(obj, Session):
+                print '   session', obj, referrers(obj, True)
         elif isinstance(obj, AppObject):
             acount += 1
-        else:
+        elif isinstance(obj, ResultSet):
+            rcount += 1
+            #print '   rset', obj, referrers(obj)
+        elif isinstance(obj, Repository):
+            print '   REPO', obj, referrers(obj, True)
+        #elif isinstance(obj, NativeSQLSource):
+        #    print '   SOURCe', obj, referrers(obj)
+        elif isinstance(obj, CubicWebTC):
+            print '   TC', obj, referrers(obj)
+        elif isinstance(obj, TestSuite):
+            print '   SUITE', obj, referrers(obj)
+        #elif isinstance(obj, Values):
+        #    print '   values', '%#x' % id(obj), referrers(obj, True)
+        elif isinstance(obj, Connection):
+            ccount += 1
+            #print '   cnx', obj, referrers(obj)
+        #elif isinstance(obj, Cursor):
+        #    ccount += 1
+        #    print '   cursor', obj, referrers(obj)
+        elif isinstance(obj, file):
+            fcount += 1
+        #    print '   open file', file.name, file.fileno
+        elif isinstance(obj, CubicWebSchema):
+            scount += 1
+            print '   schema', obj, referrers(obj)
+        elif not isinstance(obj, (type, tuple, dict, list, set, frozenset,
+                                  weakref.ref, weakref.WeakKeyDictionary,
+                                  listiterator,
+                                  property, classmethod,
+                                  types.ModuleType, types.MemberDescriptorType,
+                                  types.FunctionType, types.MethodType)):
             try:
                 ocount[obj.__class__] += 1
             except KeyError:
                 ocount[obj.__class__] = 1
             except AttributeError:
                 pass
-    print 'IN MEM REQUESTS', count
-    print 'IN MEM APPOBJECTS', acount
-    ocount = sorted(ocount.items(), key=lambda x: x[1], reverse=True)[:20]
-    pprint(ocount)
-    print 'UNREACHABLE', gc.garbage
+    if count:
+        print ' NB REQUESTS/SESSIONS', count
+    if acount:
+        print ' NB APPOBJECTS', acount
+    if ccount:
+        print ' NB CONNECTIONS', ccount
+    if rcount:
+        print ' NB RSETS', rcount
+    if scount:
+        print ' NB SCHEMAS', scount
+    if fcount:
+        print ' NB FILES', fcount
+    if all:
+        ocount = sorted(ocount.items(), key=lambda x: x[1], reverse=True)[:20]
+        pprint(ocount)
+    if gc.garbage:
+        print 'UNREACHABLE', gc.garbage
+
+def referrers(obj, showobj=False):
+    try:
+        return sorted(set((type(x), showobj and x or getattr(x, '__name__', '%#x' % id(x)))
+                          for x in _referrers(obj)))
+    except TypeError:
+        s = set()
+        unhashable = []
+        for x in _referrers(obj):
+            try:
+                s.add(x)
+            except TypeError:
+                unhashable.append(x)
+        return sorted(s) + unhashable
+
+def _referrers(obj, seen=None, level=0):
+    import gc, types
+    from cubicweb.schema import CubicWebRelationSchema, CubicWebEntitySchema
+    interesting = []
+    if seen is None:
+        seen = set()
+    for x in gc.get_referrers(obj):
+        if id(x) in seen:
+            continue
+        seen.add(id(x))
+        if isinstance(x, types.FrameType):
+            continue
+        if isinstance(x, (CubicWebRelationSchema, CubicWebEntitySchema)):
+            continue
+        if isinstance(x, (list, tuple, set, dict, listiterator)):
+            if level >= 5:
+                pass
+                #interesting.append(x)
+            else:
+                interesting += _referrers(x, seen, level+1)
+        else:
+            interesting.append(x)
+    return interesting
 
 def run(config, debug):
     # create the site
@@ -397,7 +504,7 @@ def run(config, debug):
     root_resource.start_service()
     logger.info('instance started on %s', root_resource.base_url)
     if config['profile']:
-        prof = hotshot.Profile(config['profile'])
-        prof.runcall(reactor.run)
+        import cProfile
+        cProfile.runctx('reactor.run()', globals(), locals(), config['profile'])
     else:
         reactor.run()

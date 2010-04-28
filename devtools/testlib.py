@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """this module contains base classes and utilities for cubicweb tests
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -12,8 +25,7 @@ import sys
 import re
 from urllib import unquote
 from math import log
-
-import simplejson
+from contextlib import contextmanager
 
 import yams.schema
 
@@ -31,7 +43,7 @@ from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser
-
+from cubicweb.utils import json
 
 # low-level utilities ##########################################################
 
@@ -131,17 +143,16 @@ class CubicWebTC(TestCase):
     """abstract class for test using an apptest environment
 
     attributes:
-    `vreg`, the vregistry
-    `schema`, self.vreg.schema
-    `config`, cubicweb configuration
-    `cnx`, dbapi connection to the repository using an admin user
-    `session`, server side session associated to `cnx`
-    `app`, the cubicweb publisher (for web testing)
-    `repo`, the repository object
 
-    `admlogin`, login of the admin user
-    `admpassword`, password of the admin user
-
+    * `vreg`, the vregistry
+    * `schema`, self.vreg.schema
+    * `config`, cubicweb configuration
+    * `cnx`, dbapi connection to the repository using an admin user
+    * `session`, server side session associated to `cnx`
+    * `app`, the cubicweb publisher (for web testing)
+    * `repo`, the repository object
+    * `admlogin`, login of the admin user
+    * `admpassword`, password of the admin user
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
@@ -207,6 +218,7 @@ class CubicWebTC(TestCase):
     def _build_repo(cls):
         cls.repo, cls.cnx = devtools.init_test_database(config=cls.config)
         cls.init_config(cls.config)
+        cls.repo.hm.call_hooks('server_startup', repo=cls.repo)
         cls.vreg = cls.repo.vreg
         cls._orig_cnx = cls.cnx
         cls.config.repository = lambda x=None: cls.repo
@@ -228,7 +240,9 @@ class CubicWebTC(TestCase):
     @property
     def session(self):
         """return current server side session (using default manager account)"""
-        return self.repo._sessions[self.cnx.sessionid]
+        session = self.repo._sessions[self.cnx.sessionid]
+        session.set_pool()
+        return session
 
     @property
     def adminsession(self):
@@ -245,11 +259,24 @@ class CubicWebTC(TestCase):
 
     def setUp(self):
         pause_tracing()
-        self._init_repo()
+        previous_failure = self.__class__.__dict__.get('_repo_init_failed')
+        if previous_failure is not None:
+            self.skip('repository is not initialised: %r' % previous_failure)
+        try:
+            self._init_repo()
+        except Exception, ex:
+            self.__class__._repo_init_failed = ex
+            raise
         resume_tracing()
+        self._cnxs = []
         self.setup_database()
         self.commit()
         MAILBOX[:] = [] # reset mailbox
+
+    def tearDown(self):
+        for cnx in self._cnxs:
+            if not cnx._closed:
+                cnx.close()
 
     def setup_database(self):
         """add your database setup code by overriding this method"""
@@ -265,20 +292,20 @@ class CubicWebTC(TestCase):
             return req.user
 
     def create_user(self, login, groups=('users',), password=None, req=None,
-                    commit=True):
+                    commit=True, **kwargs):
         """create and return a new user entity"""
         if password is None:
             password = login.encode('utf8')
-        cursor = self._orig_cnx.cursor(req or self.request())
-        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
-                              {'login': unicode(login), 'passwd': password})
-        user = rset.get_entity(0, 0)
-        cursor.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
-                       % ','.join(repr(g) for g in groups),
-                       {'x': user.eid}, 'x')
+        if req is None:
+            req = self._orig_cnx.request()
+        user = req.create_entity('CWUser', login=unicode(login),
+                                 upassword=password, **kwargs)
+        req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
+                    % ','.join(repr(g) for g in groups),
+                    {'x': user.eid}, 'x')
         user.clear_related_cache('in_group', 'subject')
         if commit:
-            self._orig_cnx.commit()
+            req.cnx.commit()
         return user
 
     def login(self, login, **kwargs):
@@ -291,6 +318,7 @@ class CubicWebTC(TestCase):
             self.cnx = repo_connect(self.repo, unicode(login),
                                     cnxprops=ConnectionProperties('inmemory'),
                                     **kwargs)
+            self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
         return self.cnx
@@ -299,6 +327,7 @@ class CubicWebTC(TestCase):
         if not self.cnx is self._orig_cnx:
             try:
                 self.cnx.close()
+                self._cnxs.remove(self.cnx)
             except ProgrammingError:
                 pass # already closed
         self.cnx = self._orig_cnx
@@ -319,7 +348,10 @@ class CubicWebTC(TestCase):
 
     @nocoverage
     def commit(self):
-        self.cnx.commit()
+        try:
+            return self.cnx.commit()
+        finally:
+            self.session.set_pool() # ensure pool still set after commit
 
     @nocoverage
     def rollback(self):
@@ -327,6 +359,8 @@ class CubicWebTC(TestCase):
             self.cnx.rollback()
         except ProgrammingError:
             pass
+        finally:
+            self.session.set_pool() # ensure pool still set after commit
 
     # # server side db api #######################################################
 
@@ -338,6 +372,17 @@ class CubicWebTC(TestCase):
 
     def entity(self, rql, args=None, eidkey=None, req=None):
         return self.execute(rql, args, eidkey, req=req).get_entity(0, 0)
+
+    @contextmanager
+    def temporary_appobjects(self, *appobjects):
+        self.vreg._loadedmods.setdefault(self.__module__, {})
+        for obj in appobjects:
+            self.vreg.register(obj)
+        try:
+            yield
+        finally:
+            for obj in appobjects:
+                self.vreg.unregister(obj)
 
     # vregistry inspection utilities ###########################################
 
@@ -449,7 +494,7 @@ class CubicWebTC(TestCase):
 
     def remote_call(self, fname, *args):
         """remote json call simulation"""
-        dump = simplejson.dumps
+        dump = json.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
         ctrl = self.vreg['controllers'].select('json', req)
@@ -458,9 +503,9 @@ class CubicWebTC(TestCase):
     def app_publish(self, req, path='view'):
         return self.app.publish(path, req)
 
-    def ctrl_publish(self, req):
+    def ctrl_publish(self, req, ctrl='edit'):
         """call the publish method of the edit controller"""
-        ctrl = self.vreg['controllers'].select('edit', req)
+        ctrl = self.vreg['controllers'].select(ctrl, req)
         try:
             result = ctrl.publish()
             req.cnx.commit()
@@ -484,7 +529,8 @@ class CubicWebTC(TestCase):
             else:
                 cleanup = lambda p: (p[0], unquote(p[1]))
                 params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
-            path = path[len(req.base_url()):]
+            if path.startswith(req.base_url()): # may be relative
+                path = path[len(req.base_url()):]
             return path, params
         else:
             self.fail('expected a Redirect exception')

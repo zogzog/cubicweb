@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.sources.ldapusers unit and functional tests
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 import socket
@@ -15,7 +28,7 @@ from cubicweb.devtools.repotest import RQLGeneratorTC
 
 from cubicweb.server.sources.ldapuser import *
 
-if socket.gethostbyname('ldap1').startswith('172'):
+if '17.1' in socket.gethostbyname('ldap1'):
     SYT = 'syt'
     ADIM = 'adim'
 else:
@@ -189,7 +202,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"')
 
     def test_multiple_entities_from_different_sources(self):
-        self.create_user('cochon', req=self.session)
+        self.create_user('cochon')
         self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
@@ -202,15 +215,15 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEquals(rset.rows, [['admin', 'activated'], [SYT, 'activated']])
 
     def test_exists2(self):
-        self.create_user('comme', req=self.session)
-        self.create_user('cochon', req=self.session)
+        self.create_user('comme')
+        self.create_user('cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         rset = self.sexecute('Any GN ORDERBY GN WHERE X in_group G, G name GN, (G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon")))')
         self.assertEquals(rset.rows, [['managers'], ['users']])
 
     def test_exists3(self):
-        self.create_user('comme', req=self.session)
-        self.create_user('cochon', req=self.session)
+        self.create_user('comme')
+        self.create_user('cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.failUnless(self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"'))
         self.sexecute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
@@ -219,9 +232,9 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEquals(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
 
     def test_exists4(self):
-        self.create_user('comme', req=self.session)
-        self.create_user('cochon', groups=('users', 'guests'), req=self.session)
-        self.create_user('billy', req=self.session)
+        self.create_user('comme')
+        self.create_user('cochon', groups=('users', 'guests'))
+        self.create_user('billy')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "billy"')
@@ -241,9 +254,9 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEquals(sorted(rset.rows), sorted(all.rows))
 
     def test_exists5(self):
-        self.create_user('comme', req=self.session)
-        self.create_user('cochon', groups=('users', 'guests'), req=self.session)
-        self.create_user('billy', req=self.session)
+        self.create_user('comme')
+        self.create_user('cochon', groups=('users', 'guests'))
+        self.create_user('billy')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "billy"')
@@ -273,7 +286,7 @@ class LDAPUserSourceTC(CubicWebTC):
                           sorted(r[0] for r in afeids + ueids))
 
     def _init_security_test(self):
-        self.create_user('iaminguestsgrouponly', groups=('guests',), req=self.session)
+        self.create_user('iaminguestsgrouponly', groups=('guests',))
         cnx = self.login('iaminguestsgrouponly')
         return cnx.cursor()
 
@@ -369,6 +382,11 @@ class GlobTrFuncTC(TestCase):
 # XXX
 LDAPUserSourceTC._init_repo()
 repo = LDAPUserSourceTC.repo
+
+def teardown_module(*args):
+    global repo
+    del repo
+    del RQL2LDAPFilterTC.schema
 
 class RQL2LDAPFilterTC(RQLGeneratorTC):
     schema = repo.schema

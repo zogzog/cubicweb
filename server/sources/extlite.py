@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """provide an abstract class for external sources using a sqlite database helper
 
-:organization: Logilab
-:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -19,12 +32,6 @@ class ConnectionWrapper(object):
     def __init__(self, source=None):
         self.source = source
         self._cnx = None
-
-    @property
-    def logged_user(self):
-        if self._cnx is None:
-            self._cnx = self.source._sqlcnx
-        return self._cnx.logged_user
 
     def cursor(self):
         if self._cnx is None:
@@ -193,9 +200,10 @@ repository.',
         if self._need_sql_create:
             return []
         assert dbg_st_search(self.uri, union, varmap, args, cachekey)
-        sql, query_args = self.rqlsqlgen.generate(union, args)
-        args = self.sqladapter.merge_args(args, query_args)
-        results = self.sqladapter.process_result(self.doexec(session, sql, args))
+        sql, qargs, cbs = self.rqlsqlgen.generate(union, args)
+        args = self.sqladapter.merge_args(args, qargs)
+        cursor = self.doexec(session, sql, args)
+        results = self.sqladapter.process_result(cursor, cbs)
         assert dbg_results(results)
         return results
 
@@ -231,15 +239,15 @@ repository.',
         """update an entity in the source"""
         raise NotImplementedError()
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source
 
         this is not deleting a file in the svn but deleting entities from the
         source. Main usage is to delete repository content when a Repository
         entity is deleted.
         """
-        attrs = {SQL_PREFIX + 'eid': eid}
-        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
+        attrs = {'cw_eid': entity.eid}
+        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
 
     def local_add_relation(self, session, subject, rtype, object):

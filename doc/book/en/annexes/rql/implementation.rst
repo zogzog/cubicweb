@@ -2,6 +2,7 @@
 
 Implementation
 --------------
+
 BNF grammar
 ~~~~~~~~~~~
 
@@ -126,8 +127,8 @@ Known limitations
 ~~~~~~~~~~~~~~~~~
 
 - The current implementation does not support linking two relations of type 'is'
-  with a OR. I do not think that the negation is supported on this type of
-  relation (XXX FIXME to be confirmed).
+  with an OR. I do not think that the negation is supported on this type of
+  relation (XXX to be confirmed).
 
 - Relations defining the variables must be left to those using them.  For
   example::
@@ -140,11 +141,11 @@ Known limitations
 
   is not.
 
-- missing proper explicit type conversion,  COALESCE and certainly other things...
+- missing proper explicit type conversion, COALESCE and certainly other things...
 
-- writing a rql query require knowledge of the schema used (with real relation
-  names and entities, not those viewing in the user interface). On the other
-  hand, we can not really bypass that, and it is the job of a user interface to
+- writing an rql query requires knowledge of the used schema (with real relation
+  names and entities, not those viewed in the user interface). On the other
+  hand, we cannot really bypass that, and it is the job of a user interface to
   hide the RQL.
 
 

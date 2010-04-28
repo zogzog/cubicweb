@@ -1,13 +1,29 @@
 # pylint: disable-msg=W0622,C0103
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb global packaging information for the cubicweb knowledge management
 software
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (3, 6, 3)
+numversion = (3, 7, 4)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
@@ -30,7 +46,7 @@ This package contains:
 
 web = 'http://www.cubicweb.org'
 ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
-pyversions = ['2.4', '2.5']
+pyversions = ['2.5', '2.6']
 
 classifiers = [
            'Environment :: Web Environment',
@@ -89,6 +105,8 @@ try:
          [join(data_dir, fname) for fname in listdir(data_dir) if not isdir(join(data_dir, fname))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'timeline'),
          [join(data_dir, 'timeline', fname) for fname in listdir(join(data_dir, 'timeline'))]],
+        [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'images'),
+         [join(data_dir, 'images', fname) for fname in listdir(join(data_dir, 'images'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc'),
          [join(wdoc_dir, fname) for fname in listdir(wdoc_dir) if not isdir(join(wdoc_dir, fname))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc', 'images'),

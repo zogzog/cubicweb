@@ -1,20 +1,36 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: check for data integrity according to the instance'schema
 validity
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
 from threading import Lock
+
+from yams.schema import role_name
 
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.selectors import implements
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
+from cubicweb.server.hook import set_operation
 
 # special relations that don't have to be checked for integrity, usually
 # because they are handled internally by hooks (so we trust ourselves)
@@ -35,13 +51,12 @@ def _acquire_unique_cstr_lock(session):
     RQLUniqueConstraint in two different transactions, as explained in
     http://intranet.logilab.fr/jpl/ticket/36564
     """
-    asession = session.actual_session()
-    if 'uniquecstrholder' in asession.transaction_data:
+    if 'uniquecstrholder' in session.transaction_data:
         return
     _UNIQUE_CONSTRAINTS_LOCK.acquire()
-    asession.transaction_data['uniquecstrholder'] = True
+    session.transaction_data['uniquecstrholder'] = True
     # register operation responsible to release the lock on commit/rollback
-    _ReleaseUniqueConstraintsOperation(asession)
+    _ReleaseUniqueConstraintsOperation(session)
 
 def _release_unique_cstr_lock(session):
     if 'uniquecstrholder' in session.transaction_data:
@@ -61,64 +76,54 @@ class _CheckRequiredRelationOperation(hook.LateOperation):
     """checking relation cardinality has to be done after commit in
     case the relation is being replaced
     """
-    eid, rtype = None, None
+    role = key = base_rql = None
 
     def precommit_event(self):
-        # recheck pending eids
-        if self.session.deleted_in_transaction(self.eid):
-            return
-        if self.rtype in self.session.transaction_data.get('pendingrtypes', ()):
-            return
-        if self.session.unsafe_execute(*self._rql()).rowcount < 1:
-            etype = self.session.describe(self.eid)[0]
-            _ = self.session._
-            msg = _('at least one relation %(rtype)s is required on %(etype)s (%(eid)s)')
-            msg %= {'rtype': _(self.rtype), 'etype': _(etype), 'eid': self.eid}
-            raise ValidationError(self.eid, {self.rtype: msg})
-
-    def commit_event(self):
-        pass
-
-    def _rql(self):
-        raise NotImplementedError()
+        session =self.session
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        # poping key is not optional: if further operation trigger new deletion
+        # of relation, we'll need a new operation
+        for eid, rtype in session.transaction_data.pop(self.key):
+            # recheck pending eids / relation types
+            if eid in pendingeids:
+                continue
+            if rtype in pendingrtypes:
+                continue
+            if not session.execute(self.base_rql % rtype, {'x': eid}, 'x'):
+                etype = session.describe(eid)[0]
+                _ = session._
+                msg = _('at least one relation %(rtype)s is required on '
+                        '%(etype)s (%(eid)s)')
+                msg %= {'rtype': _(rtype), 'etype': _(etype), 'eid': eid}
+                raise ValidationError(eid, {role_name(rtype, self.role): msg})
 
 
 class _CheckSRelationOp(_CheckRequiredRelationOperation):
     """check required subject relation"""
-    def _rql(self):
-        return 'Any O WHERE S eid %%(x)s, S %s O' % self.rtype, {'x': self.eid}, 'x'
-
+    role = 'subject'
+    key = '_cwisrel'
+    base_rql = 'Any O WHERE S eid %%(x)s, S %s O'
 
 class _CheckORelationOp(_CheckRequiredRelationOperation):
     """check required object relation"""
-    def _rql(self):
-        return 'Any S WHERE O eid %%(x)s, S %s O' % self.rtype, {'x': self.eid}, 'x'
+    role = 'object'
+    key = '_cwiorel'
+    base_rql = 'Any S WHERE O eid %%(x)s, S %s O'
 
 
 class IntegrityHook(hook.Hook):
     __abstract__ = True
     category = 'integrity'
 
-class UserIntegrityHook(IntegrityHook):
-    __abstract__ = True
-    __select__ = IntegrityHook.__select__ & hook.regular_session()
 
-
-class CheckCardinalityHook(UserIntegrityHook):
+class CheckCardinalityHook(IntegrityHook):
     """check cardinalities are satisfied"""
     __regid__ = 'checkcard'
     events = ('after_add_entity', 'before_delete_relation')
 
     def __call__(self):
         getattr(self, self.event)()
-
-    def checkrel_if_necessary(self, opcls, rtype, eid):
-        """check an equivalent operation has not already been added"""
-        for op in self._cw.pending_operations:
-            if isinstance(op, opcls) and op.rtype == rtype and op.eid == eid:
-                break
-        else:
-            opcls(self._cw, rtype=rtype, eid=eid)
 
     def after_add_entity(self):
         eid = self.entity.eid
@@ -127,10 +132,14 @@ class CheckCardinalityHook(UserIntegrityHook):
             # skip automatically handled relations
             if rschema.type in DONT_CHECK_RTYPES_ON_ADD:
                 continue
-            opcls = role == 'subject' and _CheckSRelationOp or _CheckORelationOp
             rdef = rschema.role_rdef(eschema, targetschemas[0], role)
             if rdef.role_cardinality(role) in '1+':
-                self.checkrel_if_necessary(opcls, rschema.type, eid)
+                if role == 'subject':
+                    set_operation(self._cw, '_cwisrel', (eid, rschema.type),
+                                  _CheckSRelationOp)
+                else:
+                    set_operation(self._cw, '_cwiorel', (eid, rschema.type),
+                                  _CheckORelationOp)
 
     def before_delete_relation(self):
         rtype = self.rtype
@@ -138,14 +147,16 @@ class CheckCardinalityHook(UserIntegrityHook):
             return
         session = self._cw
         eidfrom, eidto = self.eidfrom, self.eidto
-        card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
         pendingrdefs = session.transaction_data.get('pendingrdefs', ())
         if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
             return
+        card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
         if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
-            self.checkrel_if_necessary(_CheckSRelationOp, rtype, eidfrom)
+            set_operation(self._cw, '_cwisrel', (eidfrom, rtype),
+                          _CheckSRelationOp)
         if card[1] in '1+' and not session.deleted_in_transaction(eidto):
-            self.checkrel_if_necessary(_CheckORelationOp, rtype, eidto)
+            set_operation(self._cw, '_cwiorel', (eidto, rtype),
+                          _CheckORelationOp)
 
 
 class _CheckConstraintsOp(hook.LateOperation):
@@ -176,7 +187,7 @@ class _CheckConstraintsOp(hook.LateOperation):
         pass
 
 
-class CheckConstraintHook(UserIntegrityHook):
+class CheckConstraintHook(IntegrityHook):
     """check the relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -194,7 +205,7 @@ class CheckConstraintHook(UserIntegrityHook):
                                rdef=(self.eidfrom, self.rtype, self.eidto))
 
 
-class CheckAttributeConstraintHook(UserIntegrityHook):
+class CheckAttributeConstraintHook(IntegrityHook):
     """check the attribute relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
@@ -214,7 +225,7 @@ class CheckAttributeConstraintHook(UserIntegrityHook):
                                         rdef=(self.entity.eid, attr, None))
 
 
-class CheckUniqueHook(UserIntegrityHook):
+class CheckUniqueHook(IntegrityHook):
     __regid__ = 'checkunique'
     events = ('before_add_entity', 'before_update_entity')
 
@@ -227,49 +238,11 @@ class CheckUniqueHook(UserIntegrityHook):
                 if val is None:
                     continue
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
-                rset = self._cw.unsafe_execute(rql, {'val': val})
+                rset = self._cw.execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
                     msg = self._cw._('the value "%s" is already used, use another one')
-                    raise ValidationError(entity.eid, {attr: msg % val})
-
-
-class _DelayedDeleteOp(hook.Operation):
-    """delete the object of composite relation except if the relation
-    has actually been redirected to another composite
-    """
-
-    def precommit_event(self):
-        session = self.session
-        # don't do anything if the entity is being created or deleted
-        if not (session.deleted_in_transaction(self.eid) or
-                session.added_in_transaction(self.eid)):
-            etype = session.describe(self.eid)[0]
-            session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
-                                   % (etype, self.relation),
-                                   {'x': self.eid}, 'x')
-
-
-class DeleteCompositeOrphanHook(IntegrityHook):
-    """delete the composed of a composite relation when this relation is deleted
-    """
-    __regid__ = 'deletecomposite'
-    events = ('before_delete_relation',)
-
-    def __call__(self):
-        # if the relation is being delete, don't delete composite's components
-        # automatically
-        pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
-        if (self._cw.describe(self.eidfrom)[0], self.rtype,
-            self._cw.describe(self.eidto)[0]) in pendingrdefs:
-            return
-        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
-                                                 'composite')
-        if composite == 'subject':
-            _DelayedDeleteOp(self._cw, eid=self.eidto,
-                             relation='Y %s X' % self.rtype)
-        elif composite == 'object':
-            _DelayedDeleteOp(self._cw, eid=self.eidfrom,
-                             relation='X %s Y' % self.rtype)
+                    qname = role_name(attr, 'subject')
+                    raise ValidationError(entity.eid, {qname: msg % val})
 
 
 class DontRemoveOwnersGroupHook(IntegrityHook):
@@ -281,16 +254,20 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
 
     def __call__(self):
         if self.event == 'before_delete_entity' and self.entity.name == 'owners':
-            raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
-        elif self.event == 'before_update_entity' and 'name' in self.entity.edited_attributes:
+            msg = self._cw._('can\'t be deleted')
+            raise ValidationError(self.entity.eid, {None: msg})
+        elif self.event == 'before_update_entity' and \
+                 'name' in self.entity.edited_attributes:
             newname = self.entity.pop('name')
             oldname = self.entity.name
             if oldname == 'owners' and newname != oldname:
-                raise ValidationError(self.entity.eid, {'name': self._cw._('can\'t be changed')})
+                qname = role_name('name', 'subject')
+                msg = self._cw._('can\'t be changed')
+                raise ValidationError(self.entity.eid, {qname: msg})
             self.entity['name'] = newname
 
 
-class TidyHtmlFields(UserIntegrityHook):
+class TidyHtmlFields(IntegrityHook):
     """tidy HTML in rich text strings"""
     __regid__ = 'htmltidy'
     events = ('before_add_entity', 'before_update_entity')
@@ -319,3 +296,59 @@ class StripCWUserLoginHook(IntegrityHook):
         user = self.entity
         if 'login' in user.edited_attributes and user.login:
             user.login = user.login.strip()
+
+
+# 'active' integrity hooks: you usually don't want to deactivate them, they are
+# not really integrity check, they maintain consistency on changes
+
+class _DelayedDeleteOp(hook.Operation):
+    """delete the object of composite relation except if the relation has
+    actually been redirected to another composite
+    """
+    key = base_rql = None
+
+    def precommit_event(self):
+        session = self.session
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        neweids = session.transaction_data.get('neweids', ())
+        # poping key is not optional: if further operation trigger new deletion
+        # of composite relation, we'll need a new operation
+        for eid, rtype in session.transaction_data.pop(self.key):
+            # don't do anything if the entity is being created or deleted
+            if not (eid in pendingeids or eid in neweids):
+                etype = session.describe(eid)[0]
+                session.execute(self.base_rql % (etype, rtype), {'x': eid}, 'x')
+
+class _DelayedDeleteSEntityOp(_DelayedDeleteOp):
+    """delete orphan subject entity of a composite relation"""
+    key = '_cwiscomp'
+    base_rql = 'DELETE %s X WHERE X eid %%(x)s, NOT X %s Y'
+
+class _DelayedDeleteOEntityOp(_DelayedDeleteOp):
+    """check required object relation"""
+    key = '_cwiocomp'
+    base_rql = 'DELETE %s X WHERE X eid %%(x)s, NOT Y %s X'
+
+
+class DeleteCompositeOrphanHook(hook.Hook):
+    """delete the composed of a composite relation when this relation is deleted
+    """
+    __regid__ = 'deletecomposite'
+    events = ('before_delete_relation',)
+    category = 'activeintegrity'
+
+    def __call__(self):
+        # if the relation is being delete, don't delete composite's components
+        # automatically
+        pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
+        if (self._cw.describe(self.eidfrom)[0], self.rtype,
+            self._cw.describe(self.eidto)[0]) in pendingrdefs:
+            return
+        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
+                                              'composite')
+        if composite == 'subject':
+            set_operation(self._cw, '_cwiocomp', (self.eidto, self.rtype),
+                          _DelayedDeleteOEntityOp)
+        elif composite == 'object':
+            set_operation(self._cw, '_cwiscomp', (self.eidfrom, self.rtype),
+                          _DelayedDeleteSEntityOp)

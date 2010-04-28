@@ -2,9 +2,9 @@
 
 .. _Part4:
 
---------------------
-Part IV - Appendixes
---------------------
+----------
+Appendixes
+----------
 
 The following chapters are reference material.
 
@@ -13,7 +13,6 @@ The following chapters are reference material.
    :numbered:
 
    faq
-   cookbook
    cubicweb-ctl
    rql/index
    mercurial

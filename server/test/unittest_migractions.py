@@ -1,5 +1,21 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from copy import deepcopy
@@ -14,6 +30,11 @@ from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
+migrschema = None
+def teardown_module(*args):
+    global migrschema
+    del migrschema
+    del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
 
@@ -35,6 +56,13 @@ class MigrationCommandsTC(CubicWebTC):
     def _refresh_repo(cls):
         super(MigrationCommandsTC, cls)._refresh_repo()
         cls.repo.set_schema(deepcopy(cls.origschema), resetvreg=False)
+        # reset migration schema eids
+        for eschema in migrschema.entities():
+            eschema.eid = None
+        for rschema in migrschema.relations():
+            rschema.eid = None
+            for rdef in rschema.rdefs.values():
+                rdef.eid = None
 
     def setUp(self):
         CubicWebTC.setUp(self)
@@ -43,7 +71,6 @@ class MigrationCommandsTC(CubicWebTC):
                                         interactive=False)
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
-
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)

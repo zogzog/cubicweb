@@ -1,10 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Exceptions shared by different cubicweb packages.
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -45,21 +58,19 @@ class CubicWebRuntimeError(CubicWebException):
 
 class ConnectionError(RepositoryError):
     """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
+    a connection failed
+    """
 
 class AuthenticationError(ConnectionError):
-    """raised when a bad connection id is given or when an attempt to establish
-    a connection failed
+    """raised when when an attempt to establish a connection failed do to wrong
+    connection information (login / password or other authentication token)
     """
     def __init__(self, *args, **kwargs):
         super(AuthenticationError, self).__init__(*args)
         self.__dict__.update(kwargs)
 
 class BadConnectionId(ConnectionError):
-    """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
-
-BadSessionId = BadConnectionId # XXX bw compat for pyro connections
+    """raised when a bad connection id is given"""
 
 class UnknownEid(RepositoryError):
     """the eid is not defined in the system tables"""
@@ -127,8 +138,6 @@ class NoSelectableObject(RegistryException):
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
 
-class RegistryOutOfDate(RegistryException):
-    """raised when a source file modification is detected"""
 
 # query exception #############################################################
 

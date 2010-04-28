@@ -1,10 +1,23 @@
 # pylint: disable-msg=W0401,W0614
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """exceptions used in the core of the CubicWeb web application
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -53,10 +66,9 @@ class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
     def __init__(self, reason=''):
-        #super(RequestError, self).__init__() # XXX require py >= 2.5
-        RequestError.__init__(self)
+        super(RequestError, self).__init__()
         self.reason = reason
 
     def dumps(self):
-        import simplejson
-        return simplejson.dumps({'reason': self.reason})
+        from cubicweb.web import json
+        return json.dumps({'reason': self.reason})

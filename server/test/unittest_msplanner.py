@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
@@ -60,6 +73,11 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
 # keep cnx so it's not garbage collected and the associated session is closed
 repo, cnx = init_test_database()
 
+def teardown_module(*args):
+    global repo, cnx
+    del repo, cnx
+
+
 class BaseMSPlannerTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
 
@@ -87,10 +105,10 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.add_source(FakeCardSource, 'cards')
 
     def tearDown(self):
-        super(BaseMSPlannerTC, self).tearDown()
         # restore hijacked security
         self.restore_orig_affaire_security()
         self.restore_orig_cwuser_security()
+        super(BaseMSPlannerTC, self).tearDown()
 
     def restore_orig_affaire_security(self):
         affreadperms = list(self.schema['Affaire'].permissions['read'])
@@ -620,7 +638,6 @@ class MSPlannerTC(BaseMSPlannerTC):
         2. return the result of Any X,Y WHERE X login 'syt', Y login 'adim'
            on the system source
         """
-        ueid = self.session.user.eid
         self._test('Any X,Y LIMIT 10 OFFSET 10 WHERE X login "syt", Y login "adim"',
                    [('FetchStep',
                      [('Any X WHERE X login "syt", X is CWUser', [{'X': 'CWUser'}])],
@@ -632,7 +649,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [('Any X,Y LIMIT 10 OFFSET 10 WHERE X is CWUser, Y is CWUser', [{'X': 'CWUser', 'Y': 'CWUser'}])],
                      10, 10, [self.system],
                      {'X': 'table0.C0', 'Y': 'table1.C0'}, [])
-                    ], {'x': ueid})
+                    ])
 
     def test_complex_aggregat(self):
         self._test('Any MAX(X)',
@@ -1005,7 +1022,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         self.session = self.user_groups_session('guests')
         self._test('Any X,XT,U WHERE X is Card, X owned_by U?, X title XT, U login L',
                    [('FetchStep',
-                     [('Any U,L WHERE U identity 5, U login L, U is CWUser',
+                     [('Any U,L WHERE U login L, EXISTS(U identity 5), U is CWUser',
                        [{'L': 'String', u'U': 'CWUser'}])],
                      [self.system], {}, {'L': 'table0.C1', 'U': 'table0.C0', 'U.login': 'table0.C1'}, []),
                     ('FetchStep',
@@ -1412,13 +1429,25 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [])],
                    {'E': self.session.user.eid})
 
-    def test_eid_dont_cross_relation(self):
+    def test_eid_dont_cross_relation_1(self):
         repo._type_source_cache[999999] = ('Personne', 'system', 999999)
         self._test('Any Y,YT WHERE X eid %(x)s, X fiche Y, Y title YT',
                    [('OneFetchStep', [('Any Y,YT WHERE X eid 999999, X fiche Y, Y title YT',
                                        [{'X': 'Personne', 'Y': 'Card', 'YT': 'String'}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999})
+
+    def test_eid_dont_cross_relation_2(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.dont_cross_relations.add('concerne')
+        try:
+            self._test('Any Y,S,YT,X WHERE Y concerne X, Y in_state S, X eid 999999, Y ref YT',
+                   [('OneFetchStep', [('Any Y,S,YT,999999 WHERE Y concerne 999999, Y in_state S, Y ref YT',
+                                       [{'Y': 'Affaire', 'YT': 'String', 'S': 'State'}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': 999999})
+        finally:
+            self.cards.dont_cross_relations.remove('concerne')
 
 
     # external source w/ .cross_relations == ['multisource_crossed_rel'] ######
@@ -1517,15 +1546,11 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         repo._type_source_cache[999998] = ('State', 'system', None)
         self._test('INSERT Note X: X in_state S, X type T WHERE S eid %(s)s, N eid %(n)s, N type T',
-                   [('FetchStep', [('Any T WHERE N eid 999999, N type T, N is Note',
-                                    [{'N': 'Note', 'T': 'String'}])],
-                     [self.cards], None, {'N.type': 'table0.C0', 'T': 'table0.C0'}, []),
-                    ('InsertStep',
-                     [('RelationsStep',
-                       [('OneFetchStep', [('Any 999998,T WHERE N type T, N is Note',
+                   [('InsertStep',
+                     [('InsertRelationsStep',
+                       [('OneFetchStep', [('Any T WHERE N eid 999999, N type T, N is Note',
                                            [{'N': 'Note', 'T': 'String'}])],
-                        None, None, [self.system],
-                        {'N.type': 'table0.C0', 'T': 'table0.C0'}, [])])
+                        None, None, [self.cards], {}, [])])
                       ])
                     ],
                    {'n': 999999, 's': 999998})
@@ -1534,15 +1559,11 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         repo._type_source_cache[999998] = ('State', 'system', None)
         self._test('INSERT Note X: X in_state S, X type T, X migrated_from N WHERE S eid %(s)s, N eid %(n)s, N type T',
-                   [('FetchStep', [('Any T,N WHERE N eid 999999, N type T, N is Note',
-                                    [{'N': 'Note', 'T': 'String'}])],
-                     [self.cards], None, {'N': 'table0.C1', 'N.type': 'table0.C0', 'T': 'table0.C0'}, []),
-                    ('InsertStep',
-                     [('RelationsStep',
-                       [('OneFetchStep', [('Any 999998,T,N WHERE N type T, N is Note',
+                   [('InsertStep',
+                     [('InsertRelationsStep',
+                       [('OneFetchStep', [('Any T WHERE N eid 999999, N type T, N is Note',
                                            [{'N': 'Note', 'T': 'String'}])],
-                         None, None, [self.system],
-                         {'N': 'table0.C1', 'N.type': 'table0.C0', 'T': 'table0.C0'}, [])
+                         None, None, [self.cards], {}, [])
                         ])
                       ])
                     ],
@@ -1553,8 +1574,8 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999998] = ('State', 'cards', 999998)
         self._test('INSERT Note X: X in_state S, X type T WHERE S eid %(s)s, N eid %(n)s, N type T',
                    [('InsertStep',
-                     [('RelationsStep',
-                       [('OneFetchStep', [('Any 999998,T WHERE N eid 999999, N type T, N is Note',
+                     [('InsertRelationsStep',
+                       [('OneFetchStep', [('Any T WHERE N eid 999999, N type T, N is Note',
                                            [{'N': 'Note', 'T': 'String'}])],
                          None, None, [self.cards], {}, [])]
                        )]
@@ -1566,10 +1587,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999998] = ('State', 'system', None)
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s',
                    [('InsertStep',
-                     [('RelationsStep',
-                       [('OneFetchStep', [('Any 999998,999999', [{}])],
-                         None, None, [self.system], {}, [])]
-                       )]
+                      [('InsertRelationsStep', [])]
                      )],
                    {'n': 999999, 's': 999998})
 
@@ -1578,12 +1596,14 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999998] = ('State', 'system', None)
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s, A concerne N',
                    [('InsertStep',
-                     [('RelationsStep',
-                       [('OneFetchStep', [('Any 999998,999999 WHERE A concerne 999999, A is Affaire',
-                                           [{'A': 'Affaire'}])],
-                         None, None, [self.system], {}, [])]
-                       )]
-                     )],
+                     [('InsertRelationsStep',
+                       [('OneFetchStep',
+                         [('Any A WHERE A concerne 999999, A is Affaire',
+                           [{'A': 'Affaire'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                      ])
+                    ],
                    {'n': 999999, 's': 999998})
 
     def test_delete_relation1(self):
@@ -1664,7 +1684,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # source, states should only be searched in the system source as well
         self._test('SET X in_state S WHERE X eid %(x)s, S name "deactivated"',
                    [('UpdateStep', [
-                       ('OneFetchStep', [('DISTINCT Any 5,S WHERE S name "deactivated", S is State',
+                       ('OneFetchStep', [('DISTINCT Any S WHERE S name "deactivated", S is State',
                                           [{'S': 'State'}])],
                         None, None, [self.system], {}, []),
                        ]),
@@ -1814,7 +1834,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    [('FetchStep', [('Any Y WHERE Y multisource_rel 999998, Y is Note', [{'Y': 'Note'}])],
                      [self.cards], None, {'Y': u'table0.C0'}, []),
                     ('UpdateStep',
-                     [('OneFetchStep', [('DISTINCT Any 999999,Y WHERE Y migrated_from 999998, Y is Note',
+                     [('OneFetchStep', [('DISTINCT Any Y WHERE Y migrated_from 999998, Y is Note',
                                          [{'Y': 'Note'}])],
                        None, None, [self.system],
                        {'Y': u'table0.C0'}, [])])],
@@ -1841,14 +1861,9 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_nonregr11(self):
         repo._type_source_cache[999999] = ('Bookmark', 'system', 999999)
         self._test('SET X bookmarked_by Y WHERE X eid %(x)s, Y login "hop"',
-                   [('FetchStep',
-                     [('Any Y WHERE Y login "hop", Y is CWUser', [{'Y': 'CWUser'}])],
-                     [self.ldap, self.system],
-                     None, {'Y': 'table0.C0'}, []),
-                    ('UpdateStep',
-                     [('OneFetchStep', [('DISTINCT Any 999999,Y WHERE Y is CWUser', [{'Y': 'CWUser'}])],
-                       None, None, [self.system], {'Y': 'table0.C0'},
-                       [])]
+                   [('UpdateStep',
+                     [('OneFetchStep', [('DISTINCT Any Y WHERE Y login "hop", Y is CWUser', [{'Y': 'CWUser'}])],
+                       None, None, [self.ldap, self.system], {}, [])]
                      )],
                    {'x': 999999})
 

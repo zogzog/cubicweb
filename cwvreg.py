@@ -1,9 +1,193 @@
-"""extend the generic VRegistry with some cubicweb specific stuff
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+""".. VRegistry:
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+The `VRegistry`
+---------------
+
+The `VRegistry` can be seen as a two levels dictionary. It contains
+all dynamically loaded objects (subclasses of :ref:`appobject`) to
+build a |cubicweb| application. Basically:
+
+* the first level key returns a *registry*. This key corresponds to the
+  `__registry__` attribute of application object classes
+
+* the second level key returns a list of application objects which
+  share the same identifier. This key corresponds to the `__regid__`
+  attribute of application object classes.
+
+A *registry* holds a specific kind of application objects. There is
+for instance a registry for entity classes, another for views, etc...
+
+The `VRegistry` has two main responsibilities:
+
+- being the access point to all registries
+
+- handling the registration process at startup time, and during automatic
+  reloading in debug mode.
+
+.. _AppObjectRecording:
+
+Details of the recording process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   vregistry: registration_callback
+
+On startup |cubicweb| loads application objects defined in its library
+and in cubes used by the instance. Application objects from the
+library are loaded first, then those provided by cubes are loaded in
+dependency order (e.g. if your cube depends on an other, objects from
+the dependency will be loaded first). Cube's modules or packages where
+appobject are looked for is explained in :ref:`cubelayout`.
+
+For each module:
+
+* by default all objects are registered automatically
+
+* if some objects have to replace other objects, or have to be
+  included only if some condition is met, you'll have to define a
+  `registration_callback(vreg)` function in your module and explicitly
+  register **all objects** in this module, using the api defined
+  below.
+
+.. Note::
+    Once the function `registration_callback(vreg)` is implemented in a module,
+    all the objects from this module have to be explicitly registered as it
+    disables the automatic objects registration.
+
+
+API for objects registration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here are the registration methods that you can use in the `registration_callback`
+to register your objects to the `VRegistry` instance given as argument (usually
+named `vreg`):
+
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_all
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_and_replace
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_if_interface_found
+.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.unregister
+
+Examples:
+
+.. sourcecode:: python
+
+   # web/views/basecomponents.py
+   def registration_callback(vreg):
+      # register everything in the module except SeeAlsoComponent
+      vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
+      # conditionally register SeeAlsoVComponent
+      if 'see_also' in vreg.schema:
+          vreg.register(SeeAlsoVComponent)
+
+In this example, we register all application object classes defined in the module
+except `SeeAlsoVComponent`. This class is then registered only if the 'see_also'
+relation type is defined in the instance'schema.
+
+.. sourcecode:: python
+
+   # goa/appobjects/sessions.py
+   def registration_callback(vreg):
+      vreg.register(SessionsCleaner)
+      # replace AuthenticationManager by GAEAuthenticationManager
+      vreg.register_and_replace(GAEAuthenticationManager, AuthenticationManager)
+      # replace PersistentSessionManager by GAEPersistentSessionManager
+      vreg.register_and_replace(GAEPersistentSessionManager, PersistentSessionManager)
+
+In this example, we explicitly register classes one by one:
+
+* the `SessionCleaner` class
+* the `GAEAuthenticationManager` to replace the `AuthenticationManager`
+* the `GAEPersistentSessionManager` to replace the `PersistentSessionManager`
+
+If at some point we register a new appobject class in this module, it won't be
+registered at all without modification to the `registration_callback`
+implementation. The previous example will register it though, thanks to the call
+to the `register_all` method.
+
+
+.. _Selection:
+
+Runtime objects selection
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that we have all application objects loaded, the question is : when
+I want some specific object, for instance the primary view for a given
+entity, how do I get the proper object ? This is what we call the
+**selection mechanism**.
+
+As explained in the :ref:`Concepts` section:
+
+* each application object has a **selector**, defined by its
+  `__select__` class attribute
+
+* this selector is responsible to return a **score** for a given context
+
+  - 0 score means the object doesn't apply to this context
+
+  - else, the higher the score, the better the object suits the context
+
+* the object with the higher score is selected.
+
+.. Note::
+
+  When no score is higher than the others, an exception is raised in development
+  mode to let you know that the engine was not able to identify the view to
+  apply. This error is silenced in production mode and one of the objects with
+  the higher score is picked.
+
+  In such cases you would need to review your design and make sure your selectors
+  or appobjects are properly defined.
+
+For instance, if you are selecting the primary (eg `__regid__ =
+'primary'`) view (eg `__registry__ = 'views'`) for a result set
+containing a `Card` entity, two objects will probably be selectable:
+
+* the default primary view (`__select__ = implements('Any')`), meaning
+  that the object is selectable for any kind of entity type
+
+* the specific `Card` primary view (`__select__ = implements('Card')`,
+  meaning that the object is selectable for Card entities
+
+Other primary views specific to other entity types won't be selectable in this
+case. Among selectable objects, the implements selector will return a higher
+score than the second view since it's more specific, so it will be selected as
+expected.
+
+.. _SelectionAPI:
+
+API for objects selections
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here is the selection API you'll get on every registry. Some of them, as the
+'etypes' registry, containing entity classes, extend it. In those methods,
+`*args, **kwargs` is what we call the **context**. Those arguments are given to
+selectors that will inspect there content and return a score accordingly.
+
+.. automethod:: cubicweb.vregistry.Registry.select
+
+.. automethod:: cubicweb.vregistry.Registry.select_or_none
+
+.. automethod:: cubicweb.vregistry.Registry.possible_objects
+
+.. automethod:: cubicweb.vregistry.Registry.object_by_id
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -16,17 +200,14 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      RegistryOutOfDate, CW_EVENT_MANAGER, onevent)
+                      CW_EVENT_MANAGER, onevent)
 from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
 
-
-@onevent('before-registry-reload')
 def clear_rtag_objects():
     for rtag in RTAGS:
         rtag.clear()
-
 
 def use_interfaces(obj):
     """return interfaces used by the given object by searching for implements
@@ -265,6 +446,11 @@ class CubicWebVRegistry(VRegistry):
         self.schema = None
         self.initialized = False
         self.reset()
+        # XXX give force_reload (or refactor [re]loading...)
+        if self.config.mode != 'test':
+            # don't clear rtags during test, this may cause breakage with
+            # manually imported appobject modules
+            CW_EVENT_MANAGER.bind('before-registry-reload', clear_rtag_objects)
 
     def setdefault(self, regid):
         try:
@@ -285,8 +471,8 @@ class CubicWebVRegistry(VRegistry):
     def itervalues(self):
         return (value for key, value in self.items())
 
-    def reset(self, path=None, force_reload=None):
-        super(CubicWebVRegistry, self).reset(path, force_reload)
+    def reset(self):
+        super(CubicWebVRegistry, self).reset()
         self._needs_iface = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
@@ -296,7 +482,29 @@ class CubicWebVRegistry(VRegistry):
             self['propertyvalues'] = self.eprop_values = {}
             for key, propdef in self.config.eproperty_definitions():
                 self.register_property(key, **propdef)
-        if path is not None and force_reload:
+
+    def set_schema(self, schema):
+        """set instance'schema and load application objects"""
+        self._set_schema(schema)
+        # now we can load application's web objects
+        self.reload(self.config.vregistry_path(), force_reload=False)
+        # map lowered entity type names to their actual name
+        self.case_insensitive_etypes = {}
+        for eschema in self.schema.entities():
+            etype = str(eschema)
+            self.case_insensitive_etypes[etype.lower()] = etype
+            clear_cache(eschema, 'ordered_relations')
+            clear_cache(eschema, 'meta_attributes')
+
+    def reload_if_needed(self):
+        path = self.config.vregistry_path()
+        if self.is_reload_needed(path):
+            self.reload(path)
+
+    def reload(self, path, force_reload=True):
+        """modification detected, reset and reload the vreg"""
+        CW_EVENT_MANAGER.emit('before-registry-reload')
+        if force_reload:
             cleanup_sys_modules(path)
             cubes = self.config.cubes()
             # if the fs code use some cubes not yet registered into the instance
@@ -307,21 +515,9 @@ class CubicWebVRegistry(VRegistry):
                 if not cube in cubes:
                     cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
                     cleanup_sys_modules(cpath)
-
-    def set_schema(self, schema):
-        """set instance'schema and load application objects"""
-        self._set_schema(schema)
-        # now we can load application's web objects
-        searchpath = self.config.vregistry_path()
-        self.reset(searchpath, force_reload=False)
-        self.register_objects(searchpath, force_reload=False)
-        # map lowered entity type names to their actual name
-        self.case_insensitive_etypes = {}
-        for eschema in self.schema.entities():
-            etype = str(eschema)
-            self.case_insensitive_etypes[etype.lower()] = etype
-            clear_cache(eschema, 'ordered_relations')
-            clear_cache(eschema, 'meta_attributes')
+        self.reset()
+        self.register_objects(path, force_reload)
+        CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
         """set instance'schema"""
@@ -339,8 +535,11 @@ class CubicWebVRegistry(VRegistry):
                     obj.schema = schema
 
     def register_if_interface_found(self, obj, ifaces, **kwargs):
-        """register an object but remove it if no entity class implements one of
-        the given interfaces at the end of the registration process
+        """register `obj` but remove it if no entity class implements one of
+        the given `ifaces` interfaces at the end of the registration process.
+
+        Extra keyword arguments are given to the
+        :meth:`~cubicweb.cwvreg.CubicWebVRegistry.register` function.
         """
         self.register(obj, **kwargs)
         if not isinstance(ifaces,  (tuple, list)):
@@ -349,26 +548,23 @@ class CubicWebVRegistry(VRegistry):
             self._needs_iface[obj] = ifaces
 
     def register(self, obj, *args, **kwargs):
+        """register `obj` application object into `registryname` or
+        `obj.__registry__` if not specified, with identifier `oid` or
+        `obj.__regid__` if not specified.
+
+        If `clear` is true, all objects with the same identifier will be
+        previously unregistered.
+        """
         super(CubicWebVRegistry, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
             self._needs_iface[obj] = ifaces
 
-    def register_objects(self, path, force_reload=None):
+    def register_objects(self, path, force_reload=False):
         """overriden to remove objects requiring a missing interface"""
-        if force_reload is None:
-            force_reload = self.config.debugmode
-        try:
-            super(CubicWebVRegistry, self).register_objects(
-                path, force_reload, self.config.extrapath)
-        except RegistryOutOfDate:
-            CW_EVENT_MANAGER.emit('before-registry-reload')
-            # modification detected, reset and reload
-            self.reset(path, force_reload)
-            super(CubicWebVRegistry, self).register_objects(
-                path, force_reload, self.config.extrapath)
-            CW_EVENT_MANAGER.emit('after-registry-reload')
+        super(CubicWebVRegistry, self).register_objects(
+            path, force_reload, self.config.extrapath)
 
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:

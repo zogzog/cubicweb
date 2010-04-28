@@ -1,35 +1,53 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Security hooks: check permissions to add/delete/update entities according to
 the user connected to a session
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import objectify_selector, lltrace
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
 def check_entity_attributes(session, entity, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
-    # ._default_set is only there on entity creation to indicate unspecified
-    # attributes which has been set to a default value defined in the schema
-    defaults = getattr(entity, '_default_set', ())
+    # .skip_security_attributes is there to bypass security for attributes
+    # set by hooks by modifying the entity's dictionnary
+    dontcheck = entity.skip_security_attributes
     if editedattrs is None:
         try:
             editedattrs = entity.edited_attributes
         except AttributeError:
-            editedattrs = entity
+            editedattrs = entity # XXX unexpected
     for attr in editedattrs:
-        if attr in defaults:
+        if attr in dontcheck:
             continue
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
             rdef.check_perm(session, 'update', eid=eid)
+    # don't update dontcheck until everything went fine: see usage in
+    # after_update_entity, where if we got an Unauthorized at hook time, we will
+    # retry and commit time
+    dontcheck |= frozenset(editedattrs)
 
 
 class _CheckEntityPermissionOp(hook.LateOperation):
@@ -53,10 +71,17 @@ class _CheckRelationPermissionOp(hook.LateOperation):
         pass
 
 
+@objectify_selector
+@lltrace
+def write_security_enabled(cls, req, **kwargs):
+    if req is None or not req.write_security:
+        return 0
+    return 1
+
 class SecurityHook(hook.Hook):
     __abstract__ = True
     category = 'security'
-    __select__ = hook.Hook.__select__ & hook.regular_session()
+    __select__ = hook.Hook.__select__ & write_security_enabled()
 
 
 class AfterAddEntitySecurityHook(SecurityHook):

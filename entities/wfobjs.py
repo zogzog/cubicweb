@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """workflow definition and history related entities
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -158,7 +171,7 @@ class Workflow(AnyEntity):
             todelstate = self.state_by_name(todelstate)
         if not hasattr(replacement, 'eid'):
             replacement = self.state_by_name(replacement)
-        execute = self._cw.unsafe_execute
+        execute = self._cw.execute
         execute('SET X in_state S WHERE S eid %(s)s', {'s': todelstate.eid}, 's')
         execute('SET X from_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
                 {'os': todelstate.eid, 'ns': replacement.eid}, 's')

@@ -92,8 +92,7 @@ Comparison operators
     Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
-XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than
-"NOT A trick 'bar'" ?
+.. XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than "NOT A trick 'bar'" ?
 
 .. _PriorityOperators:
 
@@ -373,3 +372,15 @@ each line result returned by the restriction*.
 
         DELETE X friend Y WHERE X is Person, X name 'foo'
 
+Virtual RQL relations
+~~~~~~~~~~~~~~~~~~~~~
+
+Those relations may only be used in RQL query and are not actual
+attributes of your entities.
+
+* `has_text`: relation to use to query the full text index (only for
+  entities having fulltextindexed attributes).
+
+* `identity`: relation to use to tell that a RQL variable should be
+  the same as another (but you've to use two different rql variables
+  for querying purpose)

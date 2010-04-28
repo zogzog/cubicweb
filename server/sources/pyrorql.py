@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Source to query another RQL repository using pyro
 
-:organization: Logilab
-:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -203,7 +216,8 @@ repository (default to 5 minutes).',
                                          insert=False)
                     # entity has been deleted from external repository but is not known here
                     if eid is not None:
-                        repo.delete_info(session, eid)
+                        entity = session.entity_from_eid(eid, etype)
+                        repo.delete_info(session, entity, self.uri, extid)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
@@ -350,11 +364,11 @@ repository (default to 5 minutes).',
         self._query_cache.clear()
         entity.clear_all_caches()
 
-    def delete_entity(self, session, etype, eid):
+    def delete_entity(self, session, entity):
         """delete an entity from the source"""
         cu = session.pool[self.uri]
-        cu.execute('DELETE %s X WHERE X eid %%(x)s' % etype,
-                   {'x': self.eid2extid(eid, session)}, 'x')
+        cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
+                   {'x': self.eid2extid(entity.eid, session)}, 'x')
         self._query_cache.clear()
 
     def add_relation(self, session, subject, rtype, object):

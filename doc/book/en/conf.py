@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 #
 # Cubicweb documentation build configuration file, created by
@@ -19,6 +32,7 @@
 # serve to show the default value.
 
 import sys, os
+
 from cubicweb import __pkginfo__ as cw
 
 # If your extensions are in another directory, add it here. If the directory
@@ -31,10 +45,10 @@ from cubicweb import __pkginfo__ as cw
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'logilab.common.sphinx_ext']
 autoclass_content = 'both'
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+#templates_path = []
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -44,7 +58,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'CubicWeb'
-copyright = '2008-2010, Logilab'
+copyright = '2001-2010, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -91,11 +105,13 @@ pygments_style = 'sphinx'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'sphinx-default.css'
+#html_style = 'sphinx-default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 html_title = '%s %s' % (project, release)
+html_theme = 'standard_theme'
+html_theme_path = ['.']
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -185,3 +201,11 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+#aafig_format = dict(latex='pdf', html='svg', text=None)
+
+rst_epilog = """
+.. |cubicweb| replace:: *CubicWeb*
+.. |yams| replace:: *Yams*
+.. |rql| replace:: *RQL*
+"""

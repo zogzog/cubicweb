@@ -1,12 +1,26 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for request/session
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: Library General Public License version 2 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from urlparse import urlsplit, urlunsplit
 from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
@@ -23,6 +37,12 @@ ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
 
 
+def _check_cw_unsafe(kwargs):
+    if kwargs.pop('_cw_unsafe', False):
+        warn('[3.7] _cw_unsafe argument is deprecated, now unsafe by '
+             'default, control it using cw_[read|write]_security.',
+             DeprecationWarning, stacklevel=3)
+
 class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
@@ -36,12 +56,10 @@ class RequestSessionBase(object):
 
     request/session is the main resources accessor, mainly through it's vreg
     attribute:
-    :vreg:
-      the instance's registry
-    :vreg.schema:
-      the instance's schema
-    :vreg.config:
-      the instance's configuration
+
+    :attribute vreg: the instance's registry
+    :attribute vreg.schema: the instance's schema
+    :attribute vreg.config: the instance's configuration
     """
     def __init__(self, vreg):
         self.vreg = vreg
@@ -71,7 +89,8 @@ class RequestSessionBase(object):
         def get_entity(row, col=0, etype=etype, req=self, rset=rset):
             return req.vreg.etype_class(etype)(req, rset, row, col)
         rset.get_entity = get_entity
-        return self.decorate_rset(rset)
+        rset.req = self
+        return rset
 
     def eid_rset(self, eid, etype=None):
         """return a result set for the given eid without doing actual query
@@ -83,14 +102,17 @@ class RequestSessionBase(object):
             etype = self.describe(eid)[0]
         rset = ResultSet([(eid,)], 'Any X WHERE X eid %(x)s', {'x': eid},
                          [(etype,)])
-        return self.decorate_rset(rset)
+        rset.req = self
+        return rset
 
     def empty_rset(self):
         """return a result set for the given eid without doing actual query
         (we have the eid, we can suppose it exists and user has access to the
         entity)
         """
-        return self.decorate_rset(ResultSet([], 'Any X WHERE X eid -1'))
+        rset = ResultSet([], 'Any X WHERE X eid -1')
+        rset.req = self
+        return rset
 
     def entity_from_eid(self, eid, etype=None):
         """return an entity instance for the given eid. No query is done"""
@@ -108,63 +130,19 @@ class RequestSessionBase(object):
     def set_entity_cache(self, entity):
         pass
 
-    # XXX move to CWEntityManager or even better as factory method (unclear
-    # where yet...)
-
-    def create_entity(self, etype, _cw_unsafe=False, **kwargs):
+    def create_entity(self, etype, **kwargs):
         """add a new entity of the given type
 
         Example (in a shell session):
 
-        c = create_entity('Company', name=u'Logilab')
-        create_entity('Person', works_for=c, firstname=u'John', lastname=u'Doe')
+        >>> c = create_entity('Company', name=u'Logilab')
+        >>> create_entity('Person', firstname=u'John', lastname=u'Doe',
+        ...               works_for=c)
 
         """
-        if _cw_unsafe:
-            execute = self.unsafe_execute
-        else:
-            execute = self.execute
-        rql = 'INSERT %s X' % etype
-        relations = []
-        restrictions = set()
-        cachekey = []
-        pending_relations = []
-        for attr, value in kwargs.items():
-            if isinstance(value, (tuple, list, set, frozenset)):
-                if len(value) == 1:
-                    value = iter(value).next()
-                else:
-                    del kwargs[attr]
-                    pending_relations.append( (attr, value) )
-                    continue
-            if hasattr(value, 'eid'): # non final relation
-                rvar = attr.upper()
-                # XXX safer detection of object relation
-                if attr.startswith('reverse_'):
-                    relations.append('%s %s X' % (rvar, attr[len('reverse_'):]))
-                else:
-                    relations.append('X %s %s' % (attr, rvar))
-                restriction = '%s eid %%(%s)s' % (rvar, attr)
-                if not restriction in restrictions:
-                    restrictions.add(restriction)
-                cachekey.append(attr)
-                kwargs[attr] = value.eid
-            else: # attribute
-                relations.append('X %s %%(%s)s' % (attr, attr))
-        if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
-        if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, kwargs, cachekey).get_entity(0, 0)
-        for attr, values in pending_relations:
-            if attr.startswith('reverse_'):
-                restr = 'Y %s X' % attr[len('reverse_'):]
-            else:
-                restr = 'X %s Y' % attr
-            execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                restr, ','.join(str(r.eid) for r in values)),
-                         {'x': created.eid}, 'x')
-        return created
+        _check_cw_unsafe(kwargs)
+        cls = self.vreg['etypes'].etype_class(etype)
+        return cls.cw_instantiate(self.execute, **kwargs)
 
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
@@ -173,8 +151,8 @@ class RequestSessionBase(object):
             raise Unauthorized(self._('only select queries are authorized'))
 
     def get_cache(self, cachename):
-        """
-        NOTE: cachename should be dotted names as in :
+        """cachename should be dotted names as in :
+
         - cubicweb.mycache
         - cubes.blog.mycache
         - etc.
@@ -301,7 +279,7 @@ class RequestSessionBase(object):
             userinfo['name'] = "cubicweb"
             userinfo['email'] = ""
             return userinfo
-        user = self.actual_session().user
+        user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
         userinfo['email'] = user.get_email()
@@ -400,10 +378,6 @@ class RequestSessionBase(object):
 
     def base_url(self):
         """return the root url of the instance"""
-        raise NotImplementedError
-
-    def decorate_rset(self, rset):
-        """add vreg/req (at least) attributes to the given result set """
         raise NotImplementedError
 
     def describe(self, eid):

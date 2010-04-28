@@ -1,15 +1,26 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Fake objects to ease testing of cubicweb without a fully working environment
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.adbh import get_adv_func_helper
-
-from indexer import get_indexer
+from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CubicWebVRegistry
@@ -118,17 +129,6 @@ class FakeRequest(CubicWebRequestBase):
     def validate_cache(self):
         pass
 
-    # session compatibility (in some test are using this class to test server
-    # side views...)
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
-    def unsafe_execute(self, *args, **kwargs):
-        """return the original parent session if any, else self"""
-        kwargs.pop('propagate', None)
-        return self.execute(*args, **kwargs)
-
 
 class FakeUser(object):
     login = 'toto'
@@ -138,18 +138,19 @@ class FakeUser(object):
 
 
 class FakeSession(RequestSessionBase):
+    read_security = write_security = True
+    set_read_security = set_write_security = lambda *args, **kwargs: None
+
     def __init__(self, repo=None, user=None):
         self.repo = repo
         self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
         self.pool = FakePool()
         self.user = user or FakeUser()
         self.is_internal_session = False
-        self.is_super_session = self.user.eid == -1
         self.transaction_data = {}
 
-    def execute(self, *args):
+    def execute(self, *args, **kwargs):
         pass
-    unsafe_execute = execute
 
     def commit(self, *args):
         self.transaction_data.clear()
@@ -157,11 +158,6 @@ class FakeSession(RequestSessionBase):
         pass
     def system_sql(self, sql, args=None):
         pass
-
-    def decorate_rset(self, rset, propagate=False):
-        rset.vreg = self.vreg
-        rset.req = self
-        return rset
 
     def set_entity_cache(self, entity):
         pass
@@ -200,12 +196,7 @@ class FakeRepo(object):
 
 
 class FakeSource(object):
-    dbhelper = get_adv_func_helper('sqlite')
-    indexer = get_indexer('sqlite', 'UTF8')
-    dbhelper.fti_uid_attr = indexer.uid_attr
-    dbhelper.fti_table = indexer.table
-    dbhelper.fti_restriction_sql = indexer.restriction_sql
-    dbhelper.fti_need_distinct_query = indexer.need_distinct
+    dbhelper = get_db_helper('sqlite')
     def __init__(self, uri):
         self.uri = uri
 

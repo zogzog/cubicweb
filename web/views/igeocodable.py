@@ -1,17 +1,29 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Specific views for entities implementing IGeocodable
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
-
-import simplejson
 
 from cubicweb.interfaces import IGeocodable
 from cubicweb.view import EntityView
 from cubicweb.selectors import implements
+from cubicweb.web import json
 
 class GeocodingJsonView(EntityView):
     __regid__ = 'geocoding-json'
@@ -39,7 +51,7 @@ class GeocodingJsonView(EntityView):
             'center': center,
             'markers': markers,
             }
-        self.w(simplejson.dumps(geodata))
+        self.w(json.dumps(geodata))
 
     def build_marker_data(self, row, extraparams):
         entity = self.cw_rset.get_entity(row, 0)

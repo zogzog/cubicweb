@@ -1,3 +1,20 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """plan execution of rql queries on multiple sources
 
 the best way to understand what are we trying to acheive here is to read the
@@ -69,10 +86,6 @@ is supported, no group or such):
      will directly get local eids)
 
 
-:organization: Logilab
-:copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -313,8 +326,6 @@ class PartPlanInformation(object):
             if varobj.stinfo['uidrels']:
                 vrels = varobj.stinfo['relations'] - varobj.stinfo['uidrels']
                 for rel in varobj.stinfo['uidrels']:
-                    if rel.neged(strict=True) or rel.operator() != '=':
-                        continue
                     for const in rel.children[1].get_nodes(Constant):
                         eid = const.eval(self.plan.args)
                         source = self._session.source_from_eid(eid)
@@ -352,8 +363,11 @@ class PartPlanInformation(object):
                             source.support_relation, (r.r_type for r in rels))):
                             self.needsplit = True
         # add source for rewritten constants to sourcesterms
+        self._const_vars = {}
         for vconsts in self.rqlst.stinfo['rewritten'].itervalues():
-            const = vconsts[0]
+            # remember those consts come from the same variable
+            for const in vconsts:
+                self._const_vars[const] = vconsts
             source = self._session.source_from_eid(const.eval(self.plan.args))
             if source is self.system_source:
                 for const in vconsts:
@@ -539,6 +553,11 @@ class PartPlanInformation(object):
                                                     rel in self._crossrelations[s]))
         if invalid_sources:
             self._remove_sources(term, invalid_sources)
+            # if term is a rewritten const, we can apply the same changes to
+            # all other consts inserted from the same original variable
+            for const in self._const_vars.get(term, ()):
+                if const is not term:
+                    self._remove_sources(const, invalid_sources)
             termsources -= invalid_sources
             self._remove_sources_until_stable(term, termssources)
             if isinstance(oterm, Constant):
@@ -1044,7 +1063,7 @@ class MSPlanner(SSPlanner):
                      for select in subquery.query.children]
             for sppi in sppis:
                 if sppi.needsplit or sppi.part_sources != ppi.part_sources:
-                    temptable = 'T%s' % make_uid(id(subquery))
+                    temptable = plan.make_temp_table_name('T%s' % make_uid(id(subquery)))
                     sstep = self._union_plan(plan, sppis, temptable)[0]
                     break
             else:
@@ -1077,7 +1096,7 @@ class MSPlanner(SSPlanner):
                 inputmap = self._ppi_subqueries(ppi)
                 aggrstep = need_aggr_step(select, sources)
                 if aggrstep:
-                    atemptable = 'T%s' % make_uid(id(select))
+                    atemptable = plan.make_temp_table_name('T%s' % make_uid(id(select)))
                     sunion = Union()
                     sunion.append(select)
                     selected = select.selection[:]
@@ -1121,7 +1140,7 @@ class MSPlanner(SSPlanner):
         subinputmap = self._ppi_subqueries(ppi)
         stepdefs = ppi.part_steps()
         if need_aggr_step(select, ppi.part_sources, stepdefs):
-            atemptable = 'T%s' % make_uid(id(select))
+            atemptable = plan.make_temp_table_name('T%s' % make_uid(id(select)))
             selection = select.selection[:]
             select_group_sort(select)
         else:
@@ -1171,6 +1190,7 @@ class MSPlanner(SSPlanner):
                 else:
                     table = '_T%s%s' % (''.join(sorted(v._ms_table_key() for v in terms)),
                                         ''.join(sorted(str(i) for i in solindices)))
+                    table = plan.make_temp_table_name(table)
                     ppi.build_non_final_part(minrqlst, solindices, sources,
                                              insertedvars, table)
         # finally: join parts, deal with aggregat/group/sorts if necessary

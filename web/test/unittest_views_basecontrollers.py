@@ -1,11 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-import simplejson
 
 from logilab.common.testlib import unittest_main, mock_object
 
@@ -13,7 +25,7 @@ from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
+from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, json
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 u = unicode
@@ -51,7 +63,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject-confirm:X': u'toto',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'login': 'the value "admin" is already used, use another one'})
+        self.assertEquals(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
         """checking that a manager user can edit itself
@@ -219,7 +231,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount': 'value [0;100] constraint failed for value -10'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value -10'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -228,7 +240,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount': 'value [0;100] constraint failed for value 110'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value 110'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -343,7 +355,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'blogentry')
-        self.assertEquals(params, {u'__message': u'entity deleted'})
+        self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         self.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
                      {'x': self.session.user.eid, 'e': eid}, 'x')
@@ -353,7 +365,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'cwuser/admin')
-        self.assertEquals(params, {u'__message': u'entity deleted'})
+        self.assertIn('_cwmsgid', params)
         eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         eid2 = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         req = self.request()
@@ -363,7 +375,7 @@ class EditControllerTC(CubicWebTC):
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
         self.assertEquals(path, 'view')
-        self.assertEquals(params, {u'__message': u'entities deleted'})
+        self.assertIn('_cwmsgid', params)
 
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity
@@ -430,7 +442,7 @@ class EditControllerTC(CubicWebTC):
                     'use_email-object:Y': 'X',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'address': u'required attribute'})
+        self.assertEquals(ex.errors, {'address-subject': u'required field'})
 
     def test_nonregr_copy(self):
         user = self.user()
@@ -498,12 +510,20 @@ class ReportBugControllerTC(CubicWebTC):
 
     def test_usable_by_guets(self):
         self.login('anon')
-        self.vreg['controllers'].select('reportbug', self.request())
+        self.assertRaises(NoSelectableObject,
+                          self.vreg['controllers'].select, 'reportbug', self.request())
+        self.vreg['controllers'].select('reportbug', self.request(description='hop'))
 
 
 class SendMailControllerTC(CubicWebTC):
 
     def test_not_usable_by_guets(self):
+        self.assertRaises(NoSelectableObject,
+                          self.vreg['controllers'].select, 'sendmail', self.request())
+        self.vreg['controllers'].select('sendmail',
+                                        self.request(subject='toto',
+                                                     recipient='toto@logilab.fr',
+                                                     mailbody='hop'))
         self.login('anon')
         self.assertRaises(NoSelectableObject,
                           self.vreg['controllers'].select, 'sendmail', self.request())
@@ -542,7 +562,7 @@ class JSONControllerTC(CubicWebTC):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
 #         ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
 #         self.assertEquals(ctrl.publish(),
-#                           simplejson.dumps(self.execute(rql).rows))
+#                           json.dumps(self.execute(rql).rows))
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
@@ -619,14 +639,14 @@ class JSONControllerTC(CubicWebTC):
     # silly tests
     def test_external_resource(self):
         self.assertEquals(self.remote_call('external_resource', 'RSS_LOGO')[0],
-                          simplejson.dumps(self.request().external_resource('RSS_LOGO')))
+                          json.dumps(self.request().external_resource('RSS_LOGO')))
     def test_i18n(self):
         self.assertEquals(self.remote_call('i18n', ['bimboom'])[0],
-                          simplejson.dumps(['bimboom']))
+                          json.dumps(['bimboom']))
 
     def test_format_date(self):
         self.assertEquals(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
-                          simplejson.dumps('2007/01/01'))
+                          json.dumps('2007/01/01'))
 
 
 

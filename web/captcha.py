@@ -1,10 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Simple captcha library, based on PIL. Monkey patch functions in this module
 if you want something better...
 
-:organization: Logilab
-:copyright: 2009-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -17,7 +30,7 @@ import Image, ImageFont, ImageDraw, ImageFilter
 from time import time
 
 from cubicweb import tags
-from cubicweb.web import formwidgets as fw
+from cubicweb.web import ProcessFormError, formwidgets as fw
 
 
 def pil_captcha(text, fontfile, fontsize):
@@ -63,7 +76,22 @@ def captcha(fontfile, fontsize, size=5, format='JPEG'):
 class CaptchaWidget(fw.TextInput):
     def render(self, form, field, renderer=None):
         # t=int(time()*100) to make sure img is not cached
-        src = form._cw.build_url('view', vid='captcha', t=int(time()*100))
+        src = form._cw.build_url('view', vid='captcha', t=int(time()*100),
+                                 captchakey=field.input_name(form))
         img = tags.img(src=src, alt=u'captcha')
         img = u'<div class="captcha">%s</div>' % img
         return img + super(CaptchaWidget, self).render(form, field, renderer)
+
+    def process_field_data(self, form, field):
+        captcha = form._cw.get_session_data(field.input_name(form), None,
+                                            pop=True)
+        val = super(CaptchaWidget, self).process_field_data(form, field)
+        if val is None:
+            return val # required will be checked by field
+        if captcha is None:
+            msg = form._cw._('unable to check captcha, please try again')
+            raise ProcessFormError(msg)
+        elif val.lower() != captcha.lower():
+            msg = form._cw._('incorrect captcha value')
+            raise ProcessFormError(msg)
+        return val

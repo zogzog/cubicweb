@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from os.path import dirname, join, abspath
 from datetime import datetime, timedelta
@@ -48,7 +61,12 @@ def setup_module(*args):
 def teardown_module(*args):
     PyroRQLSource.get_connection = PyroRQLSource_get_connection
     Connection.close = Connection_close
-
+    global repo2, cnx2, repo3, cnx3
+    repo2.shutdown()
+    repo3.shutdown()
+    del repo2, cnx2, repo3, cnx3
+    #del TwoSourcesTC.config.vreg
+    #del TwoSourcesTC.config
 
 class TwoSourcesTC(CubicWebTC):
     config = TwoSourcesConfiguration('data')
@@ -130,7 +148,7 @@ class TwoSourcesTC(CubicWebTC):
         cu = cnx.cursor()
         rset = cu.execute('Any X WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
-        cnx.close()
+        Connection_close(cnx)
 
     def test_synchronization(self):
         cu = cnx2.cursor()

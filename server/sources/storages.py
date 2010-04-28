@@ -1,25 +1,60 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """custom storages for the system source"""
 from os import unlink, path as osp
+
+from yams.schema import role_name
 
 from cubicweb import Binary
 from cubicweb.server.hook import Operation
 
-
-ETYPE_ATTR_STORAGE = {}
 def set_attribute_storage(repo, etype, attr, storage):
-    ETYPE_ATTR_STORAGE.setdefault(etype, {})[attr] = storage
-    repo.system_source.map_attribute(etype, attr, storage.sqlgen_callback)
+    repo.system_source.set_storage(etype, attr, storage)
 
 def unset_attribute_storage(repo, etype, attr):
-    ETYPE_ATTR_STORAGE.setdefault(etype, {}).pop(attr, None)
-    repo.system_source.unmap_attribute(etype, attr)
-
+    repo.system_source.unset_storage(etype, attr)
 
 class Storage(object):
-    """abstract storage"""
-    def sqlgen_callback(self, generator, relation, linkedvar):
-        """sql generator callback when some attribute with a custom storage is
-        accessed
+    """abstract storage
+
+    * If `source_callback` is true (by default), the callback will be run during
+      query result process of fetched attribute's valu and should have the
+      following prototype::
+
+        callback(self, source, value)
+
+      where `value` is the value actually stored in the backend. None values
+      will be skipped (eg callback won't be called).
+
+    * if `source_callback` is false, the callback will be run during sql
+      generation when some attribute with a custom storage is accessed and
+      should have the following prototype::
+
+        callback(self, generator, relation, linkedvar)
+
+      where `generator` is the sql generator, `relation` the current rql syntax
+      tree relation and linkedvar the principal syntax tree variable holding the
+      attribute.
+    """
+    is_source_callback = True
+
+    def callback(self, *args):
+        """see docstring for prototype, which vary according to is_source_callback
         """
         raise NotImplementedError()
 
@@ -38,63 +73,97 @@ class Storage(object):
 # * better file path attribution
 # * handle backup/restore
 
+def uniquify_path(dirpath, basename):
+    """return a unique file name for `basename` in `dirpath`, or None
+    if all attemps failed.
+
+    XXX subject to race condition.
+    """
+    path = osp.join(dirpath, basename)
+    if not osp.isfile(path):
+        return path
+    base, ext = osp.splitext(path)
+    for i in xrange(1, 256):
+        path = '%s%s%s' % (base, i, ext)
+        if not osp.isfile(path):
+            return path
+    return None
+
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
-    def __init__(self, defaultdir):
+    def __init__(self, defaultdir, fsencoding='utf-8'):
         self.default_directory = defaultdir
+        self.fsencoding = fsencoding
 
-    def sqlgen_callback(self, generator, linkedvar, relation):
+    def callback(self, source, value):
         """sql generator callback when some attribute with a custom storage is
         accessed
         """
-        linkedvar.accept(generator)
-        return '_fsopen(%s.cw_%s)' % (
-            linkedvar._q_sql.split('.', 1)[0], # table name
-            relation.r_type) # attribute name
+        fpath = source.binary_to_str(value)
+        try:
+            return Binary(file(fpath).read())
+        except OSError, ex:
+            source.critical("can't open %s: %s", value, ex)
+            return None
 
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
-        if not entity._cw.transaction_data.get('fs_importing'):
-            try:
-                value = entity.pop(attr)
-            except KeyError:
-                pass
-            else:
-                fpath = self.new_fs_path(entity, attr)
-                # bytes storage used to store file's path
-                entity[attr] = Binary(fpath)
-                file(fpath, 'w').write(value.getvalue())
-                AddFileOp(entity._cw, filepath=fpath)
-        # else entity[attr] is expected to be an already existant file path
+        if entity._cw.transaction_data.get('fs_importing'):
+            binary = Binary(file(entity[attr].getvalue()).read())
+        else:
+            binary = entity.pop(attr)
+            fpath = self.new_fs_path(entity, attr)
+            # bytes storage used to store file's path
+            entity[attr] = Binary(fpath)
+            file(fpath, 'w').write(binary.getvalue())
+            AddFileOp(entity._cw, filepath=fpath)
+        return binary
 
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
-        try:
-            value = entity.pop(attr)
-        except KeyError:
-            pass
+        if entity._cw.transaction_data.get('fs_importing'):
+            oldpath = self.current_fs_path(entity, attr)
+            fpath = entity[attr].getvalue()
+            if oldpath != fpath:
+                DeleteFileOp(entity._cw, filepath=oldpath)
+            binary = Binary(file(fpath).read())
         else:
+            binary = entity.pop(attr)
             fpath = self.current_fs_path(entity, attr)
-            UpdateFileOp(entity._cw, filepath=fpath, filedata=value.getvalue())
+            UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
+        return binary
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
 
     def new_fs_path(self, entity, attr):
-        fspath = osp.join(self.default_directory, '%s_%s' % (entity.eid, attr))
-        while osp.exists(fspath):
-            fspath = '_' + fspath
+        # We try to get some hint about how to name the file using attribute's
+        # name metadata, so we use the real file name and extension when
+        # available. Keeping the extension is useful for example in the case of
+        # PIL processing that use filename extension to detect content-type, as
+        # well as providing more understandable file names on the fs.
+        basename = [str(entity.eid), attr]
+        name = entity.attr_metadata(attr, 'name')
+        if name is not None:
+            basename.append(name.encode(self.fsencoding))
+        fspath = uniquify_path(self.default_directory, '_'.join(basename))
+        if fspath is None:
+            msg = entity._cw._('failed to uniquify path (%s, %s)') % (
+                dirpath, '_'.join(basename))
+            raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
         return fspath
 
     def current_fs_path(self, entity, attr):
         sysource = entity._cw.pool.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
-                                 attr, entity.__regid__, entity.eid))
-        dbmod = sysource.dbapi_module
-        return dbmod.process_value(cu.fetchone()[0], [None, dbmod.BINARY],
-                                   binarywrap=str)
+                             attr, entity.__regid__, entity.eid))
+        rawvalue = cu.fetchone()[0]
+        if rawvalue is None: # no previous value
+            return self.new_fs_path(entity, attr)
+        return sysource._process_value(rawvalue, cu.description[0],
+                                       binarywrap=str)
 
 
 class AddFileOp(Operation):

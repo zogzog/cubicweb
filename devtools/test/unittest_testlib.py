@@ -1,20 +1,33 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittests for gct.apptest module
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from cStringIO import StringIO
 from unittest import TestSuite
 
-
-from logilab.common.testlib import (TestCase, unittest_main, 
+from logilab.common.testlib import (TestCase, unittest_main,
                                     SkipAwareTextTestRunner)
 
 from cubicweb.devtools import htmlparser
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.pytestconf import clean_repo_test_cls
 
 class WebTestTC(TestCase):
 
@@ -37,7 +50,7 @@ class WebTestTC(TestCase):
         self.assertEquals(result.testsRun, 2)
         self.assertEquals(len(result.errors), 0)
         self.assertEquals(len(result.failures), 1)
-
+        clean_repo_test_cls(MyWebTest)
 
 
 HTML_PAGE = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

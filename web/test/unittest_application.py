@@ -1,10 +1,23 @@
 # -*- coding: iso-8859-1 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.web.application
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 import base64, Cookie
@@ -186,36 +199,66 @@ class ApplicationTC(CubicWebTC):
         self.assertEquals(values['eid'], eid)
         error = forminfo['error']
         self.assertEquals(error.entity, user.eid)
-        self.assertEquals(error.errors['login'], 'required attribute')
+        self.assertEquals(error.errors['login-subject'], 'required field')
 
 
-    def test_validation_error_dont_loose_subentity_data(self):
+    def test_validation_error_dont_loose_subentity_data_ctrl(self):
         """test creation of two linked entities
+
+        error occurs on the web controller
         """
         req = self.request()
-        form = {'eid': ['X', 'Y'], '__maineid': 'X',
-                '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject,surname-subject',
-                # missing required field
-                'login-subject:X': u'',
-                'surname-subject:X': u'Mr Ouaoua',
-                # but email address is set
-                '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject,alias-subject,use_email-object',
-                'address-subject:Y': u'bougloup@logilab.fr',
-                'alias-subject:Y': u'',
-                'use_email-object:Y': 'X',
-                # necessary to get validation error handling
-                '__errorurl': 'view?vid=edition...',
-                }
-        req.form = form
-        # monkey patch edited_eid to ensure both entities are edited, not only X
-        req.edited_eids = lambda : ('Y', 'X')
+        # set Y before X to ensure both entities are edited, not only X
+        req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
+                    '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject',
+                    # missing required field
+                    'login-subject:X': u'',
+                    # but email address is set
+                    '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject',
+                    'address-subject:Y': u'bougloup@logilab.fr',
+                    'use_email-object:Y': 'X',
+                    # necessary to get validation error handling
+                    '__errorurl': 'view?vid=edition...',
+                    }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
         forminfo = req.get_session_data('view?vid=edition...')
         self.assertEquals(set(forminfo['eidmap']), set('XY'))
+        self.assertEquals(forminfo['eidmap']['X'], None)
+        self.assertIsInstance(forminfo['eidmap']['Y'], int)
+        self.assertEquals(forminfo['error'].entity, 'X')
+        self.assertEquals(forminfo['error'].errors,
+                          {'login-subject': 'required field'})
+        self.assertEquals(forminfo['values'], req.form)
+
+
+    def test_validation_error_dont_loose_subentity_data_repo(self):
+        """test creation of two linked entities
+
+        error occurs on the repository
+        """
+        req = self.request()
+        # set Y before X to ensure both entities are edited, not only X
+        req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
+                    '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    # already existent user
+                    'login-subject:X': u'admin',
+                    'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
+                    '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject',
+                    'address-subject:Y': u'bougloup@logilab.fr',
+                    'use_email-object:Y': 'X',
+                    # necessary to get validation error handling
+                    '__errorurl': 'view?vid=edition...',
+                    }
+        path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
+        forminfo = req.get_session_data('view?vid=edition...')
+        self.assertEquals(set(forminfo['eidmap']), set('XY'))
+        self.assertIsInstance(forminfo['eidmap']['X'], int)
+        self.assertIsInstance(forminfo['eidmap']['Y'], int)
         self.assertEquals(forminfo['error'].entity, forminfo['eidmap']['X'])
-        self.assertEquals(forminfo['error'].errors, {'login': 'required attribute',
-                                                     'upassword': 'required attribute'})
-        self.assertEquals(forminfo['values'], form)
+        self.assertEquals(forminfo['error'].errors,
+                          {'login-subject': u'the value "admin" is already used, use another one'})
+        self.assertEquals(forminfo['values'], req.form)
+
 
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)

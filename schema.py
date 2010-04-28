@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """classes to define schemas for CubicWeb
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -21,7 +34,7 @@ from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
-     RelationDefinitionSchema, PermissionMixIn
+     RelationDefinitionSchema, PermissionMixIn, role_name
 from yams.constraints import BaseConstraint, FormatConstraint
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          obsolete as yobsolete, cleanup_sys_modules)
@@ -34,14 +47,15 @@ from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
-#  set of meta-relations available for every entity types
+# set of meta-relations available for every entity types
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
-SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state', 'wf_info_for'))
+SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state',
+                     'wf_info_for'))
 
-#  set of entity and relation types used to build the schema
+# set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'RQLExpression',
@@ -399,7 +413,9 @@ class CubicWebEntitySchema(EntitySchema):
                                           __permissions__=RO_ATTR_PERMS)
             self.schema.add_relation_def(rdef)
         elif not need_has_text and has_has_text:
-            self.schema.del_relation_def(self.type, 'has_text', 'String')
+            # use rschema.del_relation_def and not schema.del_relation_def to
+            # avoid deleting the relation type accidentally...
+            self.schema['has_text'].del_relation_def(self, self.schema['String'])
 
     def schema_entity(self):
         """return True if this entity type is used to build the schema"""
@@ -681,17 +697,22 @@ class RepoEnforcedRQLConstraintMixIn(object):
             # XXX at this point if both or neither of S and O are in mainvar we
             # dunno if the validation error `occured` on eidfrom or eidto (from
             # user interface point of view)
+            #
+            # possible enhancement: check entity being created, it's probably
+            # the main eid unless this is a composite relation
             if eidto is None or 'S' in self.mainvars or not 'O' in self.mainvars:
                 maineid = eidfrom
+                qname = role_name(rtype, 'subject')
             else:
                 maineid = eidto
+                qname = role_name(rtype, 'object')
             if self.msg:
                 msg = session._(self.msg)
             else:
                 msg = '%(constraint)s %(restriction)s failed' % {
                     'constraint':  session._(self.type()),
                     'restriction': self.restriction}
-            raise ValidationError(maineid, {rtype: msg})
+            raise ValidationError(maineid, {qname: msg})
 
     def exec_query(self, session, eidfrom, eidto):
         if eidto is None:
@@ -704,7 +725,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.unsafe_execute(rql, args, ck, build_descr=False)
+        return session.execute(rql, args, ck, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -830,13 +851,10 @@ class RQLExpression(object):
                 return True
             return False
         if keyarg is None:
-            # on the server side, use unsafe_execute, but this is not available
-            # on the client side (session is actually a request)
-            execute = getattr(session, 'unsafe_execute', session.execute)
             kwargs.setdefault('u', session.user.eid)
             cachekey = kwargs.keys()
             try:
-                rset = execute(rql, kwargs, cachekey, build_descr=True)
+                rset = session.execute(rql, kwargs, cachekey, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
@@ -1084,10 +1102,10 @@ def vocabulary(self, entity=None, form=None):
     elif form is not None:
         cw = form._cw
     if cw is not None:
-        if hasattr(cw, 'is_super_session'):
+        if hasattr(cw, 'write_security'): # test it's a session and not a request
             # cw is a server session
-            hasperm = cw.is_super_session or \
-                      not cw.vreg.config.is_hook_category_activated('integrity') or \
+            hasperm = not cw.write_security or \
+                      not cw.is_hook_category_activated('integrity') or \
                       cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)
         else:
             hasperm = cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT)

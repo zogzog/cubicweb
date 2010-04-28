@@ -1,13 +1,28 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """schema definition related entities
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached
+
+from yams.schema import role_name
 
 from cubicweb import ValidationError
 from cubicweb.schema import ERQLExpression, RRQLExpression
@@ -64,13 +79,14 @@ class CWRType(AnyEntity):
         for rdef in self.reverse_relation_type:
             card = rdef.cardinality[0]
             if not card in '?1':
+                qname = role_name('inlined', 'subject')
                 rtype = self.name
                 stype = rdef.stype
                 otype = rdef.otype
                 msg = self._cw._("can't set inlined=%(inlined)s, "
                                  "%(stype)s %(rtype)s %(otype)s "
                                  "has cardinality=%(card)s")
-                raise ValidationError(self.eid, {'inlined': msg % locals()})
+                raise ValidationError(self.eid, {qname: msg % locals()})
 
     def db_key_name(self):
         """XXX goa specific"""

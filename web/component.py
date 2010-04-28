@@ -1,20 +1,31 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract component class and base components definition for CubicWeb web client
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
-
-from simplejson import dumps
 
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import role
-from cubicweb.utils import merge_dicts
+from cubicweb.web import json
 from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
@@ -116,14 +127,15 @@ class NavigationComponent(Component):
             del params[self.stop_param]
 
     def page_url(self, path, params, start, stop):
-        params = merge_dicts(params, {self.start_param : start,
-                                      self.stop_param : stop,})
+        params = dict(params)
+        params.update({self.start_param : start,
+                       self.stop_param : stop,})
         if path == 'json':
             rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-                dumps(params.get('divid', 'paginated-content')),
-                dumps(rql), dumps(params.pop('vid', None)), dumps(params))
+                json.dumps(params.get('divid', 'paginated-content')),
+                json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
         else:
             url = self._cw.build_url(path, **params)
         return url

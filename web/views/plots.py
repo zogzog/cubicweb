@@ -1,13 +1,24 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """basic plot views
 
-:organization: Logilab
-:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
-
-from simplejson import dumps
 
 from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
@@ -15,6 +26,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.utils import UStringIO
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import multi_columns_rset
+from cubicweb.web import dumps
 from cubicweb.web.views import baseviews
 
 @objectify_selector
@@ -115,8 +127,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
                                      'plotdata': ','.join(plotdata),
-                                     'mode': self.timemode and "'time'" or 'null'},
-                                    jsoncall=req.json_request)
+                                     'mode': self.timemode and "'time'" or 'null'})
 
 
 class PlotView(baseviews.AnyRsetView):

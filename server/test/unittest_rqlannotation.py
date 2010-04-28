@@ -1,12 +1,33 @@
 # -*- coding: iso-8859-1 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.rqlannotation
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BaseQuerierTC
 
 repo, cnx = init_test_database()
+
+def teardown_module(*args):
+    global repo, cnx
+    del repo, cnx
+
 
 class SQLGenAnnotatorTC(BaseQuerierTC):
     repo = repo

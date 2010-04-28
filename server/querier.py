@@ -1,11 +1,26 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 from itertools import repeat
@@ -22,9 +37,8 @@ from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import add_types_restriction
-
-READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
+from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
+from cubicweb.server.session import security_enabled
 
 def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
@@ -41,24 +55,22 @@ def update_varmap(varmap, selected, table):
 
 # permission utilities ########################################################
 
-def var_kwargs(restriction, args):
-    varkwargs = {}
-    for rel in restriction.iget_nodes(Relation):
-        cmp = rel.children[1]
-        if rel.r_type == 'eid' and cmp.operator == '=' and \
-               not rel.neged(strict=True) and \
-               isinstance(cmp.children[0], Constant) and \
-               cmp.children[0].type == 'Substitute':
-            varkwargs[rel.children[0].name] = typed_eid(cmp.children[0].eval(args))
-    return varkwargs
-
 def check_no_password_selected(rqlst):
     """check that Password entities are not selected"""
     for solution in rqlst.solutions:
         if 'Password' in solution.itervalues():
             raise Unauthorized('Password selection is not allowed')
 
-def check_read_access(schema, user, rqlst, solution):
+def term_etype(session, term, solution, args):
+    """return the entity type for the given term (a VariableRef or a Constant
+    node)
+    """
+    try:
+        return solution[term.name]
+    except AttributeError:
+        return session.describe(term.eval(args))[0]
+
+def check_read_access(session, rqlst, solution, args):
     """check that the given user has credentials to access data read the
     query
 
@@ -66,6 +78,10 @@ def check_read_access(schema, user, rqlst, solution):
     in the schema), keys are variable names and values associated rql expression
     for the associated variable with the given solution
     """
+    # use `term_etype` since we've to deal with rewritten constants here,
+    # when used as an external source by another repository.
+    # XXX what about local read security w/ those rewritten constants...
+    schema = session.repo.schema
     if rqlst.where is not None:
         for rel in rqlst.where.iget_nodes(Relation):
             # XXX has_text may have specific perm ?
@@ -73,38 +89,40 @@ def check_read_access(schema, user, rqlst, solution):
                 continue
             rschema = schema.rschema(rel.r_type)
             if rschema.final:
-                eschema = schema.eschema(solution[rel.children[0].name])
+                eschema = schema.eschema(term_etype(session, rel.children[0],
+                                                    solution, args))
                 rdef = eschema.rdef(rschema)
             else:
-                rdef = rschema.rdef(solution[rel.children[0].name],
-                                    solution[rel.children[1].children[0].name])
-            if not user.matching_groups(rdef.get_groups('read')):
+                rdef = rschema.rdef(term_etype(session, rel.children[0],
+                                               solution, args),
+                                    term_etype(session, rel.children[1].children[0],
+                                               solution, args))
+            if not session.user.matching_groups(rdef.get_groups('read')):
+                # XXX rqlexpr not allowed
                 raise Unauthorized('read', rel.r_type)
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
     for varname in rqlst.defined_vars:
-        etype = solution[varname]
-        eschema = schema.eschema(etype)
+        eschema = schema.eschema(solution[varname])
         if eschema.final:
             continue
-        if not user.matching_groups(eschema.get_groups('read')):
+        if not session.user.matching_groups(eschema.get_groups('read')):
             erqlexprs = eschema.get_rqlexprs('read')
             if not erqlexprs:
-                ex = Unauthorized('read', etype)
+                ex = Unauthorized('read', solution[varname])
                 ex.var = varname
                 raise ex
-            #assert len(erqlexprs) == 1
-            localchecks[varname] = tuple(erqlexprs)
+            localchecks[varname] = erqlexprs
     return localchecks
 
-def noinvariant_vars(restricted, select, nbtrees):
+def add_noinvariant(noinvariant, restricted, select, nbtrees):
     # a variable can actually be invariant if it has not been restricted for
     # security reason or if security assertion hasn't modified the possible
     # solutions for the query
     if nbtrees != 1:
         for vname in restricted:
             try:
-                yield select.defined_vars[vname]
+                noinvariant.add(select.defined_vars[vname])
             except KeyError:
                 # this is an alias
                 continue
@@ -116,7 +134,7 @@ def noinvariant_vars(restricted, select, nbtrees):
                 # this is an alias
                 continue
             if len(var.stinfo['possibletypes']) != 1:
-                yield var
+                noinvariant.add(var)
 
 def _expand_selection(terms, selected, aliases, select, newselect):
     for term in terms:
@@ -175,6 +193,13 @@ class ExecutionPlan(object):
         finally:
             self.clean()
 
+    def make_temp_table_name(self, table):
+        """
+        return a temp table name according to db backend
+        """
+        return self.syssource.make_temp_table_name(table)
+
+
     def init_temp_table(self, table, selected, sol):
         """initialize sql schema and variable map for a temporary table which
         will be used to store result for the given rqlst
@@ -200,12 +225,35 @@ class ExecutionPlan(object):
 
         return rqlst to actually execute
         """
-        noinvariant = set()
-        if security and not self.session.is_super_session:
-            self._insert_security(union, noinvariant)
-        self.rqlhelper.simplify(union)
-        self.sqlannotate(union)
-        set_qdata(self.schema.rschema, union, noinvariant)
+        cached = None
+        if security and self.session.read_security:
+            # ensure security is turned of when security is inserted,
+            # else we may loop for ever...
+            if self.session.transaction_data.get('security-rqlst-cache'):
+                key = self.cache_key
+            else:
+                key = None
+            if key is not None and key in self.session.transaction_data:
+                cachedunion, args = self.session.transaction_data[key]
+                union.children[:] = []
+                for select in cachedunion.children:
+                    union.append(select)
+                union.has_text_query = cachedunion.has_text_query
+                args.update(self.args)
+                self.args = args
+                cached = True
+            else:
+                noinvariant = set()
+                with security_enabled(self.session, read=False):
+                    self._insert_security(union, noinvariant)
+                if key is not None:
+                    self.session.transaction_data[key] = (union, self.args)
+        else:
+            noinvariant = ()
+        if cached is None:
+            self.rqlhelper.simplify(union)
+            self.sqlannotate(union)
+            set_qdata(self.schema.rschema, union, noinvariant)
         if union.has_text_query:
             self.cache_key = None
 
@@ -273,14 +321,13 @@ class ExecutionPlan(object):
                     myrqlst = select.copy(solutions=lchecksolutions)
                     myunion.append(myrqlst)
                     # in-place rewrite + annotation / simplification
-                    lcheckdef = [((varmap, 'X'), rqlexprs)
-                                 for varmap, rqlexprs in lcheckdef]
+                    lcheckdef = [((var, 'X'), rqlexprs) for var, rqlexprs in lcheckdef]
                     rewrite(myrqlst, lcheckdef, lchecksolutions, self.args)
-                    noinvariant.update(noinvariant_vars(restricted, myrqlst, nbtrees))
+                    add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
                 if () in localchecks:
                     select.set_possible_types(localchecks[()])
                     add_types_restriction(self.schema, select)
-                    noinvariant.update(noinvariant_vars(restricted, select, nbtrees))
+                    add_noinvariant(noinvariant, restricted, select, nbtrees)
 
     def _check_permissions(self, rqlst):
         """return a dict defining "local checks", e.g. RQLExpression defined in
@@ -300,44 +347,50 @@ class ExecutionPlan(object):
 
         note: rqlst should not have been simplified at this point
         """
-        assert not self.session.is_super_session
-        user = self.session.user
-        schema = self.schema
+        session = self.session
         msgs = []
+        neweids = session.transaction_data.get('neweids', ())
+        varkwargs = {}
+        if not session.transaction_data.get('security-rqlst-cache'):
+            for var in rqlst.defined_vars.itervalues():
+                for rel in var.stinfo['uidrels']:
+                    const = rel.children[1].children[0]
+                    try:
+                        varkwargs[var.name] = typed_eid(const.eval(self.args))
+                        break
+                    except AttributeError:
+                        #from rql.nodes import Function
+                        #assert isinstance(const, Function)
+                        # X eid IN(...)
+                        pass
         # dictionnary of variables restricted for security reason
         localchecks = {}
-        if rqlst.where is not None:
-            varkwargs = var_kwargs(rqlst.where, self.args)
-            neweids = self.session.transaction_data.get('neweids', ())
-        else:
-            varkwargs = None
         restricted_vars = set()
         newsolutions = []
         for solution in rqlst.solutions:
             try:
-                localcheck = check_read_access(schema, user, rqlst, solution)
+                localcheck = check_read_access(session, rqlst, solution, self.args)
             except Unauthorized, ex:
                 msg = 'remove %s from solutions since %s has no %s access to %s'
-                msg %= (solution, user.login, ex.args[0], ex.args[1])
+                msg %= (solution, session.user.login, ex.args[0], ex.args[1])
                 msgs.append(msg)
                 LOGGER.info(msg)
             else:
                 newsolutions.append(solution)
-                if varkwargs:
-                    # try to benefit of rqlexpr.check cache for entities which
-                    # are specified by eid in query'args
-                    for varname, eid in varkwargs.iteritems():
-                        try:
-                            rqlexprs = localcheck.pop(varname)
-                        except KeyError:
-                            continue
-                        if eid in neweids:
-                            continue
-                        for rqlexpr in rqlexprs:
-                            if rqlexpr.check(self.session, eid):
-                                break
-                        else:
-                            raise Unauthorized()
+                # try to benefit of rqlexpr.check cache for entities which
+                # are specified by eid in query'args
+                for varname, eid in varkwargs.iteritems():
+                    try:
+                        rqlexprs = localcheck.pop(varname)
+                    except KeyError:
+                        continue
+                    if eid in neweids:
+                        continue
+                    for rqlexpr in rqlexprs:
+                        if rqlexpr.check(session, eid):
+                            break
+                    else:
+                        raise Unauthorized()
                 restricted_vars.update(localcheck)
                 localchecks.setdefault(tuple(localcheck.iteritems()), []).append(solution)
         # raise Unautorized exception if the user can't access to any solution
@@ -376,39 +429,6 @@ class InsertPlan(ExecutionPlan):
         self._r_subj_index = {}
         self._r_obj_index = {}
         self._expanded_r_defs = {}
-
-    def relation_definitions(self, rqlst, to_build):
-        """add constant values to entity def, mark variables to be selected
-        """
-        to_select = {}
-        for relation in rqlst.main_relations:
-            lhs, rhs = relation.get_variable_parts()
-            rtype = relation.r_type
-            if rtype in READ_ONLY_RTYPES:
-                raise QueryError("can't assign to %s" % rtype)
-            try:
-                edef = to_build[str(lhs)]
-            except KeyError:
-                # lhs var is not to build, should be selected and added as an
-                # object relation
-                edef = to_build[str(rhs)]
-                to_select.setdefault(edef, []).append((rtype, lhs, 1))
-            else:
-                if isinstance(rhs, Constant) and not rhs.uid:
-                    # add constant values to entity def
-                    value = rhs.eval(self.args)
-                    eschema = edef.e_schema
-                    attrtype = eschema.subjrels[rtype].objects(eschema)[0]
-                    if attrtype == 'Password' and isinstance(value, unicode):
-                        value = value.encode('UTF8')
-                    edef[rtype] = value
-                elif to_build.has_key(str(rhs)):
-                    # create a relation between two newly created variables
-                    self.add_relation_def((edef, rtype, to_build[rhs.name]))
-                else:
-                    to_select.setdefault(edef, []).append( (rtype, rhs, 0) )
-        return to_select
-
 
     def add_entity_def(self, edef):
         """add an entity definition to build"""
@@ -629,20 +649,20 @@ class QuerierHelper(object):
             try:
                 self.solutions(session, rqlst, args)
             except UnknownEid:
-                # we want queries such as "Any X WHERE X eid 9999"
-                # return an empty result instead of raising UnknownEid
+                # we want queries such as "Any X WHERE X eid 9999" return an
+                # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
-        if not rqlst.TYPE == 'select':
-            if not session.is_super_session:
+        if rqlst.TYPE != 'select':
+            if session.read_security:
                 check_no_password_selected(rqlst)
-            # write query, ensure session's mode is 'write' so connections
-            # won't be released until commit/rollback
+            # write query, ensure session's mode is 'write' so connections won't
+            # be released until commit/rollback
             session.mode = 'write'
             cachekey = None
         else:
-            if not session.is_super_session:
+            if session.read_security:
                 for select in rqlst.children:
                     check_no_password_selected(select)
             # on select query, always copy the cached rqlst so we don't have to

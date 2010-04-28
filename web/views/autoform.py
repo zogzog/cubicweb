@@ -1,17 +1,126 @@
-"""The automatic entity form.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+The automatic entity form
+-------------------------
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+.. autodocstring:: cubicweb.web.views.autoform::AutomaticEntityForm
+
+Configuration through uicfg
+```````````````````````````
+
+It is possible to manage which and how an entity's attributes and relations
+will be edited in the various context where the automatic entity form is used
+by using proper uicfg tags.
+
+The details of the uicfg syntax can be found in the :ref:`uicfg` chapter.
+
+Possible relation tags that apply to entity forms are detailled below.
+They are all in the :mod:`cubicweb.web.uicfg` module.
+
+Attributes/relations display location
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``autoform_section`` specifies where to display a relation in form for a given
+form type.  :meth:`tag_attribute`, :meth:`tag_subject_of` and
+:meth:`tag_object_of` methods for this relation tag expect two arguments
+additionally to the relation key: a `formtype` and a `section`.
+
+`formtype` may be one of:
+
+* 'main', the main entity form (e.g. the one you get when creating or editing an
+  entity)
+
+* 'inlined', the form for an entity inlined into another form
+
+* 'muledit', the table form when editing multiple entities of the same type
+
+
+section may be one of:
+
+* 'hidden', don't display (not even in an hidden input, right?)
+
+* 'attributes', display in the attributes section
+
+* 'relations', display in the relations section, using the generic relation
+  selector combobox (available in main form only, and not usable for attributes)
+
+* 'inlined', display target entity of the relation into an inlined form
+  (available in main form only, and not for attributes)
+
+By default, mandatory relations are displayed in the 'attributes' section,
+others in 'relations' section.
+
+
+Change default fields
+^^^^^^^^^^^^^^^^^^^^^
+
+Use ``autoform_field`` to replace the default field class to use for a relation
+or attribute. You can put either a field class or instance as value (put a class
+whenether it's possible).
+
+.. Warning::
+
+   `autoform_field_kwargs` should usually be used instead of
+   `autoform_field`. If you put a field instance into `autoform_field`,
+   `autoform_field_kwargs` values for this relation will be ignored.
+
+
+Customize field options
+^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to customize field options (see :class:`~cubicweb.web.formfields.Field`
+for a detailed list of options), use `autoform_field_kwargs`. This rtag takes
+a dictionary as arguments, that will be given to the field's contructor.
+
+You can then put in that dictionary any arguments supported by the field
+class. For instance:
+
+.. sourcecode:: python
+
+   # Change the content of the combobox. Here `ticket_done_in_choices` is a
+   # function which returns a list of elements to populate the combobox
+   autoform_field_kwargs.tag_subject_of(('Ticket', 'done_in', '*'),
+                                        {'sort': False,
+                                         'choices': ticket_done_in_choices})
+
+   # Force usage of a TextInput widget for the expression attribute of
+   # RQLExpression entities
+   autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
+                                       {'widget': fw.TextInput})
+
+
+
+Overriding permissions
+^^^^^^^^^^^^^^^^^^^^^^
+
+The `autoform_permissions_overrides` rtag provides a way to by-pass security
+checking for dark-corner case where it can't be verified properly.
+
+
+.. More about inlined forms
+.. Controlling the generic relation fields
 """
 
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from warnings import warn
-
-from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
@@ -22,7 +131,7 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
-from cubicweb.web import stdmsgs, uicfg, eid_param, \
+from cubicweb.web import stdmsgs, uicfg, eid_param, dumps, \
      form as f, formwidgets as fw, formfields as ff
 from cubicweb.web.views import forms
 
@@ -512,16 +621,13 @@ class UnrelatedDivs(EntityView):
 # The automatic entity form ####################################################
 
 class AutomaticEntityForm(forms.EntityFieldsForm):
-    """base automatic form to edit any entity.
+    """AutomaticEntityForm is an automagic form to edit any entity. It is
+    designed to be fully generated from schema but highly configurable through
+    :ref:`uicfg`.
 
-    Designed to be fully generated from schema but highly configurable through:
-
-    * uicfg (autoform_* relation tags)
-    * various standard form parameters
-    * overriding
-
-    You can also easily customise it by adding/removing fields in
-    AutomaticEntityForm instances or by inheriting from it.
+    Of course, as for other forms, you can also customise it by specifying
+    various standard form parameters on selection, overriding, or
+    adding/removing fields in a selected instances.
     """
     __regid__ = 'edition'
 

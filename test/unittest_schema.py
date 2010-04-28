@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 import sys
@@ -241,6 +254,17 @@ class SchemaReaderClassTest(TestCase):
         self.failUnless('has_text' in schema['CWUser'].subject_relations())
         self.failIf('has_text' in schema['EmailAddress'].subject_relations())
 
+    def test_permission_settings(self):
+        schema = loader.load(config)
+        aschema = schema['TrInfo'].rdef('comment')
+        self.assertEquals(aschema.get_groups('read'),
+                          set(('managers', 'users', 'guests')))
+        self.assertEquals(aschema.get_rqlexprs('read'),
+                          ())
+        self.assertEquals(aschema.get_groups('update'),
+                          set(('managers',)))
+        self.assertEquals([x.expression for x in aschema.get_rqlexprs('update')],
+                          ['U has_update_permission X'])
 
 class BadSchemaRQLExprTC(TestCase):
     def setUp(self):
@@ -257,16 +281,20 @@ class BadSchemaRQLExprTC(TestCase):
         self.assertEquals(str(ex), msg)
 
     def test_rrqlexpr_on_etype(self):
-        self._test('rrqlexpr_on_eetype.py', "can't use RRQLExpression on ToTo, use an ERQLExpression")
+        self._test('rrqlexpr_on_eetype.py',
+                   "can't use RRQLExpression on ToTo, use an ERQLExpression")
 
     def test_erqlexpr_on_rtype(self):
-        self._test('erqlexpr_on_ertype.py', "can't use ERQLExpression on relation ToTo toto TuTu, use a RRQLExpression")
+        self._test('erqlexpr_on_ertype.py',
+                   "can't use ERQLExpression on relation ToTo toto TuTu, use a RRQLExpression")
 
     def test_rqlexpr_on_rtype_read(self):
-        self._test('rqlexpr_on_ertype_read.py', "can't use rql expression for read permission of relation ToTo toto TuTu")
+        self._test('rqlexpr_on_ertype_read.py',
+                   "can't use rql expression for read permission of relation ToTo toto TuTu")
 
     def test_rrqlexpr_on_attr(self):
-        self._test('rrqlexpr_on_attr.py', "can't use RRQLExpression on attribute ToTo.attr[String], use an ERQLExpression")
+        self._test('rrqlexpr_on_attr.py',
+                   "can't use RRQLExpression on attribute ToTo.attr[String], use an ERQLExpression")
 
 
 class NormalizeExpressionTC(TestCase):
@@ -277,8 +305,10 @@ class NormalizeExpressionTC(TestCase):
 
 class RQLExpressionTC(TestCase):
     def test_comparison(self):
-        self.assertEquals(ERQLExpression('X is CWUser', 'X', 0), ERQLExpression('X is CWUser', 'X', 0))
-        self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0), ERQLExpression('X is CWGroup', 'X', 0))
+        self.assertEquals(ERQLExpression('X is CWUser', 'X', 0),
+                          ERQLExpression('X is CWUser', 'X', 0))
+        self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0),
+                             ERQLExpression('X is CWGroup', 'X', 0))
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):

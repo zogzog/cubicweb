@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Mass mailing form views
 
-:organization: Logilab
-:copyright: 2007-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -11,7 +24,7 @@ _ = unicode
 import operator
 
 from cubicweb.interfaces import IEmailable
-from cubicweb.selectors import implements, match_user_groups
+from cubicweb.selectors import implements, authenticated_user
 from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs, action, form, formfields as ff
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
@@ -22,7 +35,7 @@ class SendEmailAction(action.Action):
     __regid__ = 'sendemail'
     # XXX should check email is set as well
     __select__ = (action.Action.__select__ & implements(IEmailable)
-                  & match_user_groups('managers', 'users'))
+                  & authenticated_user())
 
     title = _('send email')
     category = 'mainactions'
@@ -41,6 +54,11 @@ def recipient_vocabulary(form, field):
 
 class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
+
+    needs_js = ('cubicweb.widgets.js', 'cubicweb.massmailing.js')
+    needs_css = ('cubicweb.mailform.css')
+    domid = 'sendmail'
+    action = 'sendmail'
 
     sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
                             label=_('From:'),
@@ -81,7 +99,6 @@ class MassMailingForm(forms.FieldsForm):
 
 class MassMailingFormRenderer(formrenderers.FormRenderer):
     __regid__ = 'massmailing'
-    button_bar_class = u'toolbar'
 
     def _render_fields(self, fields, w, form):
         w(u'<table class="headersform">')
@@ -115,15 +132,12 @@ class MassMailingFormRenderer(formrenderers.FormRenderer):
     def render_buttons(self, w, form):
         pass
 
+
 class MassMailingFormView(form.FormViewMixIn, EntityView):
     __regid__ = 'massmailing'
-    __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
+    __select__ = implements(IEmailable) & authenticated_user()
 
     def call(self):
-        req = self._cw
-        req.add_js('cubicweb.widgets.js', 'cubicweb.massmailing.js')
-        req.add_css('cubicweb.mailform.css')
-        from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
-        form = self._cw.vreg['forms'].select('massmailing', self._cw, rset=self.cw_rset,
-                                             action='sendmail', domid='sendmail')
+        form = self._cw.vreg['forms'].select('massmailing', self._cw,
+                                             rset=self.cw_rset)
         self.w(form.render())

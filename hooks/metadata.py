@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: set generic metadata
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -12,17 +25,7 @@ from datetime import datetime
 
 from cubicweb.selectors import implements
 from cubicweb.server import hook
-
-
-def eschema_eid(session, eschema):
-    """get eid of the CWEType entity for the given yams type"""
-    # eschema.eid is None if schema has been readen from the filesystem, not
-    # from the database (eg during tests)
-    if eschema.eid is None:
-        eschema.eid = session.unsafe_execute(
-            'Any X WHERE X is CWEType, X name %(name)s',
-            {'name': str(eschema)})[0][0]
-    return eschema.eid
+from cubicweb.server.utils import eschema_eid
 
 
 class MetaDataHook(hook.Hook):
@@ -103,18 +106,17 @@ class SetOwnershipHook(MetaDataHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        asession = self._cw.actual_session()
-        if not asession.is_internal_session:
-            self._cw.add_relation(self.entity.eid, 'owned_by', asession.user.eid)
-            _SetCreatorOp(asession, entity=self.entity)
+        if not self._cw.is_internal_session:
+            self._cw.add_relation(self.entity.eid, 'owned_by', self._cw.user.eid)
+            _SetCreatorOp(self._cw, entity=self.entity)
 
 
 class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
-        self.session.unsafe_execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
-                                    'NOT EXISTS(X owned_by U, X eid %(x)s)',
-                                    {'c': self.compositeeid, 'x': self.composedeid},
-                                    ('c', 'x'))
+        self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
+                             'NOT EXISTS(X owned_by U, X eid %(x)s)',
+                             {'c': self.compositeeid, 'x': self.composedeid},
+                             ('c', 'x'))
 
 
 class SyncCompositeOwner(MetaDataHook):

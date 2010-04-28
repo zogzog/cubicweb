@@ -1,18 +1,29 @@
 # -*- coding: utf-8 -*-
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of base controllers, which are directly plugged into the application
 object to handle publication.
 
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
 from smtplib import SMTP
-
-import simplejson
 
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
@@ -20,9 +31,9 @@ from logilab.common.date import strptime
 from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
                       typed_eid)
 from cubicweb.utils import CubicWebJsonEncoder
-from cubicweb.selectors import yes, match_user_groups
+from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
+from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps, json
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -34,7 +45,7 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 def jsonize(func):
-    """decorator to sets correct content_type and calls `simplejson.dumps` on
+    """decorator to sets correct content_type and calls `json.dumps` on
     results
     """
     def wrapper(self, *args, **kwargs):
@@ -91,11 +102,11 @@ class LogoutController(Controller):
         #   anonymous connection is allowed and the page will be displayed or
         #   we'll be redirected to the login form
         msg = self._cw._('you have been logged out')
-        if self._cw.https:
-            # XXX hack to generate an url on the http version of the site
-            self._cw._base_url =  self._cw.vreg.config['base-url']
-            self._cw.https = False
-        return self._cw.build_url('view', vid='index', __message=msg)
+        # force base_url so on dual http/https configuration, we generate an url
+        # on the http version of the site
+        return self._cw.build_url('view', vid='index', __message=msg,
+                                  base_url=self._cw.vreg.config['base-url'])
+
 
 class ViewController(Controller):
     """standard entry point :
@@ -236,7 +247,7 @@ class FormValidatorController(Controller):
         errback = str(self._cw.form.get('__onfailure', 'null'))
         cbargs = str(self._cw.form.get('__cbargs', 'null'))
         self._cw.set_content_type('text/html')
-        jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
  wp = window.parent;
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
@@ -276,14 +287,16 @@ class JSonController(Controller):
         args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
             args = (args,)
-        args = [simplejson.loads(arg) for arg in args]
+        try:
+            args = [json.loads(arg) for arg in args]
+        except ValueError, exc:
+            self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
+            raise RemoteCallFailed(repr(exc))
         try:
             result = func(*args)
         except RemoteCallFailed:
             raise
         except Exception, ex:
-            import traceback
-            traceback.print_exc()
             self.exception('an exception occured while calling js_%s(%s): %s',
                            fname, args, ex)
             raise RemoteCallFailed(repr(ex))
@@ -392,10 +405,22 @@ class JSonController(Controller):
         else: # we receive unicode keys which is not supported by the **syntax
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
-        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset, **extraargs)
+        # XXX while it sounds good, addition of the try/except below cause pb:
+        # when filtering using facets return an empty rset, the edition box
+        # isn't anymore selectable, as expected. The pb is that with the
+        # try/except below, we see a "an error occured" message in the ui, while
+        # we don't see it without it. Proper fix would probably be to deal with
+        # this by allowing facet handling code to tell to js_component that such
+        # error is expected and should'nt be reported.
+        #try:
+        comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset,
+                                              **extraargs)
+        #except NoSelectableObject:
+        #    raise RemoteCallFailed('unselectable')
         extraargs = extraargs or {}
         stream = comp.set_stream()
         comp.render(**extraargs)
+        # XXX why not _call_view ?
         extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n')
@@ -427,11 +452,12 @@ class JSonController(Controller):
         entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
         # note: default is reserved in js land
         args['default'] = self._cw.form['default_value']
-        args['reload'] = simplejson.loads(args['reload'])
+        args['reload'] = json.loads(args['reload'])
         rset = req.eid_rset(int(self._cw.form['eid']))
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         stream = view.set_stream()
         view.render(**args)
+        # XXX why not _call_view ?
         extresources = req.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n')
@@ -564,41 +590,29 @@ class JSonController(Controller):
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
 
-
+# XXX move to massmailing
 class SendMailController(Controller):
     __regid__ = 'sendmail'
-    __select__ = match_user_groups('managers', 'users')
+    __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
         eids = self._cw.form['recipient']
-        # make sure we have a list even though only one recipient was specified
+        # eids may be a string if only one recipient was specified
         if isinstance(eids, basestring):
-            eids = (eids,)
-        rql = 'Any X WHERE X eid in (%s)' % (','.join(eids))
-        rset = self._cw.execute(rql)
-        for entity in rset.entities():
-            yield entity
-
-    @property
-    @cached
-    def smtp(self):
-        mailhost, port = self._cw.config['smtp-host'], self._cw.config['smtp-port']
-        try:
-            return SMTP(mailhost, port)
-        except Exception, ex:
-            self.exception("can't connect to smtp server %s:%s (%s)",
-                             mailhost, port, ex)
-            url = self._cw.build_url(__message=self._cw._('could not connect to the SMTP server'))
-            raise Redirect(url)
+            rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
+        else:
+            rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
+        return rset.entities()
 
     def sendmail(self, recipient, subject, body):
-        helo_addr = '%s <%s>' % (self._cw.config['sender-name'],
-                                 self._cw.config['sender-addr'])
         msg = format_mail({'email' : self._cw.user.get_email(),
                            'name' : self._cw.user.dc_title(),},
                           [recipient], body, subject)
-        self.smtp.sendmail(helo_addr, [recipient], msg.as_string())
+        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
+            msg = self._cw._('could not connect to the SMTP server')
+            url = self._cw.build_url(__message=msg)
+            raise Redirect(url)
 
     def publish(self, rset=None):
         # XXX this allows users with access to an cubicweb instance to use it as
@@ -608,18 +622,41 @@ class SendMailController(Controller):
         for recipient in self.recipients():
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)
-        # breadcrumbs = self._cw.get_session_data('breadcrumbs', None)
         url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
         raise Redirect(url)
 
 
 class MailBugReportController(SendMailController):
     __regid__ = 'reportbug'
-    __select__ = yes()
+    __select__ = match_form_params('description')
 
     def publish(self, rset=None):
         body = self._cw.form['description']
         self.sendmail(self._cw.config['submit-mail'], _('%s error report') % self._cw.config.appid, body)
         url = self._cw.build_url(__message=self._cw._('bug report sent'))
+        raise Redirect(url)
+
+
+class UndoController(SendMailController):
+    __regid__ = 'undo'
+    __select__ = authenticated_user() & match_form_params('txuuid')
+
+    def publish(self, rset=None):
+        txuuid = self._cw.form['txuuid']
+        errors = self._cw.cnx.undo_transaction(txuuid)
+        if errors:
+            self.w(self._cw._('some errors occured:'))
+            self.wview('pyvalist', pyvalue=errors)
+        else:
+            self.redirect()
+
+    def redirect(self):
+        req = self._cw
+        breadcrumbs = req.get_session_data('breadcrumbs', None)
+        if breadcrumbs is not None and len(breadcrumbs) > 1:
+            url = req.rebuild_url(breadcrumbs[-2],
+                                  __message=req._('transaction undoed'))
+        else:
+            url = req.build_url(__message=req._('transaction undoed'))
         raise Redirect(url)
 

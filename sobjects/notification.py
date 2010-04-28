@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some views to handle notification on data changes
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -33,11 +46,9 @@ class RecipientsFinder(Component):
     def recipients(self):
         mode = self._cw.vreg.config['default-recipients-mode']
         if mode == 'users':
-            # use unsafe execute else we may don't have the right to see users
-            # to notify...
-            execute = self._cw.unsafe_execute
+            execute = self._cw.execute
             dests = [(u.get_email(), u.property_value('ui.language'))
-                     for u in execute(self.user_rql, build_descr=True, propagate=True).entities()]
+                     for u in execute(self.user_rql, build_descr=True).entities()]
         elif mode == 'default-dest-addrs':
             lang = self._cw.vreg.property_value('ui.language')
             dests = zip(self._cw.vreg.config['default-dest-addrs'], repeat(lang))
@@ -158,7 +169,8 @@ url: %(url)s
                 if not rdef.has_perm(self._cw, 'read', eid=self.cw_rset[0][0]):
                     continue
             # XXX suppose it's a subject relation...
-            elif not rschema.has_perm(self._cw, 'read', fromeid=self.cw_rset[0][0]): # XXX toeid
+            elif not rschema.has_perm(self._cw, 'read',
+                                      fromeid=self.cw_rset[0][0]):
                 continue
             if attr in self.no_detailed_change_attrs:
                 msg = _('%s updated') % _(attr)

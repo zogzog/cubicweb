@@ -40,22 +40,27 @@ The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blo
 .. _`mailing-list`: http://lists.cubicweb.org/mailman/listinfo/cubicweb
 .. _blog: http://www.cubicweb.org/blog/1238
 
-Table of Contents
-=================
-
 .. toctree::
    :maxdepth: 2
 
    intro/index
-   development/index
+   tutorials/index
+
+.. toctree::
+   :maxdepth: 3
+
+   devrepo/index
+   devweb/index
+
+.. toctree::
+   :maxdepth: 2
+
    admin/index
    annexes/index
 
 See also:
 
-* the complete :ref:`TOC`,
 * the :ref:`genindex`,
 * the :ref:`modindex`,
-* and the :ref:`search`.
 
 .. |cubicweb| replace:: *CubicWeb*

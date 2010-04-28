@@ -1,10 +1,23 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """additional cubicweb-ctl commands and command handlers for cubicweb and cubicweb's
 cubes development
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -515,19 +528,14 @@ class NewCubeCommand(Command):
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
+        dependencies = {}
         if verbose:
-            includes = self._ask_for_dependancies()
-            if len(includes) == 1:
-                dependancies = '%r,' % includes[0]
-            else:
-                dependancies = ', '.join(repr(cube) for cube in includes)
-        else:
-            dependancies = ''
+            dependencies = self._ask_for_dependencies()
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
-                   'dependancies' : dependancies,
+                   'dependencies' : dict((dep, None) for dep in dependencies),
                    'version'  : cubicwebversion,
                    'year'  : str(datetime.now().year),
                    'author': self['author'],
@@ -536,7 +544,7 @@ class NewCubeCommand(Command):
                    }
         copy_skeleton(skeldir, cubedir, context)
 
-    def _ask_for_dependancies(self):
+    def _ask_for_dependencies(self):
         from logilab.common.shellutils import ASK
         from logilab.common.textutils import splitstrip
         includes = []
@@ -546,7 +554,7 @@ class NewCubeCommand(Command):
             if answer == 'y':
                 includes.append(stdtype)
             if answer == 'type':
-                includes = splitstrip(raw_input('type dependancies: '))
+                includes = splitstrip(raw_input('type dependencies: '))
                 break
             elif answer == 'skip':
                 break
@@ -565,47 +573,48 @@ class ExamineLogCommand(Command):
     chances are the lines at the top are the ones that will bring the higher
     benefit after optimisation. Start there.
     """
-    arguments = '< rql.log'
+    arguments = 'rql.log'
     name = 'exlog'
     options = (
         )
 
     def run(self, args):
-        if args:
-            raise BadCommandUsage("no argument expected")
         import re
         requests = {}
-        for lineno, line in enumerate(sys.stdin):
-            if not ' WHERE ' in line:
-                continue
-            #sys.stderr.write( line )
+        for filepath in args:
             try:
-                rql, time = line.split('--')
-                rql = re.sub("(\'\w+': \d*)", '', rql)
-                if '{' in rql:
-                    rql = rql[:rql.index('{')]
-                req = requests.setdefault(rql, [])
-                time.strip()
-                chunks = time.split()
-                clocktime = float(chunks[0][1:])
-                cputime = float(chunks[-3])
-                req.append( (clocktime, cputime) )
-            except Exception, exc:
-                sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
-
+                stream = file(filepath)
+            except OSError, ex:
+                raise BadCommandUsage("can't open rql log file %s: %s"
+                                      % (filepath, ex))
+            for lineno, line in enumerate(file):
+                if not ' WHERE ' in line:
+                    continue
+                try:
+                    rql, time = line.split('--')
+                    rql = re.sub("(\'\w+': \d*)", '', rql)
+                    if '{' in rql:
+                        rql = rql[:rql.index('{')]
+                    req = requests.setdefault(rql, [])
+                    time.strip()
+                    chunks = time.split()
+                    clocktime = float(chunks[0][1:])
+                    cputime = float(chunks[-3])
+                    req.append( (clocktime, cputime) )
+                except Exception, exc:
+                    sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
         stat = []
-        for rql, times in requests.items():
+        for rql, times in requests.iteritems():
             stat.append( (sum(time[0] for time in times),
                           sum(time[1] for time in times),
                           len(times), rql) )
-
         stat.sort()
         stat.reverse()
-
-        total_time = sum(clocktime for clocktime, cputime, occ, rql in stat)*0.01
+        total_time = sum(clocktime for clocktime, cputime, occ, rql in stat) * 0.01
         print 'Percentage;Cumulative Time (clock);Cumulative Time (CPU);Occurences;Query'
         for clocktime, cputime, occ, rql in stat:
-            print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime, cputime, occ, rql)
+            print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime,
+                                            cputime, occ, rql)
 
 
 class GenerateSchema(Command):
