@@ -174,9 +174,10 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                     add_msg(w, str(tschema),
                             'inlined:%s.%s.%s' % (etype, rschema, role))
-                if appearsin_addmenu.etype_get(eschema, rschema, role, tschema) and \
-                       (libconfig is None or not
-                        libappearsin_addmenu.etype_get(eschema, rschema, role, tschema)):
+                if appearsin_addmenu.etype_get(eschema, rschema, role, tschema):
+                    if libconfig is not None and libappearsin_addmenu.etype_get(eschema, rschema, role, tschema):
+                        if eschema in libschema and tschema in libschema:
+                            continue
                     if role == 'subject':
                         label = 'add %s %s %s %s' % (eschema, rschema,
                                                      tschema, role)
