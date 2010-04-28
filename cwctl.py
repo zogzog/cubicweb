@@ -783,7 +783,7 @@ class ShellCommand(Command):
 
     Arguments after bare "--" string will not be processed by the shell command
     You can use it to pass extra arguments to your script and expect for
-    them in 'scriptargs' afterwards.
+    them in '__args__' afterwards.
 
     <instance>
       the identifier of the instance to connect.
@@ -869,7 +869,7 @@ sources for migration will be automatically selected.",
                 # remember that usage requires instance appid as first argument
                 scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
                 for script in scripts:
-                    mih.cmd_process_script(script, args=args)
+                    mih.cmd_process_script(script, scriptargs=args)
             else:
                 mih.interactive_shell()
         finally:

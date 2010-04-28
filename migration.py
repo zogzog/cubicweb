@@ -287,14 +287,14 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if confirmed
 
         Context environment can have these variables defined:
-        - __name__   : will be determine by funcname parameter
-        - __file__   : is the name of the script if it exists
-        - scriptargs : script arguments coming from command-line
+        - __name__ : will be determine by funcname parameter
+        - __file__ : is the name of the script if it exists
+        - __args__ : script arguments coming from command-line
 
         :param migrscript: name of the script
-        :param funcname: defines __name__ internally (or use __main__)
-        :params args: arguments of the script
-        :keyword args: extra arguments of the script given by command-line
+        :param funcname: defines __name__ inside the shell (or use __main__)
+        :params args: optional arguments for funcname
+        :keyword scriptargs: optional arguments of the script
         """
         migrscript = os.path.normpath(migrscript)
         if migrscript.endswith('.py'):
@@ -312,7 +312,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             else:
                 pyname = splitext(basename(migrscript))[0]
             scriptlocals.update({'__file__': migrscript, '__name__': pyname,
-                                 'scriptargs': kwargs.pop("args", [])})
+                                 '__args__': kwargs.pop("scriptargs", [])})
             execfile(migrscript, scriptlocals)
             if funcname is not None:
                 try:

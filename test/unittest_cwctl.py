@@ -58,7 +58,7 @@ class CubicWebShellTC(CubicWebTC):
         for script, args in scripts.items():
             scriptname = os.path.join('data/scripts/', script)
             self.assert_(os.path.exists(scriptname))
-            mih.cmd_process_script(scriptname, None, args=args)
+            mih.cmd_process_script(scriptname, None, scriptargs=args)
 
 
 if __name__ == '__main__':
