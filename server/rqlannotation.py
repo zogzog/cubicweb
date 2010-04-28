@@ -51,7 +51,7 @@ def _annotate_select(annotator, rqlst):
             stinfo['invariant'] = False
             stinfo['principal'] = _select_main_var(stinfo['rhsrelations'])
             continue
-        if not stinfo['relations'] and not stinfo['typerels']:
+        if not stinfo['relations'] and stinfo['typerel'] is None:
             # Any X, Any MAX(X)...
             # those particular queries should be executed using the system
             # entities table unless there is some type restriction
@@ -93,7 +93,7 @@ def _annotate_select(annotator, rqlst):
                 continue
             rschema = getrschema(rel.r_type)
             if rel.optional:
-                if rel in stinfo['optrelations']:
+                if rel in stinfo.get('optrelations', ()):
                     # optional variable can't be invariant if this is the lhs
                     # variable of an inlined relation
                     if not rel in stinfo['rhsrelations'] and rschema.inlined:
@@ -309,7 +309,7 @@ class IsAmbData(object):
     def compute(self, rqlst):
         # set domains for each variable
         for varname, var in rqlst.defined_vars.iteritems():
-            if var.stinfo['uidrels'] or \
+            if var.stinfo['uidrel'] is not None or \
                    self.eschema(rqlst.solutions[0][varname]).final:
                 ptypes = var.stinfo['possibletypes']
             else:
@@ -352,7 +352,7 @@ class IsAmbData(object):
     def set_rel_constraint(self, term, rel, etypes_func):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):
             var = term.variable
-            if len(var.stinfo['relations'] - var.stinfo['typerels']) == 1 \
+            if len(var.stinfo['relations']) == 1 \
                    or rel.sqlscope is var.sqlscope or rel.r_type == 'identity':
                 self.restrict(var, frozenset(etypes_func()))
                 try:
@@ -369,7 +369,7 @@ class IsAmbData(object):
         if isinstance(other, VariableRef) and isinstance(other.variable, Variable):
             deambiguifier = other.variable
             if not var is self.deambification_map.get(deambiguifier):
-                if not var.stinfo['typerels']:
+                if var.stinfo['typerel'] is None:
                     otheretypes = deambiguifier.stinfo['possibletypes']
                 elif not self.is_ambiguous(deambiguifier):
                     otheretypes = self.varsols[deambiguifier]
@@ -377,7 +377,7 @@ class IsAmbData(object):
                     # we know variable won't be invariant, try to use
                     # it to deambguify the current variable
                     otheretypes = self.varsols[deambiguifier]
-            if not deambiguifier.stinfo['typerels']:
+            if deambiguifier.stinfo['typerel'] is None:
                 # if deambiguifier has no type restriction using 'is',
                 # don't record it
                 deambiguifier = None

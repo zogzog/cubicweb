@@ -63,7 +63,7 @@ a:hover{
   text-decoration: underline;
 }
 
-a img {
+a img, img {
   border: none;
   text-align: center;
 }

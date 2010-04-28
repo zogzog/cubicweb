@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for users
+"""Specific views for users and groups"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -25,6 +24,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import action, uicfg
+from cubicweb.web.views import tabs
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWUser', 'login'), 'hidden')
@@ -84,3 +84,65 @@ class FoafView(EntityView):
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
+
+
+# group views ##################################################################
+
+_pvs.tag_object_of(('CWUser', 'in_group', 'CWGroup'), 'hidden')
+_pvs.tag_object_of(('*', 'require_group', 'CWGroup'), 'hidden')
+
+
+class CWGroupPrimaryView(tabs.TabbedPrimaryView):
+    __select__ = implements('CWGroup')
+    tabs = [_('cwgroup-main'), _('cwgroup-permissions')]
+    default_tab = 'cwgroup-main'
+
+
+class CWGroupMainTab(tabs.PrimaryTab):
+    __regid__ = 'cwgroup-main'
+    __select__ = tabs.PrimaryTab.__select__ & implements('CWGroup')
+
+    def render_entity_attributes(self, entity):
+        rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
+              'U login L, U firstname FN, U surname LN, U creation_date CD, ' \
+              'U last_login_time LL, G eid %(x)s'
+        rset = self._cw.execute(rql, {'x': entity.eid})
+        headers = (_(u'user'), _(u'first name'), _(u'last name'),
+                   _(u'creation date'), _(u'last login time'))
+        self.wview('editable-table', rset, 'null', displayfilter=True,
+                   displaycols=range(5), mainindex=0, headers=headers)
+
+class CWGroupPermTab(EntityView):
+    __regid__ = 'cwgroup-permissions'
+    __select__ = implements('CWGroup')
+
+    def cell_call(self, row, col):
+        self._cw.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
+        access_types = ('read', 'delete', 'add', 'update')
+        w = self.w
+        entity = self.cw_rset.get_entity(row, col)
+        objtype_access = {'CWEType': ('read', 'delete', 'add', 'update'),
+                          'CWRelation': ('add', 'delete')}
+        rql_cwetype = 'DISTINCT Any X WHERE X %s_permission CWG, X is CWEType, ' \
+                      'CWG eid %%(e)s'
+        rql_cwrelation = 'DISTINCT Any RT WHERE X %s_permission CWG, X is CWRelation, ' \
+                         'X relation_type RT, CWG eid %%(e)s'
+        self.render_objtype_access(entity, 'CWEType', objtype_access, rql_cwetype)
+        self.render_objtype_access(entity, 'CWRelation', objtype_access, rql_cwrelation)
+
+    def render_objtype_access(self, entity, objtype, objtype_access, rql):
+        self.w(u'<h4>%s</h4>' % self._cw._(objtype))
+        for access_type in objtype_access[objtype]:
+            rset = self._cw.execute(rql % access_type, {'e': entity.eid})
+            if rset:
+                self.w(u'<div>%s:</div>' % self._cw.__(access_type + '_permission'))
+                self.w(u'<div>%s</div><br/>' % self._cw.view('csv', rset, 'null'))
+
+class CWGroupInContextView(EntityView):
+    __regid__ = 'incontext'
+    __select__ = implements('CWGroup')
+
+    def cell_call(self, row, col):
+        entity = self.cw_rset.complete_entity(row, col)
+        self.w(u'<a href="%s" class="%s">%s</a>' % (
+            entity.absolute_url(), entity.name, entity.printable_value('name')))

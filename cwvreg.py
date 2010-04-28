@@ -401,6 +401,10 @@ VRegistry.REGISTRY_FACTORY['views'] = ViewsRegistry
 
 
 class ActionsRegistry(CWRegistry):
+    def poss_visible_objects(self, *args, **kwargs):
+        """return an ordered list of possible actions"""
+        return sorted(self.possible_objects(*args, **kwargs),
+                      key=lambda x: x.order)
 
     def possible_actions(self, req, rset=None, **kwargs):
         if rset is None:
@@ -616,7 +620,7 @@ class CubicWebVRegistry(VRegistry):
     def solutions(self, req, rqlst, args):
         def type_from_eid(eid, req=req):
             return req.describe(eid)[0]
-        self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
+        return self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
 
     def parse(self, req, rql, args=None):
         rqlst = self.rqlhelper.parse(rql)

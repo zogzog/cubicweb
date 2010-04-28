@@ -19,7 +19,6 @@
 
 * the rql input form
 * the logged user link
-* pdf view link
 
 """
 __docformat__ = "restructuredtext en"

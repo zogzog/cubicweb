@@ -49,17 +49,17 @@ class SchemaModificationHooksTC(CubicWebTC):
 
     def _set_perms(self, eid):
         self.execute('SET X read_permission G WHERE X eid %(x)s, G is CWGroup',
-                     {'x': eid}, 'x')
+                     {'x': eid})
         self.execute('SET X add_permission G WHERE X eid %(x)s, G is CWGroup, G name "managers"',
-                     {'x': eid}, 'x')
+                     {'x': eid})
         self.execute('SET X delete_permission G WHERE X eid %(x)s, G is CWGroup, G name "owners"',
-                     {'x': eid}, 'x')
+                     {'x': eid})
 
     def _set_attr_perms(self, eid):
         self.execute('SET X read_permission G WHERE X eid %(x)s, G is CWGroup',
-                     {'x': eid}, 'x')
+                     {'x': eid})
         self.execute('SET X update_permission G WHERE X eid %(x)s, G is CWGroup, G name "managers"',
-                     {'x': eid}, 'x')
+                     {'x': eid})
 
     def test_base(self):
         schema = self.repo.schema
@@ -105,7 +105,7 @@ class SchemaModificationHooksTC(CubicWebTC):
                                'WHERE RT name "concerne2", E name "CWUser"')[0][0]
         self._set_perms(rdefeid)
         self.commit()
-        self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid}, 'x')
+        self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid})
         self.commit()
         self.failUnless('concerne2' in schema['CWUser'].subject_relations())
         self.failIf('concerne2' in schema['Societe2'].subject_relations())
@@ -265,7 +265,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
                                'WHERE RT name "messageid", E name "BaseTransition", F name "String"')[0][0]
         assert self.execute('SET X read_permission Y WHERE X eid %(x)s, Y name "managers"',
-                     {'x': attreid}, 'x')
+                     {'x': attreid})
         self.commit()
         self.schema.rebuild_infered_relations()
         self.failUnless('Transition' in self.schema['messageid'].subjects())
@@ -316,10 +316,10 @@ class SchemaModificationHooksTC(CubicWebTC):
         if not getattr(cstr, 'eid', None):
             self.skip('start me alone') # bug in schema reloading, constraint's eid not restored
         self.execute('SET X value %(v)s WHERE X eid %(x)s',
-                     {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"}, 'x')
+                     {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"})
         self.execute('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
                      'WHERE CT name %(ct)s, EDEF eid %(x)s',
-                     {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid}, 'x')
+                     {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid})
         self.commit()
         cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
         self.assertEquals(cstr.values, (u'normal', u'auto', u'new'))

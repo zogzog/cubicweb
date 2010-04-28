@@ -321,9 +321,15 @@ function restoreInlinedEntity(peid, rtype, eid) {
 }
 
 function _clearPreviousErrors(formid) {
-    jQuery('#' + formid + 'ErrorMessage').remove();
-    jQuery('#' + formid + ' span.errorMsg').remove();
-    jQuery('#' + formid + ' .error').removeClass('error');
+    // on some case (eg max request size exceeded, we don't know the formid
+    if (formid) {
+	jQuery('#' + formid + 'ErrorMessage').remove();
+	jQuery('#' + formid + ' span.errorMsg').remove();
+	jQuery('#' + formid + ' .error').removeClass('error');
+    } else {
+	jQuery('span.errorMsg').remove();
+	jQuery('.error').removeClass('error');
+    }
 }
 
 function _displayValidationerrors(formid, eid, errors) {
@@ -391,7 +397,6 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     var descr = result[1];
     // Unknown structure
     if ( !isArrayLike(descr) || descr.length != 2 ) {
-	log('got strange error :', descr);
 	updateMessage(descr);
 	return false;
     }
@@ -405,7 +410,12 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
 /* unfreeze form buttons when the validation process is over*/
 function unfreezeFormButtons(formid) {
     jQuery('#progress').hide();
-    jQuery('#' + formid + ' .validateButton').removeAttr('disabled');
+    // on some case (eg max request size exceeded, we don't know the formid
+    if (formid) {
+	jQuery('#' + formid + ' .validateButton').removeAttr('disabled');
+    } else {
+	jQuery('.validateButton').removeAttr('disabled');
+    }
     return true;
 }
 

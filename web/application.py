@@ -18,6 +18,8 @@
 """CubicWeb web client application object
 
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -31,10 +33,11 @@ from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
     RepositoryError, CW_EVENT_MANAGER)
+from cubicweb.dbapi import DBAPISession
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
-    StatusResponse, DirectResponse, Redirect, NotFound,
-    RemoteCallFailed, ExplicitLogin, InvalidSession, RequestError)
+    StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
+    RemoteCallFailed, InvalidSession, RequestError)
 
 # make session manager available through a global variable so the debug view can
 # print information about web session
@@ -74,7 +77,7 @@ class AbstractSessionManager(component.Component):
         for session in self.current_sessions():
             no_use_time = (time() - session.last_usage_time)
             total += 1
-            if session.anonymous_connection:
+            if session.anonymous_session:
                 if no_use_time >= self.cleanup_anon_session_time:
                     self.close_session(session)
                     closed += 1
@@ -98,9 +101,11 @@ class AbstractSessionManager(component.Component):
         raise NotImplementedError()
 
     def open_session(self, req):
-        """open and return a new session for the given request
+        """open and return a new session for the given request. The session is
+        also bound to the request.
 
-        :raise ExplicitLogin: if authentication is required
+        raise :exc:`cubicweb.AuthenticationError` if authentication failed
+        (no authentication info found or wrong user/password)
         """
         raise NotImplementedError()
 
@@ -119,11 +124,24 @@ class AbstractAuthenticationManager(component.Component):
     def __init__(self, vreg):
         self.vreg = vreg
 
-    def authenticate(self, req):
-        """authenticate user and return corresponding user object
+    def validate_session(self, req, session):
+        """check session validity, reconnecting it to the repository if the
+        associated connection expired in the repository side (hence the
+        necessity for this method).
 
-        :raise ExplicitLogin: if authentication is required (no authentication
-        info found or wrong user/password)
+        raise :exc:`InvalidSession` if session is corrupted for a reason or
+        another and should be closed
+        """
+        raise NotImplementedError()
+
+    def authenticate(self, req):
+        """authenticate user using connection information found in the request,
+        and return corresponding a :class:`~cubicweb.dbapi.Connection` instance,
+        as well as login and authentication information dictionary used to open
+        the connection.
+
+        raise :exc:`cubicweb.AuthenticationError` if authentication failed
+        (no authentication info found or wrong user/password)
         """
         raise NotImplementedError()
 
@@ -181,7 +199,6 @@ class CookieSessionHandler(object):
 
         :raise Redirect: if authentication has occured and succeed
         """
-        assert req.cnx is None # at this point no cnx should be set on the request
         cookie = req.get_cookie()
         try:
             sessionid = str(cookie[self.SESSION_VAR].value)
@@ -191,9 +208,11 @@ class CookieSessionHandler(object):
             try:
                 session = self.get_session(req, sessionid)
             except InvalidSession:
+                # try to open a new session, so we get an anonymous session if
+                # allowed
                 try:
                     session = self.open_session(req)
-                except ExplicitLogin:
+                except AuthenticationError:
                     req.remove_cookie(cookie, self.SESSION_VAR)
                     raise
         # remember last usage time for web session tracking
@@ -209,14 +228,14 @@ class CookieSessionHandler(object):
         req.set_cookie(cookie, self.SESSION_VAR, maxage=None)
         # remember last usage time for web session tracking
         session.last_usage_time = time()
-        if not session.anonymous_connection:
+        if not session.anonymous_session:
             self._postlogin(req)
         return session
 
     def _update_last_login_time(self, req):
         try:
             req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
-                        {'x' : req.user.eid}, 'x')
+                        {'x' : req.user.eid})
             req.cnx.commit()
         except (RepositoryError, Unauthorized):
             # ldap user are not writeable for instance
@@ -253,7 +272,7 @@ class CookieSessionHandler(object):
         """
         self.session_manager.close_session(req.cnx)
         req.remove_cookie(req.get_cookie(), self.SESSION_VAR)
-        raise AuthenticationError(url=goto_url)
+        raise LogOut(url=goto_url)
 
 
 class CubicWebPublisher(object):
@@ -297,7 +316,10 @@ class CubicWebPublisher(object):
         sessions (i.e. a new connection may be created or an already existing
         one may be reused
         """
-        self.session_handler.set_session(req)
+        try:
+            self.session_handler.set_session(req)
+        except AuthenticationError:
+            req.set_session(DBAPISession(None))
 
     # publish methods #########################################################
 
@@ -309,19 +331,18 @@ class CubicWebPublisher(object):
             return self.main_publish(path, req)
         finally:
             cnx = req.cnx
-            self._logfile_lock.acquire()
-            try:
-                try:
-                    result = ['\n'+'*'*80]
-                    result.append(req.url())
-                    result += ['%s %s -- (%.3f sec, %.3f CPU sec)' % q for q in cnx.executed_queries]
-                    cnx.executed_queries = []
-                    self._query_log.write('\n'.join(result).encode(req.encoding))
-                    self._query_log.flush()
-                except Exception:
-                    self.exception('error while logging queries')
-            finally:
-                self._logfile_lock.release()
+            if cnx:
+                with self._logfile_lock:
+                    try:
+                        result = ['\n'+'*'*80]
+                        result.append(req.url())
+                        result += ['%s %s -- (%.3f sec, %.3f CPU sec)' % q
+                                   for q in cnx.executed_queries]
+                        cnx.executed_queries = []
+                        self._query_log.write('\n'.join(result).encode(req.encoding))
+                        self._query_log.flush()
+                    except Exception:
+                        self.exception('error while logging queries')
 
     @deprecated("[3.4] use vreg['controllers'].select(...)")
     def select_controller(self, oid, req):
@@ -361,12 +382,16 @@ class CubicWebPublisher(object):
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)
-                if req.cnx is not None:
-                    # req.cnx is None if anonymous aren't allowed and we are
-                    # displaying the cookie authentication form
+                if req.cnx:
+                    # no req.cnx if anonymous aren't allowed and we are
+                    # displaying some anonymous enabled view such as the cookie
+                    # authentication form
                     req.cnx.commit()
             except (StatusResponse, DirectResponse):
-                req.cnx.commit()
+                if req.cnx:
+                    req.cnx.commit()
+                raise
+            except (AuthenticationError, LogOut):
                 raise
             except Redirect:
                 # redirect is raised by edit controller when everything went fine,
@@ -388,10 +413,13 @@ class CubicWebPublisher(object):
                 else:
                     # delete validation errors which may have been previously set
                     if '__errorurl' in req.form:
-                        req.del_session_data(req.form['__errorurl'])
+                        req.session.data.pop(req.form['__errorurl'], None)
                     raise
-            except (AuthenticationError, NotFound, RemoteCallFailed):
-                raise
+            except RemoteCallFailed, ex:
+                req.set_header('content-type', 'application/json')
+                raise StatusResponse(500, ex.dumps())
+            except NotFound:
+                raise StatusResponse(404, self.notfound_content(req))
             except ValidationError, ex:
                 self.validation_error_handler(req, ex)
             except (Unauthorized, BadRQLQuery, RequestError), ex:
@@ -402,7 +430,7 @@ class CubicWebPublisher(object):
                 self.critical('Catch all triggered!!!')
                 self.exception('this is what happened')
         finally:
-            if req.cnx is not None:
+            if req.cnx:
                 try:
                     req.cnx.rollback()
                 except:
@@ -417,7 +445,7 @@ class CubicWebPublisher(object):
                         'values': req.form,
                         'eidmap': req.data.get('eidmap', {})
                         }
-            req.set_session_data(req.form['__errorurl'], forminfo)
+            req.session.data[req.form['__errorurl']] = forminfo
             # XXX form session key / __error_url should be differentiated:
             # session key is 'url + #<form dom id', though we usually don't want
             # the browser to move to the form since it hides the global

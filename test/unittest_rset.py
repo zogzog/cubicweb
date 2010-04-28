@@ -225,7 +225,7 @@ class ResultSetTC(CubicWebTC):
     def test_get_entity_simple(self):
         self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                         surname=u'di mascio', firstname=u'adrien')
-        e = self.entity('Any X,T WHERE X login "adim", X surname T')
+        e = self.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
         self.assertEquals(e['surname'], 'di mascio')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
         self.assertRaises(KeyError, e.__getitem__, 'creation_date')

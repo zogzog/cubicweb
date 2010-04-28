@@ -82,18 +82,18 @@ class EmailAddressTC(BaseEntityTC):
 class CWUserTC(BaseEntityTC):
 
     def test_complete(self):
-        e = self.entity('CWUser X WHERE X login "admin"')
+        e = self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
         e.complete()
 
     def test_matching_groups(self):
-        e = self.entity('CWUser X WHERE X login "admin"')
+        e = self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
         self.failUnless(e.matching_groups('managers'))
         self.failIf(e.matching_groups('xyz'))
         self.failUnless(e.matching_groups(('xyz', 'managers')))
         self.failIf(e.matching_groups(('xyz', 'abcd')))
 
     def test_dc_title_and_name(self):
-        e = self.entity('CWUser U WHERE U login "member"')
+        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), 'member')
         e.set_attributes(firstname=u'bouah')
@@ -104,7 +104,7 @@ class CWUserTC(BaseEntityTC):
         self.assertEquals(e.name(), u'bouah lôt')
 
     def test_allowed_massmail_keys(self):
-        e = self.entity('CWUser U WHERE U login "member"')
+        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
         # Bytes/Password attributes should be omited
         self.assertEquals(e.allowed_massmail_keys(),
                           set(('surname', 'firstname', 'login', 'last_login_time',

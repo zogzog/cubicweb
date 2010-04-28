@@ -135,6 +135,9 @@ class CWRelation(AnyEntity):
     def otype(self):
         return self.to_entity[0]
 
+    def yams_schema(self):
+        rschema = self._cw.vreg.schema.rschema(self.rtype.name)
+        return rschema.rdefs[(self.stype.name, self.otype.name)]
 
 class CWAttribute(CWRelation):
     __regid__ = 'CWAttribute'
@@ -175,6 +178,9 @@ class RQLExpression(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
     def dc_title(self):
+        return self.expression or u''
+
+    def dc_long_title(self):
         return '%s(%s)' % (self.exprtype, self.expression or u'')
 
     @property

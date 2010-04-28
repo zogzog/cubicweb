@@ -115,8 +115,7 @@ class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
         self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                              'NOT EXISTS(X owned_by U, X eid %(x)s)',
-                             {'c': self.compositeeid, 'x': self.composedeid},
-                             ('c', 'x'))
+                             {'c': self.compositeeid, 'x': self.composedeid})
 
 
 class SyncCompositeOwner(MetaDataHook):

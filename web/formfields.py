@@ -723,9 +723,9 @@ class FileField(StringField):
             # raise UnmodifiedField instead of returning None, since the later
             # will try to remove already attached file if any
             raise UnmodifiedField()
-        # skip browser submitted mime type
-        filename, _, stream = value
-        # value is a  3-uple (filename, mimetype, stream)
+        # value is a 2-uple (filename, stream)
+        filename, stream = value
+        # XXX avoid in memory loading of posted files. Requires Binary handling changes...
         value = Binary(stream.read())
         if not value.getvalue(): # usually an unexistant file
             value = None

@@ -124,8 +124,8 @@ class MigrationCommandsTC(CubicWebTC):
         testdate = date(2005, 12, 13)
         eid1 = self.mh.rqlexec('INSERT Note N')[0][0]
         eid2 = self.mh.rqlexec('INSERT Note N: N mydate %(mydate)s', {'mydate' : testdate})[0][0]
-        d1 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid1}, 'x')[0][0]
-        d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2}, 'x')[0][0]
+        d1 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid1})[0][0]
+        d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2})[0][0]
         self.assertEquals(d1, date.today())
         self.assertEquals(d2, testdate)
         self.mh.rollback()
@@ -519,13 +519,13 @@ class MigrationCommandsTC(CubicWebTC):
         note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo"').get_entity(0, 0)
         aff = self.execute('INSERT Affaire X').get_entity(0, 0)
         self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
-                                     {'x': text.eid, 'y': aff.eid}, 'x'))
+                                     {'x': text.eid, 'y': aff.eid}))
         self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
-                                     {'x': note.eid, 'y': aff.eid}, 'x'))
+                                     {'x': note.eid, 'y': aff.eid}))
         self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
-                                     {'x': text.eid, 'y': aff.eid}, 'x'))
+                                     {'x': text.eid, 'y': aff.eid}))
         self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
-                                     {'x': note.eid, 'y': aff.eid}, 'x'))
+                                     {'x': note.eid, 'y': aff.eid}))
         # XXX remove specializes by ourselves, else tearDown fails when removing
         # Para because of Note inheritance. This could be fixed by putting the
         # MemSchemaCWETypeDel(session, name) operation in the

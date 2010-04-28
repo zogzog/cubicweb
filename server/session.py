@@ -26,6 +26,7 @@ import sys
 import threading
 from time import time
 from uuid import uuid4
+from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
@@ -655,8 +656,14 @@ class Session(RequestSessionBase):
         return self.repo.source_from_eid(eid, self)
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
-        """db-api like method directly linked to the querier execute method"""
-        rset = self._execute(self, rql, kwargs, eid_key, build_descr)
+        """db-api like method directly linked to the querier execute method.
+
+        See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
+        """
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
         return rset
 

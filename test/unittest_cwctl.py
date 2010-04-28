@@ -23,15 +23,8 @@ import os
 from cStringIO import StringIO
 from logilab.common.testlib import TestCase, unittest_main
 
-if os.environ.get('APYCOT_ROOT'):
-    root = os.environ['APYCOT_ROOT']
-    CUBES_DIR = '%s/local/share/cubicweb/cubes/' % root
-    os.environ['CW_CUBES_PATH'] = CUBES_DIR
-    REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-    os.environ['CW_INSTANCES_DIR'] = REGISTRY_DIR
-
 from cubicweb.cwconfig import CubicWebConfiguration
-CubicWebConfiguration.load_cwctl_plugins()
+CubicWebConfiguration.load_cwctl_plugins() # XXX necessary?
 
 class CubicWebCtlTC(TestCase):
     def setUp(self):

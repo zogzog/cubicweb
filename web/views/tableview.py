@@ -109,10 +109,12 @@ class TableView(AnyRsetView):
                 continue
         return None
 
-    def displaycols(self, displaycols):
+    def displaycols(self, displaycols, headers):
         if displaycols is None:
             if 'displaycols' in self._cw.form:
                 displaycols = [int(idx) for idx in self._cw.form['displaycols']]
+            elif headers is not None:
+                displaycols = range(len(headers))
             else:
                 displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
         return displaycols
@@ -149,7 +151,7 @@ class TableView(AnyRsetView):
                     hidden = False
             if displayactions is None and 'displayactions' in req.form:
                 displayactions = True
-        displaycols = self.displaycols(displaycols)
+        displaycols = self.displaycols(displaycols, headers)
         fromformfilter = 'fromformfilter' in req.form
         # if fromformfilter is true, this is an ajax call and we only want to
         # replace the inner div, so don't regenerate everything under the if
@@ -319,7 +321,7 @@ class InitialTableView(TableView):
         """Dumps a table displaying a composite query"""
         actrql = self._cw.form['actualrql']
         self._cw.ensure_ro_rql(actrql)
-        displaycols = self.displaycols(displaycols)
+        displaycols = self.displaycols(displaycols, headers)
         if displayactions is None and 'displayactions' in self._cw.form:
             displayactions = True
         if divid is None and 'divid' in self._cw.form:
@@ -348,3 +350,67 @@ class InitialTableView(TableView):
 class EditableInitialTableTableView(InitialTableView):
     __regid__ = 'editable-initialtable'
     finalview = 'editable-final'
+
+
+class EntityAttributesTableView(EntityView):
+    """This table displays entity attributes in a table and allow to set a
+    specific method to help building cell content for each attribute as well as
+    column header.
+
+    Table will render entity cell by using the appropriate build_COLNAME_cell
+    methods if defined otherwise cell content will be entity.COLNAME.
+
+    Table will render column header using the method header_for_COLNAME if
+    defined otherwise COLNAME will be used.
+    """
+    __abstract__ = True
+    columns = ()
+    table_css = "listing"
+    css_files = ()
+
+    def call(self, columns=None):
+        if self.css_files:
+            self._cw.add_css(self.css_files)
+        _ = self._cw._
+        self.columns = columns or self.columns
+        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
+        self.w(u'<table class="%s">' % self.table_css)
+        self.table_header(ecls)
+        self.w(u'<tbody>')
+        for row in xrange(self.cw_rset.rowcount):
+            self.cell_call(row=row, col=0)
+        self.w(u'</tbody>')
+        self.w(u'</table>')
+
+    def cell_call(self, row, col):
+        _ = self._cw._
+        entity = self.cw_rset.get_entity(row, col)
+        infos = {}
+        for col in self.columns:
+            meth = getattr(self, 'build_%s_cell' % col, None)
+            # find the build method or try to find matching attribute
+            if meth:
+                content = meth(entity)
+            else:
+                content = entity.printable_value(col)
+            infos[col] = content
+        self.w(u"""<tr onmouseover="addElementClass(this, 'highlighted');"
+            onmouseout="removeElementClass(this, 'highlighted')">""")
+        line = u''.join(u'<td>%%(%s)s</td>' % col for col in self.columns)
+        self.w(line % infos)
+        self.w(u'</tr>\n')
+
+    def table_header(self, ecls):
+        """builds the table's header"""
+        self.w(u'<thead><tr>')
+        _ = self._cw._
+        for column in self.columns:
+            meth = getattr(self, 'header_for_%s' % column, None)
+            if meth:
+                colname = meth(ecls)
+            else:
+                colname = _(column)
+            self.w(u'<th>%s</th>' % xml_escape(colname))
+        self.w(u'</tr></thead>\n')
+
+

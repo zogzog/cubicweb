@@ -1017,7 +1017,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
         if lastrel and not self.eidto in pendings:
-            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto}, 'x')
+            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto})
         MemSchemaRDefDel(session, (subjschema, rschema, objschema))
 
 

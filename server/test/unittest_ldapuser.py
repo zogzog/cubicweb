@@ -189,7 +189,7 @@ class LDAPUserSourceTC(CubicWebTC):
             rset = self.sexecute('Any U ORDERBY D DESC WHERE WF wf_info_for X,'
                                 'WF creation_date D, WF from_state FS,'
                                 'WF owned_by U?, X eid %(x)s',
-                                {'x': adim.eid}, 'x')
+                                {'x': adim.eid})
             self.assertEquals(rset.rows, [[syt.eid]])
         finally:
             # restore db state

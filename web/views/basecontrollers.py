@@ -28,15 +28,15 @@ from smtplib import SMTP
 from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
-from cubicweb import (NoSelectableObject, ValidationError, ObjectNotFound,
-                      typed_eid)
+from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
+                      AuthenticationError, typed_eid)
 from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import authenticated_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps, json
+from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, json_dumps, json
 from cubicweb.web.controller import Controller
-from cubicweb.web.views import vid_from_rset
-from cubicweb.web.views.formrenderers import FormRenderer
+from cubicweb.web.views import vid_from_rset, formrenderers
+
 try:
     from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
                                     prepare_facets_rqlst)
@@ -69,7 +69,7 @@ def check_pageid(func):
     user's session data
     """
     def wrapper(self, *args, **kwargs):
-        data = self._cw.get_session_data(self._cw.pageid)
+        data = self._cw.session.data.get(self._cw.pageid)
         if data is None:
             raise RemoteCallFailed(self._cw._('pageid-not-found'))
         return func(self, *args, **kwargs)
@@ -83,7 +83,7 @@ class LoginController(Controller):
         """log in the instance"""
         if self._cw.vreg.config['auth-mode'] == 'http':
             # HTTP authentication
-            raise ExplicitLogin()
+            raise AuthenticationError()
         else:
             # Cookie authentication
             return self.appli.need_login_content(self._cw)
@@ -129,7 +129,10 @@ class ViewController(Controller):
         req = self._cw
         if rset is None and not hasattr(req, '_rql_processed'):
             req._rql_processed = True
-            rset = self.process_rql(req.form.get('rql'))
+            if req.cnx:
+                rset = self.process_rql(req.form.get('rql'))
+            else:
+                rset = None
         if rset and rset.rowcount == 1 and '__method' in req.form:
             entity = rset.get_entity(0, 0)
             try:
@@ -190,14 +193,14 @@ class ViewController(Controller):
             else:
                 rql = 'SET Y %s X WHERE X eid %%(x)s, Y eid %%(y)s' % rtype
             for teid in eids:
-                req.execute(rql, {'x': eid, 'y': typed_eid(teid)}, ('x', 'y'))
+                req.execute(rql, {'x': eid, 'y': typed_eid(teid)})
 
 
 def _validation_error(req, ex):
     req.cnx.rollback()
     # XXX necessary to remove existant validation error?
     # imo (syt), it's not necessary
-    req.get_session_data(req.form.get('__errorurl'), pop=True)
+    req.session.data.pop(req.form.get('__errorurl'), None)
     foreid = ex.entity
     eidmap = req.data.get('eidmap', {})
     for var, eid in eidmap.items():
@@ -249,7 +252,6 @@ class FormValidatorController(Controller):
         self._cw.set_content_type('text/html')
         jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
- wp = window.parent;
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
 
@@ -294,7 +296,7 @@ class JSonController(Controller):
             raise RemoteCallFailed(repr(exc))
         try:
             result = func(*args)
-        except RemoteCallFailed:
+        except (RemoteCallFailed, DirectResponse):
             raise
         except Exception, ex:
             self.exception('an exception occured while calling js_%s(%s): %s',
@@ -327,12 +329,12 @@ class JSonController(Controller):
             form['__action_%s' % action] = u'whatever'
         return form
 
-    def _exec(self, rql, args=None, eidkey=None, rocheck=True):
+    def _exec(self, rql, args=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
         if rocheck:
             self._cw.ensure_ro_rql(rql)
         try:
-            return self._cw.execute(rql, args, eidkey)
+            return self._cw.execute(rql, args)
         except Exception, ex:
             self.exception("error in _exec(rql=%s): %s", rql, ex)
             return None
@@ -390,7 +392,7 @@ class JSonController(Controller):
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
         form.build_context()
         vfield = form.field_by_name('value')
-        renderer = FormRenderer(self._cw)
+        renderer = formrenderers.FormRenderer(self._cw)
         return vfield.render(form, renderer, tabindex=tabindex) \
                + renderer.render_help(form, vfield)
 
@@ -484,7 +486,7 @@ class JSonController(Controller):
     @check_pageid
     @jsonize
     def js_user_callback(self, cbname):
-        page_data = self._cw.get_session_data(self._cw.pageid, {})
+        page_data = self._cw.session.data.get(self._cw.pageid, {})
         try:
             cb = page_data[cbname]
         except KeyError:
@@ -513,7 +515,7 @@ class JSonController(Controller):
         self._cw.unregister_callback(self._cw.pageid, cbname)
 
     def js_unload_page_data(self):
-        self._cw.del_session_data(self._cw.pageid)
+        self._cw.session.data.pop(self._cw.pageid, None)
 
     def js_cancel_edition(self, errorurl):
         """cancelling edition from javascript
@@ -558,15 +560,13 @@ class JSonController(Controller):
 
     def _add_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        pendings = self._cw.get_session_data(key, set())
+        pendings = self._cw.session.data.setdefault(key, set())
         pendings.add( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        self._cw.set_session_data(key, pendings)
 
     def _remove_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        pendings = self._cw.get_session_data(key)
+        pendings = self._cw.session.data[key]
         pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        self._cw.set_session_data(key, pendings)
 
     def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
         self._remove_pending(eidfrom, rel, eidto, 'insert')
@@ -652,7 +652,7 @@ class UndoController(SendMailController):
 
     def redirect(self):
         req = self._cw
-        breadcrumbs = req.get_session_data('breadcrumbs', None)
+        breadcrumbs = req.session.data.get('breadcrumbs', None)
         if breadcrumbs is not None and len(breadcrumbs) > 1:
             url = req.rebuild_url(breadcrumbs[-2],
                                   __message=req._('transaction undoed'))

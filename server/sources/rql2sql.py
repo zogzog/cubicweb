@@ -106,7 +106,7 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     modified = False
     for varname in tuple(unstable):
         var = select.defined_vars[varname]
-        if not var.stinfo['optrelations']:
+        if not var.stinfo.get('optrelations'):
             continue
         modified = True
         unstable.remove(varname)
@@ -133,13 +133,13 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
             var.stinfo['relations'].remove(rel)
             newvar.stinfo['relations'].add(newrel)
             if rel.optional in ('left', 'both'):
-                newvar.stinfo['optrelations'].add(newrel)
+                newvar.add_optional_relation(newrel)
             for vref in newrel.children[1].iget_nodes(VariableRef):
                 var = vref.variable
                 var.stinfo['relations'].add(newrel)
                 var.stinfo['rhsrelations'].add(newrel)
                 if rel.optional in ('right', 'both'):
-                    var.stinfo['optrelations'].add(newrel)
+                    var.add_optional_relation(newrel)
         # extract subquery solutions
         mysolutions = [sol.copy() for sol in solutions]
         cleanup_solutions(newselect, mysolutions)
@@ -907,7 +907,7 @@ class SQLGenerator(object):
                         condition = '%s=%s' % (lhssql, rhsconst.accept(self))
                         if relation.r_type != 'identity':
                             condition = '(%s OR %s IS NULL)' % (condition, lhssql)
-                        if not lhsvar.stinfo['optrelations']:
+                        if not lhsvar.stinfo.get('optrelations'):
                             return condition
                         self.add_outer_join_condition(lhsvar, t1, condition)
                     return
@@ -1006,7 +1006,7 @@ class SQLGenerator(object):
                 sql = '%s%s' % (lhssql, rhssql)
         except AttributeError:
             sql = '%s%s' % (lhssql, rhssql)
-        if lhs.variable.stinfo['optrelations']:
+        if lhs.variable.stinfo.get('optrelations'):
             self.add_outer_join_condition(lhs.variable, table, sql)
         else:
             return sql
@@ -1021,7 +1021,7 @@ class SQLGenerator(object):
         lhsvar = lhs.variable
         me_is_principal = lhsvar.stinfo.get('principal') is rel
         if me_is_principal:
-            if not lhsvar.stinfo['typerels']:
+            if lhsvar.stinfo['typerel'] is None:
                 # the variable is using the fti table, no join needed
                 jointo = None
             elif not lhsvar.name in self._varmap:
@@ -1154,7 +1154,7 @@ class SQLGenerator(object):
                 vtablename = '_' + variable.name
                 self.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
-                if variable.stinfo['typerels']:
+                if variable.stinfo['typerel'] is not None:
                     # add additional restriction on entities.type column
                     pts = variable.stinfo['possibletypes']
                     if len(pts) == 1:
@@ -1316,7 +1316,7 @@ class SQLGenerator(object):
             tablealias = self._state.outer_tables[table]
             actualtables = self._state.actual_tables[-1]
         except KeyError:
-            for rel in var.stinfo['optrelations']:
+            for rel in var.stinfo.get('optrelations'):
                 self.visit_relation(rel)
             assert self._state.outer_tables
             self.add_outer_join_condition(var, table, condition)

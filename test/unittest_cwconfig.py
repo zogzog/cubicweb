@@ -20,13 +20,16 @@
 """
 import sys
 import os
+import tempfile
 from os.path import dirname, join, abspath
 
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import (TestCase, unittest_main,
+                                    with_tempdir)
 from logilab.common.changelog import Version
 
 from cubicweb.devtools import ApptestConfiguration
+from cubicweb.cwconfig import _find_prefix
 
 def unabsolutize(path):
     parts = path.split(os.sep)
@@ -45,7 +48,7 @@ class CubicWebConfigurationTC(TestCase):
         self.config._cubes = ('email', 'file')
 
     def tearDown(self):
-        os.environ.pop('CW_CUBES_PATH', None)
+        ApptestConfiguration.CUBES_PATH = []
 
     def test_reorder_cubes(self):
         # jpl depends on email and file and comment
@@ -65,7 +68,7 @@ class CubicWebConfigurationTC(TestCase):
 
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
-        comment_pkginfo.__recommend__ = ('file',)
+        comment_pkginfo.__recommends_cubes__ = {'file': None}
         try:
             # email recommends comment
             # comment recommends file
@@ -78,7 +81,7 @@ class CubicWebConfigurationTC(TestCase):
             self.assertEquals(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
                               ('forge', 'email', 'comment', 'file'))
         finally:
-            comment_pkginfo.__use__ = ()
+            comment_pkginfo.__recommends_cubes__ = {}
 
 
 #     def test_vc_config(self):
@@ -104,11 +107,11 @@ class CubicWebConfigurationTC(TestCase):
         # make sure we don't import the email cube, but the stdlib email package
         import email
         self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
-        os.environ['CW_CUBES_PATH'] = CUSTOM_CUBES_DIR
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.assertEquals(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])
-        os.environ['CW_CUBES_PATH'] = os.pathsep.join([
-            CUSTOM_CUBES_DIR, self.config.CUBES_DIR, 'unexistant'])
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR,
+                                            self.config.CUBES_DIR, 'unexistant']
         # filter out unexistant and duplicates
         self.assertEquals(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR,
@@ -127,6 +130,91 @@ class CubicWebConfigurationTC(TestCase):
         from cubes import file
         self.assertEquals(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
 
+class FindPrefixTC(TestCase):
+    def make_dirs(self, *args):
+        path = join(tempfile.tempdir, *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def make_file(self, *args):
+        self.make_dirs(*args[: -1])
+        file_path = join(tempfile.tempdir, *args)
+        file_obj = open(file_path, 'w')
+        file_obj.write('""" None """')
+        file_obj.close()
+        return file_path
+
+    @with_tempdir
+    def test_samedir(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        self.assertEquals(_find_prefix(prefix), prefix)
+
+    @with_tempdir
+    def test_samedir_filepath(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        file_path = self.make_file('bob.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_dir_inside_prefix(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        dir_path = self.make_dirs('bob')
+        self.assertEquals(_find_prefix(dir_path), prefix)
+
+    @with_tempdir
+    def test_file_in_dir_inside_prefix(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        file_path = self.make_file('bob', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_file_in_deeper_dir_inside_prefix(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_multiple_candidate_prefix(self):
+        self.make_dirs('share', 'cubicweb')
+        prefix = self.make_dirs('bob')
+        self.make_dirs('bob', 'share', 'cubicweb')
+        file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_sister_candidate_prefix(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        self.make_dirs('bob', 'share', 'cubicweb')
+        file_path = self.make_file('bell', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_multiple_parent_candidate_prefix(self):
+        self.make_dirs('share', 'cubicweb')
+        prefix = self.make_dirs('share', 'cubicweb', 'bob')
+        self.make_dirs('share', 'cubicweb', 'bob', 'share', 'cubicweb')
+        file_path = self.make_file('share', 'cubicweb', 'bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_upper_candidate_prefix(self):
+        prefix = tempfile.tempdir
+        self.make_dirs('share', 'cubicweb')
+        self.make_dirs('bell','bob',  'share', 'cubicweb')
+        file_path = self.make_file('bell', 'toto.py')
+        self.assertEquals(_find_prefix(file_path), prefix)
+
+    @with_tempdir
+    def test_no_prefix(self):
+        prefix = tempfile.tempdir
+        self.assertEquals(_find_prefix(prefix), sys.prefix)
 
 if __name__ == '__main__':
     unittest_main()

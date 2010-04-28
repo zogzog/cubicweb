@@ -39,7 +39,7 @@ class URLPublisherTC(CubicWebTC):
         req = self.request()
         b = req.create_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
         c = req.create_entity('Tag', name=u'yo') # take care: Tag's name normalized to lower case
-        self.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s', {'c':c.eid, 'b':b.eid}, 'b')
+        self.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s', {'c':c.eid, 'b':b.eid})
 
     def process(self, url):
         req = self.req = self.request()

@@ -252,7 +252,7 @@ class AddRelatedActions(action.Action):
     __select__ = action.Action.__select__ & one_line_rset() & non_final_entity()
 
     submenu = _('addrelated')
-    order = 20
+    order = 17
 
     def fill_menu(self, box, menu):
         # when there is only one item in the sub-menu, replace the sub-menu by

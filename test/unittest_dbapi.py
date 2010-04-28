@@ -53,21 +53,6 @@ class DBAPITC(CubicWebTC):
         self.assertRaises(ProgrammingError, cnx.user, None)
         self.assertRaises(ProgrammingError, cnx.describe, 1)
 
-    def test_session_data_api(self):
-        cnx = self.login('anon')
-        self.assertEquals(cnx.get_session_data('data'), None)
-        self.assertEquals(cnx.session_data(), {})
-        cnx.set_session_data('data', 4)
-        self.assertEquals(cnx.get_session_data('data'), 4)
-        self.assertEquals(cnx.session_data(), {'data': 4})
-        cnx.del_session_data('data')
-        cnx.del_session_data('whatever')
-        self.assertEquals(cnx.get_session_data('data'), None)
-        self.assertEquals(cnx.session_data(), {})
-        cnx.session_data()['data'] = 4
-        self.assertEquals(cnx.get_session_data('data'), 4)
-        self.assertEquals(cnx.session_data(), {'data': 4})
-
     def test_shared_data_api(self):
         cnx = self.login('anon')
         self.assertEquals(cnx.get_shared_data('data'), None)

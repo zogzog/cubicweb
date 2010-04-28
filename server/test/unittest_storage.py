@@ -145,14 +145,14 @@ class StorageTC(CubicWebTC):
                             ' (Any D, X WHERE X eid %(x)s, X data D)'
                             '  UNION '
                             ' (Any D, X WHERE X eid %(x)s, X data D)'
-                            ')', {'x': f1.eid}, 'x')
+                            ')', {'x': f1.eid})
         self.assertEquals(len(rset), 2)
         self.assertEquals(rset[0][0], f1.eid)
         self.assertEquals(rset[1][0], f1.eid)
         self.assertEquals(rset[0][1].getvalue(), 'the-data')
         self.assertEquals(rset[1][1].getvalue(), 'the-data')
         rset = self.execute('Any X,LENGTH(D) WHERE X eid %(x)s, X data D',
-                            {'x': f1.eid}, 'x')
+                            {'x': f1.eid})
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][0], f1.eid)
         self.assertEquals(rset[0][1], len('the-data'))
@@ -160,7 +160,7 @@ class StorageTC(CubicWebTC):
                             ' (Any D, X WHERE X eid %(x)s, X data D)'
                             '  UNION '
                             ' (Any D, X WHERE X eid %(x)s, X data D)'
-                            ')', {'x': f1.eid}, 'x')
+                            ')', {'x': f1.eid})
         self.assertEquals(len(rset), 2)
         self.assertEquals(rset[0][0], f1.eid)
         self.assertEquals(rset[1][0], f1.eid)
@@ -168,7 +168,7 @@ class StorageTC(CubicWebTC):
         self.assertEquals(rset[1][1], len('the-data'))
         ex = self.assertRaises(QueryError, self.execute,
                                'Any X,UPPER(D) WHERE X eid %(x)s, X data D',
-                               {'x': f1.eid}, 'x')
+                               {'x': f1.eid})
         self.assertEquals(str(ex), 'UPPER can not be called on mapped attribute')
 
 
@@ -191,7 +191,7 @@ class StorageTC(CubicWebTC):
                      {'d': Binary('some other data'), 'f': f1.eid})
         self.assertEquals(f1.data.getvalue(), 'some other data')
         self.commit()
-        f2 = self.entity('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid})
+        f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         self.assertEquals(f2.data.getvalue(), 'some other data')
 
 

@@ -129,14 +129,16 @@ class Form(AppObject):
     def form_valerror(self):
         """the validation error exception if any"""
         if self.parent_form is None:
-            return self._form_valerror
+            # unset if restore_previous_post has not be called
+            return getattr(self, '_form_valerror', None)
         return self.parent_form.form_valerror
 
     @property
     def form_previous_values(self):
         """previously posted values (on validation error)"""
         if self.parent_form is None:
-            return self._form_previous_values
+            # unset if restore_previous_post has not be called
+            return getattr(self, '_form_previous_values', {})
         return self.parent_form.form_previous_values
 
     @iclassmethod
@@ -222,7 +224,7 @@ class Form(AppObject):
             warn('[3.6.1] restore_previous_post already called, remove this call',
                  DeprecationWarning, stacklevel=2)
             return
-        forminfo = self._cw.get_session_data(sessionkey, pop=True)
+        forminfo = self._cw.session.data.pop(sessionkey, None)
         if forminfo:
             self._form_previous_values = forminfo['values']
             self._form_valerror = forminfo['error']

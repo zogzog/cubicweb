@@ -41,7 +41,6 @@ uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
 # groups
 _('navigation')
 _('ui')
-_('actions')
 _('boxes')
 _('components')
 _('contentnavigation')

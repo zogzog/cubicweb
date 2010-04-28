@@ -65,9 +65,6 @@ class AuthenticationError(ConnectionError):
     """raised when when an attempt to establish a connection failed do to wrong
     connection information (login / password or other authentication token)
     """
-    def __init__(self, *args, **kwargs):
-        super(AuthenticationError, self).__init__(*args)
-        self.__dict__.update(kwargs)
 
 class BadConnectionId(ConnectionError):
     """raised when a bad connection id is given"""

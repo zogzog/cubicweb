@@ -100,18 +100,15 @@ class TestServerConfiguration(ServerConfiguration):
          {'type' : 'string',
           'default': None,
           'help': 'login of the CubicWeb user account to use for anonymous user (if you want to allow anonymous)',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('anonymous-password',
          {'type' : 'string',
           'default': None,
           'help': 'password of the CubicWeb user account matching login',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ))
-
-    if not os.environ.get('APYCOT_ROOT'):
-        REGISTRY_DIR = normpath(join(CW_SOFTWARE_ROOT, '../cubes'))
 
     def __init__(self, appid, log_threshold=logging.CRITICAL+10):
         ServerConfiguration.__init__(self, appid)

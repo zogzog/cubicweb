@@ -246,8 +246,8 @@ class BaseQuerierTC(TestCase):
         self._dumb_sessions.append(s)
         return s
 
-    def execute(self, rql, args=None, eid_key=None, build_descr=True):
-        return self.o.execute(self.session, rql, args, eid_key, build_descr)
+    def execute(self, rql, args=None, build_descr=True):
+        return self.o.execute(self.session, rql, args, build_descr)
 
     def commit(self):
         self.session.commit()

@@ -33,18 +33,7 @@ class Action(AppObject):
     """
     __registry__ = 'actions'
     __select__ = match_search_state('normal')
-
-    cw_property_defs = {
-        'visible':  dict(type='Boolean', default=True,
-                         help=_('display the action or not')),
-        'order':    dict(type='Int', default=99,
-                         help=_('display order of the action')),
-        'category': dict(type='String', default='moreactions',
-                         vocabulary=('mainactions', 'moreactions', 'addrelated',
-                                     'useractions', 'siteactions', 'hidden'),
-                         help=_('context where this component should be displayed')),
-    }
-    site_wide = True # don't want user to configurate actions
+    order = 99
     category = 'moreactions'
     # actions in category 'moreactions' can specify a sub-menu in which they should be filed
     submenu = None

@@ -53,10 +53,6 @@ class StatusResponse(Exception):
         self.status = int(status)
         self.content = content
 
-class ExplicitLogin(AuthenticationError):
-    """raised when a bad connection id is given or when an attempt to establish
-    a connection failed"""
-
 class InvalidSession(CubicWebException):
     """raised when a session id is found but associated session is not found or
     invalid
@@ -72,3 +68,9 @@ class RemoteCallFailed(RequestError):
     def dumps(self):
         from cubicweb.web import json
         return json.dumps({'reason': self.reason})
+
+class LogOut(PublishException):
+    """raised to ask for deauthentication of a logged in user"""
+    def __init__(self, url):
+        super(LogOut, self).__init__()
+        self.url = url

@@ -67,53 +67,53 @@ class PyroRQLSource(AbstractSource):
          {'type' : 'string',
           'default': REQUIRED,
           'help': 'identifier of the repository in the pyro name server',
-          'group': 'pyro-source', 'inputlevel': 0,
+          'group': 'pyro-source', 'level': 0,
           }),
         ('mapping-file',
          {'type' : 'string',
           'default': REQUIRED,
           'help': 'path to a python file with the schema mapping definition',
-          'group': 'pyro-source', 'inputlevel': 1,
+          'group': 'pyro-source', 'level': 1,
           }),
         ('cubicweb-user',
          {'type' : 'string',
           'default': REQUIRED,
           'help': 'user to use for connection on the distant repository',
-          'group': 'pyro-source', 'inputlevel': 0,
+          'group': 'pyro-source', 'level': 0,
           }),
         ('cubicweb-password',
          {'type' : 'password',
           'default': '',
           'help': 'user to use for connection on the distant repository',
-          'group': 'pyro-source', 'inputlevel': 0,
+          'group': 'pyro-source', 'level': 0,
           }),
         ('base-url',
          {'type' : 'string',
           'default': '',
           'help': 'url of the web site for the distant repository, if you want '
           'to generate external link to entities from this repository',
-          'group': 'pyro-source', 'inputlevel': 1,
+          'group': 'pyro-source', 'level': 1,
           }),
         ('pyro-ns-host',
          {'type' : 'string',
           'default': None,
           'help': 'Pyro name server\'s host. If not set, default to the value \
 from all_in_one.conf. It may contains port information using <host>:<port> notation.',
-          'group': 'pyro-source', 'inputlevel': 1,
+          'group': 'pyro-source', 'level': 1,
           }),
         ('pyro-ns-group',
          {'type' : 'string',
           'default': None,
           'help': 'Pyro name server\'s group where the repository will be \
 registered. If not set, default to the value from all_in_one.conf.',
-          'group': 'pyro-source', 'inputlevel': 1,
+          'group': 'pyro-source', 'level': 1,
           }),
         ('synchronization-interval',
          {'type' : 'int',
           'default': 5*60,
           'help': 'interval between synchronization with the external \
 repository (default to 5 minutes).',
-          'group': 'pyro-source', 'inputlevel': 2,
+          'group': 'pyro-source', 'level': 2,
           }),
 
     )
@@ -299,7 +299,7 @@ repository (default to 5 minutes).',
             session.set_shared_data('sources_error', msg % self.uri)
             return []
         try:
-            rql, cachekey = RQL2RQL(self).generate(session, union, args)
+            rql = RQL2RQL(self).generate(session, union, args)
         except UnknownEid, ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
@@ -307,7 +307,7 @@ repository (default to 5 minutes).',
         if server.DEBUG & server.DBG_RQL:
             print '  translated rql', rql
         try:
-            rset = cu.execute(rql, args, cachekey)
+            rset = cu.execute(rql, args)
         except Exception, ex:
             self.exception(str(ex))
             msg = session._("error while querying source %s, some data may be missing")
@@ -359,8 +359,7 @@ repository (default to 5 minutes).',
         """update an entity in the source"""
         relations, kwargs = self._entity_relations_and_kwargs(session, entity)
         cu = session.pool[self.uri]
-        cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                   kwargs, 'x')
+        cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs)
         self._query_cache.clear()
         entity.clear_all_caches()
 
@@ -368,7 +367,7 @@ repository (default to 5 minutes).',
         """delete an entity from the source"""
         cu = session.pool[self.uri]
         cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
-                   {'x': self.eid2extid(entity.eid, session)}, 'x')
+                   {'x': self.eid2extid(entity.eid, session)})
         self._query_cache.clear()
 
     def add_relation(self, session, subject, rtype, object):
@@ -376,7 +375,7 @@ repository (default to 5 minutes).',
         cu = session.pool[self.uri]
         cu.execute('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)}, ('x', 'y'))
+                    'y': self.eid2extid(object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).clear_all_caches()
         session.entity_from_eid(object).clear_all_caches()
@@ -386,7 +385,7 @@ repository (default to 5 minutes).',
         cu = session.pool[self.uri]
         cu.execute('DELETE X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)}, ('x', 'y'))
+                    'y': self.eid2extid(object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).clear_all_caches()
         session.entity_from_eid(object).clear_all_caches()
@@ -409,9 +408,8 @@ class RQL2RQL(object):
     def generate(self, session, rqlst, args):
         self._session = session
         self.kwargs = args
-        self.cachekey = []
         self.need_translation = False
-        return self.visit_union(rqlst), self.cachekey
+        return self.visit_union(rqlst)
 
     def visit_union(self, node):
         s = self._accept_children(node)
@@ -560,7 +558,6 @@ class RQL2RQL(object):
                 # ensure we have not yet translated the value...
                 if not key in self._const_var:
                     self.kwargs[key] = self.eid2extid(self.kwargs[key])
-                    self.cachekey.append(key)
                     self._const_var[key] = None
         return node.as_string()
 

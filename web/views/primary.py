@@ -126,7 +126,7 @@ class PrimaryView(EntityView):
         """default implementation return an empty string"""
         return u''
 
-    def render_entity_attributes(self, entity, siderelations=None):
+    def render_entity_attributes(self, entity):
         display_attributes = []
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
@@ -152,7 +152,7 @@ class PrimaryView(EntityView):
                     self._render_attribute(rschema, value, role=role, table=True)
             self.w(u'</table>')
 
-    def render_entity_relations(self, entity, siderelations=None):
+    def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
@@ -310,18 +310,7 @@ class URLAttributeView(EntityView):
 
 _pvs = uicfg.primaryview_section
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
-              'is', 'is_instance_of', 'identity',
-              'owned_by', 'created_by', 'in_state',
-              'wf_info_for', 'by_transition', 'from_state', 'to_state',
-              'require_permission', 'from_entity', 'to_entity',
-              'see_also'):
+              'is', 'is_instance_of', 'identity', 'owned_by', 'created_by',
+              'require_permission', 'see_also'):
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
-
-_pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
-_pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
-
-for attr in ('name', 'final'):
-    _pvs.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'final', 'symmetric', 'inlined'):
-    _pvs.tag_attribute(('CWRType', attr), 'hidden')

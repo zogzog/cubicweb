@@ -21,7 +21,7 @@ from os import unlink, path as osp
 from yams.schema import role_name
 
 from cubicweb import Binary
-from cubicweb.server.hook import Operation
+from cubicweb.server import hook
 
 def set_attribute_storage(repo, etype, attr, storage):
     repo.system_source.set_storage(etype, attr, storage)
@@ -67,6 +67,9 @@ class Storage(object):
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         raise NotImplementedError()
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        raise NotImplementedError()
 
 # TODO
 # * make it configurable without code
@@ -88,6 +91,7 @@ def uniquify_path(dirpath, basename):
         if not osp.isfile(path):
             return path
     return None
+
 
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
@@ -116,7 +120,7 @@ class BytesFileSystemStorage(Storage):
             # bytes storage used to store file's path
             entity[attr] = Binary(fpath)
             file(fpath, 'w').write(binary.getvalue())
-            AddFileOp(entity._cw, filepath=fpath)
+            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         return binary
 
     def entity_updated(self, entity, attr):
@@ -125,7 +129,8 @@ class BytesFileSystemStorage(Storage):
             oldpath = self.current_fs_path(entity, attr)
             fpath = entity[attr].getvalue()
             if oldpath != fpath:
-                DeleteFileOp(entity._cw, filepath=oldpath)
+                hook.set_operation(entity._cw, 'bfss_deleted', oldpath,
+                                   DeleteFileOp)
             binary = Binary(file(fpath).read())
         else:
             binary = entity.pop(attr)
@@ -135,7 +140,8 @@ class BytesFileSystemStorage(Storage):
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
-        DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
+        fpath = self.current_fs_path(entity, attr)
+        hook.set_operation(entity._cw, 'bfss_deleted', fpath, DeleteFileOp)
 
     def new_fs_path(self, entity, attr):
         # We try to get some hint about how to name the file using attribute's
@@ -165,22 +171,35 @@ class BytesFileSystemStorage(Storage):
         return sysource._process_value(rawvalue, cu.description[0],
                                        binarywrap=str)
 
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        entity.edited_attributes = set()
+        self.entity_added(entity, attribute)
+        session = entity._cw
+        source = session.repo.system_source
+        attrs = source.preprocess_entity(entity)
+        sql = source.sqlgen.update('cw_' + entity.__regid__, attrs,
+                                   ['cw_eid'])
+        source.doexec(session, sql, attrs)
 
-class AddFileOp(Operation):
+
+class AddFileOp(hook.Operation):
     def rollback_event(self):
-        try:
-            unlink(self.filepath)
-        except:
-            pass
+        for filepath in self.session.transaction_data.pop('bfss_added'):
+            try:
+                unlink(filepath)
+            except Exception, ex:
+                self.error('cant remove %s: %s' % (filepath, ex))
 
-class DeleteFileOp(Operation):
+class DeleteFileOp(hook.Operation):
     def commit_event(self):
-        try:
-            unlink(self.filepath)
-        except:
-            pass
+        for filepath in self.session.transaction_data.pop('bfss_deleted'):
+            try:
+                unlink(filepath)
+            except Exception, ex:
+                self.error('cant remove %s: %s' % (filepath, ex))
 
-class UpdateFileOp(Operation):
+class UpdateFileOp(hook.Operation):
     def precommit_event(self):
         try:
             file(self.filepath, 'w').write(self.filedata)

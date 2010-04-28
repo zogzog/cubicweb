@@ -190,44 +190,45 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         ('db-driver',
          {'type' : 'string',
           'default': 'postgres',
-          'help': 'database driver (postgres, sqlite, sqlserver2005)',
-          'group': 'native-source', 'inputlevel': 1,
+          # XXX use choice type
+          'help': 'database driver (postgres, mysql, sqlite, sqlserver2005)',
+          'group': 'native-source', 'level': 1,
           }),
         ('db-host',
          {'type' : 'string',
           'default': '',
           'help': 'database host',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-port',
          {'type' : 'string',
           'default': '',
           'help': 'database port',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-name',
          {'type' : 'string',
           'default': Method('default_instance_id'),
           'help': 'database name',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-user',
          {'type' : 'string',
           'default': CubicWebNoAppConfiguration.mode == 'user' and getlogin() or 'cubicweb',
           'help': 'database user',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-password',
          {'type' : 'password',
           'default': '',
           'help': 'database password',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-encoding',
          {'type' : 'string',
           'default': 'utf8',
           'help': 'database encoding',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-extra-arguments',
          {'type' : 'string',
@@ -347,6 +348,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if not self._storages[etype]:
             del self._storages[etype]
         self.unmap_attribute(etype, attr)
+
+    def storage(self, etype, attr):
+        """return the storage for the given entity type / attribute
+        """
+        try:
+            return self._storages[etype][attr]
+        except KeyError:
+            raise Exception('no custom storage set for %s.%s' % (etype, attr))
 
     # ISource interface #######################################################
 

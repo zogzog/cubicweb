@@ -35,7 +35,8 @@ from logilab.common.clcommands import register_commands, pop_arg
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
-from cubicweb.toolsutils import Command, copy_skeleton, underline_title
+from cubicweb.toolsutils import (SKEL_EXCLUDE, Command,
+                                 copy_skeleton, underline_title)
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -453,12 +454,19 @@ class NewCubeCommand(Command):
     """Create a new cube.
 
     <cubename>
-      the name of the new cube
+      the name of the new cube. It should be a valid python module name.
     """
     name = 'newcube'
     arguments = '<cubename>'
 
     options = (
+        ("layout",
+         {'short': 'L', 'type' : 'choice', 'metavar': '<cube layout>',
+          'default': 'simple', 'choices': ('simple', 'full'),
+          'help': 'cube layout. You\'ll get a minimal cube with the "simple" \
+layout, and a full featured cube with "full" layout.',
+          }
+         ),
         ("directory",
          {'short': 'd', 'type' : 'string', 'metavar': '<cubes directory>',
           'help': 'directory where the new cube should be created',
@@ -488,14 +496,53 @@ class NewCubeCommand(Command):
           'help': 'cube author\'s web site',
           }
          ),
+        ("license",
+         {'short': 'l', 'type' : 'choice', 'metavar': '<license>',
+          'default': 'LGPL', 'choices': ('GPL', 'LGPL', ''),
+          'help': 'cube license',
+          }
+         ),
         )
 
+    LICENSES = {
+        'LGPL': '''\
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/>.
+''',
+        'GPL': '''\
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 2.1 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+''',
+        '': '# INSERT LICENSE HERE'
+        }
 
     def run(self, args):
+        import re
         from logilab.common.shellutils import ASK
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument (cube name) is expected")
-        cubename, = args
+        cubename = args[0]
+        if not re.match('[_A-Za-z][_A-Za-z0-9]*$', cubename):
+            raise BadCommandUsage("cube name should be a valid python module name")
         verbose = self.get('verbose')
         cubesdir = self.get('directory')
         if not cubesdir:
@@ -514,7 +561,7 @@ class NewCubeCommand(Command):
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
         skeldir = join(BASEDIR, 'skeleton')
-        default_name = 'cubicweb-%s' % cubename.lower()
+        default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:
             distname = raw_input('Debian name for your cube ? [%s]): ' % default_name).strip()
             if not distname:
@@ -524,41 +571,49 @@ class NewCubeCommand(Command):
                     distname = 'cubicweb-' + distname
         else:
             distname = default_name
-
+        if not re.match('[a-z][-a-z0-9]*$', distname):
+            raise BadCommandUsage("cube distname should be a valid debian package name")
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
-        dependencies = {}
+        dependencies = {'cubicweb': '>= %s' % cubicwebversion}
         if verbose:
-            dependencies = self._ask_for_dependencies()
+            dependencies.update(self._ask_for_dependencies())
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
-                   'dependencies' : dict((dep, None) for dep in dependencies),
+                   'dependencies' : dependencies,
                    'version'  : cubicwebversion,
                    'year'  : str(datetime.now().year),
                    'author': self['author'],
                    'author-email': self['author-email'],
                    'author-web-site': self['author-web-site'],
+                   'license': self['license'],
+                   'long-license': self.LICENSES[self['license']],
                    }
-        copy_skeleton(skeldir, cubedir, context)
+        exclude = SKEL_EXCLUDE
+        if self['layout'] == 'simple':
+            exclude += ('sobjects.py*', 'precreate.py*', 'realdb_test*',
+                        'cubes.*', 'external_resources*')
+        copy_skeleton(skeldir, cubedir, context, exclude=exclude)
 
     def _ask_for_dependencies(self):
         from logilab.common.shellutils import ASK
         from logilab.common.textutils import splitstrip
-        includes = []
-        for stdtype in ServerConfiguration.available_cubes():
-            answer = ASK.ask("Depends on cube %s? " % stdtype,
+        depcubes = []
+        for cube in ServerConfiguration.available_cubes():
+            answer = ASK.ask("Depends on cube %s? " % cube,
                              ('N','y','skip','type'), 'N')
             if answer == 'y':
-                includes.append(stdtype)
+                depcubes.append(cube)
             if answer == 'type':
-                includes = splitstrip(raw_input('type dependencies: '))
+                depcubes = splitstrip(raw_input('type dependencies: '))
                 break
             elif answer == 'skip':
                 break
-        return includes
+        return dict(('cubicweb-' + cube, ServerConfiguration.cube_version(cube))
+                    for cube in depcubes)
 
 
 class ExamineLogCommand(Command):

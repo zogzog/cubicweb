@@ -74,7 +74,7 @@ class FetchStep(OneFetchStep):
             if not isinstance(vref, VariableRef):
                 continue
             var = vref.variable
-            if var.stinfo['attrvars']:
+            if var.stinfo.get('attrvars'):
                 for lhsvar, rtype in var.stinfo['attrvars']:
                     if lhsvar.name in srqlst.defined_vars:
                         key = '%s.%s' % (lhsvar.name, rtype)

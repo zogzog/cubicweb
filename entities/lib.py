@@ -36,6 +36,7 @@ def mangle_email(address):
         return address
     return '%s at %s' % (name, host.replace('.', ' dot '))
 
+
 class EmailAddress(AnyEntity):
     __regid__ = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
@@ -63,8 +64,10 @@ class EmailAddress(AnyEntity):
         subjrels = self.e_schema.object_relations()
         if not ('sender' in subjrels and 'recipients' in subjrels):
             return
-        rql = 'DISTINCT Any X, S, D ORDERBY D DESC WHERE X sender Y or X recipients Y, X subject S, X date D, Y eid %(y)s'
-        rset = self._cw.execute(rql, {'y': self.eid}, 'y')
+        rset = self._cw.execute('DISTINCT Any X, S, D ORDERBY D DESC '
+                                'WHERE X sender Y or X recipients Y, '
+                                'X subject S, X date D, Y eid %(y)s',
+                                {'y': self.eid})
         if skipeids is None:
             skipeids = set()
         for i in xrange(len(rset)):
@@ -144,7 +147,7 @@ class CWCache(AnyEntity):
 
     def touch(self):
         self._cw.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
-                         {'t': datetime.now(), 'x': self.eid}, 'x')
+                         {'t': datetime.now(), 'x': self.eid})
 
     def valid(self, date):
         if date:

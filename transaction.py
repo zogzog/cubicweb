@@ -61,7 +61,7 @@ class Transaction(object):
         none if not found.
         """
         return self.req.execute('Any X WHERE X eid %(x)s',
-                                {'x': self.user_eid}, 'x').get_entity(0, 0)
+                                {'x': self.user_eid}).get_entity(0, 0)
 
     def actions_list(self, public=True):
         """return an ordered list of action effectued during that transaction

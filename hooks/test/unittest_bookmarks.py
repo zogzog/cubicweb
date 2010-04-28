@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -31,10 +28,10 @@ class BookmarkHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE X bookmarked_by U WHERE U login "admin"')
         self.commit()
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': beid}, 'x'))
+        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
         self.execute('DELETE X bookmarked_by U WHERE U login "anon"')
         self.commit()
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': beid}, 'x'))
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
 
 if __name__ == '__main__':
     unittest_main()

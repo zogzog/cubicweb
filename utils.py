@@ -322,35 +322,6 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
-def _pdf_conversion_availability():
-    try:
-        import pysixt
-    except ImportError:
-        return False
-    from subprocess import Popen, STDOUT
-    if not os.path.isfile('/usr/bin/fop'):
-        return False
-    try:
-        Popen(['/usr/bin/fop', '-q'],
-              stdout=open(os.devnull, 'w'),
-              stderr=STDOUT)
-    except OSError, e:
-        getLogger('cubicweb').info('fop not usable (%s)', e)
-        return False
-    return True
-
-def can_do_pdf_conversion(__answer_cache=[]):
-    """pdf conversion depends on
-    * pysixt (python package)
-    * fop 0.9x
-
-    NOTE: actual check is done by _pdf_conversion_availability and
-    result is cached
-    """
-    if not __answer_cache: # first time, not in cache
-        __answer_cache.append(_pdf_conversion_availability())
-    return __answer_cache[0]
-
 try:
     # may not be there if cubicweb-web not installed
     if sys.version_info < (2,6):

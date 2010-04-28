@@ -83,8 +83,7 @@ class CaptchaWidget(fw.TextInput):
         return img + super(CaptchaWidget, self).render(form, field, renderer)
 
     def process_field_data(self, form, field):
-        captcha = form._cw.get_session_data(field.input_name(form), None,
-                                            pop=True)
+        captcha = form._cw.session.data.pop(field.input_name(form), None)
         val = super(CaptchaWidget, self).process_field_data(form, field)
         if val is None:
             return val # required will be checked by field

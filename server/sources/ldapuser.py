@@ -71,27 +71,27 @@ class LDAPUserSource(AbstractSource):
           'default': 'ldap',
           'help': 'ldap host. It may contains port information using \
 <host>:<port> notation.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('protocol',
          {'type' : 'choice',
           'default': 'ldap',
           'choices': ('ldap', 'ldaps', 'ldapi'),
           'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('auth-mode',
          {'type' : 'choice',
           'default': 'simple',
           'choices': ('simple', 'cram_md5', 'digest_md5', 'gssapi'),
           'help': 'authentication mode used to authenticate user to the ldap.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('auth-realm',
          {'type' : 'string',
           'default': None,
           'help': 'realm to use when using gssapi/kerberos authentication.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
 
         ('data-cnx-dn',
@@ -99,52 +99,52 @@ class LDAPUserSource(AbstractSource):
           'default': '',
           'help': 'user dn to use to open data connection to the ldap (eg used \
 to respond to rql queries).',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('data-cnx-password',
          {'type' : 'string',
           'default': '',
           'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries).',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
 
         ('user-base-dn',
          {'type' : 'string',
           'default': 'ou=People,dc=logilab,dc=fr',
           'help': 'base DN to lookup for users',
-          'group': 'ldap-source', 'inputlevel': 0,
+          'group': 'ldap-source', 'level': 0,
           }),
         ('user-scope',
          {'type' : 'choice',
           'default': 'ONELEVEL',
           'choices': ('BASE', 'ONELEVEL', 'SUBTREE'),
           'help': 'user search scope',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-classes',
          {'type' : 'csv',
           'default': ('top', 'posixAccount'),
           'help': 'classes of user',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-login-attr',
          {'type' : 'string',
           'default': 'uid',
           'help': 'attribute used as login on authentication',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-default-group',
          {'type' : 'csv',
           'default': ('users',),
           'help': 'name of a group in which ldap users will be by default. \
 You can set multiple groups by separating them by a comma.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-attrs-map',
          {'type' : 'named',
           'default': {'uid': 'login', 'gecos': 'email'},
           'help': 'map from ldap user attributes to cubicweb attributes',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
 
         ('synchronization-interval',
@@ -152,13 +152,13 @@ You can set multiple groups by separating them by a comma.',
           'default': '1d',
           'help': 'interval between synchronization with the ldap \
 directory (default to once a day).',
-          'group': 'ldap-source', 'inputlevel': 2,
+          'group': 'ldap-source', 'level': 2,
           }),
         ('cache-life-time',
          {'type' : 'time',
           'default': '2h',
           'help': 'life time of query cache in minutes (default to two hours).',
-          'group': 'ldap-source', 'inputlevel': 2,
+          'group': 'ldap-source', 'level': 2,
           }),
 
     )
@@ -242,10 +242,10 @@ directory (default to once a day).',
                             elif rset:
                                 if not execute('SET X address %(addr)s WHERE '
                                                'U primary_email X, U eid %(u)s',
-                                               {'addr': ldapemailaddr, 'u': eid}, 'u'):
+                                               {'addr': ldapemailaddr, 'u': eid}):
                                     execute('SET X address %(addr)s WHERE '
                                             'X eid %(x)s',
-                                            {'addr': ldapemailaddr, 'x': rset[0][0]}, 'x')
+                                            {'addr': ldapemailaddr, 'x': rset[0][0]})
                             else:
                                 # no email found, create it
                                 _insert_email(session, ldapemailaddr, eid)
@@ -561,7 +561,7 @@ directory (default to once a day).',
         super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
-                            {'x': entity.eid, 'group': group}, 'x')
+                            {'x': entity.eid, 'group': group})
         # search for existant email first
         try:
             emailaddr = self._cache[dn][self.user_rev_attrs['email']]
@@ -571,7 +571,7 @@ directory (default to once a day).',
                                {'addr': emailaddr})
         if rset:
             session.execute('SET U primary_email X WHERE U eid %(u)s, X eid %(x)s',
-                            {'x': rset[0][0], 'u': entity.eid}, 'u')
+                            {'x': rset[0][0], 'u': entity.eid})
         else:
             # not found, create it
             _insert_email(session, emailaddr, entity.eid)
@@ -586,7 +586,7 @@ directory (default to once a day).',
 
 def _insert_email(session, emailaddr, ueid):
     session.execute('INSERT EmailAddress X: X address %(addr)s, U primary_email X '
-                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid}, 'x')
+                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid})
 
 class GotDN(Exception):
     """exception used when a dn localizing the searched user has been found"""

@@ -126,5 +126,5 @@ else:
             text, data = captcha.captcha(self._cw.vreg.config['captcha-font-file'],
                                          self._cw.vreg.config['captcha-font-size'])
             key = self._cw.form.get('captchakey', 'captcha')
-            self._cw.set_session_data(key, text)
+            self._cw.session.data[key] = text
             self.w(data.read())
