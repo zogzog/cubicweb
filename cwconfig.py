@@ -351,7 +351,7 @@ registered.',
           'default': False,
           'help': "don't display actual email addresses but mangle them if \
 this option is set to yes",
-          'group': 'email', 'inputlevel': 2,
+          'group': 'email', 'inputlevel': 3,
           }),
         )
     # static and class methods used to get instance independant resources ##
