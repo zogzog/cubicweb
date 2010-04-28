@@ -281,14 +281,25 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         return context
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
-        """execute a migration script
-        in interactive mode,  display the migration script path, ask for
-        confirmation and execute it if confirmed
+        """execute a migration script in interactive mode
+
+        Display the migration script path, ask for confirmation and execute it
+        if confirmed
+
+        Context environment can have these variables defined:
+        - __name__   : will be determine by funcname parameter
+        - __file__   : is the name of the script if it exists
+        - scriptargs : script arguments coming from command-line
+
+        :param migrscript: name of the script
+        :param funcname: defines __name__ internally (or use __main__)
+        :params args: arguments of the script
+        :keyword args: extra arguments of the script given by command-line
         """
         migrscript = os.path.normpath(migrscript)
         if migrscript.endswith('.py'):
             script_mode = 'python'
-        elif migrscript.endswith('.txt') or migrscript.endswith('.rst'):
+        elif migrscript.endswith(('.txt', '.rst')):
             script_mode = 'doctest'
         else:
             raise Exception('This is not a valid cubicweb shell input')
@@ -300,7 +311,8 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 pyname = '__main__'
             else:
                 pyname = splitext(basename(migrscript))[0]
-            scriptlocals.update({'__file__': migrscript, '__name__': pyname})
+            scriptlocals.update({'__file__': migrscript, '__name__': pyname,
+                                 'scriptargs': kwargs.pop("args", [])})
             execfile(migrscript, scriptlocals)
             if funcname is not None:
                 try:

@@ -24,7 +24,11 @@ from cStringIO import StringIO
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.server.migractions import ServerMigrationHelper
+
 CubicWebConfiguration.load_cwctl_plugins() # XXX necessary?
+
 
 class CubicWebCtlTC(TestCase):
     def setUp(self):
@@ -36,6 +40,26 @@ class CubicWebCtlTC(TestCase):
     def test_list(self):
         from cubicweb.cwctl import ListCommand
         ListCommand().run([])
+
+
+class CubicWebShellTC(CubicWebTC):
+
+    def test_process_script_args_context(self):
+        repo = self.cnx._repo
+        mih = ServerMigrationHelper(None, repo=repo, cnx=self.cnx,
+                                    interactive=False,
+                                    # hack so it don't try to load fs schema
+                                    schema=1)
+        scripts = {'script1.py': list(),
+                   'script2.py': ['-v'],
+                   'script3.py': ['-vd', '-f', 'FILE.TXT'],
+                  }
+        mih.cmd_process_script('data/scripts/script1.py', funcname=None)
+        for script, args in scripts.items():
+            scriptname = os.path.join('data/scripts/', script)
+            self.assert_(os.path.exists(scriptname))
+            mih.cmd_process_script(scriptname, None, args=args)
+
 
 if __name__ == '__main__':
     unittest_main()

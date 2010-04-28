@@ -781,11 +781,15 @@ class ShellCommand(Command):
     repository internals (session, etc...) so most migration commands won't be
     available.
 
+    Arguments after bare "--" string will not be processed by the shell command
+    You can use it to pass extra arguments to your script and expect for
+    them in 'scriptargs' afterwards.
+
     <instance>
       the identifier of the instance to connect.
     """
     name = 'shell'
-    arguments = '<instance> [batch command file]'
+    arguments = '<instance> [batch command file(s)] [-- <script arguments>]'
     options = (
         ('system-only',
          {'short': 'S', 'action' : 'store_true',
@@ -861,8 +865,11 @@ sources for migration will be automatically selected.",
             mih = config.migration_handler()
         try:
             if args:
-                for arg in args:
-                    mih.cmd_process_script(arg)
+                # use cmdline parser to access left/right attributes only
+                # remember that usage requires instance appid as first argument
+                scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
+                for script in scripts:
+                    mih.cmd_process_script(script, args=args)
             else:
                 mih.interactive_shell()
         finally:
