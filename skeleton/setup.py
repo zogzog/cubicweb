@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # pylint: disable-msg=W0404,W0622,W0704,W0613,W0152
-"""Generic Setup script, takes package info from __pkginfo__.py file.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
-:copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
-"""
 __docformat__ = "restructuredtext en"
 
 import os

@@ -1,4 +1,6 @@
 include README
+include COPYING
+include COPYING.LESSER
 include pylintrc
 include bin/cubicweb-*
 include man/cubicweb-ctl.1

@@ -1,9 +1,22 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
@@ -625,7 +638,6 @@ class MSPlannerTC(BaseMSPlannerTC):
         2. return the result of Any X,Y WHERE X login 'syt', Y login 'adim'
            on the system source
         """
-        ueid = self.session.user.eid
         self._test('Any X,Y LIMIT 10 OFFSET 10 WHERE X login "syt", Y login "adim"',
                    [('FetchStep',
                      [('Any X WHERE X login "syt", X is CWUser', [{'X': 'CWUser'}])],
@@ -637,7 +649,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [('Any X,Y LIMIT 10 OFFSET 10 WHERE X is CWUser, Y is CWUser', [{'X': 'CWUser', 'Y': 'CWUser'}])],
                      10, 10, [self.system],
                      {'X': 'table0.C0', 'Y': 'table1.C0'}, [])
-                    ], {'x': ueid})
+                    ])
 
     def test_complex_aggregat(self):
         self._test('Any MAX(X)',
@@ -1417,13 +1429,25 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [])],
                    {'E': self.session.user.eid})
 
-    def test_eid_dont_cross_relation(self):
+    def test_eid_dont_cross_relation_1(self):
         repo._type_source_cache[999999] = ('Personne', 'system', 999999)
         self._test('Any Y,YT WHERE X eid %(x)s, X fiche Y, Y title YT',
                    [('OneFetchStep', [('Any Y,YT WHERE X eid 999999, X fiche Y, Y title YT',
                                        [{'X': 'Personne', 'Y': 'Card', 'YT': 'String'}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999})
+
+    def test_eid_dont_cross_relation_2(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.dont_cross_relations.add('concerne')
+        try:
+            self._test('Any Y,S,YT,X WHERE Y concerne X, Y in_state S, X eid 999999, Y ref YT',
+                   [('OneFetchStep', [('Any Y,S,YT,999999 WHERE Y concerne 999999, Y in_state S, Y ref YT',
+                                       [{'Y': 'Affaire', 'YT': 'String', 'S': 'State'}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': 999999})
+        finally:
+            self.cards.dont_cross_relations.remove('concerne')
 
 
     # external source w/ .cross_relations == ['multisource_crossed_rel'] ######

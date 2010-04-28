@@ -1,3 +1,20 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """plan execution of rql queries on multiple sources
 
 the best way to understand what are we trying to acheive here is to read the
@@ -69,10 +86,6 @@ is supported, no group or such):
      will directly get local eids)
 
 
-:organization: Logilab
-:copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -353,8 +366,11 @@ class PartPlanInformation(object):
                             source.support_relation, (r.r_type for r in rels))):
                             self.needsplit = True
         # add source for rewritten constants to sourcesterms
+        self._const_vars = {}
         for vconsts in self.rqlst.stinfo['rewritten'].itervalues():
-            const = vconsts[0]
+            # remember those consts come from the same variable
+            for const in vconsts:
+                self._const_vars[const] = vconsts
             source = self._session.source_from_eid(const.eval(self.plan.args))
             if source is self.system_source:
                 for const in vconsts:
@@ -540,6 +556,11 @@ class PartPlanInformation(object):
                                                     rel in self._crossrelations[s]))
         if invalid_sources:
             self._remove_sources(term, invalid_sources)
+            # if term is a rewritten const, we can apply the same changes to
+            # all other consts inserted from the same original variable
+            for const in self._const_vars.get(term, ()):
+                if const is not term:
+                    self._remove_sources(const, invalid_sources)
             termsources -= invalid_sources
             self._remove_sources_until_stable(term, termssources)
             if isinstance(oterm, Constant):

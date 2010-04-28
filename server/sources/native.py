@@ -1,3 +1,20 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# logilab-common is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Adapters for native cubicweb sources.
 
 Notes:
@@ -6,10 +23,6 @@ Notes:
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
 
-:organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
-:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from __future__ import with_statement
 
@@ -177,7 +190,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         ('db-driver',
          {'type' : 'string',
           'default': 'postgres',
-          'help': 'database driver (postgres or sqlite)',
+          # XXX use choice type
+          'help': 'database driver (postgres, mysql, sqlite, sqlserver2005)',
           'group': 'native-source', 'level': 1,
           }),
         ('db-host',
@@ -215,6 +229,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           'default': 'utf8',
           'help': 'database encoding',
           'group': 'native-source', 'level': 1,
+          }),
+        ('db-extra-arguments',
+         {'type' : 'string',
+          'default': '',
+          'help': 'set to "Trusted_Connection" if you are using SQLServer and '
+                  'want trusted authentication for the database connection',
+          'group': 'native-source', 'inputlevel': 2,
           }),
     )
 
