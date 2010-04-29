@@ -64,11 +64,13 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
                 self.w(self._cw._('we are not yet ready to handle this query'))
             except xy.UnsupportedVocabulary, ex:
                 self.w(self._cw._('unknown vocabulary:') + u' ' + unicode('ex'))
-            if vid == 'sparqlxml':
-                url = self._cw.build_url('view', rql=qinfo.finalize(), vid=vid)
-                raise Redirect(url)
-            rset = self._cw.execute(qinfo.finalize())
-            self.wview(vid, rset, 'null')
+            else:
+                if vid == 'sparqlxml':
+                    url = self._cw.build_url('view', rql=qinfo.finalize(), vid=vid)
+                    raise Redirect(url)
+                print qinfo.finalize()
+                rset = self._cw.execute(*qinfo.finalize())
+                self.wview(vid, rset, 'null')
 
 
 ## sparql resultset views #####################################################
