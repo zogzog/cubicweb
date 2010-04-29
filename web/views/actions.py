@@ -29,7 +29,7 @@ from cubicweb.selectors import (EntitySelector, yes,
     one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
-    has_permission, has_add_permission, implements,
+    has_permission, has_add_permission, implements, debug_mode,
     )
 from cubicweb.web import uicfg, controller, action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
@@ -412,6 +412,21 @@ class PoweredByAction(action.Action):
     def url(self):
         return 'http://www.cubicweb.org'
 
+class GotRhythmAction(action.Action):
+    __regid__ = 'rhythm'
+    __select__ = debug_mode()
+
+    category = 'footer'
+    order = 3
+    title = _('Got rhythm?')
+
+    def url(self):
+        from logilab.mtconverter import xml_escape
+        return xml_escape(self._cw.url()+'#')
+
+    def html_class(self):
+        self._cw.add_js('cubicweb.rhythm.js')
+        return 'rhythm'
 
 ## default actions ui configuration ###########################################
 

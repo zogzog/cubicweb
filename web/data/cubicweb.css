@@ -8,6 +8,8 @@
 /* xhtml tags                          */
 /***************************************/
 
+.rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; }
+
 html, body {
   background: #e2e2e2;
 }

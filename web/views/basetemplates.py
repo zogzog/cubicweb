@@ -394,8 +394,10 @@ class HTMLPageFooter(View):
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
-            self.w(u'<a href="%s">%s</a>' % (action.url(),
-                                             self._cw._(action.title)))
+            self.w(u'<a href="%s"' % action.url())
+            if getattr(action, 'html_class'):
+                self.w(u' class="%s"' % action.html_class())
+            self.w(u'>%s</a>' % self._cw._(action.title))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
         self.w(u'</div>')

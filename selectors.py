@@ -1288,6 +1288,10 @@ class is_in_state(score_entity):
                 return None
         super(is_in_state, self).__init__(score)
 
+@objectify_selector
+def debug_mode(cls, req, rset=None, **kwargs):
+    """Return 1 if running in debug mode"""
+    return req.vreg.config.debugmode and 1 or 0
 
 ## deprecated stuff ############################################################
 
