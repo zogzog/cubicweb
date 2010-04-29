@@ -8,46 +8,30 @@
 /* xhtml tags                          */
 /***************************************/
 
+/* scale and rhythm cf http://lamb.cc/typograph/ */
+body { font-size:100%; line-height:1.25; }
+h1, h2, h3 { margin-top:0; margin-bottom:0; }
+
+/* scale traditional */
+h1 { font-size:1.5em; padding:1.45833em 0; }
+h2 { font-size:1.33333em; padding:1.25em 0; }
+h3 { font-size:1.16667em; padding:1.51785em 0; }
+.rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; }
+
+/* scale 3:5 stranded */
+/* h1 { font-size:2em; padding:1.25em 0; } */
+/* h2 { font-size:1.61538em; padding:1.30936em 0; } */
+/* h3 { font-size:1.23077em; padding:1.40579em 0; } */
+/* .rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; } */
+
+/* scale le corbusier */
+/* h1 { font-size:2.11538em; padding:1.44305em 0; } */
+/* h2 { font-size:1.61538em; padding:1.30936em 0; } */
+/* h3 { font-size:1.30769em; padding:1.28686em 0; } */
+/* .rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; } */
+
 html, body {
   background: #e2e2e2;
-}
-
-body {
-  font-size: 69%;
-  font-weight: normal;
-  font-family: Verdana, sans-serif;
-}
-
-h1 {
-  font-size: 188%;
-  margin: 0.2em 0px 0.3em;
-  border-bottom: 1px solid #000;
-}
-
-h2, h3 {
-  margin-top: 0.2em;
-  margin-bottom: 0.3em;
-}
-
-h2 {
-  font-size: 135%;
-}
-
-h3 {
-  font-size: 130%;
-}
-
-h4 {
-  font-size: 120%;
-  margin: 0.2em 0px;
-}
-
-h5 {
-  font-size:110%;
-}
-
-h6{
-  font-size:105%;
 }
 
 a, a:active, a:visited, a:link {
@@ -59,19 +43,19 @@ a:hover{
   text-decoration: underline;
 }
 
-a img, img {
-  border: none;
-  text-align: center;
-}
+/* a img, img { */
+/*   border: none; */
+/*   text-align: center; */
+/* } */
 
-p {
-  margin: 0em 0px 0.2em;
-  padding-top: 2px;
-}
+/* p { */
+/*   margin: 0em 0px 0.2em; */
+/*   padding-top: 2px; */
+/* } */
 
-table, td, input, select{
-  font-size: 100%;
-}
+/* table, td, input, select{ */
+/*   font-size: 100%; */
+/* } */
 
 table {
   border: none;
@@ -81,48 +65,48 @@ table th, table td {
   vertical-align: top;
 }
 
-table td img {
-  vertical-align: middle;
-  margin-right: 10px;
-}
+/* table td img { */
+/*   vertical-align: middle; */
+/*   margin-right: 10px; */
+/* } */
 
-ol {
-  margin: 1px 0px 1px 16px;
-}
+/* ol { */
+/*   margin: 1px 0px 1px 16px; */
+/* } */
 
-ul{
-  margin: 1px 0px 1px 4px;
-}
+/* ul{ */
+/*   margin: 1px 0px 1px 4px; */
+/* } */
 
-ul li {
-  margin-top: 2px;
-  padding: 0px 0px 2px 8px;
-  background: url("bullet_orange.png") 0% 6px no-repeat;
-}
+/* ul li { */
+/*   margin-top: 2px; */
+/*   padding: 0px 0px 2px 8px; */
+/*   background: url("bullet_orange.png") 0% 6px no-repeat; */
+/* } */
 
-dt {
-  font-size:1.17em;
-  font-weight:600;
-}
+/* dt { */
+/*   font-size:1.17em; */
+/*   font-weight:600; */
+/* } */
 
-dd {
-  margin: 0.6em 0 1.5em 2em;
-}
+/* dd { */
+/*   margin: 0.6em 0 1.5em 2em; */
+/* } */
 
-fieldset {
-  border: none;
-}
+/* fieldset { */
+/*   border: none; */
+/* } */
 
-legend {
-  padding: 0px 2px;
-  font: bold 1em Verdana, sans-serif;
-}
+/* legend { */
+/*   padding: 0px 2px; */
+/*   font: bold 1em Verdana, sans-serif; */
+/* } */
 
-input, textarea {
-  padding: 0.2em;
-  vertical-align: middle;
-  border: 1px solid #ccc;
-}
+/* input, textarea { */
+/*   padding: 0.2em; */
+/*   vertical-align: middle; */
+/*   border: 1px solid #ccc; */
+/* } */
 
 input:focus {
   border: 1px inset #ff7700;
@@ -134,27 +118,27 @@ label, .label {
 
 pre {
   font-family: Courier, "Courier New", Monaco, monospace;
-  font-size: 100%;
-  color: #000;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
+/*   font-size: 100%; */
+/*   color: #000; */
+/*   background-color: #f2f2f2; */
+/*   border: 1px solid #ccc; */
 }
 
-code {
-  font-size: 120%;
-  color: #000;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
-}
+/* code { */
+/*   font-size: 120%; */
+/*   color: #000; */
+/*   background-color: #f2f2f2; */
+/*   border: 1px solid #ccc; */
+/* } */
 
-blockquote {
-  font-family: Courier, "Courier New", serif;
-  font-size: 120%;
-  margin: 5px 0px;
-  padding: 0.8em;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
-}
+/* blockquote { */
+/*   font-family: Courier, "Courier New", serif; */
+/*   font-size: 120%; */
+/*   margin: 5px 0px; */
+/*   padding: 0.8em; */
+/*   background-color: #f2f2f2; */
+/*   border: 1px solid #ccc; */
+/* } */
 
 /***************************************/
 /* generic classes                     */
@@ -282,7 +266,7 @@ table#mainLayout td.navcol {
 
 div#pageContent {
   clear: both;
-  padding: 10px 1em 2em;
+/*   padding: 10px 1em 2em; */
   background: #ffffff;
   border: 1px solid #ccc;
 }
@@ -726,7 +710,7 @@ table.listing td.top {
   border: 1px solid white;
   border-bottom: none;
   text-align: right ! important;
-  /* insane IE row bug workaround */
+  /* insane IE row bug workraound */
   position: relative;
   left: -1px;
   top: -1px;

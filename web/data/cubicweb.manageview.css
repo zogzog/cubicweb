@@ -6,17 +6,17 @@ table.startup {
   width: 100%;
 }
 
-table.startup td {
-  padding: 0.1em 0.2em;
-}
+/* table.startup td { */
+/*   padding: 0.1em 0.2em; */
+/* } */
 
 table.startup td.addcol {
   text-align: right;
-  width: 0.5em;
+/*   width: 0.5em; */
 }
 
-table.startup th{
-  padding-top: 3px;
-  padding-bottom: 3px;
-  text-align: left;
-}
+/* table.startup th{ */
+/*   padding-top: 3px; */
+/*   padding-bottom: 3px; */
+/*   text-align: left; */
+/* } */

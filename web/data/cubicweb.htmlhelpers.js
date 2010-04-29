@@ -164,7 +164,7 @@ function roundedCorners(node) {
     }
 }
 
-jQuery(document).ready(function () {roundedCorners(this.body);});
+//jQuery(document).ready(function () {roundedCorners(this.body);});
 
 CubicWeb.provide('corners.js');
 
