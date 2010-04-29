@@ -42,7 +42,7 @@ class ManageView(StartupView):
     def call(self, **kwargs):
         """The default view representing the instance's management"""
         self._cw.add_css('cubicweb.manageview.css')
-        self.w(u'<div>\n')
+        self.w(u'<h1>%s</h1>' % self._cw.property_value('ui.site-title'))
         if not self.display_folders():
             self._main_index()
         else:
@@ -53,7 +53,6 @@ class ManageView(StartupView):
             self.folders()
             self.w(u'</td>')
             self.w(u'</tr></table>\n')
-        self.w(u'</div>\n')
 
     def _main_index(self):
         req = self._cw
@@ -79,7 +78,7 @@ class ManageView(StartupView):
             self.w(u'<br/><a href="%s">%s</a>\n' % (xml_escape(href), label))
 
     def folders(self):
-        self.w(u'<h4>%s</h4>\n' % self._cw._('Browse by category'))
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
         self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
 
     def create_links(self):
@@ -93,7 +92,7 @@ class ManageView(StartupView):
         self.w(u'</ul>')
 
     def startup_views(self):
-        self.w(u'<h4>%s</h4>\n' % self._cw._('Startup views'))
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Startup views'))
         self.startupviews_table()
 
     def startupviews_table(self):
@@ -105,7 +104,7 @@ class ManageView(StartupView):
 
     def entities(self):
         schema = self._cw.vreg.schema
-        self.w(u'<h4>%s</h4>\n' % self._cw._('The repository holds the following entities'))
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
         manager = self._cw.user.matching_groups('managers')
         self.w(u'<table class="startup">')
         if manager:

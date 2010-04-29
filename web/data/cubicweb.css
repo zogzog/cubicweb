@@ -9,53 +9,52 @@
 /***************************************/
 
 /* scale and rhythm cf http://lamb.cc/typograph/ */
-body { font-size:100%; line-height:1.25; }
+body {
+  font-family:  Verdana,sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
 h1, h2, h3 { margin-top:0; margin-bottom:0; }
 
-/* scale traditional */
-h1 { font-size:1.5em; padding:1.45833em 0; }
-h2 { font-size:1.33333em; padding:1.25em 0; }
-h3 { font-size:1.16667em; padding:1.51785em 0; }
-.rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; }
+/* got rhythm ? beat of 12*1.25 = 15 px */
+.rhythm_bg { background: url(/data/rhythm18.png) repeat ! important; }
 
 /* scale 3:5 stranded */
-/* h1 { font-size:2em; padding:1.25em 0; } */
-/* h2 { font-size:1.61538em; padding:1.30936em 0; } */
-/* h3 { font-size:1.23077em; padding:1.40579em 0; } */
-/* .rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; } */
+/* h1 { font-size:2em; } */
+/* h2 { font-size:1.61538em; } */
+/* h3 { font-size:1.23077em; } */
 
 /* scale le corbusier */
-/* h1 { font-size:2.11538em; padding:1.44305em 0; } */
-/* h2 { font-size:1.61538em; padding:1.30936em 0; } */
-/* h3 { font-size:1.30769em; padding:1.28686em 0; } */
-/* .rhythm_bg { background: url(/data/rhythm20.png) repeat ! important; } */
+/* h1 { font-size:2.11538em; } */
+/* h2 { font-size:1.61538em; } */
+/* h3 { font-size:1.30769em; } */
+
+/* scale traditional */
+h1 { font-size: 1.5em; }
+h2 { font-size: 1.33333em; }
+h3 { font-size: 1.16667em; }
+
+/* paddings */
+h1 {
+    border-bottom: 0.06em solid black;
+    padding-top: 0.9em;
+    margin-bottom: 0.44em;
+}
+h2 { padding: 0.4em 0 0.25em 0; }
+h3 { padding: 0.5em 0 0.57em 0; }
 
 html, body {
   background: #e2e2e2;
 }
 
 a, a:active, a:visited, a:link {
-  color: #ff4500;
+  color: #ff4500; /*  XXX make this configurable */
   text-decoration: none;
 }
 
 a:hover{
   text-decoration: underline;
 }
-
-/* a img, img { */
-/*   border: none; */
-/*   text-align: center; */
-/* } */
-
-/* p { */
-/*   margin: 0em 0px 0.2em; */
-/*   padding-top: 2px; */
-/* } */
-
-/* table, td, input, select{ */
-/*   font-size: 100%; */
-/* } */
 
 table {
   border: none;
@@ -64,49 +63,6 @@ table {
 table th, table td {
   vertical-align: top;
 }
-
-/* table td img { */
-/*   vertical-align: middle; */
-/*   margin-right: 10px; */
-/* } */
-
-/* ol { */
-/*   margin: 1px 0px 1px 16px; */
-/* } */
-
-/* ul{ */
-/*   margin: 1px 0px 1px 4px; */
-/* } */
-
-/* ul li { */
-/*   margin-top: 2px; */
-/*   padding: 0px 0px 2px 8px; */
-/*   background: url("bullet_orange.png") 0% 6px no-repeat; */
-/* } */
-
-/* dt { */
-/*   font-size:1.17em; */
-/*   font-weight:600; */
-/* } */
-
-/* dd { */
-/*   margin: 0.6em 0 1.5em 2em; */
-/* } */
-
-/* fieldset { */
-/*   border: none; */
-/* } */
-
-/* legend { */
-/*   padding: 0px 2px; */
-/*   font: bold 1em Verdana, sans-serif; */
-/* } */
-
-/* input, textarea { */
-/*   padding: 0.2em; */
-/*   vertical-align: middle; */
-/*   border: 1px solid #ccc; */
-/* } */
 
 input:focus {
   border: 1px inset #ff7700;
@@ -117,28 +73,42 @@ label, .label {
 }
 
 pre {
-  font-family: Courier, "Courier New", Monaco, monospace;
-/*   font-size: 100%; */
-/*   color: #000; */
-/*   background-color: #f2f2f2; */
-/*   border: 1px solid #ccc; */
+  clear: both;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.015em;
+  padding: 0.5em;
+  margin: 0 1.5em 1.5em;
+  background-color: #F0F0F0;
+  border: 1px solid #CCBCA7;
 }
 
-/* code { */
-/*   font-size: 120%; */
-/*   color: #000; */
-/*   background-color: #f2f2f2; */
-/*   border: 1px solid #ccc; */
-/* } */
+p {
+  text-align: justify;
+  margin-bottom: 1.5em;
+}
 
-/* blockquote { */
-/*   font-family: Courier, "Courier New", serif; */
-/*   font-size: 120%; */
-/*   margin: 5px 0px; */
-/*   padding: 0.8em; */
-/*   background-color: #f2f2f2; */
-/*   border: 1px solid #ccc; */
-/* } */
+ol, ul {
+  list-style-type: disc;
+  margin-bottom: 1.25em;
+}
+
+p + ul {
+  margin-top: -1.5em;
+}
+
+li {
+  margin-left: 1.5em;
+}
+
+fieldset {
+  border: none;
+}
+
+h2 a, h2 a:active, h2 a:visited, h2 a:link,
+h3 a, h3 a:active, h3 a:visited, h3 a:link {
+  color: inherit;
+  text-decoration: none;
+}
 
 /***************************************/
 /* generic classes                     */
@@ -154,7 +124,7 @@ pre {
 
 .hr {
   border-bottom: 1px dotted #ccc;
-  margin: 1em 0px;
+  margin: 19px 0px 20px 0px;
 }
 
 .left {
@@ -174,8 +144,11 @@ pre {
   visibility: hidden;
 }
 
-li.invisible { list-style: none; background: none; padding: 0px 0px
-1px 1px; }
+li.invisible {
+  list-style: none;
+  background: none;
+  padding: 0px 0px 1px 1px;
+}
 
 li.invisible div{
   display: inline;
@@ -191,6 +164,7 @@ li.invisible div{
 table#header {
   background: #ff7700 url("banner.png") left top repeat-x;
   text-align: left;
+  height: 45px; /* height counts in font-size -> 2.5*16 = 40 */
 }
 
 table#header td {
@@ -198,28 +172,27 @@ table#header td {
 }
 
 table#header a {
-color: #000;
+  color: #000;
+}
+
+table#header img#logo{
+  vertical-align: middle;
 }
 
 span#appliName {
- font-weight: bold;
- color: #000;
- white-space: nowrap;
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap;
 }
 
 table#header td#headtext {
   width: 100%;
 }
 
-/* FIXME appear with 4px width in IE6 */
-div#stateheader{
-  min-width: 66%;
-}
-
 /* Popup on login box and userActionBox */
 div.popupWrapper{
- position:relative;
- z-index:100;
+  position:relative;
+  z-index:100;
 }
 
 div.popup {
@@ -227,7 +200,7 @@ div.popup {
   background: #fff;
   border: 1px solid black;
   text-align: left;
-  z-index:400;
+  z-index: 400;
 }
 
 div.popup ul li a {
@@ -235,40 +208,48 @@ div.popup ul li a {
   color: black;
 }
 
+/* FIXME appear with 4px width in IE6 */
+div#stateheader{
+  min-width: 66%;
+}
+
 /* main zone */
 
 div#page {
-  background: #e2e2e2;
-  position: relative;
   min-height: 800px;
+  margin: 8px;
 }
 
-table#mainLayout{
- margin:0px 3px;
-}
-
-table#mainLayout td#contentcol {
-  padding: 8px 10px 5px;
-}
-
-table#mainLayout td.navcol {
+table#mainLayout #navColumnLeft {
   width: 16em;
+  padding-right: 8px;
 }
 
+table#mainLayout #navColumnRight {
+  width: 16em;
+  padding-left: 8px;
+}
+
+div#pageContent {
+  clear: both;
+/*  margin-top:-1px; /* enable when testing rhythm */
+  background: #ffffff;
+  border: 1px solid #ccc;
+}
+
+/* */
 #contentheader {
   margin: 0px;
   padding: 0.2em 0.5em 0.5em 0.5em;
+  border:2px solid blue;
 }
 
 #contentheader a {
   color: #000;
 }
 
-div#pageContent {
-  clear: both;
-/*   padding: 10px 1em 2em; */
-  background: #ffffff;
-  border: 1px solid #ccc;
+div#contentmain {
+  padding: 0 1em 1em;
 }
 
 /* rql bar */
@@ -285,9 +266,6 @@ input#rql{
 }
 
 /* boxes */
-div.navboxes {
- margin-top: 8px;
-}
 
 div.boxFrame {
   width: 100%;
@@ -367,16 +345,16 @@ ul.boxListing ul li a:hover {
 }
 
 ul.boxListing a.boxMenu:hover {
-                                background: #eeedd9 url(puce_down.png) no-repeat scroll 98% 6px;
-                                cursor:pointer;
-                                border-top:medium none;
-                                }
+  background: #eeedd9 url(puce_down.png) no-repeat scroll 98% 6px;
+  cursor:pointer;
+  border-top:medium none;
+}
+
 a.boxMenu {
   background: transparent url("puce_down.png") 98% 6px no-repeat;
   display: block;
   padding: 1px 9px 1px 3px;
 }
-
 
 a.popupMenu {
   background: transparent url("puce_down_black.png") 2% 6px no-repeat;
@@ -527,12 +505,6 @@ div.prevnext a {
 /* entity views                        */
 /***************************************/
 
-.mainInfo  {
-  margin-right: 1em;
-  padding: 0.2em;
-}
-
-
 div.mainRelated {
   border: none;
   margin-right: 1em;
@@ -551,7 +523,7 @@ div.metadata {
 }
 
 div.section {
-  margin-top: 0.5em;
+/*  margin-top: 0.5em; */
   width:100%;
 }
 
@@ -792,10 +764,10 @@ input.button{
 /* footer                              */
 /***************************************/
 
-div.footer {
+div#footer {
   text-align: center;
 }
-div.footer a {
+div#footer a {
   color: #000;
   text-decoration: none;
 }
