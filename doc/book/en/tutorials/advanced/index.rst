@@ -508,9 +508,11 @@ model, in *test/unittest_sytweb.py*:
 It's not complete, but show most things you'll want to do in tests: adding some
 content, creating users and connecting as them in the test, etc...
 
-To run it type: ::
+To run it type:
 
-    [syt@scorpius test]$ pytest unittest_sytweb.py
+.. sourcecode:: bash
+
+    $ pytest unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     -> creating tables [....................]
     -> inserting default user and default groups.
@@ -524,9 +526,11 @@ To run it type: ::
 
 
 The first execution is taking time, since it creates a sqlite database for the
-test instance. The second one will be much quicker: ::
+test instance. The second one will be much quicker:
 
-    [syt@scorpius test]$ pytest unittest_sytweb.py
+.. sourcecode:: bash
+    
+    $ pytest unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     .
     ----------------------------------------------------------------------
@@ -537,12 +541,11 @@ test instance. The second one will be much quicker: ::
 If you do some changes in your schema, you'll have to force regeneration of that
 database. You do that by removing the tmpdb files before running the test: ::
 
-    [syt@scorpius test]$ rm tmpdb*
+    $ rm tmpdb*
 
 
 .. Note::
-  pytest is a very convenient utilities to control test execution, from the `logilab-common`_
-  package
+  pytest is a very convenient utility used to control test execution. It is available from the `logilab-common`_ package.
 
 .. _`logilab-common`: http://www.logilab.org/project/logilab-common
 
@@ -578,7 +581,7 @@ that's it! Those instructions will:
 
 To migrate my instance I simply type::
 
-   [syt@scorpius ~]$ cubicweb-ctl upgrade sytweb
+   cubicweb-ctl upgrade sytweb
 
 I'll then be asked some questions to do the migration step by step. You should say
 YES when it asks if a backup of your database should be done, so you can get back
