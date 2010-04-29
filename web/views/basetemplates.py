@@ -168,7 +168,7 @@ class TheMainTemplate(MainTemplate):
         self.wview('header', rset=self.cw_rset, view=view)
         w(u'<div id="page"><table width="100%" border="0" id="mainLayout"><tr>\n')
         self.nav_column(view, 'left')
-        w(u'<td id="contentcol">\n')
+        w(u'<td id="contentColumn">\n')
         components = self._cw.vreg['components']
         rqlcomp = components.select_or_none('rqlinput', self._cw, rset=self.cw_rset)
         if rqlcomp:
@@ -190,7 +190,7 @@ class TheMainTemplate(MainTemplate):
         boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
-            self.w(u'<td class="navcol"><div class="navboxes">\n')
+            self.w(u'<td id="navColumn%s"><div class="navboxes">\n' % context.capitalize())
             for box in boxes:
                 box.render(w=self.w, view=view)
             self.w(u'</div></td>\n')
@@ -254,7 +254,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<body>\n')
         w(u'<div id="page">')
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
-        w(u'<td class="navcol">\n')
+        w(u'<td id="navColumnLeft">\n')
         self.topleft_header()
         boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context='left'))
@@ -389,7 +389,7 @@ class HTMLPageFooter(View):
 
     def call(self, **kwargs):
         req = self._cw
-        self.w(u'<div class="footer">')
+        self.w(u'<div id="footer">')
         actions = self._cw.vreg['actions'].possible_actions(self._cw,
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
