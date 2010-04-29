@@ -32,9 +32,9 @@ class TWStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'twisted'
 
-    def start_server(self, config, debug):
+    def start_server(self, config):
         from cubicweb.etwist import server
-        server.run(config, debug)
+        server.run(config)
 
 class TWStopHandler(CommandHandler):
     cmdname = 'stop'

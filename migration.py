@@ -111,7 +111,7 @@ class MigrationHelper(object):
         self.config = config
         if config:
             # no config on shell to a remote instance
-            self.config.init_log(logthreshold=logging.ERROR, debug=True)
+            self.config.init_log(logthreshold=logging.ERROR)
         # 0: no confirmation, 1: only main commands confirmed, 2 ask for everything
         self.verbosity = verbosity
         self.need_wrap = True

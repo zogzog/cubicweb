@@ -477,14 +477,13 @@ running.'}),
 
     def start_instance(self, appid):
         """start the instance's server"""
-        debug = self['debug']
         force = self['force']
         loglevel = self['loglevel']
-        config = cwcfg.config_for(appid)
+        config = cwcfg.config_for(appid, debugmode=self['debug'])
         if loglevel is not None:
             loglevel = 'LOG_%s' % loglevel.upper()
             config.global_set_option('log-threshold', loglevel)
-            config.init_log(loglevel, debug=debug, force=True)
+            config.init_log(loglevel, force=True)
         if self['profile']:
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
@@ -493,7 +492,7 @@ running.'}),
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
-        helper.start_server(config, debug)
+        helper.start_server(config)
 
 
 class StopInstanceCommand(InstanceCommand):

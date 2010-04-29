@@ -66,7 +66,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         return None
     def main_config_file(self):
         return None
-    def init_log(self, debug=None):
+    def init_log(self):
         pass
     def load_configuration(self):
         pass

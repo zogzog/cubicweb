@@ -104,10 +104,10 @@ class Repository(object):
     XXX protect pyro access
     """
 
-    def __init__(self, config, vreg=None, debug=False):
+    def __init__(self, config, vreg=None):
         self.config = config
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config, debug)
+            vreg = cwvreg.CubicWebVRegistry(config)
         self.vreg = vreg
         self.pyro_registered = False
         self.info('starting repository from %s', self.config.apphome)

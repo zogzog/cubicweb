@@ -122,12 +122,11 @@ class LongTimeExpiringFile(File):
 
 
 class CubicWebRootResource(resource.Resource):
-    def __init__(self, config, debug=None):
-        self.debugmode = debug
+    def __init__(self, config):
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
-        self.appli = CubicWebPublisher(config, debug=self.debugmode)
+        self.appli = CubicWebPublisher(config)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
         self.children = {}
@@ -210,7 +209,7 @@ class CubicWebRootResource(resource.Resource):
     def render(self, request):
         """Render a page from the root resource"""
         # reload modified files in debug mode
-        if self.debugmode:
+        if self.config.debugmode:
             self.appli.vreg.reload_if_needed()
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)
@@ -405,15 +404,15 @@ from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.twisted')
 set_log_methods(CubicWebRootResource, LOGGER)
 
-def run(config, debug):
+def run(config):
     # create the site
-    root_resource = CubicWebRootResource(config, debug)
+    root_resource = CubicWebRootResource(config)
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
     reactor.listenTCP(port, website)
     logger = getLogger('cubicweb.twisted')
-    if not debug:
+    if not config.debugmode:
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")

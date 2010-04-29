@@ -442,10 +442,10 @@ class CubicWebVRegistry(VRegistry):
     * contentnavigation XXX to merge with components? to kill?
     """
 
-    def __init__(self, config, debug=None, initlog=True):
+    def __init__(self, config, initlog=True):
         if initlog:
             # first init log service
-            config.init_log(debug=debug)
+            config.init_log()
         super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
         self.initialized = False

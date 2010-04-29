@@ -249,9 +249,9 @@ class RepositoryStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'repository'
 
-    def start_server(self, ctlconf, debug):
+    def start_server(self, ctlconf):
         command = ['cubicweb-ctl start-repository ']
-        if debug:
+        if ctlconf.debugmode:
             command.append('--debug')
         command.append(self.config.appid)
         os.system(' '.join(command))

@@ -280,12 +280,12 @@ class CubicWebPublisher(object):
     to publish HTTP request.
     """
 
-    def __init__(self, config, debug=None,
+    def __init__(self, config,
                  session_handler_fact=CookieSessionHandler,
                  vreg=None):
         self.info('starting web instance from %s', config.apphome)
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
+            vreg = cwvreg.CubicWebVRegistry(config)
         self.vreg = vreg
         # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)
