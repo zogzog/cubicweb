@@ -3,14 +3,10 @@
  *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
-/***************************************/
-/* xhtml tags styles                   */
-/***************************************/
 
-*{
-  margin:0px;
-  padding :0px;
-}
+/***************************************/
+/* xhtml tags                          */
+/***************************************/
 
 html, body {
   background: #e2e2e2;
@@ -78,7 +74,6 @@ table, td, input, select{
 }
 
 table {
-  border-collapse: collapse;
   border: none;
 }
 
@@ -97,7 +92,6 @@ ol {
 
 ul{
   margin: 1px 0px 1px 4px;
-  list-style-type: none;
 }
 
 ul li {
@@ -136,10 +130,6 @@ input:focus {
 
 label, .label {
   font-weight: bold;
-}
-
-iframe {
-  border: 0px;
 }
 
 pre {
