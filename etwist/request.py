@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Twisted request handler for CubicWeb
+"""Twisted request handler for CubicWeb"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from datetime import datetime
@@ -55,9 +54,9 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         return self._twreq.method
 
     def relative_path(self, includeparams=True):
-        """return the normalized path of the request (ie at least relative
-        to the instance's root, but some other normalization may be needed
-        so that the returned path may be used to compare to generated urls
+        """return the normalized path of the request (ie at least relative to
+        the instance's root, but some other normalization may be needed so that
+        the returned path may be used to compare to generated urls
 
         :param includeparams:
            boolean indicating if GET form parameters should be kept in the path
@@ -68,8 +67,8 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         return path
 
     def get_header(self, header, default=None, raw=True):
-        """return the value associated with the given input header,
-        raise KeyError if the header is not set
+        """return the value associated with the given input header, raise
+        KeyError if the header is not set
         """
         if raw:
             return self._headers_in.getRawHeaders(header, [default])[0]

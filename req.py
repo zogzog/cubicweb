@@ -374,11 +374,11 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    # abstract methods to override according to the web front-end #############
-
     def base_url(self):
         """return the root url of the instance"""
-        raise NotImplementedError
+        return self.vreg.config['base-url']
+
+    # abstract methods to override according to the web front-end #############
 
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""

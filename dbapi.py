@@ -253,9 +253,6 @@ class DBAPIRequest(RequestSessionBase):
             self.session = None
             self.cnx = self.user = _NeedAuthAccessMock()
 
-    def base_url(self):
-        return self.vreg.config['base-url']
-
     def from_controller(self):
         return 'view'
 

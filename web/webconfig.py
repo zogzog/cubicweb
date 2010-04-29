@@ -309,8 +309,8 @@ have the python imaging library installed to use captcha)',
         """load instance's configuration files"""
         super(WebConfiguration, self).load_configuration()
         # load external resources definition
-        self._build_ext_resources()
         self._init_base_url()
+        self._build_ext_resources()
 
     def _init_base_url(self):
         # normalize base url(s)

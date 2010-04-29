@@ -626,16 +626,6 @@ class Session(RequestSessionBase):
         else:
             del self.transaction_data['ecache'][eid]
 
-    def base_url(self):
-        url = self.repo.config['base-url']
-        if not url:
-            try:
-                url = self.repo.config.default_base_url()
-            except AttributeError: # default_base_url() might not be available
-                self.warning('missing base-url definition in server config')
-                url = u''
-        return url
-
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
         sense here, always return 'view')

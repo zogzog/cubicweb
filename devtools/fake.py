@@ -66,10 +66,6 @@ class FakeRequest(CubicWebRequestBase):
     def header_if_modified_since(self):
         return None
 
-    def base_url(self):
-        """return the root url of the instance"""
-        return BASE_URL
-
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
         to the instance's root, but some other normalization may be needed
