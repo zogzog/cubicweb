@@ -19,13 +19,81 @@
 
 __docformat__ = "restructuredtext en"
 
+import re
+import os
+import os.path as osp
+
+
 class PropertySheet(dict):
-    def __init__(self, **context):
+    def __init__(self, cache_directory, **context):
+        self._cache_directory = cache_directory
         self._context = context
+        self.reset()
         context['sheet'] = self
+        self._percent_rgx = re.compile('%(?!\()')
+
+    def reset(self):
+        self.clear()
+        self._ordered_propfiles = []
+        self._propfile_mtime = {}
+        self._sourcefile_mtime = {}
+        self._cache = {}
 
     def load(self, fpath):
         scriptglobals = self._context.copy()
         scriptglobals['__file__'] = fpath
         execfile(fpath, scriptglobals, self)
+        self._propfile_mtime[fpath] = os.stat(fpath)[-2]
+        self._ordered_propfiles.append(fpath)
 
+    def need_reload(self):
+        for fpath, mtime in self._propfile_mtime.iteritems():
+            if os.stat(fpath)[-2] > mtime:
+                return True
+        for rid, (directory, mtime) in self._cache.items():
+            if os.stat(osp.join(directory, rid))[-2] > mtime:
+                del self._cache[rid]
+        return False
+
+    def reload(self):
+        ordered_files = self._ordered_propfiles
+        self.reset()
+        for fpath in ordered_files:
+            self.load(fpath)
+
+    def reload_if_needed(self):
+        if self.need_reload():
+            self.reload()
+
+    def process_resource(self, rdirectory, rid):
+        try:
+            return self._cache[rid][0]
+        except KeyError:
+            cachefile = osp.join(self._cache_directory, rid)
+            self.debug('caching processed css %s/%s into %s',
+                       rdirectory, rid, cachefile)
+            rcachedir = osp.dirname(cachefile)
+            if not osp.exists(rcachedir):
+                os.makedirs(rcachedir)
+            sourcefile = osp.join(rdirectory, rid)
+            content = file(sourcefile).read()
+            # XXX replace % not followed by a paren by %% to avoid having to do
+            # this in the source css file ?
+            try:
+                content = self.compile(content)
+            except ValueError, ex:
+                self.error("can't process %s/%s: %s", rdirectory, rid, ex)
+            else:
+                stream = file(cachefile, 'w')
+                stream.write(content)
+                stream.close()
+                rdirectory = self._cache_directory
+            self._cache[rid] = (rdirectory, os.stat(sourcefile)[-2])
+            return rdirectory
+
+    def compile(self, content):
+        return self._percent_rgx.sub('%%', content) % self
+
+from cubicweb.web import LOGGER
+from logilab.common.logging_ext import set_log_methods
+set_log_methods(PropertySheet, LOGGER)

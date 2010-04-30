@@ -272,6 +272,9 @@ have the python imaging library installed to use captcha)',
         path = [self.apphome] + self.cubes_path() + [join(self.shared_dir())]
         for directory in path:
             if exists(join(directory, rdirectory, rid)):
+                if rdirectory == 'data' and rid.endswith('.css'):
+                    return self.uiprops.process_resource(join(directory, rdirectory),
+                                                         rid)
                 return join(directory, rdirectory)
 
     def locate_all_files(self, rid, rdirectory='wdoc'):
@@ -309,7 +312,10 @@ have the python imaging library installed to use captcha)',
     def _build_ui_properties(self):
         # self.datadir_url[:-1] to remove trailing /
         from cubicweb.web.propertysheet import PropertySheet
-        self.uiprops = PropertySheet(datadir_url=self.datadir_url[:-1])
+        self.uiprops = PropertySheet(
+            join(self.appdatahome, 'uicache'),
+            data=lambda x: self.datadir_url + x,
+            datadir_url=self.datadir_url[:-1])
         libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
         self.uiprops.load(libuiprops)
         for path in reversed([self.apphome] + self.cubes_path()):

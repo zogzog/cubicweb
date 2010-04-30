@@ -210,6 +210,7 @@ class CubicWebRootResource(resource.Resource):
         """Render a page from the root resource"""
         # reload modified files in debug mode
         if self.config.debugmode:
+            self.config.uiprops.reload_if_needed()
             self.appli.vreg.reload_if_needed()
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)
