@@ -152,13 +152,6 @@ class Repository(object):
                 if not isinstance(session.user, InternalManager):
                     session.user.__class__ = usercls
 
-    def _bootstrap_hook_registry(self):
-        """called during bootstrap since we need the metadata hooks"""
-        hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
-        self.vreg.init_registration([hooksdirectory])
-        self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
-                            'cubicweb.hooks.metadata')
-
     def open_connections_pools(self):
         config = self.config
         self._available_pools = Queue.Queue()
@@ -184,7 +177,9 @@ class Repository(object):
             for modname in ('__init__', 'authobjs', 'wfobjs'):
                 self.vreg.load_file(join(etdirectory, '%s.py' % modname),
                                     'cubicweb.entities.%s' % modname)
-            self._bootstrap_hook_registry()
+            hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
+            self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
+                                'cubicweb.hooks.metadata')
         elif config.read_instance_schema:
             # normal start: load the instance schema from the database
             self.fill_schema()
@@ -233,8 +228,7 @@ class Repository(object):
         if resetvreg:
             if self.config._cubes is None:
                 self.config.init_cubes(self.get_cubes())
-            # full reload of all appobjects
-            self.vreg.reset()
+            # trigger full reload of all appobjects
             self.vreg.set_schema(schema)
         else:
             self.vreg._set_schema(schema)
