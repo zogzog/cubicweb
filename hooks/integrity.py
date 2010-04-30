@@ -164,7 +164,7 @@ class _CheckConstraintsOp(hook.LateOperation):
     """
     def precommit_event(self):
         session = self.session
-        for values in session.transaction_data['check_constraints_op']:
+        for values in session.transaction_data.pop('check_constraints_op'):
             eidfrom, rtype, eidto = values[:3]
             # first check related entities have not been deleted in the same
             # transaction
@@ -225,7 +225,7 @@ class CheckAttributeConstraintHook(IntegrityHook):
                 constraints = [c for c in eschema.rdef(attr).constraints
                                if isinstance(c, (RQLUniqueConstraint, RQLConstraint))]
                 if constraints:
-                    hook.set_operation(self._cw, 'check_constraint_op',
+                    hook.set_operation(self._cw, 'check_constraints_op',
                                        (self.entity.eid, attr, None) + tuple(constraints),
                                        _CheckConstraintsOp)
 

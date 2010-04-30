@@ -54,11 +54,11 @@ class _CheckEntityPermissionOp(hook.LateOperation):
     def precommit_event(self):
         #print 'CheckEntityPermissionOp', self.session.user, self.entity, self.action
         session = self.session
-        for values in session.transaction_data['check_entity_perm_op']:
+        for values in session.transaction_data.pop('check_entity_perm_op'):
             entity = session.entity_from_eid(values[0])
             action = values[1]
-        entity.check_perm(action)
-        check_entity_attributes(session, entity, values[2:])
+            entity.check_perm(action)
+            check_entity_attributes(session, entity, values[2:])
 
     def commit_event(self):
         pass

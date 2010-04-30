@@ -69,7 +69,7 @@ class _SetCreatorOp(hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        for eid in session.transaction_data['set_creator_op']:
+        for eid in session.transaction_data.pop('set_creator_op'):
             if session.deleted_in_transaction(eid):
                 # entity have been created and deleted in the same transaction
                 continue
@@ -114,7 +114,7 @@ class SetOwnershipHook(MetaDataHook):
 
 class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
-        for compositeeid, composedeid in self.session.transaction_data['sync_owners_op']:
+        for compositeeid, composedeid in self.session.transaction_data.pop('sync_owners_op'):
             self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                  'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                  {'c': compositeeid, 'x': composedeid})
