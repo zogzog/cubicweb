@@ -406,6 +406,7 @@ class VRegistry(dict):
     # initialization methods ###################################################
 
     def init_registration(self, path, extrapath=None):
+        self.reset()
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path, extrapath)
         # XXX is _loadedmods still necessary ? It seems like it's useful
