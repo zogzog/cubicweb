@@ -432,7 +432,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow-subject': 'workflow isn\'t a workflow for this type'})
+        self.assertEquals(ex.errors, {'in_state-subject': u"state doesn't apply to this entity's type"})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be
