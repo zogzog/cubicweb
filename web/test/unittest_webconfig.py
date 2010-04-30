@@ -33,15 +33,14 @@ class WebconfigTC(TestCase):
     def test_nonregr_print_css_as_list(self):
         """make sure PRINT_CSS *must* is a list"""
         config = self.config
-        req = fake.FakeRequest()
-        print_css = req.external_resource('STYLESHEETS_PRINT')
+        print_css = config.uiprops['STYLESHEETS_PRINT']
         self.failUnless(isinstance(print_css, list))
-        ie_css = req.external_resource('IE_STYLESHEETS')
+        ie_css = config.uiprops['STYLESHEETS_IE']
         self.failUnless(isinstance(ie_css, list))
 
     def test_locate_resource(self):
-        self.failUnless('FILE_ICON' in self.config.ext_resources)
-        rname = self.config.ext_resources['FILE_ICON'].replace('DATADIR/', '')
+        self.failUnless('FILE_ICON' in self.config.uiprops)
+        rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
         self.failUnless('file' in self.config.locate_resource(rname).split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css').split(os.sep)
         self.failUnless('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot

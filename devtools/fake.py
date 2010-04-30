@@ -39,6 +39,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self['uid'] = None
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 100
+        self.datadir_url = BASE_URL + 'data/'
 
     def cubes(self, expand=False):
         return self._cubes

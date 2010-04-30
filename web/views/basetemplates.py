@@ -294,22 +294,22 @@ class HTMLHeader(View):
         self.alternates()
 
     def favicon(self):
-        favicon = self._cw.external_resource('FAVICON', None)
+        favicon = self._cw.vreg.config.uiprops.get('FAVICON', None)
         if favicon:
             self.whead(u'<link rel="shortcut icon" href="%s"/>\n' % favicon)
 
     def stylesheets(self):
         req = self._cw
         add_css = req.add_css
-        for css in req.external_resource('STYLESHEETS'):
+        for css in req.vreg.config.uiprops['STYLESHEETS']:
             add_css(css, localfile=False)
-        for css in req.external_resource('STYLESHEETS_PRINT'):
+        for css in req.vreg.config.uiprops['STYLESHEETS_PRINT']:
             add_css(css, u'print', localfile=False)
-        for css in req.external_resource('IE_STYLESHEETS'):
+        for css in req.vreg.config.uiprops['STYLESHEETS_IE']:
             add_css(css, localfile=False, ieonly=True)
 
     def javascripts(self):
-        for jscript in self._cw.external_resource('JAVASCRIPTS'):
+        for jscript in self._cw.vreg.config.uiprops['JAVASCRIPTS']:
             self._cw.add_js(jscript, localfile=False)
 
     def alternates(self):

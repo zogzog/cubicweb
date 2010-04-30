@@ -59,7 +59,7 @@ class GeocodingJsonView(EntityView):
         if hasattr(entity, 'marker_icon'):
             icon = entity.marker_icon()
         else:
-            icon = (self._cw.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None)
+            icon = (self._cw.vreg.config.uiprops['GMARKER_ICON'], (20, 34), (4, 34), None)
         return {'latitude': entity.latitude, 'longitude': entity.longitude,
                 'title': entity.dc_long_title(),
                 #icon defines : (icon._url, icon.size,  icon.iconAncho', icon.shadow)

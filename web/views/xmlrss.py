@@ -147,7 +147,7 @@ class RSSIconBox(box.BoxTemplate):
 
     def call(self, **kwargs):
         try:
-            rss = self._cw.external_resource('RSS_LOGO')
+            rss = self._cw.vreg.config.uiprops['RSS_LOGO']
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return

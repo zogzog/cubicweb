@@ -23,6 +23,7 @@ _ = unicode
 
 import os
 from os.path import join, exists, split
+from warnings import warn
 
 from logilab.common.decorators import cached
 
@@ -208,7 +209,7 @@ have the python imaging library installed to use captcha)',
         ))
 
     def fckeditor_installed(self):
-        return exists(self.ext_resources['FCKEDITOR_PATH'])
+        return exists(self.uiprops['FCKEDITOR_PATH'])
 
     def eproperty_definitions(self):
         for key, pdef in super(WebConfiguration, self).eproperty_definitions():
@@ -239,30 +240,6 @@ have the python imaging library installed to use captcha)',
     def vc_config(self):
         return self.repository().get_versions()
 
-    # mapping to external resources (id -> path) (`external_resources` file) ##
-    ext_resources = {
-        'FAVICON':  'DATADIR/favicon.ico',
-        'LOGO':     'DATADIR/logo.png',
-        'RSS_LOGO': 'DATADIR/rss.png',
-        'HELP':     'DATADIR/help.png',
-        'CALENDAR_ICON': 'DATADIR/calendar.gif',
-        'SEARCH_GO':'DATADIR/go.png',
-
-        'FCKEDITOR_PATH':  '/usr/share/fckeditor/',
-
-        'IE_STYLESHEETS':    ['DATADIR/cubicweb.ie.css'],
-        'STYLESHEETS':       ['DATADIR/cubicweb.css'],
-        'STYLESHEETS_PRINT': ['DATADIR/cubicweb.print.css'],
-
-        'JAVASCRIPTS':       ['DATADIR/jquery.js',
-                              'DATADIR/jquery.corner.js',
-                              'DATADIR/jquery.json.js',
-                              'DATADIR/cubicweb.compat.js',
-                              'DATADIR/cubicweb.python.js',
-                              'DATADIR/cubicweb.htmlhelpers.js'],
-        }
-
-
     def anonymous_user(self):
         """return a login and password to use for anonymous users. None
         may be returned for both if anonymous connections are not allowed
@@ -278,7 +255,7 @@ have the python imaging library installed to use captcha)',
 
     def has_resource(self, rid):
         """return true if an external resource is defined"""
-        return bool(self.ext_resources.get(rid))
+        return bool(self.uiprops.get(rid))
 
     @cached
     def locate_resource(self, rid):
@@ -310,7 +287,7 @@ have the python imaging library installed to use captcha)',
         super(WebConfiguration, self).load_configuration()
         # load external resources definition
         self._init_base_url()
-        self._build_ext_resources()
+        self._build_ui_properties()
 
     def _init_base_url(self):
         # normalize base url(s)
@@ -324,25 +301,40 @@ have the python imaging library installed to use captcha)',
             httpsurl += '/'
             if not self.repairing:
                 self.global_set_option('https-url', httpsurl)
+        if self.debugmode:
+            self.datadir_url = baseurl + 'data/'
+        else:
+            self.datadir_url = baseurl + 'data%s/' % self.instance_md5_version()
 
-    def _build_ext_resources(self):
-        libresourcesfile = join(self.shared_dir(), 'data', 'external_resources')
-        self.ext_resources.update(read_config(libresourcesfile))
+    def _build_ui_properties(self):
+        # self.datadir_url[:-1] to remove trailing /
+        from cubicweb.web.propertysheet import PropertySheet
+        self.uiprops = PropertySheet(datadir_url=self.datadir_url[:-1])
+        libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
+        self.uiprops.load(libuiprops)
         for path in reversed([self.apphome] + self.cubes_path()):
-            resourcesfile = join(path, 'data', 'external_resources')
-            if exists(resourcesfile):
-                self.debug('loading %s', resourcesfile)
-                self.ext_resources.update(read_config(resourcesfile))
-        resourcesfile = join(self.apphome, 'external_resources')
+            self._load_ui_properties(join(path, 'data'))
+        self._load_ui_properties(self.apphome)
+
+    def _load_ui_properties(self, path):
+        resourcesfile = join(path, 'external_resources')
         if exists(resourcesfile):
-            self.debug('loading %s', resourcesfile)
-            self.ext_resources.update(read_config(resourcesfile))
-        for resource in ('STYLESHEETS', 'STYLESHEETS_PRINT',
-                         'IE_STYLESHEETS', 'JAVASCRIPTS'):
-            val = self.ext_resources[resource]
-            if isinstance(val, str):
-                files = [w.strip() for w in val.split(',') if w.strip()]
-                self.ext_resources[resource] = files
+            warn('[3.9] %s file is deprecated, use an uiprops.py file'
+                 % resourcesfile, DeprecationWarning)
+            for rid, val in read_config(resourcesfile).iteritems():
+                if rid in ('STYLESHEETS', 'STYLESHEETS_PRINT',
+                           'IE_STYLESHEETS', 'JAVASCRIPTS'):
+                    val = [w.strip().replace('DATADIR/', self.datadir_url)
+                           for w in val.split(',') if w.strip()]
+                    if rid == 'IE_STYLESHEETS':
+                        rid = 'STYLESHEETS_IE'
+                else:
+                    val = val.strip().replace('DATADIR/', self.datadir_url)
+                self.uiprops[rid] = val
+        uipropsfile = join(path, 'uiprops.py')
+        if exists(uipropsfile):
+            self.debug('loading %s', uipropsfile)
+            self.uiprops.load(uipropsfile)
 
     # static files handling ###################################################
 

@@ -302,16 +302,15 @@ class Session(RequestSessionBase):
 
     def set_language(self, language):
         """i18n configuration for translation"""
-        vreg = self.vreg
         language = language or self.user.property_value('ui.language')
         try:
-            gettext, pgettext = vreg.config.translations[language]
+            gettext, pgettext = self.vreg.config.translations[language]
             self._ = self.__ = gettext
             self.pgettext = pgettext
         except KeyError:
-            language = vreg.property_value('ui.language')
+            language = self.vreg.property_value('ui.language')
             try:
-                gettext, pgettext = vreg.config.translations[language]
+                gettext, pgettext = self.vreg.config.translations[language]
                 self._ = self.__ = gettext
                 self.pgettext = pgettext
             except KeyError:

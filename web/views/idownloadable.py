@@ -48,7 +48,7 @@ def download_box(w, entity, title=None, label=None, footer=u''):
     w(u'<div class="sideBox downloadBox"><div class="sideBoxBody">')
     w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
       % (xml_escape(entity.download_url()),
-         req.external_resource('DOWNLOAD_ICON'),
+         req.vreg.config.uiprops['DOWNLOAD_ICON'],
          _('download icon'), xml_escape(label or entity.dc_title())))
     w(u'%s</div>' % footer)
     w(u'</div></div>\n')

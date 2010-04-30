@@ -643,7 +643,7 @@ class JSONControllerTC(CubicWebTC):
     # silly tests
     def test_external_resource(self):
         self.assertEquals(self.remote_call('external_resource', 'RSS_LOGO')[0],
-                          json.dumps(self.request().external_resource('RSS_LOGO')))
+                          json.dumps(self.config.uiprops['RSS_LOGO']))
     def test_i18n(self):
         self.assertEquals(self.remote_call('i18n', ['bimboom'])[0],
                           json.dumps(['bimboom']))

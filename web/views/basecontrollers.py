@@ -481,7 +481,7 @@ class JSonController(Controller):
     @jsonize
     def js_external_resource(self, resource):
         """returns the URL of the external resource named `resource`"""
-        return self._cw.external_resource(resource)
+        return self._cw.vreg.config.uiprops[resource]
 
     @check_pageid
     @jsonize

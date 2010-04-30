@@ -449,7 +449,6 @@ class CubicWebVRegistry(VRegistry):
         super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
         self.initialized = False
-        self.reset()
         # XXX give force_reload (or refactor [re]loading...)
         if self.config.mode != 'test':
             # don't clear rtags during test, this may cause breakage with

@@ -664,7 +664,8 @@ this option is set to yes",
         self.debugmode = debugmode
         self.adjust_sys_path()
         self.load_defaults()
-        self.translations = {}
+        # will be properly initialized later by _gettext_init
+        self.translations = {'en': (unicode, lambda ctx, msgid: unicode(msgid) )}
         # don't register ReStructured Text directives by simple import, avoid pb
         # with eg sphinx.
         # XXX should be done properly with a function from cw.uicfg
@@ -985,7 +986,7 @@ the repository',
         super(CubicWebConfiguration, self).load_configuration()
         if self.apphome and self.set_language:
             # init gettext
-            self._set_language()
+            self._gettext_init()
 
     def init_log(self, logthreshold=None, force=False):
         """init the log service"""
@@ -1013,7 +1014,7 @@ the repository',
             if lang != 'en':
                 yield lang
 
-    def _set_language(self):
+    def _gettext_init(self):
         """set language for gettext"""
         from gettext import translation
         path = join(self.apphome, 'i18n')
