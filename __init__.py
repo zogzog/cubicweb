@@ -21,6 +21,13 @@ relations between entitites.
 """
 __docformat__ = "restructuredtext en"
 
+# ignore the pygments UserWarnings
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning,
+                        message='.*was already imported',
+                        module='.*pygments')
+
+
 import __builtin__
 # '_' is available in builtins to mark internationalized string but should
 # not be used to do the actual translation
