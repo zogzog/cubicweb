@@ -594,7 +594,7 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
 
 
 class multi_lines_rset(Selector):
-    """If `nb`is specified, return 1 if the result set has exactly `nb` row of
+    """If `nb` is specified, return 1 if the result set has exactly `nb` row of
     result. Else (`nb` is None), return 1 if the result set contains *at least*
     two rows.
     """
@@ -612,7 +612,7 @@ class multi_lines_rset(Selector):
 
 
 class multi_columns_rset(multi_lines_rset):
-    """If `nb`is specified, return 1 if the result set has exactly `nb` column
+    """If `nb` is specified, return 1 if the result set has exactly `nb` column
     per row. Else (`nb` is None), return 1 if the result set contains *at least*
     two columns per row. Return 0 for empty result set.
     """
