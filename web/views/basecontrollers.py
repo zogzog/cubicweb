@@ -581,14 +581,6 @@ class JSonController(Controller):
     def js_add_pending_delete(self, (eidfrom, rel, eidto)):
         self._add_pending(eidfrom, rel, eidto, 'delete')
 
-    # XXX specific code. Kill me and my AddComboBox friend
-    @jsonize
-    def js_add_and_link_new_entity(self, etype_to, rel, eid_to, etype_from, value_from):
-        # create a new entity
-        eid_from = self._cw.execute('INSERT %s T : T name "%s"' % ( etype_from, value_from ))[0][0]
-        # link the new entity to the main entity
-        rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
-        return eid_from
 
 # XXX move to massmailing
 class SendMailController(Controller):

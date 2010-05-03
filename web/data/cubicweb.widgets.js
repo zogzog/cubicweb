@@ -313,34 +313,5 @@ Widgets.TemplateTextField = defclass("TemplateTextField", null, {
 
 });
 
-/*
- * ComboBox with a textinput : allows to add a new value
- */
-
-Widgets.AddComboBox = defclass('AddComboBox', null, {
-   __init__ : function(wdgnode) {
-       jQuery("#add_newopt").click(function() {
-	  var new_val = jQuery("#newopt").val();
-	      if (!new_val){
-		  return false;
-	      }
-          name = wdgnode.getAttribute('name').split(':');
-	  this.rel = name[0];
-	  this.eid_to = name[1];
-          this.etype_to = wdgnode.getAttribute('cubicweb:etype_to');
-          this.etype_from = wdgnode.getAttribute('cubicweb:etype_from');
-     	  var d = asyncRemoteExec('add_and_link_new_entity', this.etype_to, this.rel, this.eid_to, this.etype_from, 'new_val');
-          d.addCallback(function (eid) {
-	      jQuery(wdgnode).find("option[selected]").removeAttr("selected");
-              var new_option = OPTION({'value':eid, 'selected':'selected'}, value=new_val);
-              wdgnode.appendChild(new_option);
-          });
-          d.addErrback(function (xxx) {
-              log('xxx =', xxx);
-          });
-     });
-   }
-});
-
 
 CubicWeb.provide('widgets.js');

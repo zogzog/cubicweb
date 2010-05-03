@@ -60,7 +60,6 @@ Ajax / javascript widgets
 .. autoclass:: cubicweb.web.formwidgets.AjaxWidget
 .. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
 
-.. kill or document AddComboBoxWidget
 .. kill or document StaticFileAutoCompletionWidget
 .. kill or document LazyRestrictedAutoCompletionWidget
 .. kill or document RestrictedAutoCompletionWidget
@@ -775,24 +774,6 @@ class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
         entity = form._cw.entity_from_eid(value)
         return entity.view('combobox')
 
-
-class AddComboBoxWidget(Select):
-    def attributes(self, form, field):
-        attrs = super(AddComboBoxWidget, self).attributes(form, field)
-        init_ajax_attributes(attrs, 'AddComboBox')
-        # XXX entity form specific
-        entity = form.edited_entity
-        attrs['cubicweb:etype_to'] = entity.e_schema
-        etype_from = entity.e_schema.subjrels[field.name].objects(entity.e_schema)[0]
-        attrs['cubicweb:etype_from'] = etype_from
-        return attrs
-
-    def _render(self, form, field, renderer):
-        return super(AddComboBoxWidget, self)._render(form, field, renderer) + u'''
-<div id="newvalue">
-  <input type="text" id="newopt" />
-  <a href="javascript:noop()" id="add_newopt">&#160;</a></div>
-'''
 
 # more widgets #################################################################
 
