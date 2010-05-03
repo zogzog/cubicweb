@@ -340,12 +340,11 @@ class JSonController(Controller):
             return None
         return None
 
-    def _call_view(self, view, **kwargs):
-        req = self._cw
-        divid = req.form.get('divid', 'pageContent')
+    def _call_view(self, view, paginate=False, **kwargs):
+        divid = self._cw.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
         stream = view.set_stream()
-        if req.form.get('paginate'):
+        if paginate:
             if divid == 'pageContent':
                 # mimick main template behaviour
                 stream.write(u'<div id="pageContent">')
@@ -356,12 +355,12 @@ class JSonController(Controller):
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
-        extresources = req.html_headers.getvalue(skiphead=True)
+        extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
             stream.write(extresources)
             stream.write(u'</div>\n')
-        if req.form.get('paginate') and divid == 'pageContent':
+        if paginate and divid == 'pageContent':
             stream.write(u'</div></div>')
         return stream.getvalue()
 
@@ -381,7 +380,7 @@ class JSonController(Controller):
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
-        return self._call_view(view)
+        return self._call_view(view, paginate=req.form.get('paginate'))
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
@@ -419,16 +418,7 @@ class JSonController(Controller):
                                               **extraargs)
         #except NoSelectableObject:
         #    raise RemoteCallFailed('unselectable')
-        extraargs = extraargs or {}
-        stream = comp.set_stream()
-        comp.render(**extraargs)
-        # XXX why not _call_view ?
-        extresources = self._cw.html_headers.getvalue(skiphead=True)
-        if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n')
-            stream.write(extresources)
-            stream.write(u'</div>\n')
-        return stream.getvalue()
+        return self._call_view(comp, **extraargs)
 
     @check_pageid
     @xhtmlize
@@ -457,15 +447,7 @@ class JSonController(Controller):
         args['reload'] = json.loads(args['reload'])
         rset = req.eid_rset(int(self._cw.form['eid']))
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
-        stream = view.set_stream()
-        view.render(**args)
-        # XXX why not _call_view ?
-        extresources = req.html_headers.getvalue(skiphead=True)
-        if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n')
-            stream.write(extresources)
-            stream.write(u'</div>\n')
-        return stream.getvalue()
+        return self._call_view(view, **args)
 
     @jsonize
     def js_i18n(self, msgids):
