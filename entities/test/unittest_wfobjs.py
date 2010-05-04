@@ -56,7 +56,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
+        self.assertEquals(ex.errors, {'state_of-subject': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
@@ -432,7 +432,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'in_state-subject': u"state doesn't apply to this entity's type"})
+        self.assertEquals(ex.errors, {'custom_workflow-subject': u"workflow isn't a workflow for this type"})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be
