@@ -125,20 +125,20 @@ the repository rather than the user running the command',
          {'type' : 'time',
           'default': '30min',
           'help': 'session expiration time, default to 30 minutes',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
         ('connections-pool-size',
          {'type' : 'int',
           'default': 4,
           'help': 'size of the connections pools. Each source supporting multiple \
 connections will have this number of opened connections.',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
         ('rql-cache-size',
          {'type' : 'int',
           'default': 300,
           'help': 'size of the parsed rql cache size.',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
         ('undo-support',
          {'type' : 'string', 'default': '',
@@ -146,20 +146,20 @@ connections will have this number of opened connections.',
 [C]reate [U]pdate [D]elete entities / [A]dd [R]emove relation. Leave it empty \
 for no undo support, set it to CUDAR for full undo support, or to DR for \
 support undoing of deletion only.',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
         ('keep-transaction-lifetime',
          {'type' : 'int', 'default': 7,
           'help': 'number of days during which transaction records should be \
 kept (hence undoable).',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
         ('multi-sources-etypes',
          {'type' : 'csv', 'default': (),
           'help': 'defines which entity types from this repository are used \
 by some other instances. You should set this properly so those instances to \
 detect updates / deletions.',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
 
         ('delay-full-text-indexation',
@@ -168,7 +168,7 @@ detect updates / deletions.',
           ' to be done when entity are added/modified by users, activate this '
           'option and setup a job using cubicweb-ctl db-rebuild-fti on your '
           'system (using cron for instance).',
-          'group': 'main', 'level': 1,
+          'group': 'main', 'level': 3,
           }),
 
         # email configuration
@@ -181,7 +181,7 @@ to find recipients, recipients will be found according to this mode. Available \
 modes are "default-dest-addrs" (emails specified in the configuration \
 variable with the same name), "users" (every users which has activated \
 account with an email set), "none" (no notification).',
-          'group': 'email', 'level': 1,
+          'group': 'email', 'level': 2,
           }),
         ('default-dest-addrs',
          {'type' : 'csv',
@@ -189,7 +189,7 @@ account with an email set), "none" (no notification).',
           'help': 'comma separated list of email addresses that will be used \
 as default recipient when an email is sent and the notification has no \
 specific recipient rules.',
-          'group': 'email', 'level': 1,
+          'group': 'email', 'level': 2,
           }),
         ('supervising-addrs',
          {'type' : 'csv',
@@ -205,7 +205,7 @@ notified of every changes.',
           'help': 'Pyro server host, if not detectable correctly through \
 gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
-          'group': 'pyro', 'level': 2,
+          'group': 'pyro', 'level': 3,
           }),
         ) + CubicWebConfiguration.options)
 
