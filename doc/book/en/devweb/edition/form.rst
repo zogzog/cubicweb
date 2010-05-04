@@ -210,10 +210,7 @@ trivial. Then we add the relevant version to the initial vocabulary.
 
 Here, given a project eid, we complete the vocabulary with all
 unpublished versions defined in the project (sorted by number) for
-which the current user is allowed to establish the relation. Of
-course, we take care *not* to provide a version the ticket is already
-linked to (through ``done_in``).
-
+which the current user is allowed to establish the relation.
 
 APIs
 ~~~~
