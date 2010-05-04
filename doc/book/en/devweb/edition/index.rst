@@ -11,3 +11,4 @@ interactions.
 
    form
    editcontroller
+   examples

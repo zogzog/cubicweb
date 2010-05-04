@@ -25,7 +25,7 @@ Configuration through uicfg
 ```````````````````````````
 
 It is possible to manage which and how an entity's attributes and relations
-will be edited in the various context where the automatic entity form is used
+will be edited in the various contexts where the automatic entity form is used
 by using proper uicfg tags.
 
 The details of the uicfg syntax can be found in the :ref:`uicfg` chapter.
@@ -53,7 +53,7 @@ additionally to the relation key: a `formtype` and a `section`.
 
 section may be one of:
 
-* 'hidden', don't display (not even in an hidden input, right?)
+* 'hidden', don't display (not even in a hidden input)
 
 * 'attributes', display in the attributes section
 
@@ -104,7 +104,11 @@ class. For instance:
    autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
                                        {'widget': fw.TextInput})
 
+.. note::
 
+   the widget argument can be either a class or an instance (the later
+   case being convenient to pass the Widget specific initialisation
+   options)
 
 Overriding permissions
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -621,13 +625,13 @@ class UnrelatedDivs(EntityView):
 # The automatic entity form ####################################################
 
 class AutomaticEntityForm(forms.EntityFieldsForm):
-    """AutomaticEntityForm is an automagic form to edit any entity. It is
-    designed to be fully generated from schema but highly configurable through
-    :ref:`uicfg`.
+    """AutomaticEntityForm is an automagic form to edit any entity. It
+    is designed to be fully generated from schema but highly
+    configurable through uicfg.
 
     Of course, as for other forms, you can also customise it by specifying
     various standard form parameters on selection, overriding, or
-    adding/removing fields in a selected instances.
+    adding/removing fields in selected instances.
     """
     __regid__ = 'edition'
 
