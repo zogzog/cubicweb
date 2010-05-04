@@ -14,7 +14,7 @@ the *CubicWeb* framework.
    rtags
    js
    css
-   form
+   edition/index
    facets
    internationalization
 ..   property

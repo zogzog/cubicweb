@@ -106,10 +106,7 @@ class RequestSessionBase(object):
         return rset
 
     def empty_rset(self):
-        """return a result set for the given eid without doing actual query
-        (we have the eid, we can suppose it exists and user has access to the
-        entity)
-        """
+        """ return a guaranteed empty result """
         rset = ResultSet([], 'Any X WHERE X eid -1')
         rset.req = self
         return rset
