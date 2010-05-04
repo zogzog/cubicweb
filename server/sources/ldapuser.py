@@ -44,6 +44,7 @@ from ldap.ldapobject import ReconnectLDAPObject
 from ldap.filter import filter_format, escape_filter_chars
 from ldapurl import LDAPUrl
 
+from logilab.common.configuration import time_validator
 from cubicweb import AuthenticationError, UnknownEid, RepositoryError
 from cubicweb.server.utils import cartesian_product
 from cubicweb.server.sources import (AbstractSource, TrFunc, GlobTrFunc,
@@ -186,9 +187,11 @@ directory (default to once a day).',
                               for o in self.user_classes]
         self._conn = None
         self._cache = {}
-        ttlm = int(source_config.get('cache-life-type', 2*60))
+        ttlm = time_validator(None, None,
+                              source_config.get('cache-life-time', 2*60))
         self._query_cache = TimedCache(ttlm)
-        self._interval = int(source_config.get('synchronization-interval',
+        self._interval = time_validator(None, None,
+                                        source_config.get('synchronization-interval',
                                                24*60*60))
 
     def reset_caches(self):
