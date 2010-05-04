@@ -20,6 +20,38 @@ bare text field), :class:`~cubicweb.web.formwidgets.DateTimePicker` (a simple
 calendar) or even :class:`~cubicweb.web.formwidgets.JQueryDatePicker` (the JQuery
 calendar).  You can of course also write your own widget.
 
+Exploring the available forms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A small excursion into a |cubicweb| shell is the quickest way to
+discover available forms (or application objects in general).
+
+.. sourcecode:: python
+
+ >>> from pprint import pprint
+ >>> pprint( session.vreg['forms'] )
+ {'base': [<class 'cubicweb.web.views.forms.FieldsForm'>,
+           <class 'cubicweb.web.views.forms.EntityFieldsForm'>],
+  'changestate': [<class 'cubicweb.web.views.workflow.ChangeStateForm'>,
+                  <class 'cubes.tracker.views.forms.VersionChangeStateForm'>],
+  'composite': [<class 'cubicweb.web.views.forms.CompositeForm'>,
+                <class 'cubicweb.web.views.forms.CompositeEntityForm'>],
+  'deleteconf': [<class 'cubicweb.web.views.editforms.DeleteConfForm'>],
+  'edition': [<class 'cubicweb.web.views.autoform.AutomaticEntityForm'>,
+              <class 'cubicweb.web.views.workflow.TransitionEditionForm'>,
+              <class 'cubicweb.web.views.workflow.StateEditionForm'>],
+  'logform': [<class 'cubicweb.web.views.basetemplates.LogForm'>],
+  'massmailing': [<class 'cubicweb.web.views.massmailing.MassMailingForm'>],
+  'muledit': [<class 'cubicweb.web.views.editforms.TableEditForm'>],
+  'sparql': [<class 'cubicweb.web.views.sparql.SparqlForm'>]}
+
+
+The two most important form families here (for all pracitcal purposes)
+are `base` and `edition`. Most of the time one wants alterations of
+the AutomaticEntityForm (from the `edition` category).
+
+The Automatic Entity Form
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: cubicweb.web.views.autoform
 
@@ -181,6 +213,7 @@ unpublished versions defined in the project (sorted by number) for
 which the current user is allowed to establish the relation. Of
 course, we take care *not* to provide a version the ticket is already
 linked to (through ``done_in``).
+
 
 APIs
 ~~~~

@@ -10,5 +10,6 @@ interactions.
    :maxdepth: 2
 
    form
+   dissection
    editcontroller
    examples
