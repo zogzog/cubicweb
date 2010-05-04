@@ -48,13 +48,13 @@ class SchemaViewer(object):
 
     # no self.req managements
 
-    def may_read(self, rdef, action):
+    def may_read(self, rdef, action='read'):
         """Return true if request user may read the given schema.
         Always return True when no request is provided.
         """
         if self.req is None:
             return True
-        return sch.may_have_permission('read', self.req)
+        return rdef.may_have_permission(action, self.req)
 
     def format_eschema(self, eschema):
         text = eschema.type
