@@ -4,20 +4,28 @@ The `Request` class (`cubicweb.web`)
 Overview
 ````````
 
-A request instance is created when an HTTP request is sent to the web server.
-It contains informations such as form parameters, user authenticated, etc.
+A request instance is created when an HTTP request is sent to the web
+server.  It contains informations such as form parameters,
+authenticated user, etc. It is a very prevalent object and is used
+throughout all of the framework and applications.
 
-**Globally, a request represents a user query, either through HTTP or not
-(we also talk about RQL queries on the server side for example).**
+**A request represents a user query, either through HTTP or not (we
+also talk about RQL queries on the server side for example).**
 
-An instance of `Request` has the following attributes:
+Here is a non-exhaustive list of attributes and methods available on
+request objects (grouped by category):
 
-* `user`, instance of `cubicweb.common.utils.User` corresponding to the authenticated
-  user
-* `form`, dictionary containing the values of a web form
-* `encoding`, character encoding to use in the response
+* `Browser control`:
 
-But also:
+  * `ie_browser`: tells if the browser belong to the Internet Explorer
+    family
+  * `xhtml_browser`: tells if the browser is able to properly handle
+    XHTML (at the HTTP content_type level)
+
+* `User and identification`:
+
+  * `user`, instance of `cubicweb.common.utils.User` corresponding to
+    the authenticated user
 
 * `Session data handling`
 
@@ -26,6 +34,36 @@ But also:
     key or the value `default` if the key is not defined
   * `set_session_data(key, value)`, assign a value to a key
   * `del_session_data(key)`,  suppress the value associated to a key
+
+* `Edition` (utilities for edition control):
+
+  * `cancel_edition`: resets error url and cleans up pending operations
+  * `create_entity`: utility to create an entity (from an etype,
+    attributes and relation values)
+  * `datadir_url`: returns the url to the merged external resources
+    (|cubicweb|'s `web/data` directory plus all `data` directories of
+    used cubes)
+  * `edited_eids`: returns the list of eids of entities that are
+    edited under the current http request
+  * `eid_rset(eid)`: utility which returns a result set from an eid
+  * `entity_from_eid(eid)`: returns an entity instance from the given eid
+  * `encoding`: returns the encoding of the current HTTP request
+  * `ensure_ro_rql(rql)`: ensure some rql query is a data request
+  * etype_rset
+  * `form`, dictionary containing the values of a web form
+  * `encoding`, character encoding to use in the response
+  * `next_tabindex()`: returns a monotonically growing integer used to
+    build the html tab index of forms
+
+* `HTTP`
+
+  * `authmode`: returns a string describing the authentication mode
+    (http, cookie, ...)
+  * `lang`: returns the user agents/browser's language as carried by
+    the http request
+  * `demote_to_html()`: in the context of an XHTML compliant browser,
+    this will force emission of the response as an HTML document
+    (using the http content negociation)
 
 *  `Cookies handling`
 
@@ -39,9 +77,27 @@ But also:
 
 * `URL handling`
 
+  * `build_url(__vid, *args, **kwargs)`: return an absolute URL using
+    params dictionary key/values as URL parameters. Values are
+    automatically URL quoted, and the publishing method to use may be
+    specified or will be guessed.
+  * `build_url_params(**kwargs)`: returns a properly prepared (quoted,
+    separators, ...) string from the given parameters
   * `url()`, returns the full URL of the HTTP request
   * `base_url()`, returns the root URL of the web application
   * `relative_path()`, returns the relative path of the request
+
+* `Web resource (.css, .js files, etc.) handling`:
+
+  * `add_css(cssfiles)`: adds the given list of css resources to the current
+    html headers
+  * `add_js(jsfiles)`: adds the given list of javascript resources to the
+    current html headers
+  * `add_onload(jscode)`: inject the given jscode fragment (an unicode
+    string) into the current html headers, wrapped inside a
+    document.ready(...) or another ajax-friendly one-time trigger event
+  * `add_header(header, values)`: adds the header/value pair to the
+    current html headers
 
 * `And more...`
 
