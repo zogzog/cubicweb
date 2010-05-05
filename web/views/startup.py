@@ -96,11 +96,16 @@ class ManageView(StartupView):
         self.startupviews_table()
 
     def startupviews_table(self):
-        for v in self._cw.vreg['views'].possible_views(self._cw, None):
+        views = self._cw.vreg['views'].possible_views(self._cw, None)
+        if not views:
+            return
+        self.w(u'<ul>')
+        for v in views:
             if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue
-            self.w('<p><a href="%s">%s</a></p>' % (
+            self.w('<li><a href="%s">%s</a></li>' % (
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
+        self.w(u'</ul>')
 
     def entities(self):
         schema = self._cw.vreg.schema

@@ -55,3 +55,55 @@ DOWNLOAD_ICON = data('download.gif')
 UPLOAD_ICON = data('upload.gif')
 GMARKER_ICON = data('gmap_blue_marker.png')
 UP_ICON = data('up.gif')
+
+# colors, fonts, etc
+
+# default (body, html)
+defaultColor = '#000'
+defaultFont = 'Verdana,sans-serif'
+defaultSize = '12px'
+defaultLineHeight = '1.5'
+defaultLineHeightEm = defaultLineHeight + 'em'
+baseRhythmBg = 'rhythm18.png'
+
+# XXX
+defaultLayoutMargin = '8px'
+
+# header
+headerBgColor = '#ff7700'
+
+# h
+h1FontSize = '1.5em'
+h1BorderBottomStyle = '0.06em solid black'
+h1Padding = '0 0 0.14em 0 '
+h1Margin = '0.8em 0 0.5em'
+
+h2FontSize = '1.33333em'
+h2Padding = '0.4em 0 0.35em 0'
+h2Margin = '0'
+
+h3FontSize = '1.16667em'
+h3Padding = '0.5em 0 0.57em 0'
+h3Margin = '0'
+
+# links
+aColor = '#ff4500'
+aActiveColor = aVisitedColor = aLinkColor = aColor
+
+# page frame
+pageContentBorderColor = '#ccc'
+pageContentBgColor = '#fff'
+pageContentPadding = '1em'
+pageMinHeight = '800px'
+
+# button
+buttonBorderColor = '#edecd2'
+buttonBgColor = '#fffff8'
+
+# action, search, sideBoxes
+actionBoxTitleBgColor = '#cfceb7'
+sideBoxBodyBgColor = '#eeedd9'
+
+
+# table listing
+listingBorderColor = '#878787'
