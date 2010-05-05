@@ -595,7 +595,7 @@ layout, and a full featured cube with "full" layout.',
         exclude = SKEL_EXCLUDE
         if self['layout'] == 'simple':
             exclude += ('sobjects.py*', 'precreate.py*', 'realdb_test*',
-                        'cubes.*', 'external_resources*')
+                        'cubes.*', 'uiprops.py*')
         copy_skeleton(skeldir, cubedir, context, exclude=exclude)
 
     def _ask_for_dependencies(self):

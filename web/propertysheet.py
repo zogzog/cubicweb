@@ -47,12 +47,12 @@ class PropertySheet(dict):
         self._ordered_propfiles.append(fpath)
 
     def need_reload(self):
+        for rid, (adirectory, rdirectory, mtime) in self._cache.items():
+            if os.stat(osp.join(rdirectory, rid))[-2] > mtime:
+                del self._cache[rid]
         for fpath, mtime in self._propfile_mtime.iteritems():
             if os.stat(fpath)[-2] > mtime:
                 return True
-        for rid, (directory, mtime) in self._cache.items():
-            if os.stat(osp.join(directory, rid))[-2] > mtime:
-                del self._cache[rid]
         return False
 
     def reload(self):
@@ -70,7 +70,7 @@ class PropertySheet(dict):
             return self._cache[rid][0]
         except KeyError:
             cachefile = osp.join(self._cache_directory, rid)
-            self.debug('caching processed css %s/%s into %s',
+            self.debug('caching processed %s/%s into %s',
                        rdirectory, rid, cachefile)
             rcachedir = osp.dirname(cachefile)
             if not osp.exists(rcachedir):
@@ -83,13 +83,14 @@ class PropertySheet(dict):
                 content = self.compile(content)
             except ValueError, ex:
                 self.error("can't process %s/%s: %s", rdirectory, rid, ex)
+                adirectory = rdirectory
             else:
                 stream = file(cachefile, 'w')
                 stream.write(content)
                 stream.close()
-                rdirectory = self._cache_directory
-            self._cache[rid] = (rdirectory, os.stat(sourcefile)[-2])
-            return rdirectory
+                adirectory = self._cache_directory
+            self._cache[rid] = (adirectory, rdirectory, os.stat(sourcefile)[-2])
+            return adirectory
 
     def compile(self, content):
         return self._percent_rgx.sub('%%', content) % self

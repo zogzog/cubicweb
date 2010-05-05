@@ -181,10 +181,6 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
 
-    def ext_resources_file(self):
-        """return instance's external resources file"""
-        return join(self.apphome, 'data', 'external_resources')
-
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and threads
         return True

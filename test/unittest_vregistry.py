@@ -56,21 +56,25 @@ class VRegistryTC(TestCase):
 
 
     def test_load_subinterface_based_appobjects(self):
-        self.vreg.reset()
         self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar was kicked
         self.failIf(self.vreg['views'].get('progressbar'))
+        # we've to emulate register_objects to add custom MyCard objects
+        path = [join(BASE, 'entities', '__init__.py'),
+                join(BASE, 'web', 'views', 'iprogress.py')]
+        filemods = self.vreg.init_registration(path, None)
+        for filepath, modname in filemods:
+            self.vreg.load_file(filepath, modname)
         class MyCard(Card):
             __implements__ = (IMileStone,)
-        self.vreg.reset()
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register(MyCard)
-        self.vreg.register_objects([join(BASE, 'entities', '__init__.py'),
-                                    join(BASE, 'web', 'views', 'iprogress.py')])
+        self.vreg.initialization_completed()
         # check progressbar isn't kicked
         self.assertEquals(len(self.vreg['views']['progressbar']), 1)
 
     def test_properties(self):
+        self.vreg.reset()
         self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
         self.failUnless(self.vreg.property_info('system.version.cubicweb'))
         self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')

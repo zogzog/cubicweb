@@ -26,6 +26,7 @@ from os.path import join, exists, split
 from warnings import warn
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options
@@ -253,29 +254,30 @@ have the python imaging library installed to use captcha)',
             user = unicode(user)
         return user, passwd
 
-    def has_resource(self, rid):
-        """return true if an external resource is defined"""
-        return bool(self.uiprops.get(rid))
-
-    @cached
     def locate_resource(self, rid):
         """return the directory where the given resource may be found"""
         return self._fs_locate(rid, 'data')
 
-    @cached
     def locate_doc_file(self, fname):
         """return the directory where the given resource may be found"""
         return self._fs_locate(fname, 'wdoc')
 
-    def _fs_locate(self, rid, rdirectory):
+    @cached
+    def _fs_path_locate(self, rid, rdirectory):
         """return the directory where the given resource may be found"""
         path = [self.apphome] + self.cubes_path() + [join(self.shared_dir())]
         for directory in path:
             if exists(join(directory, rdirectory, rid)):
-                if rdirectory == 'data' and rid.endswith('.css'):
-                    return self.uiprops.process_resource(join(directory, rdirectory),
-                                                         rid)
-                return join(directory, rdirectory)
+                return directory
+
+    def _fs_locate(self, rid, rdirectory):
+        """return the directory where the given resource may be found"""
+        directory = self._fs_path_locate(rid, rdirectory)
+        if directory is None:
+            return None
+        if rdirectory == 'data' and rid.endswith('.css'):
+            return self.uiprops.process_resource(join(directory, rdirectory), rid)
+        return join(directory, rdirectory)
 
     def locate_all_files(self, rid, rdirectory='wdoc'):
         """return all files corresponding to the given resource"""
@@ -319,11 +321,11 @@ have the python imaging library installed to use captcha)',
         libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
         self.uiprops.load(libuiprops)
         for path in reversed([self.apphome] + self.cubes_path()):
-            self._load_ui_properties(join(path, 'data'))
+            self._load_ui_properties(path)
         self._load_ui_properties(self.apphome)
 
     def _load_ui_properties(self, path):
-        resourcesfile = join(path, 'external_resources')
+        resourcesfile = join(path, 'data', 'external_resources')
         if exists(resourcesfile):
             warn('[3.9] %s file is deprecated, use an uiprops.py file'
                  % resourcesfile, DeprecationWarning)
@@ -367,3 +369,8 @@ have the python imaging library installed to use captcha)',
     def static_file_del(self, rpath):
         if self.static_file_exists(rpath):
             os.remove(join(self.static_directory, rpath))
+
+    @deprecated('[3.9] use _cw.uiprops.get(rid)')
+    def has_resource(self, rid):
+        """return true if an external resource is defined"""
+        return bool(self.uiprops.get(rid))
