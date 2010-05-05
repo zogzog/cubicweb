@@ -204,7 +204,7 @@ class TableView(AnyRsetView):
 
     def render_actions(self, divid, actions):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = tags.img(src=self._cw.vreg.config.uiprops['PUCE_DOWN'],
+        label = tags.img(src=self._cw.uiprops['PUCE_DOWN'],
                          alt=xml_escape(self._cw._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)

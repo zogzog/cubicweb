@@ -248,7 +248,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
                 eschema.type, self._cw.build_url('cwetype/%s' % eschema.type),
                 eschema.type, _(eschema.type)))
             self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.vreg.config.uiprops['UP_ICON'], _('up')))
+                url,  self._cw.uiprops['UP_ICON'], _('up')))
             self.w(u'</h3>')
             self.w(u'<div style="margin: 0px 1.5em">')
             self.permissions_table(eschema)
@@ -277,7 +277,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
                 rschema.type, self._cw.build_url('cwrtype/%s' % rschema.type),
                 rschema.type, _(rschema.type)))
             self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.vreg.config.uiprops['UP_ICON'], _('up')))
+                url,  self._cw.uiprops['UP_ICON'], _('up')))
             self.w(u'</h3>')
             self.grouped_permissions_table(rschema)
 

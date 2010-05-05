@@ -79,7 +79,7 @@ class ApplLogo(component.Component):
 
     def call(self):
         self.w(u'<a href="%s"><img class="logo" src="%s" alt="logo"/></a>'
-               % (self._cw.base_url(), self._cw.vreg.config.uiprops['LOGO']))
+               % (self._cw.base_url(), self._cw.uiprops['LOGO']))
 
 
 class ApplHelp(component.Component):

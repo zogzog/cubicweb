@@ -27,7 +27,7 @@ import os.path as osp
 class PropertySheet(dict):
     def __init__(self, cache_directory, **context):
         self._cache_directory = cache_directory
-        self._context = context
+        self.context = context
         self.reset()
         context['sheet'] = self
         self._percent_rgx = re.compile('%(?!\()')
@@ -40,7 +40,7 @@ class PropertySheet(dict):
         self._cache = {}
 
     def load(self, fpath):
-        scriptglobals = self._context.copy()
+        scriptglobals = self.context.copy()
         scriptglobals['__file__'] = fpath
         execfile(fpath, scriptglobals, self)
         self._propfile_mtime[fpath] = os.stat(fpath)[-2]

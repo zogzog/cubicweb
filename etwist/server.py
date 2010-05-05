@@ -178,6 +178,9 @@ class CubicWebRootResource(resource.Resource):
         pre_path = request.path.split('/')[1:]
         if pre_path[0] == 'https':
             pre_path.pop(0)
+            uiprops = self.config.https_uiprops
+        else:
+            uiprops = self.config.uiprops
         directory = pre_path[0]
         # Anything in data/, static/, fckeditor/ and the generated versioned
         # data directory is treated as static files
@@ -187,7 +190,7 @@ class CubicWebRootResource(resource.Resource):
             if directory == 'static':
                 return File(self.config.static_directory)
             if directory == 'fckeditor':
-                return File(self.config.ext_resources['FCKEDITOR_PATH'])
+                return File(uiprops['FCKEDITOR_PATH'])
             if directory != 'data':
                 # versioned directory, use specific file with http cache
                 # headers so their are cached for a very long time
@@ -195,7 +198,7 @@ class CubicWebRootResource(resource.Resource):
             else:
                 cls = File
             if path == 'fckeditor':
-                return cls(self.config.ext_resources['FCKEDITOR_PATH'])
+                return cls(uiprops['FCKEDITOR_PATH'])
             if path == directory: # recurse
                 return self
             datadir = self.config.locate_resource(path)
@@ -211,6 +214,8 @@ class CubicWebRootResource(resource.Resource):
         # reload modified files in debug mode
         if self.config.debugmode:
             self.config.uiprops.reload_if_needed()
+            if self.https_url:
+                self.config.https_uiprops.reload_if_needed()
             self.appli.vreg.reload_if_needed()
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)

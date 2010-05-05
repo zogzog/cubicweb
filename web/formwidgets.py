@@ -549,7 +549,7 @@ class DateTimePicker(TextInput):
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
-                   form._cw.vreg.config.uiprops['CALENDAR_ICON'],
+                   form._cw.uiprops['CALENDAR_ICON'],
                    form._cw._('calendar'), helperid) )
 
 
@@ -573,7 +573,7 @@ class JQueryDatePicker(FieldWidget):
         req.add_onload(u'jqNode("%s").datepicker('
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
-                           domid, req.vreg.config.uiprops['CALENDAR_ICON'], fmt))
+                           domid, req.uiprops['CALENDAR_ICON'], fmt))
         if self.datestr is None:
             value = self.values(form, field)[0]
         else:
@@ -935,7 +935,7 @@ class Button(Input):
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
         if self.icon:
-            img = tags.img(src=form._cw.vreg.config.uiprops[self.icon], alt=self.icon)
+            img = tags.img(src=form._cw.uiprops[self.icon], alt=self.icon)
         else:
             img = u''
         return tags.button(img + xml_escape(label), escapecontent=False,
@@ -966,7 +966,7 @@ class ImgButton(object):
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)
-        imgsrc = form._cw.vreg.config.uiprops[self.imgressource]
+        imgsrc = form._cw.uiprops[self.imgressource]
         return '<a id="%(domid)s" href="%(href)s">'\
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
             'label': label, 'imgsrc': imgsrc,

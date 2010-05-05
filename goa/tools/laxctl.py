@@ -43,7 +43,7 @@ def initialize_vregistry(applroot):
     do_monkey_patch()
     from cubicweb.goa.goavreg import GAEVregistry
     from cubicweb.goa.goaconfig import GAEConfiguration
-    #WebConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
+    #WebConfiguration.uiprops['JAVASCRIPTS'].append('DATADIR/goa.js')
     config = GAEConfiguration('toto', applroot)
     vreg = GAEVregistry(config)
     vreg.set_schema(config.load_schema())

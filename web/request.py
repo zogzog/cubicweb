@@ -83,6 +83,12 @@ class CubicWebRequestBase(DBAPIRequest):
         super(CubicWebRequestBase, self).__init__(vreg)
         self.authmode = vreg.config['auth-mode']
         self.https = https
+        if https:
+            self.uiprops = vreg.config.https_uiprops
+            self.datadir_url = vreg.config.https_datadir_url
+        else:
+            self.uiprops = vreg.config.uiprops
+            self.datadir_url = vreg.config.datadir_url
         # raw html headers that can be added from any view
         self.html_headers = HTMLHead()
         # form parameters
@@ -99,7 +105,6 @@ class CubicWebRequestBase(DBAPIRequest):
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
-        self.datadir_url = vreg.config.datadir_url
         self._set_pageid()
         # prepare output header
         self.headers_out = Headers()
@@ -794,14 +799,14 @@ class CubicWebRequestBase(DBAPIRequest):
                     u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
         return u'<div>'
 
-    @deprecated('[3.9] use req.vreg.config.uiprops[rid]')
+    @deprecated('[3.9] use req.uiprops[rid]')
     def external_resource(self, rid, default=_MARKER):
         """return a path to an external resource, using its identifier
 
         raise `KeyError` if the resource is not defined
         """
         try:
-            return self.vreg.config.uiprops[rid]
+            return self.uiprops[rid]
         except KeyError:
             if default is _MARKER:
                 raise

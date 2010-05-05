@@ -30,6 +30,7 @@ from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
 class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
+    uiprops = {}
     apphome = None
     def __init__(self, appid='data', apphome=None, cubes=()):
         self.appid = appid

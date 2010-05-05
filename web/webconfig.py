@@ -302,10 +302,15 @@ have the python imaging library installed to use captcha)',
         if not self.repairing:
             self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
-        if httpsurl and httpsurl[-1] != '/':
-            httpsurl += '/'
-            if not self.repairing:
-                self.global_set_option('https-url', httpsurl)
+        if httpsurl:
+            if httpsurl[-1] != '/':
+                httpsurl += '/'
+                if not self.repairing:
+                    self.global_set_option('https-url', httpsurl)
+            if self.debugmode:
+                self.https_datadir_url = httpsurl + 'data/'
+            else:
+                self.https_datadir_url = httpsurl + 'data%s/' % self.instance_md5_version()
         if self.debugmode:
             self.datadir_url = baseurl + 'data/'
         else:
@@ -318,31 +323,41 @@ have the python imaging library installed to use captcha)',
             join(self.appdatahome, 'uicache'),
             data=lambda x: self.datadir_url + x,
             datadir_url=self.datadir_url[:-1])
-        libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
-        self.uiprops.load(libuiprops)
-        for path in reversed([self.apphome] + self.cubes_path()):
-            self._load_ui_properties(path)
-        self._load_ui_properties(self.apphome)
+        self._init_uiprops(self.uiprops)
+        if self['https-url']:
+            self.https_uiprops = PropertySheet(
+                join(self.appdatahome, 'uicache'),
+                data=lambda x: self.https_datadir_url + x,
+                datadir_url=self.https_datadir_url[:-1])
+            self._init_uiprops(self.https_uiprops)
 
-    def _load_ui_properties(self, path):
+    def _init_uiprops(self, uiprops):
+        libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
+        uiprops.load(libuiprops)
+        for path in reversed([self.apphome] + self.cubes_path()):
+            self._load_ui_properties_file(uiprops, path)
+        self._load_ui_properties_file(uiprops, self.apphome)
+
+    def _load_ui_properties_file(self, uiprops, path):
         resourcesfile = join(path, 'data', 'external_resources')
         if exists(resourcesfile):
             warn('[3.9] %s file is deprecated, use an uiprops.py file'
                  % resourcesfile, DeprecationWarning)
+            datadir_url = uiprops.context['datadir_url']
             for rid, val in read_config(resourcesfile).iteritems():
                 if rid in ('STYLESHEETS', 'STYLESHEETS_PRINT',
                            'IE_STYLESHEETS', 'JAVASCRIPTS'):
-                    val = [w.strip().replace('DATADIR/', self.datadir_url)
+                    val = [w.strip().replace('DATADIR', datadir_url)
                            for w in val.split(',') if w.strip()]
                     if rid == 'IE_STYLESHEETS':
                         rid = 'STYLESHEETS_IE'
                 else:
-                    val = val.strip().replace('DATADIR/', self.datadir_url)
-                self.uiprops[rid] = val
+                    val = val.strip().replace('DATADIR', datadir_url)
+                uiprops[rid] = val
         uipropsfile = join(path, 'uiprops.py')
         if exists(uipropsfile):
             self.debug('loading %s', uipropsfile)
-            self.uiprops.load(uipropsfile)
+            uiprops.load(uipropsfile)
 
     # static files handling ###################################################
 
