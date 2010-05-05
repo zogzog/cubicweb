@@ -1,5 +1,5 @@
 
-Dissection of a Form
+Dissection of a form
 --------------------
 
 This is done (again) with a vanilla instance of the `tracker`_
@@ -113,8 +113,11 @@ The `freezeFormButtons(...)` javascript callback defined on the
 ``conlick`` event of the form element prevents accidental multiple
 clicks in a row.
 
-The ``action`` of the form is mapped to the `validateform` controller
+The ``action`` of the form is mapped to the ``validateform`` controller
 (situated in :mod:`cubicweb.web.views.basecontrollers`).
+
+A full explanation of the validation loop is given in
+:ref:`validation_process`.
 
 The attributes section
 ''''''''''''''''''''''
@@ -252,19 +255,22 @@ Finally comes the buttons zone.
           <tr>
             <td align="center">
               <button class="validateButton" tabindex="9" type="submit" value="validate">
-                <img alt="OK_ICON" src="{}" />validate
+                <img alt="OK_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/ok.png" />
+                validate
               </button>
             </td>
             <td style="align: right; width: 50%;">
               <button class="validateButton"
                       onclick="postForm(&#39;__action_apply&#39;, &#39;button_apply&#39;, &#39;entityForm&#39;)"
                       tabindex="10" type="button" value="apply">
-                <img alt="APPLY_ICON" src="{}" />apply
+                <img alt="APPLY_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/plus.png" />
+                apply
               </button>
               <button class="validateButton"
                       onclick="postForm(&#39;__action_cancel&#39;, &#39;button_cancel&#39;, &#39;entityForm&#39;)"
                       tabindex="11" type="button" value="cancel">
-                <img alt="CANCEL_ICON" src="{}" />cancel
+                <img alt="CANCEL_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/cancel.png" />
+                cancel
               </button>
             </td>
           </tr>
@@ -273,4 +279,87 @@ Finally comes the buttons zone.
 
 The most notable artifacts here are the ``postForm(...)`` calls
 defined on click events on these buttons. This function basically
-submits the form. XXX validateform vs validateForm, ajax or not ?
+submits the form.
+
+.. validation_process::
+
+The form validation process
+---------------------------
+
+Preparation
+~~~~~~~~~~~
+
+After the (html) document is loaded, the ``setFormsTarget`` javascript
+function dynamically transforms the DOM as follows. For all forms of
+the DOM, it:
+
+* sets the ``target`` attribute where there is a ``cubicweb:target``
+  attribute (with the same value)
+
+* appends an empty `IFRAME` element at the end
+
+Let us have a look again at the form element. We have omitted some
+irrelevant attributes.
+
+.. sourcecode::html
+
+  <form action="http://crater:9999/validateform" method="post"
+        enctype="application/x-www-form-urlencoded"
+        id="entityForm" cubicweb:target="eformframe"
+        target="eformframe">
+  ...
+  </form>
+
+Validation loop
+~~~~~~~~~~~~~~~
+
+On form submission, the form.action is invoked. Basically, the
+``validateform`` controller is called and its output lands in the
+specified ``target``, the iframe that was previously prepared.
+
+Hence, the main page is not replaced, only the iframe contents. The
+``validateform`` controller only outputs a tiny javascript fragment
+which is then immediately executed.
+
+.. sourcecode:: html
+
+ <iframe width="0px" height="0px" name="eformframe" id="eformframe" src="javascript: void(0)">
+   <script type="text/javascript">
+     window.parent.handleFormValidationResponse('entityForm', null, null,
+                                                [false, [2164, {"name-subject": "required field"}], null],
+                                                null);
+   </script>
+ </iframe>
+
+The ``window.parent`` part ensures the javascript function is called
+on the right context (that is: the form element). We will describe its
+parameters:
+
+* first comes the form id (`entityForm`)
+
+* then two optional callbacks for the success and failure case
+
+* an array containing:
+
+  * a boolean which indicates status (success or failure), and then, on error:
+
+    * an array structured as ``[eid, {'rtype-role': 'error msg'}, ...]``
+
+  * on success:
+
+    * an url (string) representing the next thing to jump to
+
+Given the array structure described above, it is quite simple to
+manipulate the DOM to show the errors at appropriate places.
+
+Explanation
+~~~~~~~~~~~
+
+This mecanism may seem a bit overcomplicated but we have to deal with
+two realities:
+
+* in the (strict) XHTML world, there are no iframes (hence the dynamic
+  inclusion, tolerated by Firefox)
+
+* no (or not all) browser(s) support file input field handling through
+  ajax.
