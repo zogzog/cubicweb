@@ -402,6 +402,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     }
     _displayValidationerrors(formid, descr[0], descr[1]);
     updateMessage(_('please correct errors below'));
+    // ensure the browser does not scroll down
     document.location.hash = '#header';
     return false;
 }

@@ -1,8 +1,50 @@
 Examples
 --------
 
-Example of ad-hoc fields form
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(Automatic) Entity form
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Looking at some cubes available on the `cubicweb forge`_ we find some
+with form manipulation. The following example comes from the the
+`conference`_ cube. It extends the change state form for the case
+where a ``Talk`` entity is getting into ``submitted`` state. The goal
+is to select reviewers for the submitted talk.
+
+.. _`cubicweb forge`: http://www.cubicweb.org/view?rql=Any+P+ORDERBY+N+WHERE+P+name+LIKE+%22cubicweb-%25%22%2C+P+is+Project%2C+P+name+N
+.. _`conference`: http://www.cubicweb.org/project/cubicweb-conference
+
+.. sourcecode:: python
+
+ from cubicweb.web import formfields as ff, formwidgets as fwdgs
+ class SendToReviewerStatusChangeView(ChangeStateFormView):
+     __select__ = (ChangeStateFormView.__select__ &
+                   implements('Talk') &
+                   rql_condition('X in_state S, S name "submitted"'))
+
+     def get_form(self, entity, transition, **kwargs):
+         form = super(SendToReviewerStatusChangeView, self).get_form(entity, transition, **kwargs)
+         relation = ff.RelationField(name='reviews', role='object',
+                                     eidparam=True,
+                                     label=_('select reviewers'),
+                                     widget=fwdgs.Select(multiple=True))
+         form.append_field(relation)
+         return form
+
+Simple extension of a form can be done from within the `FormView`
+wrapping the form. FormView instances have a handy ``get_form`` method
+that returns the form to be rendered. Here we add a ``RelationField``
+to the base state change form.
+
+One notable point is the ``eidparam`` argument: it tells both the
+field and the ``edit controller`` that the field is linked to a
+specific entity.
+
+It is hence entirely possible to add ad-hoc fields that will be
+processed by some specialized instance of the edit controller.
+
+
+Ad-hoc fields form
+~~~~~~~~~~~~~~~~~~
 
 We want to define a form doing something else than editing an entity. The idea is
 to propose a form to send an email to entities in a resultset which implements

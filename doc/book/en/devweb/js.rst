@@ -22,8 +22,8 @@ the cube, like this : 'cube.mycube.js', so as to avoid name clashes.
 
 .. XXX external_resources variable (which needs love)
 
-CubicWeb javascript API
-~~~~~~~~~~~~~~~~~~~~~~~
+Server-side Javascript API
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Javascript resources are typically loaded on demand, from views. The
 request object (available as self._cw from most application objects,
@@ -39,8 +39,8 @@ for instance views and entities objects) has a few methods to do that:
   snippet inline in the html headers. This is quite useful for setting
   up early jQuery(document).ready(...) initialisations.
 
-CubicWeb javascript events
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Javascript events
+~~~~~~~~~~~~~~~~~
 
 * ``server-response``: this event is triggered on HTTP responses (both
   standard and ajax). The two following extra parameters are passed
@@ -53,8 +53,8 @@ CubicWeb javascript events
     ajax request, otherwise the document itself for standard HTTP
     requests.
 
-Important AJAX APIS
-~~~~~~~~~~~~~~~~~~~
+Important javascript AJAX APIS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * `asyncRemoteExec` and `remoteExec` are the base building blocks for
   doing arbitrary async (resp. sync) communications with the server
@@ -72,10 +72,10 @@ Important AJAX APIS
 A simple example with asyncRemoteExec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the python side, we have to extend the BaseController class. The
-@jsonize decorator ensures that the `return value` of the method is
-encoded as JSON data. By construction, the JSonController inputs
-everything in JSON format.
+In the python side, we have to extend the ``BaseController``
+class. The ``@jsonize`` decorator ensures that the return value of the
+method is encoded as JSON data. By construction, the JSonController
+inputs everything in JSON format.
 
 .. sourcecode: python
 
@@ -225,13 +225,13 @@ instance (it should contain something like
 `http://myinstance/json?`). The actual JSonController method name is
 encoded in the `params` dictionary using the `fname` key.
 
-A more real-life example from CubicWeb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A more real-life example
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-A frequent use case of Web 2 applications is the delayed (or
-on-demand) loading of pieces of the DOM. This is typically achieved
-using some preparation of the initial DOM nodes, jQuery event handling
-and proper use of loadxhtml.
+A frequent need of Web 2 applications is the delayed (or demand
+driven) loading of pieces of the DOM. This is typically achieved using
+some preparation of the initial DOM nodes, jQuery event handling and
+proper use of loadxhtml.
 
 We present here a skeletal version of the mecanism used in CubicWeb
 and available in web/views/tabs.py, in the `LazyViewMixin` class.
@@ -317,9 +317,6 @@ The browser-side definition follows.
     }
 
 
-
-
-.. XXX reloadComponent
 .. XXX userCallback / user_callback
 
 Javascript library: overview
