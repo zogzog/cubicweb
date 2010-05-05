@@ -6,9 +6,9 @@ table.startup {
   width: 100%;
 }
 
-table.startup td {
-  padding: 0.1em 0.2em;
-}
+/* table.startup td { */
+/*   padding: 0.1em 0.2em; */
+/* } */
 
 table.startup td.addcol {
   text-align: right;

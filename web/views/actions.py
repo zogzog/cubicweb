@@ -15,13 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of HTML base actions
+"""Set of HTML base actions"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from warnings import warn
+
+from logilab.mtconverter import xml_escape
 
 from cubicweb.schema import display_name
 from cubicweb.appobject import objectify_selector
@@ -421,7 +422,6 @@ class GotRhythmAction(action.Action):
     title = _('Got rhythm?')
 
     def url(self):
-        from logilab.mtconverter import xml_escape
         return xml_escape(self._cw.url()+'#')
 
     def html_class(self):
