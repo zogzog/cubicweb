@@ -67,7 +67,7 @@ include_dirs = [join('test', 'data'),
                 join('server', 'test', 'data'),
                 join('web', 'test', 'data'),
                 join('devtools', 'test', 'data'),
-                'skeleton']
+                'schemas', 'skeleton']
 
 
 entities_dir = 'entities'
