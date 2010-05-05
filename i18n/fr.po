@@ -534,7 +534,7 @@ msgid "New WorkflowTransition"
 msgstr "Nouvelle transition workflow"
 
 msgid "No result matching query"
-msgstr "aucun résultat"
+msgstr "Aucun résultat ne correspond à la requête"
 
 msgid "Non exhaustive list of views that may apply to entities of this type"
 msgstr "Liste non exhausite des vues s'appliquant à ce type d'entité"
