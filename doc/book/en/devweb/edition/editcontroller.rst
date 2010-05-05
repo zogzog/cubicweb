@@ -1,71 +1,68 @@
 .. _edit_controller:
 
 The `edit controller`
-+++++++++++++++++++++
+---------------------
 
-It can be found in (:mod:`cubicweb.web.views.editcontroller`).
+It can be found in (:mod:`cubicweb.web.views.editcontroller`). This
+controller processes data received from an html form to create or
+update entities.
 
-Editing control
+Edition handling
 ~~~~~~~~~~~~~~~~
 
-.. XXX this look obsolete
+The parameters related to entities to edit are specified as follows
+(first seen in :ref:`attributes_section`)::
 
-The parameters related to entities to edit are specified as follows ::
-
-  <field name>:<entity eid>
+  <rtype-role>:<entity eid>
 
 where entity eid could be a letter in case of an entity to create. We
 name those parameters as *qualified*.
 
-1. Retrieval of entities to edit by looking for the forms parameters
-   starting by `eid:` and also having a parameter `__type` associated
-   (also *qualified* by eid)
+* Retrieval of entities to edit is done by using the forms parameters
+  `eid` and `__type`
 
-2. For all the attributes and the relations of an entity to edit:
+* For all the attributes and the relations of an entity to edit
+  (attributes and relations are handled a bit differently but these
+  details are not much relevant here) :
 
-   1. search for a parameter `edits-<relation name>` or `edito-<relation name>`
-      qualified in the case of a relation where the entity is object
-   2. if found, the value returned is considered as the initial value
-      for this relaiton and we then look for the new value(s)  in the parameter
-      <relation name> (qualified)
-   3. if the value returned is different from the initial value, an database update
-      request is done
+   * using the ``rtype``, ``role`` and ``__type`` information, fetch
+     an appropriate field instance
 
-3. For each entity to edit:
+   * check if the field has been modified (if not, proceed to the next
+     relation)
 
-   1. if a qualified parameter `__linkto` is specified, its value has to be
-      a string (or a list of string) such as: ::
+   * build an rql expression to update the entity
+
+At the end, all rql expressions are executed.
+
+* For each entity to edit:
+
+   * if a qualified parameter `__linkto` is specified, its value has
+     to be a string (or a list of strings) such as: ::
 
         <relation type>:<eids>:<target>
 
-      where <target> is either `subject` or `object` and each eid could be
-      separated from the others by a `_`. Target specifies if the *edited entity*
-      is subject or object of the relation and each relation specified will
-      be inserted.
+     where <target> is either `subject` or `object` and each eid could
+     be separated from the others by a `_`. Target specifies if the
+     *edited entity* is subject or object of the relation and each
+     relation specified will be inserted.
 
-    2. if a qualified parameter `__clone_eid` is specified for an entity, the
-       relations of the specified entity passed as value of this parameter are
-       copied on the edited entity.
+    * if a qualified parameter `__clone_eid` is specified for an entity, the
+      relations of the specified entity passed as value of this parameter are
+      copied on the edited entity.
 
-    3. if a qualified parameter `__delete` is specified, its value must be
-       a string or a list of string such as follows: ::
+    * if a qualified parameter `__delete` is specified, its value must be
+      a string or a list of string such as follows: ::
 
-          <ssubjects eids>:<relation type>:<objects eids>
+          <subjects eids>:<relation type>:<objects eids>
 
-       where each eid subject or object can be seperated from the other
-       by `_`. Each relation specified will be deleted.
+      where each eid subject or object can be seperated from the other
+      by `_`. Each specified relation will be deleted.
 
-    4. if a qualified parameter `__insert` is specified, its value should
-       follow the same pattern as `__delete`, but each relation specified is
-       inserted.
 
-4. If the parameters `__insert` and/or `__delete` are found not qualified,
-   they are interpreted as explained above (independantly from the number
-   of entities edited).
-
-5. If no entity is edited but the form contains the parameters `__linkto`
-   and `eid`, this one is interpreted by using the value specified for `eid`
-   to designate the entity on which to add the relations.
+* If no entity is edited but the form contains the parameters `__linkto`
+  and `eid`, this one is interpreted by using the value specified for `eid`
+  to designate the entity on which to add the relations.
 
 
 .. note::

@@ -1,4 +1,6 @@
 
+.. _form_dissection:
+
 Dissection of a form
 --------------------
 
@@ -110,7 +112,7 @@ metadata, that will be used by the `edit controller` to process it
 back correctly.
 
 The `freezeFormButtons(...)` javascript callback defined on the
-``conlick`` event of the form element prevents accidental multiple
+``onlick`` event of the form element prevents accidental multiple
 clicks in a row.
 
 The ``action`` of the form is mapped to the ``validateform`` controller
@@ -118,6 +120,8 @@ The ``action`` of the form is mapped to the ``validateform`` controller
 
 A full explanation of the validation loop is given in
 :ref:`validation_process`.
+
+.. _attributes_section:
 
 The attributes section
 ''''''''''''''''''''''
@@ -281,7 +285,7 @@ The most notable artifacts here are the ``postForm(...)`` calls
 defined on click events on these buttons. This function basically
 submits the form.
 
-.. validation_process::
+.. _validation_process:
 
 The form validation process
 ---------------------------
