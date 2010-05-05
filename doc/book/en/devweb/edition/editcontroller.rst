@@ -64,7 +64,6 @@ At the end, all rql expressions are executed.
   and `eid`, this one is interpreted by using the value specified for `eid`
   to designate the entity on which to add the relations.
 
-
 .. note::
 
    * if the parameter `__action_delete` is found, all the entities specified
