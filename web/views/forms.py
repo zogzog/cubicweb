@@ -25,8 +25,8 @@ Base form classes
    using a form renderer. No display is actually done here, though you'll find
    some attributes of form that are used to control the rendering process.
 
-Besides the automagic form we'll see later, they are barely two form
-classes in |cubicweb|:
+Besides the automagic form we'll see later, there are roughly two main
+form classes in |cubicweb|:
 
 .. autoclass:: cubicweb.web.views.forms.FieldsForm
 .. autoclass:: cubicweb.web.views.forms.EntityFieldsForm

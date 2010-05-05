@@ -69,11 +69,13 @@ class _SetCreatorOp(hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        if session.deleted_in_transaction(self.entity.eid):
-            # entity have been created and deleted in the same transaction
-            return
-        if not self.entity.created_by:
-            session.add_relation(self.entity.eid, 'created_by', session.user.eid)
+        for eid in session.transaction_data.pop('set_creator_op'):
+            if session.deleted_in_transaction(eid):
+                # entity have been created and deleted in the same transaction
+                continue
+            entity = session.entity_from_eid(eid)
+            if not entity.created_by:
+                session.add_relation(eid, 'created_by', session.user.eid)
 
 
 class SetIsHook(MetaDataHook):
@@ -108,14 +110,14 @@ class SetOwnershipHook(MetaDataHook):
     def __call__(self):
         if not self._cw.is_internal_session:
             self._cw.add_relation(self.entity.eid, 'owned_by', self._cw.user.eid)
-            _SetCreatorOp(self._cw, entity=self.entity)
-
+            hook.set_operation(self._cw, 'set_creator_op', self.entity.eid, _SetCreatorOp)
 
 class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
-        self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
-                             'NOT EXISTS(X owned_by U, X eid %(x)s)',
-                             {'c': self.compositeeid, 'x': self.composedeid})
+        for compositeeid, composedeid in self.session.transaction_data.pop('sync_owners_op'):
+            self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
+                                 'NOT EXISTS(X owned_by U, X eid %(x)s)',
+                                 {'c': compositeeid, 'x': composedeid})
 
 
 class SyncCompositeOwner(MetaDataHook):
@@ -132,9 +134,9 @@ class SyncCompositeOwner(MetaDataHook):
         eidfrom, eidto = self.eidfrom, self.eidto
         composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
         if composite == 'subject':
-            _SyncOwnersOp(self._cw, compositeeid=eidfrom, composedeid=eidto)
+            hook.set_operation(self._cw, 'sync_owners_op', (eidfrom, eidto), _SyncOwnersOp)
         elif composite == 'object':
-            _SyncOwnersOp(self._cw, compositeeid=eidto, composedeid=eidfrom)
+            hook.set_operation(self._cw, 'sync_owners_op', (eidto, eidfrom), _SyncOwnersOp)
 
 
 class FixUserOwnershipHook(MetaDataHook):

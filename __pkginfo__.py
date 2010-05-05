@@ -78,7 +78,7 @@ include_dirs = [join('test', 'data'),
                 join('hooks', 'test', 'data'),
                 join('web', 'test', 'data'),
                 join('devtools', 'test', 'data'),
-                'skeleton']
+                'schemas', 'skeleton']
 
 
 _server_migration_dir = join('misc', 'migration')

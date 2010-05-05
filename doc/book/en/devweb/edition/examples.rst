@@ -1,31 +1,8 @@
-HTML form construction
-----------------------
+Examples
+--------
 
-CubicWeb provides the somewhat usual form / field / widget / renderer abstraction
-to provide generic building blocks which will greatly help you in building forms
-properly integrated with CubicWeb (coherent display, error handling, etc...),
-while keeping things as flexible as possible.
-
-A **form** basically only holds a set of **fields**, and has te be bound to a
-**renderer** which is responsible to layout them. Each field is bound to a
-**widget** that will be used to fill in value(s) for that field (at form
-generation time) and 'decode' (fetch and give a proper Python type to) values
-sent back by the browser.
-
-The **field** should be used according to the type of what you want to edit.
-E.g. if you want to edit some date, you'll have to use the
-:class:`cubicweb.web.formfields.DateField`. Then you can choose among multiple
-widgets to edit it, for instance :class:`cubicweb.web.formwidgets.TextInput` (a
-bare text field), :class:`~cubicweb.web.formwidgets.DateTimePicker` (a simple
-calendar) or even :class:`~cubicweb.web.formwidgets.JQueryDatePicker` (the JQuery
-calendar).  You can of course also write your own widget.
-
-
-.. automodule:: cubicweb.web.views.autoform
-
-
-Example of bare fields form
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example of ad-hoc fields form
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We want to define a form doing something else than editing an entity. The idea is
 to propose a form to send an email to entities in a resultset which implements
@@ -40,11 +17,13 @@ Here is the source code:
 	return '%s <%s>' % (form._cw.user.dc_title(), form._cw.user.get_email())
 
     def recipient_choices(form, field):
-	return [(e.get_email(), e.eid) for e in form.cw_rset.entities()
+	return [(e.get_email(), e.eid)
+                 for e in form.cw_rset.entities()
 		 if e.get_email()]
 
     def recipient_value(form):
-	return [e.eid for e in form.cw_rset.entities() if e.get_email()]
+	return [e.eid for e in form.cw_rset.entities()
+                if e.get_email()]
 
     class MassMailingForm(forms.FieldsForm):
 	__regid__ = 'massmailing'
@@ -127,7 +106,8 @@ Here is what it looks like:
 
    class SendMailController(Controller):
        __regid__ = 'sendmail'
-       __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
+       __select__ = (authenticated_user() &
+                     match_form_params('recipient', 'mailbody', 'subject'))
 
        def publish(self, rset=None):
            body = self._cw.form['mailbody']
@@ -156,10 +136,11 @@ to eids found in the 'recipient' form value, and send email after calling
 if we successfully sent email, we redirect to the index page with proper message
 to inform the user.
 
-Also notice that our controller has a selector that deny access to it to
-anonymous users (we don't want our instance to be used as a spam relay), but also
-check expected parameters are specified in forms. That avoids later defensive
-programming (though it's not enough to handle all possible error cases).
+Also notice that our controller has a selector that deny access to it
+to anonymous users (we don't want our instance to be used as a spam
+relay), but also checks if the expected parameters are specified in
+forms. That avoids later defensive programming (though it's not enough
+to handle all possible error cases).
 
 To conclude our example, suppose we wish a different form layout and that existent
 renderers are not satisfying (we would check that first of course :). We would then
@@ -186,7 +167,8 @@ have to define our own renderer:
                     w(u'</div>')
                 else:
                     w(u'<tr>')
-                    w(u'<td class="hlabel">%s</td>' % self.render_label(form, field))
+                    w(u'<td class="hlabel">%s</td>' %
+                      self.render_label(form, field))
                     w(u'<td class="hvalue">')
                     w(field.render(form, self))
                     w(u'</td></tr>')
@@ -205,12 +187,3 @@ To bind this renderer to our form, we should add to our form definition above:
 
     form_renderer_id = 'massmailing'
 
-API
-~~~
-
-.. automodule:: cubicweb.web.formfields
-.. automodule:: cubicweb.web.formwidgets
-.. automodule:: cubicweb.web.views.forms
-.. automodule:: cubicweb.web.views.formrenderers
-
-.. Example of entity fields form

@@ -98,7 +98,7 @@ class WebConfiguration(CubicWebConfiguration):
          {'type' : 'string',
           'default': None,
           'help': 'web instance query log file',
-          'group': 'main', 'level': 2,
+          'group': 'main', 'level': 3,
           }),
         # web configuration
         ('https-url',
@@ -112,20 +112,20 @@ class WebConfiguration(CubicWebConfiguration):
           'differentiate between http vs https access. For instance: \n'\
           'RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]\n'\
           'where the cubicweb web server is listening on port 8080.',
-          'group': 'main', 'level': 2,
+          'group': 'main', 'level': 3,
           }),
         ('auth-mode',
          {'type' : 'choice',
           'choices' : ('cookie', 'http'),
           'default': 'cookie',
           'help': 'authentication mode (cookie / http)',
-          'group': 'web', 'level': 1,
+          'group': 'web', 'level': 3,
           }),
         ('realm',
          {'type' : 'string',
           'default': 'cubicweb',
           'help': 'realm to use on HTTP authentication mode',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
         ('http-session-time',
          {'type' : 'time',
@@ -144,7 +144,7 @@ class WebConfiguration(CubicWebConfiguration):
           'So even if http-session-time is 0 and the user don\'t close his '
           'browser, he will have to reauthenticate after this time of '
           'inactivity. Default to 24h.',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
         ('cleanup-anonymous-session-time',
          {'type' : 'time',
@@ -152,14 +152,14 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'Same as cleanup-session-time but specific to anonymous '
           'sessions. You can have a much smaller timeout here since it will be '
           'transparent to the user. Default to 5min.',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
         ('force-html-content-type',
          {'type' : 'yn',
           'default': False,
           'help': 'force text/html content type for your html pages instead of cubicweb user-agent based'\
           'deduction of an appropriate content type',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
         ('embed-allowed',
          {'type' : 'regexp',
@@ -167,7 +167,7 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'regular expression matching URLs that may be embeded. \
 leave it blank if you don\'t want the embedding feature, or set it to ".*" \
 if you want to allow everything',
-          'group': 'web', 'level': 1,
+          'group': 'web', 'level': 3,
           }),
         ('submit-mail',
          {'type' : 'string',
@@ -197,14 +197,14 @@ if you want to allow everything',
           'default': join(CubicWebConfiguration.shared_dir(), 'data', 'porkys.ttf'),
           'help': 'True type font to use for captcha image generation (you \
 must have the python imaging library installed to use captcha)',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
         ('captcha-font-size',
          {'type' : 'int',
           'default': 25,
           'help': 'Font size to use for captcha image generation (you must \
 have the python imaging library installed to use captcha)',
-          'group': 'web', 'level': 2,
+          'group': 'web', 'level': 3,
           }),
 
         ))

@@ -674,10 +674,11 @@ class Connection(object):
         self._repo.rollback(self.sessionid)
 
     def cursor(self, req=None):
-        """Return a new Cursor Object using the connection.  If the database
-        does not provide a direct cursor concept, the module will have to
-        emulate cursors using other means to the extent needed by this
-        specification.
+        """Return a new Cursor Object using the connection.
+
+        On pyro connection, you should get cursor after calling if
+        load_appobjects method if desired (which you should call if you intend
+        to use ORM abilities).
         """
         if self._closed is not None:
             raise ProgrammingError('Can\'t get cursor on closed connection')

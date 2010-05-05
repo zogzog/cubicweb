@@ -53,8 +53,12 @@ def check_entity_attributes(session, entity, editedattrs=None):
 class _CheckEntityPermissionOp(hook.LateOperation):
     def precommit_event(self):
         #print 'CheckEntityPermissionOp', self.session.user, self.entity, self.action
-        self.entity.check_perm(self.action)
-        check_entity_attributes(self.session, self.entity, self.editedattrs)
+        session = self.session
+        for values in session.transaction_data.pop('check_entity_perm_op'):
+            entity = session.entity_from_eid(values[0])
+            action = values[1]
+            entity.check_perm(action)
+            check_entity_attributes(session, entity, values[2:])
 
     def commit_event(self):
         pass
@@ -89,9 +93,9 @@ class AfterAddEntitySecurityHook(SecurityHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        _CheckEntityPermissionOp(self._cw, entity=self.entity,
-                                 editedattrs=tuple(self.entity.edited_attributes),
-                                 action='add')
+        hook.set_operation(self._cw, 'check_entity_perm_op',
+                           (self.entity.eid, 'add') + tuple(self.entity.edited_attributes),
+                           _CheckEntityPermissionOp)
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
@@ -108,9 +112,9 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
             # save back editedattrs in case the entity is reedited later in the
             # same transaction, which will lead to edited_attributes being
             # overwritten
-            _CheckEntityPermissionOp(self._cw, entity=self.entity,
-                                     editedattrs=tuple(self.entity.edited_attributes),
-                                     action='update')
+            hook.set_operation(self._cw, 'check_entity_perm_op',
+                               (self.entity.eid, 'update') + tuple(self.entity.edited_attributes),
+                               _CheckEntityPermissionOp)
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):
