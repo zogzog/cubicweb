@@ -60,6 +60,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
                 self.expand_cubes(cubes, with_recommends=True))
         else:
             self._cubes = ()
+        self.uiprops = {'FCKEDITOR_PATH': ''}
 
     @property
     def apphome(self):
