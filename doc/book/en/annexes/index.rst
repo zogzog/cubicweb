@@ -17,6 +17,8 @@ The following chapters are reference material.
    rql/index
    mercurial
    depends
+   javascript-api
+   docstrings-conventions
 
 (X)HTML tricks to apply
 -----------------------

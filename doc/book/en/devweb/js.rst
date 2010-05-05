@@ -353,3 +353,11 @@ Javascript library: overview
 There is also javascript support for massmailing, gmap (google maps),
 fckcwconfig (fck editor), timeline, calendar, goa (CubicWeb over
 AppEngine), flot (charts drawing), tabs and bookmarks.
+
+API
+~~~
+
+.. toctree::
+    :maxdepth: 1
+    
+    js_api/index
