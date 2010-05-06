@@ -724,7 +724,10 @@ class FileField(StringField):
             # will try to remove already attached file if any
             raise UnmodifiedField()
         # value is a 2-uple (filename, stream)
-        filename, stream = value
+        try:
+            filename, stream = value
+        except ValueError:
+            raise UnmodifiedField()
         # XXX avoid in memory loading of posted files. Requires Binary handling changes...
         value = Binary(stream.read())
         if not value.getvalue(): # usually an unexistant file
