@@ -62,8 +62,8 @@ FAQ
    .footer          #footer
    .logo	    #logo
    .simpleMessage   .loginMessage
-   .appMsg	    (removed)
-   .searchMessage   (removed)
+   .appMsg	    (styles are removed from css)
+   .searchMessage   (styles are removed from css)
   ===============  ==================================
 
   Introduction of the new cubicweb.reset.css based on Eric Meyer's
