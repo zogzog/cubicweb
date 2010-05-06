@@ -79,6 +79,7 @@ class WebConfiguration(CubicWebConfiguration):
     """
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['web/views'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['views'])
+    uiprops = {'FCKEDITOR_PATH': ''}
 
     options = merge_options(CubicWebConfiguration.options + (
         ('anonymous-user',
