@@ -1052,7 +1052,7 @@ class rql_condition(EntitySelector):
 
 @objectify_selector
 @lltrace
-def no_cnx(cls, req, rset, *args, **kwargs):
+def no_cnx(cls, req, **kwargs):
     """Return 1 if the web session has no connection set. This occurs when
     anonymous access is not allowed and user isn't authenticated.
 
