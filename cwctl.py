@@ -285,7 +285,7 @@ class ListCommand(Command):
                     print 'is not installed, but required by %s' % ' '.join(cfgpb.reverse_constraints[cube])
                 else:
                     print '* cube %s version %s is installed, but version %s is required by (%s)' % (
-                        cube, cfgpb.cubes[cube].version, version, ', '.join(cfgpb.reverse_constraints[cube]))
+                        cube, cfgpb.cubes[cube], version, ', '.join(cfgpb.reverse_constraints[cube]))
 
 class CreateInstanceCommand(Command):
     """Create an instance from a cube. This is an unified
