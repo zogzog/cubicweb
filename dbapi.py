@@ -553,7 +553,7 @@ class Connection(object):
         if 'views' in subpath:
             esubpath = list(subpath)
             esubpath.remove('views')
-            esubpath.append('web/views')
+            esubpath.append(join('web', 'views'))
         cubes = reversed([config.cube_dir(p) for p in cubes])
         vpath = config.build_vregistry_path(cubes, evobjpath=esubpath,
                                             tvobjpath=subpath)
