@@ -224,7 +224,7 @@ class TableView(AnyRsetView):
             # compute column header
             if headers is not None:
                 label = headers[displaycols.index(colindex)]
-            if colindex == mainindex:
+            if colindex == mainindex and label is not None:
                 label += ' (%s)' % self.cw_rset.rowcount
             column = TableColumn(label, colindex)
             coltype = self.cw_rset.description[0][colindex]

@@ -326,7 +326,7 @@ class TableWidget(HTMLWidget):
         self.w(u'<tr class="header">')
         for column in self.columns:
             attrs = ('%s="%s"' % (name, value) for name, value in column.cell_attrs.iteritems())
-            self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name))
+            self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name or u''))
         self.w(u'</tr>')
         self.w(u'</thead><tbody>')
         for rowindex in xrange(len(self.model.get_rows())):
