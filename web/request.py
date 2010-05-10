@@ -367,7 +367,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 ret = func(req, *args)
             except TypeError:
                 from warnings import warn
-                warn('user callback should now take request as argument')
+                warn('[3.2] user callback should now take request as argument')
                 ret = func(*args)
             self.unregister_callback(self.pageid, cbname)
             return ret
