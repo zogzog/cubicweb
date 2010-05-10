@@ -391,7 +391,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 if optdict.get('default') is REQUIRED:
                     self.config.input_option(optdescr[1], optdict)
         self.config.generate_config(open(newconfig, 'w'))
-        show_diffs(configfile, newconfig, ask_confirm=self.confirm is not yes)
+        show_diffs(configfile, newconfig, askconfirm=self.confirm is not yes)
         os.close(fd)
         if exists(newconfig):
             os.unlink(newconfig)

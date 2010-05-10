@@ -38,7 +38,7 @@ from twisted.web import http, server
 from twisted.web import static, resource
 from twisted.web.server import NOT_DONE_YET
 
-from simplejson import dumps
+from cubicweb.web import dumps
 
 from logilab.common.decorators import monkeypatch
 

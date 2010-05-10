@@ -270,7 +270,7 @@ class CookieSessionHandler(object):
         """logout from the instance by cleaning the session and raising
         `AuthenticationError`
         """
-        self.session_manager.close_session(req.cnx)
+        self.session_manager.close_session(req.session)
         req.remove_cookie(req.get_cookie(), self.SESSION_VAR)
         raise LogOut(url=goto_url)
 

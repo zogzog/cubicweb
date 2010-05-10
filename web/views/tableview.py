@@ -224,7 +224,7 @@ class TableView(AnyRsetView):
             # compute column header
             if headers is not None:
                 label = headers[displaycols.index(colindex)]
-            if colindex == mainindex:
+            if colindex == mainindex and label is not None:
                 label += ' (%s)' % self.cw_rset.rowcount
             column = TableColumn(label, colindex)
             coltype = self.cw_rset.description[0][colindex]
@@ -287,8 +287,7 @@ class CellView(EntityView):
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
         if val is not None and not self._cw.vreg.schema.eschema(etype).final:
-            e = self.cw_rset.get_entity(row, col)
-            e.view(cellvid or 'outofcontext', w=self.w)
+            self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
         elif val is None:
             # This is usually caused by a left outer join and in that case,
             # regular views will most certainly fail if they don't have

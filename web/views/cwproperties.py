@@ -27,12 +27,14 @@ from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups, objectify_selector)
+                                match_user_groups, objectify_selector,
+                                logged_user_in_rset)
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
-from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton, FieldWidget
+from cubicweb.web.formwidgets import (Select, TextInput, Button, SubmitButton,
+                                      FieldWidget)
 from cubicweb.web.views import primary, formrenderers
 
 uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
@@ -233,17 +235,12 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return subform
 
 
-@objectify_selector
-def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
-    return req.user.eid == rset[row or 0][col]
-
-
 class CWPropertiesForm(SystemCWPropertiesForm):
     """user's preferences properties edition form"""
     __regid__ = 'propertiesform'
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
-        | (one_line_rset() & match_user_groups('users') & is_user_prefs())
+        | (one_line_rset() & match_user_groups('users') & logged_user_in_rset())
         | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
         )
 

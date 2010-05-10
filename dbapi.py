@@ -28,6 +28,7 @@ from logging import getLogger
 from time import time, clock
 from itertools import count
 from warnings import warn
+from os.path import join
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
@@ -550,7 +551,7 @@ class Connection(object):
         if 'views' in subpath:
             esubpath = list(subpath)
             esubpath.remove('views')
-            esubpath.append('web/views')
+            esubpath.append(join('web', 'views'))
         cubes = reversed([config.cube_dir(p) for p in cubes])
         vpath = config.build_vregistry_path(cubes, evobjpath=esubpath,
                                             tvobjpath=subpath)

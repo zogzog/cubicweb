@@ -689,6 +689,16 @@ class multi_etypes_rset(multi_lines_rset):
         return rset and self.match_expected(len(rset.column_types(col))) or 0
 
 
+@objectify_selector
+def logged_user_in_rset(cls, req, rset=None, row=None, col=0, **kwargs):
+    """Return positive score if the result set at the specified row / col
+    contains the eid of the logged user.
+    """
+    if rset is None:
+        return 0
+    return req.user.eid == rset[row or 0][col]
+
+
 # entity selectors #############################################################
 
 class non_final_entity(EClassSelector):
@@ -1052,7 +1062,7 @@ class rql_condition(EntitySelector):
 
 @objectify_selector
 @lltrace
-def no_cnx(cls, req, rset, *args, **kwargs):
+def no_cnx(cls, req, **kwargs):
     """Return 1 if the web session has no connection set. This occurs when
     anonymous access is not allowed and user isn't authenticated.
 
