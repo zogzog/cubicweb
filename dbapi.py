@@ -28,6 +28,7 @@ from logging import getLogger
 from time import time, clock
 from itertools import count
 from warnings import warn
+from os.path import join
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
