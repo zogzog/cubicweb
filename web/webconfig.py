@@ -208,6 +208,14 @@ have the python imaging library installed to use captcha)',
           'group': 'web', 'level': 3,
           }),
 
+        ('use-old-css',
+         {'type' : 'yn',
+          'default': True,
+          'help': 'use cubicweb.old.css instead of 3.9 cubicweb.css',
+          'group': 'web', 'level': 2,
+          }),
+
+
         ))
 
     def fckeditor_installed(self):
@@ -338,6 +346,14 @@ have the python imaging library installed to use captcha)',
         for path in reversed([self.apphome] + self.cubes_path()):
             self._load_ui_properties_file(uiprops, path)
         self._load_ui_properties_file(uiprops, self.apphome)
+        # XXX pre 3.9 css compat
+        if self['use-old-css']:
+            datadir_url = uiprops.context['datadir_url']
+            if (datadir_url+'/cubicweb.css') in uiprops['STYLESHEETS']:
+                idx = uiprops['STYLESHEETS'].index(datadir_url+'/cubicweb.css')
+                uiprops['STYLESHEETS'][idx] = datadir_url+'/cubicweb.old.css'
+            if datadir_url+'/cubicweb.reset.css' in uiprops['STYLESHEETS']:
+                uiprops['STYLESHEETS'].remove(datadir_url+'/cubicweb.reset.css')
 
     def _load_ui_properties_file(self, uiprops, path):
         resourcesfile = join(path, 'data', 'external_resources')
