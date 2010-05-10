@@ -60,7 +60,7 @@ function loadAjaxHtmlHead(response) {
     //    returned several 'root' nodes and we need to keep the wrapper
     //    created by getDomFromResponse()
     if (response.childNodes.length == 1 &&
-	response.getAttribute('cubicweb:type') == 'cwResponseWrapper') {
+        response.getAttribute('cubicweb:type') == 'cwResponseWrapper') {
         return response.firstChild;
     }
     return response;
@@ -286,6 +286,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
         if (node) {
             // make sure the component is visible
             removeElementClass(node, "hidden");
+            domnode = preprocessAjaxLoad(node, domnode);
             swapDOM(node, domnode);
             postAjaxLoad(domnode);
         }
