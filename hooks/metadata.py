@@ -160,18 +160,10 @@ class UpdateFTIHook(MetaDataHook):
         rtype = self.rtype
         session = self._cw
         ftcontainer = session.vreg.schema.rschema(rtype).fulltext_container
-        if self.event == 'after_add_relation':
-            if ftcontainer == 'subject':
-                session.repo.system_source.index_entity(
-                    session, session.entity_from_eid(self.eidfrom))
-            elif ftcontainer == 'object':
-                session.repo.system_source.index_entity(
-                    session, session.entity_from_eid(self.eidto))
-        # after delete relation
-        elif ftcontainer == 'subject':
+        if ftcontainer == 'subject':
             session.repo.system_source.index_entity(
-                session, entity=session.entity_from_eid(self.eidfrom))
+                session, session.entity_from_eid(self.eidfrom))
         elif ftcontainer == 'object':
             session.repo.system_source.index_entity(
-                session, entity=session.entity_from_eid(self.eidto))
+                session, session.entity_from_eid(self.eidto))
 
