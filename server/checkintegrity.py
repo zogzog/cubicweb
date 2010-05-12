@@ -130,7 +130,7 @@ def check_schema(schema, session, eids, fix=1):
     """check serialized schema"""
     print 'Checking serialized schema'
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
-                          'VocabularyConstraint', 'RQLConstraint',
+                          'VocabularyConstraint',
                           'RQLVocabularyConstraint')
     rql = ('Any COUNT(X),RN,SN,ON,CTN GROUPBY RN,SN,ON,CTN ORDERBY 1 '
            'WHERE X is CWConstraint, R constrained_by X, '
@@ -142,6 +142,8 @@ def check_schema(schema, session, eids, fix=1):
         if cstrname in unique_constraints:
             print "ERROR: got %s %r constraints on relation %s.%s.%s" % (
                 count, cstrname, sn, rn, on)
+            if fix:
+                print 'dunno how to fix, do it yourself'
 
 
 
