@@ -178,7 +178,7 @@ class PrimaryView(EntityView):
                          DeprecationWarning)
                     label, rset, vid  = box
                 self.w(u'<div class="sideBox">')
-                self.wview(vid, rset, title=label)
+                self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
                 self.w(u'</div>')
             else:
                 try:
