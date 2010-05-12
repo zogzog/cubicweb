@@ -235,7 +235,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           'default': '',
           'help': 'set to "Trusted_Connection" if you are using SQLServer and '
                   'want trusted authentication for the database connection',
-          'group': 'native-source', 'inputlevel': 2,
+          'group': 'native-source', 'level': 2,
           }),
     )
 
