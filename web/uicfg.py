@@ -80,18 +80,13 @@ def init_primaryview_section(rtag, sschema, rschema, oschema, role):
 primaryview_section = RelationTags('primaryview_section',
                                    init_primaryview_section,
                                    frozenset(('attributes', 'relations',
-                                               'sideboxes', 'hidden')))
+                                              'sideboxes', 'hidden')))
 
 
 class DisplayCtrlRelationTags(RelationTagsDict):
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
-        self._counter = 0
-
-    def tag_relation(self, key, tag):
-        tag = super(DisplayCtrlRelationTags, self).tag_relation(key, tag)
-        self._counter += 1
-        tag.setdefault('order', self._counter)
+        self.counter = 0
 
     def tag_subject_of(self, key, tag):
         subj, rtype, obj = key
@@ -117,7 +112,8 @@ def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
         sschema = '*'
         label = '%s_%s' % (rschema, role)
     rtag.setdefault((sschema, rschema, oschema, role), 'label', label)
-    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag._counter)
+    rtag.counter += 1
+    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag.counter)
 
 primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
                                                    init_primaryview_display_ctrl)
