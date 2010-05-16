@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2010-01-15 09:35+0100\n"
+"PO-Revision-Date: 2010-05-16 18:59+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -3272,11 +3272,11 @@ msgstr "entités définissant le schéma"
 msgid "schema's permissions definitions"
 msgstr "permissions définies dans le schéma"
 
+msgid "schema-diagram"
+msgstr "diagramme"
+
 msgid "schema-entity-types"
 msgstr "types d'entités"
-
-msgid "schema-image"
-msgstr "image"
 
 msgid "schema-relation-types"
 msgstr "types de relations"
@@ -4081,3 +4081,6 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid "schema-image"
+#~ msgstr "image"
