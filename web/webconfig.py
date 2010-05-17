@@ -134,7 +134,7 @@ class WebConfiguration(CubicWebConfiguration):
           'help': "duration of the cookie used to store session identifier. "
           "If 0, the cookie will expire when the user exist its browser. "
           "Should be 0 or greater than repository\'s session-time.",
-          'group': 'web', 'inputlevel': 2,
+          'group': 'web', 'level': 2,
           }),
         ('cleanup-session-time',
          {'type' : 'time',

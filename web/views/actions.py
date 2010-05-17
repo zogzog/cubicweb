@@ -264,12 +264,15 @@ class AddRelatedActions(action.Action):
     def actual_actions(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         eschema = entity.e_schema
-        for rschema, teschema, x in self.add_related_schemas(entity):
-            if x == 'subject':
-                label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
+        for rschema, teschema, role in self.add_related_schemas(entity):
+            if rschema.role_rdef(eschema, teschema, role).role_cardinality(role) in '1?':
+                if entity.related(rschema, role):
+                    continue
+            if role == 'subject':
+                label = 'add %s %s %s %s' % (eschema, rschema, teschema, role)
                 url = self.linkto_url(entity, rschema, teschema, 'object')
             else:
-                label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
+                label = 'add %s %s %s %s' % (teschema, rschema, eschema, role)
                 url = self.linkto_url(entity, rschema, teschema, 'subject')
             yield self.build_action(self._cw._(label), url)
 

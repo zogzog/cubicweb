@@ -27,15 +27,15 @@ import shutil
 from os.path import isdir, exists, join, walk
 
 try:
-   if os.environ.get('NO_SETUPTOOLS'):
-      raise ImportError() # do as there is no setuptools
-   from setuptools import setup
-   from setuptools.command import install_lib
-   USE_SETUPTOOLS = True
+    if os.environ.get('NO_SETUPTOOLS'):
+        raise ImportError() # do as there is no setuptools
+    from setuptools import setup
+    from setuptools.command import install_lib
+    USE_SETUPTOOLS = True
 except ImportError:
-   from distutils.core import setup
-   from distutils.command import install_lib
-   USE_SETUPTOOLS = False
+    from distutils.core import setup
+    from distutils.command import install_lib
+    USE_SETUPTOOLS = False
 
 # import required features
 from __pkginfo__ import modname, version, license, description, web, \
@@ -46,13 +46,13 @@ long_description = file('README').read()
 # import optional features
 import __pkginfo__
 if USE_SETUPTOOLS:
-   requires = {}
-   for entry in ("__depends__", "__recommends__"):
-      requires.update(getattr(__pkginfo__, entry, {}))
-   install_requires = [("%s %s" % (d, v and v or "")).strip()
+    requires = {}
+    for entry in ("__depends__", "__recommends__"):
+        requires.update(getattr(__pkginfo__, entry, {}))
+    install_requires = [("%s %s" % (d, v and v or "")).strip()
                        for d, v in requires.iteritems()]
 else:
-   install_requires = []
+    install_requires = []
 
 distname = getattr(__pkginfo__, 'distname', modname)
 scripts = getattr(__pkginfo__, 'scripts', ())
@@ -181,7 +181,7 @@ def install(**kwargs):
         kwargs['package_dir'] = {modname : '.'}
         packages = [modname] + get_packages(os.getcwd(), modname)
     if USE_SETUPTOOLS:
-       kwargs['install_requires'] = install_requires
+        kwargs['install_requires'] = install_requires
     kwargs['packages'] = packages
     return setup(name=distname, version=version, license=license, url=web,
                  description=description, long_description=long_description,

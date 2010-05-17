@@ -304,9 +304,9 @@ class PropagateSubjectRelationHook(Hook):
             assert self.rtype in self.object_relations
             meid, seid = self.eidto, self.eidfrom
         self._cw.execute(
-            'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
+            'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'
             % (self.main_rtype, self.main_rtype, self.main_rtype),
-            {'x': meid, 'e': seid}, ('x', 'e'))
+            {'x': meid, 'e': seid})
 
 
 class PropagateSubjectRelationAddHook(Hook):
@@ -326,12 +326,12 @@ class PropagateSubjectRelationAddHook(Hook):
             if rel in eschema.subjrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R, NOT R %s P' % (self.rtype, rel, self.rtype),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
             if rel in eschema.objrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X, NOT R %s P' % (self.rtype, rel, self.rtype),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
 
 
 class PropagateSubjectRelationDelHook(Hook):
@@ -351,12 +351,12 @@ class PropagateSubjectRelationDelHook(Hook):
             if rel in eschema.subjrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R' % (self.rtype, rel),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
             if rel in eschema.objrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X' % (self.rtype, rel),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
 
 
 # abstract classes for operation ###############################################

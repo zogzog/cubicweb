@@ -178,7 +178,7 @@ class PrimaryView(EntityView):
                          DeprecationWarning)
                     label, rset, vid  = box
                 self.w(u'<div class="sideBox">')
-                self.wview(vid, rset, title=label)
+                self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
                 self.w(u'</div>')
             else:
                 try:
@@ -265,30 +265,33 @@ class RelatedView(EntityView):
     __regid__ = 'autolimited'
 
     def call(self, **kwargs):
-        # nb: rset retreived using entity.related with limit + 1 if any
-        # because of that, we known that rset.printable_rql() will return
-        # rql with no limit set anyway (since it's handled manually)
+        # nb: rset is retreived using entity.related with limit + 1 if any.
+        # Because of that, we know that rset.printable_rql() will return rql
+        # with no limit set anyway (since it's handled manually)
         if 'dispctrl' in self.cw_extra_kwargs:
             limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
             limit = None
+            subvid = 'incontext'
         if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
-                self.wview('incontext', self.cw_rset, row=0)
+                self.wview(subvid, self.cw_rset, row=0)
             elif 1 < self.cw_rset.rowcount <= 5:
-                self.wview('csv', self.cw_rset)
+                self.wview('csv', self.cw_rset, subvid=subvid)
             else:
                 self.w(u'<div>')
-                self.wview('simplelist', self.cw_rset)
+                self.wview('simplelist', self.cw_rset, subvid=subvid)
                 self.w(u'</div>')
         # else show links to display related entities
         else:
             rql = self.cw_rset.printable_rql()
             self.cw_rset.limit(limit) # remove extra entity
             self.w(u'<div>')
-            self.wview('simplelist', self.cw_rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
-                                               self._cw._('see them all')))
+            self.wview('simplelist', self.cw_rset, subvid=subvid)
+            self.w(u'[<a href="%s">%s</a>]' % (
+                xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                self._cw._('see them all')))
             self.w(u'</div>')
 
 

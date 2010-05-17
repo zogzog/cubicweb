@@ -3235,11 +3235,11 @@ msgstr "entidades del esquema"
 msgid "schema's permissions definitions"
 msgstr "definiciones de permisos del esquema"
 
-msgid "schema-entity-types"
+msgid "schema-diagram"
 msgstr ""
 
-msgid "schema-image"
-msgstr "esquema imagen"
+msgid "schema-entity-types"
+msgstr ""
 
 msgid "schema-relation-types"
 msgstr ""
@@ -4034,3 +4034,6 @@ msgstr "ha terminado la sesion"
 
 msgid "you should probably delete that property"
 msgstr "deberia probablamente suprimir esta propriedad"
+
+#~ msgid "schema-image"
+#~ msgstr "esquema imagen"

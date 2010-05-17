@@ -51,25 +51,25 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
          {'type' : 'csv',
           'default': [],
           'help': 'list of db model based cubes used by the instance.',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('included-yams-cubes',
          {'type' : 'csv',
           'default': [],
           'help': 'list of yams based cubes used by the instance.',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('use-google-auth',
          {'type' : 'yn',
           'default': True,
           'help': 'does this instance rely on google authentication service or not.',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('schema-type',
          {'type' : 'choice', 'choices': ('yams', 'dbmodel'),
           'default': 'yams',
           'help': 'does this instance is defining its schema using yams or db model.',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         # overriden options
         ('query-log-file',
@@ -78,7 +78,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
           'help': 'web instance query log file: DON\'T SET A VALUE HERE WHEN '
           'UPLOADING YOUR INSTANCE. This should only be used to analyse '
           'queries issued by your instance in the development environment.',
-          'group': 'main', 'inputlevel': 2,
+          'group': 'main', 'level': 2,
           }),
         ('anonymous-user',
          {'type' : 'string',
@@ -87,7 +87,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
           '(if you want to allow anonymous). This option will be ignored if '
           'use-google-auth option is set (in which case you should control '
           'anonymous access using the app.yaml file)',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
 
         ) + WebConfiguration.options + ServerConfiguration.options)

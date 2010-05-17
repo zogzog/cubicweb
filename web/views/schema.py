@@ -138,9 +138,9 @@ class SchemaView(tabs.TabsMixin, StartupView):
     """display schema information (graphically, listing tables...) in tabs"""
     __regid__ = 'schema'
     title = _('instance schema')
-    tabs = [_('schema-image'), _('schema-entity-types'),
+    tabs = [_('schema-diagram'), _('schema-entity-types'),
             _('schema-relation-types'), _('schema-security')]
-    default_tab = 'schema-image'
+    default_tab = 'schema-diagram'
 
     def call(self):
         self.w(u'<h1>%s</h1>' % _('Schema of the data model'))
@@ -148,7 +148,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
 
 
 class SchemaImageTab(StartupView):
-    __regid__ = 'schema-image'
+    __regid__ = 'schema-diagram'
 
     def call(self):
         self.w(_(u'<div>This schema of the data model <em>excludes</em> the '

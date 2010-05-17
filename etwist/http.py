@@ -45,10 +45,11 @@ class HTTPResponse(object):
 
 
     def _finalize(self):
-        if self._stream is not None:
-            self._twreq.write(str(self._stream))
+        # we must set code before writing anything, else it's too late
         if self._code is not None:
             self._twreq.setResponseCode(self._code)
+        if self._stream is not None:
+            self._twreq.write(str(self._stream))
         self._twreq.finish()
 
     def __repr__(self):
