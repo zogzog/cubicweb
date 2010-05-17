@@ -866,6 +866,11 @@ class RQLExpression(object):
                 if self.eid is not None:
                     session.local_perm_cache[key] = False
                 return False
+            except Unauthorized, ex:
+                self.debug('unauthorized %s: %s', rql, str(ex))
+                if self.eid is not None:
+                    session.local_perm_cache[key] = False
+                return False
         else:
             rset = session.eid_rset(kwargs[keyarg])
         # if no special has_*_permission relation in the rql expression, just
