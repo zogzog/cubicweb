@@ -467,6 +467,7 @@ class AttributeFacet(RelationFacet):
     attrtype = 'String'
     # type of comparison: default is an exact match on the attribute value
     comparator = '=' # could be '<', '<=', '>', '>='
+    i18nable = True
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -491,7 +492,10 @@ class AttributeFacet(RelationFacet):
         return rset and self.rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
-        _ = self._cw._
+        if self.i18nable:
+            _ = self._cw._
+        else:
+            _ = unicode
         return [(_(value), value) for value, in rset]
 
     def support_and(self):
