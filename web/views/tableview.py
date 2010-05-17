@@ -76,7 +76,7 @@ class TableView(AnyRsetView):
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
-          xml_escape(dumps([divid, 'table', False, vidargs])))
+          xml_escape(dumps([divid, self.__regid__, False, vidargs])))
         w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         w(u'<input type="hidden" name="divid" value="%s" />' % divid)
         w(u'<input type="hidden" name="fromformfilter" value="1" />')
