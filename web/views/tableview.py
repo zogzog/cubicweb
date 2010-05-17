@@ -15,10 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""generic table view, including filtering abilities
-
-
-"""
+"""generic table view, including filtering abilities"""
 __docformat__ = "restructuredtext en"
 
 try:
