@@ -475,7 +475,10 @@ class ResultSet(object):
                 if role == 'subject':
                     rschema = eschema.subjrels[attr]
                     if rschema.final:
-                        entity[attr] = rowvalues[outerselidx]
+                        if attr == 'eid':
+                            entity.eid = rowvalues[outerselidx]
+                        else:
+                            entity[attr] = rowvalues[outerselidx]
                         continue
                 else:
                     rschema = eschema.objrels[attr]
