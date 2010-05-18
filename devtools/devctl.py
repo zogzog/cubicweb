@@ -58,6 +58,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         if cubes:
             self._cubes = self.reorder_cubes(
                 self.expand_cubes(cubes, with_recommends=True))
+            self.load_site_cubicweb()
         else:
             self._cubes = ()
 
