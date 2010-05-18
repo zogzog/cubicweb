@@ -136,10 +136,10 @@ class CheckCardinalityHook(IntegrityHook):
             if rdef.role_cardinality(role) in '1+':
                 if role == 'subject':
                     set_operation(self._cw, '_cwisrel', (eid, rschema.type),
-                                  _CheckSRelationOp)
+                                  _CheckSRelationOp, list)
                 else:
                     set_operation(self._cw, '_cwiorel', (eid, rschema.type),
-                                  _CheckORelationOp)
+                                  _CheckORelationOp, list)
 
     def before_delete_relation(self):
         rtype = self.rtype
@@ -153,10 +153,10 @@ class CheckCardinalityHook(IntegrityHook):
         card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
         if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
             set_operation(self._cw, '_cwisrel', (eidfrom, rtype),
-                          _CheckSRelationOp)
+                          _CheckSRelationOp, list)
         if card[1] in '1+' and not session.deleted_in_transaction(eidto):
             set_operation(self._cw, '_cwiorel', (eidto, rtype),
-                          _CheckORelationOp)
+                          _CheckORelationOp, list)
 
 
 class _CheckConstraintsOp(hook.LateOperation):
@@ -205,7 +205,7 @@ class CheckConstraintHook(IntegrityHook):
         if constraints:
             hook.set_operation(self._cw, 'check_constraints_op',
                                (self.eidfrom, self.rtype, self.eidto, tuple(constraints)),
-                               _CheckConstraintsOp)
+                               _CheckConstraintsOp, list)
 
 
 class CheckAttributeConstraintHook(IntegrityHook):
@@ -226,7 +226,7 @@ class CheckAttributeConstraintHook(IntegrityHook):
                 if constraints:
                     hook.set_operation(self._cw, 'check_constraints_op',
                                        (self.entity.eid, attr, None, tuple(constraints)),
-                                       _CheckConstraintsOp)
+                                       _CheckConstraintsOp, list)
 
 
 class CheckUniqueHook(IntegrityHook):
