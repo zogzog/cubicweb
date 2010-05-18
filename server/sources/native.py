@@ -33,6 +33,7 @@ from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 from contextlib import contextmanager
+from os.path import abspath
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -264,6 +265,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.dbdriver == 'sqlite' and \
                not getattr(repo.config, 'no_sqlite_wrap', False):
             from cubicweb.server.sources.extlite import ConnectionWrapper
+            self.dbhelper.dbname = abspath(self.dbhelper.dbname)
             self.get_connection = lambda: ConnectionWrapper(self)
             self.check_connection = lambda cnx: cnx
             def pool_reset(cnx):
