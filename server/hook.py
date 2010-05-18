@@ -473,23 +473,27 @@ class Operation(object):
 
 set_log_methods(Operation, getLogger('cubicweb.session'))
 
+def _container_add(container, value):
+    {set: set.add, list: list.append}[container.__class__](container, value)
 
-def set_operation(session, datakey, value, opcls, **opkwargs):
+def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
     """Search for session.transaction_data[`datakey`] (expected to be a set):
 
     * if found, simply append `value`
 
-    * else, initialize it to set([`value`]) and instantiate the given `opcls`
-      operation class with additional keyword arguments.
+    * else, initialize it to containercls([`value`]) and instantiate the given
+      `opcls` operation class with additional keyword arguments. `containercls`
+      is a set by default. Give `list` if you want to keep arrival ordering.
 
     You should use this instead of creating on operation for each `value`,
     since handling operations becomes coslty on massive data import.
     """
     try:
-        session.transaction_data[datakey].add(value)
+        _container_add(session.transaction_data[datakey], value)
     except KeyError:
         opcls(session, **opkwargs)
-        session.transaction_data[datakey] = set((value,))
+        session.transaction_data[datakey] = containercls()
+        _container_add(session.transaction_data[datakey], value)
 
 
 class LateOperation(Operation):

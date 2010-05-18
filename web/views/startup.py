@@ -100,7 +100,7 @@ class ManageView(StartupView):
         if not views:
             return
         self.w(u'<ul>')
-        for v in views:
+        for v in sorted(views, key=lambda x: self._cw._(x.title)):
             if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue
             self.w('<li><a href="%s">%s</a></li>' % (

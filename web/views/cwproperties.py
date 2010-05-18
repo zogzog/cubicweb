@@ -121,9 +121,11 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         # user's preference but not site's configuration
         for key in vreg.user_property_keys(self.__regid__=='systempropertiesform'):
             parts = key.split('.')
-            if parts[0] in vreg:
+            if parts[0] in vreg and len(parts) >= 3:
                 # appobject configuration
-                reg, oid, propid = parts
+                reg = parts[0]
+                propid = parts[-1]
+                oid = '.'.join(parts[1:-1])
                 groupedopts.setdefault(reg, {}).setdefault(oid, []).append(key)
             else:
                 mainopts.setdefault(parts[0], []).append(key)

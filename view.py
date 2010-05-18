@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract views and templates classes for CubicWeb web client
+"""abstract views and templates classes for CubicWeb web client"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -74,6 +72,7 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:tindex            CDATA   #IMPLIED
  cubicweb:tlunit            CDATA   #IMPLIED
  cubicweb:type              CDATA   #IMPLIED
+ cubicweb:unselimg          CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
  cubicweb:value             CDATA   #IMPLIED
  cubicweb:variables         CDATA   #IMPLIED

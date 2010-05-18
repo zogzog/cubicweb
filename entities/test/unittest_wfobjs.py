@@ -56,7 +56,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'state_of-subject': 'workflow already have a state of that name'})
+        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)

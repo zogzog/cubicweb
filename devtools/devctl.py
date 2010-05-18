@@ -58,6 +58,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         if cubes:
             self._cubes = self.reorder_cubes(
                 self.expand_cubes(cubes, with_recommends=True))
+            self.load_site_cubicweb()
         else:
             self._cubes = ()
 
@@ -351,23 +352,23 @@ class UpdateTemplateCatalogCommand(Command):
 
 def update_cubes_catalogs(cubes):
     for cubedir in cubes:
-        toedit = []
         if not isdir(cubedir):
             print '-> ignoring %s that is not a directory.' % cubedir
             continue
         try:
-            toedit += update_cube_catalogs(cubedir)
+            toedit = update_cube_catalogs(cubedir)
         except Exception:
             import traceback
             traceback.print_exc()
             print '-> error while updating catalogs for cube', cubedir
         else:
             # instructions pour la suite
-            print '-> regenerated .po catalogs for cube %s.' % cubedir
-            print '\nYou can now edit the following files:'
-            print '* ' + '\n* '.join(toedit)
-            print ('When you are done, run "cubicweb-ctl i18ninstance '
-                   '<yourinstance>" to see changes in your instances.')
+            if toedit:
+                print '-> regenerated .po catalogs for cube %s.' % cubedir
+                print '\nYou can now edit the following files:'
+                print '* ' + '\n* '.join(toedit)
+                print ('When you are done, run "cubicweb-ctl i18ninstance '
+                       '<yourinstance>" to see changes in your instances.')
 
 def update_cube_catalogs(cubedir):
     import shutil
@@ -375,7 +376,6 @@ def update_cube_catalogs(cubedir):
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
     from cubicweb.i18n import extract_from_tal, execute
-    toedit = []
     cube = basename(normpath(cubedir))
     tempdir = tempfile.mkdtemp()
     print underline_title('Updating i18n catalogs for cube %s' % cube)
@@ -420,8 +420,14 @@ def update_cube_catalogs(cubedir):
     print '-> merging %i .pot files:' % len(potfiles)
     execute('msgcat -o %s %s' % (potfile,
                                  ' '.join('"%s"' % f for f in potfiles)))
+    if not exists(potfile):
+        print 'no message catalog for cube', cube, 'nothing to translate'
+        # cleanup
+        rm(tempdir)
+        return ()
     print '-> merging main pot file with existing translations:'
     chdir('i18n')
+    toedit = []
     for lang in LANGS:
         print '-> language', lang
         cubepo = '%s.po' % lang
@@ -520,6 +526,7 @@ layout, and a full featured cube with "full" layout.',
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 ''',
+
         'GPL': '''\
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
