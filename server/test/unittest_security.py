@@ -192,8 +192,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(len(rset), 1)
         ent = rset.get_entity(0, 0)
         session.set_pool() # necessary
-        self.assertRaises(Unauthorized,
-                          ent.e_schema.check_perm, session, 'update', eid=ent.eid)
+        self.assertRaises(Unauthorized, ent.cw_check_perm, 'update')
         self.assertRaises(Unauthorized,
                           cu.execute, "SET P travaille S WHERE P is Personne, S is Societe")
         # test nothing has actually been inserted:
@@ -561,11 +560,11 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.execute('SET TI comment %(c)s WHERE TI wf_info_for X, X ref "ARCT01"',
                      {'c': u'bouh!'})
         self.commit()
-        aff.clear_related_cache('wf_info_for', 'object')
+        aff.cw_clear_relation_cache('wf_info_for', 'object')
         trinfo = iworkflowable.latest_trinfo()
         self.assertEquals(trinfo.comment, 'bouh!')
         # but not from_state/to_state
-        aff.clear_related_cache('wf_info_for', role='object')
+        aff.cw_clear_relation_cache('wf_info_for', role='object')
         self.assertRaises(Unauthorized,
                           self.execute, 'SET TI from_state S WHERE TI eid %(ti)s, S name "ben non"',
                           {'ti': trinfo.eid})

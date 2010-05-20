@@ -206,7 +206,7 @@ class CopyFormView(EditionFormView):
             if not rschema.final:
                 # ensure relation cache is filed
                 rset = self.copying.related(rschema, role)
-                self.newentity.set_related_cache(rschema, role, rset)
+                self.newentity.cw_set_relation_cache(rschema, role, rset)
 
     def submited_message(self):
         """return the message that will be displayed on successful edition"""
@@ -342,7 +342,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         rdef = entity.e_schema.rdef(rtype)
         afs = uicfg.autoform_section.etype_get(
             entity.__regid__, rtype, 'subject', rdef.object)
-        if 'main_hidden' in afs or not entity.has_perm('update'):
+        if 'main_hidden' in afs or not entity.cw_has_perm('update'):
             return False
         if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
             return False

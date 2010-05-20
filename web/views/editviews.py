@@ -59,9 +59,9 @@ class SearchForAssociationView(EntityView):
         # them. Use fetch_order and not fetch_unrelated_order as sort method
         # since the latter is mainly there to select relevant items in the combo
         # box, it doesn't give interesting result in this context
-        rql, args = entity.unrelated_rql(rtype, etype, role,
-                                         ordermethod='fetch_order',
-                                         vocabconstraints=False)
+        rql, args = entity.cw_unrelated_rql(rtype, etype, role,
+                                            ordermethod='fetch_order',
+                                            vocabconstraints=False)
         rset = self._cw.execute(rql, args, tuple(args))
         return rset, 'list', "search-associate-content", True
 

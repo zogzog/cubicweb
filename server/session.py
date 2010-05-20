@@ -242,7 +242,7 @@ class Session(RequestSessionBase):
             entity = self.entity_cache(eid)
         except KeyError:
             return
-        rcache = entity.relation_cached(rtype, role)
+        rcache = entity.cw_relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
             rset = rset.copy()
@@ -258,14 +258,15 @@ class Session(RequestSessionBase):
                 targetentity.cw_col = 0
             rset.rowcount += 1
             entities.append(targetentity)
-            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
 
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
         try:
             entity = self.entity_cache(eid)
         except KeyError:
             return
-        rcache = entity.relation_cached(rtype, role)
+        rcache = entity.cw_relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
             for idx, row in enumerate(rset.rows):
@@ -284,7 +285,8 @@ class Session(RequestSessionBase):
                 del rset.description[idx]
             del entities[idx]
             rset.rowcount -= 1
-            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
 
     # resource accessors ######################################################
 

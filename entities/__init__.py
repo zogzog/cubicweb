@@ -42,7 +42,7 @@ class AnyEntity(Entity):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             if rschema.meta:
                 continue
-            value = self.get_value(rschema.type)
+            value = self.cw_attr_value(rschema.type)
             if value:
                 # make the value printable (dates, floats, bytes, etc.)
                 return self.printable_value(rschema.type, value, attrschema.type,
@@ -107,7 +107,7 @@ class AnyEntity(Entity):
         """
         if rtype is None:
             return self.dc_title().lower()
-        value = self.get_value(rtype)
+        value = self.cw_attr_value(rtype)
         # do not restrict to `unicode` because Bytes will return a `str` value
         if isinstance(value, basestring):
             return self.printable_value(rtype, format='text/plain').lower()

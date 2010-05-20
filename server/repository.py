@@ -565,7 +565,7 @@ class Repository(object):
             session.close()
         session = Session(user, self, cnxprops)
         user._cw = user.cw_rset.req = session
-        user.clear_related_cache()
+        user.cw_clear_relation_cache()
         self._sessions[session.id] = session
         self.info('opened %s', session)
         self.hm.call_hooks('session_open', session)
@@ -1021,17 +1021,12 @@ class Repository(object):
         the entity instance
         """
         # init edited_attributes before calling before_add_entity hooks
-        entity._is_saved = False # entity has an eid but is not yet saved
-        entity.edited_attributes = set(entity)
-        entity_ = entity.pre_add_hook()
-        # XXX kill that transmutation feature !
-        if not entity_ is entity:
-            entity.__class__ = entity_.__class__
-            entity.__dict__.update(entity_.__dict__)
+        entity._cw_is_saved = False # entity has an eid but is not yet saved
+        entity.edited_attributes = set(entity) # XXX cw_edited_attributes
         eschema = entity.e_schema
         source = self.locate_etype_source(entity.__regid__)
         # allocate an eid to the entity before calling hooks
-        entity.set_eid(self.system_source.create_eid(session))
+        entity.eid = self.system_source.create_eid(session)
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
@@ -1046,12 +1041,12 @@ class Repository(object):
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))
-        entity.set_defaults()
+        entity._cw_set_defaults()
         if session.is_hook_category_activated('integrity'):
-            entity.check(creation=True)
+            entity._cw_check(creation=True)
         source.add_entity(session, entity)
         self.add_info(session, entity, source, extid, complete=False)
-        entity._is_saved = True # entity has an eid and is saved
+        entity._cw_is_saved = True # entity has an eid and is saved
         # prefill entity relation caches
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
@@ -1060,12 +1055,13 @@ class Repository(object):
             if rschema.final:
                 entity.setdefault(rtype, None)
             else:
-                entity.set_related_cache(rtype, 'subject', session.empty_rset())
+                entity.cw_set_relation_cache(rtype, 'subject',
+                                             session.empty_rset())
         for rschema in eschema.object_relations():
             rtype = str(rschema)
             if rtype in schema.VIRTUAL_RTYPES:
                 continue
-            entity.set_related_cache(rtype, 'object', session.empty_rset())
+            entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
         # set inline relation cache before call to after_add_entity
         for attr, value in relations:
             session.update_rel_cache_add(entity.eid, attr, value)
@@ -1094,7 +1090,7 @@ class Repository(object):
         entity.edited_attributes = edited_attributes
         try:
             if session.is_hook_category_activated('integrity'):
-                entity.check()
+                entity._cw_check()
             only_inline_rels, need_fti_update = True, False
             relations = []
             source = self.source_from_eid(entity.eid, session)
@@ -1132,7 +1128,7 @@ class Repository(object):
                     hm.call_hooks('after_update_entity', session, entity=entity)
                 for attr, value, prevvalue in relations:
                     # if the relation is already cached, update existant cache
-                    relcache = entity.relation_cached(attr, 'subject')
+                    relcache = entity.cw_relation_cached(attr, 'subject')
                     if prevvalue is not None:
                         hm.call_hooks('after_delete_relation', session,
                                       eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
@@ -1142,8 +1138,8 @@ class Repository(object):
                     if relcache is not None:
                         session.update_rel_cache_add(entity.eid, attr, value)
                     else:
-                        entity.set_related_cache(attr, 'subject',
-                                                 session.eid_rset(value))
+                        entity.cw_set_relation_cache(attr, 'subject',
+                                                     session.eid_rset(value))
                     hm.call_hooks('after_add_relation', session,
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:

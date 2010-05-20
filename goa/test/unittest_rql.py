@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from cubicweb.goa.testlib import *
 
 from cubicweb import Binary
@@ -612,7 +609,7 @@ class RQLTest(GAEBasedTC):
     def test_error_unknown_eid(self):
         rset = self.req.execute('Any X WHERE X eid %(x)s', {'x': '1234'})
         self.assertEquals(len(rset), 0)
-        self.blog.delete()
+        self.blog.cw_delete()
         rset = self.req.execute('Any X WHERE X eid %(x)s', {'x': self.blog.eid})
         self.assertEquals(len(rset), 0)
 

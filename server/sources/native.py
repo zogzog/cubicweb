@@ -1007,10 +1007,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 entity[rtype] = unicode(value, session.encoding, 'replace')
             else:
                 entity[rtype] = value
-        entity.set_eid(eid)
+        entity.eid = eid
         session.repo.init_entity_caches(session, entity, self)
         entity.edited_attributes = set(entity)
-        entity.check()
+        entity._cw_check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
         # restore the entity
         action.changes['cw_eid'] = eid
@@ -1077,7 +1077,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return [session._(
                 "Can't undo creation of entity %(eid)s of type %(etype)s, type "
                 "no more supported" % {'eid': eid, 'etype': etype})]
-        entity.set_eid(eid)
+        entity.eid = eid
         # for proper eid/type cache update
         hook.set_operation(session, 'pendingeids', eid,
                            CleanupDeletedEidsCacheOp)

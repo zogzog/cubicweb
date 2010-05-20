@@ -233,7 +233,7 @@ class Model(entities.AnyEntity):
                 return self.req.datastore_get(self.eid)
             except AttributeError: # self.req is not a server session
                 return Get(self.eid)
-        self.set_defaults()
+        self._cw_set_defaults()
         values = self._to_gae_dict(convert=False)
         parent = key_name = _app = None
         if self._gaeinitargs is not None:
@@ -343,7 +343,7 @@ class Model(entities.AnyEntity):
             self.req = req
         dbmodel = self.to_gae_model()
         key = Put(dbmodel)
-        self.set_eid(str(key))
+        self.eid = str(key)
         if self.req is not None and self.rset is None:
             self.rset = rset_from_objs(self.req, dbmodel, ('eid',),
                                        'Any X WHERE X eid %(x)s', {'x': self.eid})
@@ -409,7 +409,7 @@ class Model(entities.AnyEntity):
     def dynamic_properties(self):
         raise NotImplementedError('use eschema')
 
-    def is_saved(self):
+    def cw_is_saved(self):
         return self.has_eid()
 
     def parent(self):

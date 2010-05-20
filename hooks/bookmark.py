@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""bookmark related hooks
+"""bookmark related hooks"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb.server import hook
@@ -28,7 +27,7 @@ class AutoDeleteBookmarkOp(hook.Operation):
     def precommit_event(self):
         if not self.session.deleted_in_transaction(self.bookmark.eid):
             if not self.bookmark.bookmarked_by:
-                self.bookmark.delete()
+                self.bookmark.cw_delete()
 
 
 class DelBookmarkedByHook(hook.Hook):

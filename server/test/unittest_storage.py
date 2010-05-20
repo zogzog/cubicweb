@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.server.sources.storages
-
-"""
+"""unit tests for module cubicweb.server.sources.storages"""
 
 from __future__ import with_statement
 
@@ -89,11 +87,11 @@ class StorageTC(CubicWebTC):
         f1.set_attributes(data=Binary('the new data'))
         self.rollback()
         self.assertEquals(file(expected_filepath).read(), 'the-data')
-        f1.delete()
+        f1.cw_delete()
         self.failUnless(osp.isfile(expected_filepath))
         self.rollback()
         self.failUnless(osp.isfile(expected_filepath))
-        f1.delete()
+        f1.cw_delete()
         self.commit()
         self.failIf(osp.isfile(expected_filepath))
 

@@ -306,7 +306,7 @@ class CubicWebTC(TestCase):
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),
                     {'x': user.eid})
-        user.clear_related_cache('in_group', 'subject')
+        user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
             req.cnx.commit()
         return user

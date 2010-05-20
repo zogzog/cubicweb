@@ -305,7 +305,7 @@ class EditController(basecontrollers.ViewController):
             entity = self._cw.entity_from_eid(eid, etype)
             path, params = entity.cw_adapt_to('IEditControl').after_deletion_path()
             redirect_info.add( (path, tuple(params.iteritems())) )
-            entity.delete()
+            entity.cw_delete()
         if len(redirect_info) > 1:
             # In the face of ambiguity, refuse the temptation to guess.
             self._after_deletion_path = 'view', ()

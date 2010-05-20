@@ -323,7 +323,7 @@ class Field(object):
                     value = getattr(entity, self.name)
                     if value is not None or not self.fallback_on_none_attribute:
                         return value
-            elif entity.has_eid() or entity.relation_cached(self.name, self.role):
+            elif entity.has_eid() or entity.cw_relation_cached(self.name, self.role):
                 value = [r[0] for r in entity.related(self.name, self.role)]
                 if value or not self.fallback_on_none_attribute:
                     return value
@@ -399,7 +399,7 @@ class Field(object):
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'format') and (
                 entity.has_eid() or '%s_format' % self.name in entity):
-                return form.edited_entity.attr_metadata(self.name, 'format')
+                return form.edited_entity.cw_attr_metadata(self.name, 'format')
         return form._cw.property_value('ui.default-text-format')
 
     def encoding(self, form):
@@ -408,7 +408,7 @@ class Field(object):
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'encoding') and (
                 entity.has_eid() or '%s_encoding' % self.name in entity):
-                return form.edited_entity.attr_metadata(self.name, 'encoding')
+                return form.edited_entity.cw_attr_metadata(self.name, 'encoding')
         return form._cw.encoding
 
     def form_init(self, form):

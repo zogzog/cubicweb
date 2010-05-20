@@ -1033,7 +1033,7 @@ class has_permission(EntitySelector):
         return self.score(req, rset, row, col)
 
     def score_entity(self, entity):
-        if entity.has_perm(self.action):
+        if entity.cw_has_perm(self.action):
             return 1
         return 0
 

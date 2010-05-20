@@ -49,15 +49,15 @@ def _clear_related_cache(session, gaesubject, rtype, gaeobject):
         except KeyError:
             pass
         else:
-            entity.clear_related_cache(rtype, role)
+            entity.cw_clear_relation_cache(rtype, role)
     if gaesubject.kind() == 'CWUser':
         for asession in session.repo._sessions.itervalues():
             if asession.user.eid == subject:
-                asession.user.clear_related_cache(rtype, 'subject')
+                asession.user.cw_clear_relation_cache(rtype, 'subject')
     if gaeobject.kind() == 'CWUser':
         for asession in session.repo._sessions.itervalues():
             if asession.user.eid == object:
-                asession.user.clear_related_cache(rtype, 'object')
+                asession.user.cw_clear_relation_cache(rtype, 'object')
 
 def _mark_modified(session, gaeentity):
     modified = session.transaction_data.setdefault('modifiedentities', {})

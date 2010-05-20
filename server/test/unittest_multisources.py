@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from os.path import dirname, join, abspath
 from datetime import datetime, timedelta
 
@@ -113,11 +110,11 @@ class TwoSourcesTC(CubicWebTC):
         self.assertEquals(len(rset), 4)
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
-        self.assertEquals(rset.get_entity(0, 0).metainformation(),
+        self.assertEquals(rset.get_entity(0, 0).cw_metainformation(),
                           {'source': {'adapter': 'native', 'uri': 'system'},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
-        metainf = externent.metainformation()
+        metainf = externent.cw_metainformation()
         self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
         self.assertEquals(metainf['type'], 'Card')
         self.assert_(metainf['extid'])

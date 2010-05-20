@@ -108,7 +108,7 @@ class WorkflowTC(CubicWebTC):
         self.commit()
         iworkflowable.change_state('deactivated', u'deactivate 2')
         self.commit()
-        e.clear_related_cache('wf_info_for', 'object')
+        e.cw_clear_relation_cache('wf_info_for', 'object')
         self.assertEquals([tr.comment for tr in e.reverse_wf_info_for],
                           ['deactivate 1', 'activate 1', 'deactivate 2'])
         self.assertEquals(iworkflowable.latest_trinfo().comment, 'deactivate 2')
@@ -128,7 +128,7 @@ class WorkflowTC(CubicWebTC):
 
     def _test_manager_deactivate(self, user):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
-        user.clear_related_cache('in_state', 'subject')
+        user.cw_clear_relation_cache('in_state', 'subject')
         self.assertEquals(len(user.in_state), 1)
         self.assertEquals(iworkflowable.state, 'deactivated')
         trinfo = iworkflowable.latest_trinfo()

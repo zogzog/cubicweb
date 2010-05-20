@@ -173,7 +173,7 @@ class Workflow(AnyEntity):
                 {'os': todelstate.eid, 'ns': replacement.eid})
         execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
                 {'os': todelstate.eid, 'ns': replacement.eid})
-        todelstate.delete()
+        todelstate.cw_delete()
 
 
 class BaseTransition(AnyEntity):

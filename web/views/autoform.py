@@ -766,7 +766,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
             return self.display_fields
-        if self.edited_entity.has_eid() and not self.edited_entity.has_perm('update'):
+        if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return []
         # XXX we should simply put eid in the generated section, no?
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
@@ -869,7 +869,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             vvreg = self._cw.vreg['views']
             # display inline-edition view for all existing related entities
             for i, relentity in enumerate(related.entities()):
-                if relentity.has_perm('update'):
+                if relentity.cw_has_perm('update'):
                     yield vvreg.select('inline-edition', self._cw,
                                        rset=related, row=i, col=0,
                                        etype=ttype, rtype=rschema, role=role,

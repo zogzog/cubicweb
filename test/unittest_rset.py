@@ -229,10 +229,10 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(e['surname'], 'di mascio')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
         self.assertRaises(KeyError, e.__getitem__, 'creation_date')
-        self.assertEquals(pprelcachedict(e._related_cache), [])
+        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
         e.complete()
         self.assertEquals(e['firstname'], 'adrien')
-        self.assertEquals(pprelcachedict(e._related_cache), [])
+        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
 
     def test_get_entity_advanced(self):
         self.request().create_entity('Bookmark', title=u'zou', path=u'/view')
@@ -245,19 +245,19 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(e['title'], 'zou')
         self.assertRaises(KeyError, e.__getitem__, 'path')
         self.assertEquals(e.view('text'), 'zou')
-        self.assertEquals(pprelcachedict(e._related_cache), [])
+        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
 
         e = rset.get_entity(0, 1)
         self.assertEquals(e.cw_row, 0)
         self.assertEquals(e.cw_col, 1)
         self.assertEquals(e['login'], 'anon')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
-        self.assertEquals(pprelcachedict(e._related_cache),
+        self.assertEquals(pprelcachedict(e._cw_related_cache),
                           [])
         e.complete()
         self.assertEquals(e['firstname'], None)
         self.assertEquals(e.view('text'), 'anon')
-        self.assertEquals(pprelcachedict(e._related_cache),
+        self.assertEquals(pprelcachedict(e._cw_related_cache),
                           [])
 
         self.assertRaises(NotAnEntity, rset.get_entity, 0, 2)
@@ -269,7 +269,7 @@ class ResultSetTC(CubicWebTC):
         seid = self.execute('State X WHERE X name "activated"')[0][0]
         # for_user / in_group are prefetched in CWUser __init__, in_state should
         # be filed from our query rset
-        self.assertEquals(pprelcachedict(e._related_cache),
+        self.assertEquals(pprelcachedict(e._cw_related_cache),
                           [('in_state_subject', [seid])])
 
     def test_get_entity_advanced_prefilled_cache(self):
@@ -279,7 +279,7 @@ class ResultSetTC(CubicWebTC):
                             'X title XT, S name SN, U login UL, X eid %s' % e.eid)
         e = rset.get_entity(0, 0)
         self.assertEquals(e['title'], 'zou')
-        self.assertEquals(pprelcachedict(e._related_cache),
+        self.assertEquals(pprelcachedict(e._cw_related_cache),
                           [('created_by_subject', [5])])
         # first level of recursion
         u = e.created_by[0]
@@ -298,9 +298,9 @@ class ResultSetTC(CubicWebTC):
         e = rset.get_entity(0, 0)
         # if any of the assertion below fails with a KeyError, the relation is not cached
         # related entities should be an empty list
-        self.assertEquals(e.related_cache('primary_email', 'subject', True), ())
+        self.assertEquals(e._cw_relation_cache('primary_email', 'subject', True), ())
         # related rset should be an empty rset
-        cached = e.related_cache('primary_email', 'subject', False)
+        cached = e._cw_relation_cache('primary_email', 'subject', False)
         self.assertIsInstance(cached, ResultSet)
         self.assertEquals(cached.rowcount, 0)
 

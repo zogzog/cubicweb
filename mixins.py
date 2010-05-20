@@ -145,7 +145,7 @@ class TreeMixIn(object):
                                 entities=entities)
 
     def children_rql(self):
-        return self.related_rql(self.tree_attribute, self.children_target)
+        return self.cw_related_rql(self.tree_attribute, self.children_target)
 
     def is_leaf(self):
         return len(self.children()) == 0

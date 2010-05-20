@@ -54,7 +54,7 @@ class ITreeAdapter(EntityAdapter):
 
         XXX should be removed from the public interface
         """
-        return self.entity.related_rql(self.tree_relation, self.parent_role)
+        return self.entity.cw_related_rql(self.tree_relation, self.parent_role)
 
     @implements_adapter_compat('ITree')
     def different_type_children(self, entities=True):
