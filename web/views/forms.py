@@ -222,8 +222,6 @@ class EntityFieldsForm(FieldsForm):
     __regid__ = 'base'
     __select__ = (match_kwargs('entity')
                   | (one_line_rset() & non_final_entity()))
-
-    internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
     @iclassmethod

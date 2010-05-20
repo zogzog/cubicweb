@@ -314,6 +314,9 @@ class JSonController(Controller):
         for name, value in zip(names, values):
             # remove possible __action_xxx inputs
             if name.startswith('__action'):
+                if action is None:
+                    # strip '__action_' to get the actual action name
+                    action = name[9:]
                 continue
             # form.setdefault(name, []).append(value)
             if name in form:

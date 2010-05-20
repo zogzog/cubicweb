@@ -274,7 +274,6 @@ def reset_test_database_sqlite(config):
 def init_test_database_sqlite(config):
     """initialize a fresh sqlite databse used for testing purpose"""
     # remove database file if it exists
-    dbfile = config.sources()['system']['db-name']
     if not reset_test_database_sqlite(config):
         # initialize the database
         import shutil

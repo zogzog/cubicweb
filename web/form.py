@@ -80,8 +80,6 @@ class Form(AppObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
 
-    internal_fields = ('__errorurl',) + controller.NAV_FORM_PARAMETERS
-
     parent_form = None
     force_session_key = None
     domid = 'form'

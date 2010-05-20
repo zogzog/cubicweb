@@ -82,7 +82,7 @@ def uniquify_path(dirpath, basename):
 
     XXX subject to race condition.
     """
-    path = osp.join(dirpath, basename)
+    path = osp.join(dirpath, basename.replace(osp.sep, '-'))
     if not osp.isfile(path):
         return path
     base, ext = osp.splitext(path)
