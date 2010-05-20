@@ -161,4 +161,4 @@ class RepositoryServer(object):
 from logging import getLogger
 from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.reposerver')
-set_log_methods(CubicWebConfiguration, LOGGER)
+set_log_methods(RepositoryServer, LOGGER)
