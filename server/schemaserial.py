@@ -27,7 +27,9 @@ from logilab.common.shellutils import ProgressBar
 
 from yams import schema as schemamod, buildobjs as ybo
 
-from cubicweb.schema import CONSTRAINTS, ETYPE_NAME_MAP, VIRTUAL_RTYPES
+from cubicweb import CW_SOFTWARE_ROOT
+from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
+                             VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
 
 def group_mapping(cursor, interactive=True):
@@ -100,17 +102,28 @@ def deserialize_schema(schema, session):
             sidx[eid] = eschema
             continue
         if etype in ETYPE_NAME_MAP:
+            needcopy = False
             netype = ETYPE_NAME_MAP[etype]
             # can't use write rql queries at this point, use raw sql
-            session.system_sql('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
-                               % {'p': sqlutils.SQL_PREFIX},
-                               {'x': eid, 'n': netype})
-            session.system_sql('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
-                               {'x': etype, 'n': netype})
+            sqlexec = session.system_sql
+            if sqlexec('SELECT 1 FROM %(p)sCWEType WHERE %(p)sname=%%(n)s'
+                       % {'p': sqlutils.SQL_PREFIX}, {'n': netype}).fetchone():
+                # the new type already exists, we should merge
+                assert etype.lower() != netype.lower()
+                needcopy = True
+            else:
+                # the new type doesn't exist, we should rename
+                sqlexec('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
+                        % {'p': sqlutils.SQL_PREFIX}, {'x': eid, 'n': netype})
+                if etype.lower() != netype.lower():
+                    sqlexec('ALTER TABLE %s%s RENAME TO %s%s' % (
+                        sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))
+            sqlexec('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
+                    {'x': etype, 'n': netype})
             session.commit(False)
             try:
-                session.system_sql('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
-                                   {'x': etype, 'n': netype})
+                sqlexec('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
+                        {'x': etype, 'n': netype})
             except:
                 pass
             tocleanup = [eid]
@@ -118,6 +131,12 @@ def deserialize_schema(schema, session):
                           if etype == eidetype)
             repo.clear_caches(tocleanup)
             session.commit(False)
+            if needcopy:
+                from logilab.common.testlib import mock_object
+                sidx[eid] = mock_object(type=netype)
+                # copy / CWEType entity removal expected to be done through
+                # rename_entity_type in a migration script
+                continue
             etype = netype
         etype = ybo.EntityType(name=etype, description=desc, eid=eid)
         eschema = schema.add_entity_type(etype)

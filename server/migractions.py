@@ -51,7 +51,8 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError
-from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
+from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
+                             PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
@@ -851,9 +852,23 @@ class ServerMigrationHelper(MigrationHelper):
         `oldname` is a string giving the name of the existing entity type
         `newname` is a string giving the name of the renamed entity type
         """
-        self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(oldname)s',
-                     {'newname' : unicode(newname), 'oldname' : oldname},
-                     ask_confirm=False)
+        schema = self.repo.schema
+        if newname in schema:
+            assert oldname in ETYPE_NAME_MAP, \
+                   '%s should be mappend to %s in ETYPE_NAME_MAP' % (oldname, newname)
+            attrs = ','.join([SQL_PREFIX + rschema.type
+                              for rschema in schema[newname].subject_relations()
+                              if (rschema.final or rschema.inlined)
+                              and not rschema in PURE_VIRTUAL_RTYPES])
+            self.sqlexec('INSERT INTO %s%s(%s) SELECT %s FROM %s%s' % (
+                SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname))
+            # use rql to propagate deletion. XXX we may miss some stuff since
+            # only the bootstrap schema is set.
+            self.rqlexec('DELETE CWEType ET WHERE ET name %(n)s', {'n': oldname})
+        else:
+            self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(oldname)s',
+                         {'newname' : unicode(newname), 'oldname' : oldname},
+                         ask_confirm=False)
         if commit:
             self.commit()
 

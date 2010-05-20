@@ -568,7 +568,14 @@ class CubicWebSchema(Schema):
         rdef.name = rdef.name.lower()
         rdef.subject = bw_normalize_etype(rdef.subject)
         rdef.object = bw_normalize_etype(rdef.object)
-        rdefs = super(CubicWebSchema, self).add_relation_def(rdef)
+        try:
+            rdefs = super(CubicWebSchema, self).add_relation_def(rdef)
+        except BadSchemaDefinition:
+            reversed_etype_map = dict( (v, k) for k, v in ETYPE_NAME_MAP.iteritems() )
+            if rdef.subject in reversed_etype_map or rdef.object in reversed_etype_map:
+                self.warning('huuuu')
+                return
+            raise
         if rdefs:
             try:
                 self._eid_index[rdef.eid] = rdefs
