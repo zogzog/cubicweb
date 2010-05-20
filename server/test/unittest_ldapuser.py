@@ -178,12 +178,13 @@ class LDAPUserSourceTC(CubicWebTC):
         cnx = self.login(SYT, password='dummypassword')
         cu = cnx.cursor()
         adim = cu.execute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
-        adim.fire_transition('deactivate')
+        iworkflowable = adim.cw_adapt_to('IWorkflowable')
+        iworkflowable.fire_transition('deactivate')
         try:
             cnx.commit()
             adim.clear_all_caches()
             self.assertEquals(adim.in_state[0].name, 'deactivated')
-            trinfo = adim.latest_trinfo()
+            trinfo = iworkflowable.latest_trinfo()
             self.assertEquals(trinfo.owned_by[0].login, SYT)
             # select from_state to skip the user's creation TrInfo
             rset = self.sexecute('Any U ORDERBY D DESC WHERE WF wf_info_for X,'
@@ -195,7 +196,7 @@ class LDAPUserSourceTC(CubicWebTC):
             # restore db state
             self.restore_connection()
             adim = self.sexecute('CWUser X WHERE X login %(login)s', {'login': ADIM}).get_entity(0, 0)
-            adim.fire_transition('activate')
+            adim.cw_adapt_to('IWorkflowable').fire_transition('activate')
             self.sexecute('DELETE X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
 
     def test_same_column_names(self):

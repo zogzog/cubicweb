@@ -85,7 +85,7 @@ class StatusChangeViewsTC(CubicWebTC):
     def test_status_change_view(self):
         req = self.request()
         u = self.create_user('toto', req=req)
-        u.fire_transition('deactivate', comment=u'yeah')
+        u.cw_adapt_to('IWorkflowable').fire_transition('deactivate', comment=u'yeah')
         self.failIf(MAILBOX)
         self.commit()
         self.assertEquals(len(MAILBOX), 1)

@@ -205,7 +205,7 @@ class RepositoryTC(CubicWebTC):
         session = repo._get_session(cnxid)
         session.set_pool()
         user = session.user
-        user.fire_transition('deactivate')
+        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
         repo.rollback(cnxid)

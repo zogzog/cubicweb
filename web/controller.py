@@ -106,6 +106,16 @@ class Controller(AppObject):
         view.set_http_cache_headers()
         self._cw.validate_cache()
 
+    def sendmail(self, recipient, subject, body):
+        senderemail = self._cw.user.cw_adapt_to('IEmailable').get_email()
+        msg = format_mail({'email' : senderemail,
+                           'name' : self._cw.user.dc_title(),},
+                          [recipient], body, subject)
+        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
+            msg = self._cw._('could not connect to the SMTP server')
+            url = self._cw.build_url(__message=msg)
+            raise Redirect(url)
+
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters

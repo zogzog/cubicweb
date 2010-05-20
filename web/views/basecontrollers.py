@@ -18,22 +18,17 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of base controllers, which are directly plugged into the application
 object to handle publication.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
-from smtplib import SMTP
-
-from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
-from cubicweb.utils import CubicWebJsonEncoder
 from cubicweb.selectors import authenticated_user, match_form_params
-from cubicweb.mail import format_mail
-from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, json_dumps, json
+from cubicweb.web import (Redirect, RemoteCallFailed, DirectResponse,
+                          json, json_dumps)
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
@@ -250,7 +245,7 @@ class FormValidatorController(Controller):
         errback = str(self._cw.form.get('__onfailure', 'null'))
         cbargs = str(self._cw.form.get('__cbargs', 'null'))
         self._cw.set_content_type('text/html')
-        jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        jsargs = json_dumps((status, args, entity))
         return """<script type="text/javascript">
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
@@ -568,42 +563,8 @@ class JSonController(Controller):
 
 
 # XXX move to massmailing
-class SendMailController(Controller):
-    __regid__ = 'sendmail'
-    __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
-    def recipients(self):
-        """returns an iterator on email's recipients as entities"""
-        eids = self._cw.form['recipient']
-        # eids may be a string if only one recipient was specified
-        if isinstance(eids, basestring):
-            rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
-        else:
-            rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
-        return rset.entities()
-
-    def sendmail(self, recipient, subject, body):
-        msg = format_mail({'email' : self._cw.user.get_email(),
-                           'name' : self._cw.user.dc_title(),},
-                          [recipient], body, subject)
-        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
-            msg = self._cw._('could not connect to the SMTP server')
-            url = self._cw.build_url(__message=msg)
-            raise Redirect(url)
-
-    def publish(self, rset=None):
-        # XXX this allows users with access to an cubicweb instance to use it as
-        # a mail relay
-        body = self._cw.form['mailbody']
-        subject = self._cw.form['subject']
-        for recipient in self.recipients():
-            text = body % recipient.as_email_context()
-            self.sendmail(recipient.get_email(), subject, text)
-        url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
-        raise Redirect(url)
-
-
-class MailBugReportController(SendMailController):
+class MailBugReportController(Controller):
     __regid__ = 'reportbug'
     __select__ = match_form_params('description')
 
@@ -614,7 +575,7 @@ class MailBugReportController(SendMailController):
         raise Redirect(url)
 
 
-class UndoController(SendMailController):
+class UndoController(Controller):
     __regid__ = 'undo'
     __select__ = authenticated_user() & match_form_params('txuuid')
 

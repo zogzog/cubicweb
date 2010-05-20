@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""additional cubicweb-ctl commands and command handlers for cubicweb and cubicweb's
-cubes development
-
+"""additional cubicweb-ctl commands and command handlers for cubicweb and
+cubicweb's cubes development
 """
+
 __docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as

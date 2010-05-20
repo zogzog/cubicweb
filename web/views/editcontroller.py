@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The edit controller, handling form submitting.
+"""The edit controller, automatically handling entity form submitting"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -27,8 +26,36 @@ from rql.utils import rqlvar_maker
 from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
+from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb.selectors import implements
+from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
+                          ProcessFormError)
 from cubicweb.web.views import basecontrollers, autoform
+
+
+class IEditControlAdapter(EntityAdapter):
+    __regid__ = 'IEditControl'
+    __select__ = implements('Any')
+
+    @implements_adapter_compat('IEditControl')
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        parent = self.cw_adapt_to('IBreadCrumbs').parent_entity()
+        if parent is not None:
+            return parent.rest_path(), {}
+        return str(self.e_schema).lower(), {}
+
+    @implements_adapter_compat('IEditControl')
+    def pre_web_edit(self):
+        """callback called by the web editcontroller when an entity will be
+        created/modified, to let a chance to do some entity specific stuff.
+
+        Do nothing by default.
+        """
+        pass
+
 
 def valerror_eid(eid):
     try:
@@ -155,7 +182,7 @@ class EditController(basecontrollers.ViewController):
         entity.eid = formparams['eid']
         is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff
-        entity.pre_web_edit()
+        entity.cw_adapt_to('IEditControl').pre_web_edit()
         # create a rql query from parameters
         rqlquery = RqlQuery()
         # process inlined relations at the same time as attributes
@@ -276,7 +303,7 @@ class EditController(basecontrollers.ViewController):
         eidtypes = tuple(eidtypes)
         for eid, etype in eidtypes:
             entity = self._cw.entity_from_eid(eid, etype)
-            path, params = entity.after_deletion_path()
+            path, params = entity.cw_adapt_to('IEditControl').after_deletion_path()
             redirect_info.add( (path, tuple(params.iteritems())) )
             entity.delete()
         if len(redirect_info) > 1:

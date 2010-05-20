@@ -520,3 +520,34 @@ class Component(ReloadableMixIn, View):
     # XXX a generic '%s%s' % (self.__regid__, self.__registry__.capitalize()) would probably be nicer
     def div_id(self):
         return '%sComponent' % self.__regid__
+
+
+class Adapter(AppObject):
+    """base class for adapters"""
+    __registry__ = 'adapters'
+
+
+class EntityAdapter(Adapter):
+    """base class for entity adapters (eg adapt an entity to an interface)"""
+    def __init__(self, _cw, **kwargs):
+        try:
+            self.entity = kwargs.pop('entity')
+        except KeyError:
+            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
+                                                    kwargs.get('col') or 0)
+        Adapter.__init__(self, _cw, **kwargs)
+
+
+def implements_adapter_compat(iface):
+    def _pre39_compat(func):
+        def decorated(self, *args, **kwargs):
+            entity = self.entity
+            if hasattr(entity, func.__name__):
+                warn('[3.9] %s method is deprecated, define it on a custom '
+                     '%s for %s instead' % (func.__name__, iface,
+                                            entity.__class__),
+                     DeprecationWarning)
+                return getattr(entity, func.__name__)(*args, **kwargs)
+            return func(self, *args, **kwargs)
+        return decorated
+    return _pre39_compat

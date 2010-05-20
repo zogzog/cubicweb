@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""entity classes user and group entities
+"""entity classes user and group entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""navigation components definition for CubicWeb web client
+"""navigation components definition for CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -26,11 +25,10 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.interfaces import IPrevNext
 from cubicweb.selectors import (paginated_rset, sorted_rset,
-                                primary_view, match_context_prop,
-                                one_line_rset, implements)
+                                adaptable, implements)
 from cubicweb.uilib import cut
+from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
 
@@ -160,20 +158,41 @@ class SortedNavigation(NavigationComponent):
         self.w(u'</div>')
 
 
+from cubicweb.interfaces import IPrevNext
+
+class IPrevNextAdapter(EntityAdapter):
+    """interface for entities which can be linked to a previous and/or next
+    entity
+    """
+    __regid__ = 'IPrevNext'
+    __select__ = implements(IPrevNext) # XXX for bw compat, else should be abstract
+
+    @implements_adapter_compat('IPrevNext')
+    def next_entity(self):
+        """return the 'next' entity"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('IPrevNext')
+    def previous_entity(self):
+        """return the 'previous' entity"""
+        raise NotImplementedError
+
+
 class NextPrevNavigationComponent(EntityVComponent):
     __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __select__ = (one_line_rset() & primary_view()
-                  & match_context_prop() & implements(IPrevNext))
+    __select__ = (EntityVComponent.__select__
+                  & adaptable('IPrevNext'))
     context = 'navbottom'
     order = 10
     def call(self, view=None):
         entity = self.cw_rset.get_entity(0, 0)
-        previous = entity.previous_entity()
-        next = entity.next_entity()
+        adapter = entity.cw_adapt_to('IDownloadable')
+        previous = adapter.previous_entity()
+        next = adapter.next_entity()
         if previous or next:
             textsize = self._cw.property_value('navigation.short-line-size')
             self.w(u'<div class="prevnext">')

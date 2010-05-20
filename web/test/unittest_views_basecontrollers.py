@@ -128,7 +128,7 @@ class EditControllerTC(CubicWebTC):
         self.assertEquals(e.firstname, u'Th\xe9nault')
         self.assertEquals(e.surname, u'Sylvain')
         self.assertEquals([g.eid for g in e.in_group], groupeids)
-        self.assertEquals(e.state, 'activated')
+        self.assertEquals(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
 
     def test_create_multiple_linked(self):

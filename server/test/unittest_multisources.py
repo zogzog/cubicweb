@@ -307,8 +307,9 @@ class TwoSourcesTC(CubicWebTC):
                      {'x': affaire.eid, 'u': ueid})
 
     def test_nonregr2(self):
-        self.session.user.fire_transition('deactivate')
-        treid = self.session.user.latest_trinfo().eid
+        iworkflowable = self.session.user.cw_adapt_to('IWorkflowable')
+        iworkflowable.fire_transition('deactivate')
+        treid = iworkflowable.latest_trinfo().eid
         rset = self.sexecute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                             {'x': treid})
         self.assertEquals(len(rset), 1)

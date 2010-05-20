@@ -301,6 +301,7 @@ def score_interface(etypesreg, cls_or_inst, cls, iface):
             if iface is basecls:
                 return index + 3
         return 0
+    # XXX iface in implements deprecated in 3.9
     if implements_iface(cls_or_inst, iface):
         # implenting an interface takes precedence other special Any interface
         return 2
@@ -527,18 +528,33 @@ class appobject_selectable(Selector):
 
     * `registry`, a registry name
 
-    * `regid`, an object identifier in this registry
+    * `regids`, object identifiers in this registry, one of them should be
+      selectable.
     """
-    def __init__(self, registry, regid):
+    def __init__(self, registry, *regids):
         self.registry = registry
-        self.regid = regid
+        self.regids = regids
 
     def __call__(self, cls, req, **kwargs):
-        try:
-            req.vreg[self.registry].select(self.regid, req, **kwargs)
-            return 1
-        except NoSelectableObject:
-            return 0
+        for regid in self.regids:
+            try:
+                req.vreg[self.registry].select(regid, req, **kwargs)
+                return 1
+            except NoSelectableObject:
+                return 0
+
+
+class adaptable(appobject_selectable):
+    """Return 1 if another appobject is selectable using the same input context.
+
+    Initializer arguments:
+
+    * `regids`, adapter identifiers (e.g. interface names) to which the context
+      (usually entities) should be adaptable. One of them should be selectable
+      when multiple identifiers are given.
+    """
+    def __init__(self, *regids):
+        super(adaptable, self).__init__('adapters', *regids)
 
 
 # rset selectors ##############################################################
@@ -731,7 +747,12 @@ class implements(ImplementsMixIn, EClassSelector):
 
     .. note:: when interface is an entity class, the score will reflect class
               proximity so the most specific object will be selected.
+
+    .. note:: with cubicweb >= 3.9, you should use adapters instead of
+              interface, so no interface should be given to this selector. Use
+              :class:`adaptable` instead.
     """
+
     def score_class(self, eclass, req):
         return self.score_interfaces(req, eclass, eclass)
 
@@ -756,6 +777,26 @@ class score_entity(EntitySelector):
                 return score
             return 1
         self.score_entity = intscore
+
+
+class has_mimetype(EntitySelector):
+    """Return 1 if the entity adapt to IDownloadable and has the given MIME type.
+
+    You can give 'image/' to match any image for instance, or 'image/png' to match
+    only PNG images.
+    """
+    def __init__(self, mimetype, once_is_enough=False):
+        super(has_mimetype, self).__init__(once_is_enough)
+        self.mimetype = mimetype
+
+    def score_entity(self, entity):
+        idownloadable =  entity.cw_adapt_to('IDownloadable')
+        if idownloadable is None:
+            return 0
+        mt = idownloadable.download_content_type()
+        if not (mt and mt.startswith(self.mimetype)):
+            return 0
+        return 1
 
 
 class relation_possible(EntitySelector):
@@ -1283,17 +1324,18 @@ class match_transition(ExpectedValueSelector):
 class is_in_state(score_entity):
     """return 1 if entity is in one of the states given as argument list
 
-    you should use this instead of your own score_entity x: x.state == 'bla'
-    selector to avoid some gotchas:
+    you should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
 
     * possible views gives a fake entity with no state
-    * you must use the latest tr info, not entity.state for repository side
+    * you must use the latest tr info, not entity.in_state for repository side
       checking of the current state
     """
     def __init__(self, *states):
         def score(entity, states=set(states)):
+            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
             try:
-                return entity.latest_trinfo().new_state.name in states
+                return trinfo.new_state.name in states
             except AttributeError:
                 return None
         super(is_in_state, self).__init__(score)

@@ -279,7 +279,7 @@ class RequestSessionBase(object):
         user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
-        userinfo['email'] = user.get_email()
+        userinfo['email'] = user.cw_adapt_to('IEmailable').get_email()
         return userinfo
 
     def is_internal_session(self):

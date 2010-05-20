@@ -16,10 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Objects interacting together to provides the external page embeding
-functionality.
+functionality."""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 import re
@@ -29,14 +27,25 @@ from urllib import quote as urlquote # XXX should use view.url_quote method
 
 from logilab.mtconverter import guess_encoding
 
-from cubicweb.selectors import (one_line_rset, score_entity,
-                                match_search_state, implements)
+from cubicweb.selectors import (one_line_rset, score_entity, implements,
+                                adaptable, match_search_state)
 from cubicweb.interfaces import IEmbedable
-from cubicweb.view import NOINDEX, NOFOLLOW
+from cubicweb.view import NOINDEX, NOFOLLOW, EntityAdapter, implements_adapter_compat
 from cubicweb.uilib import soup2xhtml
 from cubicweb.web.controller import Controller
 from cubicweb.web.action import Action
 from cubicweb.web.views import basetemplates
+
+
+class IEmbedableAdapter(EntityAdapter):
+    """interface for embedable entities"""
+    __regid__ = 'IEmbedable'
+    __select__ = implements(IEmbedable) # XXX for bw compat, should be abstract
+
+    @implements_adapter_compat('IEmbedable')
+    def embeded_url(self):
+        """embed action interface"""
+        raise NotImplementedError
 
 
 class ExternalTemplate(basetemplates.TheMainTemplate):
@@ -92,7 +101,7 @@ class EmbedController(Controller):
 
 def entity_has_embedable_url(entity):
     """return 1 if the entity provides an allowed embedable url"""
-    url = entity.embeded_url()
+    url = entity.cw_adapt_to('IEmbedable').embeded_url()
     if not url or not url.strip():
         return 0
     allowed = entity._cw.vreg.config['embed-allowed']
@@ -107,14 +116,14 @@ class EmbedAction(Action):
     """
     __regid__ = 'embed'
     __select__ = (one_line_rset() & match_search_state('normal')
-                  & implements(IEmbedable)
+                  & adaptable('IEmbedable')
                   & score_entity(entity_has_embedable_url))
 
     title = _('embed')
 
     def url(self, row=0):
         entity = self.cw_rset.get_entity(row, 0)
-        url = urljoin(self._cw.base_url(), entity.embeded_url())
+        url = urljoin(self._cw.base_url(), entity.cw_adapt_to('IEmbedable').embeded_url())
         if self._cw.form.has_key('rql'):
             return self._cw.build_url('embed', url=url, rql=self._cw.form['rql'])
         return self._cw.build_url('embed', url=url)

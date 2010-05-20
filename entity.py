@@ -107,10 +107,10 @@ class Entity(AppObject, dict):
                     if not interface.implements(cls, iface):
                         interface.extend(cls, iface)
             if role == 'subject':
-                setattr(cls, rschema.type, SubjectRelation(rschema))
+                attr = rschema.type
             else:
                 attr = 'reverse_%s' % rschema.type
-                setattr(cls, attr, ObjectRelation(rschema))
+            setattr(cls, attr, Relation(rschema, role))
         if mixins:
             # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
             # due to class dumping, cls is the generated top level class with actual
@@ -124,6 +124,24 @@ class Entity(AppObject, dict):
             mixins += cls.__bases__[1:]
             cls.__bases__ = tuple(mixins)
             cls.info('plugged %s mixins on %s', mixins, cls)
+
+    fetch_attrs = ('modification_date',)
+    @classmethod
+    def fetch_order(cls, attr, var):
+        """class method used to control sort order when multiple entities of
+        this type are fetched
+        """
+        return cls.fetch_unrelated_order(attr, var)
+
+    @classmethod
+    def fetch_unrelated_order(cls, attr, var):
+        """class method used to control sort order when multiple entities of
+        this type are fetched to use in edition (eg propose them to create a
+        new relation on an edited entity).
+        """
+        if attr == 'modification_date':
+            return '%s DESC' % var
+        return None
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
@@ -377,6 +395,23 @@ class Entity(AppObject, dict):
         """
         for attr, value in values.items():
             self[attr] = value # use self.__setitem__ implementation
+
+    def cw_adapt_to(self, interface):
+        """return an adapter the entity to the given interface name.
+
+        return None if it can not be adapted.
+        """
+        try:
+            cache = self._cw_adapters_cache
+        except AttributeError:
+            self._cw_adapters_cache = cache = {}
+        try:
+            return cache[interface]
+        except KeyError:
+            adapter = self._cw.vreg['adapters'].select_or_none(
+                interface, self._cw, entity=self)
+            cache[interface] = adapter
+            return adapter
 
     def rql_set_value(self, attr, value):
         """call by rql execution plan when some attribute is modified
@@ -949,6 +984,10 @@ class Entity(AppObject, dict):
             del self.__unique
         except AttributeError:
             pass
+        try:
+            del self._cw_adapters_cache
+        except AttributeError:
+            pass
 
     # raw edition utilities ###################################################
 
@@ -1038,61 +1077,6 @@ class Entity(AppObject, dict):
         self.e_schema.check(self, creation=creation, _=_,
                             relations=relations)
 
-    def fti_containers(self, _done=None):
-        if _done is None:
-            _done = set()
-        _done.add(self.eid)
-        containers = tuple(self.e_schema.fulltext_containers())
-        if containers:
-            for rschema, target in containers:
-                if target == 'object':
-                    targets = getattr(self, rschema.type)
-                else:
-                    targets = getattr(self, 'reverse_%s' % rschema)
-                for entity in targets:
-                    if entity.eid in _done:
-                        continue
-                    for container in entity.fti_containers(_done):
-                        yield container
-                        yielded = True
-        else:
-            yield self
-
-    def get_words(self):
-        """used by the full text indexer to get words to index
-
-        this method should only be used on the repository side since it depends
-        on the logilab.database package
-
-        :rtype: list
-        :return: the list of indexable word of this entity
-        """
-        from logilab.database.fti import tokenize
-        # take care to cases where we're modyfying the schema
-        pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
-        words = []
-        for rschema in self.e_schema.indexable_attributes():
-            if (self.e_schema, rschema) in pending:
-                continue
-            try:
-                value = self.printable_value(rschema, format='text/plain')
-            except TransformError:
-                continue
-            except:
-                self.exception("can't add value of %s to text index for entity %s",
-                               rschema, self.eid)
-                continue
-            if value:
-                words += tokenize(value)
-        for rschema, role in self.e_schema.fulltext_relations():
-            if role == 'subject':
-                for entity in getattr(self, rschema.type):
-                    words += entity.get_words()
-            else: # if role == 'object':
-                for entity in getattr(self, 'reverse_%s' % rschema.type):
-                    words += entity.get_words()
-        return words
-
 
 # attribute and relation descriptors ##########################################
 
@@ -1111,13 +1095,13 @@ class Attribute(object):
     def __set__(self, eobj, value):
         eobj[self._attrname] = value
 
+
 class Relation(object):
     """descriptor that controls schema relation access"""
-    _role = None # for pylint
 
-    def __init__(self, rschema):
-        self._rschema = rschema
+    def __init__(self, rschema, role):
         self._rtype = rschema.type
+        self._role = role
 
     def __get__(self, eobj, eclass):
         if eobj is None:
@@ -1128,14 +1112,6 @@ class Relation(object):
     def __set__(self, eobj, value):
         raise NotImplementedError
 
-
-class SubjectRelation(Relation):
-    """descriptor that controls schema relation access"""
-    _role = 'subject'
-
-class ObjectRelation(Relation):
-    """descriptor that controls schema relation access"""
-    _role = 'object'
 
 from logging import getLogger
 from cubicweb import set_log_methods

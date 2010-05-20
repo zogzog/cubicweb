@@ -84,7 +84,7 @@ class SupervisingTC(CubicWebTC):
         self.assertEquals(op.to_send[0][1], ['test@logilab.fr'])
         self.commit()
         # some other changes #######
-        user.fire_transition('deactivate')
+        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         sentops = [op for op in session.pending_operations
                    if isinstance(op, SupervisionMailOp)]
         self.assertEquals(len(sentops), 1)

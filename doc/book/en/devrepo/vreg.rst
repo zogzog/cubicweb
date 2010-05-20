@@ -37,6 +37,7 @@ Those selectors are somewhat dumb, which doesn't mean they're not (very) useful.
 .. autoclass:: cubicweb.appobject.yes
 .. autoclass:: cubicweb.selectors.match_kwargs
 .. autoclass:: cubicweb.selectors.appobject_selectable
+.. autoclass:: cubicweb.selectors.adaptable
 
 
 Result set selectors
@@ -75,6 +76,7 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.selectors.partial_has_related_entities
 .. autoclass:: cubicweb.selectors.has_permission
 .. autoclass:: cubicweb.selectors.has_add_permission
+.. autoclass:: cubicweb.selectors.has_mimetype
 
 
 Logged user selectors

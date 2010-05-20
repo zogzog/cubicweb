@@ -1175,7 +1175,7 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
                 source.fti_unindex_entity(session, entity.eid)
-                for container in entity.fti_containers():
+                for container in entity.cw_adapt_to('IFTIndexable').fti_containers():
                     if still_fti or container is not entity:
                         source.fti_unindex_entity(session, entity.eid)
                         source.fti_index_entity(session, container)

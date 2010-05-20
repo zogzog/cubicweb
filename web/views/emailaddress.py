@@ -26,7 +26,7 @@ from cubicweb.schema import display_name
 from cubicweb.selectors import implements
 from cubicweb import Unauthorized
 from cubicweb.web import uicfg
-from cubicweb.web.views import baseviews, primary
+from cubicweb.web.views import baseviews, primary, ibreadcrumbs
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
@@ -138,3 +138,10 @@ class EmailAddressTextView(baseviews.TextView):
 
     def cell_call(self, row, col, **kwargs):
         self.w(self.cw_rset.get_entity(row, col).display_address())
+
+
+class EmailAddressIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = implements('EmailAddress')
+
+    def parent_entity(self):
+        return self.email_of

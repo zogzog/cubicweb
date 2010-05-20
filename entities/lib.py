@@ -48,13 +48,13 @@ class EmailAddress(AnyEntity):
 
     @property
     def email_of(self):
-        return self.reverse_use_email and self.reverse_use_email[0]
+        return self.reverse_use_email and self.reverse_use_email[0] or None
 
     @property
     def prefered(self):
         return self.prefered_form and self.prefered_form[0] or self
 
-    @deprecated('use .prefered')
+    @deprecated('[3.6] use .prefered')
     def canonical_form(self):
         return self.prefered_form and self.prefered_form[0] or self
 
@@ -88,14 +88,6 @@ class EmailAddress(AnyEntity):
         if attr == 'address':
             return self.display_address()
         return super(EmailAddress, self).printable_value(attr, value, attrtype, format)
-
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.email_of:
-            return self.email_of.rest_path(), {}
-        return super(EmailAddress, self).after_deletion_path()
 
 
 class Bookmark(AnyEntity):
@@ -132,12 +124,6 @@ class CWProperty(AnyEntity):
             return self._cw._(self._cw.vreg.property_info(self.pkey)['help'])
         except UnknownProperty:
             return u''
-
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        return 'view', {}
 
 
 class CWCache(AnyEntity):

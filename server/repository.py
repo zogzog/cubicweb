@@ -407,7 +407,7 @@ class Repository(object):
             raise AuthenticationError('authentication failed with all sources')
         cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
-               not cwuser.state in cwuser.AUTHENTICABLE_STATES:
+               not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
         return cwuser
 

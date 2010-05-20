@@ -106,7 +106,7 @@ class CWUserTC(BaseEntityTC):
     def test_allowed_massmail_keys(self):
         e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
         # Bytes/Password attributes should be omited
-        self.assertEquals(e.allowed_massmail_keys(),
+        self.assertEquals(e.cw_adapt_to('IEmailable').allowed_massmail_keys(),
                           set(('surname', 'firstname', 'login', 'last_login_time',
                                'creation_date', 'modification_date', 'cwuri', 'eid'))
                           )

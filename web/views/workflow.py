@@ -33,13 +33,13 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                implements, score_entity)
-from cubicweb.interfaces import IWorkflowable
+                                implements, score_entity, adaptable)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
-from cubicweb.web.views import TmpFileViewMixin, forms, primary, autoform
+from cubicweb.web.views import TmpFileViewMixin
+from cubicweb.web.views import forms, primary, autoform, ibreadcrumbs
 from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
 
 _pvs = uicfg.primaryview_section
@@ -89,8 +89,9 @@ class ChangeStateForm(forms.CompositeEntityForm):
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     __regid__ = 'statuschange'
     title = _('status change')
-    __select__ = (one_line_rset() & implements(IWorkflowable)
-                  & match_form_params('treid'))
+    __select__ = (one_line_rset()
+                  & match_form_params('treid')
+                  & adaptable('IWorkflowable'))
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -99,7 +100,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         self.w(u'<h4>%s %s</h4>\n' % (self._cw._(transition.name),
                                       entity.view('oneline')))
         msg = self._cw._('status will change from %(st1)s to %(st2)s') % {
-            'st1': entity.printable_state,
+            'st1': entity.cw_adapt_to('IWorkflowable').printable_state,
             'st2': self._cw._(transition.destination(entity).name)}
         self.w(u'<p>%s</p>\n' % msg)
         self.w(form.render())
@@ -128,7 +129,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
 class WFHistoryView(EntityView):
     __regid__ = 'wfhistory'
     __select__ = relation_possible('wf_info_for', role='object') & \
-                 score_entity(lambda x: x.workflow_history)
+                 score_entity(lambda x: x.cw_adapt_to('IWorkflowable').workflow_history)
 
     title = _('Workflow history')
 
@@ -183,22 +184,24 @@ class WorkflowActions(action.Action):
 
     def fill_menu(self, box, menu):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
-        menu.label = u'%s: %s' % (self._cw._('state'), entity.printable_state)
+        menu.label = u'%s: %s' % (self._cw._('state'),
+                                  entity.cw_adapt_to('IWorkflowable').printable_state)
         menu.append_anyway = True
         super(WorkflowActions, self).fill_menu(box, menu)
 
     def actual_actions(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        iworkflowable = entity.cw_adapt_to('IWorkflowable')
         hastr = False
-        for tr in entity.possible_transitions():
+        for tr in iworkflowable.possible_transitions():
             url = entity.absolute_url(vid='statuschange', treid=tr.eid)
             yield self.build_action(self._cw._(tr.name), url)
             hastr = True
         # don't propose to see wf if user can't pass any transition
         if hastr:
-            wfurl = entity.current_workflow.absolute_url()
+            wfurl = iworkflowable.current_workflow.absolute_url()
             yield self.build_action(self._cw._('view workflow'), wfurl)
-        if entity.workflow_history:
+        if iworkflowable.workflow_history:
             wfurl = entity.absolute_url(vid='wfhistory')
             yield self.build_action(self._cw._('view history'), wfurl)
 
@@ -345,6 +348,27 @@ class StateEditionForm(autoform.AutomaticEntityForm):
                 return workflow_items_for_relation(self._cw, eids[0], 'transition_of',
                                                    'allowed_transition')
         return []
+
+class WorkflowIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = implements('Workflow')
+    # XXX what if workflow of multiple types?
+    def parent_entity(self):
+        return self.entity.workflow_of and self.entity.workflow_of[0] or None
+
+class WorkflowItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = implements('BaseTransition', 'State')
+    def parent_entity(self):
+        return self.entity.workflow
+
+class TransitionItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = implements('SubWorkflowExitPoint')
+    def parent_entity(self):
+        return self.entity.reverse_subworkflow_exit[0]
+
+class TrInfoIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = implements('TrInfo')
+    def parent_entity(self):
+        return self.entity.for_entity
 
 
 # workflow images ##############################################################

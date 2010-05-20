@@ -384,7 +384,7 @@ class SecurityTC(BaseSecurityTC):
         # Note.para attribute editable by managers or if the note is in "todo" state
         note = self.execute("INSERT Note X: X para 'bidule'").get_entity(0, 0)
         self.commit()
-        note.fire_transition('markasdone')
+        note.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
         self.execute('SET X para "truc" WHERE X eid %(x)s', {'x': note.eid})
         self.commit()
         cnx = self.login('iaminusersgrouponly')
@@ -393,13 +393,13 @@ class SecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized, cnx.commit)
         note2 = cu.execute("INSERT Note X: X para 'bidule'").get_entity(0, 0)
         cnx.commit()
-        note2.fire_transition('markasdone')
+        note2.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
         cnx.commit()
         self.assertEquals(len(cu.execute('Any X WHERE X in_state S, S name "todo", X eid %(x)s', {'x': note2.eid})),
                           0)
         cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
         self.assertRaises(Unauthorized, cnx.commit)
-        note2.fire_transition('redoit')
+        note2.cw_adapt_to('IWorkflowable').fire_transition('redoit')
         cnx.commit()
         cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
         cnx.commit()
@@ -435,7 +435,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cnx.commit()
         self.restore_connection()
         affaire = self.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
-        affaire.fire_transition('abort')
+        affaire.cw_adapt_to('IWorkflowable').fire_transition('abort')
         self.commit()
         self.assertEquals(len(self.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01"')),
                           1)
@@ -537,14 +537,15 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             cu = cnx.cursor()
             self.schema['Affaire'].set_action_permissions('read', ('users',))
             aff = cu.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
-            aff.fire_transition('abort')
+            aff.cw_adapt_to('IWorkflowable').fire_transition('abort')
             cnx.commit()
             # though changing a user state (even logged user) is reserved to managers
             user = cnx.user(self.session)
             # XXX wether it should raise Unauthorized or ValidationError is not clear
             # the best would probably ValidationError if the transition doesn't exist
             # from the current state but Unauthorized if it exists but user can't pass it
-            self.assertRaises(ValidationError, user.fire_transition, 'deactivate')
+            self.assertRaises(ValidationError,
+                              user.cw_adapt_to('IWorkflowable').fire_transition, 'deactivate')
         finally:
             # restore orig perms
             for action, perms in affaire_perms.iteritems():
@@ -552,15 +553,16 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)
+        iworkflowable = aff.cw_adapt_to('IWorkflowable')
         self.commit()
-        aff.fire_transition('abort')
+        iworkflowable.fire_transition('abort')
         self.commit()
         # can change tr info comment
         self.execute('SET TI comment %(c)s WHERE TI wf_info_for X, X ref "ARCT01"',
                      {'c': u'bouh!'})
         self.commit()
         aff.clear_related_cache('wf_info_for', 'object')
-        trinfo = aff.latest_trinfo()
+        trinfo = iworkflowable.latest_trinfo()
         self.assertEquals(trinfo.comment, 'bouh!')
         # but not from_state/to_state
         aff.clear_related_cache('wf_info_for', role='object')

@@ -15,22 +15,252 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of tree-building widgets, based on jQuery treeview plugin
-
+"""Set of tree views / tree-building widgets, some based on jQuery treeview
+plugin.
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.mtconverter import xml_escape
+from logilab.common.decorators import cached
+
 from cubicweb.utils import make_uid
-from cubicweb.interfaces import ITree
-from cubicweb.selectors import implements
-from cubicweb.view import EntityView
+from cubicweb.selectors import implements, adaptable
+from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
 from cubicweb.web import json
+from cubicweb.interfaces import ITree
+from cubicweb.web.views import baseviews
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
 
+
+class ITreeAdapter(EntityAdapter):
+    """This adapter has to be overriden to be configured using the
+    tree_relation, child_role and parent_role class attributes to
+    benefit from this default implementation
+    """
+    __regid__ = 'ITree'
+    __select__ = implements(ITree) # XXX for bw compat, else should be abstract
+
+    tree_relation = None
+    child_role = 'subject'
+    parent_role = 'object'
+
+    @implements_adapter_compat('ITree')
+    def children_rql(self):
+        """returns RQL to get children
+
+        XXX should be removed from the public interface
+        """
+        return self.entity.related_rql(self.tree_relation, self.parent_role)
+
+    @implements_adapter_compat('ITree')
+    def different_type_children(self, entities=True):
+        """return children entities of different type as this entity.
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        res = self.entity.related(self.tree_relation, self.parent_role,
+                                  entities=entities)
+        eschema = self.entity.e_schema
+        if entities:
+            return [e for e in res if e.e_schema != eschema]
+        return res.filtered_rset(lambda x: x.e_schema != eschema, self.entity.cw_col)
+
+    @implements_adapter_compat('ITree')
+    def same_type_children(self, entities=True):
+        """return children entities of the same type as this entity.
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        res = self.entity.related(self.tree_relation, self.parent_role,
+                                  entities=entities)
+        eschema = self.entity.e_schema
+        if entities:
+            return [e for e in res if e.e_schema == eschema]
+        return res.filtered_rset(lambda x: x.e_schema is eschema, self.entity.cw_col)
+
+    @implements_adapter_compat('ITree')
+    def is_leaf(self):
+        """returns true if this node as no child"""
+        return len(self.children()) == 0
+
+    @implements_adapter_compat('ITree')
+    def is_root(self):
+        """returns true if this node has no parent"""
+        return self.parent() is None
+
+    @implements_adapter_compat('ITree')
+    def root(self):
+        """return the root object"""
+        return self._cw.entity_from_eid(self.path()[0])
+
+    @implements_adapter_compat('ITree')
+    def parent(self):
+        """return the parent entity if any, else None (e.g. if we are on the
+        root)
+        """
+        try:
+            return self.entity.related(self.tree_relation, self.child_role,
+                                       entities=True)[0]
+        except (KeyError, IndexError):
+            return None
+
+    @implements_adapter_compat('ITree')
+    def children(self, entities=True, sametype=False):
+        """return children entities
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        if sametype:
+            return self.same_type_children(entities)
+        else:
+            return self.entity.related(self.tree_relation, self.parent_role,
+                                       entities=entities)
+
+    @implements_adapter_compat('ITree')
+    def iterparents(self, strict=True):
+        def _uptoroot(self):
+            curr = self
+            while True:
+                curr = curr.parent()
+                if curr is None:
+                    break
+                yield curr
+                curr = curr.cw_adapt_to('ITree')
+        if not strict:
+            return chain([self.entity], _uptoroot(self))
+        return _uptoroot(self)
+
+    @implements_adapter_compat('ITree')
+    def iterchildren(self, _done=None):
+        """iterates over the item's children"""
+        if _done is None:
+            _done = set()
+        for child in self.children():
+            if child.eid in _done:
+                self.error('loop in %s tree', child.__regid__.lower())
+                continue
+            yield child
+            _done.add(child.eid)
+
+    @implements_adapter_compat('ITree')
+    def prefixiter(self, _done=None):
+        if _done is None:
+            _done = set()
+        if self.entity.eid in _done:
+            return
+        _done.add(self.entity.eid)
+        yield self.entity
+        for child in self.same_type_children():
+            for entity in child.cw_adapt_to('ITree').prefixiter(_done):
+                yield entity
+
+    @cached
+    @implements_adapter_compat('ITree')
+    def path(self):
+        """returns the list of eids from the root object to this object"""
+        path = []
+        adapter = self
+        entity = adapter.entity
+        while entity is not None:
+            if entity.eid in path:
+                self.error('loop in %s tree', entity.__regid__.lower())
+                break
+            path.append(entity.eid)
+            try:
+                # check we are not jumping to another tree
+                if (adapter.tree_relation != self.tree_relation or
+                    adapter.child_role != self.child_role):
+                    break
+                entity = adapter.parent()
+                adapter = entity.cw_adapt_to('ITree')
+            except AttributeError:
+                break
+        path.reverse()
+        return path
+
+
+def _done_init(done, view, row, col):
+    """handle an infinite recursion safety belt"""
+    if done is None:
+        done = set()
+    entity = view.cw_rset.get_entity(row, col)
+    if entity.eid in done:
+        msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
+            'rel': entity.tree_attribute,
+            'eid': entity.eid
+            }
+        return None, msg
+    done.add(entity.eid)
+    return done, entity
+
+
+class BaseTreeView(baseviews.ListView):
+    """base tree view"""
+    __regid__ = 'tree'
+    __select__ = adaptable('ITree')
+    item_vid = 'treeitem'
+
+    def call(self, done=None, **kwargs):
+        if done is None:
+            done = set()
+        super(TreeViewMixIn, self).call(done=done, **kwargs)
+
+    def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
+        done, entity = _done_init(done, self, row, col)
+        if done is None:
+            # entity is actually an error message
+            self.w(u'<li class="badcontent">%s</li>' % entity)
+            return
+        self.open_item(entity)
+        entity.view(vid or self.item_vid, w=self.w, **kwargs)
+        relatedrset = entity.cw_adapt_to('ITree').children(entities=False)
+        self.wview(self.__regid__, relatedrset, 'null', done=done, **kwargs)
+        self.close_item(entity)
+
+    def open_item(self, entity):
+        self.w(u'<li class="%s">\n' % entity.__regid__.lower())
+    def close_item(self, entity):
+        self.w(u'</li>\n')
+
+
+
+class TreePathView(EntityView):
+    """a recursive path view"""
+    __regid__ = 'path'
+    __select__ = adaptable('ITree')
+    item_vid = 'oneline'
+    separator = u'&#160;&gt;&#160;'
+
+    def call(self, **kwargs):
+        self.w(u'<div class="pathbar">')
+        super(TreePathMixIn, self).call(**kwargs)
+        self.w(u'</div>')
+
+    def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
+        done, entity = _done_init(done, self, row, col)
+        if done is None:
+            # entity is actually an error message
+            self.w(u'<span class="badcontent">%s</span>' % entity)
+            return
+        parent = entity.cw_adapt_to('ITree').parent_entity()
+        if parent:
+            parent.view(self.__regid__, w=self.w, done=done)
+            self.w(self.separator)
+        entity.view(vid or self.item_vid, w=self.w)
+
+
+# XXX rename regid to ajaxtree/foldabletree or something like that (same for
+# treeitemview)
 class TreeView(EntityView):
+    """ajax tree view, click to expand folder"""
+
     __regid__ = 'treeview'
     itemvid = 'treeitemview'
     subvid = 'oneline'
@@ -112,7 +342,7 @@ class FileItemInnerView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
-        if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
+        if entity.cw_adapt_to('ITree') and not entity.is_leaf():
             self.w(u'<div class="folder">%s</div>\n' % entity.view('oneline'))
         else:
             # XXX define specific CSS classes according to mime types
@@ -120,7 +350,7 @@ class FileItemInnerView(EntityView):
 
 
 class DefaultTreeViewItemView(EntityView):
-    """default treeitem view for entities which don't implement ITree"""
+    """default treeitem view for entities which don't adapt to ITree"""
     __regid__ = 'treeitemview'
 
     def cell_call(self, row, col, vid='oneline', treeid=None, **morekwargs):
@@ -131,12 +361,12 @@ class DefaultTreeViewItemView(EntityView):
 
 
 class TreeViewItemView(EntityView):
-    """specific treeitem view for entities which implement ITree
+    """specific treeitem view for entities which adapt to ITree
 
     (each item should be expandable if it's not a tree leaf)
     """
     __regid__ = 'treeitemview'
-    __select__ = implements(ITree)
+    __select__ = adaptable('ITree')
     default_branch_state_is_open = False
 
     def open_state(self, eeid, treeid):
@@ -150,15 +380,16 @@ class TreeViewItemView(EntityView):
                   is_last=False, **morekwargs):
         w = self.w
         entity = self.cw_rset.get_entity(row, col)
+        itree = entity.cw_adapt_to('ITree')
         liclasses = []
         is_open = self.open_state(entity.eid, treeid)
-        is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
+        is_leaf = not hasattr(entity, 'is_leaf') or itree.is_leaf()
         if is_leaf:
             if is_last:
                 liclasses.append('last')
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
-            rql = entity.children_rql() % {'x': entity.eid}
+            rql = itree.children_rql() % {'x': entity.eid}
             url = xml_escape(self._cw.build_url('json', rql=rql, vid=parentvid,
                                                 pageid=self._cw.pageid,
                                                 treeid=treeid,
@@ -197,7 +428,7 @@ class TreeViewItemView(EntityView):
         # the local node info
         self.wview(vid, self.cw_rset, row=row, col=col, **morekwargs)
         if is_open and not is_leaf: #  => rql is defined
-            self.wview(parentvid, entity.children(entities=False), subvid=vid,
+            self.wview(parentvid, itree.children(entities=False), subvid=vid,
                        treeid=treeid, initial_load=False, **morekwargs)
         w(u'</li>')
 

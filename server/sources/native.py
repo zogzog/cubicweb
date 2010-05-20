@@ -1165,7 +1165,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp
-            self.dbhelper.cursor_index_object(entity.eid, entity,
+            self.dbhelper.cursor_index_object(entity.eid,
+                                              entity.cw_adapt_to('IFTIndexable'),
                                               session.pool['system'])
         except Exception: # let KeyboardInterrupt / SystemExit propagate
             self.exception('error while reindexing %s', entity)
@@ -1190,7 +1191,8 @@ class FTIndexEntityOp(hook.LateOperation):
                 # processed
                 return
             done.add(eid)
-            for container in session.entity_from_eid(eid).fti_containers():
+            iftindexable = session.entity_from_eid(eid).cw_adapt_to('IFTIndexable')
+            for container in iftindexable.fti_containers():
                 source.fti_unindex_entity(session, container.eid)
                 source.fti_index_entity(session, container)
 

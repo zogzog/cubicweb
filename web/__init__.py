@@ -17,9 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """CubicWeb web client core. You'll need a apache-modpython or twisted
 publisher to get a full CubicWeb web application
-
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 

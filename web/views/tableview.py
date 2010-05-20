@@ -369,9 +369,9 @@ class EntityAttributesTableView(EntityView):
             self._cw.add_css(self.css_files)
         _ = self._cw._
         self.columns = columns or self.columns
-        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
+        sample = self.cw_rset.get_entity(0, 0)
         self.w(u'<table class="%s">' % self.table_css)
-        self.table_header(ecls)
+        self.table_header(sample)
         self.w(u'<tbody>')
         for row in xrange(self.cw_rset.rowcount):
             self.cell_call(row=row, col=0)
@@ -396,16 +396,15 @@ class EntityAttributesTableView(EntityView):
         self.w(line % infos)
         self.w(u'</tr>\n')
 
-    def table_header(self, ecls):
+    def table_header(self, sample):
         """builds the table's header"""
         self.w(u'<thead><tr>')
-        _ = self._cw._
         for column in self.columns:
             meth = getattr(self, 'header_for_%s' % column, None)
             if meth:
-                colname = meth(ecls)
+                colname = meth(sample)
             else:
-                colname = _(column)
+                colname = self._cw._(column)
             self.w(u'<th>%s</th>' % xml_escape(colname))
         self.w(u'</tr></thead>\n')
 

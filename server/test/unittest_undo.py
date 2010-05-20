@@ -160,8 +160,8 @@ class UndoableTransactionTC(CubicWebTC):
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
         self.failUnless(self.execute('Any X WHERE X has_text "toto@logilab"'))
-        self.assertEquals(toto.state, 'activated')
-        self.assertEquals(toto.get_email(), 'toto@logilab.org')
+        self.assertEquals(toto.cw_adapt_to('IWorkflowable').state, 'activated')
+        self.assertEquals(toto.cw_adapt_to('IEmailable').get_email(), 'toto@logilab.org')
         self.assertEquals([(p.pkey, p.value) for p in toto.reverse_for_user],
                           [('ui.default-text-format', 'text/rest')])
         self.assertEquals([g.name for g in toto.in_group],

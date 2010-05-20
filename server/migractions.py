@@ -1157,10 +1157,10 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('[3.5] use entity.fire_transition("transition") or entity.change_state("state")',
-                stacklevel=3)
+    @deprecated('[3.5] use iworkflowable.fire_transition("transition") or '
+                'iworkflowable.change_state("state")', stacklevel=3)
     def cmd_set_state(self, eid, statename, commit=False):
-        self._cw.entity_from_eid(eid).change_state(statename)
+        self._cw.entity_from_eid(eid).cw_adapt_to('IWorkflowable').change_state(statename)
         if commit:
             self.commit()
 

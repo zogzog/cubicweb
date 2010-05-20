@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""html calendar views
-
-"""
+"""html calendar views"""
 
 from datetime import date, time, timedelta
 
@@ -26,8 +24,25 @@ from logilab.common.date import (ONEDAY, ONEWEEK, days_in_month, previous_month,
                                  next_month, first_day, last_day, date_range)
 
 from cubicweb.interfaces import ICalendarViews
-from cubicweb.selectors import implements
-from cubicweb.view import EntityView
+from cubicweb.selectors import implements, adaptable
+from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
+
+class ICalendarViewsAdapter(EntityAdapter):
+    """calendar views interface"""
+    __regid__ = 'ICalendarViews'
+    __select__ = implements(ICalendarViews) # XXX for bw compat, should be abstract
+
+    @implements_adapter_compat('ICalendarViews')
+    def matching_dates(self, begin, end):
+        """
+        :param begin: day considered as begin of the range (`DateTime`)
+        :param end: day considered as end of the range (`DateTime`)
+
+        :return:
+          a list of dates (`DateTime`) in the range [`begin`, `end`] on which
+          this entity apply
+        """
+        raise NotImplementedError
 
 # used by i18n tools
 WEEKDAYS = [_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
@@ -39,7 +54,7 @@ MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
 
 class _CalendarView(EntityView):
     """base calendar view containing helpful methods to build calendar views"""
-    __select__ = implements(ICalendarViews,)
+    __select__ = adaptable('ICalendarViews')
     paginable = False
 
     # Navigation building methods / views ####################################
@@ -126,7 +141,7 @@ class _CalendarView(EntityView):
             infos = u'<div class="event">'
             infos += self._cw.view(itemvid, self.cw_rset, row=row)
             infos += u'</div>'
-            for date_ in entity.matching_dates(begin, end):
+            for date_ in entity.cw_adapt_to('ICalendarViews').matching_dates(begin, end):
                 day = date(date_.year, date_.month, date_.day)
                 try:
                     dt = time(date_.hour, date_.minute, date_.second)
@@ -288,7 +303,7 @@ class WeekCalendarView(_CalendarView):
             monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
             self.w(u'<tr><th colspan="3">%s %s (%s)</th></tr>' \
                   % (_('week'), monday.isocalendar()[1], monthlink))
-            for day in date_range(monday, sunday):
+            for day in date_range(monday, sunday+ONEDAY):
                 self.w(u'<tr>')
                 self.w(u'<td>%s</td>' % _(WEEKDAYS[day.weekday()]))
                 self.w(u'<td>%s</td>' % (day.strftime('%Y-%m-%d')))
@@ -478,7 +493,7 @@ class AMPMWeekCalendarView(WeekCalendarView):
             w(u'<tr>%s</tr>' % (
                 WEEK_TITLE % (_('week'), monday.isocalendar()[1], monthlink)))
             w(u'<tr><th>%s</th><th>&#160;</th></tr>'% _(u'Date'))
-            for day in date_range(monday, sunday):
+            for day in date_range(monday, sunday+ONEDAY):
                 events = schedule.get(day)
                 style = day.weekday() % 2 and "even" or "odd"
                 w(u'<tr class="%s">' % style)

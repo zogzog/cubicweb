@@ -97,14 +97,14 @@ class EntityTC(CubicWebTC):
         user = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
                            {'pwd': 'toto'}).get_entity(0, 0)
         self.commit()
-        user.fire_transition('deactivate')
+        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         self.commit()
         eid2 = self.execute('INSERT CWUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
         e = self.execute('Any X WHERE X eid %(x)s', {'x': eid2}).get_entity(0, 0)
         e.copy_relations(user.eid)
         self.commit()
         e.clear_related_cache('in_state', 'subject')
-        self.assertEquals(e.state, 'activated')
+        self.assertEquals(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
     def test_related_cache_both(self):
         user = self.execute('Any X WHERE X eid %(x)s', {'x':self.user().eid}).get_entity(0, 0)
@@ -435,7 +435,7 @@ du :eid:`1:*ReST*`'''
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
-        self.assertEquals(set(e.get_words()),
+        self.assertEquals(set(e.cw_adapt_to('IFTIndexable').get_words()),
                           set(['an', 'html', 'file', 'du', 'html', 'some', 'data']))
 
 

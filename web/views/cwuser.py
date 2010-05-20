@@ -80,7 +80,7 @@ class FoafView(EntityView):
         if entity.firstname:
             self.w(u'<foaf:givenname>%s</foaf:givenname>\n'
                    % xml_escape(entity.firstname))
-        emailaddr = entity.get_email()
+        emailaddr = entity.cw_adapt_to('IEmailable').get_email()
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
