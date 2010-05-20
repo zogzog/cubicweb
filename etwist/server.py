@@ -41,6 +41,7 @@ from twisted.web.server import NOT_DONE_YET
 from cubicweb.web import dumps
 
 from logilab.common.decorators import monkeypatch
+from logilab.common.daemon import daemonize
 
 from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
@@ -48,30 +49,6 @@ from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 from cubicweb.etwist.http import HTTPResponse
-
-def daemonize():
-    # XXX unix specific
-    # XXX factorize w/ code in cw.server.server and cw.server.serverctl
-    # (start-repository command)
-    # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
-    if os.fork():   # launch child and...
-        return 1
-    os.setsid()
-    if os.fork():   # launch child again.
-        return 1
-    # move to the root to avoit mount pb
-    os.chdir('/')
-    # set paranoid umask
-    os.umask(077)
-    null = os.open('/dev/null', os.O_RDWR)
-    for i in range(3):
-        try:
-            os.dup2(null, i)
-        except OSError, e:
-            if e.errno != errno.EBADF:
-                raise
-    os.close(null)
-    return None
 
 def start_task(interval, func):
     lc = task.LoopingCall(func)
@@ -418,15 +395,8 @@ def run(config, debug):
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
         print 'instance starting in the background'
-        if daemonize():
+        if daemonize(config['pid-file']):
             return # child process
-        if config['pid-file']:
-            # ensure the directory where the pid-file should be set exists (for
-            # instance /var/run/cubicweb may be deleted on computer restart)
-            piddir = os.path.dirname(config['pid-file'])
-            if not os.path.exists(piddir):
-                os.makedirs(piddir)
-            file(config['pid-file'], 'w').write(str(os.getpid()))
     root_resource.init_publisher() # before changing uid
     if config['uid'] is not None:
         try:

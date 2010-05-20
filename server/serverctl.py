@@ -525,6 +525,7 @@ class StartRepositoryCommand(Command):
         )
 
     def run(self, args):
+        from logilab.common.daemon import daemonize
         from cubicweb.server.server import RepositoryServer
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
@@ -544,7 +545,7 @@ class StartRepositoryCommand(Command):
         piddir = os.path.dirname(pidfile)
         if not os.path.exists(piddir):
             os.makedirs(piddir)
-        if not debug and server.daemonize(pidfile) == -1:
+        if not debug and daemonize(pidfile) == -1:
             return
         uid = config['uid']
         if uid is not None:
