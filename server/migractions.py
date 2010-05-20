@@ -1200,7 +1200,7 @@ class ServerMigrationHelper(MigrationHelper):
         source = self.repo.system_source
         storage = source.storage(etype, attribute)
         source.unset_storage(etype, attribute)
-        rset = self.rqlexec('Any X WHERE X is %s' etype, ask_confirm=False)
+        rset = self.rqlexec('Any X WHERE X is %s' % etype, ask_confirm=False)
         pb = ProgressBar(len(rset))
         for entity in rset.entities():
             # fill cache. Do not fetch that attribute using the global rql query
