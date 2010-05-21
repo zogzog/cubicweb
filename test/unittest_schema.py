@@ -176,7 +176,7 @@ class SchemaReaderClassTest(TestCase):
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType', 'CWUser',
-                             'ExternalUri', 'File', 'Float', 'Image', 'Int', 'Interval', 'Note',
+                             'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
                              'Societe', 'State', 'String', 'SubNote', 'SubWorkflowExitPoint',
