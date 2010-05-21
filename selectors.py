@@ -465,6 +465,7 @@ class appobject_selectable(Selector):
         self.registry = registry
         self.regids = regids
 
+    @lltrace
     def __call__(self, cls, req, **kwargs):
         for regid in self.regids:
             try:
