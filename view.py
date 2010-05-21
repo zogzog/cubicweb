@@ -547,7 +547,10 @@ def implements_adapter_compat(iface):
                      '%s for %s instead' % (func.__name__, iface,
                                             entity.__class__),
                      DeprecationWarning)
-                return getattr(entity, func.__name__)(*args, **kwargs)
+                member = getattr(entity, func.__name__)
+                if callable(member):
+                    return member(*args, **kwargs)
+                return member
             return func(self, *args, **kwargs)
         return decorated
     return _pre39_compat
