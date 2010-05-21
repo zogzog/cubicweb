@@ -490,6 +490,9 @@ class adaptable(appobject_selectable):
     def __init__(self, *regids):
         super(adaptable, self).__init__('adapters', *regids)
 
+    def __call__(self, cls, req, **kwargs):
+        kwargs.setdefault('accept_none', False)
+        return super(adaptable, self).__call__(cls, req, **kwargs)
 
 # rset selectors ##############################################################
 
