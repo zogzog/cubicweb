@@ -15,15 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for selectors mechanism
-
-"""
+"""unit tests for selectors mechanism"""
 
 from logilab.common.testlib import TestCase, unittest_main
 
+from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
-from cubicweb.selectors import implements, match_user_groups
+from cubicweb.selectors import implements, adaptable, match_user_groups
 from cubicweb.interfaces import IDownloadable
 from cubicweb.web import action
 
@@ -140,11 +139,12 @@ class SelectorsTC(TestCase):
 class ImplementsSelectorTC(CubicWebTC):
     def test_etype_priority(self):
         req = self.request()
-        cls = self.vreg['etypes'].etype_class('File')
-        anyscore = implements('Any').score_class(cls, req)
-        idownscore = implements(IDownloadable).score_class(cls, req)
+        f = req.create_entity('File', data_name=u'hop.txt', data=Binary('hop'))
+        rset = f.as_rset()
+        anyscore = implements('Any')(f.__class__, req, rset=rset)
+        idownscore = adaptable('IDownloadable')(f.__class__, req, rset=rset)
         self.failUnless(idownscore > anyscore, (idownscore, anyscore))
-        filescore = implements('File').score_class(cls, req)
+        filescore = implements('File')(f.__class__, req, rset=rset)
         self.failUnless(filescore > idownscore, (filescore, idownscore))
 
     def test_etype_inheritance_no_yams_inheritance(self):

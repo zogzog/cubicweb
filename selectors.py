@@ -531,6 +531,7 @@ class appobject_selectable(Selector):
     * `regids`, object identifiers in this registry, one of them should be
       selectable.
     """
+    selectable_score = 1
     def __init__(self, registry, *regids):
         self.registry = registry
         self.regids = regids
@@ -539,7 +540,7 @@ class appobject_selectable(Selector):
         for regid in self.regids:
             try:
                 req.vreg[self.registry].select(regid, req, **kwargs)
-                return 1
+                return self.selectable_score
             except NoSelectableObject:
                 return 0
 
@@ -553,6 +554,9 @@ class adaptable(appobject_selectable):
       (usually entities) should be adaptable. One of them should be selectable
       when multiple identifiers are given.
     """
+    # implementing an interface takes precedence other special Any interface,
+    # hence return 2 (implements('Any') score is 1)
+    selectable_score = 2
     def __init__(self, *regids):
         super(adaptable, self).__init__('adapters', *regids)
 
