@@ -226,8 +226,8 @@ class Registry(dict):
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
         if len(winners) > 1:
-            # log in production environement, error while debugging
-            if self.config.debugmode:
+            # log in production environement / test, error while debugging
+            if self.config.debugmode or self.config.mode == 'test':
                 raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
                                 % (args, kwargs.keys(),
                                    [repr(v) for v in winners]))
