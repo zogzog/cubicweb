@@ -345,7 +345,7 @@ class Entity(AppObject, dict):
             if hasattr(self, 'edited_attributes') and \
                    attr not in self.edited_attributes:
                 self.edited_attributes.add(attr)
-                self.skip_security_attributes.add(attr)
+                self._cw_skip_security_attributes.add(attr)
 
     def __delitem__(self, attr):
         """override __delitem__ to update self.edited_attributes on cleanup of
@@ -375,7 +375,7 @@ class Entity(AppObject, dict):
         if hasattr(self, 'edited_attributes') and \
                attr not in self.edited_attributes:
             self.edited_attributes.add(attr)
-            self.skip_security_attributes.add(attr)
+            self._cw_skip_security_attributes.add(attr)
 
     def pop(self, attr, default=_marker):
         """override pop to update self.edited_attributes on cleanup of
