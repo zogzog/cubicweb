@@ -131,11 +131,11 @@ class IFTIndexableAdapter(EntityAdapter):
                 words += tokenize(value)
         for rschema, role in entity.e_schema.fulltext_relations():
             if role == 'subject':
-                for entity in getattr(entity, rschema.type):
-                    words += entity.cw_adapt_to('IFTIndexable').get_words()
+                for entity_ in getattr(entity, rschema.type):
+                    words += entity_.cw_adapt_to('IFTIndexable').get_words()
             else: # if role == 'object':
-                for entity in getattr(entity, 'reverse_%s' % rschema.type):
-                    words += entity.cw_adapt_to('IFTIndexable').get_words()
+                for entity_ in getattr(entity, 'reverse_%s' % rschema.type):
+                    words += entity_.cw_adapt_to('IFTIndexable').get_words()
         return words
 
 
