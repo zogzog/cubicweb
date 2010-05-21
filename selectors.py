@@ -298,14 +298,17 @@ class EClassSelector(Selector):
         self.accept_none = accept_none
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
+                 **kwargs):
         if kwargs.get('entity'):
             return self.score_class(kwargs['entity'].__class__, req)
         if not rset:
             return 0
         score = 0
         if row is None:
-            if not self.accept_none:
+            if accept_none is None:
+                accept_none = self.accept_none
+            if not accept_none:
                 if any(rset[i][col] is None for i in xrange(len(rset))):
                     return 0
             for etype in rset.column_types(col):
@@ -365,7 +368,8 @@ class EntitySelector(EClassSelector):
     """
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
+                 **kwargs):
         if not rset and not kwargs.get('entity'):
             return 0
         score = 0
@@ -373,9 +377,11 @@ class EntitySelector(EClassSelector):
             score = self.score_entity(kwargs['entity'])
         elif row is None:
             col = col or 0
+            if accept_none is None:
+                accept_none = self.accept_none
             for row, rowvalue in enumerate(rset.rows):
                 if rowvalue[col] is None: # outer join
-                    if not self.accept_none:
+                    if not accept_none:
                         return 0
                     continue
                 escore = self.score(req, rset, row, col)
