@@ -937,6 +937,7 @@ class Entity(AppObject, dict):
         """
         if rtype is None:
             self._cw_related_cache = {}
+            self._cw_adapters_cache = {}
         else:
             assert role
             self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
@@ -953,15 +954,10 @@ class Entity(AppObject, dict):
         self._cw_completed = False
         self.clear()
         # clear relations cache
-        for rschema, _, role in self.e_schema.relation_definitions():
-            self.cw_clear_relation_cache(rschema.type, role)
+        self.cw_clear_relation_cache()
         # rest path unique cache
         try:
             del self.__unique
-        except AttributeError:
-            pass
-        try:
-            del self._cw_adapters_cache
         except AttributeError:
             pass
 
