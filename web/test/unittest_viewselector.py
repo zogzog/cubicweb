@@ -408,19 +408,19 @@ class VRegistryTC(ViewSelectorTC):
                               tableview.TableView)
 
     def test_interface_selector(self):
-        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X data_name "bim.png"')
+        rset = req.execute('File X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                               idownloadable.IDownloadablePrimaryView)
 
 
     def test_score_entity_selector(self):
-        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X data_name "bim.png"')
+        rset = req.execute('File X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
         fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('bim'))
