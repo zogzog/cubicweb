@@ -169,7 +169,7 @@ Also, think to use the :func:`lltrace` decorator on your selector class' :meth:`
 or below the :func:`objectify_selector` decorator of your selector function so it gets
 traceable when :class:`traced_selection` is activated (see :ref:`DebuggingSelectors`).
 
-.. autofunction:: cubicweb.selectors.lltrace
+.. autofunction:: cubicweb.appobject.lltrace
 
 .. note::
   Selectors __call__ should *always* return a positive integer, and shall never
@@ -183,10 +183,10 @@ Debugging selection
 
 Once in a while, one needs to understand why a view (or any application object)
 is, or is not selected appropriately. Looking at which selectors fired (or did
-not) is the way. The :class:`cubicweb.selectors.traced_selection` context
+not) is the way. The :class:`cubicweb.appobject.traced_selection` context
 manager to help with that, *if you're running your instance in debug mode*.
 
-.. autoclass:: cubicweb.selectors.traced_selection
+.. autoclass:: cubicweb.appobject.traced_selection
 
 
 .. |cubicweb| replace:: *CubicWeb*
@@ -204,87 +204,10 @@ from yams import BASE_TYPES
 
 from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
 # even if not used, let yes here so it's importable through this module
-from cubicweb.appobject import Selector, objectify_selector, yes
-from cubicweb.vregistry import class_regid
-from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.appobject import Selector, objectify_selector, lltrace, yes
 from cubicweb.schema import split_expression
 
-# helpers for debugging selectors
-SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
-TRACED_OIDS = None
-
-def _trace_selector(cls, selector, args, ret):
-    # /!\ lltrace decorates pure function or __call__ method, this
-    #     means argument order may be different
-    if isinstance(cls, Selector):
-        selname = str(cls)
-        vobj = args[0]
-    else:
-        selname = selector.__name__
-        vobj = cls
-    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
-        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
-
-def lltrace(selector):
-    """use this decorator on your selectors so the becomes traceable with
-    :class:`traced_selection`
-    """
-    # don't wrap selectors if not in development mode
-    if CubicWebConfiguration.mode == 'system': # XXX config.debug
-        return selector
-    def traced(cls, *args, **kwargs):
-        ret = selector(cls, *args, **kwargs)
-        if TRACED_OIDS is not None:
-            _trace_selector(cls, selector, args, ret)
-        return ret
-    traced.__name__ = selector.__name__
-    traced.__doc__ = selector.__doc__
-    return traced
-
-class traced_selection(object):
-    """
-    Typical usage is :
-
-    .. sourcecode:: python
-
-        >>> from cubicweb.selectors import traced_selection
-        >>> with traced_selection():
-        ...     # some code in which you want to debug selectors
-        ...     # for all objects
-
-    Don't forget the 'from __future__ import with_statement' at the module top-level
-    if you're using python prior to 2.6.
-
-    This will yield lines like this in the logs::
-
-        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
-
-    You can also give to :class:`traced_selection` the identifiers of objects on
-    which you want to debug selection ('oid1' and 'oid2' in the example above).
-
-    .. sourcecode:: python
-
-        >>> with traced_selection( ('regid1', 'regid2') ):
-        ...     # some code in which you want to debug selectors
-        ...     # for objects with __regid__ 'regid1' and 'regid2'
-
-    A potentially usefull point to set up such a tracing function is
-    the `cubicweb.vregistry.Registry.select` method body.
-    """
-
-    def __init__(self, traced='all'):
-        self.traced = traced
-
-    def __enter__(self):
-        global TRACED_OIDS
-        TRACED_OIDS = self.traced
-
-    def __exit__(self, exctype, exc, traceback):
-        global TRACED_OIDS
-        TRACED_OIDS = None
-        return traceback is None
-
+from cubicweb.appobject import traced_selection # XXX for bw compat
 
 def score_interface(etypesreg, cls_or_inst, cls, iface):
     """Return XXX if the give object (maybe an instance or class) implements
