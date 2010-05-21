@@ -42,10 +42,10 @@ class IEditControlAdapter(EntityAdapter):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
         """
-        parent = self.cw_adapt_to('IBreadCrumbs').parent_entity()
+        parent = self.entity.cw_adapt_to('IBreadCrumbs').parent_entity()
         if parent is not None:
             return parent.rest_path(), {}
-        return str(self.e_schema).lower(), {}
+        return str(self.entity.e_schema).lower(), {}
 
     @implements_adapter_compat('IEditControl')
     def pre_web_edit(self):

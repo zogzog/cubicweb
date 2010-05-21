@@ -128,7 +128,7 @@ class IFeedAdapter(EntityAdapter):
     @implements_adapter_compat('IFeed')
     def rss_feed_url(self):
         """return an url to the rss feed for this entity"""
-        return self.absolute_url(vid='rss')
+        return self.entity.absolute_url(vid='rss')
 
 
 class RSSFeedURL(Component):

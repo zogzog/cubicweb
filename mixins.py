@@ -186,6 +186,21 @@ MI_REL_TRIGGERS = {
     }
 
 
+# XXX move to cubicweb.web.views.treeview once we delete usage from this file
+def _done_init(done, view, row, col):
+    """handle an infinite recursion safety belt"""
+    if done is None:
+        done = set()
+    entity = view.cw_rset.get_entity(row, col)
+    if entity.eid in done:
+        msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
+            'rel': entity.tree_attribute,
+            'eid': entity.eid
+            }
+        return None, msg
+    done.add(entity.eid)
+    return done, entity
+
 
 class TreeViewMixIn(object):
     """a recursive tree view"""

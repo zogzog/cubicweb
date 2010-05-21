@@ -28,6 +28,7 @@ from logilab.common.decorators import cached
 from cubicweb.utils import make_uid
 from cubicweb.selectors import implements, adaptable
 from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
+from cubicweb.mixins import _done_init
 from cubicweb.web import json
 from cubicweb.interfaces import ITree
 from cubicweb.web.views import baseviews
@@ -184,21 +185,6 @@ class ITreeAdapter(EntityAdapter):
                 break
         path.reverse()
         return path
-
-
-def _done_init(done, view, row, col):
-    """handle an infinite recursion safety belt"""
-    if done is None:
-        done = set()
-    entity = view.cw_rset.get_entity(row, col)
-    if entity.eid in done:
-        msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
-            'rel': entity.tree_attribute,
-            'eid': entity.eid
-            }
-        return None, msg
-    done.add(entity.eid)
-    return done, entity
 
 
 class BaseTreeView(baseviews.ListView):

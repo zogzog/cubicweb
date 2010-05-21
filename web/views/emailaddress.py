@@ -144,4 +144,4 @@ class EmailAddressIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = implements('EmailAddress')
 
     def parent_entity(self):
-        return self.email_of
+        return self.entity.email_of

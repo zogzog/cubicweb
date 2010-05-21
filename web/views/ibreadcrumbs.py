@@ -75,11 +75,12 @@ class IBreadCrumbsAdapter(EntityAdapter):
         to displayed view (may be None). When recursing on a parent entity,
         the `recurs` argument should be set to True.
         """
-        path = [self.entity]
         parent = self.parent_entity()
         if parent is not None:
-            adapter = ibreadcrumb_adapter(self.entity)
+            adapter = ibreadcrumb_adapter(parent)
             path = adapter.breadcrumbs(view, True) + [self.entity]
+        else:
+            path = [self.entity]
         if not recurs:
             if view is None:
                 if 'vtitle' in self._cw.form:

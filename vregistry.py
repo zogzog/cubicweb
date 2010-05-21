@@ -45,7 +45,7 @@ from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
-from cubicweb.appobject import AppObject
+from cubicweb.appobject import AppObject, class_regid
 
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
@@ -83,16 +83,6 @@ def _toload_info(path, extrapath, _toload=None):
 def classid(cls):
     """returns a unique identifier for an appobject class"""
     return '%s.%s' % (cls.__module__, cls.__name__)
-
-def class_regid(cls):
-    """returns a unique identifier for an appobject class"""
-    if 'id' in cls.__dict__:
-        warn('[3.6] %s.%s: id is deprecated, use __regid__'
-             % (cls.__module__, cls.__name__), DeprecationWarning)
-        cls.__regid__ = cls.id
-    if hasattr(cls, 'id') and not isinstance(cls.id, property):
-        return cls.id
-    return cls.__regid__
 
 def class_registries(cls, registryname):
     if registryname:

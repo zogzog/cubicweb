@@ -119,7 +119,7 @@ class SIOCContainerView(EntityView):
         self.w(u'<dcterms:modified>%s</dcterms:modified>'
                % entity.modification_date) # XXX format
         self.w(u'<!-- FIXME : here be items -->')#entity.isioc_items()
-        self.w(u'</sioc:%s>\n' % sioct)
+        self.w(u'</sioc:%s>\n' % isioct)
 
 
 class SIOCItemView(EntityView):
@@ -156,5 +156,5 @@ class SIOCItemView(EntityView):
             self.w(u'</sioc:has_creator>\n')
         self.w(u'<!-- FIXME : here be topics -->')#entity.isioc_topics()
         self.w(u'<!-- FIXME : here be replies -->')#entity.isioc_replies()
-        self.w(u' </sioc:%s>\n' % sioct)
+        self.w(u' </sioc:%s>\n' % isioct)
 

@@ -93,7 +93,7 @@ class TimeTableView(EntityView):
 
         visited_tasks = {} # holds a description of a task for a user
         task_colors = {}   # remember a color assigned to a task
-        for date in date_range(date_min, date_max):
+        for date in date_range(date_min, date_max + ONEDAY):
             columns = [date]
             d_users = dates.get(date, {})
             for user in users:
