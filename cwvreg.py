@@ -617,13 +617,18 @@ class CubicWebVRegistry(VRegistry):
             # since 3.9: remove appobjects which depending on other, unexistant
             # appobjects
             for obj, (regname, regids) in self._needs_appobject.items():
-                registry = self[regname]
+                try:
+                    registry = self[regname]
+                except RegistryNotFound:
+                    self.debug('kicking %s (no registry %s)', obj, regname)
+                    self.unregister(obj)
+                    continue
                 for regid in regids:
                     if registry.get(regid):
                         break
                 else:
                     self.debug('kicking %s (no %s object in registry %s)',
-                               obj, ' or '.join(regids), registry)
+                               obj, ' or '.join(regids), regname)
                     self.unregister(obj)
         super(CubicWebVRegistry, self).initialization_completed()
         for rtag in RTAGS:
