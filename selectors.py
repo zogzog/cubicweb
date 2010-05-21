@@ -561,7 +561,7 @@ class multi_lines_rset(Selector):
 
     @lltrace
     def __call__(self, cls, req, rset=None, **kwargs):
-        return rset is not None and self.match_expected(rset.rowcount)
+        return int(rset is not None and self.match_expected(rset.rowcount))
 
 
 class multi_columns_rset(multi_lines_rset):
