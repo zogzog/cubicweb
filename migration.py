@@ -320,7 +320,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """a configuration option has been renamed"""
         self._option_changes.append(('renamed', oldname, newname))
 
-    def cmd_option_group_change(self, option, oldgroup, newgroup):
+    def cmd_option_group_changed(self, option, oldgroup, newgroup):
         """a configuration option has been moved in another group"""
         self._option_changes.append(('moved', option, oldgroup, newgroup))
 
