@@ -425,7 +425,7 @@ class MigrationCommandsTC(CubicWebTC):
                 self.failIf(self.config.cube_dir('email') in self.config.cubes_path())
                 self.failIf('file' in self.config.cubes())
                 self.failIf(self.config.cube_dir('file') in self.config.cubes_path())
-                for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
+                for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
                 self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
@@ -448,7 +448,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.failUnless(self.config.cube_dir('email') in self.config.cubes_path())
             self.failUnless('file' in self.config.cubes())
             self.failUnless(self.config.cube_dir('file') in self.config.cubes_path())
-            for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
+            for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
             self.assertEquals(sorted(schema['see_also'].rdefs.keys()),

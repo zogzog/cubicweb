@@ -491,17 +491,17 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEquals(rset.rows,
-                              [[u'description_format', 13],
-                               [u'description', 14],
+                              [[u'description_format', 12],
+                               [u'description', 13],
                                [u'name', 14],
-                               [u'created_by', 38],
-                               [u'creation_date', 38],
-                               [u'cwuri', 38],
-                               [u'in_basket', 38],
-                               [u'is', 38],
-                               [u'is_instance_of', 38],
-                               [u'modification_date', 38],
-                               [u'owned_by', 38]])
+                               [u'created_by', 37],
+                               [u'creation_date', 37],
+                               [u'cwuri', 37],
+                               [u'in_basket', 37],
+                               [u'is', 37],
+                               [u'is_instance_of', 37],
+                               [u'modification_date', 37],
+                               [u'owned_by', 37]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error

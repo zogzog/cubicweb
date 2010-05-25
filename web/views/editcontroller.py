@@ -160,8 +160,6 @@ class EditController(basecontrollers.ViewController):
     def _insert_entity(self, etype, eid, rqlquery):
         rql = rqlquery.insert_query(etype)
         try:
-            # get the new entity (in some cases, the type might have
-            # changed as for the File --> Image mutation)
             entity = self._cw.execute(rql, rqlquery.kwargs).get_entity(0, 0)
             neweid = entity.eid
         except ValidationError, ex:

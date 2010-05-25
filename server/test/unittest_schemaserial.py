@@ -68,8 +68,6 @@ class Schema2RQLTC(TestCase):
                                 {'et': None, 'x': None}),
                                ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                 {'et': None, 'x': None}),
-                               # ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
-                               #  {'et': 'File', 'x': 'Image'}),
                                ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                 {'et': None, 'x': None})])
 

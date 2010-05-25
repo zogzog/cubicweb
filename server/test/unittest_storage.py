@@ -131,7 +131,7 @@ class StorageTC(CubicWebTC):
         ex = self.assertRaises(QueryError, self.execute,
                                '(Any D WHERE X data D, X is File)'
                                ' UNION '
-                               '(Any D WHERE X data D, X is Image)')
+                               '(Any D WHERE X title D, X is Bookmark)')
         self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
         ex = self.assertRaises(QueryError,
                                self.execute, 'Any D WHERE X data D')

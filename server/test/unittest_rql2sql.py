@@ -15,10 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
-
 """unit tests for module cubicweb.server.sources.rql2sql"""
 
 import sys
@@ -429,13 +425,10 @@ FROM cw_Tag AS _X) AS T1
 GROUP BY T1.C1'''),
 
     ('Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 1, N, DF WHERE X data_name N, X data D, X data_format DF;',
-     '''SELECT (MAX(T1.C1) + MIN(LENGTH(T1.C0))), T1.C2 FROM (SELECT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
+     '''SELECT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))), _X.cw_data_name
 FROM cw_File AS _X
-UNION ALL
-SELECT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
-FROM cw_Image AS _X) AS T1
-GROUP BY T1.C2,T1.C3
-ORDER BY 1,2,T1.C3'''),
+GROUP BY _X.cw_data_name,_X.cw_data_format
+ORDER BY 1,2,_X.cw_data_format'''),
 
     ('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _A.cw_sujet AS C0, _A.cw_ref AS C1
@@ -443,12 +436,9 @@ FROM cw_Affaire AS _A
 ORDER BY 2) AS T1'''),
 
     ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
-     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(T1.C1) + MIN(LENGTH(T1.C0))) AS C0, T1.C2 AS C1, T1.C3 AS C2 FROM (SELECT DISTINCT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
+     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
 FROM cw_File AS _X
-UNION
-SELECT DISTINCT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
-FROM cw_Image AS _X) AS T1
-GROUP BY T1.C2,T1.C3
+GROUP BY _X.cw_data_name,_X.cw_data_format
 ORDER BY 2,3) AS T1
 '''),
 
@@ -711,7 +701,7 @@ WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid)''
      '''SELECT _S.cw_eid
 FROM cw_State AS _S
 WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=somename)'''),
-   
+
 # XXXFIXME fail
 #         ('Any X,RT WHERE X relation_type RT?, NOT X is CWAttribute',
 #      '''SELECT _X.cw_eid, _X.cw_relation_type
@@ -1643,6 +1633,7 @@ class removeUnsusedSolutionsTC(TestCase):
                                                           {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
                           )
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -242,10 +242,11 @@ class RepositoryTC(CubicWebTC):
                                                  'update_permission', 'read_permission')],
                               ['relation_type',
                                'from_entity', 'to_entity',
-                               'in_basket', 'constrained_by', 
+                               'constrained_by',
                                'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'description', 'description_format'])
+                               'defaultval', 'description', 'description_format',
+                               'in_basket'])
 
         self.assertEquals(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEquals(schema.eschema('State').main_attribute(), 'name')
