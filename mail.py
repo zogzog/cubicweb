@@ -85,8 +85,11 @@ def format_mail(uinfo, to_addrs, content, subject="",
     assert type(content) is unicode, repr(content)
     msg = MIMEText(content.encode('UTF-8'), 'plain', 'UTF-8')
     # safety: keep only the first newline
-    subject = subject.splitlines()[0]
-    msg['Subject'] = header(subject)
+    try:
+        subject = subject.splitlines()[0]
+        msg['Subject'] = header(subject)
+    except IndexError:
+        pass # no subject
     if uinfo.get('email'):
         email = uinfo['email']
     elif config and config['sender-addr']:
