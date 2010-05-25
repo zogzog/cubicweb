@@ -27,7 +27,7 @@ from logilab.common.interface import implements
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import ValidationError
-from cubicweb.interfaces import IMileStone, IWorkflowable
+from cubicweb.interfaces import IMileStone, ICalendarable
 from cubicweb.entities import AnyEntity
 
 
@@ -115,8 +115,9 @@ class CWUserTC(BaseEntityTC):
 class InterfaceTC(CubicWebTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):
+        from cubicweb.entities.wfobjs import WorkflowableMixIn
+        WorkflowableMixIn.__implements__ = (ICalendarable,)
         CWUser = self.vreg['etypes'].etype_class('CWUser')
-        self.failUnless(implements(CWUser, IWorkflowable))
         class MyUser(CWUser):
             __implements__ = (IMileStone,)
         self.vreg._loadedmods[__name__] = {}
@@ -126,10 +127,10 @@ class InterfaceTC(CubicWebTC):
         # a copy is done systematically
         self.failUnless(issubclass(MyUser_, MyUser))
         self.failUnless(implements(MyUser_, IMileStone))
-        self.failUnless(implements(MyUser_, IWorkflowable))
+        self.failUnless(implements(MyUser_, ICalendarable))
         # original class should not have beed modified, only the copy
         self.failUnless(implements(MyUser, IMileStone))
-        self.failIf(implements(MyUser, IWorkflowable))
+        self.failIf(implements(MyUser, ICalendarable))
 
 
 class SpecializedEntityClassesTC(CubicWebTC):
