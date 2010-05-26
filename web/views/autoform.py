@@ -125,6 +125,7 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
+from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid, neg_role, uilib
 from cubicweb.schema import display_name
@@ -645,6 +646,18 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     display_fields = None
     # action on the form tag
     _default_form_action_path = 'validateform'
+
+    # pre 3.8.3 compat
+    @property
+    def set_action(self, action):
+        self._action = action
+    @deprecated('[3.9] use form.form_action()')
+    def get_action(self):
+        try:
+            return self._action
+        except AttributeError:
+            return self._cw.build_url(self._default_form_action_path)
+    action = property(get_action, set_action)
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
