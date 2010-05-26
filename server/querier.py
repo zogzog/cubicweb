@@ -269,6 +269,7 @@ class ExecutionPlan(object):
                 # transform in subquery when len(localchecks)>1 and groups
                 if nbtrees > 1 and (select.orderby or select.groupby or
                                     select.having or select.has_aggregat or
+                                    select.distinct or
                                     select.limit or select.offset):
                     newselect = Select()
                     # only select variables in subqueries
@@ -303,6 +304,7 @@ class ExecutionPlan(object):
                         select.offset = 0
                     myunion = Union()
                     newselect.set_with([SubQuery(aliases, myunion)], check=False)
+                    newselect.distinct = select.distinct
                     solutions = [sol.copy() for sol in select.solutions]
                     cleanup_solutions(newselect, solutions)
                     newselect.set_possible_types(solutions)
