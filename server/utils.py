@@ -143,7 +143,8 @@ class LoopTask(object):
         self._t.cancel()
 
     def join(self):
-        self._t.join()
+        if self._t.isAlive():
+            self._t.join()
 
 
 class RepoThread(Thread):

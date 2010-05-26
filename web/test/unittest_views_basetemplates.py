@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.htmlparser import DTDValidator
 
@@ -26,7 +23,10 @@ class LogFormTemplateTC(CubicWebTC):
 
     def _login_labels(self):
         valid = self.content_type_validators.get('text/html', DTDValidator)()
+        req = self.request()
+        req.cnx.anonymous_connection = True
         page = valid.parse_string(self.vreg['views'].main_template(self.request(), 'login'))
+        req.cnx.anonymous_connection = False
         return page.find_tag('label')
 
     def test_label(self):

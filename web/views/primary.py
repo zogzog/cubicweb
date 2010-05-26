@@ -176,7 +176,8 @@ class PrimaryView(EntityView):
                     warn('[3.5] box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
                          'please update %s' % self.__class__.__name__,
                          DeprecationWarning)
-                    label, rset, vid  = box
+                    label, rset, vid = box
+                    dispctrl = {}
                 self.w(u'<div class="sideBox">')
                 self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
                 self.w(u'</div>')

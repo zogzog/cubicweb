@@ -176,7 +176,8 @@ class CWPermission(EntityType):
     name = String(required=True, indexed=True, internationalizable=True, maxsize=100,
                   description=_('name or identifier of the permission'))
     label = String(required=True, internationalizable=True, maxsize=100,
-                   description=_('distinct label to distinguate between other permission entity of the same name'))
+                   description=_('distinct label to distinguate between other '
+                                 'permission entity of the same name'))
     require_group = SubjectRelation('CWGroup',
                                     description=_('groups to which the permission is granted'))
 
@@ -210,7 +211,7 @@ class same_as(RelationType):
         'add':    ('managers', 'users'),
         'delete': ('managers', 'owners'),
         }
-    cardinality = '*1'
+    cardinality = '**'
     symmetric = True
     # NOTE: the 'object = ExternalUri' declaration will still be mandatory
     #       in the cube's schema.

@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML automatic forms to create, delete, copy or edit a single entity
 or a list of entities of the same type
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -27,10 +27,11 @@ from copy import copy
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
+from cubicweb import tags
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, implements, yes)
 from cubicweb.view import EntityView
-from cubicweb import tags
+from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, eid_param, dumps, \
      formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
@@ -306,7 +307,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self._cw.add_js('cubicweb.edition.js')
         self._cw.add_css('cubicweb.form.css')
         if default is None:
-            default = xml_escape(self._cw._('<no value>'))
+            default = xml_escape(self._cw._('<%s not specified>')
+                                 % display_name(self._cw, rtype, role))
         schema = self._cw.vreg.schema
         entity = self.cw_rset.get_entity(row, col)
         rschema = schema.rschema(rtype)

@@ -26,7 +26,9 @@ from logilab.common.date import strptime
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
-from cubicweb.selectors import authenticated_user, match_form_params
+from cubicweb.utils import CubicWebJsonEncoder
+from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
+from cubicweb.mail import format_mail
 from cubicweb.web import (Redirect, RemoteCallFailed, DirectResponse,
                           json, json_dumps)
 from cubicweb.web.controller import Controller
@@ -73,6 +75,7 @@ def check_pageid(func):
 
 class LoginController(Controller):
     __regid__ = 'login'
+    __select__ = anonymous_user()
 
     def publish(self, rset=None):
         """log in the instance"""

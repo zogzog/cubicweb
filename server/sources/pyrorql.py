@@ -38,7 +38,7 @@ from cubicweb import BadConnectionId, UnknownEid, ConnectionError
 from cubicweb.cwconfig import register_persistent_options
 from cubicweb.server.sources import (AbstractSource, ConnectionWrapper,
                                      TimedCache, dbg_st_search, dbg_results)
-
+from cubicweb.server.msplanner import neged_relation
 
 def uidtype(union, col, etype, args):
     select, col = union.locate_subquery(col, etype, args)
@@ -476,7 +476,10 @@ class RQL2RQL(object):
         return
 
     def visit_exists(self, node):
-        return 'EXISTS(%s)' % node.children[0].accept(self)
+        rql = node.children[0].accept(self)
+        if rql:
+            return 'EXISTS(%s)' % rql
+        return
 
     def visit_relation(self, node):
         try:
@@ -486,7 +489,7 @@ class RQL2RQL(object):
                     restr, lhs = self.process_eid_const(node.children[0])
                 except UnknownEid:
                     # can safely skip not relation with an unsupported eid
-                    if node.neged(strict=True):
+                    if neged_relation(node):
                         return
                     raise
             else:
@@ -494,7 +497,7 @@ class RQL2RQL(object):
                 restr = None
         except UnknownEid:
             # can safely skip not relation with an unsupported eid
-            if node.neged(strict=True):
+            if neged_relation(node):
                 return
             # XXX what about optional relation or outer NOT EXISTS()
             raise
@@ -511,7 +514,7 @@ class RQL2RQL(object):
             rhs = node.children[1].accept(self)
         except UnknownEid:
             # can safely skip not relation with an unsupported eid
-            if node.neged(strict=True):
+            if neged_relation(node):
                 return
             # XXX what about optional relation or outer NOT EXISTS()
             raise

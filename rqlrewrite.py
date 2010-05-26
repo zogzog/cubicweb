@@ -155,7 +155,7 @@ class RQLRewriter(object):
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
         """
-        self.select = self.insert_scope = select
+        self.select = select
         self.solutions = solutions
         self.kwargs = kwargs
         self.u_varname = None
@@ -163,6 +163,7 @@ class RQLRewriter(object):
         self.exists_snippet = {}
         self.pending_keys = []
         self.existingvars = existingvars
+        self._insert_scope = None
         # we have to annotate the rqlst before inserting snippets, even though
         # we'll have to redo it latter
         self.annotate(select)
@@ -249,15 +250,19 @@ class RQLRewriter(object):
 
     def _insert_snippet(self, varmap, parent, new):
         if new is not None:
+            if self._insert_scope is None:
+                insert_scope = self.varinfo.get('stinfo', {}).get('scope', self.select)
+            else:
+                insert_scope = self._insert_scope
             if self.varinfo.get('stinfo', {}).get('optrelations'):
                 assert parent is None
-                self.insert_scope = self.snippet_subquery(varmap, new)
+                self._insert_scope = self.snippet_subquery(varmap, new)
                 self.insert_pending()
-                self.insert_scope = self.select
+                self._insert_scope = None
                 return
             new = n.Exists(new)
             if parent is None:
-                self.insert_scope.add_restriction(new)
+                insert_scope.add_restriction(new)
             else:
                 grandpa = parent.parent
                 or_ = n.Or(parent, new)
@@ -274,9 +279,9 @@ class RQLRewriter(object):
                         self._cleanup_inserted(new)
                     raise
                 else:
-                    self.insert_scope = new
+                    self._insert_scope = new
                     self.insert_pending()
-                    self.insert_scope = self.select
+                    self._insert_scope = None
             return new
         self.insert_pending()
 

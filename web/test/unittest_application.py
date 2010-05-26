@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-1 -*-
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -16,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for cubicweb.web.application
-
-"""
+"""unit tests for cubicweb.web.application"""
 
 import base64, Cookie
 import sys
@@ -27,7 +24,7 @@ from urllib import unquote
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
 
-from cubicweb import AuthenticationError
+from cubicweb import AuthenticationError, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
@@ -298,6 +295,11 @@ class ApplicationTC(CubicWebTC):
         self.assertEquals(vreg.property_value('ui.language'), 'de')
         self.commit()
         self.assertEquals(vreg.property_value('ui.language'), 'en')
+
+    def test_login_not_available_to_authenticated(self):
+        req = self.request()
+        ex = self.assertRaises(Unauthorized, self.app_publish, req, 'login')
+        self.assertEquals(str(ex), 'log out first')
 
     def test_fb_login_concept(self):
         """see data/views.py"""
