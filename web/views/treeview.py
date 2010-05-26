@@ -196,7 +196,7 @@ class BaseTreeView(baseviews.ListView):
     def call(self, done=None, **kwargs):
         if done is None:
             done = set()
-        super(TreeViewMixIn, self).call(done=done, **kwargs)
+        super(BaseTreeView, self).call(done=done, **kwargs)
 
     def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
         done, entity = _done_init(done, self, row, col)
@@ -226,7 +226,7 @@ class TreePathView(EntityView):
 
     def call(self, **kwargs):
         self.w(u'<div class="pathbar">')
-        super(TreePathMixIn, self).call(**kwargs)
+        super(TreePathView, self).call(**kwargs)
         self.w(u'</div>')
 
     def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
