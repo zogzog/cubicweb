@@ -251,7 +251,7 @@ class EntityTC(CubicWebTC):
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                          'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                          'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
         #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')

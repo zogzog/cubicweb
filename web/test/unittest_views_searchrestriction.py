@@ -85,7 +85,7 @@ class InsertAttrRelationTC(CubicWebTC):
         try:
             self.assertEquals(self._generate(select, 'in_state', 'subject', 'name'),
                               "DISTINCT Any A,B ORDERBY B WHERE V is CWUser, "
-                              "NOT V in_state VS, VS name 'published', "
+                              "NOT EXISTS(V in_state VS), VS name 'published', "
                               "V in_state A, A name B")
         finally:
             for rdefs in rschema.rdefs.values():

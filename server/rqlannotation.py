@@ -24,7 +24,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.compat import any
 
 from rql import BadRQLQuery
-from rql.nodes import Relation, VariableRef, Constant, Variable, Or
+from rql.nodes import Relation, VariableRef, Constant, Variable, Or, Exists
 from rql.utils import common_parent
 
 def _annotate_select(annotator, rqlst):
@@ -36,7 +36,7 @@ def _annotate_select(annotator, rqlst):
     has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
-        if getrschema(rel.r_type).symmetric and not rel.neged(strict=True):
+        if getrschema(rel.r_type).symmetric and not isinstance(rel.parent, Exists):
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
                 if not stinfo['constnode'] and stinfo['selected']:
@@ -135,7 +135,7 @@ def _annotate_select(annotator, rqlst):
             # priority should be given to relation which are not in inner queries
             # (eg exists)
             try:
-                stinfo['principal'] = _select_principal(var.sqlscope, joins)
+                stinfo['principal'] = _select_principal(var.scope, joins)
             except CantSelectPrincipal:
                 stinfo['invariant'] = False
     rqlst.need_distinct = need_distinct
@@ -146,7 +146,7 @@ def _annotate_select(annotator, rqlst):
 class CantSelectPrincipal(Exception):
     """raised when no 'principal' variable can be found"""
 
-def _select_principal(sqlscope, relations, _sort=lambda x:x):
+def _select_principal(scope, relations, _sort=lambda x:x):
     """given a list of rqlst relations, select one which will be used to
     represent an invariant variable (e.g. using on extremity of the relation
     instead of the variable's type table
@@ -161,7 +161,7 @@ def _select_principal(sqlscope, relations, _sort=lambda x:x):
             continue
         if rel.ored(traverse_scope=True):
             ored_rels.add(rel)
-        elif rel.sqlscope is sqlscope:
+        elif rel.scope is scope:
             return rel
         elif not rel.neged(traverse_scope=True):
             diffscope_rels.add(rel)
@@ -175,12 +175,12 @@ def _select_principal(sqlscope, relations, _sort=lambda x:x):
                     ored_rels.discard(rel1)
                     ored_rels.discard(rel2)
     for rel in _sort(ored_rels):
-        if rel.sqlscope is sqlscope:
+        if rel.scope is scope:
             return rel
         diffscope_rels.add(rel)
     # if DISTINCT query, can use variable from a different scope as principal
     # since introduced duplicates will be removed
-    if sqlscope.stmt.distinct and diffscope_rels:
+    if scope.stmt.distinct and diffscope_rels:
         return iter(_sort(diffscope_rels)).next()
     # XXX  could use a relation for a different scope if it can't generate
     # duplicates, so we would have to check cardinality
@@ -197,7 +197,7 @@ def _select_main_var(relations):
         if rel.operator() not in ('=', 'IS') \
                or not isinstance(rel.children[1].children[0], VariableRef):
             continue
-        if rel.sqlscope is rel.stmt:
+        if rel.scope is rel.stmt:
             return rel
         principal = rel
     if principal is None:
@@ -220,23 +220,6 @@ def set_qdata(getrschema, union, noinvariant):
                     var._q_invariant = True
             else:
                 var._q_invariant = False
-        for rel in select.iget_nodes(Relation):
-            if rel.neged(strict=True) and not rel.is_types_restriction():
-                rschema = getrschema(rel.r_type)
-                if not rschema.final:
-                    # if one of the relation's variable is ambiguous but not
-                    # invariant, an intersection will be necessary
-                    for vref in rel.get_nodes(VariableRef):
-                        var = vref.variable
-                        if (not var._q_invariant and var.valuable_references() == 1
-                            and len(var.stinfo['possibletypes']) > 1):
-                            select.need_intersect = True
-                            break
-                    else:
-                        continue
-                    break
-        else:
-            select.need_intersect = False
 
 
 class SQLGenAnnotator(object):
@@ -270,7 +253,7 @@ class SQLGenAnnotator(object):
     def is_ambiguous(self, var):
         # ignore has_text relation
         if len([rel for rel in var.stinfo['relations']
-                if rel.sqlscope is var.sqlscope and rel.r_type == 'has_text']) == 1:
+                if rel.scope is var.scope and rel.r_type == 'has_text']) == 1:
             return False
         try:
             data = var.stmt._deamb_data
@@ -353,7 +336,7 @@ class IsAmbData(object):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):
             var = term.variable
             if len(var.stinfo['relations']) == 1 \
-                   or rel.sqlscope is var.sqlscope or rel.r_type == 'identity':
+                   or rel.scope is var.scope or rel.r_type == 'identity':
                 self.restrict(var, frozenset(etypes_func()))
                 try:
                     self.maydeambrels[var].add(rel)
