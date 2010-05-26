@@ -317,8 +317,9 @@ class CreateInstanceDBCommand(Command):
         create_db = self.config.create_db
         helper = get_db_helper(driver)
         if driver == 'sqlite':
-            if os.path.exists(dbname) and automatic or \
-                   ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
+            if os.path.exists(dbname) and (
+                automatic or
+                ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
         elif create_db:
             print '\n'+underline_title('Creating the system database')
