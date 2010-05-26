@@ -190,7 +190,7 @@ class NextPrevNavigationComponent(EntityVComponent):
     order = 10
     def call(self, view=None):
         entity = self.cw_rset.get_entity(0, 0)
-        adapter = entity.cw_adapt_to('IDownloadable')
+        adapter = entity.cw_adapt_to('IPrevNext')
         previous = adapter.previous_entity()
         next = adapter.next_entity()
         if previous or next:
