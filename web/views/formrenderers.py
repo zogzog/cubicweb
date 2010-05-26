@@ -174,12 +174,8 @@ class FormRenderer(AppObject):
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'
-        if form.action is None:
-            action = self._cw.build_url('edit')
-        else:
-            action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
-            xml_escape(action or '#'), enctype))
+            xml_escape(form.form_action() or '#'), enctype))
         if form.domid:
             tag += ' id="%s"' % form.domid
         if form.onsubmit:

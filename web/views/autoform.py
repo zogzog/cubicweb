@@ -643,6 +643,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # set this to a list of [(relation, role)] if you want to explictily tell
     # which relations should be edited
     display_fields = None
+    # action on the form tag
+    _default_form_action_path = 'validateform'
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
@@ -712,21 +714,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         if self.force_display:
             return None
         return self.maxrelitems + 1
-
-    def action(self):
-        """return the form's action attribute. Default to validateform if not
-        explicitly overriden.
-        """
-        try:
-            return self._action
-        except AttributeError:
-            return self._cw.build_url('validateform')
-
-    def set_action(self, value):
-        """override default action"""
-        self._action = value
-
-    action = property(action, set_action)
 
     # autoform specific fields #################################################
 

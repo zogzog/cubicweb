@@ -446,9 +446,10 @@ class LogForm(forms.FieldsForm):
     form_buttons = [fw.SubmitButton(label=_('log in'),
                                     attrs={'class': 'loginButton'})]
 
-    @property
-    def action(self):
-        return xml_escape(login_form_url(self._cw))
+    def form_action(self):
+        if self.action is None:
+            return login_form_url(self._cw)
+        return super(LogForm, self).form_action()
 
 
 class LogFormView(View):
