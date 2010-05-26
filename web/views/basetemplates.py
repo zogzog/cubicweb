@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -16,16 +15,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""default templates for CubicWeb web client
+"""default templates for CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import match_kwargs, no_cnx
+from cubicweb.selectors import match_kwargs, no_cnx, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
@@ -60,6 +58,7 @@ class LogInOutTemplate(MainTemplate):
 
 class LogInTemplate(LogInOutTemplate):
     __regid__ = 'login'
+    __select__ = anonymous_user()
     title = 'log in'
 
     def content(self, w):
@@ -79,6 +78,7 @@ class LoggedOutTemplate(LogInOutTemplate):
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),
                 self._cw._('go back to the index page')))
+
 
 @objectify_selector
 def templatable_view(cls, req, rset, *args, **kwargs):
