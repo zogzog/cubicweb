@@ -43,7 +43,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     given server.serverconfig
     """
     from getpass import getpass
-    from logilab.common.db import get_connection
+    from logilab.database import get_connection
     dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
@@ -393,7 +393,7 @@ tables, indexes... (no by default)'}),
     def run(self, args):
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
-        from logilab.common.db import get_connection
+        from logilab.database import get_connection
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         try:
