@@ -233,12 +233,15 @@ class CookieSessionHandler(object):
         return session
 
     def _update_last_login_time(self, req):
+        # XXX should properly detect missing permission / non writeable source
+        # and avoid "except (RepositoryError, Unauthorized)" below
+        if req.user.metainformation()['source']['adapter'] == 'ldapuser':
+            return
         try:
             req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
                         {'x' : req.user.eid})
             req.cnx.commit()
         except (RepositoryError, Unauthorized):
-            # ldap user are not writeable for instance
             req.cnx.rollback()
         except:
             req.cnx.rollback()

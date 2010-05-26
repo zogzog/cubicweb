@@ -25,14 +25,14 @@ repository mainly:
   point to a cubicweb instance.
 * handles session management
 * provides method for pyro registration, to call if pyro is enabled
-
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
 import sys
+import threading
 import Queue
 from os.path import join
 from datetime import datetime
@@ -315,7 +315,6 @@ class Repository(object):
     def pinfo(self):
         # XXX: session.pool is accessed from a local storage, would be interesting
         #      to see if there is a pool set in any thread specific data)
-        import threading
         return '%s: %s (%s)' % (self._available_pools.qsize(),
                                 ','.join(session.user.login for session in self._sessions.values()
                                          if session.pool),
@@ -361,28 +360,6 @@ class Repository(object):
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
-
-    def stats(self): # XXX restrict to managers session?
-        import threading
-        results = {}
-        querier = self.querier
-        source = self.system_source
-        for size, maxsize, hits, misses, title in (
-            (len(querier._rql_cache), self.config['rql-cache-size'],
-            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
-            (len(source._cache), self.config['rql-cache-size'],
-            source.cache_hit, source.cache_miss, 'sql'),
-            ):
-            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
-            results['%s_cache_hit' % title] =  hits
-            results['%s_cache_miss' % title] = misses
-            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
-        results['sql_no_cache'] = self.system_source.no_cache
-        results['nb_open_sessions'] = len(self._sessions)
-        results['nb_active_threads'] = threading.activeCount()
-        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
-        results['available_pools'] = self._available_pools.qsize()
-        return results
 
     def _login_from_email(self, login):
         session = self.internal_session()
@@ -432,6 +409,27 @@ class Repository(object):
         return cwuser
 
     # public (dbapi) interface ################################################
+
+    def stats(self): # XXX restrict to managers session?
+        results = {}
+        querier = self.querier
+        source = self.system_source
+        for size, maxsize, hits, misses, title in (
+            (len(querier._rql_cache), self.config['rql-cache-size'],
+            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
+            (len(source._cache), self.config['rql-cache-size'],
+            source.cache_hit, source.cache_miss, 'sql'),
+            ):
+            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
+            results['%s_cache_hit' % title] =  hits
+            results['%s_cache_miss' % title] = misses
+            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
+        results['sql_no_cache'] = self.system_source.no_cache
+        results['nb_open_sessions'] = len(self._sessions)
+        results['nb_active_threads'] = threading.activeCount()
+        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
+        results['available_pools'] = self._available_pools.qsize()
+        return results
 
     def get_schema(self):
         """return the instance schema. This is a public method, not
