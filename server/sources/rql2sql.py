@@ -1177,13 +1177,26 @@ class SQLGenerator(object):
             pass
         return ''
 
+    def _temp_table_scope(self, select, table):
+        scope = 9999
+        for var, sql in self._varmap.iteritems():
+            if table == sql.split('.', 1)[0]:
+                try:
+                    scope = min(scope, self._state.scopes[select.defined_vars[var].scope])
+                except KeyError:
+                    scope = 0 # XXX
+                if scope == 0:
+                    return 0
+        return 0
+
     def _var_info(self, var):
-        scope = self._state.scopes[var.scope]
         try:
             sql = self._varmap[var.name]
             tablealias = sql.split('.', 1)[0]
+            scope = self._temp_table_scope(var.stmt, tablealias)
             self.add_table(tablealias, scope=scope)
         except KeyError:
+            scope = self._state.scopes[var.scope]
             etype = self._state.solution[var.name]
             # XXX this check should be moved in rql.stcheck
             if self.schema.eschema(etype).final:
