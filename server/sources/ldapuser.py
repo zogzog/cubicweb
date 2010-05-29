@@ -201,6 +201,7 @@ directory (default to once a day).',
 
     def init(self):
         """method called by the repository once ready to handle request"""
+        self.info('ldap init')
         self.repo.looping_task(self._interval, self.synchronize)
         self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                self._query_cache.clear_expired)
@@ -221,8 +222,10 @@ directory (default to once a day).',
                                         "source='%s'" % self.uri)
             for eid, b64extid in cursor.fetchall():
                 extid = b64decode(b64extid)
+                self.debug('ldap eid %s', eid)
                 # if no result found, _search automatically delete entity information
                 res = self._search(session, extid, BASE)
+                self.debug('ldap search %s', res)
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
@@ -269,6 +272,7 @@ directory (default to once a day).',
         two queries are needed since passwords are stored crypted, so we have
         to fetch the salt first
         """
+        self.info('ldap authenticate %s', login)
         if password is None:
             raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
@@ -343,6 +347,7 @@ directory (default to once a day).',
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
+        self.debug('ldap syntax tree search')
         # XXX not handled : transform/aggregat function, join on multiple users...
         assert len(union.children) == 1, 'union not supported'
         rqlst = union.children[0]
@@ -494,19 +499,21 @@ directory (default to once a day).',
     def _search(self, session, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
+        self.info('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
         cnx = session.pool.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
+            self.info('ldap NO SUCH OBJECT')
             eid = self.extid2eid(base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
                 self.repo.delete_info(session, entity, self.uri, base)
-                self._cache.pop(base, None)
+                self.reset_cache()
             return []
 ##         except ldap.REFERRAL, e:
 ##             cnx = self.handle_referral(e)
@@ -541,6 +548,7 @@ directory (default to once a day).',
             self._cache[rec_dn] = rec_dict
             result.append(rec_dict)
         #print '--->', result
+        self.info('ldap built results %s', result)
         return result
 
     def before_entity_insertion(self, session, lid, etype, eid):
@@ -551,6 +559,7 @@ directory (default to once a day).',
         This method must return the an Entity instance representation of this
         entity.
         """
+        self.info('ldap before entity insertion')
         entity = super(LDAPUserSource, self).before_entity_insertion(session, lid, etype, eid)
         res = self._search(session, lid, BASE)[0]
         for attr in entity.e_schema.indexable_attributes():
@@ -561,6 +570,7 @@ directory (default to once a day).',
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
+        self.info('ldap after entity insertion')
         super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',

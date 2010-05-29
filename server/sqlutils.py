@@ -165,6 +165,7 @@ class SQLAdapterMixIn(object):
         dbapi_module = self.dbhelper.dbapi_module
         self.OperationalError = dbapi_module.OperationalError
         self.InterfaceError = dbapi_module.InterfaceError
+        self.DbapiError = dbapi_module.Error
         self._binary = dbapi_module.Binary
         self._process_value = dbapi_module.process_value
         self._dbencoding = dbencoding
