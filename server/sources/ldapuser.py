@@ -513,7 +513,7 @@ directory (default to once a day).',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
                 self.repo.delete_info(session, entity, self.uri, base)
-                self._cache.pop(base, None)
+                self.reset_cache()
             return []
 ##         except ldap.REFERRAL, e:
 ##             cnx = self.handle_referral(e)
