@@ -442,6 +442,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.warning("trying to reconnect")
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
+        except (self.DbapiError,), exc:
+            # We get this one with pyodbc and SQL Server when connection was reset
+            if exc.args[0] == '08S01':
+                self.warning("trying to reconnect")
+                session.pool.reconnect(self)
+                cursor = self.doexec(session, sql, args)
+            else:
+                raise
+            
         results = self.process_result(cursor, cbs)
         assert dbg_results(results)
         return results
