@@ -448,6 +448,9 @@ class VRegistry(dict):
                 mdate = self._mdate(fileordir)
                 if mdate is None:
                     continue # backup file, see _mdate implementation
+                elif "flymake" in fileordir:
+                    # flymake + pylint in use, don't consider these they will corrupt the registry
+                    continue
                 if fileordir not in lastmodifs or lastmodifs[fileordir] < mdate:
                     self.info('File %s changed since last visit', fileordir)
                     return True
@@ -462,6 +465,9 @@ class VRegistry(dict):
         mdate = self._mdate(filepath)
         if mdate is None:
             return # backup file, see _mdate implementation
+        elif "flymake" in filepath:
+            # flymake + pylint in use, don't consider these they will corrupt the registry
+            return
         # set update time before module loading, else we get some reloading
         # weirdness in case of syntax error or other error while importing the
         # module
