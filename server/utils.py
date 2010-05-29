@@ -137,6 +137,7 @@ class LoopTask(object):
 
     def start(self):
         self._t = Timer(self.interval, self.func)
+        self._t.setName('%s-%s[%d]' % (self._t.getName(), self.name, self.interval))
         self._t.start()
 
     def cancel(self):
