@@ -123,6 +123,10 @@ def ask_source_config(sourcetype, inputlevel=0):
 class LoopTask(object):
     """threaded task restarting itself once executed"""
     def __init__(self, interval, func, args):
+        if interval <= 0:
+            raise ValueError('Loop task interval must be > 0 '
+                             '(current value: %f for %s)' % \
+                             (interval, func.__name__))
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             try:
