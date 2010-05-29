@@ -20,7 +20,7 @@
 The `VRegistry`
 ---------------
 
-The `VRegistry` can be seen as a two levels dictionary. It contains
+The `VRegistry` can be seen as a two-level dictionary. It contains
 all dynamically loaded objects (subclasses of :ref:`appobject`) to
 build a |cubicweb| application. Basically:
 
@@ -49,12 +49,12 @@ Details of the recording process
 .. index::
    vregistry: registration_callback
 
-On startup |cubicweb| loads application objects defined in its library
+On startup, |cubicweb| loads application objects defined in its library
 and in cubes used by the instance. Application objects from the
 library are loaded first, then those provided by cubes are loaded in
 dependency order (e.g. if your cube depends on an other, objects from
-the dependency will be loaded first). Cube's modules or packages where
-appobject are looked for is explained in :ref:`cubelayout`.
+the dependency will be loaded first). The layout of the modules or packages
+in a cube  is explained in :ref:`cubelayout`.
 
 For each module:
 
@@ -144,20 +144,22 @@ As explained in the :ref:`Concepts` section:
 
   - else, the higher the score, the better the object suits the context
 
-* the object with the higher score is selected.
+* the object with the highest score is selected.
 
 .. Note::
 
-  When no score is higher than the others, an exception is raised in development
+  When no single object has the highest score, an exception is raised in development
   mode to let you know that the engine was not able to identify the view to
   apply. This error is silenced in production mode and one of the objects with
-  the higher score is picked.
+  the highest score is picked.
 
-  In such cases you would need to review your design and make sure your selectors
-  or appobjects are properly defined.
+  In such cases you would need to review your design and make sure
+  your selectors or appobjects are properly defined. Such an error is
+  typically caused by either forgetting to change the __regid__ in a
+  derived class, or by having copy-pasted some code.
 
-For instance, if you are selecting the primary (eg `__regid__ =
-'primary'`) view (eg `__registry__ = 'views'`) for a result set
+For instance, if you are selecting the primary (`__regid__ =
+'primary'`) view (`__registry__ = 'views'`) for a result set
 containing a `Card` entity, two objects will probably be selectable:
 
 * the default primary view (`__select__ = implements('Any')`), meaning
@@ -167,9 +169,8 @@ containing a `Card` entity, two objects will probably be selectable:
   meaning that the object is selectable for Card entities
 
 Other primary views specific to other entity types won't be selectable in this
-case. Among selectable objects, the implements selector will return a higher
-score than the second view since it's more specific, so it will be selected as
-expected.
+case. Among selectable objects, the `implements('Card')` selector will return a higher
+score since it's more specific, so the correct view will be selected as expected.
 
 .. _SelectionAPI:
 
@@ -179,7 +180,7 @@ API for objects selections
 Here is the selection API you'll get on every registry. Some of them, as the
 'etypes' registry, containing entity classes, extend it. In those methods,
 `*args, **kwargs` is what we call the **context**. Those arguments are given to
-selectors that will inspect there content and return a score accordingly.
+selectors that will inspect their content and return a score accordingly.
 
 .. automethod:: cubicweb.vregistry.Registry.select
 

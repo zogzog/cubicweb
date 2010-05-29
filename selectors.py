@@ -111,7 +111,7 @@ Here is a quick example:
 
     class UserLink(component.Component):
 	'''if the user is the anonymous user, build a link to login else a link
-	to the connected user object with a loggout link
+	to the connected user object with a logout link
 	'''
 	__regid__ = 'loggeduserlink'
 
