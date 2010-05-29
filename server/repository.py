@@ -877,6 +877,7 @@ class Repository(object):
                   recreate=False):
         """get eid from a local id. An eid is attributed if no record is found"""
         cachekey = (extid, source.uri)
+        self.debug('repo extid2eid %s %s %s %s', source, extid, etype, insert)
         try:
             return self._extid_cache[cachekey]
         except KeyError:
