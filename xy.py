@@ -21,6 +21,7 @@
 
 from yams import xy
 
+xy.register_prefix('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf')
 xy.register_prefix('http://purl.org/dc/elements/1.1/', 'dc')
 xy.register_prefix('http://xmlns.com/foaf/0.1/',       'foaf')
 xy.register_prefix('http://usefulinc.com/ns/doap#',    'doap')

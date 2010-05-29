@@ -50,6 +50,14 @@ class XYTC(TestCase):
       ?project a doap:Project;
     }''', 'Any PROJECT WHERE PROJECT is Project')
 
+    def test_base_rdftype(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    SELECT ?project
+    WHERE  {
+      ?project rdf:type doap:Project.
+    }''', 'Any PROJECT WHERE PROJECT is Project')
 
     def test_base_attr_sel(self):
         self._test('''
