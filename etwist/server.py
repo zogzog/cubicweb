@@ -99,11 +99,11 @@ class LongTimeExpiringFile(File):
 
 
 class CubicWebRootResource(resource.Resource):
-    def __init__(self, config):
+    def __init__(self, config, vreg=None):
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
-        self.appli = CubicWebPublisher(config)
+        self.appli = CubicWebPublisher(config, vreg=vreg)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
         self.children = {}
@@ -387,9 +387,11 @@ from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.twisted')
 set_log_methods(CubicWebRootResource, LOGGER)
 
-def run(config):
+def run(config, vreg=None, debug=None):
+    if debug is not None:
+        config.debugmode = debug
     # create the site
-    root_resource = CubicWebRootResource(config)
+    root_resource = CubicWebRootResource(config, vreg=vreg)
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
@@ -399,7 +401,7 @@ def run(config):
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
-        print 'instance starting in the background'
+        logger.info('instance started in the background on %s', root_resource.base_url)
         if daemonize(config['pid-file']):
             return # child process
     root_resource.init_publisher() # before changing uid
