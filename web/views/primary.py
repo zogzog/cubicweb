@@ -82,7 +82,7 @@ class PrimaryView(EntityView):
             self.w(u'</td><td>')
             self.w(u'<div class="primaryRight">')
             if hasattr(self, 'render_side_related'):
-                warn('render_side_related is deprecated')
+                warn('[3.2] render_side_related is deprecated')
                 self.render_side_related(entity, [])
             self.render_side_boxes(boxes)
             self.w(u'</div>')
@@ -95,7 +95,7 @@ class PrimaryView(EntityView):
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
             except NotImplementedError:
-                warn('component %s doesnt implement cell_call, please update'
+                warn('[3.2] component %s doesnt implement cell_call, please update'
                      % comp.__class__, DeprecationWarning)
                 comp.render(w=self.w, view=self)
         self.w(u'</div>')
