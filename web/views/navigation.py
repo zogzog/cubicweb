@@ -237,7 +237,7 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     if w is None:
         w = view.w
     nav = req.vreg['components'].select_or_none(
-        'navigation', req, rset=rset, page_size=page_size)
+        'navigation', req, rset=rset, page_size=page_size, view=view)
     if nav:
         if w is None:
             w = view.w
