@@ -34,3 +34,6 @@ class LogFormTemplateTC(CubicWebTC):
         self.assertEquals(self._login_labels(), ['login or email', 'password'])
         self.set_option('allow-email-login', 'no')
         self.assertEquals(self._login_labels(), ['login', 'password'])
+
+if __name__ == '__main__':
+   unittest_main()
