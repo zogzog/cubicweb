@@ -25,6 +25,7 @@ import os
 import select
 import errno
 import traceback
+import threading
 from os.path import join
 from time import mktime
 from datetime import date, timedelta
@@ -407,8 +408,11 @@ def run(config, debug):
         os.setuid(uid)
     root_resource.start_service()
     logger.info('instance started on %s', root_resource.base_url)
+    # avoid annoying warnign if not in Main Thread
+    signals = threading.currentThread().getName() == 'MainThread'
     if config['profile']:
         import cProfile
-        cProfile.runctx('reactor.run()', globals(), locals(), config['profile'])
+        cProfile.runctx('reactor.run(installSignalHandlers=%s)' % signals,
+                        globals(), locals(), config['profile'])
     else:
-        reactor.run()
+        reactor.run(installSignalHandlers=signals)
