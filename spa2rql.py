@@ -75,7 +75,7 @@ class QueryInfo(object):
             nbctypes = len(ctypes)
             ctypes &= varpossibletypes
             if not ctypes:
-                raise TypeResolverException()
+                raise TypeResolverException('No possible type')
             return len(ctypes) != nbctypes
         except KeyError:
             self.possible_types[var] = varpossibletypes
@@ -114,7 +114,7 @@ class QueryInfo(object):
                                               if o == '*' or o in self.possible_types[objvar]]
                 # ensure this still make sense
                 if not yams_predicates:
-                    raise TypeResolverException()
+                    raise TypeResolverException('No yams predicate')
                 if len(yams_predicates) != nbchoices:
                     modified = True
 
