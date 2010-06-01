@@ -192,11 +192,14 @@ class TableView(AnyRsetView):
             self.w(u'</div>\n')
 
     def page_navigation_url(self, navcomp, path, params):
+        if hasattr(self, 'divid'):
+            divid = self.divid
+        else:
+            divid = params.get('divid', 'paginated-content'),
         rql = params.pop('rql', self.cw_rset.printable_rql())
         # latest 'true' used for 'swap' mode
         return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-            dumps(self.divid), dumps(rql),
-            dumps(self.__regid__), dumps(params))
+            dumps(divid), dumps(rql), dumps(self.__regid__), dumps(params))
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
