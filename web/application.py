@@ -293,7 +293,7 @@ class CubicWebPublisher(object):
         # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)
         if not vreg.initialized:
-            self.config.init_cubes(self.repo.get_cubes())
+            config.init_cubes(self.repo.get_cubes())
             vreg.init_properties(self.repo.properties())
             vreg.set_schema(self.repo.get_schema())
         # set the correct publish method
