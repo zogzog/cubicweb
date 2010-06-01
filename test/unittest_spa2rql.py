@@ -188,7 +188,7 @@ class XYTC(TestCase):
     WHERE  {
       ?project a doap:Project;
               dc:title ?title.
-    }''', 'Any PROJECT,TITLE WHERE PROJECT name TITLE, PROJECT is Project')
+    }''', 'Any PROJECT, TITLE WHERE PROJECT name TITLE, PROJECT is Project')
 
 # # Two elements in the group
 # PREFIX :  <http://example.org/ns#>

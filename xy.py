@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""map standard cubicweb schema to xml vocabularies
-
-"""
+"""map standard cubicweb schema to xml vocabularies"""
 
 from yams import xy
 
