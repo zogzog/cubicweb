@@ -623,28 +623,35 @@ class multi_columns_rset(multi_lines_rset):
         return rset and self.match_expected(len(rset.rows[0])) or 0
 
 
-@objectify_selector
-@lltrace
-def paginated_rset(cls, req, rset=None, **kwargs):
-    """Return 1 for result set with more rows than a page size.
+class paginated_rset(Selector):
+    """Return 1 or more for result set with more rows than one or more page
+    size.  You can specify expected number of pages to the initializer (default
+    to one), and you'll get that number of pages as score if the result set is
+    big enough.
 
     Page size is searched in (respecting order):
     * a `page_size` argument
     * a `page_size` form parameters
     * the :ref:`navigation.page-size` property
     """
-    if rset is None:
-        return 0
-    page_size = kwargs.get('page_size')
-    if page_size is None:
-        page_size = req.form.get('page_size')
+    def __init__(self, nbpages=1):
+        assert nbpages > 0
+        self.nbpages = nbpages
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, **kwargs):
+        if rset is None:
+            return 0
+        page_size = kwargs.get('page_size')
         if page_size is None:
-            page_size = req.property_value('navigation.page-size')
-        else:
-            page_size = int(page_size)
-    if rset.rowcount <= page_size:
-        return 0
-    return 1
+            page_size = req.form.get('page_size')
+            if page_size is None:
+                page_size = req.property_value('navigation.page-size')
+            else:
+                page_size = int(page_size)
+        if rset.rowcount <= (page_size*self.nbpages):
+            return 0
+        return self.nbpages
 
 
 @objectify_selector
