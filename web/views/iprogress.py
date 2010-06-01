@@ -106,7 +106,6 @@ class IProgressAdapter(EntityAdapter):
 
 
 class IMileStoneAdapter(IProgressAdapter):
-    """represents an ITask's item"""
     __regid__ = 'IMileStone'
     __select__ = implements(IMileStone) # XXX for bw compat, should be abstract
 
