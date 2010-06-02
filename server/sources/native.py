@@ -272,6 +272,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             def pool_reset(cnx):
                 cnx.close()
             self.pool_reset = pool_reset
+            self.create_eid = self.__create_eid_sqlite
 
     @property
     def _sqlcnx(self):
@@ -729,6 +730,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # on commit
         sql = self.dbhelper.sql_temporary_table(table, schema, False)
         self.doexec(session, sql)
+
+    def __create_eid_sqlite(self, session):
+        self._eid_creation_lock.acquire()
+        try:
+            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
+                cursor = self.doexec(session, sql)
+            return cursor.fetchone()[0]
+        finally:
+            self._eid_creation_lock.release()
+
 
     def create_eid(self, session):
         self.debug('create eid')
