@@ -452,8 +452,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 cursor = self.doexec(session, sql, args)
             else:
                 raise
-            
-        results = self.process_result(cursor, cbs)
+        results = self.process_result(cursor, cbs, session=session)
         assert dbg_results(results)
         return results
 

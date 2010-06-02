@@ -33,10 +33,10 @@ class Storage(object):
     """abstract storage
 
     * If `source_callback` is true (by default), the callback will be run during
-      query result process of fetched attribute's valu and should have the
+      query result process of fetched attribute's value and should have the
       following prototype::
 
-        callback(self, source, value)
+        callback(self, source, session, value)
 
       where `value` is the value actually stored in the backend. None values
       will be skipped (eg callback won't be called).
@@ -99,7 +99,7 @@ class BytesFileSystemStorage(Storage):
         self.default_directory = defaultdir
         self.fsencoding = fsencoding
 
-    def callback(self, source, value):
+    def callback(self, source, session, value):
         """sql generator callback when some attribute with a custom storage is
         accessed
         """
