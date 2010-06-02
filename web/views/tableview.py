@@ -195,7 +195,7 @@ class TableView(AnyRsetView):
         if hasattr(self, 'divid'):
             divid = self.divid
         else:
-            divid = params.get('divid', 'paginated-content'),
+            divid = params.get('divid', 'pageContent'),
         rql = params.pop('rql', self.cw_rset.printable_rql())
         # latest 'true' used for 'swap' mode
         return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
