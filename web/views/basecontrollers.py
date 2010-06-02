@@ -18,9 +18,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of base controllers, which are directly plugged into the application
 object to handle publication.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from smtplib import SMTP
