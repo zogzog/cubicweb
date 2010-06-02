@@ -696,7 +696,7 @@ this option is set to yes",
             # for now, hard code weekly rotation every sunday, and 52 weeks kept
             # idea: make this configurable?
             init_log(debug, syslog, logthreshold, logfile, self.log_format,
-                     rotation_parameters={'when': 'W7', # every sunday
+                     rotation_parameters={'when': 'W6', # every sunday
                                           'interval': 1,
                                           'backupCount': 52,                                          
                                          })
