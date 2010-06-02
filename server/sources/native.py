@@ -255,6 +255,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
         self._eid_creation_lock = Lock()
+        self._eid_creation_cnx = self.get_connection()
         # (etype, attr) / storage mapping
         self._storages = {}
         # entity types that may be used by other multi-sources instances
@@ -729,13 +730,48 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.doexec(session, sql)
 
     def create_eid(self, session):
-        self._eid_creation_lock.acquire()
+        self.debug('create eid')
+        # lock needed to prevent 'Connection is busy with results for another command (0)' errors with SQLServer
+        self._eid_creation_lock.acquire() 
         try:
-            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
-                cursor = self.doexec(session, sql)
-            return cursor.fetchone()[0]
+            return self.__create_eid()
         finally:
             self._eid_creation_lock.release()
+            
+    def __create_eid(self):
+        # internal function doing the eid creation without locking. 
+        # needed for the recursive handling of disconnections (otherwise we 
+        # deadlock on self._eid_creation_lock
+        if self._eid_creation_cnx is None:
+            self._eid_creation_cnx = self.get_connection()
+        cnx = self._eid_creation_cnx
+        cursor = cnx.cursor()
+        try:
+            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
+                cursor.execute(sql)
+            eid = cursor.fetchone()[0]
+        except (self.OperationalError, self.InterfaceError):
+            # FIXME: better detection of deconnection pb
+            self.warning("trying to reconnect create eid connection")
+            self._eid_creation_cnx = None
+            return self.__create_eid()
+        except (self.DbapiError,), exc:
+            # We get this one with pyodbc and SQL Server when connection was reset
+            if exc.args[0] == '08S01':
+                self.warning("trying to reconnect create eid connection")
+                self._eid_creation_cnx = None
+                return self.__create_eid()
+            else:
+                raise
+        except: # WTF?
+            cnx.rollback()
+            self._eid_creation_cnx = None
+            self.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
+            raise
+        else:
+            cnx.commit()
+            return eid
+            
 
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
