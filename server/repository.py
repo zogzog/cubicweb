@@ -423,6 +423,7 @@ class Repository(object):
         results['nb_active_threads'] = threading.activeCount()
         results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
         results['available_pools'] = self._available_pools.qsize()
+        results['threads'] = ', '.join(sorted(str(t) for t in threading.enumerate()))
         return results
 
     def get_schema(self):

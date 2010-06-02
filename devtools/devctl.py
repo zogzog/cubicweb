@@ -274,7 +274,7 @@ class UpdateCubicWebCatalogCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
-            raise BadCommandUsage('Too much arguments')
+            raise BadCommandUsage('Too many arguments')
         import shutil
         import tempfile
         import yams

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""SPARQL -> RQL translator
+"""SPARQL -> RQL translator"""
 
-"""
 from logilab.common import make_domains
 from rql import TypeResolverException
 from fyzz.yappsparser import parse
@@ -76,7 +75,7 @@ class QueryInfo(object):
             nbctypes = len(ctypes)
             ctypes &= varpossibletypes
             if not ctypes:
-                raise TypeResolverException()
+                raise TypeResolverException('No possible type')
             return len(ctypes) != nbctypes
         except KeyError:
             self.possible_types[var] = varpossibletypes
@@ -98,8 +97,8 @@ class QueryInfo(object):
                         modified = True
                 # restrict predicates according to allowed subject var types
                 if subjvar in self.possible_types:
-                    yams_predicates = [(s, r, o) for s, r, o in yams_predicates
-                                       if s == '*' or s in self.possible_types[subjvar]]
+                    yams_predicates[:] = [(s, r, o) for s, r, o in yams_predicates
+                                          if s == '*' or s in self.possible_types[subjvar]]
                 if isinstance(obj, ast.SparqlVar):
                     # make a valid rql var name
                     objvar = obj.name.upper()
@@ -111,11 +110,11 @@ class QueryInfo(object):
                             modified = True
                     # restrict predicates according to allowed object var types
                     if objvar in self.possible_types:
-                        yams_predicates = [(s, r, o) for s, r, o in yams_predicates
-                                           if o == '*' or o in self.possible_types[objvar]]
+                        yams_predicates[:] = [(s, r, o) for s, r, o in yams_predicates
+                                              if o == '*' or o in self.possible_types[objvar]]
                 # ensure this still make sense
                 if not yams_predicates:
-                    raise TypeResolverException()
+                    raise TypeResolverException('No yams predicate')
                 if len(yams_predicates) != nbchoices:
                     modified = True
 
@@ -197,7 +196,8 @@ class Sparql2rqlTranslator(object):
                 raise UnsupportedQuery()
             # make a valid rql var name
             subjvar = subj.name.upper()
-            if predicate == ('', 'a'):
+            if predicate in [('', 'a'),
+                             ('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'type')]:
                 # special 'is' relation
                 if not isinstance(obj, tuple):
                     raise UnsupportedQuery()

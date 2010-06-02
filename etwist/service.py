@@ -71,6 +71,8 @@ class CWService(object, win32serviceutil.ServiceFramework):
             _check_env(os.environ)
             # create the site
             config = cwcfg.config_for(self.instance)
+            config.init_log(force=True)
+            logger.info('starting cubicweb instance %s ', self.instance)
             root_resource = CubicWebRootResource(config, False)
             website = server.Site(root_resource)
             # serve it via standard HTTP on port set in the configuration

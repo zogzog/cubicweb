@@ -19,7 +19,7 @@
 
 from __future__ import with_statement
 
-from logilab.common.testlib import unittest_main
+from logilab.common.testlib import unittest_main, tag
 from cubicweb.devtools.testlib import CubicWebTC
 
 import os.path as osp
@@ -178,7 +178,7 @@ class StorageTC(CubicWebTC):
         self.assertEquals(f1.data.getvalue(), file(filepath).read(),
                           'files content differ')
 
-
+    @tag('Storage', 'BFSS', 'update')
     def test_bfss_update_with_existing_data(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
@@ -192,6 +192,52 @@ class StorageTC(CubicWebTC):
         f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         self.assertEquals(f2.data.getvalue(), 'some other data')
 
+    @tag('Storage', 'BFSS', 'update', 'extension', 'commit')
+    def test_bfss_update_with_different_extension_commited(self):
+        # use self.session to use server-side cache
+        f1 = self.session.create_entity('File', data=Binary('some data'),
+                                        data_format=u'text/plain', data_name=u'foo.txt')
+        # NOTE: do not use set_attributes() which would automatically
+        #       update f1's local dict. We want the pure rql version to work
+        self.commit()
+        old_path = self.fspath(f1)
+        self.failUnless(osp.isfile(old_path))
+        self.assertEquals(osp.splitext(old_path)[1], '.txt')
+        self.execute('SET F data %(d)s, F data_name %(dn)s, F data_format %(df)s WHERE F eid %(f)s',
+                     {'d': Binary('some other data'), 'f': f1.eid, 'dn': u'bar.jpg', 'df': u'image/jpeg'})
+        self.commit()
+        # the new file exists with correct extension
+        # the old file is dead
+        f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
+        new_path = self.fspath(f2)
+        self.failIf(osp.isfile(old_path))
+        self.failUnless(osp.isfile(new_path))
+        self.assertEquals(osp.splitext(new_path)[1], '.jpg')
+
+    @tag('Storage', 'BFSS', 'update', 'extension', 'rollback')
+    def test_bfss_update_with_different_extension_rollbacked(self):
+        # use self.session to use server-side cache
+        f1 = self.session.create_entity('File', data=Binary('some data'),
+                                        data_format=u'text/plain', data_name=u'foo.txt')
+        # NOTE: do not use set_attributes() which would automatically
+        #       update f1's local dict. We want the pure rql version to work
+        self.commit()
+        old_path = self.fspath(f1)
+        old_data = f1.data.getvalue()
+        self.failUnless(osp.isfile(old_path))
+        self.assertEquals(osp.splitext(old_path)[1], '.txt')
+        self.execute('SET F data %(d)s, F data_name %(dn)s, F data_format %(df)s WHERE F eid %(f)s',
+                     {'d': Binary('some other data'), 'f': f1.eid, 'dn': u'bar.jpg', 'df': u'image/jpeg'})
+        self.rollback()
+        # the new file exists with correct extension
+        # the old file is dead
+        f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
+        new_path = self.fspath(f2)
+        new_data = f2.data.getvalue()
+        self.failUnless(osp.isfile(new_path))
+        self.assertEquals(osp.splitext(new_path)[1], '.txt')
+        self.assertEquals(old_path, new_path)
+        self.assertEquals(old_data, new_data)
 
     def test_bfss_update_with_fs_importing(self):
         # use self.session to use server-side cache

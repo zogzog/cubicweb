@@ -118,7 +118,8 @@ class TableView(AnyRsetView):
 
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
-             cellvids=None, cellattrs=None, mainindex=None):
+             cellvids=None, cellattrs=None, mainindex=None,
+             paginate=False, page_size=None):
         """Produces a table displaying a composite query
 
         :param title: title added before table
@@ -178,6 +179,9 @@ class TableView(AnyRsetView):
         if actions:
             self.render_actions(divid, actions)
         # render table
+        if paginate:
+            self.divid = divid # XXX iirk (see usage in page_navigation_url)
+            self.paginate(page_size=page_size, show_all_option=False)
         table = TableWidget(self)
         for column in self.get_columns(computed_labels, displaycols, headers,
                                        subvid, cellvids, cellattrs, mainindex):
@@ -186,6 +190,16 @@ class TableView(AnyRsetView):
         self.w(u'</div>\n')
         if not fromformfilter:
             self.w(u'</div>\n')
+
+    def page_navigation_url(self, navcomp, path, params):
+        if hasattr(self, 'divid'):
+            divid = self.divid
+        else:
+            divid = params.get('divid', 'pageContent'),
+        rql = params.pop('rql', self.cw_rset.printable_rql())
+        # latest 'true' used for 'swap' mode
+        return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
+            dumps(divid), dumps(rql), dumps(self.__regid__), dumps(params))
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]

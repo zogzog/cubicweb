@@ -197,7 +197,7 @@ class FieldsForm(form.Form):
     _default_form_action_path = 'edit'
     def form_action(self):
         if self.action is None:
-            self._cw.build_url(self._default_form_action_path)
+            return self._cw.build_url(self._default_form_action_path)
         return self.action
 
     @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')

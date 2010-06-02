@@ -648,7 +648,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     _default_form_action_path = 'validateform'
 
     # pre 3.8.3 compat
-    @property
     def set_action(self, action):
         self._action = action
     @deprecated('[3.9] use form.form_action()')

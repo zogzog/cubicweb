@@ -15,12 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""map standard cubicweb schema to xml vocabularies
-
-"""
+"""map standard cubicweb schema to xml vocabularies"""
 
 from yams import xy
 
+xy.register_prefix('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf')
 xy.register_prefix('http://purl.org/dc/elements/1.1/', 'dc')
 xy.register_prefix('http://xmlns.com/foaf/0.1/',       'foaf')
 xy.register_prefix('http://usefulinc.com/ns/doap#',    'doap')
@@ -32,5 +31,5 @@ xy.add_equivalence('creation_date', 'dc:date')
 xy.add_equivalence('created_by', 'dc:creator')
 xy.add_equivalence('description', 'dc:description')
 xy.add_equivalence('CWUser', 'foaf:Person')
-xy.add_equivalence('CWUser login', 'dc:title')
+xy.add_equivalence('CWUser login', 'foaf:Person dc:title')
 xy.add_equivalence('CWUser surname', 'foaf:Person foaf:name')

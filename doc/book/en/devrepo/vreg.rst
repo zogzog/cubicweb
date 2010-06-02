@@ -1,8 +1,8 @@
 The VRegistry, selectors and application objects
 ================================================
 
-This chapter talks about core concepts of the |cubicweb| framework,
-that make it different from other frameworks (and maybe not easy to
+This chapter deals with some of the  core concepts of the |cubicweb| framework
+which make it different from other frameworks (and maybe not easy to
 grasp at a first glance). To be able to do advanced development with
 |cubicweb| you need a good understanding of what is explained below.
 

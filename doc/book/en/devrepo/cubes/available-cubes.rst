@@ -2,8 +2,8 @@
 Available cubes
 ---------------
 
-An instance is based on several basic cubes. In the set of available
-basic cubes we can find for example :
+An instance is made of several basic cubes. In the set of available
+basic cubes we can find for example:
 
 Base entity types
 ~~~~~~~~~~~~~~~~~
@@ -22,14 +22,14 @@ Base entity types
 
 Classification
 ~~~~~~~~~~~~~~
-* folder_: Folder (to organize things but grouping them in folders)
+* folder_: Folder (to organize things by grouping them in folders)
 * keyword_: Keyword (to define classification schemes)
 * tag_: Tag (to tag anything)
 
 Other features
 ~~~~~~~~~~~~~~
 * basket_: Basket (like a shopping cart)
-* blog_: a blogging system uxing Blog and BlogEntry entity types
+* blog_: a blogging system using Blog and BlogEntry entity types
 * comment_: system to attach comment threads to entities)
 * email_: archiving management for emails (`Email`, `Emailpart`,
   `Emailthread`), trigger action in cubicweb through email
@@ -55,8 +55,9 @@ Other features
 .. _task: http://www.cubicweb.org/project/cubicweb-task
 .. _zone: http://www.cubicweb.org/project/cubicweb-zone
 
-To declare the use of a component, once installed, add the name of the component
-to the variable `__use__` in the file `__pkginfo__.py` of your own component.
+To declare the use of a cube, once installed, add the name of the cube
+and its dependency relation in the `__depends_cubes__` dictionary
+defined in the file `__pkginfo__.py` of your own component.
 
 .. note::
   The listed cubes above are available as debian-packages on `CubicWeb's forge`_.

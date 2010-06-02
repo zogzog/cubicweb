@@ -201,7 +201,7 @@ class ListCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
-            raise BadCommandUsage('Too much arguments')
+            raise BadCommandUsage('Too many arguments')
         from cubicweb.migration import ConfigurationProblem
         print 'CubicWeb %s (%s mode)' % (cwcfg.cubicweb_version(), cwcfg.mode)
         print

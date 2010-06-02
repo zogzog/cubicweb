@@ -157,6 +157,10 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     if rqlst.groupby:
         rqlst.add_group_var(newvar)
     rqlst.add_selected(newvar)
+    # add is restriction if necessary
+    if mainvar.stinfo['typerel'] is None:
+        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
+        rqlst.add_type_restriction(mainvar, etypes)
     return newvar
 
 def _remove_relation(rqlst, rel, var):
@@ -210,10 +214,6 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
         _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
     # add attribute variable to selection
     rqlst.add_selected(attrvar)
-    # add is restriction if necessary
-    if mainvar.stinfo['typerel'] is None:
-        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
-        rqlst.add_type_restriction(mainvar, etypes)
     return var
 
 def _cleanup_rqlst(rqlst, mainvar):
