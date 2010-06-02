@@ -1180,14 +1180,15 @@ class SQLGenerator(object):
     def _temp_table_scope(self, select, table):
         scope = 9999
         for var, sql in self._varmap.iteritems():
-            if table == sql.split('.', 1)[0]:
+            # skip "attribute variable" in varmap (such 'T.login')
+            if not '.' in var and table == sql.split('.', 1)[0]:
                 try:
                     scope = min(scope, self._state.scopes[select.defined_vars[var].scope])
                 except KeyError:
                     scope = 0 # XXX
                 if scope == 0:
-                    return 0
-        return 0
+                    break
+        return scope
 
     def _var_info(self, var):
         try:
