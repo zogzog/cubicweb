@@ -362,7 +362,7 @@ du :eid:`1:*ReST*`'''
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
 </pre></div>
 ''')
-            else
+            else:
                 self.assertEquals(e.printable_value('data'),
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
 </pre></div>
