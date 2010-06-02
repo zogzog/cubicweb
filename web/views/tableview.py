@@ -321,7 +321,7 @@ class InitialTableView(TableView):
       displayed with default restrictions set
     """
     __regid__ = 'initialtable'
-    __select__ = nonempty_rset() & match_form_params('actualrql')
+    __select__ = nonempty_rset()
     # should not be displayed in possible view since it expects some specific
     # parameters
     title = None
@@ -329,8 +329,12 @@ class InitialTableView(TableView):
     def call(self, title=None, subvid=None, headers=None, divid=None,
              displaycols=None, displayactions=None, mainindex=None):
         """Dumps a table displaying a composite query"""
-        actrql = self._cw.form['actualrql']
-        self._cw.ensure_ro_rql(actrql)
+        try:
+            actrql = self._cw.form['actualrql']
+        except KeyError:
+            actrql = self.cw_rset.printable_rql()
+        else:
+            self._cw.ensure_ro_rql(actrql)
         displaycols = self.displaycols(displaycols, headers)
         if displayactions is None and 'displayactions' in self._cw.form:
             displayactions = True

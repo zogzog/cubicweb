@@ -72,7 +72,7 @@ def default_update_cb_stack(self, stack):
 FunctionDescr.update_cb_stack = default_update_cb_stack
 
 LENGTH = SQL_FUNCTIONS_REGISTRY.get_function('LENGTH')
-def length_source_execute(source, value):
+def length_source_execute(source, session, value):
     return len(value.getvalue())
 LENGTH.source_execute = length_source_execute
 

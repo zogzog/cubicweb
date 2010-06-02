@@ -356,8 +356,15 @@ du :eid:`1:*ReST*`'''
                             data_encoding=u'ascii', data_name=u'toto.py')
         from cubicweb import mttransforms
         if mttransforms.HAS_PYGMENTS_TRANSFORMS:
-            self.assertEquals(e.printable_value('data'),
-                              '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
+            import pygments
+            if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
+                self.assertEquals(e.printable_value('data'),
+                                  '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
+</pre></div>
+''')
+            else
+                self.assertEquals(e.printable_value('data'),
+                                  '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
 </pre></div>
 ''')
         else:

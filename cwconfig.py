@@ -1154,7 +1154,7 @@ def register_stored_procedures():
         def as_sql(self, backend, args):
             raise NotImplementedError('source only callback')
 
-        def source_execute(self, source, value):
+        def source_execute(self, source, session, value):
             fpath = source.binary_to_str(value)
             try:
                 return Binary(fpath)
