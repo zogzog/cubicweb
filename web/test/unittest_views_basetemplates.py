@@ -36,4 +36,5 @@ class LogFormTemplateTC(CubicWebTC):
         self.assertEquals(self._login_labels(), ['login', 'password'])
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
    unittest_main()
