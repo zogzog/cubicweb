@@ -188,18 +188,19 @@ directory (default to once a day).',
         self._conn = None
         self._cache = {}
         # ttlm is in minutes!
-        ttlm = time_validator(None, None,
-                              source_config.get('cache-life-time', 2*60*60)) // 60
-        self._query_cache = TimedCache(max(ttlm, 1))
+        self._cache_ttl = time_validator(None, None,
+                              source_config.get('cache-life-time', 2*60*60))
+        self._cache_ttl = max(71, self._cache_ttl)
+        self._query_cache = TimedCache(self.cache_ttl)
         # interval is in seconds !
         self._interval = time_validator(None, None,
-                                        source_config.get('synchronization-interval',
-                                               24*60*60))
+                                    source_config.get('synchronization-interval',
+                                                      24*60*60))
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         self._cache = {}
-        self._query_cache = TimedCache(2*60) # TimedCache is in minutes!
+        self._query_cache = TimedCache(self._cache_ttl)
 
     def init(self):
         """method called by the repository once ready to handle request"""
@@ -207,7 +208,7 @@ directory (default to once a day).',
         # set minimum period of 5min 1s (the additional second is to minimize
         # resonnance effet)
         self.repo.looping_task(max(301, self._interval), self.synchronize)
-        self.repo.looping_task(max(7, self._query_cache.ttl.seconds // 10),
+        self.repo.looping_task(self.cache_ttl // 10,
                                self._query_cache.clear_expired)
 
     def synchronize(self):

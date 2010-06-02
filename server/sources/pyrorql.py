@@ -144,11 +144,11 @@ repository (default to 5 minutes).',
                        'group': 'sources',
                        }),)
         register_persistent_options(myoptions)
-        self._query_cache = TimedCache(30)
+        self._query_cache = TimedCache(1800)
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
-        self._query_cache = TimedCache(30)
+        self._query_cache = TimedCache(1800)
 
     def last_update_time(self):
         pkey = u'sources.%s.latest-update-time' % self.uri

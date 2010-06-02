@@ -52,11 +52,11 @@ def dbg_results(results):
     return True
 
 class TimedCache(dict):
-    def __init__(self, ttlm, ttls=0):
-        # time to live in minutes
-        self.ttl = timedelta(seconds=ttlm*60 + ttls)
-        if self.ttl.seconds <= 0:
+    def __init__(self, ttl):
+        # time to live in seconds
+        if ttl <= 0:
             raise ValueError('TimedCache initialized with a ttl of %ss' % self.ttl.seconds)
+        self.ttl = timedelta(seconds=ttl)
 
     def __setitem__(self, key, value):
         dict.__setitem__(self, key, (datetime.now(), value))
