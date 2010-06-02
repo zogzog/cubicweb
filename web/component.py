@@ -137,7 +137,7 @@ class NavigationComponent(Component):
             rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-                json.dumps(params.get('divid', 'paginated-content')),
+                json.dumps(params.get('divid', 'pageContent')),
                 json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
         else:
             url = self._cw.build_url(path, **params)
