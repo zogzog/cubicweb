@@ -191,7 +191,7 @@ directory (default to once a day).',
         self._cache_ttl = time_validator(None, None,
                               source_config.get('cache-life-time', 2*60*60))
         self._cache_ttl = max(71, self._cache_ttl)
-        self._query_cache = TimedCache(self.cache_ttl)
+        self._query_cache = TimedCache(self._cache_ttl)
         # interval is in seconds !
         self._interval = time_validator(None, None,
                                     source_config.get('synchronization-interval',
@@ -208,7 +208,7 @@ directory (default to once a day).',
         # set minimum period of 5min 1s (the additional second is to minimize
         # resonnance effet)
         self.repo.looping_task(max(301, self._interval), self.synchronize)
-        self.repo.looping_task(self.cache_ttl // 10,
+        self.repo.looping_task(self._cache_ttl // 10,
                                self._query_cache.clear_expired)
 
     def synchronize(self):
