@@ -272,7 +272,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             def pool_reset(cnx):
                 cnx.close()
             self.pool_reset = pool_reset
-            self.create_eid = self.__create_eid_sqlite
+        if self.dbdriver == 'sqlite':
+            self._create_eid = None
+            self.create_eid = self._create_eid_sqlite
 
     @property
     def _sqlcnx(self):
@@ -713,7 +715,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return None
 
     def make_temp_table_name(self, table):
-        try: # XXX remove this once 
+        try: # XXX remove this once
             return self.dbhelper.temporary_table_name(table)
         except AttributeError:
             import warnings
@@ -731,7 +733,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.dbhelper.sql_temporary_table(table, schema, False)
         self.doexec(session, sql)
 
-    def __create_eid_sqlite(self, session):
+    def _create_eid_sqlite(self, session):
         self._eid_creation_lock.acquire()
         try:
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
@@ -744,15 +746,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def create_eid(self, session):
         self.debug('create eid')
         # lock needed to prevent 'Connection is busy with results for another command (0)' errors with SQLServer
-        self._eid_creation_lock.acquire() 
+        self._eid_creation_lock.acquire()
         try:
-            return self.__create_eid()
+            return self._create_eid()
         finally:
             self._eid_creation_lock.release()
-            
-    def __create_eid(self):
-        # internal function doing the eid creation without locking. 
-        # needed for the recursive handling of disconnections (otherwise we 
+
+    def _create_eid(self):
+        # internal function doing the eid creation without locking.
+        # needed for the recursive handling of disconnections (otherwise we
         # deadlock on self._eid_creation_lock
         if self._eid_creation_cnx is None:
             self._eid_creation_cnx = self.get_connection()
@@ -766,13 +768,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect create eid connection")
             self._eid_creation_cnx = None
-            return self.__create_eid()
+            return self._create_eid()
         except (self.DbapiError,), exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01':
                 self.warning("trying to reconnect create eid connection")
                 self._eid_creation_cnx = None
-                return self.__create_eid()
+                return self._create_eid()
             else:
                 raise
         except: # WTF?
@@ -783,7 +785,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             cnx.commit()
             return eid
-            
+
 
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
