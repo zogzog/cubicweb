@@ -419,7 +419,7 @@ class InsertPlan(ExecutionPlan):
         # list of new or updated entities definition (utils.Entity)
         self.e_defs = [[]]
         # list of new relation definition (3-uple (from_eid, r_type, to_eid)
-        self.r_defs = []
+        self.r_defs = set()
         # indexes to track entity definitions bound to relation definitions
         self._r_subj_index = {}
         self._r_obj_index = {}
@@ -432,7 +432,7 @@ class InsertPlan(ExecutionPlan):
 
     def add_relation_def(self, rdef):
         """add an relation definition to build"""
-        self.r_defs.append(rdef)
+        self.r_defs.add(rdef)
         if not isinstance(rdef[0], int):
             self._r_subj_index.setdefault(rdef[0], []).append(rdef)
         if not isinstance(rdef[2], int):
@@ -458,9 +458,9 @@ class InsertPlan(ExecutionPlan):
         for i, row in enumerate(self.e_defs[:]):
             self.e_defs[i][colidx] = edefs[0]
             samplerow = self.e_defs[i]
-            for edef in edefs[1:]:
+            for edef_ in edefs[1:]:
                 row = samplerow[:]
-                row[colidx] = edef
+                row[colidx] = edef_
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
@@ -469,8 +469,8 @@ class InsertPlan(ExecutionPlan):
                 expanded = self._expanded(rdef)
                 result = []
                 for exp_rdef in expanded:
-                    for edef in edefs:
-                        result.append( (edef, exp_rdef[1], exp_rdef[2]) )
+                    for edef_ in edefs:
+                        result.append( (edef_, exp_rdef[1], exp_rdef[2]) )
                 self._expanded_r_defs[rdef] = result
         # and finally, see if this entity def is referenced as object in some
         # relation definition
@@ -479,8 +479,8 @@ class InsertPlan(ExecutionPlan):
                 expanded = self._expanded(rdef)
                 result = []
                 for exp_rdef in expanded:
-                    for edef in edefs:
-                        result.append( (exp_rdef[0], exp_rdef[1], edef) )
+                    for edef_ in edefs:
+                        result.append( (exp_rdef[0], exp_rdef[1], edef_) )
                 self._expanded_r_defs[rdef] = result
 
     def _expanded(self, rdef):

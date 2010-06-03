@@ -196,9 +196,13 @@ class FieldsForm(form.Form):
 
     _default_form_action_path = 'edit'
     def form_action(self):
-        if self.action is None:
+        try:
+            action = self.get_action() # avoid spurious warning w/ autoform bw compat property
+        except AttributeError:
+            action = self.action
+        if action is None:
             return self._cw.build_url(self._default_form_action_path)
-        return self.action
+        return action
 
     @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
     def form_add_hidden(self, name, value=None, **kwargs):

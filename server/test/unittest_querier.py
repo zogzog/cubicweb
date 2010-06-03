@@ -915,11 +915,32 @@ class QuerierTC(BaseQuerierTC):
         self.assert_(rset.rows)
         self.assertEquals(rset.description, [('Personne', 'Societe',)])
 
+    def test_insert_7_2(self):
+        self.execute("INSERT Personne X, Societe Y: X nom N, Y nom 'toto', X travaille Y WHERE U login N")
+        rset = self.execute('Any X, Y WHERE Y nom "toto", X travaille Y')
+        self.assertEquals(len(rset), 2)
+        self.assertEquals(rset.description, [('Personne', 'Societe',),
+                                             ('Personne', 'Societe',)])
+
     def test_insert_8(self):
         self.execute("INSERT Societe Y, Personne X: Y nom N, X nom 'toto', X travaille Y WHERE U login 'admin', U login N")
         rset = self.execute('Any X, Y WHERE X nom "toto", Y nom "admin", X travaille Y')
         self.assert_(rset.rows)
         self.assertEquals(rset.description, [('Personne', 'Societe',)])
+
+    def test_insert_9(self):
+        self.execute("INSERT Societe X: X nom  'Lo'")
+        self.execute("INSERT Societe X: X nom  'Gi'")
+        self.execute("INSERT SubDivision X: X nom  'Lab'")
+        rset = self.execute("INSERT Personne X: X nom N, X travaille Y, X travaille_subdivision Z WHERE Y is Societe, Z is SubDivision, Y nom N")
+        self.assertEquals(len(rset), 2)
+        self.assertEquals(rset.description, [('Personne',), ('Personne',)])
+        # self.assertSetEquals(set(x.nom for x in rset.entities()),
+        #                      ['Lo', 'Gi'])
+        # self.assertSetEquals(set(y.nom for x in rset.entities() for y in x.travaille),
+        #                      ['Lo', 'Gi'])
+        # self.assertEquals([y.nom for x in rset.entities() for y in x.travaille_subdivision],
+        #                      ['Lab', 'Lab'])
 
     def test_insert_query_error(self):
         self.assertRaises(Exception,
