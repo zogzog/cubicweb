@@ -283,8 +283,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     # FIXME editableField class could be toggleable from userprefs
 
     _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
-    _onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
-                 "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
+    _onsubmit = ("return inlineValidateRelationFormOptions('%(rtype)s', '%(eid)s', "
+                 "'%(divid)s', %(options)s);")
     _cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')"
     _defaultlandingzone = (u'<img title="%(msg)s" src="data/pen_icon.png" '
                            'alt="%(msg)s"/>')
@@ -406,9 +406,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     def _build_args(self, entity, rtype, role, formid, default, reload, lzone,
                     extradata=None):
         divid = '%s-%s-%s' % (rtype, role, entity.eid)
+        options = {'reload' : reload, 'default_value' : default,
+                   'role' : role, 'vid' : '',
+                   'lzone' : lzone}
         event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
-                      'reload' : dumps(reload), 'default' : default, 'role' : role, 'vid' : u'',
-                      'lzone' : lzone}
+                      'options' : dumps(options)}
         if extradata:
             event_args.update(extradata)
         return divid, event_args
@@ -416,7 +418,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     def _build_form(self, entity, rtype, role, formid, default, reload, lzone,
                   extradata=None, **formargs):
         divid, event_args = self._build_args(entity, rtype, role, formid, default,
-                                      reload, lzone, extradata)
+                                             reload, lzone, extradata)
         onsubmit = self._onsubmit % event_args
         cancelclick = self._cancelclick % (entity.eid, rtype, divid)
         form = self._cw.vreg['forms'].select(
@@ -434,8 +436,8 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
     by checking uicfg configuration and composite relation property.
     """
     __regid__ = 'reledit'
-    _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', "
-                "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
+    _onclick = (u"loadInlineEditionFormOptions(%(eid)s, '%(rtype)s', "
+                "'%(divid)s', %(options)s);")
 
     def should_edit_relation(self, entity, rschema, role, rvid):
         eschema = entity.e_schema

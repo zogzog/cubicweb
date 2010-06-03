@@ -96,7 +96,7 @@ class BookmarksBox(box.UserRQLBoxTemplate):
         eschema = self._cw.vreg.schema.eschema(self.etype)
         candelete = rschema.has_perm(req, 'delete', toeid=ueid)
         if candelete:
-            req.add_js( ('cubicweb.ajax.js', 'cubicweb.bookmarks.js') )
+            req.add_js('cubicweb.ajax.js')
         else:
             dlink = None
         for bookmark in rset.entities():

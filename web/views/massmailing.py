@@ -57,7 +57,7 @@ def recipient_vocabulary(form, field):
 class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
 
-    needs_js = ('cubicweb.widgets.js', 'cubicweb.massmailing.js')
+    needs_js = ('cubicweb.widgets.js',)
     needs_css = ('cubicweb.mailform.css')
     domid = 'sendmail'
     action = 'sendmail'
@@ -94,7 +94,7 @@ class MassMailingForm(forms.FieldsForm):
         return sorted(reduce(operator.and_, attrs))
 
     def build_substitutions_help(self):
-        insertLink = u'<a href="javascript: insertText(\'%%(%s)s\', \'emailarea\');">%%(%s)s</a>'
+        insertLink = u'<a href="javascript: cw.widgets.insertText(\'%%(%s)s\', \'emailarea\');">%%(%s)s</a>'
         substs = (u'<div class="substitution">%s</div>' % (insertLink % (subst, subst))
                   for subst in self.get_allowed_substitutions())
         helpmsg = self._cw._('You can use any of the following substitutions in your text')

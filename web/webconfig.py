@@ -346,14 +346,17 @@ have the python imaging library installed to use captcha)',
         for path in reversed([self.apphome] + self.cubes_path()):
             self._load_ui_properties_file(uiprops, path)
         self._load_ui_properties_file(uiprops, self.apphome)
+        datadir_url = uiprops.context['datadir_url']
         # XXX pre 3.9 css compat
         if self['use-old-css']:
-            datadir_url = uiprops.context['datadir_url']
             if (datadir_url+'/cubicweb.css') in uiprops['STYLESHEETS']:
                 idx = uiprops['STYLESHEETS'].index(datadir_url+'/cubicweb.css')
                 uiprops['STYLESHEETS'][idx] = datadir_url+'/cubicweb.old.css'
             if datadir_url+'/cubicweb.reset.css' in uiprops['STYLESHEETS']:
                 uiprops['STYLESHEETS'].remove(datadir_url+'/cubicweb.reset.css')
+        cubicweb_js_url = datadir_url + '/cubicweb.js'
+        if cubicweb_js_url not in uiprops['JAVASCRIPTS']:
+            uiprops['JAVASCRIPTS'].insert(0, cubicweb_js_url)
 
     def _load_ui_properties_file(self, uiprops, path):
         resourcesfile = join(path, 'data', 'external_resources')

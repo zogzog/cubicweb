@@ -262,6 +262,12 @@ class FormValidatorController(Controller):
             self._cw.encoding)
         return self.response(domid, status, args, entity)
 
+def optional_kwargs(extraargs):
+    if extraargs is None:
+        return {}
+    else: # we receive unicode keys which is not supported by the **syntax
+        return dict((str(key), value)
+                    for key, value in extraargs.items())
 
 class JSonController(Controller):
     __regid__ = 'json'
@@ -421,6 +427,18 @@ class JSonController(Controller):
         #    raise RemoteCallFailed('unselectable')
         return self._call_view(comp, **extraargs)
 
+    @xhtmlize
+    def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
+        if eid is not None:
+            rset = self._cw.eid_rset(eid)
+        elif 'rql' in self._cw.form:
+            rset = self._cw.execute(self._cw.form['rql'])
+        else:
+            rset = None
+        selectargs = optional_kwargs(selectargs)
+        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset, **selectargs)
+        return self._call_view(view, **optional_kwargs(renderargs))
+
     @check_pageid
     @xhtmlize
     def js_inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
@@ -440,13 +458,13 @@ class JSonController(Controller):
     @xhtmlize
     def js_reledit_form(self):
         req = self._cw
-        args = dict((x, self._cw.form[x])
+        args = dict((x, req.form[x])
                     for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
-        entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
+        entity = req.entity_from_eid(typed_eid(req.form['eid']))
         # note: default is reserved in js land
-        args['default'] = self._cw.form['default_value']
+        args['default'] = req.form['default_value']
         args['reload'] = json.loads(args['reload'])
-        rset = req.eid_rset(int(self._cw.form['eid']))
+        rset = req.eid_rset(typed_eid(req.form['eid']))
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         return self._call_view(view, **args)
 

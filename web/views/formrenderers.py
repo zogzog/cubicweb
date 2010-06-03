@@ -342,7 +342,7 @@ class EntityCompositeFormRenderer(FormRenderer):
                 w(u'<th align="left">%s</th>' %
                   tags.input(type='checkbox',
                              title=self._cw._('toggle check boxes'),
-                             onclick="setCheckboxesState('eid', this.checked)"))
+                             onclick="setCheckboxesState('eid', null, this.checked)"))
                 for field in subfields:
                     w(u'<th>%s</th>' % field_label(form, field))
                 w(u'</tr>')
@@ -358,7 +358,7 @@ class EntityCompositeFormRenderer(FormRenderer):
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
-            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
+            cbsetstate = "setCheckboxesState('eid', %s, 'checked')" % \
                          xml_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.cw_row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field

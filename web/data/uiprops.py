@@ -12,6 +12,7 @@ STYLESHEETS_PRINT = [data('cubicweb.print.css')]
 JAVASCRIPTS = [data('jquery.js'),
                data('jquery.corner.js'),
                data('jquery.json.js'),
+               data('cubicweb.js'),
                data('cubicweb.compat.js'),
                data('cubicweb.python.js'),
                data('cubicweb.htmlhelpers.js')]
