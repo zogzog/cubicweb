@@ -395,13 +395,15 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     // Failures
     _clearPreviousErrors(formid);
     var descr = result[1];
+    var errmsg;
     // Unknown structure
     if ( !isArrayLike(descr) || descr.length != 2 ) {
-	updateMessage(descr);
-	return false;
+	errmsg = descr;
+    } else {
+	_displayValidationerrors(formid, descr[0], descr[1]);
+	errmsg = _('please correct errors below');
     }
-    _displayValidationerrors(formid, descr[0], descr[1]);
-    updateMessage(_('please correct errors below'));
+    updateMessage(errmsg);
     // ensure the browser does not scroll down
     document.location.hash = '#header';
     return false;
