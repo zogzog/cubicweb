@@ -291,7 +291,9 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     name = None
     # log messages format (see logging module documentation for available keys)
     log_format = '%(asctime)s - (%(name)s) %(levelname)s: %(message)s'
-    # nor remove appobjects based on unused interface
+    # the format below can be useful to debug multi thread issues:
+    # log_format = '%(asctime)s - [%(threadName)s] (%(name)s) %(levelname)s: %(message)s'
+    # nor remove appobjects based on unused interface [???]
     cleanup_interface_sobjects = True
 
 
@@ -687,7 +689,16 @@ this option is set to yes",
                 logthreshold = 'DEBUG'
             else:
                 logthreshold = self['log-threshold']
-        init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format)
+        if sys.platform == 'win32':
+            # no logrotate on win32, so use logging rotation facilities
+            # for now, hard code weekly rotation every sunday, and 52 weeks kept
+            # idea: make this configurable?
+            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format,
+                     rotation_parameters={'when': 'W6', # every sunday
+                                          'interval': 1,
+                                          'backupCount': 52,})
+        else:
+            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
 

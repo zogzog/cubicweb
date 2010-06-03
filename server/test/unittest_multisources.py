@@ -24,7 +24,6 @@ from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
 from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
 
-TestServerConfiguration.no_sqlite_wrap = True
 
 class TwoSourcesConfiguration(TestServerConfiguration):
     sourcefile = 'sources_multi'
@@ -48,6 +47,7 @@ PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
 def setup_module(*args):
+    TestServerConfiguration.no_sqlite_wrap = True
     # hi-jack PyroRQLSource.get_connection to access existing connection (no
     # pyro connection)
     PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
@@ -64,6 +64,7 @@ def teardown_module(*args):
     del repo2, cnx2, repo3, cnx3
     #del TwoSourcesTC.config.vreg
     #del TwoSourcesTC.config
+    TestServerConfiguration.no_sqlite_wrap = False
 
 class TwoSourcesTC(CubicWebTC):
     config = TwoSourcesConfiguration('data')

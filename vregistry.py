@@ -375,7 +375,7 @@ class VRegistry(dict):
             registry.register(obj, oid=oid, clear=clear)
             self.debug('registered appobject %s in registry %s with id %s',
                        vname, registryname, oid or class_regid(obj))
-        self._loadedmods[obj.__module__][classid(obj)] = obj
+        self._loadedmods.setdefault(obj.__module__, {})[classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
         """unregister `obj` application object from the registry `registryname` or
