@@ -41,7 +41,6 @@ from twisted.web.server import NOT_DONE_YET
 from cubicweb.web import dumps
 
 from logilab.common.decorators import monkeypatch
-from logilab.common.daemon import daemonize
 
 from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
@@ -394,6 +393,7 @@ def run(config, debug):
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
+        from logilab.common.daemon import daemonize
         print 'instance starting in the background'
         if daemonize(config['pid-file']):
             return # child process
