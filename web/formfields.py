@@ -433,9 +433,11 @@ class Field(object):
             # attribute or relation
             return True
         # if it's a non final relation, we need the eids
-        if isinstance(previous_value, tuple):
+        # XXX underlying regression: getattr(ent, 'foo') used to return
+        #     a tuple, now we get a list
+        if isinstance(previous_value, (list, tuple)):
             # widget should return a set of untyped eids
-            previous_value = set(unicode(e.eid) for e in previous_value)
+            previous_value = set(e.eid for e in previous_value)
         try:
             new_value = self.process_form_value(form)
         except ProcessFormError:
