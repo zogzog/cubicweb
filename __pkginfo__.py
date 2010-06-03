@@ -43,7 +43,7 @@ __depends__ = {
     'logilab-common': '>= 0.50.2',
     'logilab-mtconverter': '>= 0.6.0',
     'rql': '>= 0.26.0',
-    'yams': '>= 0.28.1',
+    'yams': '>= 0.30.0',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
