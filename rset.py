@@ -600,7 +600,11 @@ class ResultSet(object):
         if rel is not None:
             index = rel.children[0].root_selection_index()
             if index is not None and self.rows[row][index]:
-                return self.get_entity(row, index), rel.r_type
+                try:
+                    entity = self.get_entity(row, index)
+                    return entity, rel.r_type
+                except NotAnEntity, exc:
+                    return None, None
         return None, None
 
     @cached
