@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The `ResultSet` class which is returned as result of an rql query
+"""The `ResultSet` class which is returned as result of an rql query"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache, copy_cache
