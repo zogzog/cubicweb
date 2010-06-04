@@ -165,16 +165,13 @@ class TableView(AnyRsetView):
                                             displayactions)
         elif displayfilter:
             actions += self.show_hide_actions(divid, True)
-        self.w(u'<div id="%s"' % divid)
+        self.w(u'<div id="%s">' % divid)
         if displayactions:
             actionsbycat = self._cw.vreg['actions'].possible_actions(req, self.cw_rset)
             for action in actionsbycat.get('mainactions', ()):
                 for action in action.actual_actions():
                     actions.append( (action.url(), req._(action.title),
                                      action.html_class(), None) )
-            self.w(u' cubicweb:displayactions="1">') # close <div tag
-        else:
-            self.w(u'>') # close <div tag
         # render actions menu
         if actions:
             self.render_actions(divid, actions)
