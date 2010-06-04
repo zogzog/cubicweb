@@ -46,7 +46,7 @@ class TableView(AnyRsetView):
     finalview = 'final'
 
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
-                    hidden=True):
+                    paginate, hidden=True):
         rqlst = self.cw_rset.syntax_tree()
         # union not yet supported
         if len(rqlst.children) != 1:
@@ -60,7 +60,8 @@ class TableView(AnyRsetView):
         wdgs = [wdg for wdg in wdgs if wdg is not None]
         if wdgs:
             self._generate_form(divid, baserql, wdgs, hidden,
-                               vidargs={'displaycols': displaycols,
+                               vidargs={'paginate': paginate,
+                                        'displaycols': displaycols,
                                         'displayactions': displayactions,
                                         'displayfilter': displayfilter})
             return self.show_hide_actions(divid, not hidden)
@@ -162,7 +163,7 @@ class TableView(AnyRsetView):
                 self.w(u'<h2 class="tableTitle">%s</h2>\n' % title)
             if displayfilter:
                 actions += self.form_filter(divid, displaycols, displayfilter,
-                                            displayactions)
+                                            displayactions, paginate)
         elif displayfilter:
             actions += self.show_hide_actions(divid, True)
         self.w(u'<div id="%s">' % divid)
@@ -324,7 +325,7 @@ class InitialTableView(TableView):
     title = None
 
     def call(self, title=None, subvid=None, headers=None, divid=None,
-             displaycols=None, displayactions=None, mainindex=None):
+             paginate=False, displaycols=None, displayactions=None, mainindex=None):
         """Dumps a table displaying a composite query"""
         try:
             actrql = self._cw.form['actualrql']
@@ -346,7 +347,8 @@ class InitialTableView(TableView):
         if mainindex is None:
             mainindex = self.main_var_index()
         if mainindex is not None:
-            actions = self.form_filter(divid, displaycols, displayactions, True)
+            actions = self.form_filter(divid, displaycols, displayactions,
+                                       paginate, True)
         else:
             actions = ()
         if not subvid and 'subvid' in self._cw.form:
