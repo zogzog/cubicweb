@@ -691,7 +691,7 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
                 kwargs['headlabel'] = s2d.CARD_MAP[rdef.cardinality[0]]
             try:
                 kwargs['color'] = self.colors[rschema]
-            except:
+            except KeyError:
                 kwargs['color'] = self.nextcolor()
                 self.colors[rschema] = kwargs['color']
         kwargs['fontcolor'] = kwargs['color']
