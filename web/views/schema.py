@@ -646,6 +646,7 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
         self.visitor = visitor
         self.nextcolor = cycle( ('#ff7700', '#000000',
                                  '#ebbc69', '#888888') ).next
+        self.colors = {}
 
     def node_properties(self, eschema):
         """return DOT drawing options for an entity schema include href"""
@@ -688,7 +689,11 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
                 kwargs['taillabel'] = s2d.CARD_MAP[rdef.cardinality[1]]
             if rdef.cardinality[0] != '1':
                 kwargs['headlabel'] = s2d.CARD_MAP[rdef.cardinality[0]]
-            kwargs['color'] = self.nextcolor()
+            try:
+                kwargs['color'] = self.colors[rschema]
+            except:
+                kwargs['color'] = self.nextcolor()
+                self.colors[rschema] = kwargs['color']
         kwargs['fontcolor'] = kwargs['color']
         # dot label decoration is just awful (1 line underlining the label
         # + 1 line going to the closest edge spline point)
