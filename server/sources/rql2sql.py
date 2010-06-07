@@ -556,8 +556,8 @@ class SQLGenerator(object):
                                   if not isinstance(vref, Constant))
             if having:
                 # filter out constants as for GROUP BY
-                having = ','.join(vref.accept(self) for vref in having
-                                  if not isinstance(vref, Constant))
+                having = ' AND '.join(term.accept(self) for term in having
+                                      if not isinstance(term, Constant))
             if needwrap:
                 sql = '%s FROM (%s) AS T1' % (self._selection_sql(outerselection, distinct,
                                                                   needalias),

@@ -56,13 +56,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         }
         var toupdate = result[1];
         var extraparams = vidargs;
-        var displayactions = jQuery('#' + divid).attr('cubicweb:displayactions');
-        if (displayactions) {
-            extraparams['displayactions'] = displayactions;
-        }
-        if (paginate) {
-            extraparams['paginate'] = '1';
-        }
+	if (paginate) { extraparams['paginate'] = '1'; } // XXX in vidargs
         // copy some parameters
         // XXX cleanup vid/divid mess
         // if vid argument is specified , the one specified in form params will

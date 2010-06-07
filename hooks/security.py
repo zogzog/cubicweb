@@ -25,7 +25,7 @@ from cubicweb.selectors import objectify_selector, lltrace
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
-def check_entity_attributes(session, entity, editedattrs=None):
+def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     eid = entity.eid
     eschema = entity.e_schema
     # ._cw_skip_security_attributes is there to bypass security for attributes
@@ -42,6 +42,8 @@ def check_entity_attributes(session, entity, editedattrs=None):
         rdef = eschema.rdef(attr)
         if rdef.final: # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
+            if creation and not rdef.permissions.get('update'):
+                continue
             rdef.check_perm(session, 'update', eid=eid)
     # don't update dontcheck until everything went fine: see usage in
     # after_update_entity, where if we got an Unauthorized at hook time, we will
@@ -58,6 +60,7 @@ class _CheckEntityPermissionOp(hook.LateOperation):
             action = values[1]
             entity.cw_check_perm(action)
             check_entity_attributes(session, entity, values[2:])
+                                    creation=self.creation)
 
     def commit_event(self):
         pass
@@ -94,7 +97,7 @@ class AfterAddEntitySecurityHook(SecurityHook):
     def __call__(self):
         hook.set_operation(self._cw, 'check_entity_perm_op',
                            (self.entity.eid, 'add') + tuple(self.entity.edited_attributes),
-                           _CheckEntityPermissionOp)
+                           _CheckEntityPermissionOp, creation=True)
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
@@ -113,7 +116,7 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
             # overwritten
             hook.set_operation(self._cw, 'check_entity_perm_op',
                                (self.entity.eid, 'update') + tuple(self.entity.edited_attributes),
-                               _CheckEntityPermissionOp)
+                               _CheckEntityPermissionOp, creation=False)
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The `ResultSet` class which is returned as result of an rql query
+"""The `ResultSet` class which is returned as result of an rql query"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache, copy_cache
@@ -600,7 +599,11 @@ class ResultSet(object):
         if rel is not None:
             index = rel.children[0].root_selection_index()
             if index is not None and self.rows[row][index]:
-                return self.get_entity(row, index), rel.r_type
+                try:
+                    entity = self.get_entity(row, index)
+                    return entity, rel.r_type
+                except NotAnEntity, exc:
+                    return None, None
         return None, None
 
     @cached

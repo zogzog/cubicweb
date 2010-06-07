@@ -340,16 +340,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                            self._build_renderer(entity, rtype, role))
 
     def should_edit_attribute(self, entity, rschema, form):
-        rtype = str(rschema)
-        rdef = entity.e_schema.rdef(rtype)
-        afs = uicfg.autoform_section.etype_get(
-            entity.__regid__, rtype, 'subject', rdef.object)
-        if 'main_hidden' in afs or not entity.cw_has_perm('update'):
+        if not entity.has_perm('update'):
             return False
+        rdef = entity.e_schema.rdef(rschema)
         if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
             return False
         try:
-            form.field_by_name(rtype, 'subject', entity.e_schema)
+            form.field_by_name(str(rschema), 'subject', entity.e_schema)
         except FieldNotFound:
             return False
         return True
@@ -439,15 +436,27 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
     _onclick = (u"loadInlineEditionFormOptions(%(eid)s, '%(rtype)s', "
                 "'%(divid)s', %(options)s);")
 
+    def should_edit_attribute(self, entity, rschema, form):
+        rdef = entity.e_schema.rdef(rschema)
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rschema, 'subject', rdef.object)
+        if 'main_hidden' in afs:
+            return False
+        return super(AutoClickAndEditFormView, self).should_edit_attribute(
+            entity, rschema, form)
+
     def should_edit_relation(self, entity, rschema, role, rvid):
         eschema = entity.e_schema
-        rtype = str(rschema)
-        # XXX check autoform_section. what if 'generic'?
-        dispctrl = _pvdc.etype_get(eschema, rtype, role)
+        dispctrl = _pvdc.etype_get(eschema, rschema, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
             return False
-        if eschema.rdef(rschema, role).composite == role:
+        rdef = eschema.rdef(rschema, role)
+        if rdef.composite == role:
+            return False
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rschema, role, rdef.object)
+        if 'main_hidden' in afs:
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)

@@ -416,7 +416,8 @@ class ServerMigrationHelper(MigrationHelper):
                                   'vars': expression.mainvars, 'x': teid},
                                  ask_confirm=False)
 
-    def _synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True, syncprops=True):
+    def _synchronize_rschema(self, rtype, syncrdefs=True,
+                             syncperms=True, syncprops=True):
         """synchronize properties of the persistent relation schema against its
         current definition:
 
@@ -448,7 +449,8 @@ class ServerMigrationHelper(MigrationHelper):
                                               syncprops=syncprops,
                                               syncperms=syncperms)
 
-    def _synchronize_eschema(self, etype, syncperms=True):
+    def _synchronize_eschema(self, etype, syncrdefs=True,
+                             syncperms=True, syncprops=True):
         """synchronize properties of the persistent entity schema against
         its current definition:
 
@@ -465,40 +467,43 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             eschema = self.fs_schema.eschema(etype)
         except KeyError:
-            return
-        repospschema = repoeschema.specializes()
-        espschema = eschema.specializes()
-        if repospschema and not espschema:
-            self.rqlexec('DELETE X specializes Y WHERE X is CWEType, X name %(x)s',
-                         {'x': str(repoeschema)}, ask_confirm=False)
-        elif not repospschema and espschema:
-            self.rqlexec('SET X specializes Y WHERE X is CWEType, X name %(x)s, '
-                         'Y is CWEType, Y name %(y)s',
-                         {'x': str(repoeschema), 'y': str(espschema)},
-                         ask_confirm=False)
-        self.rqlexecall(ss.updateeschema2rql(eschema, repoeschema.eid),
-                        ask_confirm=self.verbosity >= 2)
-        for rschema, targettypes, role in eschema.relation_definitions(True):
-            if rschema in VIRTUAL_RTYPES:
-                continue
-            if role == 'subject':
-                if not rschema in repoeschema.subject_relations():
-                    continue
-                subjtypes, objtypes = [etype], targettypes
-            else: # role == 'object'
-                if not rschema in repoeschema.object_relations():
-                    continue
-                subjtypes, objtypes = targettypes, [etype]
-            self._synchronize_rschema(rschema, syncperms=syncperms,
-                                      syncrdefs=False)
-            reporschema = self.repo.schema.rschema(rschema)
-            for subj in subjtypes:
-                for obj in objtypes:
-                    if (subj, obj) not in reporschema.rdefs:
-                        continue
-                    self._synchronize_rdef_schema(subj, rschema, obj)
+            return # XXX somewhat unexpected, no?...
+        if syncprops:
+            repospschema = repoeschema.specializes()
+            espschema = eschema.specializes()
+            if repospschema and not espschema:
+                self.rqlexec('DELETE X specializes Y WHERE X is CWEType, X name %(x)s',
+                             {'x': str(repoeschema)}, ask_confirm=False)
+            elif not repospschema and espschema:
+                self.rqlexec('SET X specializes Y WHERE X is CWEType, X name %(x)s, '
+                             'Y is CWEType, Y name %(y)s',
+                             {'x': str(repoeschema), 'y': str(espschema)},
+                             ask_confirm=False)
+            self.rqlexecall(ss.updateeschema2rql(eschema, repoeschema.eid),
+                            ask_confirm=self.verbosity >= 2)
         if syncperms:
             self._synchronize_permissions(eschema, repoeschema.eid)
+        if syncrdefs:
+            for rschema, targettypes, role in eschema.relation_definitions(True):
+                if rschema in VIRTUAL_RTYPES:
+                    continue
+                if role == 'subject':
+                    if not rschema in repoeschema.subject_relations():
+                        continue
+                    subjtypes, objtypes = [etype], targettypes
+                else: # role == 'object'
+                    if not rschema in repoeschema.object_relations():
+                        continue
+                    subjtypes, objtypes = targettypes, [etype]
+                self._synchronize_rschema(rschema, syncrdefs=False,
+                                          syncprops=syncprops, syncperms=syncperms)
+                reporschema = self.repo.schema.rschema(rschema)
+                for subj in subjtypes:
+                    for obj in objtypes:
+                        if (subj, obj) not in reporschema.rdefs:
+                            continue
+                        self._synchronize_rdef_schema(subj, rschema, obj,
+                                                      syncprops=syncprops, syncperms=syncperms)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
@@ -991,32 +996,23 @@ class ServerMigrationHelper(MigrationHelper):
         if ertype is not None:
             if isinstance(ertype, (tuple, list)):
                 assert len(ertype) == 3, 'not a relation definition'
-                assert syncprops, 'can\'t update permission for a relation definition'
                 self._synchronize_rdef_schema(ertype[0], ertype[1], ertype[2],
                                               syncperms=syncperms,
                                               syncprops=syncprops)
             else:
                 erschema = self.repo.schema[ertype]
                 if isinstance(erschema, CubicWebRelationSchema):
-                    self._synchronize_rschema(erschema, syncperms=syncperms,
-                                              syncprops=syncprops,
-                                              syncrdefs=syncrdefs)
-                elif syncprops:
-                    self._synchronize_eschema(erschema, syncperms=syncperms)
+                    self._synchronize_rschema(erschema, syncrdefs=syncrdefs,
+                                              syncperms=syncperms,
+                                              syncprops=syncprops)
                 else:
-                    self._synchronize_permissions(self.fs_schema[ertype], erschema.eid)
+                    self._synchronize_eschema(erschema, syncrdefs=syncrdefs,
+                                              syncperms=syncperms,
+                                              syncprops=syncprops)
         else:
             for etype in self.repo.schema.entities():
-                if syncprops:
-                    self._synchronize_eschema(etype, syncperms=syncperms)
-                else:
-                    try:
-                        fseschema = self.fs_schema[etype]
-                    except KeyError:
-                        # entity type in the repository schema but not anymore
-                        # on the fs schema
-                        continue
-                    self._synchronize_permissions(fseschema, etype.eid)
+                self._synchronize_eschema(etype, syncrdefs=syncrdefs,
+                                          syncprops=syncprops, syncperms=syncperms)
         if commit:
             self.commit()
 

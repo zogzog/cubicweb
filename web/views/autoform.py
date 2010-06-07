@@ -650,13 +650,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # pre 3.8.3 compat
     def set_action(self, action):
         self._action = action
-    @deprecated('[3.9] use form.form_action()')
     def get_action(self):
         try:
             return self._action
         except AttributeError:
             return self._cw.build_url(self._default_form_action_path)
-    action = property(get_action, set_action)
+    action = property(deprecated('[3.9] use form.form_action()')(get_action),
+                      set_action)
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):

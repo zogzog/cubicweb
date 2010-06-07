@@ -397,5 +397,9 @@ class ResultSetTC(CubicWebTC):
                           '(Any X,N WHERE X is CWGroup, X name N)'
                           ')')
 
+    def test_count_users_by_date(self):
+        rset = self.execute('Any D, COUNT(U) GROUPBY D WHERE U is CWUser, U creation_date D')
+        self.assertEquals(rset.related_entity(0,0), (None, None))
+
 if __name__ == '__main__':
     unittest_main()

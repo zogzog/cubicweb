@@ -42,7 +42,6 @@ from twisted.web.server import NOT_DONE_YET
 from cubicweb.web import dumps
 
 from logilab.common.decorators import monkeypatch
-from logilab.common.daemon import daemonize
 
 from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
@@ -398,12 +397,11 @@ def run(config, vreg=None, debug=None):
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
     reactor.listenTCP(port, website)
-    logger = getLogger('cubicweb.twisted')
     if not config.debugmode:
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
-        logger.info('instance started in the background on %s', root_resource.base_url)
+        LOGGER.info('instance started in the background on %s', root_resource.base_url)
         if daemonize(config['pid-file']):
             return # child process
     root_resource.init_publisher() # before changing uid
@@ -415,7 +413,7 @@ def run(config, vreg=None, debug=None):
             uid = getpwnam(config['uid']).pw_uid
         os.setuid(uid)
     root_resource.start_service()
-    logger.info('instance started on %s', root_resource.base_url)
+    LOGGER.info('instance started on %s', root_resource.base_url)
     # avoid annoying warnign if not in Main Thread
     signals = threading.currentThread().getName() == 'MainThread'
     if config['profile']:
