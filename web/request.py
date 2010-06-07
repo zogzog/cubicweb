@@ -735,7 +735,7 @@ class CubicWebRequestBase(DBAPIRequest):
     # page data management ####################################################
 
     def get_page_data(self, key, default=None):
-        """return value associated to `key` in curernt page data"""
+        """return value associated to `key` in current page data"""
         page_data = self.session.data.get(self.pageid)
         if page_data is None:
             return default
