@@ -177,15 +177,16 @@ msgid "1?"
 msgstr "1 0..1"
 
 #, python-format
+msgid "<%s not specified>"
+msgstr "<%s non spécifié>"
+
+#, python-format
 msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 "<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
 "vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
-
-msgid "<no value>"
-msgstr "<non spécifié>"
 
 msgid "?*"
 msgstr "0..1 0..n"
@@ -2705,6 +2706,9 @@ msgstr "liste"
 msgid "log in"
 msgstr "s'identifier"
 
+msgid "log out first"
+msgstr "déconnecter vous d'abord"
+
 msgid "login"
 msgstr "identifiant"
 
@@ -4081,6 +4085,3 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
-
-#~ msgid "schema-image"
-#~ msgstr "image"
