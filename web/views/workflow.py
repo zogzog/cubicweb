@@ -435,6 +435,5 @@ class TmpPngView(TmpFileViewMixin, view.EntityView):
 
     def cell_call(self, row=0, col=0):
         tmpfile = self._cw.session.data[self._cw.form['tmpfile']]
-        print 'tmpfile', tmpfile
         self.w(open(tmpfile, 'rb').read())
-        #os.unlink(tmpfile)
+        os.unlink(tmpfile)
