@@ -15,22 +15,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for schema related entities
+"""Specific views for schema related entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from itertools import cycle
 
+import tempfile
+import os, os.path as osp
+
+from logilab.common.graph import GraphGenerator, DotBackend
 from logilab.common.ureports import Section, Table
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 from yams.buildobjs import DEFAULT_ATTRPERMS
 
-from cubicweb.selectors import (implements, yes, match_user_groups,
-                                has_related_entities, authenticated_user)
+from cubicweb.selectors import (implements, match_user_groups, match_kwargs,
+                                has_related_entities, authenticated_user, yes)
 from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
+from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, StartupView
 from cubicweb import tags, uilib
 from cubicweb.web import action, facet, uicfg, schemaviewer
@@ -158,10 +162,7 @@ class SchemaImageTab(StartupView):
         self.w(u'<div><a href="%s">%s</a></div>' %
                (self._cw.build_url('view', vid='owl'),
                 self._cw._(u'Download schema as OWL')))
-        self.w(u'<img src="%s" alt="%s"/>\n' % (
-            xml_escape(self._cw.build_url('view', vid='schemagraph', skipmeta=1)),
-            self._cw._("graphical representation of the instance'schema")))
-
+        self.wview('schemagraph')
 
 class SchemaETypeTab(StartupView):
     __regid__ = 'schema-entity-types'
@@ -311,9 +312,7 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
             self.wview('csv', entity.related('specializes', 'object'))
             self.w(u'</div>')
         # entity schema image
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(entity.absolute_url(vid='schemagraph')),
-            xml_escape(_('graphical schema for %s') % entity.name)))
+        self.wview('schemagraph', etype=entity.name)
         # entity schema attributes
         self.w(u'<h2>%s</h2>' % _('CWAttribute_plural'))
         rset = self._cw.execute(
@@ -491,9 +490,7 @@ class CWRTypeDescriptionTab(tabs.PrimaryTab):
         super(CWRTypeDescriptionTab, self).render_entity_attributes(entity)
         _ = self._cw._
         if not entity.final:
-            msg = _('graphical schema for %s') % entity.name
-            self.w(tags.img(src=entity.absolute_url(vid='schemagraph'),
-                            alt=msg))
+            self.wview('schemagraph', rtype=entity.name)
         rset = self._cw.execute('Any R,C,R,R, RT WHERE '
                                 'R relation_type RT, RT eid %(x)s, '
                                 'R cardinality C', {'x': entity.eid})
@@ -644,41 +641,109 @@ class OneHopRSchemaVisitor(RestrictedSchemaVisitorMixIn,
                            s2d.OneHopRSchemaVisitor):
     pass
 
+class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
+    def __init__(self, visitor):
+        self.visitor = visitor
+        self.nextcolor = cycle( ('#ff7700', '#000000',
+                                 '#ebbc69', '#888888') ).next
 
-class SchemaImageView(TmpFileViewMixin, StartupView):
+    def node_properties(self, eschema):
+        """return DOT drawing options for an entity schema include href"""
+        label = ['{',eschema.type,'|']
+        label.append(r'\l'.join('%s (%s)' % (rel.type, eschema.rdef(rel.type).object)
+                                for rel in eschema.ordered_relations()
+                                    if rel.final and self.visitor.should_display_attr(eschema, rel)))
+        label.append(r'\l}') # trailing \l ensure alignement of the last one
+        return {'label' : ''.join(label), 'shape' : "record",
+                'fontname' : "Courier", 'style' : "filled",
+                'href': 'cwetype/%s' % eschema.type,
+                'fontsize': '10px'
+                }
+
+    def edge_properties(self, rschema, subjnode, objnode):
+        """return default DOT drawing options for a relation schema"""
+        # symmetric rels are handled differently, let yams decide what's best
+        if rschema.symmetric:
+            kwargs = {'label': rschema.type,
+                      'color': '#887788', 'style': 'dashed',
+                      'dir': 'both', 'arrowhead': 'normal', 'arrowtail': 'normal',
+                      'fontsize': '10px', 'href': 'cwrtype/%s' % rschema.type}
+        else:
+            kwargs = {'label': rschema.type,
+                      'color' : 'black',  'style' : 'filled', 'fontsize': '10px',
+                      'href': 'cwrtype/%s' % rschema.type}
+            rdef = rschema.rdef(subjnode, objnode)
+            composite = rdef.composite
+            if rdef.composite == 'subject':
+                kwargs['arrowhead'] = 'none'
+                kwargs['arrowtail'] = 'diamond'
+            elif rdef.composite == 'object':
+                kwargs['arrowhead'] = 'diamond'
+                kwargs['arrowtail'] = 'none'
+            else:
+                kwargs['arrowhead'] = 'open'
+                kwargs['arrowtail'] = 'none'
+            # UML like cardinalities notation, omitting 1..1
+            if rdef.cardinality[1] != '1':
+                kwargs['taillabel'] = s2d.CARD_MAP[rdef.cardinality[1]]
+            if rdef.cardinality[0] != '1':
+                kwargs['headlabel'] = s2d.CARD_MAP[rdef.cardinality[0]]
+            kwargs['color'] = self.nextcolor()
+        kwargs['fontcolor'] = kwargs['color']
+        # dot label decoration is just awful (1 line underlining the label
+        # + 1 line going to the closest edge spline point)
+        kwargs['decorate'] = 'false'
+        #kwargs['labelfloat'] = 'true'
+        return kwargs
+
+
+class SchemaGraphView(StartupView):
     __regid__ = 'schemagraph'
-    content_type = 'image/png'
 
-    def _generate(self, tmpfile):
-        """display global schema information"""
-        visitor = FullSchemaVisitor(self._cw, self._cw.vreg.schema,
-                                    skiptypes=skip_types(self._cw))
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
-
-
-class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
-    __regid__ = 'schemagraph'
-    __select__ = implements('CWEType')
-    content_type = 'image/png'
-
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
-        eschema = self._cw.vreg.schema.eschema(entity.name)
-        visitor = OneHopESchemaVisitor(self._cw, eschema,
-                                       skiptypes=skip_types(self._cw))
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
-
-
-class CWRTypeSchemaImageView(CWETypeSchemaImageView):
-    __select__ = implements('CWRType')
-
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
-        rschema = self._cw.vreg.schema.rschema(entity.name)
-        visitor = OneHopRSchemaVisitor(self._cw, rschema)
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+    def call(self, etype=None, rtype=None, alt=''):
+        schema = self._cw.vreg.schema
+        if etype:
+            assert rtype is None
+            visitor = OneHopESchemaVisitor(self._cw, schema.eschema(etype),
+                                           skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of the %(etype)s '
+                             'entity type from %(appid)s data model')
+        elif rtype:
+            visitor = OneHopRSchemaVisitor(self._cw, schema.rschema(rtype),
+                                           skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of the %(rtype)s '
+                             'relation type from %(appid)s data model')
+        else:
+            visitor = FullSchemaVisitor(self._cw, schema,
+                                        skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of %(appid)s data model')
+        alt %= {'rtype': rtype, 'etype': etype,
+                'appid': self._cw.vreg.config.appid}
+        prophdlr = CWSchemaDotPropsHandler(visitor)
+        generator = GraphGenerator(DotBackend('schema', 'BT',
+                                              ratio='compress',size=None,
+                                              renderer='dot',
+                                              additionnal_param={
+                                                  'overlap':'false',
+                                                  'splines':'true',
+                                                  'sep':'0.2',
+                                              }))
+        # map file
+        pmap, mapfile = tempfile.mkstemp(".map")
+        os.close(pmap)
+        # image file
+        fd, tmpfile = tempfile.mkstemp('.png')
+        os.close(fd)
+        generator.generate(visitor, prophdlr, tmpfile, mapfile)
+        filekeyid = make_uid()
+        self._cw.session.data[filekeyid] = tmpfile
+        self.w(u'<img src="%s" alt="%s" usemap="#schema" />' % (
+            xml_escape(self._cw.build_url(vid='tmppng', tmpfile=filekeyid)),
+            xml_escape(self._cw._(alt))))
+        stream = open(mapfile, 'r').read()
+        stream = stream.decode(self._cw.encoding)
+        self.w(stream)
+        os.unlink(mapfile)
 
 # breadcrumbs ##################################################################
 
