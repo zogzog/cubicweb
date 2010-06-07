@@ -418,6 +418,12 @@ class Field(object):
         pass
 
     def has_been_modified(self, form):
+        for field in field.actual_fields(form):
+            if field._has_been_modified():
+                return True # XXX
+        return False # not modified
+
+    def _has_been_modified(self, form):
         # fields not corresponding to an entity attribute / relations
         # are considered modified
         if not self.eidparam or not self.role or not form.edited_entity.has_eid():
@@ -441,7 +447,7 @@ class Field(object):
         except ProcessFormError:
             return True
         except UnmodifiedField:
-            return False
+            return False # not modified
         if previous_value == new_value:
             return False # not modified
         return True
