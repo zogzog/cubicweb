@@ -76,10 +76,16 @@ class ResultSet(object):
         rows = self.rows
         if len(rows) > 10:
             rows = rows[:10] + ['...']
+        if len(rows) > 1:
+            # add a line break before first entity if more that one.
+            pattern = '<resultset %r (%s rows):\n%s>' 
+        else:
+            pattern = '<resultset %r (%s rows): %s>'
+
         if not self.description:
-            return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+            return pattern % (self.rql, len(self.rows),
                                                      '\n'.join(str(r) for r in rows))
-        return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+        return pattern % (self.rql, len(self.rows),
                                                  '\n'.join('%s (%s)' % (r, d)
                                                            for r, d in zip(rows, self.description)))
 

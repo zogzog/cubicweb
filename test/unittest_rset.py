@@ -401,5 +401,19 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('Any D, COUNT(U) GROUPBY D WHERE U is CWUser, U creation_date D')
         self.assertEquals(rset.related_entity(0,0), (None, None))
 
+    def test_str(self):
+        rset = self.execute('(Any X,N WHERE X is CWGroup, X name N)')
+        self.assertIsInstance(str(rset), basestring)
+        self.assertEquals(len(str(rset).splitlines()), 1)
+
+    def test_repr(self):
+        rset = self.execute('(Any X,N WHERE X is CWGroup, X name N)')
+        self.assertIsInstance(repr(rset), basestring)
+        self.assertTrue(len(repr(rset).splitlines()) > 1)
+
+        rset = self.execute('(Any X WHERE X is CWGroup, X name "managers")')
+        self.assertIsInstance(str(rset), basestring)
+        self.assertEquals(len(str(rset).splitlines()), 1)
+
 if __name__ == '__main__':
     unittest_main()
