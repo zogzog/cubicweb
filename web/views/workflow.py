@@ -19,7 +19,6 @@
 
 * IWorkflowable views and forms
 * workflow entities views (State, Transition, TrInfo)
-
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -34,6 +33,7 @@ from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 implements, score_entity)
+from cubicweb.utils import make_uid
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -415,8 +415,10 @@ class WorkflowGraphView(view.EntityView):
         fd, tmpfile = tempfile.mkstemp('.png')
         os.close(fd)
         generator.generate(visitor, prophdlr, tmpfile, mapfile)
+        filekeyid = make_uid()
+        self._cw.session.data[filekeyid] = tmpfile
         self.w(u'<img src="%s" alt="%s" usemap="#%s" />' % (
-            xml_escape(entity.absolute_url(vid='wfimage', tmpfile=tmpfile)),
+            xml_escape(entity.absolute_url(vid='tmppng', tmpfile=filekeyid)),
             xml_escape(self._cw._('graphical workflow for %s') % entity.name),
             wfname))
         stream = open(mapfile, 'r').read()
@@ -424,12 +426,15 @@ class WorkflowGraphView(view.EntityView):
         self.w(stream)
         os.unlink(mapfile)
 
-class WorkflowImageView(TmpFileViewMixin, view.EntityView):
-    __regid__ = 'wfimage'
-    __select__ = implements('Workflow')
+
+class TmpPngView(TmpFileViewMixin, view.EntityView):
+    __regid__ = 'tmppng'
+    __select__ = match_form_params('tmpfile')
     content_type = 'image/png'
+    binary = True
 
     def cell_call(self, row=0, col=0):
-        tmpfile = self._cw.form.get('tmpfile', None)
+        tmpfile = self._cw.session.data[self._cw.form['tmpfile']]
+        print 'tmpfile', tmpfile
         self.w(open(tmpfile, 'rb').read())
-        os.unlink(tmpfile)
+        #os.unlink(tmpfile)
