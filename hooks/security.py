@@ -59,7 +59,7 @@ class _CheckEntityPermissionOp(hook.LateOperation):
             entity = session.entity_from_eid(values[0])
             action = values[1]
             entity.cw_check_perm(action)
-            check_entity_attributes(session, entity, values[2:])
+            check_entity_attributes(session, entity, values[2:],
                                     creation=self.creation)
 
     def commit_event(self):
