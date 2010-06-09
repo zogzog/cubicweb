@@ -256,7 +256,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
         self._eid_creation_lock = Lock()
-        self._eid_creation_cnx = self.get_connection()
+        self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
         # entity types that may be used by other multi-sources instances
