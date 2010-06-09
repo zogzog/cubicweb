@@ -7,10 +7,6 @@
  *
  */
 
-CubicWeb.require('python.js');
-CubicWeb.require('htmlhelpers.js');
-CubicWeb.require('ajax.js');
-
 //============= Eproperty form functions =====================================//
 /**
  * .. function:: setPropValueWidget(varname, tabindex)

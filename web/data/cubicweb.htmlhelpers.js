@@ -1,6 +1,3 @@
-CubicWeb.require('python.js');
-CubicWeb.require('jquery.corner.js');
-
 /**
  * .. function:: baseuri()
  *
@@ -183,14 +180,14 @@ function autogrow(area) {
     }
 }
 //============= page loading events ==========================================//
-CubicWeb.rounded = [['div.sideBoxBody', 'bottom 6px'],
-                    ['div.boxTitle, div.sideBoxTitle, th.month', 'top 6px']];
+cw.rounded = [['div.sideBoxBody', 'bottom 6px'],
+              ['div.boxTitle, div.sideBoxTitle, th.month', 'top 6px']];
 
 function roundedCorners(node) {
     if (jQuery.fn.corner !== undefined) {
         node = jQuery(node);
-        for (var r = 0; r < CubicWeb.rounded.length; r++) {
-            node.find(CubicWeb.rounded[r][0]).corner(CubicWeb.rounded[r][1]);
+        for (var r = 0; r < cw.rounded.length; r++) {
+            node.find(cw.rounded[r][0]).corner(cw.rounded[r][1]);
         }
     }
 }
@@ -198,8 +195,3 @@ function roundedCorners(node) {
 jQuery(document).ready(function() {
     roundedCorners(this.body);
 });
-
-CubicWeb.provide('corners.js');
-
-CubicWeb.provide('htmlhelpers.js');
-

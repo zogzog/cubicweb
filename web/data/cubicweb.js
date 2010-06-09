@@ -1,3 +1,4 @@
+
 cw = {};
 
 jQuery.extend(cw, {
@@ -368,3 +369,24 @@ function IFRAME(params) {
     }
     return node;
 }
+
+// XXX avoid crashes / backward compat
+CubicWeb = {
+    require: cw.utils.deprecatedFunction(
+        '[3.9] CubicWeb.require() is not used anymore',
+        function(module) {}),
+    provide: cw.utils.deprecatedFunction(
+        '[3.9] CubicWeb.provide() is not used anymore',
+        function(module) {})
+};
+
+jQuery(document).ready(function() {
+    jQuery(CubicWeb).trigger('server-response', [false, document]);
+    jQuery(cw).trigger('server-response', [false, document]);
+});
+
+// XXX as of 2010-04-07, no known cube uses this
+jQuery(CubicWeb).bind('ajax-loaded', function() {
+    log('[3.7] "ajax-loaded" event is deprecated, use "server-response" instead');
+    jQuery(cw).trigger('server-response', [false, document]);
+});

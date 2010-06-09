@@ -5,9 +5,6 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-CubicWeb.require('python.js');
-CubicWeb.require('ajax.js');
-
 // IMPORTANT NOTE: the variables DAYNAMES AND MONTHNAMES will be added
 //                 by cubicweb automatically
 // dynamically computed (and cached)
@@ -54,7 +51,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         'onmouseout': function() {
             this.style.fontWeight = 'normal';
         }
-    }
+    };
 
     this.todayprops = jQuery.extend({},
     this.cellprops, {
@@ -79,7 +76,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
      */
     this._uppercaseFirst = function(s) {
         return s.charAt(0).toUpperCase();
-    }
+    };
 
     /**
      * .. function:: Calendar._domForRows(rows)
@@ -118,7 +115,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         var stopdate = firstday.nextMonth();
         var curdate = firstday.sub(firstday.getRealDay());
         while (curdate.getTime() < stopdate) {
-            var row = []
+            var row = [];
             for (var i = 0; i < 7; i++) {
                 if (curdate.getMonth() == this.month) {
                     props = curdate.equals(TODAY) ? this.todayprops: this.cellprops;
@@ -131,7 +128,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
             rows.push(row);
         }
         return rows;
-    }
+    };
 
     this._makecal = function() {
         var rows = this._getrows();
@@ -156,7 +153,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         },
         ">>")))), TBODY(null, this._headdisplay(), this._domForRows(rows)));
         return this.domtable;
-    }
+    };
 
     this._updateDiv = function() {
         if (!this.domtable) {
@@ -164,7 +161,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         }
         cw.jqNode(this.containerId).empty().append(this.domtable);
         // replaceChildNodes($(this.containerId), this.domtable);
-    }
+    };
 
     this.displayNextMonth = function() {
         this.domtable = null;
@@ -173,7 +170,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         }
         this.month = (this.month + 1) % 12;
         this._updateDiv();
-    }
+    };
 
     this.displayPreviousMonth = function() {
         this.domtable = null;
@@ -182,11 +179,11 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         }
         this.month = (this.month + 11) % 12;
         this._updateDiv();
-    }
+    };
 
     this.show = function() {
         if (!this.visible) {
-            container = cw.jqNode(this.containerId);
+            var container = cw.jqNode(this.containerId);
             if (!this.domtable) {
                 this._makecal();
             }
@@ -194,7 +191,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
             toggleVisibility(container);
             this.visible = true;
         }
-    }
+    };
 
     this.hide = function(event) {
         var self;
@@ -207,7 +204,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
             toggleVisibility(self.containerId);
             self.visible = false;
         }
-    }
+    };
 
     this.toggle = function() {
         if (this.visible) {
@@ -216,7 +213,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         else {
             this.show();
         }
-    }
+    };
 
     // call hide() when the user explicitly sets the focus on the matching input
     cw.jqNode(inputId).bind('focus', {
@@ -281,15 +278,14 @@ function dateSelected(cell, containerId) {
     //      the only way understood by both IE and Mozilla. Otherwise,
     //      IE accepts innerText and mozilla accepts textContent
     var selectedDate = new Date(cal.year, cal.month, cell.innerHTML, 12);
-    var xxx = remoteExec("format_date", cw.utils.toISOTimestamp(selectedDate));
-    input.value = xxx;
+    input.value = remoteExec("format_date", cw.utils.toISOTimestamp(selectedDate));
     cal.hide();
 }
 
 function whichElement(e) {
     var targ;
     if (!e) {
-        var e = window.event;
+        e = window.event;
     }
     if (e.target) {
         targ = e.target;
@@ -357,6 +353,3 @@ function stopPropagation(event) {
     event.cancelBubble = true;
     if (event.stopPropagation) event.stopPropagation();
 }
-
-CubicWeb.provide('calendar.js');
-

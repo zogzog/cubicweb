@@ -4,9 +4,6 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-CubicWeb.require('htmlhelpers.js');
-CubicWeb.require('ajax.js');
-
 //============= filter form functions ========================================//
 function copyParam(origparams, newparams, param) {
     var index = jQuery.inArray(param, origparams[0]);
@@ -240,6 +237,3 @@ function reorderFacetsItems(root) {
 jQuery(document).ready(function() {
     initFacetBoxEvents();
 });
-
-CubicWeb.provide('facets.js');
-

@@ -111,21 +111,3 @@ var KEYS = {
     KEY_ESC: 27,
     KEY_ENTER: 13
 };
-
-// XXX avoid crashes / backward compat
-CubicWeb = {
-    require: function(module) {},
-    provide: function(module) {}
-};
-
-jQuery(document).ready(function() {
-    jQuery(CubicWeb).trigger('server-response', [false, document]);
-});
-
-// XXX as of 2010-04-07, no known cube uses this
-jQuery(CubicWeb).bind('ajax-loaded', function() {
-    log('[3.7] "ajax-loaded" event is deprecated, use "server-response" instead');
-    jQuery(CubicWeb).trigger('server-response', [false, document]);
-});
-
-CubicWeb.provide('python.js');

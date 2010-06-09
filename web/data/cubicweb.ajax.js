@@ -553,8 +553,6 @@ function getDomFromResponse(response) {
     children));
 }
 
-CubicWeb.provide('ajax.js');
-
 /* DEPRECATED *****************************************************************/
 
 preprocessAjaxLoad = cw.utils.deprecatedFunction(
@@ -663,4 +661,3 @@ asyncRemoteExec = cw.utils.deprecatedFunction(
         return deferred;
     }
 );
-
