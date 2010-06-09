@@ -48,7 +48,6 @@ def get_available_port(ports_scan):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock = s.connect(("localhost", port))
-            return port
         except socket.error, err:
             if err.args[0] in (111, 106):
                 return port
