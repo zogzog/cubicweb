@@ -96,7 +96,7 @@ def reindex_entities(schema, session, withpb=True):
     cursor = session.pool['system']
     if not repo.system_source.dbhelper.has_fti_table(cursor):
         print 'no text index table'
-        dbhelper.init_fti(cursor)
+        repo.system_source.dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():

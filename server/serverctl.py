@@ -539,14 +539,14 @@ class StartRepositoryCommand(Command):
         debug = self.config.debug
         # create the server
         server = RepositoryServer(config, debug)
-        # go ! (don't daemonize in debug mode)
-        pidfile = config['pid-file']
         # ensure the directory where the pid-file should be set exists (for
         # instance /var/run/cubicweb may be deleted on computer restart)
+        pidfile = config['pid-file']
         piddir = os.path.dirname(pidfile)
+        # go ! (don't daemonize in debug mode)
         if not os.path.exists(piddir):
             os.makedirs(piddir)
-        if not debug and daemonize(pidfile) == -1:
+        if not debug and daemonize(pidfile):
             return
         uid = config['uid']
         if uid is not None:

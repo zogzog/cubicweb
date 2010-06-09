@@ -128,6 +128,7 @@ from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid, neg_role, uilib
+from cubicweb.vregistry import classid
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.selectors import (
@@ -307,7 +308,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         try:
             cls = self._cw.vreg['etypes'].etype_class(self.etype)
         except:
-            self.w(self._cw._('no such entity type %s') % etype)
+            self.w(self._cw._('no such entity type %s') % self.etype)
             return
         entity = cls(self._cw)
         entity.eid = self._cw.varmaker.next()
@@ -733,7 +734,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
             warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
-                 'override editable_relations instead' % classid(form),
+                 'override editable_relations instead' % classid(self),
                  DeprecationWarning)
         except AttributeError:
             srels_by_cat = self.editable_relations()

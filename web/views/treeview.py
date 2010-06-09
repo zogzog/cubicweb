@@ -18,6 +18,7 @@
 """Set of tree views / tree-building widgets, some based on jQuery treeview
 plugin.
 """
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn

@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """custom storages for the system source"""
+
 from os import unlink, path as osp
 
 from yams.schema import role_name
 
-from cubicweb import Binary
+from cubicweb import Binary, ValidationError
 from cubicweb.server import hook
 
 def set_attribute_storage(repo, etype, attr, storage):
@@ -157,7 +158,7 @@ class BytesFileSystemStorage(Storage):
         fspath = uniquify_path(self.default_directory, '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
-                dirpath, '_'.join(basename))
+                self.default_directory, '_'.join(basename))
             raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
         return fspath
 

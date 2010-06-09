@@ -29,9 +29,8 @@
   current state (req, rset, row, col). At the end of the selection, if
   a appobject class has been found, an instance of this class is
   returned. The selector is instantiated at appobject registration
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 import sys
