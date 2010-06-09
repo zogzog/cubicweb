@@ -1026,7 +1026,7 @@ class SQLGenerator(object):
             lhs = None
             rhs = cmp.children[0]
         operator = cmp.operator
-        if operator in ('IS', 'LIKE', 'ILIKE'):
+        if operator in ('LIKE', 'ILIKE'):
             if operator == 'ILIKE' and not self.dbhelper.ilike_support:
                 operator = ' LIKE '
             else:
