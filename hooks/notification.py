@@ -188,7 +188,7 @@ class EntityDeleteHook(SomethingChangedHook):
         except:
             # may raise an error during deletion process, for instance due to
             # missing required relation
-            title = '#%s' % eid
+            title = '#%s' % self.entity.eid
         self._cw.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (self.entity.eid, str(self.entity.e_schema), title)))
+            ('delete_entity', (self.entity.eid, self.entity.__regid__, title)))
         return True

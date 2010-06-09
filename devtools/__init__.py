@@ -249,7 +249,7 @@ def init_test_database_sqlserver2005(config):
     """initialize a fresh sqlserver databse used for testing purpose"""
     if config.init_repository:
         from cubicweb.server import init_repository
-        init_repository(config, interactive=False, drop=True, vreg=vreg)
+        init_repository(config, interactive=False, drop=True)
 
 ### sqlite test database handling ##############################################
 
