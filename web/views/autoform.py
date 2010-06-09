@@ -128,7 +128,7 @@ from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid, neg_role, uilib
-from cubicweb.vreg import classid
+from cubicweb.vregistry import classid
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.selectors import (
