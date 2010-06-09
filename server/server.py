@@ -25,8 +25,6 @@ import select
 import warnings
 from time import localtime, mktime
 
-from logilab.common.daemon import daemonize
-
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.server.repository import Repository
 
