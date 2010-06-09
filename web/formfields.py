@@ -418,8 +418,8 @@ class Field(object):
         pass
 
     def has_been_modified(self, form):
-        for field in field.actual_fields(form):
-            if field._has_been_modified():
+        for field in self.actual_fields(form):
+            if field._has_been_modified(form):
                 return True # XXX
         return False # not modified
 
