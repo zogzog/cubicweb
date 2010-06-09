@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Repository users' and internal' sessions.
+"""Repository users' and internal' sessions."""
 
-"""
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -29,7 +28,7 @@ from uuid import uuid4
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
-from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
+from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, schema
@@ -48,17 +47,6 @@ NO_UNDO_TYPES.add('CWCache')
 NO_UNDO_TYPES.add('is')
 NO_UNDO_TYPES.add('is_instance_of')
 # XXX rememberme,forgotpwd,apycot,vcsfile
-
-def is_final(rqlst, variable, args):
-    # try to find if this is a final var or not
-    for select in rqlst.children:
-        for sol in select.solutions:
-            etype = variable.get_type(sol, args)
-            if etype is None:
-                continue
-            if etype in BASE_TYPES:
-                return True
-            return False
 
 def _make_description(selected, args, solution):
     """return a description for a result set"""
@@ -870,32 +858,37 @@ class Session(RequestSessionBase):
         """
         # not so easy, looks for variable which changes from one solution
         # to another
-        unstables = rqlst.get_variable_variables()
-        basedescription = []
+        unstables = rqlst.get_variable_indices()
+        basedescr = []
         todetermine = []
-        selected = rqlst.children[0].selection # sample selection
-        for i, term in enumerate(selected):
-            if isinstance(term, Function) and term.descr().rtype is not None:
-                basedescription.append(term.get_type(term.descr().rtype, args))
-                continue
-            for vref in term.get_nodes(VariableRef):
-                if vref.name in unstables:
-                    basedescription.append(None)
-                    todetermine.append( (i, is_final(rqlst, vref.variable, args)) )
-                    break
+        sampleselect = rqlst.children[0]
+        samplesols = sampleselect.solutions[0]
+        for i, term in enumerate(sampleselect.selection):
+            try:
+                ttype = term.get_type(samplesols, args)
+            except CoercionError:
+                ttype = None
+                isfinal = True
             else:
-                # sample etype
-                etype = rqlst.children[0].solutions[0]
-                basedescription.append(term.get_type(etype, args))
+                if ttype is None or ttype == 'Any':
+                    ttype = None
+                    isfinal = True
+                else:
+                    isfinal = ttype in BASE_TYPES
+            if ttype is None or i in unstables:
+                basedescr.append(None)
+                todetermine.append( (i, isfinal) )
+            else:
+                basedescr.append(ttype)
         if not todetermine:
-            return RepeatList(len(result), tuple(basedescription))
-        return self._build_descr(result, basedescription, todetermine)
+            return RepeatList(len(result), tuple(basedescr))
+        return self._build_descr(result, basedescr, todetermine)
 
     def _build_descr(self, result, basedescription, todetermine):
         description = []
         etype_from_eid = self.describe
         for row in result:
-            row_descr = basedescription
+            row_descr = basedescription[:]
             for index, isfinal in todetermine:
                 value = row[index]
                 if value is None:
@@ -908,7 +901,8 @@ class Session(RequestSessionBase):
                     try:
                         row_descr[index] = etype_from_eid(value)[0]
                     except UnknownEid:
-                        self.critical('wrong eid %s in repository, should check database' % value)
+                        self.critical('wrong eid %s in repository, you should '
+                                      'db-check the database' % value)
                         row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description

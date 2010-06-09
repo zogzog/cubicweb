@@ -789,6 +789,15 @@ class QuerierTC(BaseQuerierTC):
                            'end', 'finie', 'markasdone', 'pitetre', 'redoit',
                            'start', 'todo'])
 
+    def test_select_union_description_diff_var(self):
+        eid1 = self.execute('CWGroup X WHERE X name "managers"')[0][0]
+        eid2 = self.execute('CWUser X WHERE X login "admin"')[0][0]
+        rset = self.execute('(Any X WHERE X eid %(x)s)'
+                            ' UNION '
+                            '(Any Y WHERE Y eid %(y)s)',
+                            {'x': eid1, 'y': eid2})
+        self.assertEquals(rset.description[:], [('CWGroup',), ('CWUser',)])
+
     def test_exists(self):
         geid = self.execute("INSERT CWGroup X: X name 'lulufanclub'")[0][0]
         self.execute("SET U in_group G WHERE G name 'lulufanclub'")
