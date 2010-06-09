@@ -401,6 +401,7 @@ def run(config, vreg=None, debug=None):
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
+        from logilab.common.daemon import daemonize
         LOGGER.info('instance started in the background on %s', root_resource.base_url)
         if daemonize(config['pid-file']):
             return # child process

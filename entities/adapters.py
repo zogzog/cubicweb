@@ -21,6 +21,8 @@ framework itself.
 
 __docformat__ = "restructuredtext en"
 
+from logilab.mtconverter import TransformError
+
 from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.selectors import implements, relation_possible
 from cubicweb.interfaces import IDownloadable

@@ -25,7 +25,8 @@ import operator
 from cubicweb.selectors import (implements, authenticated_user,
                                 adaptable, match_form_params)
 from cubicweb.view import EntityView
-from cubicweb.web import stdmsgs, controller, action, form, formfields as ff
+from cubicweb.web import (Redirect, stdmsgs, controller, action,
+                          form, formfields as ff)
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
 from cubicweb.web.views import forms, formrenderers
 

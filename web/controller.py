@@ -25,6 +25,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
+from cubicweb.mail import format_mail
 from cubicweb.web import LOGGER, Redirect, RequestError
 
 

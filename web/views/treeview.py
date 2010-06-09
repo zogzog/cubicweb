@@ -21,6 +21,7 @@ plugin.
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from itertools import chain
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
