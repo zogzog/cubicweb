@@ -1,5 +1,9 @@
 
-cw = {};
+function Namespace(name) {
+   this.__name__ = name;
+}
+
+cw = new Namespace('cw');
 
 jQuery.extend(cw, {
     log: function () {
@@ -66,7 +70,8 @@ jQuery.extend(cw, {
 });
 
 
-cw.utils = {
+cw.utils = new Namespace('cw.utils');
+jQuery.extend(cw.utils, {
 
     deprecatedFunction: function (msg, newfunc) {
         return function () {
@@ -78,7 +83,8 @@ cw.utils = {
     movedToNamespace: function (funcnames, namespace) {
         for (var i = 0; i < funcnames.length; i++) {
             var funcname = funcnames[i];
-            var msg = '[3.9] ' + funcname + ' is deprecated, use cw.' + funcname + ' instead';
+            var msg = ('[3.9] ' + funcname + ' is deprecated, use ' +
+		       namespace.__name__ + '.' + funcname + ' instead');
             window[funcname] = cw.utils.deprecatedFunction(msg, namespace[funcname]);
         }
     },
@@ -284,7 +290,7 @@ cw.utils = {
     }
 
 
-};
+});
 
 String.prototype.startsWith = cw.utils.deprecatedFunction('[3.9] str.startsWith() is deprecated, use str.startswith() instead', function (prefix) {
     return this.startswith(prefix);
