@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main, TestCase
 
 from os.path import join
@@ -27,7 +25,7 @@ from cubicweb.appobject import AppObject
 from cubicweb.cwvreg import CubicWebVRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.interfaces import IMileStone
+from cubicweb.view import EntityAdapter
 
 from cubes.card.entities import Card
 
@@ -61,14 +59,15 @@ class VRegistryTC(TestCase):
         self.failIf(self.vreg['views'].get('progressbar'))
         # we've to emulate register_objects to add custom MyCard objects
         path = [join(BASE, 'entities', '__init__.py'),
+                join(BASE, 'entities', 'adapters.py'),
                 join(BASE, 'web', 'views', 'iprogress.py')]
         filemods = self.vreg.init_registration(path, None)
         for filepath, modname in filemods:
             self.vreg.load_file(filepath, modname)
-        class MyCard(Card):
-            __implements__ = (IMileStone,)
+        class CardIProgressAdapter(EntityAdapter):
+            __regid__ = 'IProgress'
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(MyCard)
+        self.vreg.register(CardIProgressAdapter)
         self.vreg.initialization_completed()
         # check progressbar isn't kicked
         self.assertEquals(len(self.vreg['views']['progressbar']), 1)
