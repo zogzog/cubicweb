@@ -130,7 +130,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEquals(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -155,7 +155,6 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Image', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'RQLExpression', 'ETN': 'String', 'ET': 'CWEType'},

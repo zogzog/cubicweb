@@ -133,9 +133,15 @@ class StorageTC(CubicWebTC):
                                ' UNION '
                                '(Any D WHERE X title D, X is Bookmark)')
         self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
-        ex = self.assertRaises(QueryError,
-                               self.execute, 'Any D WHERE X data D')
-        self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+
+        storages.set_attribute_storage(self.repo, 'State', 'name',
+                                       storages.BytesFileSystemStorage(self.tempdir))
+        try:
+            ex = self.assertRaises(QueryError,
+                                   self.execute, 'Any D WHERE X name D, X is IN (State, Transition)')
+            self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+        finally:
+            storages.unset_attribute_storage(self.repo, 'State', 'name')
 
     def test_source_mapped_attribute_advanced(self):
         f1 = self.create_file()

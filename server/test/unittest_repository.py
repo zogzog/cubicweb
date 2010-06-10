@@ -16,10 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.server.repository
-
-"""
-from __future__ import with_statement
+"""unit tests for module cubicweb.server.repository"""
 
 from __future__ import with_statement
 
@@ -246,8 +243,7 @@ class RepositoryTC(CubicWebTC):
                                'constrained_by',
                                'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'description', 'description_format',
-                               'in_basket'])
+                               'defaultval', 'description', 'description_format'])
 
         self.assertEquals(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEquals(schema.eschema('State').main_attribute(), 'name')
