@@ -21,11 +21,14 @@ framework itself.
 
 __docformat__ = "restructuredtext en"
 
+from itertools import chain
+
 from logilab.mtconverter import TransformError
+from logilab.common.decorators import cached
 
 from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.selectors import implements, relation_possible
-from cubicweb.interfaces import IDownloadable
+from cubicweb.interfaces import IDownloadable, ITree
 
 
 class IEmailableAdapter(EntityAdapter):
@@ -166,3 +169,154 @@ class IDownloadableAdapter(EntityAdapter):
     def download_data(self):
         """return actual data of the downloadable content"""
         raise NotImplementedError
+
+
+class ITreeAdapter(EntityAdapter):
+    """This adapter has to be overriden to be configured using the
+    tree_relation, child_role and parent_role class attributes to
+    benefit from this default implementation
+    """
+    __regid__ = 'ITree'
+    __select__ = implements(ITree) # XXX for bw compat, else should be abstract
+
+    tree_relation = None
+    child_role = 'subject'
+    parent_role = 'object'
+
+    @implements_adapter_compat('ITree')
+    def children_rql(self):
+        """returns RQL to get children
+
+        XXX should be removed from the public interface
+        """
+        return self.entity.cw_related_rql(self.tree_relation, self.parent_role)
+
+    @implements_adapter_compat('ITree')
+    def different_type_children(self, entities=True):
+        """return children entities of different type as this entity.
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        res = self.entity.related(self.tree_relation, self.parent_role,
+                                  entities=entities)
+        eschema = self.entity.e_schema
+        if entities:
+            return [e for e in res if e.e_schema != eschema]
+        return res.filtered_rset(lambda x: x.e_schema != eschema, self.entity.cw_col)
+
+    @implements_adapter_compat('ITree')
+    def same_type_children(self, entities=True):
+        """return children entities of the same type as this entity.
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        res = self.entity.related(self.tree_relation, self.parent_role,
+                                  entities=entities)
+        eschema = self.entity.e_schema
+        if entities:
+            return [e for e in res if e.e_schema == eschema]
+        return res.filtered_rset(lambda x: x.e_schema is eschema, self.entity.cw_col)
+
+    @implements_adapter_compat('ITree')
+    def is_leaf(self):
+        """returns true if this node as no child"""
+        return len(self.children()) == 0
+
+    @implements_adapter_compat('ITree')
+    def is_root(self):
+        """returns true if this node has no parent"""
+        return self.parent() is None
+
+    @implements_adapter_compat('ITree')
+    def root(self):
+        """return the root object"""
+        return self._cw.entity_from_eid(self.path()[0])
+
+    @implements_adapter_compat('ITree')
+    def parent(self):
+        """return the parent entity if any, else None (e.g. if we are on the
+        root)
+        """
+        try:
+            return self.entity.related(self.tree_relation, self.child_role,
+                                       entities=True)[0]
+        except (KeyError, IndexError):
+            return None
+
+    @implements_adapter_compat('ITree')
+    def children(self, entities=True, sametype=False):
+        """return children entities
+
+        according to the `entities` parameter, return entity objects or the
+        equivalent result set
+        """
+        if sametype:
+            return self.same_type_children(entities)
+        else:
+            return self.entity.related(self.tree_relation, self.parent_role,
+                                       entities=entities)
+
+    @implements_adapter_compat('ITree')
+    def iterparents(self, strict=True):
+        def _uptoroot(self):
+            curr = self
+            while True:
+                curr = curr.parent()
+                if curr is None:
+                    break
+                yield curr
+                curr = curr.cw_adapt_to('ITree')
+        if not strict:
+            return chain([self.entity], _uptoroot(self))
+        return _uptoroot(self)
+
+    @implements_adapter_compat('ITree')
+    def iterchildren(self, _done=None):
+        """iterates over the item's children"""
+        if _done is None:
+            _done = set()
+        for child in self.children():
+            if child.eid in _done:
+                self.error('loop in %s tree', child.__regid__.lower())
+                continue
+            yield child
+            _done.add(child.eid)
+
+    @implements_adapter_compat('ITree')
+    def prefixiter(self, _done=None):
+        if _done is None:
+            _done = set()
+        if self.entity.eid in _done:
+            return
+        _done.add(self.entity.eid)
+        yield self.entity
+        for child in self.same_type_children():
+            for entity in child.cw_adapt_to('ITree').prefixiter(_done):
+                yield entity
+
+    @cached
+    @implements_adapter_compat('ITree')
+    def path(self):
+        """returns the list of eids from the root object to this object"""
+        path = []
+        adapter = self
+        entity = adapter.entity
+        while entity is not None:
+            if entity.eid in path:
+                self.error('loop in %s tree', entity.__regid__.lower())
+                break
+            path.append(entity.eid)
+            try:
+                # check we are not jumping to another tree
+                if (adapter.tree_relation != self.tree_relation or
+                    adapter.child_role != self.child_role):
+                    break
+                entity = adapter.parent()
+                adapter = entity.cw_adapt_to('ITree')
+            except AttributeError:
+                break
+        path.reverse()
+        return path
+
