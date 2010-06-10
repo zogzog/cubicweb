@@ -742,29 +742,29 @@ class SQLGenerator(object):
                 else:
                     # no variables in the RHS
                     sql = self._visit_attribute_relation(relation)
-        else:
-            if rtype == 'is' and rhs.operator == 'IS':
-                # special case "C is NULL"
-                if lhs.name in self._varmap:
-                    lhssql = self._varmap[lhs.name]
-                else:
-                    lhssql = lhs.accept(self)
-                return '%s%s' % (lhssql, rhs.accept(self))
-            if '%s.%s' % (lhs, relation.r_type) in self._varmap:
-                # relation has already been processed by a previous step
-                return
-            if relation.optional:
-                # check it has not already been treaten (to get necessary
-                # information to add an outer join condition)
-                if relation in self._state.done:
-                    return
-                # OPTIONAL relation, generate a left|right outer join
-                sql = self._visit_outer_join_relation(relation, rschema)
-            elif rschema.inlined:
-                sql = self._visit_inlined_relation(relation)
+        elif (rtype == 'is' and isinstance(rhs.children[0], Constant)
+              and rhs.children[0].eval(self._args) is None):
+            # special case "C is NULL"
+            if lhs.name in self._varmap:
+                lhssql = self._varmap[lhs.name]
             else:
-                # regular (non final) relation
-                sql = self._visit_relation(relation, rschema)
+                lhssql = lhs.accept(self)
+            return '%s%s' % (lhssql, rhs.accept(self))
+        elif '%s.%s' % (lhs, relation.r_type) in self._varmap:
+            # relation has already been processed by a previous step
+            return ''
+        elif relation.optional:
+            # check it has not already been treaten (to get necessary
+            # information to add an outer join condition)
+            if relation in self._state.done:
+                return ''
+            # OPTIONAL relation, generate a left|right outer join
+            sql = self._visit_outer_join_relation(relation, rschema)
+        elif rschema.inlined:
+            sql = self._visit_inlined_relation(relation)
+        else:
+            # regular (non final) relation
+            sql = self._visit_relation(relation, rschema)
         return sql
 
     def _visit_inlined_relation(self, relation):
@@ -1026,7 +1026,7 @@ class SQLGenerator(object):
             lhs = None
             rhs = cmp.children[0]
         operator = cmp.operator
-        if operator in ('IS', 'LIKE', 'ILIKE'):
+        if operator in ('LIKE', 'ILIKE'):
             if operator == 'ILIKE' and not self.dbhelper.ilike_support:
                 operator = ' LIKE '
             else:

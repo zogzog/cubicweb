@@ -353,7 +353,7 @@ class RQLRewriter(object):
         if need_null_test:
             snippetrqlst = n.Or(
                 n.make_relation(subselectvar, 'is', (None, None), n.Constant,
-                                operator='IS'),
+                                operator='='),
                 snippetrqlst)
         subselect.add_restriction(snippetrqlst)
         if self.u_varname:

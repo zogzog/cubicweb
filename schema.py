@@ -852,11 +852,9 @@ class RQLExpression(object):
             except KeyError:
                 pass
         rql, has_perm_defs, keyarg = self.transform_has_permission()
-        if creating:
-            # when creating an entity, consider has_*_permission satisfied
-            if has_perm_defs:
-                return True
-            return False
+        # when creating an entity, expression related to X satisfied
+        if creating and 'X' in self.rqlst.defined_vars:
+            return True
         if keyarg is None:
             kwargs.setdefault('u', session.user.eid)
             try:
