@@ -568,7 +568,7 @@ class CubicWebVRegistry(VRegistry):
             if not obj.__name__.endswith('Adapter') and \
                    any(iface for iface in ifaces if not isinstance(iface, basestring)):
                 warn('[3.9] %s: interfaces in implements selector are '
-                     'deprecated in favor of adapters / appobject_selectable '
+                     'deprecated in favor of adapters / adaptable '
                      'selector' % obj.__name__, DeprecationWarning)
             self._needs_iface[obj] = ifaces
         depends_on = require_appobject(obj)
