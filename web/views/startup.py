@@ -79,7 +79,7 @@ class ManageView(StartupView):
 
     def folders(self):
         self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
-        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
+        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w, maxlevel=1)
 
     def create_links(self):
         self.w(u'<ul class="createLink">')

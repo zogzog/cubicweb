@@ -179,9 +179,15 @@ class ITreeAdapter(EntityAdapter):
     __regid__ = 'ITree'
     __select__ = implements(ITree) # XXX for bw compat, else should be abstract
 
-    tree_relation = None
     child_role = 'subject'
     parent_role = 'object'
+
+    @property
+    def tree_relation(self):
+        warn('[3.9] tree_attribute is deprecated, define tree_relation on a custom '
+             'ITree for %s instead' % (self.entity.__class__),
+             DeprecationWarning)
+        return self.entity.tree_attribute
 
     @implements_adapter_compat('ITree')
     def children_rql(self):

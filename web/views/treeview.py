@@ -47,7 +47,8 @@ class BaseTreeView(baseviews.ListView):
             done = set()
         super(BaseTreeView, self).call(done=done, **kwargs)
 
-    def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
+    def cell_call(self, row, col=0, vid=None, done=None, maxlevel=None, **kwargs):
+        assert maxlevel is None or maxlevel > 0
         done, entity = _done_init(done, self, row, col)
         if done is None:
             # entity is actually an error message
@@ -55,8 +56,14 @@ class BaseTreeView(baseviews.ListView):
             return
         self.open_item(entity)
         entity.view(vid or self.item_vid, w=self.w, **kwargs)
+        if maxlevel is not None:
+            maxlevel -= 1
+            if maxlevel == 0:
+                self.close_item(entity)
+                return
         relatedrset = entity.cw_adapt_to('ITree').children(entities=False)
-        self.wview(self.__regid__, relatedrset, 'null', done=done, **kwargs)
+        self.wview(self.__regid__, relatedrset, 'null', done=done,
+                   maxlevel=maxlevel, **kwargs)
         self.close_item(entity)
 
     def open_item(self, entity):
