@@ -184,7 +184,8 @@ class FileItemInnerView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
-        if entity.cw_adapt_to('ITree') and not entity.is_leaf():
+        itree = entity.cw_adapt_to('ITree')
+        if itree and not itree.is_leaf():
             self.w(u'<div class="folder">%s</div>\n' % entity.view('oneline'))
         else:
             # XXX define specific CSS classes according to mime types
@@ -225,7 +226,7 @@ class TreeViewItemView(EntityView):
         itree = entity.cw_adapt_to('ITree')
         liclasses = []
         is_open = self.open_state(entity.eid, treeid)
-        is_leaf = not hasattr(entity, 'is_leaf') or itree.is_leaf()
+        is_leaf = itree is None or itree.is_leaf()
         if is_leaf:
             if is_last:
                 liclasses.append('last')

@@ -22,6 +22,7 @@ framework itself.
 __docformat__ = "restructuredtext en"
 
 from itertools import chain
+from warnings import warn
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
