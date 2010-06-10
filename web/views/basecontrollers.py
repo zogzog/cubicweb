@@ -128,7 +128,7 @@ class ViewController(Controller):
         if rset is None and not hasattr(req, '_rql_processed'):
             req._rql_processed = True
             if req.cnx:
-                rset = self.process_rql(req.form.get('rql'))
+                rset = self.process_rql()
             else:
                 rset = None
         if rset and rset.rowcount == 1 and '__method' in req.form:
@@ -378,6 +378,8 @@ class JSonController(Controller):
         rql = req.form.get('rql')
         if rql:
             rset = self._exec(rql)
+        elif 'eid' in req.form:
+            rset = self._cw.eid_rset(req.form['eid'])
         else:
             rset = None
         vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)

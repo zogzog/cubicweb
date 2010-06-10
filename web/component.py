@@ -15,9 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract component class and base components definition for CubicWeb web client
-
+"""abstract component class and base components definition for CubicWeb web
+client
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -61,9 +62,15 @@ class EntityVComponent(Component):
     context = 'navcontentbottom'
 
     def call(self, view=None):
-        return self.cell_call(0, 0, view=view)
+        if self.cw_rset is None:
+            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+        else:
+            self.cell_call(0, 0, view=view)
 
     def cell_call(self, row, col, view=None):
+        self.entity_call(self.cw_rset.get_entity(row, col), view=view)
+
+    def entity_call(self, entity, view=None):
         raise NotImplementedError()
 
 

@@ -82,18 +82,20 @@ class Controller(AppObject):
 
     # generic methods useful for concrete implementations ######################
 
-    def process_rql(self, rql):
+    def process_rql(self):
         """execute rql if specified"""
-        # XXX assigning to self really necessary?
-        self.cw_rset = None
+        req = self._cw
+        rql = req.form.get('rql')
         if rql:
-            self._cw.ensure_ro_rql(rql)
+            req.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
-                rql = unicode(rql, self._cw.encoding)
-            pp = self._cw.vreg['components'].select_or_none('magicsearch', self._cw)
+                rql = unicode(rql, req.encoding)
+            pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
-                self.cw_rset = pp.process_query(rql)
-        return self.cw_rset
+                return pp.process_query(rql)
+        if 'eid' in req.form:
+            return req.eid_rset(req.form['eid'])
+        return None
 
     def notify_edited(self, entity):
         """called by edit_entity() to notify which entity is edited"""

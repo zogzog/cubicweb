@@ -366,6 +366,17 @@ class EntityView(View):
     __select__ = non_final_entity()
     category = 'entityview'
 
+    def call(self, **kwargs):
+        if self.cw_rset is None:
+            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+        else:
+            super(EntityView, self).call(**kwargs)
+
+    def cell_call(self, row, col, **kwargs):
+        self.entity_call(self.cw_rset.get_entity(row, col), **kwargs)
+
+    def entity_call(self, entity, **kwargs):
+        raise NotImplementedError()
 
 class StartupView(View):
     """base class for views which doesn't need a particular result set to be
