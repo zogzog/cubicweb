@@ -309,12 +309,14 @@ class OneMonthCal(EntityView):
         prevdate = curdate - timedelta(31)
         nextdate = curdate + timedelta(31)
         rql = self.cw_rset.printable_rql()
-        prevlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                                   year=prevdate.year,
-                                                   month=prevdate.month)
-        nextlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                                   year=nextdate.year,
-                                                   month=nextdate.month)
+        prevlink = self._cw.ajax_replace_url('onemonthcalid', rql=rql,
+                                             vid='onemonthcal',
+                                             year=prevdate.year,
+                                             month=prevdate.month)
+        nextlink = self._cw.ajax_replace_url('onemonthcalid', rql=rql,
+                                             vid='onemonthcal',
+                                             year=nextdate.year,
+                                             month=nextdate.month)
         return prevlink, nextlink
 
     def _build_calendar_cell(self, celldate, rows, curdate):
@@ -568,10 +570,12 @@ class OneWeekCal(EntityView):
         prevdate = curdate - timedelta(7)
         nextdate = curdate + timedelta(7)
         rql = self.cw_rset.printable_rql()
-        prevlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                                   year=prevdate.year,
-                                                   week=prevdate.isocalendar()[1])
-        nextlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                                   year=nextdate.year,
-                                                   week=nextdate.isocalendar()[1])
+        prevlink = self._cw.ajax_replace_url('oneweekcalid', rql=rql,
+                                             vid='oneweekcal',
+                                             year=prevdate.year,
+                                             week=prevdate.isocalendar()[1])
+        nextlink = self._cw.ajax_replace_url('oneweekcalid', rql=rql,
+                                             vid='oneweekcal',
+                                             year=nextdate.year,
+                                             week=nextdate.isocalendar()[1])
         return prevlink, nextlink

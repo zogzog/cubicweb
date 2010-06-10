@@ -15,21 +15,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools.fake import FakeRequest
+
 class AjaxReplaceUrlTC(TestCase):
 
     def test_ajax_replace_url(self):
         req = FakeRequest()
-        arurl = req.build_ajax_replace_url
+        arurl = req.ajax_replace_url
         # NOTE: for the simplest use cases, we could use doctest
-        self.assertEquals(arurl('foo', 'Person P', 'list'),
-                          "javascript: loadxhtml('foo', 'http://testing.fr/cubicweb/view?rql=Person%20P&amp;__notemplate=1&amp;vid=list', 'replace')")
-        self.assertEquals(arurl('foo', 'Person P', 'oneline', name='bar', age=12),
-                          '''javascript: loadxhtml('foo', 'http://testing.fr/cubicweb/view?age=12&amp;rql=Person%20P&amp;__notemplate=1&amp;vid=oneline&amp;name=bar', 'replace')''')
+        self.assertEquals(arurl('foo', rql='Person P', vid='list'),
+                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?rql=Person%20P&fname=view&vid=list", null, 'get', 'replace'); noop()""")
+        self.assertEquals(arurl('foo', rql='Person P', vid='oneline', name='bar', age=12),
+                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?name=bar&age=12&rql=Person%20P&fname=view&vid=oneline", null, 'get', 'replace'); noop()""")
 
 
 if __name__ == '__main__':

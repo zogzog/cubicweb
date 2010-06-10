@@ -569,24 +569,30 @@ class CubicWebRequestBase(DBAPIRequest):
                 cssfile = self.datadir_url + cssfile
             add_css(cssfile, media, *extraargs)
 
+    @deprecated('[3.9] use ajax_replace_url() instead, naming rql and vid arguments')
     def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
                                **extraparams):
+        return self.ajax_replace_url(nodeid, replacemode, rql=rql, vid=vid,
+                                     **extraparams)
+
+    def ajax_replace_url(self, nodeid, replacemode='replace', **extraparams):
         """builds an ajax url that will replace nodeid's content
 
         :param nodeid: the dom id of the node to replace
-        :param rql: rql to execute
-        :param vid: the view to apply on the resultset
         :param replacemode: defines how the replacement should be done.
 
-        Possible values are :
-        - 'replace' to replace the node's content with the generated HTML
-        - 'swap' to replace the node itself with the generated HTML
-        - 'append' to append the generated HTML to the node's content
+          Possible values are :
+          - 'replace' to replace the node's content with the generated HTML
+          - 'swap' to replace the node itself with the generated HTML
+          - 'append' to append the generated HTML to the node's content
+
+        Arbitrary extra named arguments may be given, they will be included as
+        parameters of the generated url.
         """
-        url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
-                             **extraparams)
-        return "javascript: loadxhtml('%s', '%s', '%s')" % (
-            nodeid, xml_escape(url), replacemode)
+        extraparams.setdefault('fname', 'view')
+        url = self.build_url('json', **extraparams)
+        return "javascript: $('#%s').loadxhtml(%s, null, 'get', '%s'); noop()" % (
+                nodeid, dumps(url), replacemode)
 
     # urls/path management ####################################################
 
