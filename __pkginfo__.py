@@ -42,13 +42,8 @@ classifiers = [
 __depends__ = {
     'logilab-common': '>= 0.50.2',
     'logilab-mtconverter': '>= 0.6.0',
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/__pkginfo__.py
-    'rql': '>= 0.26.0',
-    'yams': '>= 0.30.0',
-=======
     'rql': '>= 0.26.2',
-    'yams': '>= 0.28.1',
->>>>>>> /tmp/__pkginfo__.py~other.ZMqgs5
+    'yams': '>= 0.30.0',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
