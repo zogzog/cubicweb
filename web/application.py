@@ -59,12 +59,11 @@ class AbstractSessionManager(component.Component):
         assert self.cleanup_anon_session_time > 0
         self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
         if vreg.config.anonymous_user() is not None:
-            self.clean_sessions_interval = min(
-                5 * 60,
-                self.cleanup_session_time / 2.,
-                self.cleanup_anon_session_time / 2.)
+            self.clean_sessions_interval = max(
+                5 * 60, min(self.cleanup_session_time / 2.,
+                            self.cleanup_anon_session_time / 2.))
         else:
-            self.clean_sessions_interval = min(
+            self.clean_sessions_interval = max(
                 5 * 60,
                 self.cleanup_session_time / 2.)
 
