@@ -1084,18 +1084,13 @@ class RelationField(Field):
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs
 
-def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
+def guess_field(eschema, rschema, role='subject', **kwargs):
     """This function return the most adapted field to edit the given relation
     (`rschema`) where the given entity type (`eschema`) is the subject or object
     (`role`).
 
     The field is initialized according to information found in the schema,
     though any value can be explicitly specified using `kwargs`.
-
-    The `skip_meta_attr` flag is used to specify wether this function should
-    return a field for attributes considered as a meta-attributes
-    (e.g. describing an other attribute, such as the format or file name of a
-    file (`Bytes`) attribute).
     """
     fieldclass = None
     rdef = eschema.rdef(rschema, role)
@@ -1117,8 +1112,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs.setdefault('help', rdef.description)
     if rschema.final:
-        if skip_meta_attr and rschema in eschema.meta_attributes():
-            return None
         fieldclass = FIELDS[targetschema]
         if fieldclass is StringField:
             if eschema.has_metadata(rschema, 'format'):
@@ -1144,7 +1137,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 if metaschema is not None:
                     metakwargs = _AFF_KWARGS.etype_get(eschema, metaschema, 'subject')
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                skip_meta_attr=False,
                                                                 **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)

@@ -218,6 +218,12 @@ class AutoformSectionRelationTags(RelationTagsSet):
             sectdict.setdefault('main', 'hidden')
             sectdict.setdefault('muledit', 'hidden')
             sectdict.setdefault('inlined', 'hidden')
+        elif role == 'subject' and rschema in sschema.meta_attributes():
+            # meta attribute, usually embeded by the described attribute's field
+            # (eg RichTextField, FileField...)
+            sectdict.setdefault('main', 'hidden')
+            sectdict.setdefault('muledit', 'hidden')
+            sectdict.setdefault('inlined', 'hidden')
         # ensure we have a tag for each form type
         if not 'main' in sectdict:
             if not rschema.final and (
