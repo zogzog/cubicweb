@@ -307,6 +307,8 @@ class RequestSessionBase(object):
         try:
             view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
         except RegistryException:
+            if __fallback_oid is None:
+                raise
             view =  self.vreg[__registry].select(__fallback_oid, self,
                                                  rset=rset, **initargs)
         return view.render(w=w, **kwargs)
