@@ -116,18 +116,22 @@ class IDownloadablePrimaryView(primary.PrimaryView):
             self.wview('image', entity.cw_rset, row=entity.cw_row)
         else:
             self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
-            try:
-                if ENGINE.has_input(contenttype):
-                    # XXX expect File like schema (access to 'data' attribute)
-                    self.w(entity.printable_value('data'))
-            except TransformError:
-                pass
-            except Exception, ex:
-                msg = self._cw._("can't display data, unexpected error: %s") \
-                      % xml_escape(str(ex))
-                self.w('<div class="error">%s</div>' % msg)
+            self.render_data(entity, contenttype, 'text/html')
         self.w(u'</div>')
 
+    def render_data(self, entity, sourcemt, targetmt):
+        adapter = entity.cw_adapt_to('IDownloadable')
+        if ENGINE.find_path(sourcemt, targetmt):
+            try:
+                self.w(entity._cw_mtc_transform(adapter.download_data(), sourcemt,
+                                                targetmt, adapter.download_encoding()))
+            except Exception, ex:
+                self.exception('while rendering data for %s', entity)
+                msg = self._cw._("can't display data, unexpected error: %s") \
+                      % xml_escape(unicode(ex))
+                self.w('<div class="error">%s</div>' % msg)
+            return True
+        return False
 
 class IDownloadableLineView(baseviews.OneLineView):
     __select__ = adaptable('IDownloadable')
