@@ -6,7 +6,7 @@ $(document).ready(function() {
     			'</select>');
       }
     });
-  
+
     test("test first selected", function() {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option selected="selected" value="bar">bar</option>' +
@@ -15,7 +15,7 @@ $(document).ready(function() {
         var selected = firstSelected(document.getElementById("theselect"));
         equals(selected.value, 'bar');
     });
-  
+
     test("test first selected 2", function() {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option value="bar">bar</option>' +
@@ -24,7 +24,7 @@ $(document).ready(function() {
         var selected = firstSelected(document.getElementById("theselect"));
         equals(selected, null);
     });
-  
+
     module("visibilty");
     test('toggleVisibility', function() {
         $('#main').append('<div id="foo"></div>');
