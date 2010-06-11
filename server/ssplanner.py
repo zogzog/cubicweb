@@ -22,8 +22,6 @@ from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
-from copy import copy
-
 from rql.stmts import Union, Select
 from rql.nodes import Constant, Relation
 
@@ -479,7 +477,7 @@ class InsertRelationsStep(Step):
             result = [[]]
         for row in result:
             # get a new entity definition for this row
-            edef = copy(base_edef)
+            edef = base_edef.cw_copy()
             # complete this entity def using row values
             index = 0
             for rtype, rorder, value in self.rdefs:

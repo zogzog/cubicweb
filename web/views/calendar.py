@@ -395,12 +395,12 @@ class OneWeekCal(EntityView):
         # colors here are class names defined in cubicweb.css
         colors = [ "col%x" % i for i in range(12) ]
         next_color_index = 0
-        done_tasks = []
+        done_tasks = set()
         for row in xrange(self.cw_rset.rowcount):
             task = self.cw_rset.get_entity(row, 0)
-            if task in done_tasks:
+            if task.eid in done_tasks:
                 continue
-            done_tasks.append(task)
+            done_tasks.add(task.eid)
             the_dates = []
             icalendarable = task.cw_adapt_to('ICalendarable')
             tstart = icalendarable.start

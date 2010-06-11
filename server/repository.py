@@ -910,7 +910,7 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
-            entity.edited_attributes = set(entity)
+            entity.edited_attributes = set(entity.cw_attr_cache)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
@@ -1021,7 +1021,7 @@ class Repository(object):
         """
         # init edited_attributes before calling before_add_entity hooks
         entity._cw_is_saved = False # entity has an eid but is not yet saved
-        entity.edited_attributes = set(entity) # XXX cw_edited_attributes
+        entity.edited_attributes = set(entity.cw_attr_cache) # XXX cw_edited_attributes
         eschema = entity.e_schema
         source = self.locate_etype_source(entity.__regid__)
         # allocate an eid to the entity before calling hooks
@@ -1036,7 +1036,7 @@ class Repository(object):
         # XXX use entity.keys here since edited_attributes is not updated for
         # inline relations XXX not true, right? (see edited_attributes
         # affectation above)
-        for attr in entity.iterkeys():
+        for attr in entity.cw_attr_cache.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))

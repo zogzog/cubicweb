@@ -19,6 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
+from copy import copy
 from warnings import warn
 
 from logilab.common import interface
@@ -51,7 +52,7 @@ def greater_card(rschema, subjtypes, objtypes, index):
     return '1'
 
 
-class Entity(AppObject, dict):
+class Entity(AppObject):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
 
@@ -287,17 +288,17 @@ class Entity(AppObject, dict):
 
     def __init__(self, req, rset=None, row=None, col=0):
         AppObject.__init__(self, req, rset=rset, row=row, col=col)
-        dict.__init__(self)
         self._cw_related_cache = {}
         if rset is not None:
             self.eid = rset[row][col]
         else:
             self.eid = None
         self._cw_is_saved = True
+        self.cw_attr_cache = {}
 
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
-            self.e_schema, self.eid, self.keys(), id(self))
+            self.e_schema, self.eid, self.cw_attr_cache.keys(), id(self))
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -316,12 +317,18 @@ class Entity(AppObject, dict):
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
+    def __contains__(self, key):
+        return key in self.cw_attr_cache
+
+    def __iter__(self):
+        return iter(self.cw_attr_cache)
+
     def __getitem__(self, key):
         if key == 'eid':
             warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
                  DeprecationWarning, stacklevel=2)
             return self.eid
-        return super(Entity, self).__getitem__(key)
+        return self.cw_attr_cache[key]
 
     def __setitem__(self, attr, value):
         """override __setitem__ to update self.edited_attributes.
@@ -339,7 +346,7 @@ class Entity(AppObject, dict):
                  DeprecationWarning, stacklevel=2)
             self.eid = value
         else:
-            super(Entity, self).__setitem__(attr, value)
+            self.cw_attr_cache[attr] = value
             # don't add attribute into skip_security if already in edited
             # attributes, else we may accidentaly skip a desired security check
             if hasattr(self, 'edited_attributes') and \
@@ -363,13 +370,16 @@ class Entity(AppObject, dict):
                 del self.entity['load_left']
 
         """
-        super(Entity, self).__delitem__(attr)
+        del self.cw_attr_cache[attr]
         if hasattr(self, 'edited_attributes'):
             self.edited_attributes.remove(attr)
 
+    def get(self, key, default=None):
+        return self.cw_attr_cache.get(key, default)
+
     def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
-        super(Entity, self).setdefault(attr, default)
+        self.cw_attr_cache.setdefault(attr, default)
         # don't add attribute into skip_security if already in edited
         # attributes, else we may accidentaly skip a desired security check
         if hasattr(self, 'edited_attributes') and \
@@ -382,9 +392,9 @@ class Entity(AppObject, dict):
         undesired changes introduced in the entity's dict. See `__delitem__`
         """
         if default is _marker:
-            value = super(Entity, self).pop(attr)
+            value = self.cw_attr_cache.pop(attr)
         else:
-            value = super(Entity, self).pop(attr, default)
+            value = self.cw_attr_cache.pop(attr, default)
         if hasattr(self, 'edited_attributes') and attr in self.edited_attributes:
             self.edited_attributes.remove(attr)
         return value
@@ -556,6 +566,12 @@ class Entity(AppObject, dict):
 
     # entity cloning ##########################################################
 
+    def cw_copy(self):
+        thecopy = copy(self)
+        thecopy.cw_attr_cache = copy(self.cw_attr_cache)
+        thecopy._cw_related_cache = {}
+        return thecopy
+
     def copy_relations(self, ceid): # XXX cw_copy_relations
         """copy relations of the object with the given eid on this
         object (this method is called on the newly created copy, and
@@ -668,7 +684,7 @@ class Entity(AppObject, dict):
         selected = []
         for attr in (attributes or self._cw_to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
-            if self.has_key(attr):
+            if self.cw_attr_cache.has_key(attr):
                 continue
             # case where attribute must be completed, but is not yet in entity
             var = varmaker.next()
@@ -727,7 +743,7 @@ class Entity(AppObject, dict):
         :param name: name of the attribute to get
         """
         try:
-            value = self[name]
+            value = self.cw_attr_cache[name]
         except KeyError:
             if not self.cw_is_saved():
                 return None
@@ -952,7 +968,7 @@ class Entity(AppObject, dict):
         # clear attributes cache
         haseid = 'eid' in self
         self._cw_completed = False
-        self.clear()
+        self.cw_attr_cache.clear()
         # clear relations cache
         self.cw_clear_relation_cache()
         # rest path unique cache
@@ -1020,7 +1036,7 @@ class Entity(AppObject, dict):
 
         This method is for internal use, you should not use it.
         """
-        super(Entity, self).__setitem__(attr, value)
+        self.cw_attr_cache[attr] = value
 
     def _cw_clear_local_perm_cache(self, action):
         for rqlexpr in self.e_schema.get_rqlexprs(action):
@@ -1037,7 +1053,7 @@ class Entity(AppObject, dict):
     def _cw_set_defaults(self):
         """set default values according to the schema"""
         for attr, value in self.e_schema.defaults():
-            if not self.has_key(attr):
+            if not self.cw_attr_cache.has_key(attr):
                 self[str(attr)] = value
 
     def _cw_check(self, creation=False):

@@ -15,16 +15,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.utils
-
-"""
+"""unit tests for module cubicweb.utils"""
 
 import re
 import decimal
 import datetime
 
 from logilab.common.testlib import TestCase, unittest_main
+
 from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
+from cubicweb.entity import Entity
 
 try:
     from cubicweb.utils import CubicWebJsonEncoder, json
@@ -99,6 +99,7 @@ class RepeatListTC(TestCase):
         l.pop(2)
         self.assertEquals(l, [(1, 3)]*2)
 
+
 class SizeConstrainedListTC(TestCase):
 
     def test_append(self):
@@ -116,6 +117,7 @@ class SizeConstrainedListTC(TestCase):
             l = SizeConstrainedList(10)
             l.extend(extension)
             yield self.assertEquals, l, expected
+
 
 class JSONEncoderTC(TestCase):
     def setUp(self):
@@ -135,6 +137,20 @@ class JSONEncoderTC(TestCase):
 
     def test_encoding_decimal(self):
         self.assertEquals(self.encode(decimal.Decimal('1.2')), '1.2')
+
+    def test_encoding_bare_entity(self):
+        e = Entity(None)
+        e['pouet'] = 'hop'
+        e.eid = 2
+        self.assertEquals(json.loads(self.encode(e)),
+                          {'pouet': 'hop', 'eid': 2})
+
+    def test_encoding_entity_in_list(self):
+        e = Entity(None)
+        e['pouet'] = 'hop'
+        e.eid = 2
+        self.assertEquals(json.loads(self.encode([e])),
+                          [{'pouet': 'hop', 'eid': 2}])
 
     def test_encoding_unknown_stuff(self):
         self.assertEquals(self.encode(TestCase), 'null')

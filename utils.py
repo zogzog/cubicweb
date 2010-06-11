@@ -335,21 +335,11 @@ else:
     class CubicWebJsonEncoder(json.JSONEncoder):
         """define a json encoder to be able to encode yams std types"""
 
-        # _iterencode is the only entry point I've found to use a custom encode
-        # hook early enough: .default() is called if nothing else matched before,
-        # .iterencode() is called once on the main structure to encode and then
-        # never gets called again.
-        # For the record, our main use case is in FormValidateController with:
-        #   json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
-        # where we want all the entity attributes, including eid, to be part
-        # of the json object dumped.
-        # This would have once more been easier if Entity didn't extend dict.
-        def _iterencode(self, obj, markers=None):
-            if hasattr(obj, '__json_encode__'):
-                obj = obj.__json_encode__()
-            return json.JSONEncoder._iterencode(self, obj, markers)
-
         def default(self, obj):
+            if hasattr(obj, 'eid'):
+                d = obj.cw_attr_cache.copy()
+                d['eid'] = obj.eid
+                return d
             if isinstance(obj, datetime.datetime):
                 return obj.strftime('%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
