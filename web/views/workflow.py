@@ -20,6 +20,7 @@
 * IWorkflowable views and forms
 * workflow entities views (State, Transition, TrInfo)
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
