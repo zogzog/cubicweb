@@ -20,7 +20,7 @@
 /**
  * .. function:: Deferred
  *
- * dummy ultra minimalist implementation on deferred for jQuery
+ * dummy ultra minimalist implementation of deferred for jQuery
  */
 function Deferred() {
     this.__init__(this);
@@ -198,7 +198,7 @@ function ajaxFuncArgs(fname, form /* ... */) {
     $.extend(form, {
         'fname': fname,
         'pageid': pageid,
-        'arg': map(jQuery.toJSON, sliceList(arguments, 2))
+        'arg': $.map(cw.utils.sliceList(arguments, 2), jQuery.toJSON)
     });
     return form;
 }
@@ -544,13 +544,10 @@ function getDomFromResponse(response) {
         return jQuery(children[0]).clone().context;
     }
     // several children => wrap them in a single node and return the wrap
-    return DIV({
-        'cubicweb:type': "cwResponseWrapper"
-    },
-    map(function(node) {
-        return jQuery(node).clone().context;
-    },
-    children));
+    return DIV({'cubicweb:type': "cwResponseWrapper"},
+	       $.map(children, function(node) {
+		       return jQuery(node).clone().context;})
+	       );
 }
 
 /* DEPRECATED *****************************************************************/
@@ -629,7 +626,7 @@ remoteExec = cw.utils.deprecatedFunction(
         var props = {
             'fname': fname,
             'pageid': pageid,
-            'arg': map(jQuery.toJSON, sliceList(arguments, 1))
+            'arg': $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
         };
         var result = jQuery.ajax({
             url: JSON_BASE_URL,
@@ -651,7 +648,7 @@ asyncRemoteExec = cw.utils.deprecatedFunction(
         var props = {
             'fname': fname,
             'pageid': pageid,
-            'arg': map(jQuery.toJSON, sliceList(arguments, 1))
+            'arg': $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
         };
         // XXX we should inline the content of loadRemote here
         var deferred = loadRemote(JSON_BASE_URL, props, 'POST');

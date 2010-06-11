@@ -407,8 +407,8 @@ class EntityAttributesTableView(EntityView):
             else:
                 content = entity.printable_value(col)
             infos[col] = content
-        self.w(u"""<tr onmouseover="addElementClass(this, 'highlighted');"
-            onmouseout="removeElementClass(this, 'highlighted')">""")
+        self.w(u"""<tr onmouseover="$(this).addClass('highlighted');"
+            onmouseout="$(this).removeClass('highlighted')">""")
         line = u''.join(u'<td>%%(%s)s</td>' % col for col in self.columns)
         self.w(line % infos)
         self.w(u'</tr>\n')

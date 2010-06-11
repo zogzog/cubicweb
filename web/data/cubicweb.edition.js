@@ -25,9 +25,9 @@ function setPropValueWidget(varname, tabindex) {
         var args = {
             fname: 'prop_widget',
             pageid: pageid,
-            arg: map(jQuery.toJSON, [key, varname, tabindex])
+            arg: $.map([key, varname, tabindex], jQuery.toJSON)
         };
-        jqNode('div:value:' + varname).loadxhtml(JSON_BASE_URL, args, 'post');
+        cw.jqNode('div:value:' + varname).loadxhtml(JSON_BASE_URL, args, 'post');
     }
 }
 
@@ -39,10 +39,10 @@ function setPropValueWidget(varname, tabindex) {
  * make sure tabindex remains consistent
  */
 function reorderTabindex(start, formid) {
-    var form = getNode(formid || 'entityForm');
+    var form = cw.getNode(formid || 'entityForm');
     var inputTypes = ['INPUT', 'SELECT', 'TEXTAREA'];
     var tabindex = (start == null) ? 15: start;
-    nodeWalkDepthFirst(form, function(elem) {
+    cw.utils.nodeWalkDepthFirst(form, function(elem) {
         var tagName = elem.tagName.toUpperCase();
         if (inputTypes.contains(tagName)) {
             if (jQuery(elem).attr('tabindex') != null) {
@@ -123,7 +123,7 @@ function buildEntityLine(relationName, selectedOptionNode, comboId, eid) {
     },
     [TH(null, relationName), TD(null, [handle, link])]);
     try {
-        var separator = getNode('relationSelectorRow_' + eid);
+        var separator = cw.getNode('relationSelectorRow_' + eid);
         //dump('relationSelectorRow_' + eid) XXX warn dump is not implemented in konqueror (at least)
         // XXX Warning: separator.parentNode is not (always ?) the
         // table itself, but an intermediate node (TableSectionElement)
@@ -181,7 +181,7 @@ function addPendingInsert(optionNode, eid, cell, relname) {
         buildEntityCell(relname, optionNode, selectNode.id, eid);
     }
     else {
-        var relationSelector = getNode('relationSelector_' + eid);
+        var relationSelector = cw.getNode('relationSelector_' + eid);
         var relationSelected = relationSelector.options[relationSelector.selectedIndex];
         // new relation as a line in simple edit
         buildEntityLine(relationSelected.text, optionNode, selectNode.id, eid);
@@ -190,11 +190,11 @@ function addPendingInsert(optionNode, eid, cell, relname) {
 
 function cancelPendingInsert(elementId, element_name, comboId, eid) {
     // remove matching insert element
-    var entityView = jqNode('a' + elementId).text();
-    jqNode(element_name + elementId).remove();
+    var entityView = cw.jqNode('a' + elementId).text();
+    cw.jqNode(element_name + elementId).remove();
     if (comboId) {
         // re-insert option in combobox if it was taken from there
-        var selectNode = getNode(comboId);
+        var selectNode = cw.getNode(comboId);
         // XXX what on object relation
         if (selectNode) {
             var options = selectNode.options;
@@ -234,9 +234,9 @@ function addPendingDelete(nodeId, eid) {
     var d = loadRemote('json', ajaxFuncArgs('add_pending_delete', null, nodeId.split(':')));
     d.addCallback(function() {
         // and strike entity view
-        jqNode('span' + nodeId).addClass('pendingDelete');
+        cw.jqNode('span' + nodeId).addClass('pendingDelete');
         // replace handle text
-        jqNode('handle' + nodeId).text('+');
+        cw.jqNode('handle' + nodeId).text('+');
     });
 }
 
@@ -249,9 +249,9 @@ function cancelPendingDelete(nodeId, eid) {
     var d = loadRemote('json', ajaxFuncArgs('remove_pending_delete', null, nodeId.split(':')));
     d.addCallback(function() {
         // reset link's CSS class
-        jqNode('span' + nodeId).removeClass('pendingDelete');
+        cw.jqNode('span' + nodeId).removeClass('pendingDelete');
         // replace handle text
-        jqNode('handle' + nodeId).text('x');
+        cw.jqNode('handle' + nodeId).text('x');
     });
 }
 
@@ -262,7 +262,7 @@ function cancelPendingDelete(nodeId, eid) {
  */
 function togglePendingDelete(nodeId, eid) {
     // node found means we should cancel deletion
-    if (jQuery.className.has(getNode('span' + nodeId), 'pendingDelete')) {
+    if (jQuery.className.has(cw.getNode('span' + nodeId), 'pendingDelete')) {
         cancelPendingDelete(nodeId, eid);
     } else {
         addPendingDelete(nodeId, eid);
@@ -270,10 +270,8 @@ function togglePendingDelete(nodeId, eid) {
 }
 
 function selectForAssociation(tripletIdsString, originalEid) {
-    var tripletlist = map(function(x) {
-        return x.split(':');
-    },
-    tripletIdsString.split('-'));
+    var tripletlist = $.map(tripletIdsString.split('-'),
+			    function(x) { return x.split(':');});
     var d = loadRemote('json', ajaxFuncArgs('add_pending_inserts', null, tripletlist));
     d.addCallback(function() {
         var args = {
@@ -305,7 +303,7 @@ function updateInlinedEntitiesCounters(rtype, role) {
  * * `rtype`, the relation type between both entities
  */
 function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insertBefore) {
-    insertBefore = insertBefore || getNode('add' + rtype + ':' + peid + 'link').parentNode;
+    insertBefore = insertBefore || cw.getNode('add' + rtype + ':' + peid + 'link').parentNode;
     var args = ajaxFuncArgs('inline_creation_form', null, peid, petype, ttype, rtype, role, i18nctx);
     var d = loadRemote('json', args);
     d.addCallback(function(response) {
@@ -337,9 +335,9 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
  * removes the part of the form used to edit an inlined entity
  */
 function removeInlineForm(peid, rtype, role, eid, showaddnewlink) {
-    jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
-        $(this).remove();
-        updateInlinedEntitiesCounters(rtype, role);
+    cw.jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
+	    $(this).remove();
+	    updateInlinedEntitiesCounters(rtype, role);
     });
     if (showaddnewlink) {
         toggleVisibility(showaddnewlink);
@@ -360,29 +358,29 @@ function removeInlineForm(peid, rtype, role, eid, showaddnewlink) {
 function removeInlinedEntity(peid, rtype, eid) {
     // XXX work around the eid_param thing (eid + ':' + eid) for #471746
     var nodeid = ['rel', peid, rtype, eid + ':' + eid].join('-');
-    var node = jqNode(nodeid);
+    var node = cw.jqNode(nodeid);
     if (!node.attr('cubicweb:type')) {
         node.attr('cubicweb:type', node.val());
         node.val('');
         var divid = ['div', peid, rtype, eid].join('-');
-        jqNode(divid).fadeTo('fast', 0.5);
+        cw.jqNode(divid).fadeTo('fast', 0.5);
         var noticeid = ['notice', peid, rtype, eid].join('-');
-        jqNode(noticeid).fadeIn('fast');
+        cw.jqNode(noticeid).fadeIn('fast');
     }
 }
 
 function restoreInlinedEntity(peid, rtype, eid) {
     // XXX work around the eid_param thing (eid + ':' + eid) for #471746
     var nodeid = ['rel', peid, rtype, eid + ':' + eid].join('-');
-    var node = jqNode(nodeid);
+    var node = cw.jqNode(nodeid);
     if (node.attr('cubicweb:type')) {
         node.val(node.attr('cubicweb:type'));
         node.attr('cubicweb:type', '');
-        jqNode(['fs', peid, rtype, eid].join('-')).append(node);
+        cw.jqNode(['fs', peid, rtype, eid].join('-')).append(node);
         var divid = ['div', peid, rtype, eid].join('-');
-        jqNode(divid).fadeTo('fast', 1);
+        cw.jqNode(divid).fadeTo('fast', 1);
         var noticeid = ['notice', peid, rtype, eid].join('-');
-        jqNode(noticeid).hide();
+        cw.jqNode(noticeid).hide();
     }
 }
 
@@ -411,7 +409,7 @@ function _displayValidationerrors(formid, eid, errors) {
             var found = false;
             // XXX remove suffixes at some point
             for (var i = 0, length = suffixes.length; i < length; i++) {
-                var field = jqNode(fieldname + suffixes[i] + ':' + eid);
+                var field = cw.jqNode(fieldname + suffixes[i] + ':' + eid);
                 if (field && jQuery(field).attr('type') != 'hidden') {
                     if (!firsterrfield) {
                         firsterrfield = 'err-' + fieldid;
@@ -437,7 +435,7 @@ function _displayValidationerrors(formid, eid, errors) {
         if (globalerrors.length == 1) {
             var innernode = SPAN(null, globalerrors[0]);
         } else {
-            var innernode = UL(null, map(partial(LI, null), globalerrors));
+            var innernode = UL(null, $.map(globalerrors, partial(LI, null)));
         }
         // insert DIV and innernode before the form
         var div = DIV({
@@ -469,7 +467,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     var descr = result[1];
     var errmsg;
     // Unknown structure
-    if ( !isArrayLike(descr) || descr.length != 2 ) {
+    if ( !cw.utils.isArrayLike(descr) || descr.length != 2 ) {
 	errmsg = descr;
     } else {
 	_displayValidationerrors(formid, descr[0], descr[1]);
@@ -514,9 +512,9 @@ function freezeFormButtons(formid) {
  * used by additional submit buttons to remember which button was clicked
  */
 function postForm(bname, bvalue, formid) {
-    var form = getNode(formid);
+    var form = cw.getNode(formid);
     if (bname) {
-        var child = form.appendChild(INPUT({
+        var child = form.append(INPUT({
             type: 'hidden',
             name: bname,
             value: bvalue
@@ -584,7 +582,7 @@ jQuery(document).ready(function() {
  */
 function validateForm(formid, action, onsuccess, onfailure) {
     try {
-        var zipped = formContents(formid);
+        var zipped = cw.utils.formContents(formid);
         var args = ajaxFuncArgs('validate_form', null, action, zipped[0], zipped[1]);
         var d = loadRemote('json', args);
     } catch(ex) {
@@ -621,7 +619,7 @@ function validateForm(formid, action, onsuccess, onfailure) {
  */
 function inlineValidateRelationFormOptions(rtype, eid, divid, options) {
     try {
-        var form = getNode(divid + '-form');
+        var form = cw.getNode(divid + '-form');
         var relname = rtype + ':' + eid;
         var newtarget = jQuery('[name=' + relname + ']').val();
         var zipped = cw.utils.formContents(form);
@@ -698,17 +696,16 @@ function hideInlineEdit(eid, rtype, divid) {
     jQuery('#' + divid + '-form').hide();
 }
 
-CubicWeb.provide('edition.js');
 
 // ======================= DEPRECATED FUNCTIONS ========================= //
 inlineValidateRelationForm = cw.utils.deprecatedFunction(
     '[3.9] inlineValidateRelationForm() function is deprecated, use inlineValidateRelationFormOptions instead',
     function(rtype, role, eid, divid, reload, vid, default_value, lzone, onsucess, onfailure) {
         try {
-            var form = getNode(divid + '-form');
+            var form = cw.getNode(divid + '-form');
             var relname = rtype + ':' + eid;
             var newtarget = jQuery('[name=' + relname + ']').val();
-            var zipped = formContents(form);
+            var zipped = cw.utils.formContents(form);
             var d = asyncRemoteExec('validate_form', 'apply', zipped[0], zipped[1]);
         } catch(ex) {
             return false;

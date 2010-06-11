@@ -197,7 +197,7 @@ String.prototype.strip = function() {
  */
 function makeUnboundMethod(meth) {
     function unboundMeth(self) {
-        var newargs = sliceList(arguments, 1);
+        var newargs = cw.utils.sliceList(arguments, 1);
         return meth.apply(self, newargs);
     }
     unboundMeth.__name__ = meth.__name__;

@@ -307,8 +307,8 @@ class TableWidget(HTMLWidget):
     self._cw.add_js('jquery.tablesorter.js')
     self._cw.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
     """
-    highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
-                "onmouseout=\"removeElementClass(this, 'highlighted');\""
+    highlight = "onmouseover=\"$(this).addClass('highlighted');\" " \
+                "onmouseout=\"$(this).removeClass('highlighted');\""
 
     def __init__(self, model):
         self.model = model

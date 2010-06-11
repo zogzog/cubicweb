@@ -57,10 +57,10 @@ jQuery.extend(cw, {
     },
 
     swapDOM: function (dest, src) {
-        dest = getNode(dest);
+        dest = cw.getNode(dest);
         var parent = dest.parentNode;
         if (src) {
-            src = getNode(src);
+            src = cw.getNode(src);
             parent.replaceChild(src, dest);
         } else {
             parent.removeChild(dest);
@@ -159,7 +159,7 @@ jQuery.extend(cw.utils, {
         var children = visitor(node);
         if (children) {
             for (var i = 0; i < children.length; i++) {
-                nodeWalkDepthFirst(children[i], visitor);
+                cw.utils.nodeWalkDepthFirst(children[i], visitor);
             }
         }
     },
@@ -192,7 +192,7 @@ jQuery.extend(cw.utils, {
         if (typeof(elem) == "undefined" || elem === null) {
             elem = document.body;
         } else {
-            elem = getNode(elem);
+            elem = cw.getNode(elem);
         }
         cw.utils.nodeWalkDepthFirst(elem, function (elem) {
             var name = elem.name;
@@ -250,8 +250,17 @@ jQuery.extend(cw.utils, {
                 if (tagName === "FORM" || tagName === "P" || tagName === "SPAN" || tagName === "DIV") {
                     return elem.childNodes;
                 }
+		var value = elem.value;
+		if (tagName === "TEXTAREA") {
+		    if (typeof(FCKeditor) != 'undefined') {
+			var fck = FCKeditorAPI.GetInstance(elem.id);
+			if (fck) {
+			    value = fck.GetHTML();
+			}
+		    }
+		}
                 names.push(name);
-                values.push(elem.value || '');
+                values.push(value || '');
                 return null;
             }
             return elem.childNodes;

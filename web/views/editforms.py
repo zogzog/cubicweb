@@ -340,7 +340,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                            self._build_renderer(entity, rtype, role))
 
     def should_edit_attribute(self, entity, rschema, form):
-        if not entity.has_perm('update'):
+        if not entity.cw_has_perm('update'):
             return False
         rdef = entity.e_schema.rdef(rschema)
         if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
@@ -370,8 +370,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         w = self.w
         divid = form.event_args['divid']
         w(u'<div id="%s-reledit" class="field" '
-          u'onmouseout="addElementClass(jQuery(\'#%s\'), \'hidden\')" '
-          u'onmouseover="removeElementClass(jQuery(\'#%s\'), \'hidden\')">'
+          u'onmouseout="jQuery(\'#%s\').addClass(\'hidden\')" '
+          u'onmouseover="jQuery(\'#%s\').removeClass(\'hidden\')">'
           % (divid, divid, divid))
         w(u'<div id="%s-value" class="editableFieldValue">%s</div>' % (divid, value))
         w(form.render(renderer=renderer))

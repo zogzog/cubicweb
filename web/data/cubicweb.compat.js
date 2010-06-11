@@ -93,16 +93,6 @@ getNodeAttribute = cw.utils.deprecatedFunction(
     }
 );
 
-getNode = cw.utils.deprecatedFunction(
-    '[3.9] getNode(nodeid) is deprecated, use $(#nodeid) instead',
-    function(node) {
-        if (typeof node == 'string') {
-            return document.getElementById(node);
-        }
-        return node;
-    }
-);
-
 /**
  * The only known usage of KEYS is in the tag cube. Once cubicweb-tag 1.7.0 is out,
  * this current definition can be removed.

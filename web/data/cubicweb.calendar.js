@@ -62,7 +62,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         var _td = function(elt) {
             return TD(this.cellprops, elt);
         };
-        return TR(null, map(_td, row));
+        return TR(null, $.map(row, _td));
     };
 
     this._makecell = function(cellinfo) {
@@ -88,7 +88,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
     this._domForRows = function(rows) {
         var lines = [];
         for (i = 0; i < rows.length; i++) {
-            lines.push(TR(null, map(this._makecell, rows[i])));
+            lines.push(TR(null, $.map(rows[i], this._makecell)));
         }
         return lines;
     };
@@ -106,7 +106,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
         var _th = function(day) {
             return TH(null, self._uppercaseFirst(day));
         };
-        return TR(null, map(_th, DAYNAMES));
+        return TR(null, $.map(DAYNAMES, _th));
     };
 
     this._getrows = function() {
@@ -273,7 +273,7 @@ function togglePreviousMonth(containerId) {
  */
 function dateSelected(cell, containerId) {
     var cal = Calendar.REGISTRY[containerId];
-    var input = getNode(cal.inputId);
+    var input = cw.getNode(cal.inputId);
     // XXX: the use of innerHTML might cause problems, but it seems to be
     //      the only way understood by both IE and Mozilla. Otherwise,
     //      IE accepts innerText and mozilla accepts textContent

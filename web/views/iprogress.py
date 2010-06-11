@@ -71,8 +71,8 @@ class ProgressTableView(EntityAttributesTableView):
                 content = entity.printable_value(col)
             infos[col] = content
         cssclass = entity.cw_adapt_to('IMileStone').progress_class()
-        self.w(u"""<tr class="%s" onmouseover="addElementClass(this, 'highlighted');"
-            onmouseout="removeElementClass(this, 'highlighted')">""" % cssclass)
+        self.w(u"""<tr class="%s" onmouseover="$(this).addClass('highlighted');"
+            onmouseout="$(this).removeClass('highlighted')">""" % cssclass)
         line = u''.join(u'<td>%%(%s)s</td>' % col for col in self.columns)
         self.w(line % infos)
         self.w(u'</tr>\n')
