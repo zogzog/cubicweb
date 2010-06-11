@@ -21,6 +21,7 @@
 """
 
 from urlparse import urlsplit
+import pickle
 
 from rql import parse
 
@@ -84,6 +85,8 @@ class ResultSetTC(CubicWebTC):
             params2 = dict(pair.split('=') for pair in info1[3].split('&'))
             self.assertDictEquals(params1, params2)
 
+    def test_pickle(self):
+        self.assertEquals(len(pickle.dumps(self.rset)), 392)
 
     def test_build_url(self):
         req = self.request()
