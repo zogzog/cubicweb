@@ -374,6 +374,9 @@ class Entity(AppObject):
         if hasattr(self, 'edited_attributes'):
             self.edited_attributes.remove(attr)
 
+    def clear(self):
+        self.cw_attr_cache.clear()
+
     def get(self, key, default=None):
         return self.cw_attr_cache.get(key, default)
 
