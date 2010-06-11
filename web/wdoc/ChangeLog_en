@@ -6,6 +6,11 @@
 .. _OWL: http://www.w3.org/TR/owl-features/
 .. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
 
+2010-06-11  --  3.8.4
+   * support full text prefix search for instances using postgres > 8.4 as database: try it
+     by using search such as 'cubic*'
+
+
 2010-04-20  --  3.8.0
    * nicer schema_ and workflow views (clickable image!)
 

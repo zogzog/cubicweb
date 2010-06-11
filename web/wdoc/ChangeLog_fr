@@ -6,6 +6,10 @@
 .. _OWL: http://www.w3.org/TR/owl-features/
 .. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
 
+2010-06-11  --  3.8.4
+   * support pour la recherche de préfixe pour les instances utilisant postgres > 8.4 :
+     essayez en cherchant par ex. 'cubic*'
+
 2010-04-20  --  3.8.0
 
    * amélioration des vues de schema_ et des vues de workflows
