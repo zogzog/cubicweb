@@ -18,9 +18,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """user interface libraries
 
-contains some functions designed to help implementation of cubicweb user interface
-
+contains some functions designed to help implementation of cubicweb user
+interface.
 """
+
 __docformat__ = "restructuredtext en"
 
 import csv
@@ -123,7 +124,7 @@ def safe_cut(text, length):
 
 fallback_safe_cut = safe_cut
 
-
+REM_ROOT_HTML_TAGS = re.compile('</(body|html)>', re.U)
 try:
     from lxml import etree
 except (ImportError, AttributeError):
@@ -133,12 +134,13 @@ else:
 
     def soup2xhtml(data, encoding):
         """tidy (at least try) html soup and return the result
+
         Note: the function considers a string with no surrounding tag as valid
               if <div>`data`</div> can be parsed by an XML parser
         """
-        # normalize line break
-        # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-        data = u'\n'.join(data.splitlines())
+        # remove spurious </body> and </html> tags, then normalize line break
+        # (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1)
+        data = REM_ROOT_HTML_TAGS.sub('', u'\n'.join(data.splitlines()))
         # XXX lxml 1.1 support still needed ?
         xmltree = etree.HTML('<div>%s</div>' % data)
         # NOTE: lxml 1.1 (etch platforms) doesn't recognize
@@ -146,7 +148,13 @@ else:
         #       why we specify an encoding and re-decode to unicode later
         body = etree.tostring(xmltree[0], encoding=encoding)
         # remove <body> and </body> and decode to unicode
-        return body[11:-13].decode(encoding)
+        snippet = body[6:-7].decode(encoding)
+        # take care to bad xhtml (for instance starting with </div>) which
+        # may mess with the <div> we added below. Only remove it if it's
+        # still there...
+        if snippet.startswith('<div>') and snippet.endswith('</div>'):
+            snippet = snippet[5:-6]
+        return snippet
 
     if hasattr(etree.HTML('<div>test</div>'), 'iter'):
 
