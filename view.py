@@ -34,6 +34,7 @@ from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.schema import display_name
+from cubicweb.vregistry import classid
 
 # robots control
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'
@@ -555,7 +556,7 @@ def implements_adapter_compat(iface):
             if hasattr(entity, func.__name__):
                 warn('[3.9] %s method is deprecated, define it on a custom '
                      '%s for %s instead' % (func.__name__, iface,
-                                            entity.__class__),
+                                            classid(entity.__class__)),
                      DeprecationWarning)
                 member = getattr(entity, func.__name__)
                 if callable(member):
