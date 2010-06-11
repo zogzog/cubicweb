@@ -307,6 +307,8 @@ class RequestSessionBase(object):
         try:
             view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
         except RegistryException:
+            if __fallback_oid is None:
+                raise
             view =  self.vreg[__registry].select(__fallback_oid, self,
                                                  rset=rset, **initargs)
         return view.render(w=w, **kwargs)
@@ -315,7 +317,7 @@ class RequestSessionBase(object):
         """return a string for a date time according to instance's
         configuration
         """
-        if date:
+        if date is not None:
             if date_format is None:
                 if time:
                     date_format = self.property_value('ui.datetime-format')
@@ -328,7 +330,7 @@ class RequestSessionBase(object):
         """return a string for a time according to instance's
         configuration
         """
-        if time:
+        if time is not None:
             return ustrftime(time, self.property_value('ui.time-format'))
         return u''
 

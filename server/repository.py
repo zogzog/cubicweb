@@ -92,7 +92,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
                                 {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
         with security_enabled(session, read=False):
-            session.execute('DELETE X %sY WHERE Y eid %%(y)s, '
+            session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
                             'NOT X eid %%(x)s' % rtype,
                             {'x': eidfrom, 'y': eidto})
 

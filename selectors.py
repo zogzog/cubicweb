@@ -759,7 +759,7 @@ class relation_possible(EntitySelector):
 
     * `action`, a relation schema action (e.g. one of 'read', 'add', 'delete',
       default to 'read') which must be granted to the user, else a 0 score will
-      be returned
+      be returned. Give None if you don't want any permission checking.
 
     * `strict`, boolean (default to False) telling what to do when the user has
       not globally the permission for the action (eg the action is not granted
@@ -817,11 +817,11 @@ class relation_possible(EntitySelector):
         if self.target_etype is not None:
             try:
                 rdef = rschema.role_rdef(eschema, self.target_etype, self.role)
-                if not rdef.may_have_permission(self.action, req):
+                if self.action and not rdef.may_have_permission(self.action, req):
                     return 0
             except KeyError:
                 return 0
-        else:
+        elif self.action:
             return rschema.may_have_permission(self.action, req, eschema, self.role)
         return 1
 
@@ -829,13 +829,14 @@ class relation_possible(EntitySelector):
         rschema = self._get_rschema(entity)
         if rschema is None:
             return 0 # relation not supported
-        if self.target_etype is not None:
-            rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
-        if self.role == 'subject':
-            if not rschema.has_perm(entity._cw, 'add', fromeid=entity.eid):
+        if self.action:
+            if self.target_etype is not None:
+                rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
+            if self.role == 'subject':
+                if not rschema.has_perm(entity._cw, self.action, fromeid=entity.eid):
+                    return 0
+            elif not rschema.has_perm(entity._cw, self.action, toeid=entity.eid):
                 return 0
-        elif not rschema.has_perm(entity._cw, 'add', toeid=entity.eid):
-            return 0
         return 1
 
 

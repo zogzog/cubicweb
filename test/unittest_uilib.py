@@ -94,6 +94,54 @@ quis nostrud exercitation ullamco laboris nisi"),
             got = uilib.text_cut(text, 30)
             self.assertEquals(got, expected)
 
+    def test_soup2xhtml_1_1(self):
+        self.assertEquals(uilib.soup2xhtml('hop <div>', 'ascii'),
+                          'hop <div/>')
+        self.assertEquals(uilib.soup2xhtml('<div> hop', 'ascii'),
+                          '<div> hop</div>')
+        self.assertEquals(uilib.soup2xhtml('hop <div> hop', 'ascii'),
+                          'hop <div> hop</div>')
+
+    def test_soup2xhtml_1_2(self):
+        self.assertEquals(uilib.soup2xhtml('hop </div>', 'ascii'),
+                          'hop ')
+        self.assertEquals(uilib.soup2xhtml('</div> hop', 'ascii'),
+                          '<div/> hop')
+        self.assertEquals(uilib.soup2xhtml('hop </div> hop', 'ascii'),
+                          '<div>hop </div> hop')
+
+    def test_soup2xhtml_2_1(self):
+        self.assertEquals(uilib.soup2xhtml('hop <body>', 'ascii'),
+                          'hop ')
+        self.assertEquals(uilib.soup2xhtml('<body> hop', 'ascii'),
+                          ' hop')
+        self.assertEquals(uilib.soup2xhtml('hop <body> hop', 'ascii'),
+                          'hop  hop')
+
+    def test_soup2xhtml_2_2(self):
+        self.assertEquals(uilib.soup2xhtml('hop </body>', 'ascii'),
+                          'hop ')
+        self.assertEquals(uilib.soup2xhtml('</body> hop', 'ascii'),
+                          ' hop')
+        self.assertEquals(uilib.soup2xhtml('hop </body> hop', 'ascii'),
+                          'hop  hop')
+
+    def test_soup2xhtml_3_1(self):
+        self.assertEquals(uilib.soup2xhtml('hop <html>', 'ascii'),
+                          'hop ')
+        self.assertEquals(uilib.soup2xhtml('<html> hop', 'ascii'),
+                          ' hop')
+        self.assertEquals(uilib.soup2xhtml('hop <html> hop', 'ascii'),
+                          'hop  hop')
+
+    def test_soup2xhtml_3_2(self):
+        self.assertEquals(uilib.soup2xhtml('hop </html>', 'ascii'),
+                          'hop ')
+        self.assertEquals(uilib.soup2xhtml('</html> hop', 'ascii'),
+                          ' hop')
+        self.assertEquals(uilib.soup2xhtml('hop </html> hop', 'ascii'),
+                          'hop  hop')
+
 if __name__ == '__main__':
     unittest_main()
 

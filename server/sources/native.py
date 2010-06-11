@@ -744,7 +744,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def create_eid(self, session):
-        self.debug('create eid')
         # lock needed to prevent 'Connection is busy with results for another command (0)' errors with SQLServer
         self._eid_creation_lock.acquire()
         try:
