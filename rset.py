@@ -44,8 +44,6 @@ class ResultSet(object):
     :type rql: str or unicode
     :param rql: the original RQL query string
     """
-    _picklable_attributes = set(['limited', 'rows', 'description', '_rsetactions',
-                                 'args', 'rowcount', '_rqlst', 'rql'])
 
     def __init__(self, results, rql, args=None, description=(), rqlst=None):
         self.rows = results
@@ -119,10 +117,6 @@ class ResultSet(object):
     def __iter__(self):
         """Returns an iterator over rows"""
         return iter(self.rows)
-
-    def __getstate__(self):
-        return dict((k, v) for k, v in self.__dict__.iteritems()
-                    if k in self._picklable_attributes)
 
     def __add__(self, rset):
         # XXX buggy implementation (.rql and .args attributes at least much

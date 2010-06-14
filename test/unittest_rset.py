@@ -86,6 +86,7 @@ class ResultSetTC(CubicWebTC):
             self.assertDictEquals(params1, params2)
 
     def test_pickle(self):
+        del self.rset.req
         self.assertEquals(len(pickle.dumps(self.rset)), 392)
 
     def test_build_url(self):
