@@ -471,10 +471,14 @@ class CubicWebRelationSchema(RelationSchema):
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
                 subjtype = session.describe(kwargs['fromeid'])[0]
+            elif 'frometype' in kwargs:
+                subjtype = kwargs.pop('frometype')
             else:
                 subjtype = None
             if 'toeid' in kwargs:
                 objtype = session.describe(kwargs['toeid'])[0]
+            elif 'toetype' in kwargs:
+                objtype = kwargs.pop('toetype')
             else:
                 objtype = None
         if objtype and subjtype:
