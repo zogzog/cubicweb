@@ -154,7 +154,8 @@ $(document).ready(function() {
         var scriptsIncluded = jsSources();
         equals(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         equals(jQuery('head link').length, 1);
-        equals(jQuery('head link').attr('href'), 'qunit.css');
+        /* use endswith because in pytest context we have an absolute path */
+        ok(jQuery('head link').attr('href').endswith('/qunit.css'));
         stop();
         jQuery('#main').loadxhtml('/../ajax_url1.html', {
             callback: function() {
@@ -169,7 +170,8 @@ $(document).ready(function() {
                 equals(jQuery('#main h1').html(), 'Hello');
                 // qunit.css is not added twice
                 equals(jQuery('head link').length, 1);
-                equals(jQuery('head link').attr('href'), 'qunit.css');
+                /* use endswith because in pytest context we have an absolute path */
+                ok(jQuery('head link').attr('href').endswith('/qunit.css'));
                 start();
             }
         });
