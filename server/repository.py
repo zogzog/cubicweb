@@ -325,6 +325,7 @@ class Repository(object):
         """
         assert not self._shutting_down, 'already shutting down'
         self._shutting_down = True
+        self.system_source.shutdown()
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
                 self.info('canceling task %s...', looptask.name)
