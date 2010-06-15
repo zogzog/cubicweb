@@ -575,10 +575,11 @@ class CubicWebVRegistry(VRegistry):
         if depends_on is not None:
             self._needs_appobject[obj] = depends_on
 
-    def register_objects(self, path, force_reload=False):
-        """overriden to remove objects requiring a missing interface"""
+    def register_objects(self, path):
+        """overriden to give cubicweb's extrapath (eg cubes package's __path__)
+        """
         super(CubicWebVRegistry, self).register_objects(
-            path, force_reload, self.config.extrapath)
+            path, self.config.extrapath)
 
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:

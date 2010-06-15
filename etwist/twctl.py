@@ -40,6 +40,9 @@ class TWStopHandler(CommandHandler):
     cmdname = 'stop'
     cfgname = 'twisted'
 
+    def poststop(self):
+        pass
+
 
 try:
     from cubicweb.server import serverctl

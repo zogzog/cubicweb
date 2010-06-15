@@ -44,6 +44,7 @@ class ResultSet(object):
     :type rql: str or unicode
     :param rql: the original RQL query string
     """
+
     def __init__(self, results, rql, args=None, description=(), rqlst=None):
         self.rows = results
         self.rowcount = results and len(results) or 0

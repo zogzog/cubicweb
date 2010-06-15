@@ -122,6 +122,7 @@ for event in ALL_HOOKS:
 _MARKER = object()
 def entity_oldnewvalue(entity, attr):
     """returns the couple (old attr value, new attr value)
+
     NOTE: will only work in a before_update_entity hook
     """
     # get new value and remove from local dict to force a db query to
@@ -130,6 +131,8 @@ def entity_oldnewvalue(entity, attr):
     oldvalue = getattr(entity, attr)
     if newvalue is not _MARKER:
         entity[attr] = newvalue
+    else:
+        newvalue = oldvalue
     return oldvalue, newvalue
 
 

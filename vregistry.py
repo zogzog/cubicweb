@@ -404,11 +404,11 @@ class VRegistry(dict):
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload=False, extrapath=None):
+    def register_objects(self, path, extrapath=None):
         # load views from each directory in the instance's path
         filemods = self.init_registration(path, extrapath)
         for filepath, modname in filemods:
-            self.load_file(filepath, modname, force_reload)
+            self.load_file(filepath, modname)
         self.initialization_completed()
 
     def initialization_completed(self):
@@ -446,7 +446,7 @@ class VRegistry(dict):
                     return True
         return False
 
-    def load_file(self, filepath, modname, force_reload=False):
+    def load_file(self, filepath, modname):
         """load app objects from a python file"""
         from logilab.common.modutils import load_module_from_name
         if modname in self._loadedmods:
@@ -463,7 +463,7 @@ class VRegistry(dict):
         # module
         self._lastmodifs[filepath] = mdate
         # load the module
-        module = load_module_from_name(modname, use_sys=not force_reload)
+        module = load_module_from_name(modname)
         self.load_module(module)
 
     def load_module(self, module):

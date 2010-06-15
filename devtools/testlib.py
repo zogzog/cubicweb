@@ -83,6 +83,9 @@ def unprotected_entities(schema, strict=False):
 
 
 def refresh_repo(repo, resetschema=False, resetvreg=False):
+    for pool in repo.pools:
+        pool.close(True)
+    repo.system_source.shutdown()
     devtools.reset_test_database(repo.config)
     for pool in repo.pools:
         pool.reconnect()

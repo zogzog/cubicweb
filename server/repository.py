@@ -319,6 +319,7 @@ class Repository(object):
         """
         assert not self._shutting_down, 'already shutting down'
         self._shutting_down = True
+        self.system_source.shutdown()
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
                 self.info('canceling task %s...', looptask.name)
@@ -344,7 +345,7 @@ class Repository(object):
             pyro_unregister(self.config)
         hits, misses = self.querier.cache_hit, self.querier.cache_miss
         try:
-            self.info('rqlt st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
+            self.info('rql st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
                       (hits * 100) / (hits + misses))
             hits, misses = self.system_source.cache_hit, self.system_source.cache_miss
             self.info('sql cache hit/miss: %s/%s (%s%% hits)', hits, misses,
@@ -497,9 +498,10 @@ class Repository(object):
         """return a result set containing system wide properties"""
         session = self.internal_session()
         try:
-            return session.execute('Any K,V WHERE P is CWProperty,'
-                                   'P pkey K, P value V, NOT P for_user U',
-                                   build_descr=False)
+            # don't use session.execute, we don't want rset.req set
+            return self.querier.execute(session, 'Any K,V WHERE P is CWProperty,'
+                                        'P pkey K, P value V, NOT P for_user U',
+                                        build_descr=False)
         finally:
             session.close()
 
@@ -584,8 +586,13 @@ class Repository(object):
         session = self._get_session(sessionid, setpool=True)
         try:
             try:
-                return self.querier.execute(session, rqlstring, args,
+                rset = self.querier.execute(session, rqlstring, args,
                                             build_descr)
+                # NOTE: the web front will (re)build it when needed
+                #       e.g in facets
+                #       Zeroed to avoid useless overhead with pyro
+                rset._rqlst = None
+                return rset
             except (Unauthorized, RQLSyntaxError):
                 raise
             except ValidationError, ex:
