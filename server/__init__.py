@@ -180,6 +180,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
                         {'name': unicode(group)})
     create_user(session, login, pwd, 'managers')
     session.commit()
+    repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_cnx(config, login, password=pwd)
