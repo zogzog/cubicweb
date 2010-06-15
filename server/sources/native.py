@@ -338,6 +338,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def shutdown(self):
         if self._eid_creation_cnx:
             self._eid_creation_cnx.close()
+            self._eid_creation_cnx = None
 
     # XXX deprecates [un]map_attribute ?
     def map_attribute(self, etype, attr, cb, sourcedb=True):
