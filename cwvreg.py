@@ -521,7 +521,7 @@ class CubicWebVRegistry(VRegistry):
                 if not cube in cubes:
                     cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
                     cleanup_sys_modules(cpath)
-        self.register_objects(path, force_reload)
+        self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
