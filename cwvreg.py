@@ -521,7 +521,7 @@ class CubicWebVRegistry(VRegistry):
                     cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
                     cleanup_sys_modules(cpath)
         self.reset()
-        self.register_objects(path, force_reload)
+        self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _set_schema(self, schema):
@@ -566,10 +566,11 @@ class CubicWebVRegistry(VRegistry):
         if ifaces:
             self._needs_iface[obj] = ifaces
 
-    def register_objects(self, path, force_reload=False):
-        """overriden to remove objects requiring a missing interface"""
+    def register_objects(self, path):
+        """overriden to give cubicweb's extrapath (eg cubes package's __path__)
+        """
         super(CubicWebVRegistry, self).register_objects(
-            path, force_reload, self.config.extrapath)
+            path, self.config.extrapath)
 
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:
