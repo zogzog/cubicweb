@@ -650,7 +650,7 @@ class ExamineLogCommand(Command):
             except OSError, ex:
                 raise BadCommandUsage("can't open rql log file %s: %s"
                                       % (filepath, ex))
-            for lineno, line in enumerate(file):
+            for lineno, line in enumerate(stream):
                 if not ' WHERE ' in line:
                     continue
                 try:
