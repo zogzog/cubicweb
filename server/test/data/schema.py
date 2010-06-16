@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, RichString, String, Int, Boolean, Datetime)
 from yams.constraints import SizeConstraint
