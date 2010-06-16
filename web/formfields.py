@@ -82,6 +82,8 @@ class UnmodifiedField(Exception):
     it
     """
 
+def normalize_filename(filename):
+    return filename.split('\\')[-1]
 
 def vocab_sort(vocab):
     """sort vocabulary, considering option groups"""
@@ -736,7 +738,7 @@ class FileField(StringField):
             value = None
         else:
             # set filename on the Binary instance, may be used later in hooks
-            value.filename = filename
+            value.filename = normalize_filename(filename)
         return value
 
 
