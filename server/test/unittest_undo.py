@@ -280,3 +280,7 @@ class UndoableTransactionTC(CubicWebTC):
         #                    'required on CWUser (%s)' % self.toto.eid})
 
     # test implicit 'replacement' of an inlined relation
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()

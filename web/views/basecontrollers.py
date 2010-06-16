@@ -543,12 +543,12 @@ class JSonController(Controller):
             cookies[statename] = nodeeid
             self._cw.set_cookie(cookies, statename)
         else:
-            marked = set(filter(None, treestate.value.split(';')))
+            marked = set(filter(None, treestate.value.split(':')))
             if nodeeid in marked:
                 marked.remove(nodeeid)
             else:
                 marked.add(nodeeid)
-            cookies[statename] = ';'.join(marked)
+            cookies[statename] = ':'.join(marked)
             self._cw.set_cookie(cookies, statename)
 
     @jsonize

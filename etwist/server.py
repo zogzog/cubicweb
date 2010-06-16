@@ -203,6 +203,11 @@ class CubicWebRootResource(resource.Resource):
 
     def render_request(self, request):
         try:
+            # processing HUGE files (hundred of megabytes) in http.processReceived
+            # blocks other HTTP requests processing
+            # due to the clumsy & slow parsing algorithm of cgi.FieldStorage
+            # so we deferred that part to the cubicweb thread
+            request.process_multipart()
             return self._render_request(request)
         except:
             errorstream = StringIO()
@@ -334,7 +339,6 @@ def gotLength(self, length):
             d.callback(None)
         self.notifications = []
 
-
 @monkeypatch(http.Request)
 def requestReceived(self, command, path, version):
     """Called by channel when all data has been received.
@@ -359,29 +363,37 @@ def requestReceived(self, command, path, version):
     self.host = self.channel.transport.getHost()
     # Argument processing
     ctype = self.getHeader('content-type')
+    self._do_process_multipart = False
     if self.method == "POST" and ctype:
         key, pdict = parse_header(ctype)
         if key == 'application/x-www-form-urlencoded':
             self.args.update(http.parse_qs(self.content.read(), 1))
         elif key == 'multipart/form-data':
-            self.content.seek(0, 0)
-            form = FieldStorage(self.content, self.received_headers,
-                                environ={'REQUEST_METHOD': 'POST'},
-                                keep_blank_values=1,
-                                strict_parsing=1)
-            for key in form:
-                value = form[key]
-                if isinstance(value, list):
-                    self.args[key] = [v.value for v in value]
-                elif value.filename:
-                    if value.done != -1: # -1 is transfer has been interrupted
-                        self.files[key] = (value.filename, value.file)
-                    else:
-                        self.files[key] = (None, None)
-                else:
-                    self.args[key] = value.value
+            # defer this as it can be extremely time consumming
+            # with big files
+            self._do_process_multipart = True
     self.process()
 
+
+@monkeypatch(http.Request)
+def process_multipart(self):
+    if not self._do_process_multipart:
+        return
+    form = FieldStorage(self.content, self.received_headers,
+                        environ={'REQUEST_METHOD': 'POST'},
+                        keep_blank_values=1,
+                        strict_parsing=1)
+    for key in form:
+        value = form[key]
+        if isinstance(value, list):
+            self.args[key] = [v.value for v in value]
+        elif value.filename:
+            if value.done != -1: # -1 is transfer has been interrupted
+                self.files[key] = (value.filename, value.file)
+            else:
+                self.files[key] = (None, None)
+        else:
+            self.args[key] = value.value
 
 from logging import getLogger
 from cubicweb import set_log_methods

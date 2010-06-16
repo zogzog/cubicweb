@@ -26,7 +26,7 @@ in such a file:
 
 .. sourcecode:: sh
 
-    $ cubicweb-ctl exlog < ~/myapp-rql.log
+    $ cubicweb-ctl exlog ~/myapp-rql.log
     0.07 50 Any A WHERE X eid %(x)s, X firstname A {}
     0.05 50 Any A WHERE X eid %(x)s, X lastname A {}
     0.01 1 Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E employees X, X modification_date AA {}

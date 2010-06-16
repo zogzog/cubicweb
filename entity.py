@@ -781,7 +781,10 @@ class Entity(AppObject):
             return self._cw_relation_cache(rtype, role, entities, limit)
         except KeyError:
             pass
-        assert self.has_eid()
+        if not self.has_eid():
+            if entities:
+                return []
+            return self.empty_rset()
         rql = self.cw_related_rql(rtype, role)
         rset = self._cw.execute(rql, {'x': self.eid})
         self.cw_set_relation_cache(rtype, role, rset)
