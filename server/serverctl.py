@@ -48,14 +48,16 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
-    print '-> connecting to %s database' % driver,
-    if dbhost:
-        print '%s@%s' % (dbname, dbhost),
-    else:
-        print dbname,
+    if verbose:
+        print '-> connecting to %s database' % driver,
+        if dbhost:
+            print '%s@%s' % (dbname, dbhost),
+        else:
+            print dbname,
     if not verbose or (not special_privs and source.get('db-user')):
         user = source['db-user']
-        print 'as', user
+        if verbose:
+            print 'as', user
         if source.get('db-password'):
             password = source['db-password']
         else:
@@ -272,6 +274,14 @@ class RepositoryStopHandler(CommandHandler):
 
 # repository specific commands ################################################
 
+def createdb(helper, source, dbcnx, cursor, **kwargs):
+    if dbcnx.logged_user != source['db-user']:
+        helper.create_database(cursor, source['db-name'], source['db-user'],
+                               source['db-encoding'], **kwargs)
+    else:
+        helper.create_database(cursor, source['db-name'],
+                               dbencoding=source['db-encoding'], **kwargs)
+
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
 
@@ -314,14 +324,13 @@ class CreateInstanceDBCommand(Command):
         source = config.sources()['system']
         dbname = source['db-name']
         driver = source['db-driver']
-        create_db = self.config.create_db
         helper = get_db_helper(driver)
         if driver == 'sqlite':
             if os.path.exists(dbname) and (
                 automatic or
                 ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
-        elif create_db:
+        elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
@@ -338,12 +347,7 @@ class CreateInstanceDBCommand(Command):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
                         return
-                if dbcnx.logged_user != source['db-user']:
-                    helper.create_database(cursor, dbname, source['db-user'],
-                                           source['db-encoding'])
-                else:
-                    helper.create_database(cursor, dbname,
-                                           dbencoding=source['db-encoding'])
+                createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
