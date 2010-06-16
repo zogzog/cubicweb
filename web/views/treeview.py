@@ -142,7 +142,7 @@ class TreeViewItemView(EntityView):
         cookies = self._cw.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
-            return str(eeid) in treestate.value.split(';')
+            return str(eeid) in treestate.value.split(':')
         return self.default_branch_state_is_open
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
