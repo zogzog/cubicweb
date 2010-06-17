@@ -274,11 +274,11 @@ class AddRelatedActions(action.Action):
                     continue
             if role == 'subject':
                 label = 'add %s %s %s %s' % (eschema, rschema, teschema, role)
-                url = self.linkto_url(entity, rschema, teschema, 'object')
+                url = self.linkto_url(entity, rschema, teschema, 'object', **params)
             else:
                 label = 'add %s %s %s %s' % (teschema, rschema, eschema, role)
-                url = self.linkto_url(entity, rschema, teschema, 'subject')
-            yield self.build_action(self._cw._(label), url, **params)
+                url = self.linkto_url(entity, rschema, teschema, 'subject', **params)
+            yield self.build_action(self._cw._(label), url)
 
     def add_related_schemas(self, entity):
         """this is actually used ui method to generate 'addrelated' actions from
