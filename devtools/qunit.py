@@ -70,6 +70,7 @@ class FirefoxHelper(object):
 
     def stop(self):
         if self._process is not None:
+            assert self._process.returncode is None,  self._process.returncode
             os.kill(self._process.pid, signal.SIGTERM)
             self._process.wait()
             self._process = None
