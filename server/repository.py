@@ -1036,7 +1036,7 @@ class Repository(object):
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', entity.__regid__, entity.eid, dict(entity)
+            print 'ADD entity', self, entity.__regid__, entity.eid, entity.cw_attr_cache
         relations = []
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
@@ -1088,7 +1088,7 @@ class Repository(object):
         """
         if server.DEBUG & server.DBG_REPO:
             print 'UPDATE entity', entity.__regid__, entity.eid, \
-                  dict(entity), edited_attributes
+                  entity.cw_attr_cache, edited_attributes
         hm = self.hm
         eschema = entity.e_schema
         session.set_entity_cache(entity)
