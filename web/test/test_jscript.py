@@ -6,26 +6,35 @@ from os import path as osp
 class JScript(QUnitTestCase):
 
     all_js_tests = (
-        ("jstests/test_datetime.js",(
+        ("jstests/test_utils.js", (
             "../data/cubicweb.js",
-            "../data/cubicweb.compat.js",)),
+            "../data/cubicweb.compat.js",
+            "../data/cubicweb.python.js",
+            "jstests/utils.js",
+            ),
+         ),
+
         ("jstests/test_htmlhelpers.js", (
             "../data/cubicweb.js",
             "../data/cubicweb.compat.js",
             "../data/cubicweb.python.js",
-            "../data/cubicweb.htmlhelpers.js")),
-        ("jstests/test_ajax.js",(
+            "../data/cubicweb.htmlhelpers.js",
+            ),
+         ),
+
+        ("jstests/test_ajax.js", (
             "../data/cubicweb.python.js",
             "../data/cubicweb.js",
             "../data/cubicweb.compat.js",
             "../data/cubicweb.htmlhelpers.js",
             "../data/cubicweb.ajax.js",
-            ),(
+            ), (
             "jstests/ajax_url0.html",
             "jstests/ajax_url1.html",
             "jstests/ajax_url2.html",
             "jstests/ajaxresult.json",
-            ))
+            ),
+         ),
     )
 
 
