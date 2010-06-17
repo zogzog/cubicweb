@@ -511,6 +511,21 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(len(rset.rows), 1)
         self.assertEquals(rset.rows[0][0], self.ueid)
 
+    def test_select_having_non_aggregat_1(self):
+        rset = self.execute('Any L WHERE X login L, X creation_date CD '
+                            'HAVING YEAR(CD) = %s' % date.today().year)
+        self.assertListEquals(rset.rows,
+                              [[u'admin'],
+                               [u'anon']])
+
+    def test_select_having_non_aggregat_2(self):
+        rset = self.execute('Any L GROUPBY L WHERE X login L, X in_group G, '
+                            'X creation_date CD HAVING YEAR(CD) = %s OR COUNT(G) > 1'
+                            % date.today().year)
+        self.assertListEquals(rset.rows,
+                              [[u'admin'],
+                               [u'anon']])
+
     def test_select_complex_sort(self):
         """need sqlite including http://www.sqlite.org/cvstrac/tktview?tn=3773 fix"""
         rset = self.execute('Any X ORDERBY X,D LIMIT 5 WHERE X creation_date D')
