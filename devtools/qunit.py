@@ -1,9 +1,9 @@
 import os, os.path as osp
 import signal
-from tempfile import mkdtemp, NamedTemporaryFile
+from tempfile import mkdtemp, NamedTemporaryFile, TemporaryFile
 import tempfile
 from Queue import Queue, Empty
-from subprocess import Popen, check_call
+from subprocess import Popen, check_call, CalledProcessError
 from shutil import rmtree, copy as copyfile
 from uuid import uuid4 
 
@@ -16,6 +16,30 @@ from cubicweb.view import StartupView
 from cubicweb.web.controller import Controller
 from cubicweb.devtools.httptest import CubicWebServerTC
 
+
+class VerboseCalledProcessError(CalledProcessError):
+
+    def __init__(self, returncode, command, stdout, stderr):
+        super(VerboseCalledProcessError, self).__init__(returncode, command)
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __str__(self):
+        str = [ super(VerboseCalledProcessError, self).__str__()]
+        if self.stdout.strip():
+            str.append('******************')
+            str.append('* process stdout *')
+            str.append('******************')
+            str.append(self.stdout)
+        if self.stderr.strip():
+            str.append('******************')
+            str.append('* process stderr *')
+            str.append('******************')
+            str.append(self.stderr)
+        return '\n'.join(str)
+
+
+
 class FirefoxHelper(object):
 
     profile_name_mask = 'PYTEST_PROFILE_%(uid)s'
@@ -26,11 +50,16 @@ class FirefoxHelper(object):
         self._profile_data = {'uid': uuid4()}
         self._profile_name = self.profile_name_mask % self._profile_data
         fnull = open(os.devnull, 'w')
-        check_call(['firefox', '-no-remote', '-CreateProfile',
-                    '%s %s' % (self._profile_name, self._tmp_dir)],
-                              stdout=fnull, stderr=fnull)
-        if url is not None:
-            self.start(url)
+        stdout = TemporaryFile()
+        stderr = TemporaryFile()
+        try:
+          check_call(['firefox', '-no-remote', '-CreateProfile',
+                      '%s %s' % (self._profile_name, self._tmp_dir)],
+                                stdout=stdout, stderr=stderr)
+        except CalledProcessError, cpe:
+            stdout.seek(0)
+            stderr.seek(0)
+            raise VerboseCalledProcessError(cpe.returncode, cpe.cmd, stdout.read(), stderr.read())
 
 
     def start(self, url):
