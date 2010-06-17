@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Fake objects to ease testing of cubicweb without a fully working environment
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from logilab.database import get_db_helper
@@ -46,7 +46,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
         return self._cubes
 
     def sources(self):
-        return {}
+        return {'system': {'db-driver': 'sqlite'}}
 
 
 class FakeRequest(CubicWebRequestBase):

@@ -29,7 +29,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import Relation, VariableRef, Constant, SubQuery
+from rql.nodes import Relation, VariableRef, Constant, SubQuery, Function
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -50,7 +50,8 @@ def update_varmap(varmap, selected, table):
         key = term.as_string()
         value = '%s.C%s' % (table, i)
         if varmap.get(key, value) != value:
-            raise Exception('variable name conflict on %s' % key)
+            raise Exception('variable name conflict on %s: got %s / %s'
+                            % (key, value, varmap))
         varmap[key] = value
 
 # permission utilities ########################################################
@@ -285,7 +286,26 @@ class ExecutionPlan(object):
                     for term in origselection:
                         newselect.append_selected(term.copy(newselect))
                     if select.orderby:
-                        newselect.set_orderby([s.copy(newselect) for s in select.orderby])
+                        sortterms = []
+                        for sortterm in select.orderby:
+                            sortterms.append(sortterm.copy(newselect))
+                            for fnode in sortterm.get_nodes(Function):
+                                if fnode.name == 'FTIRANK':
+                                    # we've to fetch the has_text relation as well
+                                    var = fnode.children[0].variable
+                                    rel = iter(var.stinfo['ftirels']).next()
+                                    assert not rel.ored(), 'unsupported'
+                                    newselect.add_restriction(rel.copy(newselect))
+                                    # remove relation from the orig select and
+                                    # cleanup variable stinfo
+                                    rel.parent.remove(rel)
+                                    var.stinfo['ftirels'].remove(rel)
+                                    var.stinfo['relations'].remove(rel)
+                                    # XXX not properly re-annotated after security insertion?
+                                    newvar = newselect.get_variable(var.name)
+                                    newvar.stinfo.setdefault('ftirels', set()).add(rel)
+                                    newvar.stinfo.setdefault('relations', set()).add(rel)
+                        newselect.set_orderby(sortterms)
                         _expand_selection(select.orderby, selected, aliases, select, newselect)
                         select.orderby = () # XXX dereference?
                     if select.groupby:
@@ -562,6 +582,8 @@ class QuerierHelper(object):
         # rql parsing / analysing helper
         self.solutions = repo.vreg.solutions
         rqlhelper = repo.vreg.rqlhelper
+        # set backend on the rql helper, will be used for function checking
+        rqlhelper.backend = repo.config.sources()['system']['db-driver']
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner

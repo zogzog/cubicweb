@@ -577,7 +577,6 @@ class CubicWebSchema(Schema):
         except BadSchemaDefinition:
             reversed_etype_map = dict( (v, k) for k, v in ETYPE_NAME_MAP.iteritems() )
             if rdef.subject in reversed_etype_map or rdef.object in reversed_etype_map:
-                self.warning('huuuu')
                 return
             raise
         if rdefs:

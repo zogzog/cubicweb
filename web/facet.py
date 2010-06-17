@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """contains utility functions and some visual component to restrict results of
 a search
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from copy import deepcopy

@@ -134,6 +134,8 @@ class TwoSourcesTC(CubicWebTC):
         self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
         self.failUnless(self.sexecute('Any X WHERE X has_text "affref"'))
         self.failUnless(self.sexecute('Affaire X WHERE X has_text "affref"'))
+        self.failUnless(self.sexecute('Any X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
+        self.failUnless(self.sexecute('Affaire X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
 
     def test_anon_has_text(self):
         self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
@@ -145,6 +147,9 @@ class TwoSourcesTC(CubicWebTC):
         cnx = self.login('anon')
         cu = cnx.cursor()
         rset = cu.execute('Any X WHERE X has_text "card"')
+        # 5: 4 card + 1 readable affaire
+        self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
+        rset = cu.execute('Any X ORDERBY FTIRANK(X) WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
         Connection_close(cnx)
 

@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""automatic tests
-
-"""
+"""automatic tests"""
 
 from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView

@@ -413,7 +413,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         """retrieve CWUser X from both sources and return concatenation of results
         """
         self._test('CWUser X ORDERBY X LIMIT 10 OFFSET 10',
-                   [('AggrStep', 'Any X ORDERBY X', 10, 10, 'table0', None, [
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0 LIMIT 10 OFFSET 10', None, [
                        ('FetchStep', [('Any X WHERE X is CWUser', [{'X': 'CWUser'}])],
                         [self.ldap, self.system], {}, {'X': 'table0.C0'}, []),
                        ]),
@@ -423,7 +423,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         """
         # COUNT(X) is kept in sub-step and transformed into SUM(X) in the AggrStep
         self._test('Any COUNT(X) WHERE X is CWUser',
-                   [('AggrStep', 'Any COUNT(X)', None, None, 'table0', None, [
+                   [('AggrStep', 'SELECT SUM(table0.C0) FROM table0', None, [
                        ('FetchStep', [('Any COUNT(X) WHERE X is CWUser', [{'X': 'CWUser'}])],
                         [self.ldap, self.system], {}, {'COUNT(X)': 'table0.C0'}, []),
                        ]),
@@ -498,7 +498,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered(self):
         self._test('Any L ORDERBY L WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
@@ -507,7 +507,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered_limit_offset(self):
         self._test('Any L ORDERBY L LIMIT 10 OFFSET 10 WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', 10, 10, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0 LIMIT 10 OFFSET 10', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
@@ -593,7 +593,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         2. return content of the table sorted
         """
         self._test('Any X,F ORDERBY F WHERE X firstname F',
-                   [('AggrStep', 'Any X,F ORDERBY F', None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0, table0.C1 FROM table0 ORDER BY table0.C1', None,
                      [('FetchStep', [('Any X,F WHERE X firstname F, X is CWUser',
                                       [{'X': 'CWUser', 'F': 'String'}])],
                        [self.ldap, self.system], {},
@@ -657,7 +657,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_typed_aggregat(self):
         self._test('Any MAX(X) WHERE X is Card',
-                   [('AggrStep', 'Any MAX(X)', None, None, 'table0',  None,
+                   [('AggrStep', 'SELECT MAX(table0.C0) FROM table0',  None,
                      [('FetchStep',
                        [('Any MAX(X) WHERE X is Card', [{'X': 'Card'}])],
                        [self.cards, self.system], {}, {'MAX(X)': 'table0.C0'}, [])
@@ -1299,9 +1299,66 @@ class MSPlannerTC(BaseMSPlannerTC):
                         ]),
                     ])
 
+    def test_has_text_orderby_rank(self):
+        self._test('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C0'}, []),
+                    ('AggrStep', 'SELECT table1.C1 FROM table1 ORDER BY table1.C0', None, [
+                        ('FetchStep', [('Any FTIRANK(X),X WHERE X has_text "bla", X is CWUser',
+                                        [{'X': 'CWUser'}])],
+                         [self.system], {'X': 'table0.C0'}, {'FTIRANK(X)': 'table1.C0', 'X': 'table1.C1'}, []),
+                        ('FetchStep', [('Any FTIRANK(X),X WHERE X has_text "bla", X firstname "bla", X is Personne',
+                                        [{'X': 'Personne'}])],
+                         [self.system], {}, {'FTIRANK(X)': 'table1.C0', 'X': 'table1.C1'}, []),
+                        ]),
+                    ])
+
+    def test_security_has_text_orderby_rank(self):
+        # use a guest user
+        self.session = self.user_groups_session('guests')
+        self._test('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table1.C0'}, []),
+                    ('UnionFetchStep',
+                     [('FetchStep', [('Any X WHERE X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                       [self.system], {}, {'X': 'table0.C0'}, []),
+                      ('FetchStep', [('Any X WHERE EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
+                       [self.system], {'X': 'table1.C0'}, {'X': 'table0.C0'}, [])]),
+                    ('OneFetchStep', [('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla"',
+                                       [{'X': 'CWUser'}, {'X': 'Personne'}])],
+                     None, None, [self.system], {'X': 'table0.C0'}, []),
+                    ])
+
+    def test_has_text_select_rank(self):
+        self._test('Any X, FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   # XXX unecessary duplicate selection
+                   [('FetchStep', [('Any X,X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C1'}, []),
+                    ('UnionStep', None, None, [
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X is CWUser', [{'X': 'CWUser'}])],
+                         None, None, [self.system], {'X': 'table0.C1'}, []),
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                    ])
+
+    def test_security_has_text_select_rank(self):
+        # use a guest user
+        self.session = self.user_groups_session('guests')
+        self._test('Any X, FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X,X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C1'}, []),
+                    ('UnionStep', None, None, [
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
+                         None, None, [self.system], {'X': 'table0.C1'}, []),
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                    ])
+
     def test_sort_func(self):
         self._test('Note X ORDERBY DUMB_SORT(RF) WHERE X type RF',
-                   [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)', None, None, 'table0', None, [
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY DUMB_SORT(table0.C1)', None, [
                        ('FetchStep', [('Any X,RF WHERE X type RF, X is Note',
                                        [{'X': 'Note', 'RF': 'String'}])],
                         [self.cards, self.system], {}, {'X': 'table0.C0', 'X.type': 'table0.C1', 'RF': 'table0.C1'}, []),
@@ -1310,8 +1367,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_ambigous_sort_func(self):
         self._test('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF, X is IN (Bookmark, Card, EmailThread)',
-                   [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)',
-                     None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY DUMB_SORT(table0.C1)', None,
                      [('FetchStep', [('Any X,RF WHERE X title RF, X is Card',
                                       [{'X': 'Card', 'RF': 'String'}])],
                        [self.cards, self.system], {},
@@ -1728,7 +1784,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep', [('Any X,D WHERE X modification_date D, X is CWUser',
                                     [{'X': 'CWUser', 'D': 'Datetime'}])],
                      [self.ldap, self.system], None, {'X': 'table1.C0', 'X.modification_date': 'table1.C1', 'D': 'table1.C1'}, []),
-                    ('AggrStep', 'Any X ORDERBY D DESC', None, None, 'table2', None, [
+                    ('AggrStep', 'SELECT table2.C0 FROM table2 ORDER BY table2.C1 DESC', None, [
                         ('FetchStep', [('Any X,D WHERE E eid %s, E wf_info_for X, X modification_date D, E is TrInfo, X is Affaire'%treid,
                                         [{'X': 'Affaire', 'E': 'TrInfo', 'D': 'Datetime'}])],
                          [self.system],
@@ -1871,8 +1927,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                     [{'X': 'Note', 'Z': 'Datetime'}])],
                      [self.cards, self.system], None, {'X': 'table0.C0', 'X.modification_date': 'table0.C1', 'Z': 'table0.C1'},
                      []),
-                    ('AggrStep', 'Any X ORDERBY Z DESC',
-                     None, None, 'table1', None,
+                    ('AggrStep', 'SELECT table1.C0 FROM table1 ORDER BY table1.C1 DESC', None,
                      [('FetchStep', [('Any X,Z WHERE X modification_date Z, 999999 see_also X, X is Bookmark',
                                       [{'X': 'Bookmark', 'Z': 'Datetime'}])],
                        [self.system], {},   {'X': 'table1.C0', 'X.modification_date': 'table1.C1',

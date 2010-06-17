@@ -22,8 +22,8 @@ Notes:
   from which it comes from) are stored in a varchar column encoded as a base64
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"

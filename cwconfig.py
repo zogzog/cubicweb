@@ -1107,6 +1107,7 @@ _EXT_REGISTERED = False
 def register_stored_procedures():
     from logilab.database import FunctionDescr
     from rql.utils import register_function, iter_funcnode_variables
+    from rql.nodes import SortTerm, Constant, VariableRef
 
     global _EXT_REGISTERED
     if _EXT_REGISTERED:
@@ -1150,6 +1151,34 @@ def register_stored_procedures():
         supported_backends = ('mysql', 'postgres', 'sqlite',)
 
     register_function(TEXT_LIMIT_SIZE)
+
+
+    class FTIRANK(FunctionDescr):
+        """return ranking of a variable that must be used as some has_text
+        relation subject in the query's restriction. Usually used to sort result
+        of full-text search by ranking.
+        """
+        supported_backends = ('postgres',)
+        rtype = 'Float'
+
+        def st_check_backend(self, backend, funcnode):
+            """overriden so that on backend not supporting fti ranking, the
+            function is removed when in an orderby clause, or replaced by a 1.0
+            constant.
+            """
+            if not self.supports(backend):
+                parent = funcnode.parent
+                while parent is not None and not isinstance(parent, SortTerm):
+                    parent = parent.parent
+                if isinstance(parent, SortTerm):
+                    parent.parent.remove(parent)
+                else:
+                    funcnode.parent.replace(funcnode, Constant(1.0, 'Float'))
+                    parent = funcnode
+                for vref in parent.iget_nodes(VariableRef):
+                    vref.unregister_reference()
+
+    register_function(FTIRANK)
 
 
     class FSPATH(FunctionDescr):

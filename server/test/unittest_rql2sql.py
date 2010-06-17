@@ -22,11 +22,13 @@ import sys
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
-
-#from cubicweb.server.sources.native import remove_unused_solutions
-from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
-
 from rql.utils import register_function, FunctionDescr
+
+from cubicweb.devtools import TestServerConfiguration
+from cubicweb.devtools.repotest import RQLGeneratorTC
+from cubicweb.server.sources.rql2sql import remove_unused_solutions
+
+
 # add a dumb registered procedure
 class stockproc(FunctionDescr):
     supported_backends = ('postgres', 'sqlite', 'mysql')
@@ -35,8 +37,6 @@ try:
 except AssertionError, ex:
     pass # already registered
 
-from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.repotest import RQLGeneratorTC
 
 config = TestServerConfiguration('data')
 config.bootstrap_cubes()
@@ -1060,11 +1060,9 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.database import get_db_helper
-
 class CWRQLTC(RQLGeneratorTC):
     schema = schema
-
+    backend = 'sqlite'
     def test_nonregr_sol(self):
         delete = self.rqlhelper.parse(
             'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
@@ -1090,12 +1088,7 @@ class CWRQLTC(RQLGeneratorTC):
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
     schema = schema
-
-    #capture = True
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('postgres')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'postgres'
 
     def _norm_sql(self, sql):
         return sql.strip()
@@ -1355,13 +1348,53 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.c
 UNION ALL
 SELECT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-"""),
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu"""),
 
             ('Personne X where X has_text %(text)s, X travaille S, S has_text %(text)s',
              """SELECT _X.eid
 FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
 WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')"""),
+
+            ('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "toto tata"',
+             """SELECT appears0.uid
+FROM appears AS appears0
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata')
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight DESC"""),
+
+            ('Personne X ORDERBY FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.eid AND _X.type='Personne'
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight"""),
+
+            ('Personne X ORDERBY FTIRANK(X) WHERE X has_text %(text)s',
+             """SELECT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne'
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight"""),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
+             """SELECT T1.C0 FROM (SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+FROM appears AS appears0, cw_Basket AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+UNION ALL
+SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+FROM appears AS appears0, cw_Folder AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+ORDER BY 2) AS T1"""),
+
+            ('Personne X ORDERBY FTIRANK(X),FTIRANK(S) WHERE X has_text %(text)s, X travaille S, S has_text %(text)s',
+             """SELECT _X.eid
+FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight,ts_rank(appears2.words, to_tsquery('default', 'hip&hop&momo'))*appears2.weight"""),
+
+
+            ('Any X, FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT appears0.uid, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight
+FROM appears AS appears0
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata')"""),
+
             )):
             yield t
 
@@ -1411,11 +1444,7 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
-
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('sqlite')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'sqlite'
 
     def _norm_sql(self, sql):
         return sql.strip().replace(' ILIKE ', ' LIKE ')
@@ -1513,17 +1542,33 @@ SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 """),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT DISTINCT appears0.uid
+FROM appears AS appears0
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Basket AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+UNION
+SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Folder AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+"""),
+
+            ('Any X, FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT DISTINCT appears0.uid, 1.0
+FROM appears AS appears0
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
             )):
             yield t
 
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
-
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('mysql')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'mysql'
 
     def _norm_sql(self, sql):
         sql = sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')

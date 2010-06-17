@@ -442,8 +442,8 @@ du :eid:`1:*ReST*`'''
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
-        self.assertEquals(set(e.cw_adapt_to('IFTIndexable').get_words()),
-                          set(['an', 'html', 'file', 'du', 'html', 'some', 'data']))
+        self.assertEquals(e.cw_adapt_to('IFTIndexable').get_words(),
+                          {'C': [u'du', u'html', 'an', 'html', 'file', u'some', u'data']})
 
 
     def test_nonregr_relation_cache(self):

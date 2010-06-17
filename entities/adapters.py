@@ -108,6 +108,10 @@ class IFTIndexableAdapter(EntityAdapter):
         else:
             yield entity
 
+    # weight in ABCD
+    entity_weight = 1.0
+    attr_weight = {}
+
     def get_words(self):
         """used by the full text indexer to get words to index
 
@@ -121,10 +125,11 @@ class IFTIndexableAdapter(EntityAdapter):
         # take care to cases where we're modyfying the schema
         entity = self.entity
         pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
-        words = []
+        words = {}
         for rschema in entity.e_schema.indexable_attributes():
             if (entity.e_schema, rschema) in pending:
                 continue
+            weight = self.attr_weight.get(rschema, 'C')
             try:
                 value = entity.printable_value(rschema, format='text/plain')
             except TransformError:
@@ -134,16 +139,19 @@ class IFTIndexableAdapter(EntityAdapter):
                                rschema, entity.eid)
                 continue
             if value:
-                words += tokenize(value)
+                words.setdefault(weight, []).extend(tokenize(value))
         for rschema, role in entity.e_schema.fulltext_relations():
             if role == 'subject':
                 for entity_ in getattr(entity, rschema.type):
-                    words += entity_.cw_adapt_to('IFTIndexable').get_words()
+                    merge_weight_dict(words, entity_.cw_adapt_to('IFTIndexable').get_words())
             else: # if role == 'object':
                 for entity_ in getattr(entity, 'reverse_%s' % rschema.type):
-                    words += entity_.cw_adapt_to('IFTIndexable').get_words()
+                    merge_weight_dict(words, entity_.cw_adapt_to('IFTIndexable').get_words())
         return words
 
+def merge_weight_dict(maindict, newdict):
+    for weight, words in newdict.iteritems():
+        maindict.setdefault(weight, []).extend(words)
 
 class IDownloadableAdapter(EntityAdapter):
     """interface for downloadable entities"""

@@ -140,13 +140,6 @@ class AggrStep(LimitOffsetMixIn, Step):
 
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
-        sel = self.select.selection
-        restr = self.select.where
-        self.select.selection = self.selection
-        self.select.where = None
-        rql = self.select.as_string(kwargs=self.plan.args)
-        self.select.selection = sel
-        self.select.where = restr
         try:
             # rely on a monkey patch (cf unittest_querier)
             table = self.plan.tablesinorder[self.table]
@@ -155,12 +148,19 @@ class AggrStep(LimitOffsetMixIn, Step):
             # not monkey patched
             table = self.table
             outputtable = self.outputtable
-        return (self.__class__.__name__, rql, self.limit, self.offset, table,
-                outputtable)
+        sql = self.get_sql().replace(self.table, table)
+        return (self.__class__.__name__, sql, outputtable)
 
     def execute(self):
         """execute this step"""
         self.execute_children()
+        sql = self.get_sql()
+        if self.outputtable:
+            self.plan.create_temp_table(self.outputtable)
+            sql = 'INSERT INTO %s %s' % (self.outputtable, sql)
+        return self.plan.sqlexec(sql, self.plan.args)
+
+    def get_sql(self):
         self.inputmap = inputmap = self.children[-1].outputmap
         # get the select clause
         clause = []
@@ -223,17 +223,15 @@ class AggrStep(LimitOffsetMixIn, Step):
             sql.append('LIMIT %s' % self.limit)
         if self.offset:
             sql.append('OFFSET %s' % self.offset)
-        #print 'DATA', plan.sqlexec('SELECT * FROM %s' % self.table, None)
-        sql = ' '.join(sql)
-        if self.outputtable:
-            self.plan.create_temp_table(self.outputtable)
-            sql = 'INSERT INTO %s %s' % (self.outputtable, sql)
-        return self.plan.sqlexec(sql, self.plan.args)
+        return ' '.join(sql)
 
     def visit_function(self, function):
         """generate SQL name for a function"""
-        return '%s(%s)' % (function.name,
-                           ','.join(c.accept(self) for c in function.children))
+        try:
+            return self.children[0].outputmap[str(function)]
+        except KeyError:
+            return '%s(%s)' % (function.name,
+                               ','.join(c.accept(self) for c in function.children))
 
     def visit_variableref(self, variableref):
         """get the sql name for a variable reference"""
