@@ -520,7 +520,7 @@ class FilterRQLBuilder(object):
     def build_rql(self):#, tablefilter=False):
         form = self._cw.form
         facetids = form['facets'].split(',')
-        select = parse(form['baserql']).children[0] # XXX Union unsupported yet
+        select = self._cw.vreg.parse(self._cw, form['baserql']).children[0] # XXX Union unsupported yet
         mainvar = filtered_variable(select)
         toupdate = []
         for facetid in facetids:
