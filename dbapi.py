@@ -532,8 +532,7 @@ class Connection(object):
             raise ProgrammingError('Closed connection')
         return self._repo.get_schema()
 
-    def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True,
-                        force_reload=None):
+    def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True):
         config = self.vreg.config
         if cubes is _MARKER:
             cubes = self._repo.get_cubes()
@@ -555,7 +554,7 @@ class Connection(object):
         cubes = reversed([config.cube_dir(p) for p in cubes])
         vpath = config.build_vregistry_path(cubes, evobjpath=esubpath,
                                             tvobjpath=subpath)
-        self.vreg.register_objects(vpath, force_reload)
+        self.vreg.register_objects(vpath)
         if self._cnxtype == 'inmemory':
             # should reinit hooks manager as well
             hm, config = self._repo.hm, self._repo.config
