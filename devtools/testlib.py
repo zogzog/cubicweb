@@ -220,7 +220,7 @@ class CubicWebTC(TestCase):
         else:
             try:
                 cls.cnx.rollback()
-            except:
+            except ProgrammingError:
                 pass
             cls._refresh_repo()
 
@@ -283,7 +283,10 @@ class CubicWebTC(TestCase):
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):
-        self.cnx.rollback()
+        try:
+            self.cnx.rollback()
+        except ProgrammingError:
+            pass
         for cnx in self._cnxs:
             if not cnx._closed:
                 cnx.close()
