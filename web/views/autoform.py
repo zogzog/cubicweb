@@ -296,12 +296,13 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link
         # id to removeInlineForm.
-        if card not in '?1':
+        if card == '?':
+            divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
+            return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
+                self.role, divid)
+        elif card in '+*':
             return "removeInlineForm('%%s', '%%s', '%s', '%%s')" % self.role
-        divid = "addNew%s%s%s:%s" % (
-            self.etype, self.rtype, self.role, self.peid)
-        return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
-            self.role, divid)
+        # don't do anything for card == '1'
 
     @cached
     def _entity(self):
