@@ -218,7 +218,10 @@ class CubicWebTC(TestCase):
         if not 'repo' in cls.__dict__:
             cls._build_repo()
         else:
-            cls.cnx.rollback()
+            try:
+                cls.cnx.rollback()
+            except:
+                pass
             cls._refresh_repo()
 
     @classmethod
@@ -280,6 +283,7 @@ class CubicWebTC(TestCase):
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):
+        self.cnx.rollback()
         for cnx in self._cnxs:
             if not cnx._closed:
                 cnx.close()
