@@ -741,10 +741,21 @@ class GenerateSchema(Command):
             p = Popen((viewer, out))
             p.wait()
 
+
+class GenerateQUnitHTML(Command):
+    """Generate a QUnit html file to see test in your browser"""
+    name = "qunit-html"
+    arguments = '<test file> [<dependancy js file>...]'
+
+    def run(self, args):
+        from cubicweb.devtools.qunit import make_qunit_html
+        print make_qunit_html(args[0], args[1:])
+
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    #LiveServerCommand,
                    NewCubeCommand,
                    ExamineLogCommand,
                    GenerateSchema,
+                   GenerateQUnitHTML,
                    ))
