@@ -20,7 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 import Cookie
-import sha
+import hashlib
 import time
 import random
 import base64
@@ -359,9 +359,9 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
-            sha.sha('%s%s%s%s' % (time.time(), func.__name__,
-                                  random.random(),
-                                  self.user.login)).hexdigest())
+            hashlib.sha('%s%s%s%s' % (time.time(), func.__name__,
+                                      random.random(),
+                                      self.user.login)).hexdigest())
         def _cb(req):
             try:
                 ret = func(req, *args)

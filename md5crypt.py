@@ -61,7 +61,7 @@ contains the following license in it:
 MAGIC = '$1$'                        # Magic string
 ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-import md5
+import hashlib as md5
 
 def to64 (v, n):
     ret = ''
