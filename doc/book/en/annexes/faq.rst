@@ -463,6 +463,13 @@ expression for an entity).
 
 You can find additional information in the section :ref:`securitymodel`.
 
+Is it possible to bypass security from the UI (web front) part ?
+----------------------------------------------------------------
+
+No.
+
+Only Hooks/Operations can do that.
+
 Can PostgreSQL and CubicWeb authentication work with kerberos ?
 ----------------------------------------------------------------
 
