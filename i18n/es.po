@@ -1,10 +1,10 @@
 # cubicweb i18n catalog
-# Copyright 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# Copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # Logilab <contact@logilab.fr>
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-11-27 07:59+0100\n"
+"PO-Revision-Date: 2010-11-27 07:59+0100\n"
 "Last-Translator: Celso Flores<jcelsoflores@gmail.com>\n"
 "Language-Team: es <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"

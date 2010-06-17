@@ -444,14 +444,20 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
-        values['removemsg'] = self._cw._('remove-inlined-entity-form')
-        w(u'<div class="iformTitle"><span>%(title)s</span> '
-          '#<span class="icounter">%(counter)s</span> '
-          '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
-          % values)
+        if values['removejs']:
+            values['removemsg'] = self._cw._('remove-inlined-entity-form')
+            w(u'<div class="iformTitle"><span>%(title)s</span> '
+              '#<span class="icounter">%(counter)s</span> '
+              '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
+              % values)
+        else:
+            w(u'<div class="iformTitle"><span>%(title)s</span> '
+              '#<span class="icounter">%(counter)s</span></div>'
+              % values)
+        # XXX that stinks
         # cleanup values
         for key in ('title', 'removejs', 'removemsg'):
-            values.pop(key)
+            values.pop(key, None)
         self.render_fields(w, form, values)
         w(u'</div></div>')
         return '\n'.join(data)

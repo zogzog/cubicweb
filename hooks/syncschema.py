@@ -1182,7 +1182,7 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                 source.fti_unindex_entity(session, entity.eid)
                 for container in entity.cw_adapt_to('IFTIndexable').fti_containers():
                     if still_fti or container is not entity:
-                        source.fti_unindex_entity(session, entity.eid)
+                        source.fti_unindex_entity(session, container.eid)
                         source.fti_index_entity(session, container)
         if len(to_reindex):
             # Transaction have already been committed

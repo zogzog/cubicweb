@@ -5,27 +5,26 @@ include pylintrc
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
-recursive-include doc *.txt *.zargo *.png *.html makefile *.rst
+recursive-include doc README makefile *.conf *.py *.rst *.txt *.html *.png *.svg *.zargo *.dia
 
-recursive-include misc *
-
-recursive-include web/data *
-recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
+recursive-include misc *.py *.png *.display
 
 include web/views/*.pt
-
-recursive-include etwist *.xml *.html
+recursive-include web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf
+recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
 
 recursive-include i18n *.pot *.po
 recursive-include schemas *.py *.sql
 
-recursive-include entities/test/data *
-recursive-include sobjects/test/data *
-recursive-include server/test/data *
-recursive-include server/test sources*
-recursive-include web/test/data *.js *.css *.png *.gif *.jpg *.ico external_resources
-recursive-include devtools/test/data *
+recursive-include test/data bootstrap_cubes *.py *.sql
+recursive-include entities/test/data bootstrap_cubes *.py
+recursive-include sobjects/test/data bootstrap_cubes *.py
+recursive-include hooks/test/data bootstrap_cubes *.py
+recursive-include server/test/data bootstrap_cubes *.py source*
+recursive-include web/test/data bootstrap_cubes *.py
+recursive-include devtools/test/data bootstrap_cubes *.py *.txt
 
 recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
 
 prune misc/cwfs
+prune goa

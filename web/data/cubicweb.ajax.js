@@ -390,9 +390,80 @@ function _loadDynamicFragments(node) {
         $(fragment.id).loadxhtml('json', ajaxFuncArgs('view', extraparams));
     }
 }
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/data/cubicweb.ajax.js
 jQuery(document).ready(function() {
     _loadDynamicFragments();
 });
+=======
+
+jQuery(document).ready(function() {loadDynamicFragments();});
+
+//============= base AJAX functions to make remote calls =====================//
+
+function remoteCallFailed(err, req) {
+    if (req.status == 500) {
+        updateMessage(err);
+    } else {
+        log(err);
+        updateMessage(_("an error occured while processing your request"));
+    }
+}
+
+
+/*
+ * This function will call **synchronously** a remote method on the cubicweb server
+ * @param fname: the function name to call (as exposed by the JSONController)
+ *
+ * additional arguments will be directly passed to the specified function
+ *
+ * It looks at http headers to guess the response type.
+ */
+function remoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {'fname' : fname, 'pageid' : pageid,
+                      'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    var result  = jQuery.ajax({url: JSON_BASE_URL, data: props, async: false}).responseText;
+    if (result) {
+        result = evalJSON(result);
+    }
+    resetCursor();
+    return result;
+}
+
+/*
+ * This function will call **asynchronously** a remote method on the json
+ * controller of the cubicweb http server
+ *
+ * @param fname: the function name to call (as exposed by the JSONController)
+ *
+ * additional arguments will be directly passed to the specified function
+ *
+ * It looks at http headers to guess the response type.
+ */
+
+function asyncRemoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {'fname' : fname, 'pageid' : pageid,
+                 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    // XXX we should inline the content of loadRemote here
+    var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
+    deferred = deferred.addErrback(remoteCallFailed);
+    deferred = deferred.addErrback(resetCursor);
+    deferred = deferred.addCallback(resetCursor);
+    return deferred;
+}
+
+
+/* emulation of gettext's _ shortcut
+ */
+function _(message) {
+    return remoteExec('i18n', [message])[0];
+}
+
+function userCallback(cbname) {
+    asyncRemoteExec('user_callback', cbname);
+}
+>>>>>>> /tmp/cubicweb.ajax.js~other.YR3yr8
 
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
