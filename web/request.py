@@ -20,7 +20,12 @@
 __docformat__ = "restructuredtext en"
 
 import Cookie
-import hashlib
+try:
+    import hashlib
+    hashlib.hash
+except AttributeError:
+    # python 2.5 ...
+    import sha as hashlib
 import time
 import random
 import base64
