@@ -4,7 +4,7 @@
  * copyright (c) 2006 Sam Collett (http://www.texotela.co.uk)
  *
  * Dual licensed under the MIT and GPL licenses.
- * Copyright (c) 2009 Anders Fajerson
+ * Copyright (c) 2010 Anders Fajerson
  * @name     timePicker
  * @version  0.2
  * @author   Anders Fajerson (http://perifer.se)

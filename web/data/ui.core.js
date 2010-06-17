@@ -1,7 +1,7 @@
 /*
  * jQuery UI @VERSION
  *
- * Copyright (c) 2008 Paul Bakaus (ui.jquery.com)
+ * Copyright (c) 2010 Paul Bakaus (ui.jquery.com)
  * Dual licensed under the MIT (MIT-LICENSE.txt)
  * and GPL (GPL-LICENSE.txt) licenses.
  *
