@@ -200,6 +200,7 @@ function remoteCallFailed(err, req) {
     if (req.status == 500) {
         updateMessage(err);
     } else {
+        log(err);
         updateMessage(_("an error occured while processing your request"));
     }
 }
