@@ -283,10 +283,8 @@ class CubicWebTC(TestCase):
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):
-        try:
+        if not self.cnx._closed:
             self.cnx.rollback()
-        except ProgrammingError:
-            pass
         for cnx in self._cnxs:
             if not cnx._closed:
                 cnx.close()
@@ -337,11 +335,12 @@ class CubicWebTC(TestCase):
 
     def restore_connection(self):
         if not self.cnx is self._orig_cnx[0]:
-            try:
+            if not cnx._closed:
                 self.cnx.close()
+            try:
                 self._cnxs.remove(self.cnx)
-            except ProgrammingError:
-                pass # already closed
+            except ValueError:
+                pass
         self.cnx, self.websession = self._orig_cnx
 
     # db api ##################################################################
@@ -373,7 +372,7 @@ class CubicWebTC(TestCase):
         try:
             self.cnx.rollback()
         except ProgrammingError:
-            pass
+            pass # connection closed
         finally:
             self.session.set_pool() # ensure pool still set after commit
 
