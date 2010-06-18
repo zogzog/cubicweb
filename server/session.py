@@ -285,7 +285,7 @@ class Session(RequestSessionBase):
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
         except (source.OperationalError, source.InterfaceError):
             source.warning("trying to reconnect")
-            self.pool.reconnect(self)
+            self.pool.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
     def set_language(self, language):
