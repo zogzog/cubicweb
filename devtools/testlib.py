@@ -335,7 +335,7 @@ class CubicWebTC(TestCase):
 
     def restore_connection(self):
         if not self.cnx is self._orig_cnx[0]:
-            if not cnx._closed:
+            if not self.cnx._closed:
                 self.cnx.close()
             try:
                 self._cnxs.remove(self.cnx)

@@ -16,9 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""This modules defines func / methods for creating test repositories
+"""This modules defines func / methods for creating test repositories"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from random import randint, choice
