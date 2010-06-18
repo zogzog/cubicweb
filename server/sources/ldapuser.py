@@ -520,12 +520,12 @@ directory (default to once a day).',
                 self.repo.delete_info(session, entity, self.uri, base)
                 self.reset_cache()
             return []
-##         except ldap.REFERRAL, e:
-##             cnx = self.handle_referral(e)
-##             try:
-##                 res = cnx.search_s(base, scope, searchstr, attrs)
-##             except ldap.PARTIAL_RESULTS:
-##                 res_type, res = cnx.result(all=0)
+        # except ldap.REFERRAL, e:
+        #     cnx = self.handle_referral(e)
+        #     try:
+        #         res = cnx.search_s(base, scope, searchstr, attrs)
+        #     except ldap.PARTIAL_RESULTS:
+        #         res_type, res = cnx.result(all=0)
         result = []
         for rec_dn, rec_dict in res:
             # When used against Active Directory, "rec_dict" may not be
@@ -553,7 +553,7 @@ directory (default to once a day).',
             self._cache[rec_dn] = rec_dict
             result.append(rec_dict)
         #print '--->', result
-        self.info('ldap built results %s', result)
+        self.info('ldap built results %s', len(result))
         return result
 
     def before_entity_insertion(self, session, lid, etype, eid):
