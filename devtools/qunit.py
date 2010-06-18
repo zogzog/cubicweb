@@ -53,7 +53,7 @@ class FirefoxHelper(object):
         stdout = TemporaryFile()
         stderr = TemporaryFile()
         try:
-          check_call(['firefox', '-no-remote', '-CreateProfile',
+          check_call(['firefox', '-safe-mode', '-no-remote', '-CreateProfile',
                       '%s %s' % (self._profile_name, self._tmp_dir)],
                                 stdout=stdout, stderr=stderr)
         except CalledProcessError, cpe:
@@ -65,7 +65,7 @@ class FirefoxHelper(object):
     def start(self, url):
         self.stop()
         fnull = open(os.devnull, 'w')
-        self._process = Popen(['firefox', '-no-remote', '-P', self._profile_name, url],
+        self._process = Popen(['firefox', '-safe-mode', '-no-remote', '-P', self._profile_name, url],
                               stdout=fnull, stderr=fnull)
 
     def stop(self):
