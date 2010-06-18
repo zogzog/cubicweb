@@ -77,6 +77,7 @@ include_dirs = [join('test', 'data'),
                 join('server', 'test', 'data'),
                 join('hooks', 'test', 'data'),
                 join('web', 'test', 'data'),
+                join('devtools', 'data'),
                 join('devtools', 'test', 'data'),
                 'schemas', 'skeleton']
 

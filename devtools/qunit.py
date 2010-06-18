@@ -262,7 +262,7 @@ def make_qunit_html(test_file, depends=(), server_data=None):
     """"""
     data = {
             'web_data': cw_path('web', 'data'),
-            'web_test': cw_path('web', 'test', 'jstests'),
+            'web_test': cw_path('devtools', 'data'),
         }
 
     html = ['''<html>
