@@ -731,7 +731,9 @@ given, appropriate sources for migration will be automatically selected \
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         if not self.config.fs_only and not toupgrade:
-            print '-> no software migration needed for instance %s.' % appid
+            print '-> no data migration needed for instance %s.' % appid
+            self.i18nupgrade(config)
+            mih.shutdown()
             return
         for cube, fromversion, toversion in toupgrade:
             print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
@@ -742,21 +744,10 @@ given, appropriate sources for migration will be automatically selected \
         mih.migrate(vcconf, reversed(toupgrade), self.config)
         # rewrite main configuration file
         mih.rewrite_configuration()
-        # handle i18n upgrade:
-        # * install new languages
-        # * recompile catalogs
-        # XXX search available language in the first cube given
-        from cubicweb import i18n
-        templdir = cwcfg.cube_dir(config.cubes()[0])
-        langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
-        errors = config.i18ncompile(langs)
-        if errors:
-            print '\n'.join(errors)
-            if not ASK.confirm('Error while compiling message catalogs, '
-                               'continue anyway ?'):
-                print '-> migration not completed.'
-                return
         mih.shutdown()
+        # handle i18n upgrade
+        if not self.i18nupgrade(config):
+            return
         print
         print '-> instance migrated.'
         if not (CWDEV or self.config.nostartstop):
@@ -768,6 +759,22 @@ given, appropriate sources for migration will be automatically selected \
                 print '%s exited with status %s' % (forkcmd, status)
         print
 
+    def i18nupgrade(self, config):
+        # handle i18n upgrade:
+        # * install new languages
+        # * recompile catalogs
+        # XXX search available language in the first cube given
+        from cubicweb import i18n
+        templdir = cwcfg.cube_dir(config.cubes()[0])
+        langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
+        errors = config.i18ncompile(langs)
+        if errors:
+            print '\n'.join(errors)
+            if not ASK.confirm('Error while compiling message catalogs, '
+                               'continue anyway?'):
+                print '-> migration not completed.'
+                return False
+        return True
 
 class ShellCommand(Command):
     """Run an interactive migration shell on an instance. This is a python shell
