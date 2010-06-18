@@ -1096,7 +1096,8 @@ class SQLGenerator(object):
         operator = mexpr.operator
         try:
             if mexpr.operator == '+' and mexpr.get_type(self._state.solution, self._args) == 'String':
-                operator = '||'
+                return '(%s)' % self.dbhelper.sql_concat_string(lhs.accept(self),
+                                                                rhs.accept(self))
         except CoercionError:
             pass
         return '(%s %s %s)'% (lhs.accept(self), operator, rhs.accept(self))
