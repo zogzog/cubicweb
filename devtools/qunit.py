@@ -132,9 +132,11 @@ class QUnitTestCase(CubicWebServerTC):
 
 
         # generate html test file
+        jquery_dir = self.config.locate_resource('jquery.js')
         html_test_file = NamedTemporaryFile(suffix='.html')
         html_test_file.write(make_qunit_html(test_file, depends,
-                             server_data=(self.test_host, self.test_port)))
+                             server_data=(self.test_host, self.test_port),
+                             web_data_path=jquery_dir))
         html_test_file.flush()
         # copying data file
         for data in data_files:
@@ -258,10 +260,11 @@ def build_js_script( host, port):
     }
     """ % (host, port)
 
-def make_qunit_html(test_file, depends=(), server_data=None):
+def make_qunit_html(test_file, depends=(), server_data=None,
+                    web_data_path=cw_path('web', 'data')):
     """"""
     data = {
-            'web_data': cw_path('web', 'data'),
+            'web_data': web_data_path,
             'web_test': cw_path('devtools', 'data'),
         }
 
