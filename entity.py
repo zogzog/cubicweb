@@ -640,15 +640,11 @@ class Entity(AppObject):
             if rschema.final:
                 continue
             targets = rschema.objects(self.e_schema)
-            if len(targets) > 1:
-                # ambigous relations, the querier doesn't handle
-                # outer join correctly in this case
-                continue
             if rschema.inlined:
                 matching_groups = self._cw.user.matching_groups
-                rdef = rschema.rdef(self.e_schema, targets[0])
-                if matching_groups(rdef.get_groups('read')) and \
-                   all(matching_groups(e.get_groups('read')) for e in targets):
+                if all(matching_groups(e.get_groups('read')) and
+                       rschema.rdef(self.e_schema, e).get_groups('read')
+                       for e in targets):
                     yield rschema, 'subject'
 
     def _cw_to_complete_attributes(self, skip_bytes=True, skip_pwd=True):
@@ -701,22 +697,16 @@ class Entity(AppObject):
                 rtype = rschema.type
                 if self.cw_relation_cached(rtype, role):
                     continue
+                # at this point we suppose that:
+                # * this is a inlined relation
+                # * entity (self) is the subject
+                # * user has read perm on the relation and on the target entity
+                assert rschema.inlined
+                assert role == 'subject'
                 var = varmaker.next()
-                targettype = rschema.targets(self.e_schema, role)[0]
-                rdef = rschema.role_rdef(self.e_schema, targettype, role)
-                card = rdef.role_cardinality(role)
-                assert card in '1?', '%s %s %s %s' % (self.e_schema, rtype,
-                                                      role, card)
-                if role == 'subject':
-                    if card == '1':
-                        rql.append('%s %s %s' % (V, rtype, var))
-                    else:
-                        rql.append('%s %s %s?' % (V, rtype, var))
-                else:
-                    if card == '1':
-                        rql.append('%s %s %s' % (var, rtype, V))
-                    else:
-                        rql.append('%s? %s %s' % (var, rtype, V))
+                # keep outer join anyway, we don't want .complete to crash on
+                # missing mandatory relation (see #1058267)
+                rql.append('%s %s %s?' % (V, rtype, var))
                 selected.append(((rtype, role), var))
         if selected:
             # select V, we need it as the left most selected variable
