@@ -131,8 +131,7 @@ class Session(RequestSessionBase):
         self.user = user
         self.repo = repo
         self.cnxtype = cnxprops.cnxtype
-        self.creation = time()
-        self.timestamp = self.creation
+        self.timestamp = time()
         self.default_mode = 'read'
         # support undo for Create Update Delete entity / Add Remove relation
         if repo.config.creating or repo.config.repairing or self.is_internal_session:
@@ -651,6 +650,7 @@ class Session(RequestSessionBase):
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
+        self.timestamp = time() # update timestamp
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
         return rset
