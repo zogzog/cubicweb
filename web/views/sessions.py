@@ -82,7 +82,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
         """
-        self.info('closing http session %s' % session)
+        self.info('closing http session %s' % session.sessionid)
         del self._sessions[session.sessionid]
         try:
             session.cnx.close()
