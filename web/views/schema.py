@@ -578,7 +578,7 @@ class RDEFConstraintsCell(EntityView):
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema.rschema(entity.rtype.name)
         rdef = rschema.rdefs[(entity.stype.name, entity.otype.name)]
-        constraints = [xml_escape(str(c)) for c in getattr(rdef, 'constraints')]
+        constraints = [xml_escape(unicode(c)) for c in getattr(rdef, 'constraints')]
         self.w(u'<br/>'.join(constraints))
 
 class CWAttributeOptionsCell(EntityView):
