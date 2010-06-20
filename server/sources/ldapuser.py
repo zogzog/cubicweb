@@ -242,7 +242,7 @@ directory (default to once a day).',
                             if emailaddr == ldapemailaddr:
                                 break
                         else:
-                            self.info('updating email address of user %s to %s',
+                            self.debug('updating email address of user %s to %s',
                                       extid, ldapemailaddr)
                             emailrset = execute('EmailAddress A WHERE A address %(addr)s',
                                                 {'addr': ldapemailaddr})
@@ -504,7 +504,7 @@ directory (default to once a day).',
     def _search(self, session, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
-        self.info('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
+        self.debug('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
         cnx = session.pool.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
@@ -564,7 +564,7 @@ directory (default to once a day).',
         This method must return the an Entity instance representation of this
         entity.
         """
-        self.info('ldap before entity insertion')
+        self.debug('ldap before entity insertion')
         entity = super(LDAPUserSource, self).before_entity_insertion(session, lid, etype, eid)
         res = self._search(session, lid, BASE)[0]
         for attr in entity.e_schema.indexable_attributes():
@@ -575,7 +575,7 @@ directory (default to once a day).',
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
-        self.info('ldap after entity insertion')
+        self.debug('ldap after entity insertion')
         super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
