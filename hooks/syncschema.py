@@ -83,7 +83,7 @@ def add_inline_relation_column(session, etype, rtype):
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        session.system_sql(str('ALTER TABLE %s ADD COLUMN %s integer'
+        session.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
     except:
@@ -376,7 +376,7 @@ class SourceDbCWAttributeAdd(hook.Operation):
         table = SQL_PREFIX + rdef.subject
         column = SQL_PREFIX + rdef.name
         try:
-            session.system_sql(str('ALTER TABLE %s ADD COLUMN %s %s'
+            session.system_sql(str('ALTER TABLE %s ADD %s %s'
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
