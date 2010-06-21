@@ -1146,8 +1146,6 @@ class SQLGenerator(object):
                 _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
-            if isinstance(value, unicode):
-                value = value.encode(self.dbencoding)
             self._query_attrs[_id] = value
         return '%%(%s)s' % _id
 
