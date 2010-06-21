@@ -21,8 +21,8 @@
 - perform physical update on the source when necessary
 
 checking for schema consistency is done in hooks.py
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from copy import copy
@@ -283,9 +283,10 @@ class SourceDbCWRTypeUpdate(hook.Operation):
                 sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
                         % (rtype, eidcolumn, column, table, column))
             # drop existant columns
-            for etype in rschema.subjects():
-                DropColumn(session, table=SQL_PREFIX + str(etype),
-                             column=SQL_PREFIX + rtype)
+            if session.repo.system_source.dbhelper.alter_column_support:
+                for etype in rschema.subjects():
+                    DropColumn(session, table=SQL_PREFIX + str(etype),
+                               column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
@@ -1011,8 +1012,9 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             if rset[0][0] == 0 and not subjschema.eid in pendings:
                 ptypes = session.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
-                DropColumn(session, table=SQL_PREFIX + subjschema.type,
-                           column=SQL_PREFIX + rschema.type)
+                if session.repo.system_source.dbhelper.alter_column_support:
+                    DropColumn(session, table=SQL_PREFIX + subjschema.type,
+                               column=SQL_PREFIX + rschema.type)
         elif lastrel:
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
