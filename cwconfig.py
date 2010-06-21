@@ -1005,7 +1005,7 @@ the repository',
         # overriden to register cube specific options
         mod = super(CubicWebConfiguration, self)._load_site_cubicweb(sitefile)
         if getattr(mod, 'options', None):
-            self.register_options(module.options)
+            self.register_options(mod.options)
             self.load_defaults()
 
     def init_log(self, logthreshold=None, debug=False, force=False):
