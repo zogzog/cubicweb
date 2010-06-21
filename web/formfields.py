@@ -949,7 +949,7 @@ def relvoc_linkedto(entity, rtype, role):
     linkedto = entity.linked_to(rtype, role)
     if linkedto:
         buildent = entity._cw.entity_from_eid
-        return [(buildent(eid).view('combobox'), eid) for eid in linkedto]
+        return [(buildent(eid).view('combobox'), unicode(eid)) for eid in linkedto]
     return []
 
 def relvoc_init(entity, rtype, role, required=False):
@@ -960,7 +960,7 @@ def relvoc_init(entity, rtype, role, required=False):
     # vocabulary doesn't include current values, add them
     if entity.has_eid():
         rset = entity.related(rtype, role)
-        vocab += [(e.view('combobox'), e.eid) for e in rset.entities()]
+        vocab += [(e.view('combobox'), unicode(e.eid)) for e in rset.entities()]
     return vocab
 
 def relvoc_unrelated(entity, rtype, role, limit=None):
@@ -1050,7 +1050,7 @@ class RelationField(Field):
             form.formvalues[(self, form)] = value
 
     def format_single_value(self, req, value):
-        return value
+        return unicode(value)
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
