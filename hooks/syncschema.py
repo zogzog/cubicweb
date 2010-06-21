@@ -144,15 +144,17 @@ class DropColumn(hook.Operation):
     table = column = None # make pylint happy
     def precommit_event(self):
         session, table, column = self.session, self.table, self.column
+        source = session.repo.system_source
         # drop index if any
-        session.pool.source('system').drop_index(session, table, column)
-        try:
+        source.drop_index(session, table, column)
+        if source.dbhelper.alter_column_support:
             session.system_sql('ALTER TABLE %s DROP COLUMN %s'
                                % (table, column), rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
-        except Exception, ex:
+        else:
             # not supported by sqlite for instance
-            self.error('error while altering table %s: %s', table, ex)
+            self.error('dropping column not supported by the backend, handle '
+                       'it yourself (%s.%s)', table, column)
 
 
 # base operations for in-memory schema synchronization  ########################
@@ -283,10 +285,10 @@ class SourceDbCWRTypeUpdate(hook.Operation):
                 sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
                         % (rtype, eidcolumn, column, table, column))
             # drop existant columns
-            if session.repo.system_source.dbhelper.alter_column_support:
-                for etype in rschema.subjects():
-                    DropColumn(session, table=SQL_PREFIX + str(etype),
-                               column=SQL_PREFIX + rtype)
+            #if session.repo.system_source.dbhelper.alter_column_support:
+            for etype in rschema.subjects():
+                DropColumn(session, table=SQL_PREFIX + str(etype),
+                           column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
@@ -1015,9 +1017,8 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             if rset[0][0] == 0 and not subjschema.eid in pendings:
                 ptypes = session.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
-                if session.repo.system_source.dbhelper.alter_column_support:
-                    DropColumn(session, table=SQL_PREFIX + subjschema.type,
-                               column=SQL_PREFIX + rschema.type)
+                DropColumn(session, table=SQL_PREFIX + subjschema.type,
+                           column=SQL_PREFIX + rschema.type)
         elif lastrel:
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
