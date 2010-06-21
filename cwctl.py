@@ -17,9 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """the cubicweb-ctl tool, based on logilab.common.clcommands to
 provide a pluggable commands system.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -477,22 +476,23 @@ running.'}),
 
     def start_instance(self, appid):
         """start the instance's server"""
-        force = self['force']
-        loglevel = self['loglevel']
         config = cwcfg.config_for(appid, debugmode=self['debug'])
-        if loglevel is not None:
-            loglevel = 'LOG_%s' % loglevel.upper()
-            config.global_set_option('log-threshold', loglevel)
-            config.init_log(loglevel, force=True)
+        init_cmdline_log_threshold(config, self['loglevel'])
         if self['profile']:
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
         pidf = config['pid-file']
-        if exists(pidf) and not force:
+        if exists(pidf) and not self['force']:
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
         helper.start_server(config)
+
+
+def init_cmdline_log_threshold(config, loglevel):
+    if loglevel is not None:
+        config.global_set_option('log-threshold', loglevel.upper())
+        config.init_log(config['log-threshold'], force=True)
 
 
 class StopInstanceCommand(InstanceCommand):

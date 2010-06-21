@@ -15,9 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-ctl commands and command handlers specific to the server.serverconfig
-
+"""cubicweb-ctl commands and command handlers specific to the
+server.serverconfig
 """
+
 __docformat__ = 'restructuredtext en'
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -251,11 +252,12 @@ class RepositoryStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'repository'
 
-    def start_server(self, ctlconf):
+    def start_server(self, config):
         command = ['cubicweb-ctl start-repository ']
-        if ctlconf.debugmode:
+        if config.debugmode:
             command.append('--debug')
-        command.append(self.config.appid)
+        command.append('--loglevel %s' % config['log-threshold'])
+        command.append(config.appid)
         os.system(' '.join(command))
 
 
@@ -264,8 +266,7 @@ class RepositoryStopHandler(CommandHandler):
     cfgname = 'repository'
 
     def poststop(self):
-        """if pyro is enabled, ensure the repository is correctly
-        unregistered
+        """if pyro is enabled, ensure the repository is correctly unregistered
         """
         if self.config.pyro_enabled():
             from cubicweb.server.repository import pyro_unregister
@@ -527,22 +528,28 @@ class StartRepositoryCommand(Command):
         ('debug',
          {'short': 'D', 'action' : 'store_true',
           'help': 'start server in debug mode.'}),
+        ('loglevel',
+         {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
+          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
         )
 
     def run(self, args):
         from logilab.common.daemon import daemonize
+        from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.server import RepositoryServer
         appid = pop_arg(args, msg='No instance specified !')
-        config = ServerConfiguration.config_for(appid)
-        if sys.platform == 'win32':
-            if not self.config.debug:
-                from logging import getLogger
-                logger = getLogger('cubicweb.ctl')
-                logger.info('Forcing debug mode on win32 platform')
-                self.config.debug = True
-        debug = self.config.debug
+        debug = self['debug']
+        if sys.platform == 'win32' and not debug:
+            from logging import getLogger
+            logger = getLogger('cubicweb.ctl')
+            logger.info('Forcing debug mode on win32 platform')
+            debug = True
+        config = ServerConfiguration.config_for(appid, debugmode=debug)
+        init_cmdline_log_threshold(config, self['loglevel'])
         # create the server
-        server = RepositoryServer(config, debug)
+        server = RepositoryServer(config)
         # ensure the directory where the pid-file should be set exists (for
         # instance /var/run/cubicweb may be deleted on computer restart)
         pidfile = config['pid-file']

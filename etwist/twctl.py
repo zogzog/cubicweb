@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-clt handlers for twisted
-
-"""
+"""cubicweb-clt handlers for twisted"""
 
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
