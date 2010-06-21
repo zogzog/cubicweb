@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Security hooks: check permissions to add/delete/update entities according to
 the user connected to a session
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from cubicweb import Unauthorized

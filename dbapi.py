@@ -20,10 +20,11 @@
 Take a look at http://www.python.org/peps/pep-0249.html
 
 (most parts of this document are reported here in docstrings)
-
 """
+
 __docformat__ = "restructuredtext en"
 
+from threading import currentThread
 from logging import getLogger
 from time import time, clock
 from itertools import count
@@ -403,6 +404,9 @@ class Cursor(object):
         """no effect"""
         pass
 
+    def _txid(self):
+        return self.connection._txid(self)
+
     def execute(self, rql, args=None, eid_key=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a :class:`~cubicweb.rset.ResultSet` object
@@ -438,7 +442,8 @@ class Cursor(object):
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
         # XXX use named argument for build_descr in case repo is < 3.8
-        rset = self._repo.execute(self._sessid, rql, args, build_descr=build_descr)
+        rset = self._repo.execute(self._sessid, rql, args,
+                                  build_descr=build_descr, txid=self._txid())
         rset.req = self.req
         return rset
 
@@ -492,6 +497,9 @@ class Connection(object):
         else:
             self.rollback()
             return False #propagate the exception
+
+    def _txid(self, cursor=None): # XXX could now handle various isolation level!
+        return currentThread().getName()
 
     def request(self):
         return DBAPIRequest(self.vreg, DBAPISession(self))
@@ -628,7 +636,7 @@ class Connection(object):
     def describe(self, eid):
         if self._closed is not None:
             raise ProgrammingError('Closed connection')
-        return self._repo.describe(self.sessionid, eid)
+        return self._repo.describe(self.sessionid, eid, txid=self._txid())
 
     def close(self):
         """Close the connection now (rather than whenever __del__ is called).
@@ -641,7 +649,7 @@ class Connection(object):
         """
         if self._closed:
             raise ProgrammingError('Connection is already closed')
-        self._repo.close(self.sessionid)
+        self._repo.close(self.sessionid, txid=self._txid())
         del self._repo # necessary for proper garbage collection
         self._closed = 1
 
@@ -655,7 +663,7 @@ class Connection(object):
         """
         if not self._closed is None:
             raise ProgrammingError('Connection is already closed')
-        return self._repo.commit(self.sessionid)
+        return self._repo.commit(self.sessionid, txid=self._txid())
 
     def rollback(self):
         """This method is optional since not all databases provide transaction
@@ -668,7 +676,7 @@ class Connection(object):
         """
         if not self._closed is None:
             raise ProgrammingError('Connection is already closed')
-        self._repo.rollback(self.sessionid)
+        self._repo.rollback(self.sessionid, txid=self._txid())
 
     def cursor(self, req=None):
         """Return a new Cursor Object using the connection.
@@ -709,6 +717,7 @@ class Connection(object):
           and set to false.
         """
         txinfos = self._repo.undoable_transactions(self.sessionid, ueid,
+                                                   txid=self._txid(),
                                                    **actionfilters)
         if req is None:
             req = self.request()
@@ -723,7 +732,8 @@ class Connection(object):
         allowed (eg not in managers group and the transaction doesn't belong to
         him).
         """
-        txinfo = self._repo.transaction_info(self.sessionid, txuuid)
+        txinfo = self._repo.transaction_info(self.sessionid, txuuid,
+                                             txid=self._txid())
         if req is None:
             req = self.request()
         txinfo.req = req
@@ -739,7 +749,8 @@ class Connection(object):
         session's user is not allowed (eg not in managers group and the
         transaction doesn't belong to him).
         """
-        return self._repo.transaction_actions(self.sessionid, txuuid, public)
+        return self._repo.transaction_actions(self.sessionid, txuuid, public,
+                                              txid=self._txid())
 
     def undo_transaction(self, txuuid):
         """Undo the given transaction. Return potential restoration errors.
@@ -748,4 +759,5 @@ class Connection(object):
         allowed (eg not in managers group and the transaction doesn't belong to
         him).
         """
-        return self._repo.undo_transaction(self.sessionid, txuuid)
+        return self._repo.undo_transaction(self.sessionid, txuuid,
+                                           txid=self._txid())

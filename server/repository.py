@@ -581,7 +581,8 @@ class Repository(object):
         session.commit()
         return session.id
 
-    def execute(self, sessionid, rqlstring, args=None, build_descr=True):
+    def execute(self, sessionid, rqlstring, args=None, build_descr=True,
+                txid=None):
         """execute a RQL query
 
         * rqlstring should be an unicode string or a plain ascii string
@@ -589,7 +590,7 @@ class Repository(object):
         * build_descr is a flag indicating if the description should be
           built on select queries
         """
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             try:
                 rset = self.querier.execute(session, rqlstring, args,
@@ -617,9 +618,9 @@ class Repository(object):
         finally:
             session.reset_pool()
 
-    def describe(self, sessionid, eid):
+    def describe(self, sessionid, eid, txid=None):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.type_and_source_from_eid(eid, session)
         finally:
@@ -645,32 +646,36 @@ class Repository(object):
         session = self._get_session(sessionid, setpool=False)
         session.set_shared_data(key, value, querydata)
 
-    def commit(self, sessionid):
+    def commit(self, sessionid, txid=None):
         """commit transaction for the session with the given id"""
         self.debug('begin commit for session %s', sessionid)
         try:
-            return self._get_session(sessionid).commit()
+            session = self._get_session(sessionid)
+            session.set_tx_data(txid)
+            return session.commit()
         except (ValidationError, Unauthorized):
             raise
         except:
             self.exception('unexpected error')
             raise
 
-    def rollback(self, sessionid):
+    def rollback(self, sessionid, txid=None):
         """commit transaction for the session with the given id"""
         self.debug('begin rollback for session %s', sessionid)
         try:
-            self._get_session(sessionid).rollback()
+            session = self._get_session(sessionid)
+            session.set_tx_data(txid)
+            session.rollback()
         except:
             self.exception('unexpected error')
             raise
 
-    def close(self, sessionid, checkshuttingdown=True):
+    def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
-        session = self._get_session(sessionid, setpool=True,
+        session = self._get_session(sessionid, setpool=True, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rollbacked before hook is called
-        session.rollback()
+        session.rollback(reset_pool=False)
         self.hm.call_hooks('session_close', session)
         # commit session at this point in case write operation has been done
         # during `session_close` hooks
@@ -701,34 +706,35 @@ class Repository(object):
         for prop, value in props.items():
             session.change_property(prop, value)
 
-    def undoable_transactions(self, sessionid, ueid=None, **actionfilters):
+    def undoable_transactions(self, sessionid, ueid=None, txid=None,
+                              **actionfilters):
         """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.undoable_transactions(session, ueid,
                                                             **actionfilters)
         finally:
             session.reset_pool()
 
-    def transaction_info(self, sessionid, txuuid):
+    def transaction_info(self, sessionid, txuuid, txid=None):
         """See :class:`cubicweb.dbapi.Connection.transaction_info`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.tx_info(session, txuuid)
         finally:
             session.reset_pool()
 
-    def transaction_actions(self, sessionid, txuuid, public=True):
+    def transaction_actions(self, sessionid, txuuid, public=True, txid=None):
         """See :class:`cubicweb.dbapi.Connection.transaction_actions`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.tx_actions(session, txuuid, public)
         finally:
             session.reset_pool()
 
-    def undo_transaction(self, sessionid, txuuid):
+    def undo_transaction(self, sessionid, txuuid, txid=None):
         """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.undo_transaction(session, txuuid)
         finally:
@@ -791,7 +797,8 @@ class Repository(object):
         session.set_pool()
         return session
 
-    def _get_session(self, sessionid, setpool=False, checkshuttingdown=True):
+    def _get_session(self, sessionid, setpool=False, txid=None,
+                     checkshuttingdown=True):
         """return the user associated to the given session identifier"""
         if checkshuttingdown and self._shutting_down:
             raise Exception('Repository is shutting down')
@@ -800,6 +807,7 @@ class Repository(object):
         except KeyError:
             raise BadConnectionId('No such session %s' % sessionid)
         if setpool:
+            session.set_tx_data(txid) # must be done before set_pool
             session.set_pool()
         return session
 

@@ -117,6 +117,9 @@ class security_enabled(object):
 #            print INDENT + 'reset write to', self.oldwrite
 
 
+class TransactionData(object):
+    def __init__(self, txid):
+        self.transactionid = txid
 
 class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
@@ -148,13 +151,31 @@ class Session(RequestSessionBase):
         # i18n initialization
         self.set_language(cnxprops.lang)
         # internals
-        self._threaddata = threading.local()
+        self._tx_data = {}
+        self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
 
     def __unicode__(self):
         return '<%ssession %s (%s 0x%x)>' % (
             self.cnxtype, unicode(self.user.login), self.id, id(self))
+
+    def set_tx_data(self, txid=None):
+        if txid is None:
+            txid = threading.currentThread().getName()
+        try:
+            self.__threaddata.txdata = self._tx_data[txid]
+        except KeyError:
+            self.__threaddata.txdata = self._tx_data[txid] = TransactionData(txid)
+
+    @property
+    def _threaddata(self):
+        try:
+            return self.__threaddata.txdata
+        except AttributeError:
+            self.set_tx_data()
+            return self.__threaddata.txdata
+
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
@@ -338,11 +359,14 @@ class Session(RequestSessionBase):
     @property
     def read_security(self):
         """return a boolean telling if read security is activated or not"""
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
         try:
-            return self._threaddata.read_security
+            return txstore.read_security
         except AttributeError:
-            self._threaddata.read_security = self.DEFAULT_SECURITY
-            return self._threaddata.read_security
+            txstore.read_security = self.DEFAULT_SECURITY
+            return txstore.read_security
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -351,8 +375,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        oldmode = self.read_security
-        self._threaddata.read_security = activated
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'read_security', self.DEFAULT_SECURITY)
+        txstore.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
         # issued on the session). This is tricky since we the execution model of
         # a (write) user query is:
@@ -369,18 +396,21 @@ class Session(RequestSessionBase):
         # else (False actually) is not perfect but should be enough
         #
         # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        self._threaddata.dbapi_query = (oldmode is self.DEFAULT_SECURITY
-                                        or activated is self.DEFAULT_SECURITY)
+        txstore.dbapi_query = (oldmode is self.DEFAULT_SECURITY
+                               or activated is self.DEFAULT_SECURITY)
         return oldmode
 
     @property
     def write_security(self):
         """return a boolean telling if write security is activated or not"""
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
         try:
-            return self._threaddata.write_security
+            return txstore.write_security
         except:
-            self._threaddata.write_security = self.DEFAULT_SECURITY
-            return self._threaddata.write_security
+            txstore.write_security = self.DEFAULT_SECURITY
+            return txstore.write_security
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -389,8 +419,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        oldmode = self.write_security
-        self._threaddata.write_security = activated
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'write_security', self.DEFAULT_SECURITY)
+        txstore.write_security = activated
         return oldmode
 
     @property
@@ -567,7 +600,6 @@ class Session(RequestSessionBase):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
         self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
-        self._threaddata.mode = self.default_mode
 
     # shared data handling ###################################################
 
@@ -657,18 +689,29 @@ class Session(RequestSessionBase):
         rset.req = self
         return rset
 
-    def _clear_thread_data(self):
+    def _clear_thread_data(self, reset_pool=True):
         """remove everything from the thread local storage, except pool
         which is explicitly removed by reset_pool, and mode which is set anyway
         by _touch
         """
-        store = self._threaddata
-        for name in ('commit_state', 'transaction_data', 'pending_operations',
-                     '_rewriter'):
-            try:
-                delattr(store, name)
-            except AttributeError:
-                pass
+        try:
+            txstore = self.__threaddata.txdata
+        except AttributeError:
+            pass
+        else:
+            if reset_pool:
+                self._tx_data.pop(txstore.transactionid, None)
+                try:
+                    del self.__threaddata.txdata
+                except AttributeError:
+                    pass
+            else:
+                for name in ('commit_state', 'transaction_data',
+                             'pending_operations', '_rewriter'):
+                    try:
+                        delattr(txstore, name)
+                    except AttributeError:
+                        continue
 
     def commit(self, reset_pool=True):
         """commit the current session's transaction"""
@@ -680,13 +723,13 @@ class Session(RequestSessionBase):
             return
         if self.commit_state:
             return
-        # by default, operations are executed with security turned off
-        with security_enabled(self, False, False):
-            # on rollback, an operation should have the following state
-            # information:
-            # - processed by the precommit/commit event or not
-            # - if processed, is it the failed operation
-            try:
+        # on rollback, an operation should have the following state
+        # information:
+        # - processed by the precommit/commit event or not
+        # - if processed, is it the failed operation
+        try:
+            # by default, operations are executed with security turned off
+            with security_enabled(self, False, False):
                 for trstate in ('precommit', 'commit'):
                     processed = []
                     self.commit_state = trstate
@@ -730,23 +773,22 @@ class Session(RequestSessionBase):
                                       exc_info=sys.exc_info())
                 self.info('%s session %s done', trstate, self.id)
                 return self.transaction_uuid(set=False)
-            finally:
-                self._clear_thread_data()
-                self._touch()
-                if reset_pool:
-                    self.reset_pool(ignoremode=True)
+        finally:
+            self._touch()
+            if reset_pool:
+                self.reset_pool(ignoremode=True)
+            self._clear_thread_data(reset_pool)
 
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
         if self.pool is None:
-            assert not self.pending_operations
             self._clear_thread_data()
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
             return
-        # by default, operations are executed with security turned off
-        with security_enabled(self, False, False):
-            try:
+        try:
+            # by default, operations are executed with security turned off
+            with security_enabled(self, False, False):
                 while self.pending_operations:
                     try:
                         operation = self.pending_operations.pop(0)
@@ -756,11 +798,11 @@ class Session(RequestSessionBase):
                         continue
                 self.pool.rollback()
                 self.debug('rollback for session %s done', self.id)
-            finally:
-                self._clear_thread_data()
-                self._touch()
-                if reset_pool:
-                    self.reset_pool(ignoremode=True)
+        finally:
+            self._touch()
+            if reset_pool:
+                self.reset_pool(ignoremode=True)
+            self._clear_thread_data(reset_pool)
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
@@ -782,7 +824,8 @@ class Session(RequestSessionBase):
                 self.error('thread %s still alive after 10 seconds, will close '
                            'session anyway', thread)
         self.rollback()
-        del self._threaddata
+        del self.__threaddata
+        del self._tx_data
 
     # transaction data/operations management ##################################
 
