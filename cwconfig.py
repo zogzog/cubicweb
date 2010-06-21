@@ -668,6 +668,7 @@ this option is set to yes",
         self.adjust_sys_path()
         self.load_defaults()
         self.translations = {}
+        self._site_loaded = set()
         # don't register ReStructured Text directives by simple import, avoid pb
         # with eg sphinx.
         # XXX should be done properly with a function from cw.uicfg
@@ -698,8 +699,7 @@ this option is set to yes",
             init_log(debug, syslog, logthreshold, logfile, self.log_format,
                      rotation_parameters={'when': 'W6', # every sunday
                                           'interval': 1,
-                                          'backupCount': 52,                                          
-                                         })
+                                          'backupCount': 52})
         else:
             init_log(debug, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
@@ -710,6 +710,34 @@ this option is set to yes",
         for application objects. By default return nothing in NoApp config.
         """
         return []
+
+    apphome = None
+
+    def load_site_cubicweb(self, paths=None):
+        """load instance's specific site_cubicweb file"""
+        if paths is None:
+            paths = self.cubes_path()
+            if self.apphome is not None:
+                paths = [self.apphome] + paths
+        for path in reversed(paths):
+            sitefile = join(path, 'site_cubicweb.py')
+            if exists(sitefile) and not sitefile in self._site_loaded:
+                self._load_site_cubicweb(sitefile)
+                self._site_loaded.add(sitefile)
+            else:
+                sitefile = join(path, 'site_erudi.py')
+                if exists(sitefile) and not sitefile in self._site_loaded:
+                    self._load_site_cubicweb(sitefile)
+                    self._site_loaded.add(sitefile)
+                    self.warning('[3.5] site_erudi.py is deprecated, should be '
+                                 'renamed to site_cubicweb.py')
+
+    def _load_site_cubicweb(self, sitefile):
+        # XXX extrapath argument to load_module_from_file only in lgc > 0.50.2
+        from logilab.common.modutils import load_module_from_modpath, modpath_from_file
+        module = load_module_from_modpath(modpath_from_file(sitefile, self.extrapath))
+        self.info('%s loaded', sitefile)
+        return module
 
     def eproperty_definitions(self):
         cfg = self.persistent_options_configuration()
@@ -892,7 +920,6 @@ the repository',
         self.appid = appid
         CubicWebNoAppConfiguration.__init__(self)
         self._cubes = None
-        self._site_loaded = set()
         self.load_file_configuration(self.main_config_file())
 
     def adjust_sys_path(self):
@@ -967,43 +994,19 @@ the repository',
             infos.append('%s-%s' % (pkg, version))
         return md5.new(';'.join(infos)).hexdigest()
 
-    def load_site_cubicweb(self):
-        """load instance's specific site_cubicweb file"""
-        paths = self.cubes_path()
-        if self.apphome is not None:
-            paths = [self.apphome] + paths
-        for path in reversed(paths):
-            sitefile = join(path, 'site_cubicweb.py')
-            if exists(sitefile) and not sitefile in self._site_loaded:
-                self._load_site_cubicweb(sitefile)
-                self._site_loaded.add(sitefile)
-            else:
-                sitefile = join(path, 'site_erudi.py')
-                if exists(sitefile) and not sitefile in self._site_loaded:
-                    self._load_site_cubicweb(sitefile)
-                    self._site_loaded.add(sitefile)
-                    self.warning('[3.5] site_erudi.py is deprecated, should be '
-                                 'renamed to site_cubicweb.py')
-
-    def _load_site_cubicweb(self, sitefile):
-        # XXX extrapath argument to load_module_from_file only in lgc > 0.46
-        from logilab.common.modutils import load_module_from_modpath, modpath_from_file
-        def load_module_from_file(filepath, path=None, use_sys=1, extrapath=None):
-            return load_module_from_modpath(modpath_from_file(filepath, extrapath),
-                                            path, use_sys)
-        module = load_module_from_file(sitefile, extrapath=self.extrapath)
-        self.info('%s loaded', sitefile)
-        # cube specific options
-        if getattr(module, 'options', None):
-            self.register_options(module.options)
-            self.load_defaults()
-
     def load_configuration(self):
         """load instance's configuration files"""
         super(CubicWebConfiguration, self).load_configuration()
         if self.apphome and self.set_language:
             # init gettext
             self._set_language()
+
+    def _load_site_cubicweb(self, sitefile):
+        # overriden to register cube specific options
+        mod = super(CubicWebConfiguration, self)._load_site_cubicweb(sitefile)
+        if getattr(mod, 'options', None):
+            self.register_options(module.options)
+            self.load_defaults()
 
     def init_log(self, logthreshold=None, debug=False, force=False):
         """init the log service"""
@@ -1099,7 +1102,8 @@ the repository',
             SMTP_LOCK.release()
         return True
 
-set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration'))
+set_log_methods(CubicWebNoAppConfiguration,
+                logging.getLogger('cubicweb.configuration'))
 
 # alias to get a configuration instance from an instance id
 instance_configuration = CubicWebConfiguration.config_for

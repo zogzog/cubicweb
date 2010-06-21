@@ -554,18 +554,12 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
-        cubes = reversed([config.cube_dir(p) for p in cubes])
-        vpath = config.build_vregistry_path(cubes, evobjpath=esubpath,
+        cubespath = [config.cube_dir(p) for p in cubes]
+        config.load_site_cubicweb(cubespath)
+        vpath = config.build_vregistry_path(reversed(cubespath),
+                                            evobjpath=esubpath,
                                             tvobjpath=subpath)
         self.vreg.register_objects(vpath)
-        if self._cnxtype == 'inmemory':
-            # should reinit hooks manager as well
-            hm, config = self._repo.hm, self._repo.config
-            hm.set_schema(hm.schema) # reset structure
-            hm.register_system_hooks(config)
-            # instance specific hooks
-            if self._repo.config.instance_hooks:
-                hm.register_hooks(config.load_hooks(self.vreg))
 
     def use_web_compatible_requests(self, baseurl, sitetitle=None):
         """monkey patch DBAPIRequest to fake a cw.web.request, so you should
