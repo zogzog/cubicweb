@@ -19,14 +19,18 @@ class SessionTC(CubicWebTC):
         self.assertEquals(self.websession.sessionid, self.websession.cnx.sessionid)
         # fake the repo session is expiring
         self.repo.close(sessionid)
-        # fake an incoming http query with sessionid in session cookie
-        # don't use self.request() which try to call req.set_session
-        req = self.requestcls(self.vreg)
-        websession = sm.get_session(req, sessionid)
-        self.assertEquals(len(sm._sessions), 1)
-        self.assertIs(websession, self.websession)
-        self.assertEquals(websession.sessionid, sessionid)
-        self.assertNotEquals(websession.sessionid, websession.cnx.sessionid)
+        try:
+            # fake an incoming http query with sessionid in session cookie
+            # don't use self.request() which try to call req.set_session
+            req = self.requestcls(self.vreg)
+            websession = sm.get_session(req, sessionid)
+            self.assertEquals(len(sm._sessions), 1)
+            self.assertIs(websession, self.websession)
+            self.assertEquals(websession.sessionid, sessionid)
+            self.assertNotEquals(websession.sessionid, websession.cnx.sessionid)
+        finally:
+            # avoid error in tearDown by telling this connection is closed...
+            self.cnx._closed = True
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

@@ -1443,6 +1443,12 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
             self.o.attr_map.clear()
 
 
+    def test_concat_string(self):
+        self._check('Any "A"+R WHERE X ref R',
+                    '''SELECT (A || _X.cw_ref)
+FROM cw_Affaire AS _X''')
+
+
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
 

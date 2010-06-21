@@ -21,8 +21,8 @@
 - perform physical update on the source when necessary
 
 checking for schema consistency is done in hooks.py
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from copy import copy
@@ -84,7 +84,7 @@ def add_inline_relation_column(session, etype, rtype):
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        session.system_sql(str('ALTER TABLE %s ADD COLUMN %s integer'
+        session.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
     except:
@@ -145,15 +145,17 @@ class DropColumn(hook.Operation):
     table = column = None # make pylint happy
     def precommit_event(self):
         session, table, column = self.session, self.table, self.column
+        source = session.repo.system_source
         # drop index if any
-        session.pool.source('system').drop_index(session, table, column)
-        try:
+        source.drop_index(session, table, column)
+        if source.dbhelper.alter_column_support:
             session.system_sql('ALTER TABLE %s DROP COLUMN %s'
                                % (table, column), rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
-        except Exception, ex:
+        else:
             # not supported by sqlite for instance
-            self.error('error while altering table %s: %s', table, ex)
+            self.error('dropping column not supported by the backend, handle '
+                       'it yourself (%s.%s)', table, column)
 
 
 # base operations for in-memory schema synchronization  ########################
@@ -284,9 +286,10 @@ class SourceDbCWRTypeUpdate(hook.Operation):
                 sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
                         % (rtype, eidcolumn, column, table, column))
             # drop existant columns
+            #if session.repo.system_source.dbhelper.alter_column_support:
             for etype in rschema.subjects():
                 DropColumn(session, table=SQL_PREFIX + str(etype),
-                             column=SQL_PREFIX + rtype)
+                           column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
@@ -377,7 +380,7 @@ class SourceDbCWAttributeAdd(hook.Operation):
         table = SQL_PREFIX + rdef.subject
         column = SQL_PREFIX + rdef.name
         try:
-            session.system_sql(str('ALTER TABLE %s ADD COLUMN %s %s'
+            session.system_sql(str('ALTER TABLE %s ADD %s %s'
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
@@ -552,8 +555,8 @@ class SourceDbCWConstraintAdd(hook.Operation):
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
                 session.system_sql(sql, rollback_on_failure=False)
-                self.info('altered column %s of table %s: now VARCHAR(%s)',
-                          column, table, newcstr.max)
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -568,16 +571,19 @@ class SourceDbCWConstraintDel(hook.Operation):
 
     def precommit_event(self):
         cstrtype = self.cstr.type()
-        table = SQL_PREFIX + str(self.subjtype)
-        column = SQL_PREFIX + str(self.rtype)
+        table = SQL_PREFIX + str(self.rdef.subject)
+        column = SQL_PREFIX + str(self.rdef.rtype)
         # alter the physical schema on size/unique constraint changes
         if cstrtype == 'SizeConstraint':
             try:
-                self.session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE TEXT'
-                                        % (table, column),
-                                        rollback_on_failure=False)
-                self.info('altered column %s of table %s: now TEXT',
-                          column, table)
+                adbh = self.session.pool.source('system').dbhelper
+                coltype = y2sql.type_from_constraints(adbh, rdef.object, [],
+                                                      creating=False)
+                sql = adbh.sql_change_col_type(table, column, coltype,
+                                               rdef.cardinality != '1')
+                self.session.system_sql(sql, rollback_on_failure=False)
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -1112,8 +1118,7 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
-            SourceDbCWConstraintDel(self._cw, cstr=cstr,
-                                    subjtype=rdef.subject, rtype=rdef.rtype)
+            SourceDbCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
             MemSchemaCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
 
 
