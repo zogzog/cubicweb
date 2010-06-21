@@ -6,78 +6,35 @@
  */
 
 /******************************************************************************/
-/* security edition form (views/management.py)                                */
+/* security edition form (views/management.py)   web/views/schema.py          */
 /******************************************************************************/
 
 h2.schema{
- background : #ff7700;
- color: #fff;
- font-weight: bold;
- padding : 0.1em 0.3em;
+ color: %(aColor)s;
 }
 
-
-h3.schema{
- font-weight: bold;
-}
-
-h4 a,
-h4 a:link,
-h4 a:visited{
- color:#000;
- }
-
-table.schemaInfo {
-  margin: 1em 0em;
-  text-align: left;
-  border: 1px solid black;
-  border-collapse: collapse;
-  width:100%;
-}
-
-table.schemaInfo th,
-table.schemaInfo td {
-  padding: .3em .5em;
-  border: 1px solid grey;
-  width:33%;
-}
-
-
-table.schemaInfo tr th {
- padding: 0.2em 0px 0.2em 5px;
- background-image:none;
- background-color:#dfdfdf;
-}
-
-table.schemaInfo thead tr {
-  border: 1px solid #dfdfdf;
-}
-
-table.schemaInfo td {
-  padding: 3px 10px 3px 5px;
-
-}
-
-a.users{
+table.schemaInfo td a.users{
  color : #00CC33;
- font-weight: bold }
-
-a.guests{
- color :  #ff7700;
  font-weight: bold;
 }
 
-a.owners{
- color : #8b0000;
+table.schemaInfo td a.guests{
+ color:  #ff7700;
  font-weight: bold;
 }
 
-a.managers{
+table.schemaInfo td a.owners{
+ color: #8b0000;
+ font-weight: bold;
+}
+
+table.schemaInfo td a.managers{
  color: #000000;
+ font-weight: bold;
 }
 
 .discret,
-a.grey{
+table.schemaInfo td a.grey{
  color:#666;
 }
 
@@ -86,39 +43,9 @@ a.grey:hover{
 }
 
 .red{
- color :  #ff7700;
+ color:  #ff7700;
  }
 
 div#schema_security{
  width:100%;
  }
-/******************************************************************************/
-/* user groups edition form (views/euser.py)                                  */
-/******************************************************************************/
-
-table#groupedit {
-  margin: 1ex 1em;
-  text-align: left;
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-
-table#groupedit th,
-table#groupedit td {
-  padding: 0.5em 1em;
-}
-
-table#groupedit tr {
-  border-bottom: 1px solid black;
-}
-
-table#groupedit tr.nogroup {
-  border: 1px solid red;
-  margin: 1px;
-}
-
-table#groupedit td {
-  text-align: center;
-  padding: 0.5em;
-}
-

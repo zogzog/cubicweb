@@ -4,8 +4,20 @@ div.calpopup {
   margin-top: 0px;
 }
 
-/* quick and dirty solution for pop to be 
+/* quick and dirty solution for pop to be
    correctly displayed on right edge of window */
-div.popupWrapper{ 
+div.popupWrapper{
   direction:rtl;
 }
+
+div#rqlinput input.rqlsubmit{
+  height: 24px;
+  width: 24px;
+}
+
+
+table#mainLayout #navColumnLeft,
+table#mainLayout #navColumnRight {
+  width: auto;
+}
+

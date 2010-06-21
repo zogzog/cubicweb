@@ -87,8 +87,8 @@ class SecurityViewMixIn(object):
         self._cw.add_css('cubicweb.acl.css')
         w = self.w
         _ = self._cw._
-        w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+        w(u'<table class="listing schemaInfo">')
+        w(u'<tr><th width="15%%">%s</th><th wdith="25%%">%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
         for action in erschema.ACTIONS:
             w(u'<tr><td>%s</td><td>' % _(action))
@@ -203,13 +203,13 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
         url = xml_escape(self._cw.build_url('schema'))
         self.w(u'<div id="schema_security">')
         self.w(u'<h2 class="schema">%s</h2>' % _('Index'))
-        self.w(u'<h4 id="entities">%s</h4>' % _('Entity types'))
+        self.w(u'<h3 id="entities">%s</h3>' % _('Entity types'))
         ents = []
         for eschema in sorted(entities):
             ents.append(u'<a class="grey" href="%s#%s">%s</a>' % (
                 url,  eschema.type, eschema.type))
         self.w(u', '.join(ents))
-        self.w(u'<h4 id="relations">%s</h4>' % _('Relation types'))
+        self.w(u'<h3 id="relations">%s</h3>' % _('Relation types'))
         rels = []
         for rschema in sorted(relations):
             rels.append(u'<a class="grey" href="%s#%s">%s</a>' %  (

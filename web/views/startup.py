@@ -99,7 +99,7 @@ class ManageView(StartupView):
         views = self._cw.vreg['views'].possible_views(self._cw, None)
         if not views:
             return
-        self.w(u'<ul>')
+        self.w(u'<ul class="startup">')
         for v in sorted(views, key=lambda x: self._cw._(x.title)):
             if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue

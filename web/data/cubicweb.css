@@ -10,7 +10,7 @@
 
 /* scale and rhythm cf http://lamb.cc/typograph/ */
 body {
-  font-family:  %(defaultFont)s;
+  font-family:  %(defaultFontFamily)s;
   font-size: %(defaultSize)s;
   line-height: %(defaultLineHeight)s;
   color: %(defaultColor)s;
@@ -37,10 +37,16 @@ h3 { font-size: %(h3FontSize)s; }
 
 /* paddings */
 h1 {
-    border-bottom: %(h1BorderBottomStyle)s;
-    padding: %(h1Padding)s;
-    margin: %(h1Margin)s;
+  border-bottom: %(h1BorderBottomStyle)s;
+  padding: %(h1Padding)s;
+  margin: %(h1Margin)s;
+  color: %(h1Color)s;
 }
+
+h1.plain {
+ border-bottom: none;
+}
+
 h2 { padding: %(h2Padding)s; }
 h3 { padding: %(h3Padding)s; }
 
@@ -73,10 +79,10 @@ pre {
   clear: both;
   font-family: 'Courier New', monospace;
   letter-spacing: 0.015em;
-  padding: 0.5em;
-  margin: 0 1.5em 1.5em;
-  background-color: #f0f0f0;
-  border: 1px solid #ccbca7;
+  padding: 0.6em;
+  margin: 0 2em 1.7em;
+  background-color: %(listingHihligthedBgColor)s;
+  border: 1px solid %(listingBorderColor)s;
 }
 
 p {
@@ -84,9 +90,13 @@ p {
   margin-bottom: %(defaultLineHeightEm)s;
 }
 
-ol, ul {
-  list-style-type: disc;
-  margin-bottom: %(defaultLineHeightEm)s;
+ul {
+   margin-bottom: %(defaultLineHeightEm)s;
+}
+
+ol {
+  list-style-type: decimal;
+ /* margin-bottom: %(defaultLineHeightEm)s; */
 }
 
 ol ol,
@@ -95,14 +105,23 @@ ul ul{
   margin-bottom : 0px;
 }
 
-p + ul {
-  margin-top: -%(defaultLineHeightEm)s;
-}
+/* p + ul { */
+/*   margin-top: -%(defaultLineHeightEm)s; */
+/* } */
 
 li {
   margin-left: 1.5em;
 }
 
+img{
+ border: none;
+}
+
+fieldset {
+  border: none;
+}
+
+h1 a, h1 a:active, h1 a:visited, h1 a:link,
 h2 a, h2 a:active, h2 a:visited, h2 a:link,
 h3 a, h3 a:active, h3 a:visited, h3 a:link {
   color: inherit;
@@ -110,18 +129,29 @@ h3 a, h3 a:active, h3 a:visited, h3 a:link {
 }
 
 input, textarea {
+  padding: 0.1em 0.2em;
+  vertical-align: bottom;
   border: 1px solid %(pageContentBorderColor)s;
-  padding: 0.1em;
-  vertical-align: middle;
+
 }
 
 input:focus {
   border: 1px inset %(headerBgColor)s;
 }
 
+hr{
+  border: none;
+  border-bottom: 1px solid %(defaultColor)s;
+  height: 1px;
+}
+
 /***************************************/
 /* generic classes                     */
 /***************************************/
+
+h1 a:hover {
+ text-decoration: none;
+}
 
 .odd {
   background-color: #f7f6f1;
@@ -134,6 +164,12 @@ input:focus {
 .hr {
   border-bottom: 1px dotted %(pageContentBorderColor)s;
   height: 17px;
+}
+
+hr.boxSeparator{
+  border: none;
+  border-bottom: 1px solid %(listingBorderColor)s;
+  height: 1px;
 }
 
 .left {
@@ -154,7 +190,6 @@ input:focus {
 }
 
 li.invisible {
-  list-style: none;
   background: none;
   padding: 0px 0px 1px 1px;
 }
@@ -170,7 +205,7 @@ li.invisible div{
 /* header */
 
 table#header {
-  background: %(headerBgColor)s url("banner.png") left top repeat-x;
+  background: %(headerBgColor)s url("banner.png") repeat-x top left;
   text-align: left;
 }
 
@@ -197,15 +232,20 @@ table#header td#headtext {
 }
 
 /* Popup on login box and userActionBox */
-div.popupWrapper{
-  position:relative;
-  z-index:100;
+div.popupWrapper {
+  position: relative;
+  z-index: 100;
 }
 
 div.popup {
   position: absolute;
   background: #fff;
-  border: 1px solid #fff;
+  /* background-color: #f0eff0; */
+  /* background-image: url(popup.png); */
+  /* background-repeat: repeat-x; */
+  /* background-positon: top left; */
+  border: 1px solid %(listingBorderColor)s;
+  border-top: none;
   text-align: left;
   z-index: 400;
 }
@@ -215,15 +255,9 @@ div.popup ul li a {
   color: #000;
 }
 
-/* FIXME appear with 4px width in IE6 */
-div#stateheader{
-  min-width: 66%;
-}
-
 /* main zone */
 
 div#page {
-  min-height: %(pageMinHeight)s;
   margin: %(defaultLayoutMargin)s;
 }
 
@@ -239,15 +273,22 @@ table#mainLayout #navColumnRight {
 
 div#pageContent {
   clear: both;
-/*  margin-top:-1px; /* enable when testing rhythm */
+  /* margin-top:-1px; *//* enable when testing rhythm */
   background: %(pageContentBgColor)s;
   border: 1px solid %(pageContentBorderColor)s;
-  padding: 0px %(pageContentPadding)s %(pageContentPadding)s;
+  padding: 0 %(pageContentPadding)s %(pageContentPadding)s;
 }
 
+div#pageContent #contentmain .pagination {
+  margin-top: 0;
+}
 
-div#breadcrumbs {
-  padding: %(pageContentPadding)s 0 0 0;
+div#pageContent .pagination{
+  margin-top: 1.5em;
+}
+
+div#contentmain{
+  margin-top: %(pageContentPadding)s
 }
 
 /*FIXME */
@@ -263,14 +304,12 @@ div#breadcrumbs {
 /* rql bar */
 
 div#rqlinput {
-  margin-bottom: 8px;
-  padding: 3px;
-  background: %(actionBoxTitleBgColor)s;
-  border: 1px solid %(actionBoxTitleBgColor)s;
+  margin-bottom: %(defaultLayoutMargin)s;
 }
 
 input#rql{
-  width: 95%;
+  padding: 0.25em 0.3em;
+  width: 99%;
 }
 
 /* boxes */
@@ -281,21 +320,20 @@ div.boxFrame {
 
 div.boxTitle {
   overflow: hidden;
-  font: bold 100% Georgia;
+  font-weight: bold;
   color: #fff;
-  padding: 0px 0px 0.2em;
-  background: %(headerBgColor)s url("search.png") left bottom repeat-x;
+  background: %(boxTitleBgColor)s url("header.png") repeat-x 50% 50%;
 }
 
 div.boxTitle span,
 div.sideBoxTitle span {
-  padding: 0px 5px;
+  padding: 0px 0.5em;
   white-space: nowrap;
 }
 
 div.searchBoxFrame div.boxTitle,
 div.greyBoxFrame div.boxTitle {
-  background: %(actionBoxTitleBgColor)s;
+  background: %(actionBoxTitleBgColor)s url("actionBoxHeader.png") repeat-x 50% 50% ;
 }
 
 div.sideBoxTitle span,
@@ -317,72 +355,17 @@ div.boxContent {
 a.boxMenu {
   display: block;
   padding: 1px 9px 1px 3px;
-  background: transparent url("puce_down.png") 98% 6px no-repeat;
+  background: transparent %(bulletDownImg)s;
 }
+
 a.boxMenu:hover {
-  background: %(sideBoxBodyBgColor)s url("puce_down.png") 98% 6px no-repeat;
+  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
   cursor: pointer;
 }
 
 a.popupMenu {
   background: transparent url("puce_down_black.png") 2% 6px no-repeat;
   padding-left: 2em;
-}
-
-ul.boxListing {
-  margin: 0px;
-  padding: 0px 3px;
-}
-
-ul.boxListing li,
-ul.boxListing ul li {
-  list-style-type: none;
-  margin: 0px;
-  padding: 0px;
-  background-image: none;
-}
-
-ul.boxListing ul {
-  padding: 1px 3px;
-}
-
-ul.boxListing a {
-  color: %(defaultColor)s;
-  padding: 1px 9px 1px 3px;
-}
-
-ul.boxListing .selected {
-  color: %(aColor)s;
-  font-weight: bold;
-}
-
-ul.boxListing a.boxBookmark:hover,
-ul.boxListing a:hover,
-ul.boxListing ul li a:hover {
-  color: #111100;
-  text-decoration: none;
-  background: %(sideBoxBodyBgColor)s;
-}
-
-ul.boxListing a.boxMenu:hover {
-  cursor: pointer;
-  border-top: medium none;
-  background: %(sideBoxBodyBgColor)s url(puce_down.png) no-repeat scroll 98% 6px;
-}
-
-ul.boxListing ul li a:hover {
-  background: %(sideBoxBodyBgColor)s  url("bullet_orange.png") 0% 6px no-repeat;
-}
-
-ul.boxListing a.boxBookmark {
-  padding-left: 3px;
-  background-image: none;
-  background:#fff;
-}
-
-ul.boxListing ul li a {
-  background: #fff url("bullet_orange.png") 0% 6px no-repeat;
-  padding: 1px 3px 0px 10px;
 }
 
 div.searchBoxFrame div.boxContent {
@@ -398,12 +381,11 @@ div.shadow{
 div.sideBoxTitle {
   background: %(actionBoxTitleBgColor)s;
   display: block;
-  font: bold 100% Georgia;
+  font-weight: bold;
 }
 
 div.sideBox {
-  padding: 0 0 0.2em;
-  margin-bottom: 0.5em;
+  margin-bottom: 1em;
 }
 
 ul.sideBox,
@@ -412,7 +394,6 @@ ul.sideBox ul{
 }
 
 ul.sideBox li{
- list-style-type : none;
  padding: 0px 0px 1px 1px;
  margin: 1px 0 1px 4px;
 }
@@ -423,7 +404,7 @@ div.sideBoxBody {
 }
 
 div.sideBoxBody a {
-  color:#555544;
+  color: %(sideBoxColor)s;
 }
 
 div.sideBoxBody a:hover {
@@ -435,10 +416,11 @@ div.sideBox table td {
 }
 
 input.rqlsubmit{
-  margin: 0px;
+  display: block;
   width: 20px;
   height: 20px;
   background: %(buttonBgColor)s url("go.png") 50% 50% no-repeat;
+  vertical-align: bottom;
 }
 
 input#norql{
@@ -465,7 +447,7 @@ div#userActionsBox a.popupMenu {
 
 /* download box XXX move to its own file? */
 div.downloadBoxTitle{
- background : #8FBC8F;
+ background : #8fbc8f;
  font-weight: bold;
 }
 
@@ -474,7 +456,7 @@ div.downloadBox{
 }
 
 div.downloadBox div.sideBoxBody{
- background : #EEFED9;
+ background : #eefed9;
 }
 
 /**************/
@@ -485,9 +467,10 @@ div#etyperestriction {
   border-bottom: 1px solid %(pageContentBorderColor)s;
 }
 
+/* pagination */
 span.slice a:visited,
 span.slice a:hover{
-  color: #555544;
+  color: %(helperColor)s;
 }
 
 span.selectedSlice a:visited,
@@ -521,18 +504,17 @@ div.mainRelated {
 }
 
 div.primaryRight{
- }
+  margin-left: %(defaultLayoutMargin)s;
+}
 
 div.metadata {
   font-size: 90%;
   margin: 5px 0px 3px;
-  color: #666;
-  font-style: italic;
+  color: %(helperColor)s;
   text-align: right;
 }
 
 div.section {
-/*  margin-top: 0.5em; */
   width:100%;
 }
 
@@ -567,49 +549,49 @@ div.toolbarButton {
 .warning,
 .message,
 .errorMessage{
-  padding: 0.3em 0.3em 0.3em 1em;
+  padding: 0.2em;
   font-weight: bold;
 }
 
 .searchMessage{
- padding-top: %(defaultLayoutMargin)s;
+ margin-top: %(defaultLayoutMargin)s;
 }
 
 .loginMessage {
   margin: 4px 0px;
   font-weight: bold;
-  color: %(headerBgColor)s;
+  color: %(aColor)s;
 }
 
 div#appMsg {
-  border: 1px solid %(actionBoxTitleBgColor)s;
   margin-bottom: %(defaultLayoutMargin)s;
+  border: 1px solid %(actionBoxTitleBgColor)s;
 }
 
 .message {
-  margin: 0px;
-  background: #fff url("information.png") 5px center no-repeat;
+  background: %(msgBgColor)s %(infoMsgBgImg)s;
   padding-left: 15px;
 }
 
 .errorMessage {
   margin: 10px 0px;
   padding-left: 25px;
-  background: #fff url("critical.png") 2px center no-repeat;
-  color: #ed0d0d;
+  background: %(msgBgColor)s url("critical.png") 2px center no-repeat;
+  color: %(errorMsgColor)s;
   border: 1px solid %(actionBoxTitleBgColor)s;
 }
 
+/* search-associate message */
 .stateMessage {
   border: 1px solid %(pageContentBorderColor)s;
-  background: #fff url("information.png") 10px 50% no-repeat;
-  padding:4px 0px 4px 20px;
+  background: %(msgBgColor)s %(infoMsgBgImg)s;
+  padding: 0.1em 0 0.1em 20px;
 }
 
 /* warning messages like "There are too many results ..." */
 .warning {
   padding-left: 25px;
-  background: #f2f2f2 url("critical.png") 3px 50% no-repeat;
+  background: %(msgBgColor)s url("critical.png") 3px 50% no-repeat;
 }
 
 /* label shown in the top-right hand corner during form validation */
@@ -628,27 +610,26 @@ div#progress {
 /***************************************/
 
 table.listing {
- width: 100%;
- padding: 10px 0em;
- color: %(defaultColor)s;
- border: 1px solid %(listingBorderColor)s;
-}
-
-table.listing tr th {
-  font-weight: bold;
-  background: #dfdfdf;
-  font-size: 8pt;
-  padding: 3px 0px 3px 5px;
+  width: 100%;
+  font-size: 0.9167em;
+  padding: 10px 0em;
+  color: %(defaultColor)s;
   border: 1px solid %(listingBorderColor)s;
-  border-right:none}
-
-table.listing thead tr {
-/*  border: 1px solid #dfdfdf; */
+  margin-bottom: 1em;
 }
 
+table.listing th {
+  font-weight: bold;
+  font-size: 8pt;
+  background: %(listingHeaderBgColor)s; 
+  padding: 2px 4px;
+  border: 1px solid %(listingBorderColor)s;
+  border-right:none;
+ /* white-space: nowrap; */
+}
 
 table.listing thead th.over {
-  background-color: #746b6b;
+  background-color: %(listingHeaderBgColor)s;
   cursor: pointer;
 }
 
@@ -658,8 +639,7 @@ table.listing tr .header {
 }
 
 table.listing td {
-  padding: 4px;
-  padding: 3px 0px 3px 5px;
+  padding: 3px;
   vertical-align: top;
   border: 1px solid %(listingBorderColor)s;
   border-right: none;
@@ -686,9 +666,15 @@ table.listing td.top {
   top: -1px;
 }
 
+table.listing input,
+table.listing textarea {
+ background: %(listingHihligthedBgColor)s;
+}
+
 table.htableForm {
   vertical-align: middle;
 }
+
 table.htableForm td{
   padding-left: 1em;
   padding-top: 0.5em;
@@ -718,27 +704,26 @@ div.pycontext span.name {
   color: #ff0000;
 }
 
-
 /***************************************/
 /* addcombobox                         */
 /***************************************/
 
-input#newopt{
- width:120px ;
- display:block;
- float:left;
- }
+input#newopt {
+  display: block;
+  float: left;
+  width: 120px;
+}
 
 div#newvalue{
- margin-top:2px;
- }
+  margin-top: 2px;
+}
 
-#add_newopt{
- background: %(buttonBgColor)s url("go.png") 50% 50% no-repeat;
- width: 20px;
- line-height: 20px;
- display:block;
- float:left;
+#add_newopt {
+  display: block;
+  float: left;
+  width: 20px;
+  line-height: 20px;
+  background: %(buttonBgColor)s url("go.png") 50% 50% no-repeat;
 }
 
 /***************************************/
@@ -749,13 +734,100 @@ input.button{
   margin: 1em 1em 0px 0px;
   border: 1px solid %(buttonBorderColor)s;
   border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
-  background: %(buttonBgColor)s url("button.png") bottom left repeat-x;
 }
 
 /* FileItemInnerView  jquery.treeview.css */
 .folder {
   /* disable odd/even under folder class */
   background-color: transparent;
+}
+
+/***************************************/
+/* lists                               */
+/***************************************/
+
+ul.section,
+ul.startup {
+  margin-bottom: 0px;
+}
+
+ul.startup li,
+ul.section li {
+  margin-left:0px
+}
+
+ul.boxListing {
+  margin: 0px;
+  padding: 0px 3px;
+}
+
+ul.boxListing li,
+ul.boxListing ul li {
+  margin: 0px;
+  padding: 0px;
+  background-image: none;
+}
+
+ul.boxListing ul {
+  padding: 1px 3px;
+}
+
+ul.boxListing a {
+  color: %(defaultColor)s;
+  display:block;
+  padding: 1px 9px 1px 3px;
+}
+
+ul.boxListing .selected {
+  color: %(aColor)s;
+  font-weight: bold;
+}
+
+ul.boxListing a.boxMenu:hover {
+  border-top: medium none;
+  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
+}
+
+ul.boxListing a.boxBookmark {
+  padding-left: 3px;
+  background-image: none;
+  background:#fff;
+}
+
+ul.simple li,
+ul.boxListing ul li ,
+.popupWrapper ul li {
+  background: transparent url("bullet_orange.png") no-repeat 0% 6px;
+}
+
+ul.boxListing a.boxBookmark:hover,
+ul.boxListing a:hover,
+ul.boxListing ul li a:hover {
+  text-decoration: none;
+  background: %(sideBoxBodyBgColor)s;
+}
+
+ul.boxListing ul li a:hover{
+  background-color: transparent;
+}
+
+ul.boxListing ul li a {
+  padding: 1px 3px 0px 10px;
+}
+
+ul.simple li {
+  padding-left: 8px;
+}
+
+.popupWrapper ul {
+  padding:0.2em 0.3em;
+  margin-bottom: 0px;
+}
+
+.popupWrapper ul li {
+  padding-left: 8px;
+  margin-left: 0px;
+  white-space: nowrap;
 }
 
 /***************************************/
@@ -770,23 +842,12 @@ div#footer a {
   text-decoration: none;
 }
 
-
 /****************************************/
 /* FIXME must by managed by cubes       */
 /****************************************/
 .needsvalidation {
   font-style: italic;
   color: gray;
-}
-
-
-/***************************************/
-/* FIXME : Deprecated ? entity view ?  */
-/***************************************/
-.title {
-  text-align: left;
-  font-size: large;
-  font-weight: bold;
 }
 
 .validateButton {
@@ -805,12 +866,42 @@ div#footer a {
 }
 
 /********************************/
-/* overwite other css here */
+/* rest releted classes         */
+/********************************/
+
+img.align-right {
+  margin-left: 1.5em;
+}
+
+img.align-left {
+  margin-right: 1.5em;
+}
+
+/********************************/
+/* overwite other css here      */
 /********************************/
 
 /* ui.tabs.css */
-ul .ui-tabs-nav,
-ul .ui-tabs-panel {
-  font-family: %(defaultFont)s;
+ul.ui-tabs-nav,
+div.ui-tabs-panel {
+  font-family: %(defaultFontFamily)s;
   font-size: %(defaultSize)s;
 }
+
+div.ui-tabs-panel {
+  border-top:1px solid #b6b6b6;
+}
+
+ul.ui-tabs-nav a {
+  color: #3d3d3d;
+}
+
+ul.ui-tabs-nav a:hover {
+  color: #000;
+}
+
+img.ui-datepicker-trigger {
+  margin-left: 0.5em;
+  vertical-align: bottom;
+}
+

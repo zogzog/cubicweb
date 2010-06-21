@@ -4,7 +4,7 @@
 # use the following line if you *need* to keep the old stylesheet
 #STYLESHEETS =       [data('cubicweb.old.css')]
 STYLESHEETS =       [data('cubicweb.reset.css'),
-                     data('cubicweb.css')]
+                     data('cubicweb.css'), ]
 STYLESHEETS_IE =    [data('cubicweb.ie.css')]
 STYLESHEETS_PRINT = [data('cubicweb.print.css')]
 
@@ -63,12 +63,14 @@ UP_ICON = data('up.gif')
 
 # default (body, html)
 defaultColor = '#000'
-defaultFont = 'Verdana,sans-serif'
+defaultFontFamily = "'Bitstream Vera Sans','Lucida Grande','Lucida Sans Unicode','Geneva','Verdana',sans-serif"
 defaultSize = '12px'
 defaultLineHeight = '1.5'
 defaultLineHeightEm = defaultLineHeight + 'em'
 baseRhythmBg = 'rhythm18.png'
 
+inputHeight = '1.3em'
+inputPadding = 'O.2em'
 # XXX
 defaultLayoutMargin = '8px'
 
@@ -76,10 +78,11 @@ defaultLayoutMargin = '8px'
 headerBgColor = '#ff7700'
 
 # h
-h1FontSize = '1.5em'
-h1BorderBottomStyle = '0.06em solid black'
+h1FontSize = '1.5em' # 18px
 h1Padding = '0 0 0.14em 0 '
 h1Margin = '0.8em 0 0.5em'
+h1Color = '#000'
+h1BorderBottomStyle = '0.06em solid %s' % h1Color
 
 h2FontSize = '1.33333em'
 h2Padding = '0.4em 0 0.35em 0'
@@ -90,7 +93,7 @@ h3Padding = '0.5em 0 0.57em 0'
 h3Margin = '0'
 
 # links
-aColor = '#ff4500'
+aColor = '#e6820e'
 aActiveColor = aVisitedColor = aLinkColor = aColor
 
 # page frame
@@ -99,14 +102,34 @@ pageContentBgColor = '#fff'
 pageContentPadding = '1em'
 pageMinHeight = '800px'
 
-# button
-buttonBorderColor = '#edecd2'
-buttonBgColor = '#fffff8'
+# boxes
+boxTitleBgColor = headerBgColor
+boxBodyBgColor = '#efefde'
 
 # action, search, sideBoxes
 actionBoxTitleBgColor = '#cfceb7'
-sideBoxBodyBgColor = '#eeedd9'
+sideBoxBodyBgColor = '#f8f8ee'
+sideBoxColor = '#555544'
 
+# table listing & co
+listingBorderColor = '#ccc'
+listingHeaderBgColor = '#efefef'
+listingHihligthedBgColor = '#fbfbfb'
 
-# table listing
-listingBorderColor = '#878787'
+# puce
+bulletDownImg = 'url("puce_down.png") 98% 6px no-repeat'
+
+#forms
+formHeaderBgColor = listingHeaderBgColor
+helperColor = '#555'
+
+# button
+buttonBorderColor = '#edecd2'
+buttonBgColor = '#fffff8'
+buttonBgImg = 'url("button.png") repeat-x 50% 50%'
+
+# messages
+msgBgColor = '#f8f8ee'
+infoMsgBgImg = 'url("information.png") 5px center no-repeat'
+errorMsgBgImg = 'url("error.png") 100% 50% no-repeat'
+errorMsgColor = '#ed0d0d'

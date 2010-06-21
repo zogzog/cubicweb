@@ -6,7 +6,7 @@ table.filter th {
   font-weight: bold;
   background: #ebe8d9 url("button.png") repeat-x;
   padding: 0.3em;
-  border-bottom: 1px solid #cfceb7;
+  border-bottom: 1px solid %(actionBoxTitleBgColor)s;
   text-align: left;
 }
 

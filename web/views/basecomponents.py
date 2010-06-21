@@ -59,11 +59,9 @@ class RQLInputForm(component.Component):
           <form action="%s">
 <fieldset>
 <input type="text" id="rql" name="rql" value="%s"  title="%s" tabindex="%s" accesskey="q" class="searchField" />
-<input type="submit" value="" class="rqlsubmit" tabindex="%s" />
 </fieldset>
 ''' % (not self.cw_propval('visible') and 'hidden' or '',
-       self._cw.build_url('view'), xml_escape(rql), req._('full text or RQL query'), req.next_tabindex(),
-        req.next_tabindex()))
+       self._cw.build_url('view'), xml_escape(rql), req._('full text or RQL query'), req.next_tabindex()))
         if self._cw.search_state[0] != 'normal':
             self.w(u'<input type="hidden" name="__mode" value="%s"/>'
                    % ':'.join(req.search_state[1]))

@@ -144,7 +144,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group))
-            w(u'<h2 class="propertiesform">%s</h2>\n' %
+            w(u'<div class="propertiesform">%s</div>\n' %
             (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
             w(u'<fieldset class="preferences">')
@@ -154,7 +154,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
             status = css_class(self._group_status(group))
-            w(u'<h2 class="propertiesform">%s</h2>\n' %
+            w(u'<div class="propertiesform">%s</div>\n' %
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
             # create selection
