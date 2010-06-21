@@ -1105,8 +1105,6 @@ class Repository(object):
         orig_edited_attributes = getattr(entity, 'edited_attributes', None)
         entity.edited_attributes = edited_attributes
         try:
-            if session.is_hook_category_activated('integrity'):
-                entity.check()
             only_inline_rels, need_fti_update = True, False
             relations = []
             source = self.source_from_eid(entity.eid, session)
@@ -1137,6 +1135,8 @@ class Repository(object):
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
                 if not only_inline_rels:
                     hm.call_hooks('before_update_entity', session, entity=entity)
+            if session.is_hook_category_activated('integrity'):
+                entity.check()
             source.update_entity(session, entity)
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
