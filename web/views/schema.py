@@ -88,7 +88,7 @@ class SecurityViewMixIn(object):
         w = self.w
         _ = self._cw._
         w(u'<table class="listing schemaInfo">')
-        w(u'<tr><th width="15%%">%s</th><th width="25%%">%s</th><th>%s</th></tr>' % (
+        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
         for action in erschema.ACTIONS:
             w(u'<tr><td>%s</td><td>' % _(action))
