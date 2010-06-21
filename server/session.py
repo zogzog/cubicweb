@@ -283,6 +283,8 @@ class Session(RequestSessionBase):
         try:
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
         except (source.OperationalError, source.InterfaceError):
+            if not rollback_on_failure:
+                raise
             source.warning("trying to reconnect")
             self.pool.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
