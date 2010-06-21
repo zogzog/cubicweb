@@ -552,8 +552,8 @@ class SourceDbCWConstraintAdd(hook.Operation):
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
                 session.system_sql(sql, rollback_on_failure=False)
-                self.info('altered column %s of table %s: now VARCHAR(%s)',
-                          column, table, newcstr.max)
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -568,16 +568,19 @@ class SourceDbCWConstraintDel(hook.Operation):
 
     def precommit_event(self):
         cstrtype = self.cstr.type()
-        table = SQL_PREFIX + str(self.subjtype)
-        column = SQL_PREFIX + str(self.rtype)
+        table = SQL_PREFIX + str(self.rdef.subject)
+        column = SQL_PREFIX + str(self.rdef.rtype)
         # alter the physical schema on size/unique constraint changes
         if cstrtype == 'SizeConstraint':
             try:
-                self.session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE TEXT'
-                                        % (table, column),
-                                        rollback_on_failure=False)
-                self.info('altered column %s of table %s: now TEXT',
-                          column, table)
+                adbh = self.session.pool.source('system').dbhelper
+                coltype = y2sql.type_from_constraints(adbh, rdef.object, [],
+                                                      creating=False)
+                sql = adbh.sql_change_col_type(table, column, coltype,
+                                               rdef.cardinality != '1')
+                self.session.system_sql(sql, rollback_on_failure=False)
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -1109,8 +1112,7 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
-            SourceDbCWConstraintDel(self._cw, cstr=cstr,
-                                    subjtype=rdef.subject, rtype=rdef.rtype)
+            SourceDbCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
             MemSchemaCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
 
 
