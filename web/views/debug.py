@@ -43,6 +43,7 @@ class ProcessInformationView(StartupView):
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('server information')
+    cache_max_age = 0
 
     def call(self, **kwargs):
         req = self._cw
@@ -126,6 +127,7 @@ class RegistryView(StartupView):
     __regid__ = 'registry'
     __select__ = StartupView.__select__ & match_user_groups('managers')
     title = _('registry')
+    cache_max_age = 0
 
     def call(self, **kwargs):
         self.w(u'<h1>%s</h1>' % _("Registry's content"))
@@ -148,6 +150,7 @@ class GCView(StartupView):
     __regid__ = 'gc'
     __select__ = StartupView.__select__ & match_user_groups('managers')
     title = _('memory leak debugging')
+    cache_max_age = 0
 
     def call(self, **kwargs):
         from cubicweb._gcdebug import gc_info
