@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb server sources support
+"""cubicweb server sources support"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from os.path import join, splitext
