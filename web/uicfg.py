@@ -278,8 +278,19 @@ class AutoformSectionRelationTags(RelationTagsSet):
         rtags.add('%s_%s' % (formtype, section))
         return rtags
 
-    def init_get(self, *key):
-        return super(AutoformSectionRelationTags, self).get(*key)
+    def init_get(self, stype, rtype, otype, tagged):
+        key = (stype, rtype, otype, tagged)
+        rtags = {}
+        for key in self._get_keys(stype, rtype, otype, tagged):
+            tags = self._tagdefs.get(key, ())
+            for tag in tags:
+                assert '_' in tag, (tag, tags)
+                section, value = tag.split('_', 1)
+                rtags[section] = value
+        cls = self.tag_container_cls
+        rtags = cls('_'.join([section,value]) for section,value in rtags.iteritems())
+        return rtags
+
 
     def get(self, *key):
         # overriden to avoid recomputing done in parent classes
