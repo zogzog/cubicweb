@@ -82,16 +82,14 @@ class RelationTags(object):
         self._tagdefs.clear()
 
     def _get_keys(self, stype, rtype, otype, tagged):
-        keys = [('*', rtype, '*', tagged),
-                ('*', rtype, otype, tagged),
-                (stype, rtype, '*', tagged),
-                (stype, rtype, otype, tagged)]
-        if stype == '*' or otype == '*':
-            keys.remove( ('*', rtype, '*', tagged) )
-            if stype == '*':
-                keys.remove( ('*', rtype, otype, tagged) )
-            if otype == '*':
-                keys.remove( (stype, rtype, '*', tagged) )
+        keys = []
+        if '*' not in (stype, otype):
+            keys.append(('*', rtype, '*', tagged))
+        if '*' != stype:
+            keys.append(('*', rtype, otype, tagged))
+        if '*' != otype:
+            keys.append((stype, rtype, '*', tagged))
+        keys.append((stype, rtype, otype, tagged))
         return keys
 
     def init(self, schema, check=True):
