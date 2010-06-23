@@ -553,7 +553,7 @@ directory (default to once a day).',
             self._cache[rec_dn] = rec_dict
             result.append(rec_dict)
         #print '--->', result
-        self.info('ldap built results %s', len(result))
+        self.debug('ldap built results %s', len(result))
         return result
 
     def before_entity_insertion(self, session, lid, etype, eid):
