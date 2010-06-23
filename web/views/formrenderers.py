@@ -409,13 +409,6 @@ class EntityFormRenderer(BaseFormRenderer):
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
-    def close_form(self, form, values):
-        """seems dumb but important for consistency w/ close form, and necessary
-        for form renderers overriding open_form to use something else or more than
-        and <form>
-        """
-        return super(EntityFormRenderer, self).close_form(form, values) + '</div>'
-
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:
             w("""<table width="100%%">
