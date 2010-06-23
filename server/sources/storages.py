@@ -106,7 +106,7 @@ class BytesFileSystemStorage(Storage):
         """
         fpath = source.binary_to_str(value)
         try:
-            return Binary(file(fpath).read())
+            return Binary(file(fpath, 'rb').read())
         except OSError, ex:
             source.critical("can't open %s: %s", value, ex)
             return None
@@ -114,28 +114,50 @@ class BytesFileSystemStorage(Storage):
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
         if entity._cw.transaction_data.get('fs_importing'):
-            binary = Binary(file(entity[attr].getvalue()).read())
+            binary = Binary(file(entity[attr].getvalue(), 'rb').read())
         else:
             binary = entity.pop(attr)
             fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
             entity[attr] = Binary(fpath)
-            file(fpath, 'w').write(binary.getvalue())
+            file(fpath, 'wb').write(binary.getvalue())
             hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         return binary
 
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
+        # get the name of the previous file containing the value
         oldpath = self.current_fs_path(entity, attr)
         if entity._cw.transaction_data.get('fs_importing'):
+            # If we are importing from the filesystem, the file already exists.
+            # We do not need to create it but we need to fetch the content of
+            # the file as the actual content of the attribute
             fpath = entity[attr].getvalue()
-            binary = Binary(file(fpath).read())
+            binary = Binary(file(fpath, 'rb').read())
         else:
+            # We must store the content of the attributes
+            # into a file to stay consistent with the behaviour of entity_add.
+            # Moreover, the BytesFileSystemStorage expects to be able to
+            # retrieve the current value of the attribute at anytime by reading
+            # the file on disk. To be able to rollback things, use a new file
+            # and keep the old one that will be removed on commit if everything
+            # went ok.
+            #
+            # fetch the current attribute value in memory
             binary = entity.pop(attr)
+            # Get filename for it
             fpath = self.new_fs_path(entity, attr)
-            UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
+            assert not osp.exists(fpath)
+            # write attribute value on disk
+            file(fpath, 'wb').write(binary.getvalue())
+            # Mark the new file as added during the transaction.
+            # The file will be removed on rollback
+            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         if oldpath != fpath:
+            # register the new location for the file.
             entity[attr] = Binary(fpath)
+            # Mark the old file as useless so the file will be removed at
+            # commit.
             hook.set_operation(entity._cw, 'bfss_deleted', oldpath,
                                DeleteFileOp)
         return binary
@@ -200,10 +222,3 @@ class DeleteFileOp(hook.Operation):
                 unlink(filepath)
             except Exception, ex:
                 self.error('cant remove %s: %s' % (filepath, ex))
-
-class UpdateFileOp(hook.Operation):
-    def precommit_event(self):
-        try:
-            file(self.filepath, 'w').write(self.filedata)
-        except Exception, ex:
-            self.exception(str(ex))
