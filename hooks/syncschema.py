@@ -516,7 +516,11 @@ class SourceDbRDefUpdate(hook.Operation):
                                                   creating=False)
             # XXX check self.values['cardinality'][0] actually changed?
             notnull = self.values['cardinality'][0] != '1'
-            sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
+            if getattr(adbh, 'alter_table_requires_cursor', False):
+                sql = adbh.sql_set_null_allowed(table, column, coltype, notnull, 
+                                                self.session.system_sql)
+            else:
+                sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
             session.system_sql(sql)
         if 'fulltextindexed' in self.values:
             UpdateFTIndexOp(session)
@@ -551,7 +555,11 @@ class SourceDbCWConstraintAdd(hook.Operation):
             card = rtype.rdef(subjtype, objtype).cardinality
             coltype = y2sql.type_from_constraints(adbh, objtype, [newcstr],
                                                   creating=False)
-            sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
+            if getattr(adbh, 'alter_table_requires_cursor', False):
+                sql = adbh.sql_change_col_type(table, column, coltype, card[0] != '1',
+                                               self.session.system_sql)
+            else:
+                sql = adbh.sql_change_col_type(table, column, coltype, card[0] != '1')
             try:
                 session.system_sql(sql, rollback_on_failure=False)
                 self.info('altered column %s of table %s: now %s',
@@ -578,8 +586,15 @@ class SourceDbCWConstraintDel(hook.Operation):
                 adbh = self.session.pool.source('system').dbhelper
                 coltype = y2sql.type_from_constraints(adbh, rdef.object, [],
                                                       creating=False)
-                sql = adbh.sql_change_col_type(table, column, coltype,
-                                               rdef.cardinality != '1')
+    
+                if getattr(adbh, 'alter_table_requires_cursor', False):
+                    sql = adbh.sql_change_col_type(table, column, coltype,
+                                                   rdef.cardinality[0] != '1',
+                                                   self.session.system_sql)
+                else:
+                    sql = adbh.sql_change_col_type(table, column, coltype,
+                                               rdef.cardinality[0] != '1')
+                
                 self.session.system_sql(sql, rollback_on_failure=False)
                 self.info('altered column %s of table %s: now %s',
                           column, table, coltype)
