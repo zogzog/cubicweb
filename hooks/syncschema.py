@@ -584,16 +584,16 @@ class SourceDbCWConstraintDel(hook.Operation):
         if cstrtype == 'SizeConstraint':
             try:
                 adbh = self.session.pool.source('system').dbhelper
-                coltype = y2sql.type_from_constraints(adbh, rdef.object, [],
+                coltype = y2sql.type_from_constraints(adbh, self.rdef.object, [],
                                                       creating=False)
     
                 if getattr(adbh, 'alter_table_requires_cursor', False):
                     sql = adbh.sql_change_col_type(table, column, coltype,
-                                                   rdef.cardinality[0] != '1',
+                                                   self.rdef.cardinality[0] != '1',
                                                    self.session.system_sql)
                 else:
                     sql = adbh.sql_change_col_type(table, column, coltype,
-                                               rdef.cardinality[0] != '1')
+                                               self.rdef.cardinality[0] != '1')
                 
                 self.session.system_sql(sql, rollback_on_failure=False)
                 self.info('altered column %s of table %s: now %s',
