@@ -293,7 +293,13 @@ directory (default to once a day).',
             raise AuthenticationError()
         # check password by establishing a (unused) connection
         try:
-            self._connect(user, password)
+            if password:
+                self._connect(user, password)
+            else:
+                # On Windows + ADAM this would have succeeded (!!!)
+                # You get Authenticated as: 'NT AUTHORITY\ANONYMOUS LOGON'.
+                # we really really don't want that
+                raise Exception('No password provided')
         except Exception, ex:
             self.info('while trying to authenticate %s: %s', user, ex)
             # Something went wrong, most likely bad credentials
