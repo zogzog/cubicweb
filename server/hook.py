@@ -369,10 +369,10 @@ class Operation(object):
     commit / rollback transations. Possible events are:
 
     precommit:
-      the pool is preparing to commit. You shouldn't do anything things which
-      has to be reverted if the commit fail at this point, but you can freely
+      the pool is preparing to commit. You shouldn't do anything which
+      has to be reverted if the commit fails at this point, but you can freely
       do any heavy computation or raise an exception if the commit can't go.
-      You can add some new operation during this phase but their precommit
+      You can add some new operations during this phase but their precommit
       event won't be triggered
 
     commit:
@@ -390,6 +390,12 @@ class Operation(object):
        * a precommit event failed, all operations are rollbacked
        * a commit event failed, all operations which are not been triggered for
          commit are rollbacked
+
+    postcommit:
+      The transaction is over. All the ORM entities are
+      invalid. If you need to work on the database, you need to stard
+      a new transaction, for instance using a new internal_session,
+      which you will need to commit (and close!).
 
     order of operations may be important, and is controlled according to
     the insert_index's method output
