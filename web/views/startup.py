@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML startup views. A startup view is global, e.g. doesn't
 apply to a result set.
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
