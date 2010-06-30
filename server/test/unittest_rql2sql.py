@@ -272,7 +272,7 @@ WHERE _X.cw_from_entity=44 AND _SE.cw_eid=44 AND _X.cw_relation_type=139 AND _R.
     ('Any O WHERE NOT S ecrit_par O, S eid 1, S inline1 P, O inline2 P',
      '''SELECT _O.cw_eid
 FROM cw_Note AS _S, cw_Personne AS _O
-WHERE NOT (_S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _O.cw_inline2=_S.cw_inline1'''),
+WHERE NOT (_S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
 
     ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
@@ -972,6 +972,12 @@ WHERE (rel_connait0.eid_from=_P.cw_eid AND rel_connait0.eid_to=_S.cw_eid OR rel_
     ]
 
 INLINE = [
+
+    ('Any P WHERE N eid 1, N ecrit_par P, NOT P owned_by P2',
+     '''SELECT _N.cw_ecrit_par
+FROM cw_Note AS _N
+WHERE _N.cw_eid=1 AND _N.cw_ecrit_par IS NOT NULL AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE _N.cw_ecrit_par=rel_owned_by0.eid_from))'''),
+
     ('Any P, L WHERE N ecrit_par P, P nom L, N eid 0',
      '''SELECT _P.cw_eid, _P.cw_nom
 FROM cw_Note AS _N, cw_Personne AS _P
@@ -1003,9 +1009,10 @@ FROM cw_Note AS _N, cw_Personne AS _P
 WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
+     # XXX "_T.cw_destination_state IS NOT NULL" could be avoided here but it's not worth it
      '''SELECT _T.cw_destination_state, rel_allowed_transition1.eid_from, _T.cw_eid
 FROM allowed_transition_relation AS rel_allowed_transition1, cw_Transition AS _T, cw_Workflow AS _ET, state_of_relation AS rel_state_of0
-WHERE _T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=_ET.cw_eid AND _ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=_T.cw_eid'''),
+WHERE _T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=_ET.cw_eid AND _ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=_T.cw_eid AND _T.cw_destination_state IS NOT NULL'''),
 
     ('Any O WHERE S eid 0, S in_state O',
      '''SELECT _S.cw_in_state

@@ -829,10 +829,11 @@ class SQLGenerator(object):
             # if the rhs variable is only linked to this relation, this mean we
             # only want the relation to exists, eg NOT NULL in case of inlined
             # relation
-            if len(rhsvar.stinfo['relations']) == 1 and rhsvar._q_invariant:
-                return '%s IS NOT NULL' % lhssql
             if rhsvar._q_invariant:
-                return self._extra_join_sql(relation, lhssql, rhsvar)
+                sql = self._extra_join_sql(relation, lhssql, rhsvar)
+                if sql:
+                    return sql
+                return '%s IS NOT NULL' % lhssql
         return '%s=%s' % (lhssql, rhsvar.accept(self))
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
