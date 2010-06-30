@@ -481,7 +481,7 @@ class LogFormView(View):
         if cw.vreg.config['allow-email-login']:
             label = cw._('login or email')
         else:
-            label = cw._('login')
+            label = cw.pgettext('CWUser', 'login')
         form.field_by_name('__login').label = label
         self.w(form.render(table_class='', display_progress_div=False))
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
