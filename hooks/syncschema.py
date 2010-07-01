@@ -251,12 +251,11 @@ class SourceDbCWRTypeUpdate(hook.Operation):
             return
         session = self.session
         if 'fulltext_container' in self.values:
-            ftiupdates = session.transaction_data.setdefault(
-                'fti_update_etypes', set())
             for subjtype, objtype in rschema.rdefs:
-                ftiupdates.add(subjtype)
-                ftiupdates.add(objtype)
-            UpdateFTIndexOp(session)
+                hook.set_operation(self._cw, 'fti_update_etypes', subjtype,
+                                   UpdateFTIndexOp)
+                hook.set_operation(self._cw, 'fti_update_etypes', objtype,
+                                   UpdateFTIndexOp)
         if not 'inlined' in self.values:
             return # nothing to do
         inlined = self.values['inlined']
@@ -523,9 +522,8 @@ class SourceDbRDefUpdate(hook.Operation):
                 sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
             session.system_sql(sql)
         if 'fulltextindexed' in self.values:
-            UpdateFTIndexOp(session)
-            session.transaction_data.setdefault(
-                'fti_update_etypes', set()).add(etype)
+            hook.set_operation(self._cw, 'fti_update_etypes', etype,
+                               UpdateFTIndexOp)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -1184,7 +1182,7 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
     def postcommit_event(self):
         session = self.session
         source = session.repo.system_source
-        to_reindex = session.transaction_data.get('fti_update_etypes', ())
+        to_reindex = session.transaction_data.pop('fti_update_etypes', ())
         self.info('%i etypes need full text indexed reindexation',
                   len(to_reindex))
         schema = self.session.repo.vreg.schema
