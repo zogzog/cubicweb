@@ -252,9 +252,9 @@ class SourceDbCWRTypeUpdate(hook.Operation):
         session = self.session
         if 'fulltext_container' in self.values:
             for subjtype, objtype in rschema.rdefs:
-                hook.set_operation(self._cw, 'fti_update_etypes', subjtype,
+                hook.set_operation(session, 'fti_update_etypes', subjtype,
                                    UpdateFTIndexOp)
-                hook.set_operation(self._cw, 'fti_update_etypes', objtype,
+                hook.set_operation(session, 'fti_update_etypes', objtype,
                                    UpdateFTIndexOp)
         if not 'inlined' in self.values:
             return # nothing to do
@@ -522,7 +522,7 @@ class SourceDbRDefUpdate(hook.Operation):
                 sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
             session.system_sql(sql)
         if 'fulltextindexed' in self.values:
-            hook.set_operation(self._cw, 'fti_update_etypes', etype,
+            hook.set_operation(session, 'fti_update_etypes', etype,
                                UpdateFTIndexOp)
 
 
