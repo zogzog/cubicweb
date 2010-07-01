@@ -15,8 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-generic boxes for CubicWeb web client:
+"""Generic boxes for CubicWeb web client:
 
 * actions box
 * possible views box
@@ -24,8 +23,8 @@ generic boxes for CubicWeb web client:
 additional (disabled by default) boxes
 * schema box
 * startup views box
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -185,7 +184,6 @@ class StartupViewsBox(BoxTemplate):
         for view in self._cw.vreg['views'].possible_views(self._cw, None):
             if view.category == 'startupview':
                 box.append(self.box_action(view))
-
         if not box.is_empty():
             box.render(self.w)
 

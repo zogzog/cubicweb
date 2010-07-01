@@ -238,13 +238,29 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
             self.peid, self.rtype, entity.eid)
         self.render_form(i18nctx, divonclick=divonclick, **kwargs)
 
+    def _get_removejs(self):
+        """
+        Don't display the remove link in edition form if the
+        cardinality is 1. Handled in InlineEntityCreationFormView for
+        creation form.
+        """
+        entity = self._entity()
+        if isinstance(self.peid, int):
+            pentity = self._cw.entity_from_eid(self.peid)
+            petype = pentity.e_schema.type
+            rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), petype)
+            card= rdef.role_cardinality(self.role)
+            if card == '1': # don't display remove link
+                return None
+        return self.removejs and self.removejs % (
+            self.peid, self.rtype, entity.eid)
+
     def render_form(self, i18nctx, **kwargs):
         """fetch and render the form"""
         entity = self._entity()
         divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
         title = self.form_title(entity, i18nctx)
-        removejs = self.removejs and self.removejs % (
-            self.peid, self.rtype, entity.eid)
+        removejs = self._get_removejs()
         countkey = '%s_count' % self.rtype
         try:
             self._cw.data[countkey] += 1

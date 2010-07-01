@@ -397,10 +397,6 @@ class EntityFormRenderer(BaseFormRenderer):
     _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')
 
-    def render(self, form, values):
-        rendered = super(EntityFormRenderer, self).render(form, values)
-        return rendered + u'</div>' # close extra div introducted by open_form
-
     def open_form(self, form, values):
         attrs_fs_label = ''
         if self.main_form_title:
@@ -408,6 +404,13 @@ class EntityFormRenderer(BaseFormRenderer):
                                % self._cw._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
+
+    def close_form(self, form, values):
+        """seems dumb but important for consistency w/ close form, and necessary
+        for form renderers overriding open_form to use something else or more than
+        and <form>
+        """
+        return super(EntityFormRenderer, self).close_form(form, values) + '</div>'
 
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:

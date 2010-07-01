@@ -19,9 +19,8 @@
 connections pools, each of them dealing with a set of connections on each source
 used by the repository. A connections pools (`ConnectionsPool`) is an
 abstraction for a group of connection to each source.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 import sys

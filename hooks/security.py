@@ -69,10 +69,12 @@ class _CheckEntityPermissionOp(hook.LateOperation):
 
 class _CheckRelationPermissionOp(hook.LateOperation):
     def precommit_event(self):
-        rdef = self.rschema.rdef(self.session.describe(self.eidfrom)[0],
-                                 self.session.describe(self.eidto)[0])
-        rdef.check_perm(self.session, self.action,
-                        fromeid=self.eidfrom, toeid=self.eidto)
+        session = self.session
+        for args in session.transaction_data.pop('check_relation_perm_op'):
+            action, rschema, eidfrom, eidto = args
+            rdef = rschema.rdef(session.describe(eidfrom)[0],
+                                session.describe(eidto)[0])
+            rdef.check_perm(session, action, fromeid=eidfrom, toeid=eidto)
 
     def commit_event(self):
         pass
@@ -154,10 +156,9 @@ class AfterAddRelationSecurityHook(SecurityHook):
                 return
             rschema = self._cw.repo.schema[self.rtype]
             if self.rtype in ON_COMMIT_ADD_RELATIONS:
-                _CheckRelationPermissionOp(self._cw, action='add',
-                                           rschema=rschema,
-                                           eidfrom=self.eidfrom,
-                                           eidto=self.eidto)
+                hook.set_operation(self._cw, 'check_relation_perm_op',
+                                   ('add', rschema, self.eidfrom, self.eidto),
+                                   _CheckRelationPermissionOp)
             else:
                 rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
                                     self._cw.describe(self.eidto)[0])
