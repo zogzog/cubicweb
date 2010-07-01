@@ -275,6 +275,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.dbdriver == 'sqlite':
             self._create_eid = None
             self.create_eid = self._create_eid_sqlite
+        self.binary_to_str = self.dbhelper.dbapi_module.binary_to_str
+
 
     @property
     def _sqlcnx(self):
@@ -672,9 +674,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # short cut to method requiring advanced db helper usage ##################
 
-    def binary_to_str(self, value):
-        return self.dbhelper.dbapi_module.binary_to_str(value)
-
     def create_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
@@ -682,6 +681,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def drop_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.drop_index(cursor, table, column, unique)
+
+    def change_col_type(self, session, table, column, coltype, null_allowed):
+        cursor = LogCursor(session.pool[self.uri])
+        self.dbhelper.change_col_type(cursor, table, column, coltype, null_allowed)
+
+    def set_null_allowed(self, session, table, column, coltype, null_allowed):
+        cursor = LogCursor(session.pool[self.uri])
+        self.dbhelper.set_null_allowed(cursor, table, column, coltype, null_allowed)
 
     # system source interface #################################################
 

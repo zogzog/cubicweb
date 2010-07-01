@@ -365,7 +365,7 @@ class SourceDbCWAttributeAdd(hook.Operation):
         sysource = session.pool.source('system')
         attrtype = y2sql.type_from_constraints(
             sysource.dbhelper, rdef.object, rdef.constraints)
-        # XXX should be moved somehow into lgc.adbh: sqlite doesn't support to
+        # XXX should be moved somehow into lgdb: sqlite doesn't support to
         # add a new column with UNIQUE, it should be added after the ALTER TABLE
         # using ADD INDEX
         if sysource.dbdriver == 'sqlite' and 'UNIQUE' in attrtype:
@@ -504,23 +504,18 @@ class SourceDbRDefUpdate(hook.Operation):
             else:
                 sysource.drop_index(session, table, column)
         if 'cardinality' in self.values and self.rschema.final:
-            adbh = session.pool.source('system').dbhelper
-            if not adbh.alter_column_support:
+            syssource = session.pool.source('system')
+            if not syssource.dbhelper.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
-                # no worry)
+                # no worry) XXX (syt) then should we set NOT NULL below ??
                 return
             atype = self.rschema.objects(etype)[0]
             constraints = self.rschema.rdef(etype, atype).constraints
-            coltype = y2sql.type_from_constraints(adbh, atype, constraints,
+            coltype = y2sql.type_from_constraints(syssource.dbhelper, atype, constraints,
                                                   creating=False)
             # XXX check self.values['cardinality'][0] actually changed?
-            notnull = self.values['cardinality'][0] != '1'
-            if getattr(adbh, 'alter_table_requires_cursor', False):
-                sql = adbh.sql_set_null_allowed(table, column, coltype, notnull, 
-                                                self.session.system_sql)
-            else:
-                sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
-            session.system_sql(sql)
+            syssource.set_null_allowed(self.session, table, column, coltype,
+                                       self.values['cardinality'][0] != '1')
         if 'fulltextindexed' in self.values:
             hook.set_operation(session, 'fti_update_etypes', etype,
                                UpdateFTIndexOp)
@@ -549,17 +544,12 @@ class SourceDbCWConstraintAdd(hook.Operation):
         # alter the physical schema on size constraint changes
         if newcstr.type() == 'SizeConstraint' and (
             oldcstr is None or oldcstr.max != newcstr.max):
-            adbh = self.session.pool.source('system').dbhelper
+            syssource = self.session.pool.source('system')
             card = rtype.rdef(subjtype, objtype).cardinality
-            coltype = y2sql.type_from_constraints(adbh, objtype, [newcstr],
-                                                  creating=False)
-            if getattr(adbh, 'alter_table_requires_cursor', False):
-                sql = adbh.sql_change_col_type(table, column, coltype, card[0] != '1',
-                                               self.session.system_sql)
-            else:
-                sql = adbh.sql_change_col_type(table, column, coltype, card[0] != '1')
+            coltype = y2sql.type_from_constraints(syssource.dbhelper, objtype,
+                                                  [newcstr], creating=False)
             try:
-                session.system_sql(sql, rollback_on_failure=False)
+                syssource.change_col_type(session, table, column, coltype, card[0] != '1')
                 self.info('altered column %s of table %s: now %s',
                           column, table, coltype)
             except Exception, ex:
@@ -580,20 +570,13 @@ class SourceDbCWConstraintDel(hook.Operation):
         column = SQL_PREFIX + str(self.rdef.rtype)
         # alter the physical schema on size/unique constraint changes
         if cstrtype == 'SizeConstraint':
+            syssource = self.session.pool.source('system')
+            coltype = y2sql.type_from_constraints(syssource.dbhelper,
+                                                  self.rdef.object, [],
+                                                  creating=False)
             try:
-                adbh = self.session.pool.source('system').dbhelper
-                coltype = y2sql.type_from_constraints(adbh, self.rdef.object, [],
-                                                      creating=False)
-    
-                if getattr(adbh, 'alter_table_requires_cursor', False):
-                    sql = adbh.sql_change_col_type(table, column, coltype,
-                                                   self.rdef.cardinality[0] != '1',
-                                                   self.session.system_sql)
-                else:
-                    sql = adbh.sql_change_col_type(table, column, coltype,
-                                               self.rdef.cardinality[0] != '1')
-                
-                self.session.system_sql(sql, rollback_on_failure=False)
+                syssource.change_col_type(session, table, column, coltype,
+                                          self.rdef.cardinality[0] != '1')
                 self.info('altered column %s of table %s: now %s',
                           column, table, coltype)
             except Exception, ex:

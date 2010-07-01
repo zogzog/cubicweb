@@ -52,7 +52,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.0.4',
+    'logilab-database': '>= 1.0.5',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 
