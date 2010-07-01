@@ -46,8 +46,8 @@ Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
 `timestamp` attributes, but *their `_cw` attribute is None*.
 
 Session hooks (eg session_open, session_close) have no special attribute.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
