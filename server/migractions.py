@@ -25,9 +25,8 @@ The following schema actions are supported for now:
 The following data actions are supported for now:
 * add an entity
 * execute raw RQL queries
-
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -1215,6 +1214,13 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         return entity
+
+    def cmd_reindex_entities(self, etypes=None):
+        """force reindexaction of entities of the given types or of all
+        indexable entity types
+        """
+        from cubicweb.server.checkintegrity import reindex_entities
+        reindex_entities(self.repo.schema, self.session, etypes=etypes)
 
     @deprecated('[3.5] use create_entity', stacklevel=3)
     def cmd_add_entity(self, etype, *args, **kwargs):

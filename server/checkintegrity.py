@@ -88,7 +88,7 @@ def etype_fti_containers(eschema, _done=None):
     else:
         yield eschema
 
-def reindex_entities(schema, session, withpb=True):
+def reindex_entities(schema, session, withpb=True, etypes=None):
     """reindex all entities in the repository"""
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
@@ -98,15 +98,16 @@ def reindex_entities(schema, session, withpb=True):
         print 'no text index table'
         repo.system_source.dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
-    etypes = set()
-    for eschema in schema.entities():
-        if eschema.final:
-            continue
-        indexable_attrs = tuple(eschema.indexable_attributes()) # generator
-        if not indexable_attrs:
-            continue
-        for container in etype_fti_containers(eschema):
-            etypes.add(container)
+    if etypes is None:
+        etypes = set()
+        for eschema in schema.entities():
+            if eschema.final:
+                continue
+            indexable_attrs = tuple(eschema.indexable_attributes()) # generator
+            if not indexable_attrs:
+                continue
+            for container in etype_fti_containers(eschema):
+                etypes.add(container)
     print 'Reindexing entities of type %s' % \
           ', '.join(sorted(str(e) for e in etypes))
     if withpb:
