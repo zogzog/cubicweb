@@ -100,7 +100,7 @@ class EntityFieldsFormTC(CubicWebTC):
         rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
         form = self.vreg['views'].select('doreledit', self.request(),
                                          rset=rset, row=0, rtype='content')
-        data = form.render(row=0, rtype='content')
+        data = form.render(row=0, rtype='content', formid='base')
         self.failUnless('content_format' in data)
 
     # form view tests #########################################################
