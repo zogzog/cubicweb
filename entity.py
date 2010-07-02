@@ -1099,6 +1099,11 @@ class Entity(AppObject):
     def clear_related_cache(self, rtype=None, role=None):
         self.cw_clear_relation_cache(rtype, role)
 
+    @deprecated('[3.9] use entity.cw_related_rql(rtype, [role, [targettypes]])')
+    def related_rql(self, rtype, role='subject', targettypes=None):
+        return self.cw_related_rql(rtype, role, targettypes)
+
+
 # attribute and relation descriptors ##########################################
 
 class Attribute(object):
