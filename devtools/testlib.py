@@ -633,10 +633,10 @@ class CubicWebTC(TestCase):
         view = viewsreg.select(vid, req, **kwargs)
         # set explicit test description
         if rset is not None:
-            self.set_description("testing %s, mod=%s (%s)" % (
+            self.set_description("testing vid=%s defined in %s with (%s)" % (
                 vid, view.__module__, rset.printable_rql()))
         else:
-            self.set_description("testing %s, mod=%s (no rset)" % (
+            self.set_description("testing vid=%s defined in %s without rset" % (
                 vid, view.__module__))
         if template is None: # raw view testing, no template
             viewfunc = view.render
