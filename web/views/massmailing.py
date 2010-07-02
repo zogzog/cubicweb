@@ -79,7 +79,7 @@ class MassMailingForm(forms.FieldsForm):
     form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",
-                              stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
+                              _(stdmsgs.BUTTON_CANCEL[0]), stdmsgs.BUTTON_CANCEL[1])]
     form_renderer_id = __regid__
 
     def __init__(self, *args, **kwargs):
