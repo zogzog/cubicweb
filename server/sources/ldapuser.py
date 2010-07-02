@@ -278,7 +278,10 @@ directory (default to once a day).',
         to fetch the salt first
         """
         self.info('ldap authenticate %s', login)
-        if password is None:
+        if not password:
+            # On Windows + ADAM this would have succeeded (!!!)
+            # You get Authenticated as: 'NT AUTHORITY\ANONYMOUS LOGON'.
+            # we really really don't want that
             raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
         searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
@@ -293,15 +296,10 @@ directory (default to once a day).',
             raise AuthenticationError()
         # check password by establishing a (unused) connection
         try:
-            if password:
-                self._connect(user, password)
-            else:
-                # On Windows + ADAM this would have succeeded (!!!)
-                # You get Authenticated as: 'NT AUTHORITY\ANONYMOUS LOGON'.
-                # we really really don't want that
-                raise Exception('No password provided')
-        except Exception, ex:
-            self.info('while trying to authenticate %s: %s', user, ex)
+            self._connect(user, password)
+        except Exception:
+            self.error('while trying to authenticate %s: %s', user,
+                       exc_info=True)
             # Something went wrong, most likely bad credentials
             raise AuthenticationError()
         return self.extid2eid(user['dn'], 'CWUser', session)
