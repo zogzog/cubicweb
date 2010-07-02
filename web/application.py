@@ -374,6 +374,7 @@ class CubicWebPublisher(object):
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
         tstart = clock()
+        commited = False
         try:
             try:
                 ctrlid, rset = self.url_resolver.process(req, path)
@@ -391,6 +392,7 @@ class CubicWebPublisher(object):
                     # displaying some anonymous enabled view such as the cookie
                     # authentication form
                     req.cnx.commit()
+                    commited = True
             except (StatusResponse, DirectResponse):
                 if req.cnx:
                     req.cnx.commit()
@@ -434,7 +436,7 @@ class CubicWebPublisher(object):
                 self.critical('Catch all triggered!!!')
                 self.exception('this is what happened')
         finally:
-            if req.cnx:
+            if req.cnx and not commited:
                 try:
                     req.cnx.rollback()
                 except:
