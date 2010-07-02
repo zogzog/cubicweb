@@ -28,7 +28,7 @@ from cubicweb.selectors import (one_line_rset, score_entity,
                                 implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.mttransforms import ENGINE
-from cubicweb.web.box import EntityBoxTemplate
+from cubicweb.web import box, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
@@ -54,7 +54,7 @@ def download_box(w, entity, title=None, label=None, footer=u''):
     w(u'</div></div>\n')
 
 
-class DownloadBox(EntityBoxTemplate):
+class DownloadBox(box.EntityBoxTemplate):
     __regid__ = 'download_box'
     # no download box for images
     # XXX primary_view selector ?
@@ -77,6 +77,7 @@ class DownloadView(EntityView):
     templatable = False
     content_type = 'application/octet-stream'
     binary = True
+    http_cache_manager = httpcache.EntityHTTPCacheManager
     add_to_breadcrumbs = False
 
     def set_request_content_type(self):
@@ -95,6 +96,8 @@ class DownloadView(EntityView):
     def call(self):
         self.w(self.cw_rset.complete_entity(0, 0).download_data())
 
+    def last_modified(self):
+        return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).modification_date
 
 class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
