@@ -169,10 +169,6 @@ class ViewController(Controller):
         if view.add_to_breadcrumbs and not view.binary:
             self._cw.update_breadcrumbs()
 
-    def validate_cache(self, view):
-        view.set_http_cache_headers()
-        self._cw.validate_cache()
-
     def execute_linkto(self, eid=None):
         """XXX __linkto parameter may cause security issue
 
