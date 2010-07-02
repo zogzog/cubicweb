@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""HTTP cache managers
+"""HTTP cache managers"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from time import mktime
