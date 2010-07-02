@@ -389,6 +389,32 @@ autoform_field_kwargs = RelationTagsDict()
 # permissions checking is by-passed and supposed to be ok
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
 
+class _ReleditTags(RelationTagsDict):
+    _keys = frozenset('reload default_value noedit'.split())
+
+    def tag_subject_of(self, key, *args, **kwargs):
+        subj, rtype, obj = key
+        if obj != '*':
+            self.warning('using explict target type in display_ctrl.tag_subject_of() '
+                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
+                         subj, rtype, subj, rtype, obj)
+        super(_ReleditTags, self).tag_subject_of(key, *args, **kwargs)
+
+    def tag_object_of(self, key, *args, **kwargs):
+        subj, rtype, obj = key
+        if subj != '*':
+            self.warning('using explict subject type in display_ctrl.tag_object_of() '
+                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
+                         rtype, obj, subj, rtype, obj)
+        super(_ReleditTags, self).tag_object_of(key, *args, **kwargs)
+
+    def tag_relation(self, key, tag):
+        for tagkey in tag.iterkeys():
+            assert tagkey in self._keys
+        return super(_ReleditTags, self).tag_relation(key, tag)
+
+reledit_ctrl = _ReleditTags('reledit')
+
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu

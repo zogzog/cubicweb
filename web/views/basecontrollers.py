@@ -457,12 +457,12 @@ class JSonController(Controller):
     def js_reledit_form(self):
         req = self._cw
         args = dict((x, req.form[x])
-                    for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
-        entity = req.entity_from_eid(typed_eid(req.form['eid']))
-        # note: default is reserved in js land
-        args['default'] = req.form['default_value']
-        args['reload'] = json.loads(args['reload'])
-        rset = req.eid_rset(typed_eid(req.form['eid']))
+                    for x in ('formid', 'rtype', 'role', 'reload', 'default_value'))
+        rset = req.eid_rset(typed_eid(self._cw.form['eid']))
+        try:
+            args['reload'] = json.loads(args['reload'])
+        except ValueError: # not true/false, an absolute url
+            assert args['reload'].startswith('http')
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
         return self._call_view(view, **args)
 
