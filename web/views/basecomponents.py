@@ -19,8 +19,8 @@
 
 * the rql input form
 * the logged user link
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 

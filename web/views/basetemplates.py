@@ -272,7 +272,7 @@ class SimpleMainTemplate(TheMainTemplate):
 
     def topleft_header(self):
         logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
-                                                      rset=self.cw_rset)
+                                                          rset=self.cw_rset)
         if logo and logo.cw_propval('visible'):
             self.w(u'<table id="header"><tr>\n')
             self.w(u'<td>')
