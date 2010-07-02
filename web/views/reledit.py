@@ -319,7 +319,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             w(u'</div>')
         if delete_related:
             args['formid'] = 'deleteconf'
-            w(u'<div id="%s-add" class="editableField" onclick="%s" title="%s">' %
+            w(u'<div id="%s-delete" class="editableField" onclick="%s" title="%s">' %
               (divid, xml_escape(self._onclick % args), self._cw._(self._deletemsg)))
             w(self._build_delete_zone())
             w(u'</div>')
