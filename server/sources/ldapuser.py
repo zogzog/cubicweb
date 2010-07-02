@@ -19,8 +19,6 @@
 
 this source is for now limited to a read-only CWUser source
 
-
-
 Part of the code is coming form Zope's LDAPUserFolder
 
 Copyright (c) 2004 Jens Vagelpohl.
@@ -297,10 +295,12 @@ directory (default to once a day).',
         # check password by establishing a (unused) connection
         try:
             self._connect(user, password)
-        except Exception:
-            self.error('while trying to authenticate %s: %s', user,
-                       exc_info=True)
+        except ldap.LDAPError, ex:
             # Something went wrong, most likely bad credentials
+            self.info('while trying to authenticate %s: %s', user, ex)
+            raise AuthenticationError()
+        except Exception:
+            self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
         return self.extid2eid(user['dn'], 'CWUser', session)
 
