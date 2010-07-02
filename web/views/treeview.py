@@ -91,7 +91,7 @@ class TreePathView(EntityView):
             # entity is actually an error message
             self.w(u'<span class="badcontent">%s</span>' % entity)
             return
-        parent = entity.cw_adapt_to('ITree').parent_entity()
+        parent = entity.cw_adapt_to('ITree').parent()
         if parent:
             parent.view(self.__regid__, w=self.w, done=done)
             self.w(self.separator)
