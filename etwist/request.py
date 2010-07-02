@@ -83,32 +83,22 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
             # Expires header seems to be required by IE7
             self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
             return
-
         # when using both 'Last-Modified' and 'ETag' response headers
         # (i.e. using respectively If-Modified-Since and If-None-Match request
         # headers, see
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4 for
         # reference
-
-        cached_because_not_modified_since = False
-
         last_modified = self.headers_out.getHeader('last-modified')
         if last_modified is not None:
-            cached_because_not_modified_since = (self._twreq.setLastModified(last_modified)
-                                                 == http.CACHED)
-
-        if not cached_because_not_modified_since:
-            return
-
-        cached_because_etag_is_same = False
+            status = self._twreq.setLastModified(last_modified)
+            if status != http.CACHED:
+                return
         etag = self.headers_out.getRawHeaders('etag')
         if etag is not None:
-            cached_because_etag_is_same = self._twreq.setETag(etag[0]) == http.CACHED
-
-        if cached_because_etag_is_same:
-            response = not_modified_response(self._twreq, self._headers_in)
-            raise DirectResponse(response)
-
+            status = self._twreq.setETag(etag[0])
+            if status == http.CACHED:
+                response = not_modified_response(self._twreq, self._headers_in)
+                raise DirectResponse(response)
         # Expires header seems to be required by IE7
         self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
 
