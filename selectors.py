@@ -734,7 +734,7 @@ class has_mimetype(EntitySelector):
         self.mimetype = mimetype
 
     def score_entity(self, entity):
-        idownloadable =  entity.cw_adapt_to('IDownloadable')
+        idownloadable = entity.cw_adapt_to('IDownloadable')
         if idownloadable is None:
             return 0
         mt = idownloadable.download_content_type()
