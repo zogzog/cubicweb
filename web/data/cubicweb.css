@@ -51,7 +51,7 @@ h2 { padding: %(h2Padding)s; }
 h3 { padding: %(h3Padding)s; }
 
 html, body {
-  background: #e2e2e2;
+  background: %(pageBgColor)s;
 }
 
 a, a:active, a:visited, a:link {

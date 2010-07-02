@@ -96,7 +96,9 @@ h3Margin = '0'
 aColor = '#e6820e'
 aActiveColor = aVisitedColor = aLinkColor = aColor
 
+
 # page frame
+pageBgColor = '#e2e2e2'
 pageContentBorderColor = '#ccc'
 pageContentBgColor = '#fff'
 pageContentPadding = '1em'
