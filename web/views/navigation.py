@@ -188,7 +188,7 @@ class IPrevNextAdapter(EntityAdapter):
     entity
     """
     __regid__ = 'IPrevNext'
-    __select__ = implements(IPrevNext) # XXX for bw compat, else should be abstract
+    __select__ = implements(IPrevNext, warn=False) # XXX for bw compat, else should be abstract
 
     @implements_adapter_compat('IPrevNext')
     def next_entity(self):

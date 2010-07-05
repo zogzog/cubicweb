@@ -156,7 +156,7 @@ def merge_weight_dict(maindict, newdict):
 class IDownloadableAdapter(EntityAdapter):
     """interface for downloadable entities"""
     __regid__ = 'IDownloadable'
-    __select__ = implements(IDownloadable) # XXX for bw compat, else should be abstract
+    __select__ = implements(IDownloadable, warn=False) # XXX for bw compat, else should be abstract
 
     @implements_adapter_compat('IDownloadable')
     def download_url(self): # XXX not really part of this interface
@@ -186,7 +186,7 @@ class ITreeAdapter(EntityAdapter):
     benefit from this default implementation
     """
     __regid__ = 'ITree'
-    __select__ = implements(ITree) # XXX for bw compat, else should be abstract
+    __select__ = implements(ITree, warn=False) # XXX for bw compat, else should be abstract
 
     child_role = 'subject'
     parent_role = 'object'
@@ -343,7 +343,7 @@ class IProgressAdapter(EntityAdapter):
     implementations.
     """
     __regid__ = 'IProgress'
-    __select__ = implements(IProgress) # XXX for bw compat, should be abstract
+    __select__ = implements(IProgress, warn=False) # XXX for bw compat, should be abstract
 
     @property
     @implements_adapter_compat('IProgress')
@@ -411,7 +411,7 @@ class IProgressAdapter(EntityAdapter):
 
 class IMileStoneAdapter(IProgressAdapter):
     __regid__ = 'IMileStone'
-    __select__ = implements(IMileStone) # XXX for bw compat, should be abstract
+    __select__ = implements(IMileStone, warn=False) # XXX for bw compat, should be abstract
 
     parent_type = None # specify main task's type
 

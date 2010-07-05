@@ -208,7 +208,7 @@ class TreeViewMixIn(object):
     __deprecation_warning__ = '[3.9] TreeViewMixIn is deprecated, use/override BaseTreeView instead'
 
     __regid__ = 'tree'
-    __select__ = implements(ITree)
+    __select__ = implements(ITree, warn=False)
     item_vid = 'treeitem'
 
     def call(self, done=None, **kwargs):

@@ -41,7 +41,7 @@ from cubicweb.web.views import basetemplates
 class IEmbedableAdapter(EntityAdapter):
     """interface for embedable entities"""
     __regid__ = 'IEmbedable'
-    __select__ = implements(IEmbedable) # XXX for bw compat, should be abstract
+    __select__ = implements(IEmbedable, warn=False) # XXX for bw compat, should be abstract
 
     @implements_adapter_compat('IEmbedable')
     def embeded_url(self):

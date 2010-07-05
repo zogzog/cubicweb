@@ -32,7 +32,7 @@ from cubicweb.interfaces import ISiocItem, ISiocContainer
 class ISIOCItemAdapter(EntityAdapter):
     """interface for entities which may be represented as an ISIOC items"""
     __regid__ = 'ISIOCItem'
-    __select__ = implements(ISiocItem) # XXX for bw compat, should be abstract
+    __select__ = implements(ISiocItem, warn=False) # XXX for bw compat, should be abstract
 
     @implements_adapter_compat('ISIOCItem')
     def isioc_content(self):
@@ -63,7 +63,7 @@ class ISIOCItemAdapter(EntityAdapter):
 class ISIOCContainerAdapter(EntityAdapter):
     """interface for entities which may be represented as an ISIOC container"""
     __regid__ = 'ISIOCContainer'
-    __select__ = implements(ISiocContainer) # XXX for bw compat, should be abstract
+    __select__ = implements(ISiocContainer, warn=False) # XXX for bw compat, should be abstract
 
     @implements_adapter_compat('ISIOCContainer')
     def isioc_type(self):
