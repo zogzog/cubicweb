@@ -178,9 +178,8 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
 FROM cw_Personne AS _X
 WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
-
-
 ]
+
 
 ADVANCED= [
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
@@ -575,6 +574,7 @@ ORDER BY T1.C2'''),
 
     ]
 
+
 MULTIPLE_SEL = [
     ("DISTINCT Any X,Y where P is Personne, P nom X , P prenom Y;",
      '''SELECT DISTINCT _P.cw_nom, _P.cw_prenom
@@ -589,7 +589,9 @@ FROM cw_Personne AS _X, cw_Personne AS _Y
 WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)''')
     ]
 
+
 NEGATIONS = [
+
     ("Personne X WHERE NOT X evaluee Y;",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
@@ -1455,6 +1457,12 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
                     '''SELECT (A || _X.cw_ref)
 FROM cw_Affaire AS _X''')
 
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
+
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
@@ -1579,6 +1587,13 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
             yield t
 
 
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
     backend = 'mysql'
@@ -1659,6 +1674,14 @@ GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
         self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
                     '''SELECT SUBSTRING(_P.cw_nom, 1, 1)
 FROM cw_Personne AS _P''')
+
+
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):

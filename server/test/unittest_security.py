@@ -15,8 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""functional tests for server'security
-"""
+"""functional tests for server'security"""
+
 import sys
 
 from logilab.common.testlib import unittest_main, TestCase
@@ -65,6 +65,27 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         self.assertRaises(Unauthorized,
                           cu.execute, 'Any X,P WHERE X is CWUser, X upassword P')
 
+
+class SecurityRewritingTC(BaseSecurityTC):
+    def hijack_source_execute(self):
+        def syntax_tree_search(*args, **kwargs):
+            self.query = (args, kwargs)
+            return []
+        self.repo.system_source.syntax_tree_search = syntax_tree_search
+
+    def tearDown(self):
+        self.repo.system_source.__dict__.pop('syntax_tree_search', None)
+        BaseSecurityTC.tearDown(self)
+
+    def test_not_relation_read_security(self):
+        cnx = self.login('iaminusersgrouponly')
+        self.hijack_source_execute()
+        self.execute('Any U WHERE NOT A todo_by U, A is Affaire')
+        self.assertEquals(self.query[0][1].as_string(),
+                          'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+        self.execute('Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+        self.assertEquals(self.query[0][1].as_string(),
+                          'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
 
 class SecurityTC(BaseSecurityTC):
 
@@ -419,7 +440,6 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(x.login, None)
         self.failUnless(x.creation_date)
         cnx.rollback()
-
 
 class BaseSchemaSecurityTC(BaseSecurityTC):
     """tests related to the base schema permission configuration"""

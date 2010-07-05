@@ -191,6 +191,7 @@ manager to help with that, *if you're running your instance in debug mode*.
 
 .. |cubicweb| replace:: *CubicWeb*
 """
+
 __docformat__ = "restructuredtext en"
 
 import logging

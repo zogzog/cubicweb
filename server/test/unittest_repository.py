@@ -212,7 +212,7 @@ class RepositoryTC(CubicWebTC):
     def test_transaction_interleaved(self):
         self.skip('implement me')
 
-    def test_close_wait_processing_request(self):
+    def test_close_kill_processing_request(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         repo.execute(cnxid, 'INSERT CWUser X: X login "toto", X upassword "tutu", X in_group G WHERE G name "users"')
@@ -223,9 +223,12 @@ class RepositoryTC(CubicWebTC):
             repo.close(cnxid)
         t = threading.Thread(target=close_in_a_few_moment)
         t.start()
-        try:
+        def run_transaction():
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
+        try:
+            ex = self.assertRaises(Exception, run_transaction)
+            self.assertEquals(str(ex), 'try to access pool on a closed session')
         finally:
             t.join()
 

@@ -189,6 +189,7 @@ selectors that will inspect their content and return a score accordingly.
 
 .. automethod:: cubicweb.vregistry.Registry.object_by_id
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
