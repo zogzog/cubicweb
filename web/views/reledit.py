@@ -91,9 +91,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 self.w(value)
                 return
             # this is for attribute-like composites (1 target type, 1 related entity at most)
+            add_related = self._may_add_related(related_rset, entity, rschema, role, ttypes)
             edit_related = self._may_edit_related_entity(related_rset, entity, rschema, role, ttypes)
             delete_related = edit_related and self._may_delete_related(related_rset, entity, rschema, role)
-            add_related = self._may_add_related(related_rset, entity, rschema, role, ttypes)
             # compute formid
             if len(ttypes) > 1: # redundant safety belt
                 formid = 'base'
@@ -142,38 +142,33 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     def _is_composite(self, eschema, rschema, role):
         return eschema.rdef(rschema, role).composite == role
 
-    def _may_add_related(self, rset, entity, rschema, role, ttypes):
+    def _may_add_related(self, related_rset, entity, rschema, role, ttypes):
         """ ok for attribute-like composite entities """
         if self._is_composite(entity.e_schema, rschema, role):
             if len(ttypes) > 1: # wrong cardinality: do not handle
                 return False
             ttype = ttypes[0]
-            if rset:
-                eschema = entity.e_schema
-                if role == 'subject':
-                    source, target = eschema.type, ttype
-                else:
-                    source, target = ttype, eschema.type
-                card = rschema.rdef(source, target).role_cardinality(role)
-                if card in '1?':
-                    return False
+            card = rschema.rdef(entity.e_schema, ttype).role_cardinality(role)
+            if related_rset and card in '?1':
+                return False
             if rschema.has_perm(self._cw, 'add', toetype=ttype):
                 return True
         return False
 
     def _may_edit_related_entity(self, related_rset, entity, rschema, role, ttypes):
         """ controls the edition of the related entity """
+        if entity.e_schema.rdef(rschema, role).role_cardinality(role) not in '?1':
+            return False
+        if len(related_rset.rows) != 1:
+            return False
         if len(ttypes) > 1:
             return False
         if not self._is_composite(entity.e_schema, rschema, role):
-            return False
-        if len(related_rset.rows) != 1:
             return False
         return related_rset.get_entity(0, 0).cw_has_perm('update')
 
     def _may_delete_related(self, related_rset, entity, rschema, role):
         # we assume may_edit_related
-        assert len(related_rset.rows) == 1
         kwargs = {'fromeid': entity.eid} if role == 'subject' else {'toeid': entity.eid}
         if not rschema.has_perm(self._cw, 'delete', **kwargs):
             return False
@@ -210,7 +205,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         event_args = self._build_args(entity, rtype, role, formid, default_value,
                                       reload, extradata)
         cancelclick = self._cancelclick % divid
-        if edit_related:
+        if edit_related and not add_related:
             display_fields = None
             display_label = True
             related_entity = entity.related(rtype, role).get_entity(0, 0)
