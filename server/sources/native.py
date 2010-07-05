@@ -42,6 +42,8 @@ from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin
 from logilab.database import get_db_helper
 
+from yams import schema2sql as y2sql
+
 from cubicweb import UnknownEid, AuthenticationError, ValidationError, Binary
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -127,6 +129,21 @@ def sql_or_clauses(sql, clauses):
         restr = '(%s)' % ' OR '.join(clauses)
     return '%s WHERE %s' % (select, restr)
 
+def rdef_table_column(rdef):
+    """return table and column used to store the given relation definition in
+    the database
+    """
+    return (SQL_PREFIX + str(rdef.subject),
+            SQL_PREFIX + str(rdef.rtype))
+
+def rdef_physical_info(dbhelper, rdef):
+    """return backend type and a boolean flag if NULL values should be allowed
+    for a given relation definition
+    """
+    coltype = y2sql.type_from_constraints(dbhelper, rdef.object,
+                                          rdef.constraints, creating=False)
+    allownull = rdef.cardinality[0] != '1'
+    return coltype, allownull
 
 class UndoException(Exception):
     """something went wrong during undoing"""
@@ -674,6 +691,47 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # short cut to method requiring advanced db helper usage ##################
 
+    def update_rdef_column(self, session, rdef):
+        """update physical column for a relation definition (final or inlined)
+        """
+        table, column = rdef_table_column(rdef)
+        coltype, allownull = rdef_physical_info(self.dbhelper, rdef)
+        if not self.dbhelper.alter_column_support:
+            self.error("backend can't alter %s.%s to %s%s", table, column, coltype,
+                       not allownull and 'NOT NULL' or '')
+            return
+        self.dbhelper.change_col_type(LogCursor(session.pool[self.uri]),
+                                      table, column, coltype, allownull)
+        self.info('altered %s.%s: now %s%s', table, column, coltype,
+                  not allownull and 'NOT NULL' or '')
+
+    def update_rdef_null_allowed(self, session, rdef):
+        """update NULL / NOT NULL of physical column for a relation definition
+        (final or inlined)
+        """
+        if not self.dbhelper.alter_column_support:
+            # not supported (and NOT NULL not set by yams in that case, so no
+            # worry)
+            return
+        table, column = rdef_table_column(rdef)
+        coltype, allownull = rdef_physical_info(self.dbhelper, rdef)
+        self.dbhelper.set_null_allowed(LogCursor(session.pool[self.uri]),
+                                       table, column, coltype, allownull)
+
+    def update_rdef_indexed(self, session, rdef):
+        table, column = rdef_table_column(rdef)
+        if rdef.indexed:
+            self.create_index(session, table, column)
+        else:
+            self.drop_index(session, table, column)
+
+    def update_rdef_unique(self, session, rdef):
+        table, column = rdef_table_column(rdef)
+        if rdef.constraint_by_type('UniqueConstraint'):
+            self.create_index(session, table, column, unique=True)
+        else:
+            self.drop_index(session, table, column, unique=True)
+
     def create_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
@@ -681,14 +739,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def drop_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.drop_index(cursor, table, column, unique)
-
-    def change_col_type(self, session, table, column, coltype, null_allowed):
-        cursor = LogCursor(session.pool[self.uri])
-        self.dbhelper.change_col_type(cursor, table, column, coltype, null_allowed)
-
-    def set_null_allowed(self, session, table, column, coltype, null_allowed):
-        cursor = LogCursor(session.pool[self.uri])
-        self.dbhelper.set_null_allowed(cursor, table, column, coltype, null_allowed)
 
     # system source interface #################################################
 

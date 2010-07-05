@@ -747,7 +747,7 @@ class Session(RequestSessionBase):
                         self.pending_operations[:] = processed
                         self.debug('%s session %s done', trstate, self.id)
                     except:
-                        self.exception('error while %sing', trstate)
+                        self.critical('error while %sing', trstate, exc_info=True)
                         # if error on [pre]commit:
                         #
                         # * set .failed = True on the operation causing the failure
@@ -759,8 +759,12 @@ class Session(RequestSessionBase):
                         # instead of having to implements rollback, revertprecommit
                         # and revertcommit, that will be enough in mont case.
                         operation.failed = True
-                        for operation in processed:
-                            operation.handle_event('revert%s_event' % trstate)
+                        for operation in reversed(processed):
+                            try:
+                                operation.handle_event('revert%s_event' % trstate)
+                            except:
+                                self.critical('error while reverting %sing', trstate,
+                                              exc_info=True)
                         # XXX use slice notation since self.pending_operations is a
                         # read-only property.
                         self.pending_operations[:] = processed + self.pending_operations
