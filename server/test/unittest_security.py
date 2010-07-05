@@ -15,8 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""functional tests for server'security
-"""
+"""functional tests for server'security"""
+
 import sys
 
 from logilab.common.testlib import unittest_main, TestCase
@@ -420,7 +420,6 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(x.login, None)
         self.failUnless(x.creation_date)
         cnx.rollback()
-
 
 class BaseSchemaSecurityTC(BaseSecurityTC):
     """tests related to the base schema permission configuration"""

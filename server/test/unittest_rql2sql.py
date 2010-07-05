@@ -178,9 +178,8 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
 FROM cw_Personne AS _X
 WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
-
-
 ]
+
 
 ADVANCED= [
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
@@ -581,6 +580,7 @@ ORDER BY T1.C2'''),
 
     ]
 
+
 MULTIPLE_SEL = [
     ("DISTINCT Any X,Y where P is Personne, P nom X , P prenom Y;",
      '''SELECT DISTINCT _P.cw_nom, _P.cw_prenom
@@ -595,7 +595,9 @@ FROM cw_Personne AS _X, cw_Personne AS _Y
 WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)''')
     ]
 
+
 NEGATIONS = [
+
     ("Personne X WHERE NOT X evaluee Y;",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
