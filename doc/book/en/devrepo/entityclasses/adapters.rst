@@ -17,7 +17,7 @@ had to implements Interfaces in entity classes to achieve a similar goal. Howeve
 hte problem with this approch is that is clutters the entity class's namespace, exposing
 name collision risks with schema attributes/relations or even methods names
 (different interfaces may define the same method with not necessarily the same
- behviour expected).
+behaviour expected).
 
 Definition of an adapter is quite trivial. An excerpt from cubicweb
 itself (found in :mod:`cubicweb.entities.adapters`):
