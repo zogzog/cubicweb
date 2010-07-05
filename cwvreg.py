@@ -202,7 +202,7 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      CW_EVENT_MANAGER, onevent)
+                      CW_EVENT_MANAGER)
 from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
@@ -477,6 +477,7 @@ class CubicWebVRegistry(VRegistry):
         return (value for key, value in self.items())
 
     def reset(self):
+        CW_EVENT_MANAGER.emit('before-registry-reset', self)
         super(CubicWebVRegistry, self).reset()
         self._needs_iface = {}
         self._needs_appobject = {}
@@ -488,6 +489,7 @@ class CubicWebVRegistry(VRegistry):
             self['propertyvalues'] = self.eprop_values = {}
             for key, propdef in self.config.eproperty_definitions():
                 self.register_property(key, **propdef)
+        CW_EVENT_MANAGER.emit('after-registry-reset', self)
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
@@ -636,7 +638,6 @@ class CubicWebVRegistry(VRegistry):
         for rtag in RTAGS:
             # don't check rtags if we don't want to cleanup_interface_sobjects
             rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
-
 
     # rql parsing utilities ####################################################
 
