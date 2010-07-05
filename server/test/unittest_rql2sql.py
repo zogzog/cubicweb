@@ -1430,6 +1430,12 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
                     '''SELECT (A || _X.cw_ref)
 FROM cw_Affaire AS _X''')
 
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
+
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
 
@@ -1538,6 +1544,13 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
             yield t
 
 
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
 
@@ -1622,6 +1635,14 @@ GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
         self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
                     '''SELECT SUBSTRING(_P.cw_nom, 1, 1)
 FROM cw_Personne AS _P''')
+
+
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):

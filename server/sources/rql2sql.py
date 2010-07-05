@@ -428,16 +428,15 @@ def extract_fake_having_terms(having):
             p = compnode.parent
             oor = None
             while not isinstance(p, Select):
-                if p in ors:
+                if p in ors or p is None: # p is None for nodes already in fakehaving
                     break
                 if isinstance(p, Or):
                     oor = p
                 p = p.parent
             else:
                 node = oor or compnode
-                if not node in fakehaving:
-                    fakehaving.append(node)
-                    compnode.parent.remove(node)
+                fakehaving.append(node)
+                node.parent.remove(node)
     return fakehaving
 
 class SQLGenerator(object):
