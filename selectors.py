@@ -678,7 +678,7 @@ class implements(EClassSelector):
         super(implements, self).__init__(**kwargs)
         self.expected_ifaces = expected_ifaces
         warn('[3.9] implements selector is deprecated, use either is_instance '
-             'or adaptable', DeprecationWarning, stacklevel=1)
+             'or adaptable', DeprecationWarning, stacklevel=2)
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,
