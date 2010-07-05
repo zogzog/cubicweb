@@ -747,7 +747,6 @@ class Session(RequestSessionBase):
                         self.pending_operations[:] = processed
                         self.debug('%s session %s done', trstate, self.id)
                     except:
-                        self.critical('error while %sing', trstate, exc_info=True)
                         # if error on [pre]commit:
                         #
                         # * set .failed = True on the operation causing the failure
