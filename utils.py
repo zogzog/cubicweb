@@ -121,6 +121,9 @@ class RepeatList(object):
     def __init__(self, size, item):
         self._size = size
         self._item = item
+    def __repr__(self):
+        return '<cubicweb.utils.RepeatList at %s item=%s size=%s>' % (
+            id(self), self._item, self._size)
     def __len__(self):
         return self._size
     def __nonzero__(self):
