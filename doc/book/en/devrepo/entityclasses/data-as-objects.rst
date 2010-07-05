@@ -4,23 +4,22 @@ Access to persistent data
 Python-level access to persistent data is provided by the
 :class:`Entity <cubicweb.entity>` class.
 
-An entity class is bound to a schema entity type.  Descriptors are added when
+.. XXX this part is not clear. refactor it.
+
+An entity class is bound to a schema entity type. Descriptors are added when
 classes are registered in order to initialize the class according to its schema:
 
-* we can access the defined attributes in the schema thanks to the attributes of
-  the same name on instances (typed value)
+* the attributes defined in the schema appear as attributes of these classes
 
-* we can access the defined relations in the schema thanks to the relations of
-  the same name on instances (entities instances list)
-
+* the relations defined in the schema appear as attributes of these classes,
+  but are lists of instances
 
 `Formatting and output generation`:
 
 * `view(__vid, __registry='views', **kwargs)`, applies the given view to the entity
   (and returns an unicode string)
 
-* `absolute_url(*args, **kwargs)`, returns an absolute URL to access the primary view
-  of an entity
+* `absolute_url(*args, **kwargs)`, returns an absolute URL including the base-url
 
 * `rest_path()`, returns a relative REST URL to get the entity
 
@@ -31,7 +30,7 @@ classes are registered in order to initialize the class according to its schema:
 `Data handling`:
 
 * `as_rset()`, converts the entity into an equivalent result set simulating the
-   request `Any X WHERE X eid _eid_`
+  request `Any X WHERE X eid _eid_`
 
 * `complete(skip_bytes=True)`, executes a request that recovers at
   once all the missing attributes of an entity
@@ -52,10 +51,10 @@ classes are registered in order to initialize the class according to its schema:
   values given named parameters
 
 * `set_relations(**kwargs)`, add relations to the given object. To
-   set a relation where this entity is the object of the relation,
-   use `reverse_<relation>` as argument name.  Values may be an
-   entity, a list of entities, or None (meaning that all relations of
-   the given type from or to this object should be deleted).
+  set a relation where this entity is the object of the relation,
+  use `reverse_<relation>` as argument name.  Values may be an
+  entity, a list of entities, or None (meaning that all relations of
+  the given type from or to this object should be deleted).
 
 * `copy_relations(ceid)`, copies the relations of the entities having the eid
   given in the parameters on the current entity
@@ -111,7 +110,7 @@ support for the `Dublin Core`_ metadata.
 `Misc methods`:
 
 * `after_deletion_path`, return (path, parameters) which should be
-   used as redirect information when this entity is being deleted
+  used as redirect information when this entity is being deleted
 
 * `pre_web_edit`, callback called by the web editcontroller when an
   entity will be created/modified, to let a chance to do some entity

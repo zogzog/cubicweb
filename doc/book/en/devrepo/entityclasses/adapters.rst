@@ -50,7 +50,7 @@ Specializing and binding an adapter
   from cubicweb.entities.adapters import ITreeAdapter
 
   class MyEntityITreeAdapter(ITreeAdapter):
-      __select__ = implements('MyEntity')
+      __select__ = is_instance('MyEntity')
       tree_relation = 'filed_under'
 
 The ITreeAdapter here provides a default implementation. The
@@ -124,6 +124,7 @@ start from:
 
     class MyEntity(AnyEntity):
         __regid__ = 'MyEntity'
+	__implements__ = AnyEntity.__implements__ + (IFoo,)
 
         def bar(self, *args):
             return sum(captain.age for captain in self.captains)
@@ -142,6 +143,7 @@ Converting to:
 
    class IFooAdapter(EntityAdapter):
        __regid__ = 'IFoo'
+       __select__ = is_instance('MyEntity')
 
        def bar(self, *args):
            return sum(captain.age for captain in self.entity.captains)
