@@ -29,7 +29,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import Relation, VariableRef, Constant, SubQuery
+from rql.nodes import Relation, VariableRef, Constant, SubQuery, Exists, Not
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -112,7 +112,16 @@ def check_read_access(session, rqlst, solution, args):
                 ex = Unauthorized('read', solution[varname])
                 ex.var = varname
                 raise ex
-            localchecks[varname] = erqlexprs
+            # don't insert security on variable only referenced by 'NOT X relation Y' or
+            # 'NOT EXISTS(X relation Y)'
+            varinfo = rqlst.defined_vars[varname].stinfo
+            if varinfo['selected'] or (
+                len([r for r in varinfo['relations']
+                     if (not schema.rschema(r.r_type).final
+                         and ((isinstance(r.parent, Exists) and r.parent.neged(strict=True))
+                              or isinstance(r.parent, Not)))])
+                != len(varinfo['relations'])):
+                localchecks[varname] = erqlexprs
     return localchecks
 
 def add_noinvariant(noinvariant, restricted, select, nbtrees):
