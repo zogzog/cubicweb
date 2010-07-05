@@ -202,7 +202,8 @@ from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
 
-from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
+from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
+                      CW_EVENT_MANAGER, role)
 # even if not used, let yes here so it's importable through this module
 from cubicweb.appobject import Selector, objectify_selector, lltrace, yes
 from cubicweb.schema import split_expression
@@ -698,6 +699,10 @@ class implements(EClassSelector):
             score += score_interface(etypesreg, cls_or_inst, cls, iface)
         return score
 
+def _reset_is_instance_cache(vreg):
+    vreg._is_instance_selector_cache = {}
+
+CW_EVENT_MANAGER.bind('before-registry-reset', _reset_is_instance_cache)
 
 class is_instance(EClassSelector):
     """Return non-zero score for entity that is an instance of the one of given
@@ -728,10 +733,7 @@ class is_instance(EClassSelector):
 
     def score_etypes(self, req, cls_or_inst, cls):
         # cache on vreg to avoid reloading issues
-        try:
-            cache = req.vreg.__is_instance_cache
-        except AttributeError:
-            cache = req.vreg.__is_instance_cache = {}
+        cache = req.vreg._is_instance_selector_cache
         try:
             expected_eclasses = cache[self]
         except KeyError:

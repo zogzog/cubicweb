@@ -1050,7 +1050,7 @@ class AfterAddCWRelationHook(AfterAddCWAttributeHook):
 class AfterUpdateCWRDefHook(SyncSchemaHook):
     __regid__ = 'syncaddcwattribute'
     __select__ = SyncSchemaHook.__select__ & is_instance('CWAttribute',
-                                                        'CWRelation')
+                                                         'CWRelation')
     events = ('before_update_entity',)
 
     def __call__(self):
