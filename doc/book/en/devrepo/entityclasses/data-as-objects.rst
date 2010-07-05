@@ -66,7 +66,7 @@ classes are registered in order to initialize the class according to its schema:
 The :class:`AnyEntity` class
 ----------------------------
 
-To provide a specific behavior for each entity, we have to define a class
+To provide a specific behavior for each entity, we can define a class
 inheriting from `cubicweb.entities.AnyEntity`. In general, we define this class
 in `mycube.entities` module (or in a submodule if we want to split code among
 multiple files) so that it will be available on both server and client side.
@@ -139,5 +139,18 @@ ORM. For instance, the new EntityExample above in mycube replaces the
 one in OTHER_CUBE. These types are stored in the `etype` section of
 the `vregistry`.
 
-Notice this is different than yams schema inheritance.
+Notice this is different than yams schema inheritance, which is an
+experimental undocumented feature.
 
+
+Application logic
+-----------------
+
+While a lot of custom behaviour and application logic can be
+implemented using entity classes, the programmer must be aware that
+adding new attributes and method on an entity class adds may shadow
+schema-level attribute or relation definitions.
+
+To keep entities clean (mostly data structures plus a few universal
+methods such as listed above), one should use `adapters` (see
+:ref:`adapters`).

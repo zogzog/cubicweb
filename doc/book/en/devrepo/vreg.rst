@@ -67,7 +67,7 @@ or entity found in the result set ('rset' argument or the input context) and
 match or not according to entity's (instance or class) properties.
 
 .. autoclass:: cubicweb.selectors.non_final_entity
-.. autoclass:: cubicweb.selectors.implements
+.. autoclass:: cubicweb.selectors.is_instance
 .. autoclass:: cubicweb.selectors.score_entity
 .. autoclass:: cubicweb.selectors.rql_condition
 .. autoclass:: cubicweb.selectors.relation_possible
@@ -77,6 +77,7 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.selectors.has_permission
 .. autoclass:: cubicweb.selectors.has_add_permission
 .. autoclass:: cubicweb.selectors.has_mimetype
+.. autoclass:: cubicweb.selectors.implements
 
 
 Logged user selectors
