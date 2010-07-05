@@ -30,7 +30,7 @@ from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 from yams.buildobjs import DEFAULT_ATTRPERMS
 
-from cubicweb.selectors import (implements, match_user_groups, match_kwargs,
+from cubicweb.selectors import (is_instance, match_user_groups, match_kwargs,
                                 has_related_entities, authenticated_user, yes)
 from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
@@ -289,7 +289,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
 _('i18ncard_1'), _('i18ncard_?'), _('i18ncard_+'), _('i18ncard_*')
 
 class CWETypePrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
     tabs = [_('cwetype-description'), _('cwetype-box'), _('cwetype-workflow'),
             _('cwetype-views'), _('cwetype-permissions')]
     default_tab = 'cwetype-description'
@@ -297,7 +297,7 @@ class CWETypePrimaryView(tabs.TabbedPrimaryView):
 
 class CWETypeDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'cwetype-description'
-    __select__ = tabs.PrimaryTab.__select__ & implements('CWEType')
+    __select__ = tabs.PrimaryTab.__select__ & is_instance('CWEType')
 
     def render_entity_attributes(self, entity):
         super(CWETypeDescriptionTab, self).render_entity_attributes(entity)
@@ -379,7 +379,7 @@ class CWETypeRelationCardinalityCell(baseviews.FinalView):
 
 class CWETypeBoxTab(EntityView):
     __regid__ = 'cwetype-box'
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
 
     def cell_call(self, row, col):
         viewer = schemaviewer.SchemaViewer(self._cw)
@@ -392,7 +392,7 @@ class CWETypeBoxTab(EntityView):
 
 class CWETypePermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'cwetype-permissions'
-    __select__ = implements('CWEType') & authenticated_user()
+    __select__ = is_instance('CWEType') & authenticated_user()
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -412,7 +412,7 @@ class CWETypePermTab(SecurityViewMixIn, EntityView):
 
 class CWETypeWorkflowTab(EntityView):
     __regid__ = 'cwetype-workflow'
-    __select__ = (implements('CWEType')
+    __select__ = (is_instance('CWEType')
                   & has_related_entities('workflow_of', 'object'))
 
     def cell_call(self, row, col):
@@ -443,7 +443,7 @@ class CWETypeWorkflowTab(EntityView):
 class CWETypeViewsTab(EntityView):
     """possible views for this entity type"""
     __regid__ = 'cwetype-views'
-    __select__ = EntityView.__select__ & implements('CWEType')
+    __select__ = EntityView.__select__ & is_instance('CWEType')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -463,7 +463,7 @@ class CWETypeViewsTab(EntityView):
 
 
 class CWETypeOneLineView(baseviews.OneLineView):
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
@@ -477,14 +477,14 @@ class CWETypeOneLineView(baseviews.OneLineView):
 # CWRType ######################################################################
 
 class CWRTypePrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWRType')
+    __select__ = is_instance('CWRType')
     tabs = [_('cwrtype-description'), _('cwrtype-permissions')]
     default_tab = 'cwrtype-description'
 
 
 class CWRTypeDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'cwrtype-description'
-    __select__ = implements('CWRType')
+    __select__ = is_instance('CWRType')
 
     def render_entity_attributes(self, entity):
         super(CWRTypeDescriptionTab, self).render_entity_attributes(entity)
@@ -503,7 +503,7 @@ class CWRTypeDescriptionTab(tabs.PrimaryTab):
 
 class CWRTypePermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'cwrtype-permissions'
-    __select__ = implements('CWRType') & authenticated_user()
+    __select__ = is_instance('CWRType') & authenticated_user()
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -514,14 +514,14 @@ class CWRTypePermTab(SecurityViewMixIn, EntityView):
 # CWAttribute / CWRelation #####################################################
 
 class RDEFPrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
     tabs = [_('rdef-description'), _('rdef-permissions')]
     default_tab = 'rdef-description'
 
 
 class RDEFDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'rdef-description'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def render_entity_attributes(self, entity):
         super(RDEFDescriptionTab, self).render_entity_attributes(entity)
@@ -533,7 +533,7 @@ class RDEFDescriptionTab(tabs.PrimaryTab):
 
 class RDEFPermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'rdef-permissions'
-    __select__ = implements('CWRelation', 'CWAttribute') & authenticated_user()
+    __select__ = is_instance('CWRelation', 'CWAttribute') & authenticated_user()
 
     def cell_call(self, row, col):
         self.permissions_table(self.cw_rset.get_entity(row, col).yams_schema())
@@ -545,7 +545,7 @@ class RDEFNameView(tableview.CellView):
     for instance)
     """
     __regid__ = 'rdef-name-cell'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -558,7 +558,7 @@ class RDEFObjectNameView(tableview.CellView):
     """same as RDEFNameView but when the context is the object entity
     """
     __regid__ = 'rdef-object-name-cell'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -569,7 +569,7 @@ class RDEFObjectNameView(tableview.CellView):
 
 class RDEFConstraintsCell(EntityView):
     __regid__ = 'rdef-constraints-cell'
-    __select__ = implements('CWAttribute', 'CWRelation')
+    __select__ = is_instance('CWAttribute', 'CWRelation')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -580,7 +580,7 @@ class RDEFConstraintsCell(EntityView):
 
 class CWAttributeOptionsCell(EntityView):
     __regid__ = 'rdef-options-cell'
-    __select__ = implements('CWAttribute')
+    __select__ = is_instance('CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -595,7 +595,7 @@ class CWAttributeOptionsCell(EntityView):
 
 class CWRelationOptionsCell(EntityView):
     __regid__ = 'rdef-options-cell'
-    __select__ = implements('CWRelation',)
+    __select__ = is_instance('CWRelation',)
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -753,28 +753,28 @@ class SchemaGraphView(StartupView):
 # breadcrumbs ##################################################################
 
 class CWRelationIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('CWRelation')
+    __select__ = is_instance('CWRelation')
     def parent_entity(self):
         return self.entity.rtype
 
 class CWAttributeIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('CWAttribute')
+    __select__ = is_instance('CWAttribute')
     def parent_entity(self):
         return self.entity.stype
 
 class CWConstraintIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('CWConstraint')
+    __select__ = is_instance('CWConstraint')
     def parent_entity(self):
         if self.entity.reverse_constrained_by:
             return self.entity.reverse_constrained_by[0]
 
 class RQLExpressionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('RQLExpression')
+    __select__ = is_instance('RQLExpression')
     def parent_entity(self):
         return self.entity.expression_of
 
 class CWPermissionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('CWPermission')
+    __select__ = is_instance('CWPermission')
     def parent_entity(self):
         # XXX useless with permission propagation
         permissionof = getattr(self.entity, 'reverse_require_permission', ())
@@ -786,7 +786,7 @@ class CWPermissionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
 
 class CWFinalFacet(facet.AttributeFacet):
     __regid__ = 'cwfinal-facet'
-    __select__ = facet.AttributeFacet.__select__ & implements('CWEType', 'CWRType')
+    __select__ = facet.AttributeFacet.__select__ & is_instance('CWEType', 'CWRType')
     rtype = 'final'
 
 class ViewSchemaAction(action.Action):

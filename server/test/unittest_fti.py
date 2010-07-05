@@ -2,7 +2,7 @@ from __future__ import with_statement
 
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
 class PostgresFTITC(CubicWebTC):
@@ -23,7 +23,7 @@ class PostgresFTITC(CubicWebTC):
 
     def test_attr_weight(self):
         class CardIFTIndexableAdapter(IFTIndexableAdapter):
-            __select__ = implements('Card')
+            __select__ = is_instance('Card')
             attr_weight = {'title': 'A'}
         with self.temporary_appobjects(CardIFTIndexableAdapter):
             req = self.request()
@@ -40,7 +40,7 @@ class PostgresFTITC(CubicWebTC):
 
     def test_entity_weight(self):
         class PersonneIFTIndexableAdapter(IFTIndexableAdapter):
-            __select__ = implements('Personne')
+            __select__ = is_instance('Personne')
             entity_weight = 2.0
         with self.temporary_appobjects(PersonneIFTIndexableAdapter):
             req = self.request()

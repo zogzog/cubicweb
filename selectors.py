@@ -244,31 +244,6 @@ class PartialSelectorMixIn(object):
         return super(PartialSelectorMixIn, self).__call__(cls, *args, **kwargs)
 
 
-class ImplementsMixIn(object):
-    """mix-in class for selectors checking implemented interfaces of something
-    """
-    def __init__(self, *expected_ifaces, **kwargs):
-        super(ImplementsMixIn, self).__init__(**kwargs)
-        self.expected_ifaces = expected_ifaces
-
-    def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__,
-                           ','.join(str(s) for s in self.expected_ifaces))
-
-    def score_interfaces(self, req, cls_or_inst, cls):
-        score = 0
-        etypesreg = req.vreg['etypes']
-        for iface in self.expected_ifaces:
-            if isinstance(iface, basestring):
-                # entity type
-                try:
-                    iface = etypesreg.etype_class(iface)
-                except KeyError:
-                    continue # entity type not in the schema
-            score += score_interface(etypesreg, cls_or_inst, cls, iface)
-        return score
-
-
 class EClassSelector(Selector):
     """abstract class for selectors working on *entity class(es)* specified
     explicitly or found of the result set.
@@ -411,7 +386,7 @@ class ExpectedValueSelector(Selector):
     """Take a list of expected values as initializer argument and store them
     into the :attr:`expected` set attribute.
 
-    You should implements the :meth:`_get_value(cls, req, **kwargs)` method
+    You should implement the :meth:`_get_value(cls, req, **kwargs)` method
     which should return the value for the given context. The selector will then
     return 1 if the value is expected, else 0.
     """
@@ -484,8 +459,8 @@ class adaptable(appobject_selectable):
       (usually entities) should be adaptable. One of them should be selectable
       when multiple identifiers are given.
     """
-    # implementing an interface takes precedence other special Any interface,
-    # hence return 2 (implements('Any') score is 1)
+    # being adaptable to an interface takes precedence other is_instance('Any'),
+    # hence return 2 (is_instance('Any') score is 1)
     selectable_score = 2
     def __init__(self, *regids):
         super(adaptable, self).__init__('adapters', *regids)
@@ -664,7 +639,7 @@ def logged_user_in_rset(cls, req, rset=None, row=None, col=0, **kwargs):
 class non_final_entity(EClassSelector):
     """Return 1 for entity of a non final entity type(s). Remember, "final"
     entity types are String, Int, etc... This is equivalent to
-    `implements('Any')` but more optimized.
+    `is_instance('Any')` but more optimized.
 
     See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
     class lookup / score rules according to the input context.
@@ -678,7 +653,7 @@ class non_final_entity(EClassSelector):
         return 1 # necessarily true if we're there
 
 
-class implements(ImplementsMixIn, EClassSelector):
+class implements(EClassSelector):
     """Return non-zero score for entity that are of the given type(s) or
     implements at least one of the given interface(s). If multiple arguments are
     given, matching one of them is enough.
@@ -692,13 +667,99 @@ class implements(ImplementsMixIn, EClassSelector):
     .. note:: when interface is an entity class, the score will reflect class
               proximity so the most specific object will be selected.
 
-    .. note:: with cubicweb >= 3.9, you should use adapters instead of
-              interface, so no interface should be given to this selector. Use
-              :class:`adaptable` instead.
+    .. note:: deprecated in cubicweb >= 3.9, use either
+              :class:`~cubicweb.selectors.is_instance` or
+              :class:`~cubicweb.selectors.adaptable`.
     """
+
+    def __init__(self, *expected_ifaces, **kwargs):
+        super(implements, self).__init__(**kwargs)
+        self.expected_ifaces = expected_ifaces
+        warn('[3.9] implements selector is deprecated, use either is_instance '
+             'or adaptable', DeprecationWarning, stacklevel=1)
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected_ifaces))
 
     def score_class(self, eclass, req):
         return self.score_interfaces(req, eclass, eclass)
+
+    def score_interfaces(self, req, cls_or_inst, cls):
+        score = 0
+        etypesreg = req.vreg['etypes']
+        for iface in self.expected_ifaces:
+            if isinstance(iface, basestring):
+                # entity type
+                try:
+                    iface = etypesreg.etype_class(iface)
+                except KeyError:
+                    continue # entity type not in the schema
+            score += score_interface(etypesreg, cls_or_inst, cls, iface)
+        return score
+
+
+class is_instance(EClassSelector):
+    """Return non-zero score for entity that is an instance of the one of given
+    type(s). If multiple arguments are given, matching one of them is enough.
+
+    Entity types should be given as string, the corresponding class will be
+    fetched from the registry at selection time.
+
+    See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
+    class lookup / score rules according to the input context.
+
+    .. note:: the score will reflect class proximity so the most specific object
+              will be selected.
+    """
+
+    def __init__(self, *expected_etypes, **kwargs):
+        super(is_instance, self).__init__(**kwargs)
+        self.expected_etypes = expected_etypes
+        for etype in self.expected_etypes:
+            assert isinstance(etype, basestring), etype
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected_etypes))
+
+    def score_class(self, eclass, req):
+        return self.score_etypes(req, eclass, eclass)
+
+    def score_etypes(self, req, cls_or_inst, cls):
+        # cache on vreg to avoid reloading issues
+        try:
+            cache = req.vreg.__is_instance_cache
+        except AttributeError:
+            cache = req.vreg.__is_instance_cache = {}
+        try:
+            expected_eclasses = cache[self]
+        except KeyError:
+            # turn list of entity types as string into a list of
+            #  (entity class, parent classes)
+            etypesreg = req.vreg['etypes']
+            expected_eclasses = cache[self] = []
+            for etype in self.expected_etypes:
+                try:
+                    expected_eclasses.append(
+                        (etypesreg.etype_class(etype),
+                         etypesreg.parent_classes(etype))
+                        )
+                except KeyError:
+                    continue # entity type not in the schema
+        score = 0
+        for iface, parents in expected_eclasses:
+            # adjust score according to class proximity
+            if iface is cls:
+                score += len(parents) + 4
+            elif iface is parents[-1]: # Any
+                score += 1
+            else:
+                for index, basecls in enumerate(reversed(parents[:-1])):
+                    if iface is basecls:
+                        score += index + 3
+                        break
+        return score
 
 
 class score_entity(EntitySelector):
@@ -1202,18 +1263,15 @@ class match_form_params(ExpectedValueSelector):
         return len(self.expected)
 
 
-class specified_etype_implements(implements):
+class specified_etype_implements(is_instance):
     """Return non-zero score if the entity type specified by an 'etype' key
     searched in (by priority) input context kwargs and request form parameters
     match a known entity type (case insensitivly), and it's associated entity
-    class is of one of the type(s) given to the initializer or implements at
-    least one of the given interfaces. If multiple arguments are given, matching
-    one of them is enough.
+    class is of one of the type(s) given to the initializer. If multiple
+    arguments are given, matching one of them is enough.
 
-    Entity types should be given as string, the corresponding class will be
-    fetched from the entity types registry at selection time.
-
-    .. note:: when interface is an entity class, the score will reflect class
+    .. note:: as with :class:`~cubicweb.selectors.is_instance`, entity types
+              should be given as string and the score will reflect class
               proximity so the most specific object will be selected.
 
     This selector is usually used by views holding entity creation forms (since
@@ -1292,7 +1350,7 @@ def debug_mode(cls, req, rset=None, **kwargs):
 
 ## deprecated stuff ############################################################
 
-entity_implements = class_renamed('entity_implements', implements)
+entity_implements = class_renamed('entity_implements', is_instance)
 
 class _but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.
@@ -1310,7 +1368,7 @@ class _but_etype(EntitySelector):
             return 0
         return 1
 
-but_etype = class_renamed('but_etype', _but_etype, 'use ~implements(*etypes) instead')
+but_etype = class_renamed('but_etype', _but_etype, 'use ~is_instance(*etypes) instead')
 
 
 # XXX deprecated the one_* variants of selectors below w/ multi_xxx(nb=1)?

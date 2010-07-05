@@ -63,7 +63,7 @@ from logilab.common.logging_ext import set_log_methods
 from cubicweb import RegistryNotFound
 from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
-                                implements)
+                                is_instance)
 from cubicweb.appobject import AppObject
 from cubicweb.server.session import security_enabled
 
@@ -246,7 +246,7 @@ class Hook(AppObject):
                 if ertype.islower():
                     rtypes.append(ertype)
                 else:
-                    cls.__select__ = cls.__select__ & implements(ertype)
+                    cls.__select__ = cls.__select__ & is_instance(ertype)
             if rtypes:
                 cls.__select__ = cls.__select__ & match_rtype(*rtypes)
         return cls
@@ -262,7 +262,7 @@ class Hook(AppObject):
     def __call__(self):
         if hasattr(self, 'call'):
             cls = self.__class__
-            warn('[3.6] %s.%s: call is deprecated, implements __call__'
+            warn('[3.6] %s.%s: call is deprecated, implement __call__'
                  % (cls.__module__, cls.__name__), DeprecationWarning)
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)

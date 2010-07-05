@@ -26,7 +26,7 @@ from logilab.common.textutils import unormalize
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
-from cubicweb.selectors import match_user_groups, implements
+from cubicweb.selectors import match_user_groups, is_instance
 from cubicweb.schema import display_name
 from cubicweb.web import ajax_replace_url, uicfg, httpcache
 

@@ -27,13 +27,13 @@ import shutil
 import tempfile
 
 from cubicweb import Binary, QueryError
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.server.sources import storages
 from cubicweb.server.hook import Hook, Operation
 
 class DummyBeforeHook(Hook):
     __regid__ = 'dummy-before-hook'
-    __select__ = Hook.__select__ & implements('File')
+    __select__ = Hook.__select__ & is_instance('File')
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -42,7 +42,7 @@ class DummyBeforeHook(Hook):
 
 class DummyAfterHook(Hook):
     __regid__ = 'dummy-after-hook'
-    __select__ = Hook.__select__ & implements('File')
+    __select__ = Hook.__select__ & is_instance('File')
     events = ('after_add_entity',)
 
     def __call__(self):

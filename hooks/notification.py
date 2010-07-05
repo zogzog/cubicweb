@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.textutils import normalize_text
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 
@@ -49,7 +49,7 @@ class NotificationHook(hook.Hook):
 class StatusChangeHook(NotificationHook):
     """notify when a workflowable entity has its state modified"""
     __regid__ = 'notifystatuschange'
-    __select__ = NotificationHook.__select__ & implements('TrInfo')
+    __select__ = NotificationHook.__select__ & is_instance('TrInfo')
     events = ('after_add_entity',)
 
     def __call__(self):

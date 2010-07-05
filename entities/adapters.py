@@ -28,7 +28,7 @@ from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements, relation_possible
+from cubicweb.selectors import implements, is_instance, relation_possible
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 
 
@@ -67,7 +67,7 @@ class IEmailableAdapter(EntityAdapter):
 
 class INotifiableAdapter(EntityAdapter):
     __regid__ = 'INotifiable'
-    __select__ = implements('Any')
+    __select__ = is_instance('Any')
 
     @implements_adapter_compat('INotifiableAdapter')
     def notification_references(self, view):
@@ -85,7 +85,7 @@ class INotifiableAdapter(EntityAdapter):
 
 class IFTIndexableAdapter(EntityAdapter):
     __regid__ = 'IFTIndexable'
-    __select__ = implements('Any')
+    __select__ = is_instance('Any')
 
     def fti_containers(self, _done=None):
         if _done is None:

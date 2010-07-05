@@ -31,9 +31,9 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 
 from cubicweb import Unauthorized, view
-from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
+from cubicweb.selectors import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
-                                implements, score_entity, adaptable)
+                                score_entity, is_instance, adaptable)
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
@@ -226,14 +226,14 @@ _abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
 _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 
 class WorkflowPrimaryView(TabbedPrimaryView):
-    __select__ = implements('Workflow')
+    __select__ = is_instance('Workflow')
     tabs = [  _('wf_tab_info'), _('wfgraph'),]
     default_tab = 'wf_tab_info'
 
 
 class CellView(view.EntityView):
     __regid__ = 'cell'
-    __select__ = implements('TrInfo')
+    __select__ = is_instance('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
         self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
@@ -242,7 +242,7 @@ class CellView(view.EntityView):
 class StateInContextView(view.EntityView):
     """convenience trick, State's incontext view should not be clickable"""
     __regid__ = 'incontext'
-    __select__ = implements('State')
+    __select__ = is_instance('State')
 
     def cell_call(self, row, col):
         self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
@@ -250,7 +250,7 @@ class StateInContextView(view.EntityView):
 
 class WorkflowTabTextView(PrimaryTab):
     __regid__ = 'wf_tab_info'
-    __select__ = PrimaryTab.__select__ & one_line_rset() & implements('Workflow')
+    __select__ = PrimaryTab.__select__ & one_line_rset() & is_instance('Workflow')
 
     def render_entity_attributes(self, entity):
         _ = self._cw._
@@ -276,7 +276,7 @@ class WorkflowTabTextView(PrimaryTab):
 
 class TransitionSecurityTextView(view.EntityView):
     __regid__ = 'trsecurity'
-    __select__ = implements('Transition')
+    __select__ = is_instance('Transition')
 
     def cell_call(self, row, col):
         _ = self._cw._
@@ -294,7 +294,7 @@ class TransitionSecurityTextView(view.EntityView):
 
 class TransitionAllowedTextView(view.EntityView):
     __regid__ = 'trfromstates'
-    __select__ = implements('Transition')
+    __select__ = is_instance('Transition')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
@@ -319,7 +319,7 @@ def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
 
 
 class TransitionEditionForm(autoform.AutomaticEntityForm):
-    __select__ = implements('Transition')
+    __select__ = is_instance('Transition')
 
     def workflow_states_for_relation(self, targetrelation):
         eids = self.edited_entity.linked_to('transition_of', 'subject')
@@ -340,7 +340,7 @@ class TransitionEditionForm(autoform.AutomaticEntityForm):
 
 
 class StateEditionForm(autoform.AutomaticEntityForm):
-    __select__ = implements('State')
+    __select__ = is_instance('State')
 
     def subject_allowed_transition_vocabulary(self, rtype, limit=None):
         if not self.edited_entity.has_eid():
@@ -351,23 +351,23 @@ class StateEditionForm(autoform.AutomaticEntityForm):
         return []
 
 class WorkflowIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('Workflow')
+    __select__ = is_instance('Workflow')
     # XXX what if workflow of multiple types?
     def parent_entity(self):
         return self.entity.workflow_of and self.entity.workflow_of[0] or None
 
 class WorkflowItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('BaseTransition', 'State')
+    __select__ = is_instance('BaseTransition', 'State')
     def parent_entity(self):
         return self.entity.workflow
 
 class TransitionItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('SubWorkflowExitPoint')
+    __select__ = is_instance('SubWorkflowExitPoint')
     def parent_entity(self):
         return self.entity.reverse_subworkflow_exit[0]
 
 class TrInfoIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = implements('TrInfo')
+    __select__ = is_instance('TrInfo')
     def parent_entity(self):
         return self.entity.for_entity
 
@@ -424,7 +424,7 @@ class WorkflowVisitor:
 
 class WorkflowGraphView(view.EntityView):
     __regid__ = 'wfgraph'
-    __select__ = EntityView.__select__ & one_line_rset() & implements('Workflow')
+    __select__ = EntityView.__select__ & one_line_rset() & is_instance('Workflow')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)

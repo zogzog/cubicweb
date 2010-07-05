@@ -25,7 +25,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 
 #from cubicweb.interfaces import IBreadCrumbs
-from cubicweb.selectors import (implements, one_line_rset, adaptable,
+from cubicweb.selectors import (is_instance, one_line_rset, adaptable,
                                 one_etype_rset, multi_lines_rset, any_rset)
 from cubicweb.view import EntityView, Component, EntityAdapter
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
@@ -48,7 +48,7 @@ class IBreadCrumbsAdapter(EntityAdapter):
     the web ui
     """
     __regid__ = 'IBreadCrumbs'
-    __select__ = implements('Any', accept_none=False)
+    __select__ = is_instance('Any', accept_none=False)
 
     def parent_entity(self):
         if hasattr(self.entity, 'parent'):

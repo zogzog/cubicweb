@@ -25,7 +25,6 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.selectors import implements
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
 

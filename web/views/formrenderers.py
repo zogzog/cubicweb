@@ -40,7 +40,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import tags
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import implements, yes
+from cubicweb.selectors import is_instance, yes
 from cubicweb.web import dumps, eid_param, formwidgets as fwdgs
 
 
@@ -392,7 +392,7 @@ class EntityFormRenderer(BaseFormRenderer):
     """
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
-    __select__ = implements('Any') & yes()
+    __select__ = is_instance('Any') & yes()
 
     _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')

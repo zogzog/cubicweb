@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 
 from yams.schema import role_name
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.server import hook
 
 
@@ -108,7 +108,7 @@ class _DelUserOp(hook.Operation):
 
 class CloseDeletedUserSessionsHook(SyncSessionHook):
     __regid__ = 'closession'
-    __select__ = SyncSessionHook.__select__ & implements('CWUser')
+    __select__ = SyncSessionHook.__select__ & is_instance('CWUser')
     events = ('after_delete_entity',)
 
     def __call__(self):
@@ -152,7 +152,7 @@ class _AddCWPropertyOp(hook.Operation):
 
 class AddCWPropertyHook(SyncSessionHook):
     __regid__ = 'addcwprop'
-    __select__ = SyncSessionHook.__select__ & implements('CWProperty')
+    __select__ = SyncSessionHook.__select__ & is_instance('CWProperty')
     events = ('after_add_entity',)
 
     def __call__(self):

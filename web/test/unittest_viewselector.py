@@ -22,7 +22,7 @@ from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
-from cubicweb.selectors import (match_user_groups, implements,
+from cubicweb.selectors import (match_user_groups, is_instance,
                                 specified_etype_implements, rql_condition,
                                 traced_selection)
 from cubicweb.web import NoSelectableObject
@@ -476,7 +476,7 @@ class VRegistryTC(ViewSelectorTC):
 
 class CWETypeRQLAction(Action):
     __regid__ = 'testaction'
-    __select__ = implements('CWEType') & rql_condition('X name "CWEType"')
+    __select__ = is_instance('CWEType') & rql_condition('X name "CWEType"')
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):

@@ -27,7 +27,7 @@ from yams.schema import role_name
 
 from cubicweb import ValidationError
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 from cubicweb.server.hook import set_operation
@@ -253,7 +253,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
     __regid__ = 'checkownersgroup'
-    __select__ = IntegrityHook.__select__ & implements('CWGroup')
+    __select__ = IntegrityHook.__select__ & is_instance('CWGroup')
     events = ('before_delete_entity', 'before_update_entity')
 
     def __call__(self):
@@ -293,7 +293,7 @@ class TidyHtmlFields(IntegrityHook):
 class StripCWUserLoginHook(IntegrityHook):
     """ensure user logins are stripped"""
     __regid__ = 'stripuserlogin'
-    __select__ = IntegrityHook.__select__ & implements('CWUser')
+    __select__ = IntegrityHook.__select__ & is_instance('CWUser')
     events = ('before_add_entity', 'before_update_entity',)
 
     def __call__(self):

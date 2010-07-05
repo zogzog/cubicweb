@@ -24,7 +24,7 @@ from time import timezone
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import (implements, non_final_entity, one_line_rset,
+from cubicweb.selectors import (is_instance, non_final_entity, one_line_rset,
                                 appobject_selectable, adaptable)
 from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
 from cubicweb.view import implements_adapter_compat
@@ -123,7 +123,7 @@ class XMLRsetView(AnyRsetView):
 
 class IFeedAdapter(EntityAdapter):
     __regid__ = 'IFeed'
-    __select__ = implements('Any')
+    __select__ = is_instance('Any')
 
     @implements_adapter_compat('IFeed')
     def rss_feed_url(self):

@@ -27,7 +27,7 @@ from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
                           ProcessFormError)
 from cubicweb.web.views import basecontrollers, autoform
@@ -35,7 +35,7 @@ from cubicweb.web.views import basecontrollers, autoform
 
 class IEditControlAdapter(EntityAdapter):
     __regid__ = 'IEditControl'
-    __select__ = implements('Any')
+    __select__ = is_instance('Any')
 
     @implements_adapter_compat('IEditControl')
     def after_deletion_path(self):

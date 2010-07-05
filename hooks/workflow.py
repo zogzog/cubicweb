@@ -24,7 +24,7 @@ from datetime import datetime
 from yams.schema import role_name
 
 from cubicweb import RepositoryError, ValidationError
-from cubicweb.selectors import implements, adaptable
+from cubicweb.selectors import is_instance, adaptable
 from cubicweb.server import hook
 
 
@@ -177,7 +177,7 @@ class FireTransitionHook(WorkflowHook):
     * by_transition or to_state (managers only) inlined relation is set
     """
     __regid__ = 'wffiretransition'
-    __select__ = WorkflowHook.__select__ & implements('TrInfo')
+    __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -273,7 +273,7 @@ class FireTransitionHook(WorkflowHook):
 class FiredTransitionHook(WorkflowHook):
     """change related entity state"""
     __regid__ = 'wffiretransition'
-    __select__ = WorkflowHook.__select__ & implements('TrInfo')
+    __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
     events = ('after_add_entity',)
 
     def __call__(self):

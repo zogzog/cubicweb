@@ -23,7 +23,7 @@ _ = unicode
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
 
 from cubicweb.view import EntityView
-from cubicweb.selectors import (one_line_rset, implements, match_context_prop,
+from cubicweb.selectors import (one_line_rset, is_instance, match_context_prop,
                                 adaptable, has_mimetype)
 from cubicweb.mttransforms import ENGINE
 from cubicweb.web import box, httpcache

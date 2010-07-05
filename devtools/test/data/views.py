@@ -15,12 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""only for unit tests !
-
-"""
+"""only for unit tests !"""
 
 from cubicweb.view import EntityView
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 
 HTML_PAGE = u"""<html>
   <body>
@@ -31,7 +29,7 @@ HTML_PAGE = u"""<html>
 
 class SimpleView(EntityView):
     __regid__ = 'simple'
-    __select__ = implements('Bug',)
+    __select__ = is_instance('Bug',)
 
     def call(self, **kwargs):
         self.cell_call(0, 0)
@@ -41,7 +39,7 @@ class SimpleView(EntityView):
 
 class RaisingView(EntityView):
     __regid__ = 'raising'
-    __select__ = implements('Bug',)
+    __select__ = is_instance('Bug',)
 
     def cell_call(self, row, col):
         raise ValueError()

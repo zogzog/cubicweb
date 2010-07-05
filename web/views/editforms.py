@@ -30,7 +30,7 @@ from logilab.common.deprecation import class_moved
 
 from cubicweb import tags
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
-                                specified_etype_implements, implements, yes)
+                                specified_etype_implements, is_instance, yes)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, eid_param, dumps, \
@@ -44,7 +44,7 @@ _pvdc = uicfg.primaryview_display_ctrl
 class DeleteConfForm(forms.CompositeForm):
     __regid__ = 'deleteconf'
     # XXX non_final_entity does not implement eclass_selector
-    __select__ = implements('Any')
+    __select__ = is_instance('Any')
 
     domid = 'deleteconf'
     copy_nav_params = True

@@ -26,7 +26,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
-from cubicweb.selectors import (one_line_rset, none_rset, implements,
+from cubicweb.selectors import (one_line_rset, none_rset, is_instance,
                                 match_user_groups, objectify_selector,
                                 logged_user_in_rset)
 from cubicweb.view import StartupView
@@ -74,7 +74,7 @@ def css_class(someclass):
 
 
 class CWPropertyPrimaryView(primary.PrimaryView):
-    __select__ = implements('CWProperty')
+    __select__ = is_instance('CWProperty')
     skip_none = False
 
 
@@ -243,7 +243,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
         | (one_line_rset() & match_user_groups('users') & logged_user_in_rset())
-        | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
+        | (one_line_rset() & match_user_groups('managers') & is_instance('CWUser'))
         )
 
     title = _('preferences')
@@ -397,7 +397,7 @@ class CWPropertiesFormRenderer(formrenderers.FormRenderer):
 
 
 class CWPropertyIEditControlAdapter(editcontroller.IEditControlAdapter):
-    __select__ = implements('CWProperty')
+    __select__ = is_instance('CWProperty')
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect

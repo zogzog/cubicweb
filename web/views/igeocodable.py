@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for entities implementing IGeocodable
+"""Specific views for entities implementing IGeocodable"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb.interfaces import IGeocodable
