@@ -178,7 +178,7 @@ class CubicWebRootResource(resource.Resource):
                 return cls(uiprops['FCKEDITOR_PATH'])
             if path == directory: # recurse
                 return self
-            datadir = self.config.locate_resource(path)
+            datadir, path = self.config.locate_resource(path)
             if datadir is None:
                 return self # recurse
             self.debug('static file %s from %s', path, datadir)

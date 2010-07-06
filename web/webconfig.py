@@ -264,12 +264,14 @@ have the python imaging library installed to use captcha)',
         return user, passwd
 
     def locate_resource(self, rid):
-        """return the directory where the given resource may be found"""
+        """return the (directory, filename) where the given resource
+        may be found
+        """
         return self._fs_locate(rid, 'data')
 
     def locate_doc_file(self, fname):
         """return the directory where the given resource may be found"""
-        return self._fs_locate(fname, 'wdoc')
+        return self._fs_locate(fname, 'wdoc')[0]
 
     @cached
     def _fs_path_locate(self, rid, rdirectory):
@@ -280,16 +282,18 @@ have the python imaging library installed to use captcha)',
                 return directory
 
     def _fs_locate(self, rid, rdirectory):
-        """return the directory where the given resource may be found"""
+        """return the (directory, filename) where the given resource
+        may be found
+        """
         directory = self._fs_path_locate(rid, rdirectory)
         if directory is None:
-            return None
+            return None, None
         if rdirectory == 'data' and rid.endswith('.css'):
             if self['use-old-css'] and rid == 'cubicweb.css':
                 # @import('cubicweb.css') in css
-                rid == 'cubicweb.old.css'
-            return self.uiprops.process_resource(join(directory, rdirectory), rid)
-        return join(directory, rdirectory)
+                rid = 'cubicweb.old.css'
+            return self.uiprops.process_resource(join(directory, rdirectory), rid), rid
+        return join(directory, rdirectory), rid
 
     def locate_all_files(self, rid, rdirectory='wdoc'):
         """return all files corresponding to the given resource"""

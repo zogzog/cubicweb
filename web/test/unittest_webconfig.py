@@ -41,8 +41,8 @@ class WebconfigTC(TestCase):
     def test_locate_resource(self):
         self.failUnless('FILE_ICON' in self.config.uiprops)
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
-        self.failUnless('file' in self.config.locate_resource(rname).split(os.sep))
-        cubicwebcsspath = self.config.locate_resource('cubicweb.css').split(os.sep)
+        self.failUnless('file' in self.config.locate_resource(rname)[0].split(os.sep))
+        cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
         self.failUnless('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
 
 if __name__ == '__main__':
