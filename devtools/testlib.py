@@ -31,7 +31,7 @@ from warnings import warn
 
 import yams.schema
 
-from logilab.common.testlib import TestCase, InnerTest
+from logilab.common.testlib import TestCase, InnerTest, Tags
 from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
@@ -163,6 +163,7 @@ class CubicWebTC(TestCase):
     appid = 'data'
     configcls = devtools.ApptestConfiguration
     reset_schema = reset_vreg = False # reset schema / vreg between tests
+    tags= TestCase.tags | Tags('cubicweb', 'cw_repo')
 
     @classproperty
     def config(cls):
@@ -786,6 +787,8 @@ class AutoPopulateTest(CubicWebTC):
     """base class for test with auto-populating of the database"""
     __abstract__ = True
 
+    tags = CubicWebTC.tags | Tags('autopopulated')
+
     pdbclass = CubicWebDebugger
     # this is a hook to be able to define a list of rql queries
     # that are application dependent and cannot be guessed automatically
@@ -911,6 +914,9 @@ class AutoPopulateTest(CubicWebTC):
 
 class AutomaticWebTest(AutoPopulateTest):
     """import this if you wan automatic tests to be ran"""
+
+    tags = AutoPopulateTest.tags | Tags('web', 'generated')
+
     def setUp(self):
         AutoPopulateTest.setUp(self)
         # access to self.app for proper initialization of the authentication
