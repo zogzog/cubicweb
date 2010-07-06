@@ -125,6 +125,8 @@ class Repository(object):
         # sources
         self.sources = []
         self.sources_by_uri = {}
+        # shutdown flag
+        self.shutting_down = False
         # FIXME: store additional sources info in the system database ?
         # FIXME: sources should be ordered (add_entity priority)
         for uri, source_config in config.sources().items():
@@ -215,7 +217,6 @@ class Repository(object):
         for i in xrange(config['connections-pool-size']):
             self.pools.append(pool.ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
-        self._shutting_down = False
         if config.quick_start:
             config.init_cubes(self.get_cubes())
         self.hm = hook.HooksManager(self.vreg)
@@ -323,8 +324,8 @@ class Repository(object):
         """called on server stop event to properly close opened sessions and
         connections
         """
-        assert not self._shutting_down, 'already shutting down'
-        self._shutting_down = True
+        assert not self.shutting_down, 'already shutting down'
+        self.shutting_down = True
         self.system_source.shutdown()
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
@@ -800,7 +801,7 @@ class Repository(object):
     def _get_session(self, sessionid, setpool=False, txid=None,
                      checkshuttingdown=True):
         """return the user associated to the given session identifier"""
-        if checkshuttingdown and self._shutting_down:
+        if checkshuttingdown and self.shutting_down:
             raise Exception('Repository is shutting down')
         try:
             session = self._sessions[sessionid]

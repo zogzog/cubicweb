@@ -1031,6 +1031,14 @@ class InternalSession(Session):
         self.cnxtype = 'inmemory'
         self.disable_hook_categories('integrity')
 
+    @property
+    def pool(self):
+        """connections pool, set according to transaction mode for each query"""
+        if self.repo.shutting_down:
+            self.reset_pool(True)
+            raise Exception('repository is shutting down')
+        return getattr(self._threaddata, 'pool', None)
+
 
 class InternalManager(object):
     """a manager user with all access rights used internally for task such as
