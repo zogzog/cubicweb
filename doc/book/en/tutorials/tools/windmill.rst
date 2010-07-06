@@ -77,6 +77,16 @@ You can refine the test by the *loadtest* windmill option:
 
     windmill -m firebug loadtest=<test_file.py> <instance url>
 
+But use the internal windmill shell to explore available commands:
+
+    windmill -m firebug shell <instance url>
+
+.. sourcecode:: python
+
+    >>> load_test(<your test file>)
+    >>> run_test(<your test file>)
+
+
 
 Integrate Windmill tests into CubicWeb
 ======================================

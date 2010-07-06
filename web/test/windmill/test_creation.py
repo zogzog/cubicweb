@@ -36,6 +36,7 @@ def test_creation():
     client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u'$(\'.message\').text() == "entity created"')
     client.open(url=u'/?rql=Any U WHERE U is CWUser, U login "myuser"')
+    client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u'$(\'#contentmain h1\').text() == "myuser"')
     client.waits.forPageLoad(timeout=u'8000')
     client.open(url=u'/cwuser/myuser?vid=sameetypelist')
