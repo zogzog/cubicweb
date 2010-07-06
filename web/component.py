@@ -133,10 +133,12 @@ class NavigationComponent(Component):
         if self.stop_param in params:
             del params[self.stop_param]
 
-    def page_url(self, path, params, start, stop):
+    def page_url(self, path, params, start=None, stop=None):
         params = dict(params)
-        params.update({self.start_param : start,
-                       self.stop_param : stop,})
+        if start is not None:
+            params[self.start_param] = start
+        if stop is not None:
+            params[self.stop_param] = stop
         view = self.cw_extra_kwargs.get('view')
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
@@ -145,7 +147,8 @@ class NavigationComponent(Component):
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
                 json.dumps(params.get('divid', 'pageContent')),
-                json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
+                json.dumps(rql), json.dumps(params.pop('vid', None)),
+                json.dumps(params))
         else:
             url = self._cw.build_url(path, **params)
         return url

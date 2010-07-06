@@ -268,9 +268,11 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
         nav.clean_params(params)
         # make a link to see them all
         if show_all_option:
-            url = xml_escape(req.build_url(__force_display=1, **params))
+            basepath = req.relative_path(includeparams=False)
+            params['__force_display'] = 1
+            url = nav.page_url(basepath, params)
             w(u'<div><a href="%s">%s</a></div>\n'
-              % (url, req._('show %s results') % len(rset)))
+              % (xml_escape(url), req._('show %s results') % len(rset)))
         rset.limit(offset=start, limit=stop-start, inplace=True)
 
 

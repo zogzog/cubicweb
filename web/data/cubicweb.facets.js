@@ -53,7 +53,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         }
         var toupdate = result[1];
         var extraparams = vidargs;
-	if (paginate) { extraparams['paginate'] = '1'; } // XXX in vidargs
+        if (paginate) { extraparams['paginate'] = '1'; } // XXX in vidargs
         // copy some parameters
         // XXX cleanup vid/divid mess
         // if vid argument is specified , the one specified in form params will
@@ -67,8 +67,11 @@ function buildRQL(divid, vid, paginate, vidargs) {
         // want to reload action box to match current selection (we don't want
         // this from a table filter)
         extraparams['rql'] = rql;
-        extraparams['vid'] = vid;
-        d = $('#' + divid).loadxhtml('json', ajaxFuncArgs('view', extraparams));
+        if (vid) { // XXX see copyParam above. Need cleanup
+            extraparams['vid'] = vid;
+        }
+        d = $('#' + divid).loadxhtml('json', ajaxFuncArgs('view', extraparams),
+                                     null, 'swap');
         d.addCallback(function() {
             // XXX rql/vid in extraparams
             jQuery(CubicWeb).trigger('facets-content-loaded', [divid, rql, vid, extraparams]);
