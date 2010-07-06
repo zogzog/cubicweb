@@ -1002,7 +1002,7 @@ def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
         if entity.eid in done:
             continue
         done.add(entity.eid)
-        res.append((entity.view('combobox'), entity.eid))
+        res.append((entity.view('combobox'), unicode(entity.eid)))
     return res
 
 
