@@ -97,6 +97,11 @@ class TreePathView(EntityView):
             self.w(self.separator)
         entity.view(vid or self.item_vid, w=self.w)
 
+class TreeComboBoxView(TreePathView):
+    """display folder in edition's combobox"""
+    __regid__ = 'combobox'
+    item_vid = 'text'
+    separator = u' > '
 
 # XXX rename regid to ajaxtree/foldabletree or something like that (same for
 # treeitemview)
