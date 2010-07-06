@@ -293,7 +293,7 @@ class NotSelector(Selector):
         return int(not score)
 
     def __str__(self):
-        return 'NOT(%s)' % super(NotSelector, self).__str__()
+        return 'NOT(%s)' % self.selector
 
 
 class yes(Selector):

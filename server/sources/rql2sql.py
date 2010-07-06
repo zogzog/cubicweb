@@ -822,7 +822,7 @@ class SQLGenerator(object):
         assert lhsvar is not None
         if isinstance(relation.parent, Not) \
                and len(lhsvar.stinfo['relations']) > 1 \
-               and (rhsvar is None or rhsvar._q_invariant):
+               and (rhsvar is not None and rhsvar._q_invariant):
             self._state.done.add(relation.parent)
             return '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)

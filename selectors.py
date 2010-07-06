@@ -883,9 +883,12 @@ class relation_possible(EntitySelector):
         if self.target_etype is not None:
             try:
                 rdef = rschema.role_rdef(eschema, self.target_etype, self.role)
-                if self.action and not rdef.may_have_permission(self.action, req):
-                    return 0
             except KeyError:
+                return 0
+            if self.action and not rdef.may_have_permission(self.action, req):
+                return 0
+            teschema = req.vreg.schema.eschema(self.target_etype)
+            if not teschema.may_have_permission('read', req):
                 return 0
         elif self.action:
             return rschema.may_have_permission(self.action, req, eschema, self.role)
@@ -902,6 +905,10 @@ class relation_possible(EntitySelector):
                 if not rschema.has_perm(entity._cw, self.action, fromeid=entity.eid):
                     return 0
             elif not rschema.has_perm(entity._cw, self.action, toeid=entity.eid):
+                return 0
+        if self.target_etype is not None:
+            teschema = entity._cw.vreg.schema.eschema(self.target_etype)
+            if not teschema.may_have_permission('read', req):
                 return 0
         return 1
 
