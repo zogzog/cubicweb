@@ -866,12 +866,28 @@ class ServerMigrationHelper(MigrationHelper):
                               and not rschema in PURE_VIRTUAL_RTYPES])
             self.sqlexec('INSERT INTO %s%s(%s) SELECT %s FROM %s%s' % (
                 SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname))
-            # use rql to propagate deletion. XXX we may miss some stuff since
-            # only the bootstrap schema is set.
-            self.rqlexec('DELETE CWEType ET WHERE ET name %(n)s', {'n': oldname})
+            # old entity type has not been added to the schema, can't gather it
+            new = schema.eschema(newname)
+            oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s', {'on': oldname},
+                                  ask_confirm=False)[0][0]
+            # backport old type relations to new type
+            # XXX workflows, other relations?
+            self.rqlexec('SET X from_entity NET WHERE X from_entity OET, '
+                         'NOT EXISTS(X2 from_entity NET, X relation_type XRT, X2 relation_type XRT, '
+                         'X to_entity XTE, X2 to_entity XTE), '
+                         'OET eid %(o)s, NET eid %(n)s',
+                         {'o': oldeid, 'n': new.eid}, ask_confirm=False)
+            self.rqlexec('SET X to_entity NET WHERE X to_entity OET, '
+                         'NOT EXISTS(X2 to_entity NET, X relation_type XRT, X2 relation_type XRT, '
+                         'X from_entity XTE, X2 from_entity XTE), '
+                         'OET eid %(o)s, NET eid %(n)s',
+                         {'o': oldeid, 'n': new.eid}, ask_confirm=False)
+            # remove the old type: use rql to propagate deletion
+            self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
+                         ask_confirm=False)
         else:
-            self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(oldname)s',
-                         {'newname' : unicode(newname), 'oldname' : oldname},
+            self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(on)s',
+                         {'newname' : unicode(newname), 'on' : oldname},
                          ask_confirm=False)
         if commit:
             self.commit()
