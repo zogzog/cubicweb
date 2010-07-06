@@ -45,7 +45,7 @@ function reorderTabindex(start, formid) {
     var tabindex = (start == null) ? 15: start;
     cw.utils.nodeWalkDepthFirst(form, function(elem) {
         var tagName = elem.tagName.toUpperCase();
-        if (inputTypes.contains(tagName)) {
+        if ($.inArray(tagName, inputTypes)) {
             if (jQuery(elem).attr('tabindex') != null) {
                 tabindex += 1;
 		jQuery(elem).attr('tabindex', tabindex);
@@ -309,7 +309,7 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
     var d = loadRemote('json', args);
     d.addCallback(function(response) {
         var dom = getDomFromResponse(response);
-        preprocessAjaxLoad(null, dom);
+        loadAjaxHtmlHead(dom);
         var form = jQuery(dom);
         form.css('display', 'none');
         form.insertBefore(insertBefore).slideDown('fast');
@@ -323,7 +323,7 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
             //       to set encoding too.
             form.closest('form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
         }
-        postAjaxLoad(dom);
+        _postAjaxLoad(dom);
     });
     d.addErrback(function(xxx) {
         log('xxx =', xxx);

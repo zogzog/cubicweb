@@ -567,7 +567,7 @@ reloadComponent = cw.utils.deprecatedFunction(
         rql = rql || '';
         nodeid = nodeid || (compid + 'Component');
         extraargs = extraargs || {};
-        var node = jqNode(nodeid);
+        var node = cw.jqNode(nodeid);
         return node.loadxhtml('json', ajaxFuncArgs('component', null, compid,
                                                    rql, registry, extraargs));
     }
