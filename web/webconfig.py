@@ -285,6 +285,9 @@ have the python imaging library installed to use captcha)',
         if directory is None:
             return None
         if rdirectory == 'data' and rid.endswith('.css'):
+            if self['use-old-css'] and rid == 'cubicweb.css':
+                # @import('cubicweb.css') in css
+                rid == 'cubicweb.old.css'
             return self.uiprops.process_resource(join(directory, rdirectory), rid)
         return join(directory, rdirectory)
 
