@@ -361,8 +361,11 @@ class Field(object):
         return widget.render(form, self, renderer)
 
     def vocabulary(self, form, **kwargs):
-        """return vocabulary for this field. This method will be called by
-        widgets which requires a vocabulary.
+        """return vocabulary for this field. This method will be
+        called by widgets which requires a vocabulary.
+
+        It should return a list of tuple (label, value), where value
+        *must be an unicode string*, not a typed value.
         """
         assert self.choices is not None
         if callable(self.choices):
@@ -387,12 +390,20 @@ class Field(object):
         if vocab and not isinstance(vocab[0], (list, tuple)):
             vocab = [(x, x) for x in vocab]
         if self.internationalizable:
-            # the short-cirtcuit 'and' boolean operator is used here to permit
-            # a valid empty string in vocabulary without attempting to translate
-            # it by gettext (which can lead to weird strings display)
-            vocab = [(label and form._cw._(label), value) for label, value in vocab]
+            # the short-cirtcuit 'and' boolean operator is used here
+            # to permit a valid empty string in vocabulary without
+            # attempting to translate it by gettext (which can lead to
+            # weird strings display)
+            vocab = [(label and form._cw._(label), value)
+                     for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
+        # XXX pre 3.9 bw compat
+        for i, (label, value) in enumerate(vocab):
+            if not isinstance(value, basestring):
+                warn('[3.9] %s: vocabulary value should be an unicode string'
+                     % self, DeprecationWarning)
+                vocab[i] = (label, unicode(value))
         return vocab
 
     def format(self, form):
