@@ -864,7 +864,8 @@ class relation_possible(EntitySelector):
             elif not rschema.has_perm(entity._cw, self.action, toeid=entity.eid):
                 return 0
         if self.target_etype is not None:
-            teschema = entity._cw.vreg.schema.eschema(self.target_etype)
+            req = entity._cw
+            teschema = req.vreg.schema.eschema(self.target_etype)
             if not teschema.may_have_permission('read', req):
                 return 0
         return 1
