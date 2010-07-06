@@ -1031,9 +1031,16 @@ WHERE _S.cw_eid=0 AND _S.cw_in_state IS NOT NULL'''),
 
     ('Any X WHERE NOT Y for_user X, X eid 123',
      '''SELECT 123
-WHERE NOT (EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123))
-'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123))'''),
 
+    ('DISTINCT Any X WHERE X from_entity OET, NOT X from_entity NET, OET name "Image", NET eid 1',
+     '''SELECT DISTINCT _X.cw_eid
+FROM cw_CWAttribute AS _X, cw_CWEType AS _OET
+WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image
+UNION
+SELECT DISTINCT _X.cw_eid
+FROM cw_CWEType AS _OET, cw_CWRelation AS _X
+WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image'''),
     ]
 
 INTERSECT = [
