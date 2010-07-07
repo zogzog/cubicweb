@@ -1246,6 +1246,13 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return entity
 
+    def cmd_update_etype_fti_weight(self, etype, weight):
+        if self.repo.system_source.dbdriver == 'postgres':
+            self.sqlexec('UPDATE appears SET weight=%(weight)s '
+                         'FROM entities as X '
+                         'WHERE X.eid=appears.uid AND X.type=%(type)s',
+                         {'type': etype, 'weight': weight}, ask_confirm=False)
+
     def cmd_reindex_entities(self, etypes=None):
         """force reindexaction of entities of the given types or of all
         indexable entity types
