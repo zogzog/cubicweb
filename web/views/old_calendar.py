@@ -44,6 +44,7 @@ class ICalendarViewsAdapter(EntityAdapter):
         """
         raise NotImplementedError
 
+
 # used by i18n tools
 WEEKDAYS = [_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
             _("friday"), _("saturday"), _("sunday")]

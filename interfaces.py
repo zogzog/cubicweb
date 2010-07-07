@@ -98,7 +98,7 @@ class IEmbedable(Interface):
     def embeded_url(self):
         """embed action interface"""
 
-# XXX deprecates in favor of ICalendarableAdapter
+# XXX deprecates in favor of ICalendarViewsAdapter
 class ICalendarViews(Interface):
     """calendar views interface"""
     def matching_dates(self, begin, end):
