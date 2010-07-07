@@ -497,6 +497,13 @@ this option is set to yes",
             deps = dict((key, None) for key in deps)
             warn('[3.8] cube %s should define %s as a dict' % (cube, key),
                  DeprecationWarning)
+        for depcube in deps:
+            try:
+                newname = CW_MIGRATION_MAP[depcube]
+            except KeyError:
+                pass
+            else:
+                deps[newname] = deps.pop(depcube)
         return deps
 
     @classmethod
@@ -516,17 +523,17 @@ this option is set to yes",
         """
         cubes = list(cubes)
         todo = cubes[:]
+        if with_recommends:
+            available = set(cls.available_cubes())
         while todo:
             cube = todo.pop(0)
             for depcube in cls.cube_dependencies(cube):
                 if depcube not in cubes:
-                    depcube = CW_MIGRATION_MAP.get(depcube, depcube)
                     cubes.append(depcube)
                     todo.append(depcube)
             if with_recommends:
                 for depcube in cls.cube_recommends(cube):
-                    if depcube not in cubes:
-                        depcube = CW_MIGRATION_MAP.get(depcube, depcube)
+                    if depcube not in cubes and depcube in available:
                         cubes.append(depcube)
                         todo.append(depcube)
         return cubes
