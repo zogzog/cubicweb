@@ -1,3 +1,9 @@
+cubicweb (3.8.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Julien Jehannet <julien.jehannet@logilab.fr>  Wed, 07 Jul 2010 11:42:02 +0200
+
 cubicweb (3.8.6-1) unstable; urgency=low
 
   * new upstream release
