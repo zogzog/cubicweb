@@ -15,6 +15,7 @@ The keywords are not case sensitive.
   HAVING, ILIKE, IN, INSERT, LIKE, LIMIT, NOT, NOW, NULL, OFFSET,
   OR, ORDERBY, SET, TODAY, TRUE, UNION, WHERE, WITH
 
+
 Variables and Typing
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -29,10 +30,11 @@ the query by *variables* that must be written in capital letters.
 There is a special type **Any**, referring to a non specific type.
 
 We can restrict the possible types for a variable using the
-special relation **is**.
+special relation **is** in the constraints.
+
 The possible type(s) for each variable is derived from the schema
-according to the constraints expressed above and thanks to the relations between
-each variable.
+according to the constraints expressed above and thanks to the relations
+between each variable.
 
 Built-in types
 ``````````````
@@ -63,7 +65,7 @@ Logical Operators
   of logical operators (see :ref:`PriorityOperators`).
 
 Mathematical Operators
-```````````````````````
+``````````````````````
 ::
 
      +, -, *, /
@@ -74,7 +76,13 @@ Comparison operators
 
      =, <, <=, >=, >, ~=, IN, LIKE, ILIKE
 
-* The operator `=` is the default operator.
+* Syntax to use comparison operator:
+
+    `VARIABLE relation operator VALUE`
+
+* The operator `=` is the default operator and can be omitted.
+
+* `relation` name is always attended
 
 * The operator `LIKE` equivalent to `~=` can be used with the
   special character `%` in a string to indicate that the chain
@@ -89,7 +97,7 @@ Comparison operators
 * The operator `IN` provides a list of possible values:
   ::
 
-    Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
+    Any X WHERE X name IN ('chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
 .. XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than "NOT A trick 'bar'" ?
@@ -100,16 +108,11 @@ Operators priority
 ``````````````````
 
 1. '*', '/'
-
 2. '+', '-'
-
-3. 'not'
-
-4 'and'
-
-5 'or'
-
-6 ','
+3. 'NOT'
+4. 'AND'
+5. 'OR'
+6. ','
 
 
 Search Query
@@ -141,16 +144,39 @@ Sorting and groups
 ``````````````````
 
 - For grouped queries (e.g. with a GROUPBY clause), all
-  selected variables should be grouped.
+  selected variables should be grouped at the right of the keyword.
 
-- To group and/or sort by attributes, we can do: "X,L user U, U
-  login L GROUPBY L, X ORDERBY L"
+- To group and/or sort by attributes, we can do::
+
+  X,L user U, U login L GROUPBY L, X ORDERBY L
 
 - If the sorting method (SORT_METHOD) is not specified, then the sorting is
-  ascendant.
+  ascendant (`ASC`).
 
 - Aggregate Functions: COUNT, MIN, MAX, AVG, SUM
 
+Having
+``````
+
+The HAVING clause, as in SQL, has been originally introduced to restrict a query according to value returned by an aggregate function, e.g.::
+
+    Any X GROUPBY X WHERE X relation Y HAVING COUNT(Y) > 10
+
+It may however be used for something else...
+
+In the WHERE clause, we are limited to 3-expression_, such thing can't be expressed directly as in the SQL's way. But this can be expressed using HAVING comparison expression.
+
+For instance, let's say you want to get people whose uppercased first name equals to another person uppercased first name::
+
+    Person X WHERE X firstname XFN, Y firstname YFN HAVING X > Y, UPPER(XFN) = UPPER(YFN)
+
+This open some new possibilities. Another example::
+
+    Person X WHERE X birthday XB HAVING YEAR(XB) = 2000
+
+That lets you use transformation functions not only in selection but for restriction as well and to by-pass limitation of the WHERE clause, which was the major flaw in the RQL language.
+
+Notice that while we would like this to work without the HAVING clause, this can't be currently be done because it introduces an ambiguity in RQL's grammar that can't be handled by Yapps_, the parser's generator we're using.
 
 Negation
 ````````
@@ -170,9 +196,8 @@ to ``is`` in python::
 
    Any A WHERE A comments B, A identity B
 
-return all objects that comment themselves. The relation
-`identity` is especially useful when defining the rules for securities
-with `RQLExpressions`.
+return all objects that comment themselves. The relation `identity` is
+especially useful when defining the rules for securities with `RQLExpressions`.
 
 
 Limit / offset
@@ -181,13 +206,6 @@ Limit / offset
 
     Any P ORDERBY N LIMIT 5 OFFSET 10 WHERE P is Person, P firstname N
 
-Function calls
-``````````````
-::
-
-    Any UPPER(N) WHERE P firstname N
-
-Functions on string: UPPER, LOWER
 
 Exists
 ``````
@@ -199,8 +217,14 @@ Exists
           OR EXISTS(T tags X, T name "priority")
 
 
-Optional relations (Left outer join)
-````````````````````````````````````
+Optional relations
+``````````````````
+
+It is a similar concept that the `Left outer join`_:
+
+    the result of a left outer join (or simply left join) for table A and B
+    always contains all records of the "left" table (A), even if the
+    join-condition does not find any matching record in the "right" table (B).
 
 * They allow you to select entities related or not to another.
 
@@ -218,12 +242,6 @@ Optional relations (Left outer join)
     Any T,P,V WHERE T is Ticket, T concerns P, T done_in V?
 
 
-Having
-``````
-::
-
-    Any X GROUPBY X WHERE X knows Y HAVING COUNT(Y) > 10
-
 Subqueries
 ``````````
 ::
@@ -234,16 +252,29 @@ Subqueries
      DISTINCT Any W, REF
         WITH W, REF BEING
             (
-	      (Any W, REF WHERE W is Workcase, W ref REF,
+              (Any W, REF WHERE W is Workcase, W ref REF,
                                  W concerned_by D, D name "Logilab")
                UNION
               (Any W, REF WHERE W is Workcase, W ref REF, '
                                 W split_into WP, WP name "WP1")
             )
 
+Function calls
+``````````````
+::
+
+    Any UPPER(N) WHERE P firstname N
+    Any LOWER(N) WHERE P firstname N
+
+Functions available on string: `UPPER`, `LOWER`
+
+.. XXX retrieve available function automatically
+
+For a performance issue, you can enrich the RQL dialect by RDMS (Relational database management system) functions.
+
 
 Examples
-````````
+~~~~~~~~
 
 - *Search for the object of identifier 53*
   ::
@@ -280,11 +311,11 @@ Examples
         P is Person, (P interested_by T, T name 'training') OR
         (P city 'Paris')
 
-- *The name and surname of all people*
+- *The surname and firstname of all people*
   ::
 
         Any N, P WHERE
-        X is Person, X name N, X first_name P
+        X is Person, X name N, X firstname P
 
   Note that the selection of several entities generally force
   the use of "Any" because the type specification applies otherwise
@@ -304,7 +335,7 @@ Examples
 
 
 Insertion query
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
     `INSERT` <entity type> V1 (, <entity type> V2) \ * `:` <assignments>
     [ `WHERE` <restriction>]
@@ -336,6 +367,7 @@ Caution, if a restriction is specified, the insertion is done for
 
 Update and relation creation queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     `SET` <assignements>
     [ `WHERE` <restriction>]
 
@@ -345,7 +377,7 @@ each result line returned by the restriction*.
 - *Renaming of the person named 'foo' to 'bar' with the first name changed*
   ::
 
-        SET X name 'bar', X first_name 'original' WHERE X is Person, X name 'foo'
+        SET X name 'bar', X firstname 'original' WHERE X is Person, X name 'foo'
 
 - *Insert a relation of type 'know' between objects linked by
   the relation of type 'friend'*
@@ -356,6 +388,7 @@ each result line returned by the restriction*.
 
 Deletion query
 ~~~~~~~~~~~~~~
+
     `DELETE` (<entity type> V) | (V1 relation v2 ),...
     [ `WHERE` <restriction>]
 
@@ -372,6 +405,7 @@ each line result returned by the restriction*.
 
         DELETE X friend Y WHERE X is Person, X name 'foo'
 
+
 Virtual RQL relations
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -381,6 +415,13 @@ attributes of your entities.
 * `has_text`: relation to use to query the full text index (only for
   entities having fulltextindexed attributes).
 
-* `identity`: relation to use to tell that a RQL variable should be
+* `identity`: `Identity`_ relation to use to tell that a RQL variable should be
   the same as another (but you've to use two different rql variables
   for querying purpose)
+
+* `is`: relation to enforce possible types for a variable
+
+
+
+.. _Yapps: http://theory.stanford.edu/~amitp/yapps/
+.. _Left outer join: http://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join

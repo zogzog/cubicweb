@@ -133,7 +133,7 @@ class RequestSessionBase(object):
         Example (in a shell session):
 
         >>> c = create_entity('Company', name=u'Logilab')
-        >>> create_entity('Person', firstname=u'John', lastname=u'Doe',
+        >>> create_entity('Person', firstname=u'John', surname=u'Doe',
         ...               works_for=c)
 
         """

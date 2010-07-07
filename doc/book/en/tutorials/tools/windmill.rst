@@ -26,7 +26,16 @@ environment, take a look to the `virtualenv
     pip install windmill
     curl -O http://github.com/windmill/windmill/tarball/master
 
-Some install instructions are `available <http://wiki.github.com/windmill/windmill/installing>`_.
+However, the Windmill project doesn't release frequently. Our recommandation is
+to used the last snapshot of the Git repository:
+
+.. sourcecode:: shell
+
+    git clone git://github.com/windmill/windmill.git HEAD
+    cd windmill
+    python setup.py develop
+
+Install instructions are `available <http://wiki.github.com/windmill/windmill/installing>`_.
 
 Be sure to have the windmill module in your PYTHONPATH afterwards::
 

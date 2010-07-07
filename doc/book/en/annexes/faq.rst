@@ -115,7 +115,7 @@ you would not be able to use dbapi.
 
     from cubicweb import dbapi
 
-    cnx = dbapi.connection(database='instance-id', user='admin', password='admin')
+    cnx = dbapi.connect(database='instance-id', user='admin', password='admin')
     cur = cnx.cursor()
     for name in ('Personal', 'Professional', 'Computers'):
         cur.execute('INSERT Blog B: B name %s', name)
@@ -302,10 +302,10 @@ How to import LDAP users in |cubicweb| ?
     import pwd
     import sys
 
-    from logilab.common.db import get_connection
+    from logilab.database import get_connection
 
     def getlogin():
-        """avoid usinng os.getlogin() because of strange tty / stdin problems
+        """avoid using os.getlogin() because of strange tty/stdin problems
         (man 3 getlogin)
         Another solution would be to use $LOGNAME, $USER or $USERNAME
         """
@@ -401,6 +401,20 @@ and paste it in the database::
     $ psql mydb
     mydb=> update cw_cwuser set cw_upassword='qHO8282QN5Utg' where cw_login='joe';
     UPDATE 1
+
+You can prefer use a migration script similar to this shell invocation instead::
+
+    $ cubicweb-ctl shell <instance>
+    >>> from cubicweb.server.utils import crypt_password
+    >>> crypted = crypt_password('joepass')
+    >>> rset = rql('Any U WHERE U is CWUser, U login "joe"')
+    >>> joe = rset.get_entity(0,0)
+    >>> joe.set_attributes(upassword=crypted)
+
+The more experimented people would use RQL request directly::
+
+    >>> rql('SET X upassword %(a)s WHERE X is CWUser, X login "joe"',
+    ...     {'a': crypted})
 
 I've just created a user in a group and it doesn't work !
 ---------------------------------------------------------
