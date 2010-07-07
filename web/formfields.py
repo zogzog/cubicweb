@@ -215,13 +215,24 @@ class Field(object):
         self.creation_rank = Field.__creation_rank
         Field.__creation_rank += 1
 
+    def as_string(self, repr=True):
+        l = [u'<%s' % self.__class__.__name__]
+        for attr in ('name', 'eidparam', 'role', 'id', 'value'):
+            value = getattr(self, attr)
+            if value is not None and value is not _MARKER:
+                l.append('%s=%r' % (attr, value))
+        if repr:
+            l.append('@%#x' % id(self))
+        return u'%s>' % ' '.join(l)
+
     def __unicode__(self):
-        return u'<%s name=%r eidparam=%s role=%r id=%r value=%r visible=%r @%x>' % (
-            self.__class__.__name__, self.name, self.eidparam, self.role,
-            self.id, self.value, self.is_visible(), id(self))
+        return self.as_string(False)
+
+    def __str__(self):
+        return self.as_string(False).encode('UTF8')
 
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return self.as_string(True).encode('UTF8')
 
     def init_widget(self, widget):
         if widget is not None:
