@@ -142,12 +142,9 @@ def install(**kwargs):
     # install-layout option was introduced in 2.5.3-1~exp1
     elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
         sys.argv.remove('--install-layout=deb')
-    kwargs['package_dir'] = {modname : '.'}
-    packages = [modname] + get_packages(os.getcwd(), modname)
     if USE_SETUPTOOLS and install_requires:
         kwargs['install_requires'] = install_requires
         kwargs['dependency_links'] = dependency_links
-    kwargs['packages'] = packages
     return setup(name = distname,
                  version = version,
                  license = license,
