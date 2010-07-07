@@ -242,6 +242,9 @@ msgstr "contrainte de bornes"
 msgid "Browse by category"
 msgstr "Naviguer par catégorie"
 
+msgid "Browse by entity type"
+msgstr "Naviguer par type d'entité"
+
 msgid "Bytes"
 msgstr "Donnée binaires"
 
@@ -437,6 +440,9 @@ msgstr "De :"
 
 msgid "Garbage collection information"
 msgstr "Information sur le ramasse-miette"
+
+msgid "Got rhythm?"
+msgstr ""
 
 msgid "Help"
 msgstr "Aide"
@@ -642,9 +648,6 @@ msgstr "Soumettre un rapport de bug"
 
 msgid "Submit bug report by mail"
 msgstr "Soumettre ce rapport par email"
-
-msgid "The repository holds the following entities"
-msgstr "Le dépot contient les entités suivantes"
 
 #, python-format
 msgid "The view %s can not be applied to this query"
@@ -1329,6 +1332,12 @@ msgstr "cliquez ici pour voir l'entité créée"
 
 msgid "click on the box to cancel the deletion"
 msgstr "cliquez dans la zone d'édition pour annuler la suppression"
+
+msgid "click to add a value"
+msgstr "cliquer pour ajouter une valeur"
+
+msgid "click to delete this value"
+msgstr "cliquer pour supprimer cette valeur"
 
 msgid "click to edit this field"
 msgstr "cliquez pour éditer ce champ"
@@ -2357,12 +2366,21 @@ msgstr "retourner sur la page d'accueil"
 msgid "granted to groups"
 msgstr "accordée aux groupes"
 
-msgid "graphical representation of the instance'schema"
-msgstr "représentation graphique du schéma de l'instance"
+#, python-format
+msgid "graphical representation of %(appid)s data model"
+msgstr "réprésentation graphique du modèle de données de %(appid)s"
 
 #, python-format
-msgid "graphical schema for %s"
-msgstr "graphique du schéma pour %s"
+msgid ""
+"graphical representation of the %(etype)s entity type from %(appid)s data "
+"model"
+msgstr "réprésentation graphique du modèle de données pour le type d'entité %(etype)s de %(appid)s"
+
+#, python-format
+msgid ""
+"graphical representation of the %(rtype)s relation type from %(appid)s data "
+"model"
+msgstr "réprésentation graphique du modèle de données pour le type de relation %(etype)s de %(appid)s"
 
 #, python-format
 msgid "graphical workflow for %s"

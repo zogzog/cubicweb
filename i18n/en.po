@@ -235,6 +235,9 @@ msgstr ""
 msgid "Browse by category"
 msgstr ""
 
+msgid "Browse by entity type"
+msgstr ""
+
 msgid "Bytes"
 msgstr "Bytes"
 
@@ -417,6 +420,9 @@ msgid "From:"
 msgstr ""
 
 msgid "Garbage collection information"
+msgstr ""
+
+msgid "Got rhythm?"
 msgstr ""
 
 msgid "Help"
@@ -622,9 +628,6 @@ msgid "Submit bug report"
 msgstr ""
 
 msgid "Submit bug report by mail"
-msgstr ""
-
-msgid "The repository holds the following entities"
 msgstr ""
 
 #, python-format
@@ -1280,6 +1283,12 @@ msgid "click here to see created entity"
 msgstr ""
 
 msgid "click on the box to cancel the deletion"
+msgstr ""
+
+msgid "click to add a value"
+msgstr ""
+
+msgid "click to delete this value"
 msgstr ""
 
 msgid "click to edit this field"
@@ -2271,11 +2280,20 @@ msgstr ""
 msgid "granted to groups"
 msgstr ""
 
-msgid "graphical representation of the instance'schema"
+#, python-format
+msgid "graphical representation of %(appid)s data model"
 msgstr ""
 
 #, python-format
-msgid "graphical schema for %s"
+msgid ""
+"graphical representation of the %(etype)s entity type from %(appid)s data "
+"model"
+msgstr ""
+
+#, python-format
+msgid ""
+"graphical representation of the %(rtype)s relation type from %(appid)s data "
+"model"
 msgstr ""
 
 #, python-format
