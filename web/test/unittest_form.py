@@ -54,15 +54,15 @@ class EntityFieldsFormTC(CubicWebTC):
         t = self.req.create_entity('Tag', name=u'x')
         form1 = self.vreg['forms'].select('edition', self.req, entity=t)
         unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.failUnless(b.eid in unrelated, unrelated)
+        self.failUnless(unicode(b.eid) in unrelated, unrelated)
         form2 = self.vreg['forms'].select('edition', self.req, entity=b)
         unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.failUnless(t.eid in unrelated, unrelated)
+        self.failUnless(unicode(t.eid) in unrelated, unrelated)
         self.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
         unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.failIf(b.eid in unrelated, unrelated)
+        self.failIf(unicode(b.eid) in unrelated, unrelated)
         unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.failIf(t.eid in unrelated, unrelated)
+        self.failIf(unicode(t.eid) in unrelated, unrelated)
 
 
     def test_form_field_vocabulary_new_entity(self):

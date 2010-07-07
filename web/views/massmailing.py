@@ -50,7 +50,7 @@ class SendEmailAction(action.Action):
 
 
 def recipient_vocabulary(form, field):
-    vocab = [(entity.cw_adapt_to('IEmailable').get_email(), entity.eid)
+    vocab = [(entity.cw_adapt_to('IEmailable').get_email(), unicode(entity.eid))
              for entity in form.cw_rset.entities()]
     return [(label, value) for label, value in vocab if label]
 
