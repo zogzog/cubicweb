@@ -224,8 +224,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         """returns the list of unrelated entities, using the entity's
         appropriate vocabulary function
         """
-        skip = set(e.eid for e in entity.related(self.rtype, get_role(self),
-                                                 entities=True))
+        skip = set(unicode(e.eid) for e in entity.related(self.rtype, get_role(self),
+                                                          entities=True))
         skip.add(None)
         skip.add(INTERNAL_FIELD_VALUE)
         filteretype = getattr(self, 'etype', None)
