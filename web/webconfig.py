@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""common web configuration for twisted/modpython instances
+"""web ui configuration for cubicweb instances"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -335,8 +334,10 @@ have the python imaging library installed to use captcha)',
     def _build_ui_properties(self):
         # self.datadir_url[:-1] to remove trailing /
         from cubicweb.web.propertysheet import PropertySheet
+        cachedir = join(self.appdatahome, 'uicache')
+        self.check_writeable_uid_directory(cachedir)
         self.uiprops = PropertySheet(
-            join(self.appdatahome, 'uicache'),
+            cachedir,
             data=lambda x: self.datadir_url + x,
             datadir_url=self.datadir_url[:-1])
         self._init_uiprops(self.uiprops)

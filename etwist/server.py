@@ -402,6 +402,7 @@ set_log_methods(CubicWebRootResource, LOGGER)
 def run(config, vreg=None, debug=None):
     if debug is not None:
         config.debugmode = debug
+    config.check_writeable_uid_directory(config.appdatahome)
     # create the site
     root_resource = CubicWebRootResource(config, vreg=vreg)
     website = server.Site(root_resource)

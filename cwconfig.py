@@ -991,6 +991,29 @@ the repository',
         """write down current configuration"""
         self.generate_config(open(self.main_config_file(), 'w'))
 
+    def check_writeable_uid_directory(self, path):
+        """check given directory path exists, belongs to the user running the
+        server process and is writeable.
+
+        If not, try to fix this, leting exception propagate when not possible.
+        """
+        if not exists(path):
+            os.makedirs(path)
+        if self['uid']:
+            try:
+                uid = int(self['uid'])
+            except ValueError:
+                from pwd import getpwnam
+                uid = getpwnam(self['uid']).pw_uid
+        else:
+            uid = os.getuid()
+        fstat = os.stat(path)
+        if fstat.st_uid != uid:
+            os.chown(path, uid, os.getgid())
+        import stat
+        if not (fstat.st_mode & stat.S_IWUSR):
+            os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+
     @cached
     def instance_md5_version(self):
         import hashlib
