@@ -296,8 +296,37 @@ jQuery.extend(cw.utils, {
             result.push(lst[i]);
         }
         return result;
-    }
+    },
 
+    /**
+     * .. function:: domid(string)
+     *
+     * return a valid DOM id from a string (should also be usable in jQuery
+     * search expression...). This is the javascript implementation of
+     * :func:`cubicweb.uilib.domid`.
+     */
+    domid: function (string) {
+	var newstring = string.replace(".", "_").replace("-", "_");
+	while (newstring != string) {
+	    string = newstring;
+	    newstring = newstring.replace(".", "_").replace("-", "_");
+	}
+	return newstring; // XXX
+    },
+
+    /**
+     * .. function:: strFuncCall(fname, *args)
+     *
+     * return a string suitable to call the `fname` javascript function with the
+     * given arguments (which should be correctly typed).. This is providing
+     * javascript implementation equivalent to :func:`cubicweb.uilib.js`.
+     */
+    strFuncCall: function(fname /* ...*/) {
+	    return (fname + '(' +
+		    $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON).join(',')
+		    + ')'
+		    );
+    }
 
 });
 

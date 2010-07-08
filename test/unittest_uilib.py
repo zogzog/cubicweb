@@ -142,6 +142,14 @@ quis nostrud exercitation ullamco laboris nisi"),
         self.assertEquals(uilib.soup2xhtml('hop </html> hop', 'ascii'),
                           'hop  hop')
 
+    def test_js(self):
+        self.assertEquals(str(uilib.js.pouet(1, "2")),
+                          'pouet(1,"2")')
+        self.assertEquals(str(uilib.js.cw.pouet(1, "2")),
+                          'cw.pouet(1,"2")')
+        self.assertEquals(str(uilib.js.cw.pouet(1, "2").pouet(None)),
+                          'cw.pouet(1,"2").pouet(null)')
+
 if __name__ == '__main__':
     unittest_main()
 
