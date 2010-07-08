@@ -24,7 +24,7 @@ from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, json
+from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 u = unicode
