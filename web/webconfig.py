@@ -342,8 +342,10 @@ have the python imaging library installed to use captcha)',
             datadir_url=self.datadir_url[:-1])
         self._init_uiprops(self.uiprops)
         if self['https-url']:
+            cachedir = join(self.appdatahome, 'uicachehttps')
+            self.check_writeable_uid_directory(cachedir)
             self.https_uiprops = PropertySheet(
-                join(self.appdatahome, 'uicache'),
+                cachedir,
                 data=lambda x: self.https_datadir_url + x,
                 datadir_url=self.https_datadir_url[:-1])
             self._init_uiprops(self.https_uiprops)
