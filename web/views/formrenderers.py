@@ -41,7 +41,8 @@ from logilab.mtconverter import xml_escape
 from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import is_instance, yes
-from cubicweb.web import dumps, eid_param, formwidgets as fwdgs
+from cubicweb.utils import json_dumps
+from cubicweb.web import eid_param, formwidgets as fwdgs
 
 
 def checkbox(name, value, attrs='', checked=None):
@@ -359,7 +360,7 @@ class EntityCompositeFormRenderer(FormRenderer):
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
             cbsetstate = "setCheckboxesState('eid', %s, 'checked')" % \
-                         xml_escape(dumps(entity.eid))
+                         xml_escape(json_dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.cw_row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
             w(u'<td>%s</td>' % checkbox('eid', entity.eid,

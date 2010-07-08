@@ -26,7 +26,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView, StartupView
-from cubicweb.web import json
+from cubicweb.utils import json_dumps
 
 _ = unicode
 
@@ -52,7 +52,7 @@ class TimelineJsonView(EntityView):
                 events.append(event)
         timeline_data = {'dateTimeFormat': self.date_fmt,
                          'events': events}
-        self.w(json.dumps(timeline_data))
+        self.w(json_dumps(timeline_data))
 
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):

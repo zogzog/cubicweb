@@ -327,12 +327,13 @@ class HTMLStream(object):
 
 try:
     # may not be there if cubicweb-web not installed
-    if sys.version_info < (2,6):
+    if sys.version_info < (2, 6):
         import simplejson as json
     else:
         import json
 except ImportError:
-    pass
+    json_dumps = None
+
 else:
 
     class CubicWebJsonEncoder(json.JSONEncoder):
@@ -359,6 +360,9 @@ else:
                 # we never ever want to fail because of an unknown type,
                 # just return None in those cases.
                 return None
+
+    def json_dumps(value):
+        return json.dumps(value, cls=CubicWebJsonEncoder)
 
 
 @deprecated('[3.7] merge_dicts is deprecated')

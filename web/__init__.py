@@ -22,20 +22,14 @@ publisher to get a full CubicWeb web application
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-import sys
-if sys.version_info < (2,6):
-    import simplejson as json
-else:
-    import json
-
-dumps = json.dumps
-
 from urllib import quote as urlquote
 
 from logilab.common.deprecation import deprecated
 
 from cubicweb.web._exceptions import *
-from cubicweb.utils import CubicWebJsonEncoder
+from cubicweb.utils import json_dumps
+
+dumps = deprecated('[3.9] use cubicweb.utils.json_dumps instead of dumps')(json_dumps)
 
 INTERNAL_FIELD_VALUE = '__cubicweb_internal_field__'
 
@@ -63,9 +57,6 @@ LOGGER = getLogger('cubicweb.web')
 # XXX deprecated
 FACETTES = set()
 
-
-def json_dumps(value):
-    return dumps(value, cls=CubicWebJsonEncoder)
 
 def jsonize(function):
     def newfunc(*args, **kwargs):

@@ -15,15 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb.web.views.basecontrollers unit tests
-
-"""
+"""cubicweb.web.views.basecontrollers unit tests"""
 
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, json
 from cubicweb.entities.authobjs import CWUser
@@ -562,7 +561,7 @@ class JSONControllerTC(CubicWebTC):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
 #         ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
 #         self.assertEquals(ctrl.publish(),
-#                           json.dumps(self.execute(rql).rows))
+#                           json_dumps(self.execute(rql).rows))
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
@@ -643,14 +642,14 @@ class JSONControllerTC(CubicWebTC):
     # silly tests
     def test_external_resource(self):
         self.assertEquals(self.remote_call('external_resource', 'RSS_LOGO')[0],
-                          json.dumps(self.config.uiprops['RSS_LOGO']))
+                          json_dumps(self.config.uiprops['RSS_LOGO']))
     def test_i18n(self):
         self.assertEquals(self.remote_call('i18n', ['bimboom'])[0],
-                          json.dumps(['bimboom']))
+                          json_dumps(['bimboom']))
 
     def test_format_date(self):
         self.assertEquals(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
-                          json.dumps('2007/01/01'))
+                          json_dumps('2007/01/01'))
 
 
 

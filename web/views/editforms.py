@@ -33,7 +33,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, is_instance, yes)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
-from cubicweb.web import uicfg, stdmsgs, eid_param, dumps, \
+from cubicweb.web import uicfg, stdmsgs, eid_param, \
      formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.views import forms, reledit

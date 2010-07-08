@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb.interfaces import IGeocodable
 from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
 from cubicweb.selectors import implements, adaptable
-from cubicweb.web import json
+from cubicweb.utils import json_dumps
 
 class IGeocodableAdapter(EntityAdapter):
     """interface required by geocoding views such as gmap-view"""
@@ -82,7 +82,7 @@ class GeocodingJsonView(EntityView):
             'center': center,
             'markers': markers,
             }
-        self.w(json.dumps(geodata))
+        self.w(json_dumps(geodata))
 
     def build_marker_data(self, entity, igeocodable, extraparams):
         return {'latitude': igeocodable.latitude,

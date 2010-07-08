@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""the facets box and some basic facets
+"""the facets box and some basic facets"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -25,7 +24,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
-from cubicweb.web import dumps
+from cubicweb.utils import json_dumps
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
@@ -102,7 +101,7 @@ class FilterBox(BoxTemplate):
             self.display_bookmark_link(rset)
         w = self.w
         w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
-            divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
+            divid, xml_escape(json_dumps([divid, vid, paginate, self.facetargs()]))))
         w(u'<fieldset>')
         hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
                    'baserql': baserql}

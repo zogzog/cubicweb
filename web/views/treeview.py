@@ -25,11 +25,10 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, json
 from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView
 from cubicweb.mixins import _done_init
-from cubicweb.web import json
 from cubicweb.web.views import baseviews
 
 def treecookiename(treeid):

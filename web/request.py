@@ -37,13 +37,11 @@ from logilab.mtconverter import xml_escape
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.mail import header
 from cubicweb.uilib import remove_html_tags
-from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
+from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid, json_dumps
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
-                          RequestError, StatusResponse, json)
+                          RequestError, StatusResponse)
 from cubicweb.web.http_headers import Headers
-
-dumps = json.dumps
 
 _MARKER = object()
 
@@ -358,7 +356,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         self.add_js('cubicweb.ajax.js')
         cbname = self.register_onetime_callback(cb, *args)
-        msg = dumps(msg or '')
+        msg = json_dumps(msg or '')
         return "javascript:userCallbackThenReloadPage('%s', %s)" % (
             cbname, msg)
 
@@ -592,7 +590,7 @@ class CubicWebRequestBase(DBAPIRequest):
         extraparams.setdefault('fname', 'view')
         url = self.build_url('json', **extraparams)
         return "javascript: $('#%s').loadxhtml(%s, null, 'get', '%s'); noop()" % (
-                nodeid, dumps(url), replacemode)
+                nodeid, json_dumps(url), replacemode)
 
     # urls/path management ####################################################
 

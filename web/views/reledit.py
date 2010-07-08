@@ -1,10 +1,30 @@
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""the 'reedit' feature (eg edit attribute/relation from primary view)
+"""
+
 import copy
 
 from logilab.mtconverter import xml_escape
 
 from cubicweb import neg_role
 from cubicweb.schema import display_name
-from cubicweb.utils import json
+from cubicweb.utils import json_dumps
 from cubicweb.selectors import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.web import uicfg, stdmsgs
@@ -194,7 +214,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                     extradata=None):
         divid = self._build_divid(rtype, role, entity.eid)
         event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'formid': formid,
-                      'reload' : json.dumps(reload), 'default_value' : default_value,
+                      'reload' : json_dumps(reload), 'default_value' : default_value,
                       'role' : role, 'vid' : u''}
         if extradata:
             event_args.update(extradata)

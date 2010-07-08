@@ -26,11 +26,10 @@ from logilab.common.date import strptime
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
-from cubicweb.utils import CubicWebJsonEncoder
+from cubicweb.utils import json, json_dumps
 from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import (Redirect, RemoteCallFailed, DirectResponse,
-                          json, json_dumps)
+from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
@@ -42,7 +41,7 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 def jsonize(func):
-    """decorator to sets correct content_type and calls `json.dumps` on
+    """decorator to sets correct content_type and calls `json_dumps` on
     results
     """
     def wrapper(self, *args, **kwargs):

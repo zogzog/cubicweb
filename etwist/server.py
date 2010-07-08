@@ -38,11 +38,11 @@ from twisted.web import http, server
 from twisted.web import static, resource
 from twisted.web.server import NOT_DONE_YET
 
-from cubicweb.web import dumps
 
 from logilab.common.decorators import monkeypatch
 
 from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
+from cubicweb.utils import json_dumps
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web.http_headers import generateDateTime
@@ -317,12 +317,12 @@ def gotLength(self, length):
         self.setResponseCode(http.BAD_REQUEST)
         if path in JSON_PATHS: # XXX better json path detection
             self.setHeader('content-type',"application/json")
-            body = dumps({'reason': 'request max size exceeded'})
+            body = json_dumps({'reason': 'request max size exceeded'})
         elif path in FRAME_POST_PATHS: # XXX better frame post path detection
             self.setHeader('content-type',"text/html")
             body = ('<script type="text/javascript">'
                     'window.parent.handleFormValidationResponse(null, null, null, %s, null);'
-                    '</script>' % dumps( (False, 'request max size exceeded', None) ))
+                    '</script>' % json_dumps( (False, 'request max size exceeded', None) ))
         else:
             self.setHeader('content-type',"text/html")
             body = ("<html><head><title>Processing Failed</title></head><body>"
