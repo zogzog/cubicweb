@@ -300,10 +300,10 @@ class AjaxEditRelationBoxTemplate(EntityBoxTemplate):
                 # for each related entity, provide a link to remove the relation
                 subview = rentity.view(self.item_vid)
                 if maydel:
-                    jscall = js.ajaxBoxRemoveLinkedEntity(
+                    jscall = unicode(js.ajaxBoxRemoveLinkedEntity(
                         self.__regid__, entity.eid, rentity.eid,
                         self.fname_remove,
-                        self.removed_msg and _(self.removed_msg))
+                        self.removed_msg and _(self.removed_msg)))
                     w(u'<tr><td>[<a href="javascript: %s">-</a>]</td>'
                       '<td class="tagged">%s</td></tr>' % (xml_escape(jscall),
                                                            subview))
@@ -317,11 +317,11 @@ class AjaxEditRelationBoxTemplate(EntityBoxTemplate):
             req.add_css('jquery.autocomplete.css')
             multiple = rdef.role_cardinality(self.role) in '*+'
             w(u'<table><tr><td>')
-            jscall = js.ajaxBoxShowSelector(
+            jscall = unicode(js.ajaxBoxShowSelector(
                 self.__regid__, entity.eid, self.fname_vocabulary,
                 self.fname_validate, self.added_msg and _(self.added_msg),
                 _(stdmsgs.BUTTON_OK[0]), _(stdmsgs.BUTTON_CANCEL[0]),
-                multiple and self.separator)
+                multiple and self.separator))
             w('<a class="button sglink" href="javascript: %s">%s</a>' % (
                 xml_escape(jscall),
                 multiple and _('add_relation') or _('update_relation')))
