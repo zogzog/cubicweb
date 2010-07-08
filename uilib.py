@@ -234,10 +234,12 @@ class _JSId(object):
     def __init__(self, id, parent=None):
         self.id = id
         self.parent = parent
-    def __str__(self):
+    def __unicode__(self):
         if self.parent:
-            return '%s.%s' % (self.parent, self.id)
-        return '%s' % self.id
+            return u'%s.%s' % (self.parent, self.id)
+        return unicode(self.id)
+    def __str__(self):
+        return unicode(self).encode('utf8')
     def __getattr__(self, attr):
         return _JSId(attr, self)
     def __call__(self, *args):
@@ -248,10 +250,10 @@ class _JSCallArgs(_JSId):
         assert isinstance(args, tuple)
         self.args = args
         self.parent = parent
-    def __str__(self):
-        args = ','.join(json_dumps(arg) for arg in self.args)
+    def __unicode__(self):
+        args = u','.join(json_dumps(arg) for arg in self.args)
         if self.parent:
-            return '%s(%s)' % (self.parent, args)
+            return u'%s(%s)' % (self.parent, args)
         return args
 
 class _JS(object):
