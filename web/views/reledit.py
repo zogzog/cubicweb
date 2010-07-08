@@ -32,12 +32,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _cancelclick = "cw.reledit.cleanupAfterCancel('%s')"
 
     # ui side actions/buttons
-    _addzone = (u'<img title="%(msg)s" src="data/plus.png" '
-                u'alt="%(msg)s"/>')
+    _addzone = u'<img title="%(msg)s" src="data/plus.png" alt="%(msg)s"/>'
     _addmsg = _('click to add a value')
-    _deletezone = (u'<img title="%(msg)s" src="data/cancel.png" alt="%(msg)s"/>')
+    _deletezone = u'<img title="%(msg)s" src="data/cancel.png" alt="%(msg)s"/>'
     _deletemsg = _('click to delete this value')
-    _editzone = (u'<img title="%(msg)s" src="data/pen_icon.png" alt="%(msg)s"/>')
+    _editzone = u'<img title="%(msg)s" src="data/pen_icon.png" alt="%(msg)s"/>'
     _editzonemsg = _('click to edit this field')
 
     # default relation vids according to cardinality
@@ -107,6 +106,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             form, renderer = self._build_form(entity, rtype, role, divid, formid, default_value,
                                               reload, dict(vid=rvid),
                                               edit_related, add_related and ttypes[0])
+            if formid == 'base':
+                field = form.field_by_name(rtype, role, entity.e_schema)
+                form.append_field(field)
             self.view_form(divid, value, form, renderer, edit_related,
                            delete_related, add_related)
 
