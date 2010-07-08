@@ -273,6 +273,7 @@ def make_qunit_html(test_file, depends=(), server_data=None,
     <!-- JS lib used as testing framework -->
     <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
     <script src="%(web_data)s/jquery.js" type="text/javascript"></script>
+    <script src="%(web_test)s/cwmock.js" type="text/javascript"></script>
     <script src="%(web_test)s/qunit.js" type="text/javascript"></script>'''
     % data]
     if server_data is not None:

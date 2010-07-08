@@ -1,5 +1,16 @@
 $(document).ready(function() {
 
+    module("ajax", {
+        setup: function() {
+          this.scriptsLength = $('head script[src]').length-1;
+	  this.cssLength = $('head link[rel=stylesheet]').length-1;
+        },
+        teardown: function() {
+          $('head script[src]:gt(' + this.scriptsLength + ')').remove();
+          $('head link[rel=stylesheet]:gt(' + this.cssLength + ')').remove();
+        }
+      });
+
     function jsSources() {
         return $.map($('head script[src]'), function(script) {
             return script.getAttribute('src');
@@ -161,18 +172,21 @@ $(document).ready(function() {
             callback: function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
-                // check that foo.js has been inserted in <head>
-                equals(scriptsIncluded.length, origLength + 1);
-                equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
-                // check that <div class="ajaxHtmlHead"> has been removed
-                equals(jQuery('#main').children().length, 1);
-                equals(jQuery('div.ajaxHtmlHead').length, 0);
-                equals(jQuery('#main h1').html(), 'Hello');
-                // qunit.css is not added twice
-                equals(jQuery('head link').length, 1);
-                /* use endswith because in pytest context we have an absolute path */
-                ok(jQuery('head link').attr('href').endswith('/qunit.css'));
-                start();
+		try {
+                    // check that foo.js has been inserted in <head>
+                    equals(scriptsIncluded.length, origLength + 1);
+                    equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
+                    // check that <div class="ajaxHtmlHead"> has been removed
+                    equals(jQuery('#main').children().length, 1);
+                    equals(jQuery('div.ajaxHtmlHead').length, 0);
+                    equals(jQuery('#main h1').html(), 'Hello');
+                    // qunit.css is not added twice
+                    equals(jQuery('head link').length, 1);
+                    /* use endswith because in pytest context we have an absolute path */
+                    ok(jQuery('head link').attr('href').endswith('/qunit.css'));
+                } finally {
+                    start();
+		}
             }
         });
     });
