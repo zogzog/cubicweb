@@ -27,6 +27,10 @@ class PropertySheetTC(TestCase):
         # defined by sheet1, extended by sheet2
         self.assertEquals(ps['stylesheets'], ['http://cwtest.com/cubicweb.css',
                                               'http://cwtest.com/mycube.css'])
+        # lazy string defined by sheet1
+        self.assertIsInstance(ps['lazy'], lazystr)
+        self.assertEquals(str(ps['lazy']), '#FFFFFF')
+        # test compilation
         self.assertEquals(ps.compile('a {bgcolor: %(bgcolor)s; size: 1%;}'),
                           'a {bgcolor: #FFFFFF; size: 1%;}')
         self.assertEquals(ps.process_resource(DATADIR, 'pouet.css'),

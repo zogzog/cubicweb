@@ -23,6 +23,13 @@ import re
 import os
 import os.path as osp
 
+class lazystr(object):
+    def __init__(self, string, context):
+        self.string = string
+        self.context = context
+    def __str__(self):
+        return self.string % self.context
+
 
 class PropertySheet(dict):
     def __init__(self, cache_directory, **context):
@@ -30,7 +37,11 @@ class PropertySheet(dict):
         self.context = context
         self.reset()
         context['sheet'] = self
+        context['lazystr'] = self.lazystr
         self._percent_rgx = re.compile('%(?!\()')
+
+    def lazystr(self, str):
+        return lazystr(str, self)
 
     def reset(self):
         self.clear()
