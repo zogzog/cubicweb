@@ -2,7 +2,6 @@
 
 # CSS stylesheets to include systematically in HTML headers
 # use the following line if you *need* to keep the old stylesheet
-#STYLESHEETS =       [data('cubicweb.old.css')]
 STYLESHEETS =       [data('cubicweb.reset.css'),
                      data('cubicweb.css'), ]
 STYLESHEETS_IE =    [data('cubicweb.ie.css')]
@@ -66,7 +65,7 @@ defaultColor = '#000'
 defaultFontFamily = "'Bitstream Vera Sans','Lucida Grande','Lucida Sans Unicode','Geneva','Verdana',sans-serif"
 defaultSize = '12px'
 defaultLineHeight = '1.5'
-defaultLineHeightEm = defaultLineHeight + 'em'
+defaultLineHeightEm = lazystr('%(defaultLineHeight)sem')
 baseRhythmBg = 'rhythm18.png'
 
 inputHeight = '1.3em'
@@ -82,7 +81,7 @@ h1FontSize = '1.5em' # 18px
 h1Padding = '0 0 0.14em 0 '
 h1Margin = '0.8em 0 0.5em'
 h1Color = '#000'
-h1BorderBottomStyle = '0.06em solid %s' % h1Color
+h1BorderBottomStyle = lazystr('0.06em solid %(h1Color)s')
 
 h2FontSize = '1.33333em'
 h2Padding = '0.4em 0 0.35em 0'
@@ -94,7 +93,7 @@ h3Margin = '0'
 
 # links
 aColor = '#e6820e'
-aActiveColor = aVisitedColor = aLinkColor = aColor
+aActiveColor = aVisitedColor = aLinkColor = lazystr('%(aColor)s')
 
 
 # page frame
@@ -105,13 +104,15 @@ pageContentPadding = '1em'
 pageMinHeight = '800px'
 
 # boxes
-boxTitleBgColor = headerBgColor
+boxTitleBg = lazystr('%(headerBgColor)s url("boxHeader.png") repeat-x 50%% 50%%')
 boxBodyBgColor = '#efefde'
 
 # action, search, sideBoxes
 actionBoxTitleBgColor = '#cfceb7'
+actionBoxTitleBg = lazystr('%(actionBoxTitleBgColor)s url("actionBoxHeader.png") repeat-x 50%% 50%%')
 sideBoxBodyBgColor = '#f8f8ee'
-sideBoxColor = '#555544'
+sideBoxBodyBg = lazystr('%(sideBoxBodyBgColor)s')
+sideBoxBodyColor = '#555544'
 
 # table listing & co
 listingBorderColor = '#ccc'
@@ -122,7 +123,7 @@ listingHihligthedBgColor = '#fbfbfb'
 bulletDownImg = 'url("puce_down.png") 98% 6px no-repeat'
 
 #forms
-formHeaderBgColor = listingHeaderBgColor
+formHeaderBgColor = lazystr('%(listingHeaderBgColor)s')
 helperColor = '#555'
 
 # button

@@ -322,7 +322,7 @@ div.boxTitle {
   overflow: hidden;
   font-weight: bold;
   color: #fff;
-  background: %(boxTitleBgColor)s url("header.png") repeat-x 50% 50%;
+  background: %(boxTitleBg)s;
 }
 
 div.boxTitle span,
@@ -333,7 +333,7 @@ div.sideBoxTitle span {
 
 div.searchBoxFrame div.boxTitle,
 div.greyBoxFrame div.boxTitle {
-  background: %(actionBoxTitleBgColor)s url("actionBoxHeader.png") repeat-x 50% 50% ;
+  background: %(actionBoxTitleBg)s;
 }
 
 div.sideBoxTitle span,
@@ -379,7 +379,7 @@ div.shadow{
 }
 
 div.sideBoxTitle {
-  background: %(actionBoxTitleBgColor)s;
+  background: %(actionBoxTitleBg)s;
   display: block;
   font-weight: bold;
 }
@@ -400,11 +400,11 @@ ul.sideBox li{
 
 div.sideBoxBody {
   padding: 0.2em 5px;
-  background: %(sideBoxBodyBgColor)s;
+  background: %(sideBoxBodyBg)s;
 }
 
 div.sideBoxBody a {
-  color: %(sideBoxColor)s;
+  color: %(sideBoxBodyColor)s;
 }
 
 div.sideBoxBody a:hover {
@@ -804,7 +804,7 @@ ul.boxListing a.boxBookmark:hover,
 ul.boxListing a:hover,
 ul.boxListing ul li a:hover {
   text-decoration: none;
-  background: %(sideBoxBodyBgColor)s;
+  background: %(sideBoxBodyBg)s;
 }
 
 ul.boxListing ul li a:hover{
