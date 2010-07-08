@@ -91,22 +91,35 @@ jQuery.extend(Deferred.prototype, {
 var JSON_BASE_URL = baseuri() + 'json?';
 
 //============= utility function handling remote calls responses. ==============//
-function _loadAjaxHtmlHead(node, head, tag, srcattr) {
+function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
     var loaded = [];
     var jqtagfilter = tag + '[' + srcattr + ']';
     jQuery('head ' + jqtagfilter).each(function(i) {
         loaded.push(this.getAttribute(srcattr));
     });
-    node.find(tag).each(function(i) {
-        if (this.getAttribute(srcattr)) {
-            if (jQuery.inArray(this.getAttribute(srcattr), loaded) == -1) {
-                jQuery(this).appendTo(head);
+    $node.find(tag).each(function(i) {
+	 var url = this.getAttribute(srcattr);
+        if (url) {
+            if (jQuery.inArray(url, loaded) == -1) {
+		if (srcattr == 'src') {
+		    // special case for <script> tags: jQuery append method
+		    // script nodes don't appears in the DOM (See comments on
+		    // http://api.jquery.com/append/), which cause undesired
+		    // duplicated load in our case. Use bare DOM api to avoid
+		    // this.
+		    var s = document.createElement("script");
+		    s.type = "text/javascript";
+		    s.src = url;
+		    $head[0].appendChild(s);
+		} else {
+		    jQuery(this).appendTo($head);
+		}
             }
         } else {
-            jQuery(this).appendTo(head);
+            jQuery(this).appendTo($head);
         }
     });
-    node.find(jqtagfilter).remove();
+    $node.find(jqtagfilter).remove();
 }
 
 /**
