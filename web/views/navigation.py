@@ -132,7 +132,7 @@ class SortedNavigation(NavigationComponent):
                 if rel is None:
                     continue
                 attrname = rel.r_type
-                if attrname == 'is':
+                if attrname in ('is', 'has_text'):
                     continue
                 if not rschema(attrname).final:
                     col = var.selected_index()

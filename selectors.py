@@ -202,6 +202,7 @@ from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
+from rql.nodes import Function
 
 from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       CW_EVENT_MANAGER, role)
@@ -588,12 +589,17 @@ class paginated_rset(Selector):
 @lltrace
 def sorted_rset(cls, req, rset=None, **kwargs):
     """Return 1 for sorted result set (e.g. from an RQL query containing an
-    :ref:ORDERBY clause.
+    :ref:ORDERBY clause), with exception that it will return 0 if the rset is
+    'ORDERBY FTIRANK(VAR)' (eg sorted by rank value of the has_text index).
     """
     if rset is None:
         return 0
-    rqlst = rset.syntax_tree()
-    if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
+    selects = rset.syntax_tree().children
+    if (len(selects) > 1 or
+        not selects[0].orderby or
+        (isinstance(selects[0].orderby[0].term, Function) and
+         selects[0].orderby[0].term.name == 'FTIRANK')
+        ):
         return 0
     return 2
 
