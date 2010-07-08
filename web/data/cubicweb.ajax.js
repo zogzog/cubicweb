@@ -241,7 +241,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
         $(node).removeClass("hidden");
         if (mode == 'swap') {
             var origId = node.id;
-            node = swapDOM(node, domnode);
+            node = cw.swapDOM(node, domnode);
             if (!node.id) {
                 node.id = origId;
             }
@@ -255,16 +255,16 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
             callback = callback.apply(this, [domnode]);
         }
     });
+    d.addErrback(remoteCallFailed);
     if (cursor) {
         d.addCallback(resetCursor);
         d.addErrback(resetCursor);
-        d.addErrback(remoteCallFailed);
     }
     return d;
 }
 
 /**
- * .. function:: loadRemote(url, form, reqtype='GET', async=true)
+ * .. function:: loadRemote(url, form, reqtype='GET', sync=false)
  *
  * Asynchronously (unless `async` argument is set to false) load an url or path
  * and return a deferred whose callbacks args are decoded according to the

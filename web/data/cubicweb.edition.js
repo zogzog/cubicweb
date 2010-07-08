@@ -48,7 +48,7 @@ function reorderTabindex(start, formid) {
         if ($.inArray(tagName, inputTypes)) {
             if (jQuery(elem).attr('tabindex') != null) {
                 tabindex += 1;
-		jQuery(elem).attr('tabindex', tabindex);
+                jQuery(elem).attr('tabindex', tabindex);
             }
             return null;
         }
@@ -170,7 +170,8 @@ function addPendingInsert(optionNode, eid, cell, relname) {
     // add hidden parameter
     var entityForm = jQuery('#entityForm');
     var oid = optionNode.id.substring(2); // option id is prefixed by "id"
-    remoteExec('add_pending_inserts', [oid.split(':')]);
+    loadRemote('json', ajaxFuncArgs('add_pending_inserts', null,
+                                    [oid.split(':')]), 'GET', true);
     var selectNode = optionNode.parentNode;
     // remove option node
     selectNode.removeChild(optionNode);
@@ -208,7 +209,8 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
         }
     }
     elementId = elementId.substring(2, elementId.length);
-    remoteExec('remove_pending_insert', elementId.split(':'));
+    loadRemote('json', ajaxFuncArgs('remove_pending_inserts', null,
+                                    elementId.split(':')), 'GET', true);
 }
 
 /**
@@ -337,8 +339,8 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
  */
 function removeInlineForm(peid, rtype, role, eid, showaddnewlink) {
     cw.jqNode(['div', peid, rtype, eid].join('-')).slideUp('fast', function() {
-	    $(this).remove();
-	    updateInlinedEntitiesCounters(rtype, role);
+            $(this).remove();
+            updateInlinedEntitiesCounters(rtype, role);
     });
     if (showaddnewlink) {
         toggleVisibility(showaddnewlink);
@@ -469,10 +471,10 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
     var errmsg;
     // Unknown structure
     if ( !cw.utils.isArrayLike(descr) || descr.length != 2 ) {
-	errmsg = descr;
+        errmsg = descr;
     } else {
-	_displayValidationerrors(formid, descr[0], descr[1]);
-	errmsg = _('please correct errors below');
+        _displayValidationerrors(formid, descr[0], descr[1]);
+        errmsg = _('please correct errors below');
     }
     updateMessage(errmsg);
     // ensure the browser does not scroll down

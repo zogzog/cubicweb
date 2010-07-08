@@ -1,10 +1,15 @@
-/**
+/** filter form, aka facets, javascript functions
+ *
  *  :organization: Logilab
  *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-//============= filter form functions ========================================//
+var SELECTED_IMG = baseuri() + "data/black-check.png";
+var UNSELECTED_IMG = baseuri() + "data/no-check-no-border.png";
+var UNSELECTED_BORDER_IMG = baseuri() + "data/black-uncheck.png";
+
+
 function copyParam(origparams, newparams, param) {
     var index = jQuery.inArray(param, origparams[0]);
     if (index > - 1) {
@@ -12,31 +17,33 @@ function copyParam(origparams, newparams, param) {
     }
 }
 
-function facetFormContent(form) {
+
+function facetFormContent($form) {
     var names = [];
     var values = [];
-    jQuery(form).find('.facet').each(function() {
+    $form.find('.facet').each(function() {
         var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
         var facetValues = jQuery(this).find('.facetValueSelected').each(function(x) {
             names.push(facetName);
             values.push(this.getAttribute('cubicweb:value'));
         });
     });
-    jQuery(form).find('input').each(function() {
+    $form.find('input').each(function() {
         names.push(this.name);
         values.push(this.value);
     });
-    jQuery(form).find('select option[selected]').each(function() {
+    $form.find('select option[selected]').each(function() {
         names.push(this.parentNode.name);
         values.push(this.value);
     });
     return [names, values];
 }
 
+
 function buildRQL(divid, vid, paginate, vidargs) {
     jQuery(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
-    var form = getNode(divid + 'Form');
-    var zipped = facetFormContent(form);
+    var $form = $('#' + divid + 'Form');
+    var zipped = facetFormContent($form);
     zipped[0].push('facetargs');
     zipped[1].push(vidargs);
     var d = loadRemote('json', ajaxFuncArgs('filter_build_rql', null, zipped[0], zipped[1]));
@@ -78,8 +85,8 @@ function buildRQL(divid, vid, paginate, vidargs) {
         });
         if (paginate) {
             // FIXME the edit box might not be displayed in which case we don't
-            // know where to put the potential new one, just skip this case
-            // for now
+            // know where to put the potential new one, just skip this case for
+            // now
             var $node = jQuery('#edit_box');
             if ($node.length) {
                 $node.loadxhtml('json', ajaxFuncArgs('render', {
@@ -116,9 +123,6 @@ function buildRQL(divid, vid, paginate, vidargs) {
     });
 }
 
-var SELECTED_IMG = baseuri() + "data/black-check.png";
-var UNSELECTED_IMG = baseuri() + "data/no-check-no-border.png";
-var UNSELECTED_BORDER_IMG = baseuri() + "data/black-uncheck.png";
 
 function initFacetBoxEvents(root) {
     // facetargs : (divid, vid, paginate, extraargs)
@@ -206,6 +210,7 @@ function initFacetBoxEvents(root) {
     });
 }
 
+
 // trigger this function on document ready event if you provide some kind of
 // persistent search (eg crih)
 function reorderFacetsItems(root) {
@@ -233,10 +238,11 @@ function reorderFacetsItems(root) {
     });
 }
 
-// we need to differenciate cases where initFacetBoxEvents is called
-// with one argument or without any argument. If we use `initFacetBoxEvents`
-// as the direct callback on the jQuery.ready event, jQuery will pass some argument
-// of his, so we use this small anonymous function instead.
+
+// we need to differenciate cases where initFacetBoxEvents is called with one
+// argument or without any argument. If we use `initFacetBoxEvents` as the
+// direct callback on the jQuery.ready event, jQuery will pass some argument of
+// his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {
     initFacetBoxEvents();
 });
