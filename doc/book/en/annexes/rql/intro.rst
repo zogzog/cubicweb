@@ -45,6 +45,13 @@ level, Versa_ is very comprehensive including through many functions of
 conversion and basic types manipulation, which we may want to look at one time
 or another.  Finally, the syntax is a little esoteric.
 
+Datalog
+```````
+
+Datalog_ is a prolog derived query langage which applies to relational
+databases. It is more expressive than RQL in that it accepts either
+extensional_ and intensional_ predicates (or relations). As of now,
+RQL only deals with intensional relations.
 
 The different types of queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,78 +71,91 @@ Delete entities or relationship (`DELETE`)
    Remove entities or relations existing in the database.
 
 
-Concepts
-~~~~~~~~
+RQL relation expressions
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Entity type
-```````````
+RQL expressions apply to a live database defined by a
+:ref:`datamodel_definition`. Apart from the main type, or head, of the
+expression (search, insert, etc.) the most common constituent of an
+RQL expression is a (set of) relation expression(s).
 
-RQL manipulates variables that are instances of entities.
-Each entity has its own type which are used in backend to improve the query
-execution plan.
+An RQL relation expression contains three components:
 
-Restrictions
-````````````
-
-They are conditions used to limit the perimeter of the result set.
-
-Relations
-`````````
-A relation is a `3-expression` defined as follows:
+* the subject, which is an entity type
+* the predicate, which is a relation definition (an arc of the schema)
+* the object, which is either an attribute or a relation to another entity
 
 .. image:: Graph-ex.gif
     :alt: <subject> <predicate> <object>
     :align: center
 
-A RQL relation contains three components:
+.. warning::
 
-* the subject, which is an entity type
-* the predicate, which is an oriented graph
-* the object, which is either an attribute or a relation to another entity
+ A relation is always expressed in the order: ``subject``,
+ ``predicate``, ``object``.
 
-In cubicweb, the term `relation` is often found without ambiguity instead of `predicate`.
-This predicate is also known as the `property` of the triple in `RDF concepts`_
+ It is important to determine if the entity type is subject or object
+ to construct a valid expression. Inverting the subject/object is an
+ error since the relation cannot be found in the schema.
 
-A relation is always expressed in the order: subject, predicate, object.
+ If one does not have access to the code, one can find the order by
+ looking at the schema image in manager views (the subject is located
+ at the beginning of the arrow).
 
-It's important to determine if entity type is subject or object to construct a
-valid expression. An inversion subject/object is equivalent to an RQL error
-since the supposed relation cannot be found in schema. If you don't have access
-to the code, you could find the order by looking at the schema image in manager
-views (the subject is located at the beginning of the arrow).
+An example of two related relation expressions::
 
-.. _SQL: http://www.firstsql.com/tutor5.htm
+  P works_for C, P name N
+
+RQL variables represent typed entities. The type of entities is
+either automatically inferred (by looking at the possible relation
+definitions, see :ref:`RelationDefinition`) or explicitely constrained
+using the ``is`` meta relation.
+
+In the example above, we barely need to look at the schema. If
+variable names (in the RQL expression) and relation type names (in the
+schema) are expresssively designed, the human reader can infer as much
+as the |cubicweb| querier.
+
+The ``P`` variable is used twice but it always represent the same set
+of entities. Hence ``P works_for C`` and ``P name N`` must be
+compatible in the sense that all the Ps (which *can* refer to
+different entity types) must accept the ``works_for`` and ``name``
+relation types. This does restrict the set of possible values of P.
+
+Adding another relation expression::
+
+  P works_for C, P name N, C name "logilab"
+
+This further restricts the possible values of P through an indirect
+constraint on the possible values of ``C``. The RQL-level unification_
+happening there is translated to one (or several) joins_ at the
+database level.
+
+.. note::
+
+ In |cubicweb|, the term `relation` is often found without ambiguity
+ instead of `predicate`.  This predicate is also known as the
+ `property` of the triple in `RDF concepts`_
+
+
+RQL Operators
+~~~~~~~~~~~~~
+
+An RQL expression's head can be completed using various operators such
+as ``ORDERBY``, ``GROUPBY``, ``HAVING``, ``LIMIT`` etc.
+
+RQL relation expressions can be grouped with ``UNION`` or
+``WITH``. Predicate oriented keywords such as ``EXISTS``, ``OR``,
+``NOT`` are available.
+
+The complete zoo of RQL operators is described extensively in the
+following chapter (:ref:`RQL`).
+
 .. _RDF concepts: http://www.w3.org/TR/rdf-concepts/
-
-Cardinality
-```````````
-XXX
-
-Cardinality is an important concept to model your business rules.
-They determine nu./tutorials/advanced/index.rst
-
-Please refer to the `datamodel definitions`_ for a deep understanding.
-
-`Relations`_ are always expressed by cardinality rules (`**` by default)
-
-.. _datamodel definitions: ./devrepo/datamodel/definition.rst
-
-Transaction
-```````````
-
-RQL supports notion of **transactions**; i.e. sequences of RQL statements
-without invoking security hooks of the instance's schema.
-
-When you're ready to make persistent the changes, you have to *commit* the
-modification in calling `commit()`.
-
-If an error is found (typically in raising a ValidationError), you have the
-possibility to roll back the transaction in invoking `rollback()` function; i.e
-to come back to the initial state of the transaction.
-
-Please, refer to the :ref:`Migration` chapter if you want more details.
-
-
-
 .. _Versa: http://wiki.xml3k.org/Versa
 .. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
+.. _unification: http://en.wikipedia.org/wiki/Unification_(computing)
+.. _joins: http://en.wikipedia.org/wiki/Join_(SQL)
+.. _Datalog: http://en.wikipedia.org/wiki/Datalog
+.. _intensional: http://en.wikipedia.org/wiki/Intensional_definition
+.. _extensional: http://en.wikipedia.org/wiki/Extension_(predicate_logic)

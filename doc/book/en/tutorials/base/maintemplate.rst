@@ -123,8 +123,8 @@ a top section.
 
 .. image:: ../../images/lax-book_06-simple-main-template_en.png
 
-XXX
-[WRITE ME]
+.. XXX
+.. [WRITE ME]
 
 * customize MainTemplate and show that everything in the user
   interface can be changed
