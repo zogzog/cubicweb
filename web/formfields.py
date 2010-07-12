@@ -411,7 +411,7 @@ class Field(object):
             vocab = vocab_sort(vocab)
         # XXX pre 3.9 bw compat
         for i, (label, value) in enumerate(vocab):
-            if not isinstance(value, basestring):
+            if value is not None and not isinstance(value, basestring):
                 warn('[3.9] %s: vocabulary value should be an unicode string'
                      % self, DeprecationWarning)
                 vocab[i] = (label, unicode(value))
