@@ -914,10 +914,14 @@ the repository',
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
             # XXX not under _INSTALL_PREFIX, right?
-            rtdir = env_path('CW_RUNTIME_DIR', '/var/run/cubicweb/', 'run time')
+            default = '/var/run/cubicweb/'
         else:
             import tempfile
-            rtdir = env_path('CW_RUNTIME_DIR', tempfile.gettempdir(), 'run time')
+            default = tempfile.gettempdir()
+        # runtime directory created on startup if necessary, don't check it
+        # exists
+        rtdir = env_path('CW_RUNTIME_DIR', default, 'run time',
+                         checkexists=False)
         return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
     # instance methods used to get instance specific resources #############
