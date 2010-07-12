@@ -399,12 +399,6 @@ class ManageAction(ManagersAction):
     title = _('manage')
     order = 20
 
-class SiteInfoAction(ManagersAction):
-    __regid__ = 'siteinfo'
-    __select__ = match_user_groups('users','managers')
-    title = _('info')
-    order = 30
-
 
 # footer actions ###############################################################
 
