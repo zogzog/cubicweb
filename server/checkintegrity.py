@@ -94,11 +94,15 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # to be updated due to the reindexation
     repo = session.repo
     cursor = session.pool['system']
-    if not repo.system_source.dbhelper.has_fti_table(cursor):
+    dbhelper = session.repo.system_source.dbhelper
+    if not dbhelper.has_fti_table(cursor):
         print 'no text index table'
-        repo.system_source.dbhelper.init_fti(cursor)
+        dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
+    if withpb:
+        pb = ProgressBar(len(etypes) + 1)
     if etypes is None:
+        print 'Reindexing entities'
         etypes = set()
         for eschema in schema.entities():
             if eschema.final:
@@ -108,13 +112,16 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
                 continue
             for container in etype_fti_containers(eschema):
                 etypes.add(container)
-    print 'Reindexing entities of type %s' % \
-          ', '.join(sorted(str(e) for e in etypes))
-    if withpb:
-        pb = ProgressBar(len(etypes) + 1)
-    # first monkey patch Entity.check to disable validation
-    # clear fti table first
-    session.system_sql('DELETE FROM %s' % session.repo.system_source.dbhelper.fti_table)
+        # clear fti table first
+        session.system_sql('DELETE FROM %s' % dbhelper.fti_table)
+    else:
+        print 'Reindexing entities of type %s' % \
+              ', '.join(sorted(str(e) for e in etypes))
+        # clear fti table first. Use subquery for sql compatibility
+        session.system_sql("DELETE FROM %s WHERE EXISTS(SELECT 1 FROM ENTITIES "
+                           "WHERE eid=%s AND type IN (%s))" % (
+                               dbhelper.fti_table, dbhelper.fti_uid_attr,
+                               ','.join("'%s'" % etype for etype in etypes)))
     if withpb:
         pb.update()
     # reindex entities by generating rql queries which set all indexable
