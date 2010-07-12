@@ -998,6 +998,9 @@ msgstr "a la permission d'ajouter"
 msgid "add_permission_object"
 msgstr "a la permission d'ajouter"
 
+msgid "add_relation"
+msgstr "ajouter"
+
 #, python-format
 msgid "added %(etype)s #%(eid)s (%(title)s)"
 msgstr "ajout de l'entité %(etype)s #%(eid)s (%(title)s)"
@@ -2374,13 +2377,17 @@ msgstr "réprésentation graphique du modèle de données de %(appid)s"
 msgid ""
 "graphical representation of the %(etype)s entity type from %(appid)s data "
 "model"
-msgstr "réprésentation graphique du modèle de données pour le type d'entité %(etype)s de %(appid)s"
+msgstr ""
+"réprésentation graphique du modèle de données pour le type d'entité %(etype)"
+"s de %(appid)s"
 
 #, python-format
 msgid ""
 "graphical representation of the %(rtype)s relation type from %(appid)s data "
 "model"
-msgstr "réprésentation graphique du modèle de données pour le type de relation %(etype)s de %(appid)s"
+msgstr ""
+"réprésentation graphique du modèle de données pour le type de relation %"
+"(etype)s de %(appid)s"
 
 #, python-format
 msgid "graphical workflow for %s"
@@ -2926,6 +2933,9 @@ msgstr "aucune permission associée"
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr "aucun champ à éditer spécifié pour l'entité %s"
+
+msgid "no related entity"
+msgstr "pas d'entité liée"
 
 msgid "no related project"
 msgstr "pas de projet rattaché"
@@ -3851,6 +3861,9 @@ msgstr "peut modifier"
 
 msgid "update_permission_object"
 msgstr "a la permission de modifier"
+
+msgid "update_relation"
+msgstr "modifier"
 
 msgid "updated"
 msgstr "mis à jour"

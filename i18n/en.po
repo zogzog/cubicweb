@@ -958,6 +958,9 @@ msgstr "used to define add permission on"
 msgid "add_permission_object"
 msgstr "has permission to add"
 
+msgid "add_relation"
+msgstr "add"
+
 #, python-format
 msgid "added %(etype)s #%(eid)s (%(title)s)"
 msgstr ""
@@ -2819,6 +2822,9 @@ msgstr ""
 msgid "no edited fields specified for entity %s"
 msgstr ""
 
+msgid "no related entity"
+msgstr ""
+
 msgid "no related project"
 msgstr ""
 
@@ -3728,6 +3734,9 @@ msgstr "has permission to update"
 
 msgid "update_permission_object"
 msgstr "has permission to update"
+
+msgid "update_relation"
+msgstr "update"
 
 msgid "updated"
 msgstr ""

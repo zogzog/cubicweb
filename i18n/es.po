@@ -981,6 +981,9 @@ msgstr ""
 msgid "add_permission_object"
 msgstr "tiene la autorización para agregar"
 
+msgid "add_relation"
+msgstr ""
+
 #, python-format
 msgid "added %(etype)s #%(eid)s (%(title)s)"
 msgstr "Agregado %(etype)s #%(eid)s (%(title)s)"
@@ -2893,6 +2896,9 @@ msgstr "no autorización relacionada"
 msgid "no edited fields specified for entity %s"
 msgstr ""
 
+msgid "no related entity"
+msgstr ""
+
 msgid "no related project"
 msgstr "no hay proyecto relacionado"
 
@@ -3809,6 +3815,9 @@ msgstr ""
 
 msgid "update_permission_object"
 msgstr "objeto de autorización de modificaciones"
+
+msgid "update_relation"
+msgstr ""
 
 msgid "updated"
 msgstr ""
