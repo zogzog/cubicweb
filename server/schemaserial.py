@@ -26,7 +26,7 @@ from logilab.common.shellutils import ProgressBar
 
 from yams import schema as schemamod, buildobjs as ybo
 
-from cubicweb import CW_SOFTWARE_ROOT
+from cubicweb import CW_SOFTWARE_ROOT, typed_eid
 from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
@@ -58,10 +58,18 @@ def group_mapping(cursor, interactive=True):
                 if not value:
                     continue
                 try:
-                    res[group] = int(value)
+                    eid = typed_eid(value)
                 except ValueError:
                     print 'eid should be an integer'
                     continue
+                for eid_ in res.values():
+                    if eid == eid_:
+                        break
+                else:
+                    print 'eid is not a group eid'
+                    continue
+                res[name] = eid
+                break
     return res
 
 def cstrtype_mapping(cursor):
