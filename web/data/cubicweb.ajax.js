@@ -92,28 +92,30 @@ var JSON_BASE_URL = baseuri() + 'json?';
 
 //============= utility function handling remote calls responses. ==============//
 function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
-    var loaded = [];
     var jqtagfilter = tag + '[' + srcattr + ']';
-    jQuery('head ' + jqtagfilter).each(function(i) {
-        loaded.push(this.getAttribute(srcattr));
-    });
+    if (cw['loaded_'+srcattr] === undefined) {
+	cw['loaded_'+srcattr] = [];
+	var loaded = cw['loaded_'+srcattr];
+	jQuery('head ' + jqtagfilter).each(function(i) {
+		loaded.push(this.getAttribute(srcattr));
+	    });
+    } else {
+	var loaded = cw['loaded_'+srcattr];
+    }
     $node.find(tag).each(function(i) {
 	 var url = this.getAttribute(srcattr);
         if (url) {
             if (jQuery.inArray(url, loaded) == -1) {
-		if (srcattr == 'src') {
-		    // special case for <script> tags: jQuery append method
-		    // script nodes don't appears in the DOM (See comments on
-		    // http://api.jquery.com/append/), which cause undesired
-		    // duplicated load in our case. Use bare DOM api to avoid
-		    // this.
-		    var s = document.createElement("script");
-		    s.type = "text/javascript";
-		    s.src = url;
-		    $head[0].appendChild(s);
-		} else {
-		    jQuery(this).appendTo($head);
-		}
+		// take care to <script> tags: jQuery append method script nodes
+		// don't appears in the DOM (See comments on
+		// http://api.jquery.com/append/), which cause undesired
+		// duplicated load in our case. After trying to use bare DOM api
+		// to avoid this, we switched to handle a list of already loaded
+		// stuff ourselves, since bare DOM api gives bug with the
+		// server-response event, since we loose control on when the
+		// script is loaded (jQuery load it immediatly).
+		loaded.push(url);
+		jQuery(this).appendTo($head);
             }
         } else {
             jQuery(this).appendTo($head);
