@@ -207,12 +207,15 @@ class NextPrevNavigationComponent(EntityVComponent):
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __select__ = (EntityVComponent.__select__
-                  & adaptable('IPrevNext'))
+    __select__ = EntityVComponent.__select__ & adaptable('IPrevNext')
     context = 'navbottom'
     order = 10
+
     def call(self, view=None):
-        entity = self.cw_rset.get_entity(0, 0)
+        self.cell_call(0, 0, view=view)
+
+    def cell_call(self, row, col, view=None):
+        entity = self.cw_rset.get_entity(row, col)
         adapter = entity.cw_adapt_to('IPrevNext')
         previous = adapter.previous_entity()
         next = adapter.next_entity()
