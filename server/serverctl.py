@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-ctl commands and command handlers specific to the
-server.serverconfig
-"""
+"""cubicweb-ctl commands and command handlers specific to the repository"""
 
 __docformat__ = 'restructuredtext en'
 
@@ -155,8 +153,8 @@ class RepositoryCreateHandler(CommandHandler):
     cfgname = 'repository'
 
     def bootstrap(self, cubes, inputlevel=0):
-        """create an instance by copying files from the given cube and by
-        asking information necessary to build required configuration files
+        """create an instance by copying files from the given cube and by asking
+        information necessary to build required configuration files
         """
         from cubicweb.server.utils import ask_source_config
         config = self.config
