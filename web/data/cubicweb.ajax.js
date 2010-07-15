@@ -402,7 +402,7 @@ function _loadDynamicFragments(node) {
         }
         extraparams['rql'] = rql;
         extraparams['vid'] = vid;
-        $(fragment.id).loadxhtml('json', ajaxFuncArgs('view', extraparams));
+        $fragment.loadxhtml('json', ajaxFuncArgs('view', extraparams));
     }
 }
 
