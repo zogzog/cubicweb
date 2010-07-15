@@ -439,10 +439,8 @@ function userCallback(cbname) {
 function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
     var d = userCallback(cbname);
     d.addCallback(function() {
-        $('#' + nodeid).loadxhtml('json', ajaxFuncArgs('render', {
-            'rql': rql
-        },
-        registry, compid));
+        $('#' + nodeid).loadxhtml('json', ajaxFuncArgs('render', {'rql': rql},
+						       registry, compid));
         if (msg) {
             updateMessage(msg);
         }
