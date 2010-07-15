@@ -705,7 +705,7 @@ class CubicWebTC(TestCase):
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
-            return None
+            return output.strip()
         validator = validatorclass()
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
