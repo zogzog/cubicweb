@@ -122,7 +122,7 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
                                           cwperm.view('oneline')))
                 else:
                     w(u'<td>%s</td>' % cwperm.view('oneline'))
-                w(u'<td>%s</td>' % self.view('csv', cwperm.related('require_group'), 'null'))
+                w(u'<td>%s</td>' % self._cw.view('csv', cwperm.related('require_group'), 'null'))
                 w(u'</tr>\n')
             w(u'</table>')
         else:
