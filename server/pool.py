@@ -67,6 +67,9 @@ class ConnectionsPool(object):
                 cnx.rollback()
             except:
                 source.critical('rollback error', exc_info=sys.exc_info())
+                # error on rollback, the connection is much probably in a really
+                # bad state. Replace it by a new one.
+                self.reconnect(source)
 
     def close(self, i_know_what_i_do=False):
         """close all connections in the pool"""
