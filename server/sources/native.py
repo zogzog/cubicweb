@@ -468,13 +468,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             cursor = self.doexec(session, sql, args)
         except (self.OperationalError, self.InterfaceError):
+            if session.mode == 'write':
+                # do not attempt to reconnect if there has been some write
+                # during the transaction
+                raise
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect")
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
         except (self.DbapiError,), exc:
             # We get this one with pyodbc and SQL Server when connection was reset
-            if exc.args[0] == '08S01':
+            if exc.args[0] == '08S01' and session.mode != 'write':
                 self.warning("trying to reconnect")
                 session.pool.reconnect(self)
                 cursor = self.doexec(session, sql, args)
