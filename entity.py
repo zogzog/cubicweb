@@ -382,13 +382,14 @@ class Entity(AppObject):
 
     def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
-        self.cw_attr_cache.setdefault(attr, default)
+        value = self.cw_attr_cache.setdefault(attr, default)
         # don't add attribute into skip_security if already in edited
         # attributes, else we may accidentaly skip a desired security check
         if hasattr(self, 'edited_attributes') and \
                attr not in self.edited_attributes:
             self.edited_attributes.add(attr)
             self._cw_skip_security_attributes.add(attr)
+        return value
 
     def pop(self, attr, default=_marker):
         """override pop to update self.edited_attributes on cleanup of
