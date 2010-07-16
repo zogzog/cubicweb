@@ -3,19 +3,18 @@
 Interfaces and Adapters
 -----------------------
 
-Interfaces are the same thing as object-oriented programming
-`interfaces`_. Adapter refers to a well-known `adapter`_ design
-pattern that helps separating concerns in object oriented
-applications.
+Interfaces are the same thing as object-oriented programming `interfaces`_.
+Adapter refers to a well-known `adapter`_ design pattern that helps separating
+concerns in object oriented applications.
 
 .. _`interfaces`: http://java.sun.com/docs/books/tutorial/java/concepts/interface.html
 .. _`adapter`: http://en.wikipedia.org/wiki/Adapter_pattern
 
-In |cubicweb| adapters provide logical functionalities
-to entity types. They are introduced in version `3.9`. Before that one
-had to implement Interfaces in entity classes to achieve a similar goal. However,
-hte problem with this approch is that is clutters the entity class's namespace, exposing
-name collision risks with schema attributes/relations or even methods names
+In |cubicweb| adapters provide logical functionalities to entity types. They
+are introduced in version `3.9`. Before that one had to implement Interfaces in
+entity classes to achieve a similar goal. However, the problem with this
+approach is that is clutters the entity class's namespace, exposing name
+collision risks with schema attributes/relations or even methods names
 (different interfaces may define the same method with not necessarily the same
 behaviour expected).
 
@@ -128,7 +127,7 @@ start from:
 
     class MyEntity(AnyEntity):
         __regid__ = 'MyEntity'
-	__implements__ = AnyEntity.__implements__ + (IFoo,)
+        __implements__ = AnyEntity.__implements__ + (IFoo,)
 
         def bar(self, *args):
             return sum(captain.age for captain in self.captains)
