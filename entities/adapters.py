@@ -159,7 +159,7 @@ class IDownloadableAdapter(EntityAdapter):
     __select__ = implements(IDownloadable, warn=False) # XXX for bw compat, else should be abstract
 
     @implements_adapter_compat('IDownloadable')
-    def download_url(self): # XXX not really part of this interface
+    def download_url(self, **kwargs): # XXX not really part of this interface
         """return an url to download entity's content"""
         raise NotImplementedError
     @implements_adapter_compat('IDownloadable')
