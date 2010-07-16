@@ -143,7 +143,7 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 
     def to_display_rql(self):
         assert self.rql is not None, self.__regid__
-        return (self.rql, {'x': self._cw.user.eid}, 'x')
+        return (self.rql, {'x': self._cw.user.eid})
 
 
 class EntityBoxTemplate(BoxTemplate):

@@ -71,7 +71,6 @@ class BaseTreeView(baseviews.ListView):
         self.w(u'</li>\n')
 
 
-
 class TreePathView(EntityView):
     """a recursive path view"""
     __regid__ = 'path'
