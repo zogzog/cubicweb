@@ -94,6 +94,7 @@ class DownloadView(EntityView):
     def last_modified(self):
         return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).modification_date
 
+
 class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
     __regid__ = 'downloadlink'
@@ -116,7 +117,8 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         adapter = entity.cw_adapt_to('IDownloadable')
         contenttype = adapter.download_content_type()
         if contenttype.startswith('image/'):
-            self.wview('image', entity.cw_rset, row=entity.cw_row)
+            self.wview('image', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
+                       link=True)
         else:
             self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
             self.render_data(entity, contenttype, 'text/html')
@@ -135,6 +137,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
                 self.w('<div class="error">%s</div>' % msg)
             return True
         return False
+
 
 class IDownloadableLineView(baseviews.OneLineView):
     __select__ = adaptable('IDownloadable')
