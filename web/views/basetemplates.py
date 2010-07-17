@@ -132,14 +132,14 @@ class TheMainTemplate(MainTemplate):
             'etypenavigation', self._cw, rset=self.cw_rset)
         if etypefilter and etypefilter.cw_propval('visible'):
             etypefilter.render(w=w)
-        self.nav_html = UStringIO()
+        nav_html = UStringIO()
         if view:
-            view.paginate(w=self.nav_html.write)
-        w(_(self.nav_html.getvalue()))
+            view.paginate(w=nav_html.write)
+        w(_(nav_html.getvalue()))
         w(u'<div id="contentmain">\n')
         view.render(w=w)
         w(u'</div>\n') # close id=contentmain
-        w(_(self.nav_html.getvalue()))
+        w(_(nav_html.getvalue()))
         w(u'</div>\n') # closes id=pageContent
         self.template_footer(view)
 
