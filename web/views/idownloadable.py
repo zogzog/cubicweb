@@ -22,6 +22,7 @@ _ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
 
+from cubicweb import tags
 from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, is_instance, match_context_prop,
                                 adaptable, has_mimetype)
@@ -118,7 +119,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         contenttype = adapter.download_content_type()
         if contenttype.startswith('image/'):
             self.wview('image', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
-                       link=True)
+                       link=True, klass='contentimage')
         else:
             self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
             self.render_data(entity, contenttype, 'text/html')
@@ -166,18 +167,12 @@ class ImageView(EntityView):
             self.wview(self.__regid__, rset, row=i, col=0)
             self.w(u'</div>')
 
-    def cell_call(self, row, col, width=None, height=None, link=False):
+    def cell_call(self, row, col, link=False, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         adapter = entity.cw_adapt_to('IDownloadable')
-        #if entity.data_format.startswith('image/'):
-        imgtag = u'<img src="%s" alt="%s" ' % (
-            xml_escape(adapter.download_url()),
-            (self._cw._('download %s')  % xml_escape(adapter.download_file_name())))
-        if width:
-            imgtag += u'width="%i" ' % width
-        if height:
-            imgtag += u'height="%i" ' % height
-        imgtag += u'/>'
+        imgtag = tags.img(src=adapter.download_url(),
+                          alt=(self._cw._('download %s') % adapter.download_file_name()),
+                          **kwargs)
         if link:
             self.w(u'<a href="%s">%s</a>' % (entity.absolute_url(vid='download'),
                                              imgtag))
