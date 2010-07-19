@@ -254,7 +254,7 @@ class RepositoryStartHandler(CommandHandler):
         command = ['cubicweb-ctl start-repository ']
         if config.debugmode:
             command.append('--debug')
-        command.append('--loglevel %s' % config['log-threshold'])
+        command.append('--loglevel %s' % config['log-threshold'].lower())
         command.append(config.appid)
         os.system(' '.join(command))
 
