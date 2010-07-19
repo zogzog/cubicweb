@@ -91,7 +91,7 @@ p {
 }
 
 ul {
-   margin-bottom: %(defaultLineHeightEm)s;
+  margin-bottom: %(defaultLineHeightEm)s;
 }
 
 ol {
@@ -114,7 +114,12 @@ li {
 }
 
 img{
- border: none;
+  border: none;
+}
+
+img.contentimage {
+  width: 100%;
+  height: 100%;
 }
 
 fieldset {
