@@ -82,11 +82,11 @@ Record your use case
 
 If you are using firefox as client, consider the "firebug" option.
 
-You can refine the test by the *loadtest* windmill option:
+If you have a running instance, you can refine the test by the *loadtest* windmill option:
 
     windmill -m firebug loadtest=<test_file.py> <instance url>
 
-But use the internal windmill shell to explore available commands:
+Or use the internal windmill shell to explore available commands:
 
     windmill -m firebug shell <instance url>
 
@@ -106,6 +106,10 @@ Run your tests
 You can easily run your windmill test suite through `pytest` or :mod:`unittest`.
 You have to copy a *test_windmill.py* file from :mod:`web.test`.
 
+To run your test series::
+
+    % pytest test/test_windmill.py
+
 By default, CubicWeb will use **firefox** as the default browser and will try
 to run test instance server on localhost. In the general case, You've no need
 to change anything.
@@ -113,6 +117,24 @@ to change anything.
 Check the :class:`cubicweb.devtools.cwwindmill.CubicWebServerTC` class for server
 parameters and :class:`cubicweb.devtools.cwwindmill.CubicWebWindmillUseCase` for
 Windmill configuration.
+
+For instance, CubicWeb framework windmill tests can be manually run by::
+
+    % pytest web/test/test_windmill.py
+
+Edit your tests
+---------------
+
+You can toggle the `edit_test` variable to enable test edition.
+
+But if you are using `pytest` as test runner, use the `-i` option directly.
+The test series will be loaded and you can run assertions step-by-step::
+
+    % pytest -i test/test_windmill.py
+
+In this case, the `firebug` extension will be loaded automatically for you.
+
+Afterwards, don't forget to save your edited test into the right file (no autosave feature).
 
 Best practises
 --------------
@@ -126,14 +148,6 @@ navigation.
 
 In the same location of the *test_windmill.py*, create a *windmill/* with your
 windmill recorded use cases.
-
-Then, you can launch the test series with::
-
-    % pytest test/test_windmill.py
-
-For instance, you can start CubicWeb framework use tests by::
-
-    % pytest web/test/test_windmill.py
 
 
 Preferences

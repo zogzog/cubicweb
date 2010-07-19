@@ -1,3 +1,5 @@
+import os, os.path as osp
+
 from cubicweb.devtools import cwwindmill
 
 
@@ -14,15 +16,19 @@ class CubicWebWindmillUseCase(cwwindmill.CubicWebWindmillUseCase):
     The first port found as available in `ports_range` will be used to launch
     the test server
 
+    Instead of toggle `edit_test` value, try `pytest -i`
+
     From Windmill configuration:
 
     :param browser: browser identification string (firefox|ie|safari|chrome) (firefox by default)
     :param test_dir: testing file path or directory (./windmill by default)
+    :param edit_test: load and edit test for debugging (False by default)
     """
     #ports_range = range(7000, 8000)
     anonymous_logged = False
     #browser = 'firefox'
     #test_dir = osp.join(os.getcwd(), 'windmill')
+    #edit_test = False
 
     # If you prefer, you can put here the use cases recorded by windmill GUI
     # (services transformer) instead of the windmill sub-directory
