@@ -137,7 +137,7 @@ class EntityUpdateHook(NotificationHook):
             rqlsel.append(var)
             rqlrestr.append('X %s %s' % (attr, var))
         rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
-        rset = session.execute(rql, {'x': self.entity.eid}, 'x')
+        rset = session.execute(rql, {'x': self.entity.eid})
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
             newvalue = self.entity[attr]
@@ -188,7 +188,7 @@ class EntityDeleteHook(SomethingChangedHook):
         except:
             # may raise an error during deletion process, for instance due to
             # missing required relation
-            title = '#%s' % eid
+            title = '#%s' % self.entity.eid
         self._cw.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (self.entity.eid, str(self.entity.e_schema), title)))
+            ('delete_entity', (self.entity.eid, self.entity.__regid__, title)))
         return True

@@ -19,9 +19,8 @@
 connections pools, each of them dealing with a set of connections on each source
 used by the repository. A connections pools (`ConnectionsPool`) is an
 abstraction for a group of connection to each source.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -68,6 +67,9 @@ class ConnectionsPool(object):
                 cnx.rollback()
             except:
                 source.critical('rollback error', exc_info=sys.exc_info())
+                # error on rollback, the connection is much probably in a really
+                # bad state. Replace it by a new one.
+                self.reconnect(source)
 
     def close(self, i_know_what_i_do=False):
         """close all connections in the pool"""

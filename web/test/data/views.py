@@ -27,7 +27,7 @@ from cubicweb.web.application import CubicWebPublisher
 # user
 # NOTE: this require "cookie" authentication mode
 def auto_login_publish(self, path, req):
-    if (req.cnx is None or req.cnx.anonymous_connection) and req.form.get('__fblogin'):
+    if (not req.cnx or req.cnx.anonymous_connection) and req.form.get('__fblogin'):
         login = password = req.form.pop('__fblogin')
         self.repo.register_user(login, password)
         req.form['__login'] = login

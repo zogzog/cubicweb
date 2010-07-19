@@ -113,7 +113,7 @@ class WorkflowTC(CubicWebTC):
         self.assertEquals(e.latest_trinfo().comment, 'deactivate 2')
 
     def test_possible_transitions(self):
-        user = self.entity('CWUser X')
+        user = self.execute('CWUser X').get_entity(0, 0)
         trs = list(user.possible_transitions())
         self.assertEquals(len(trs), 1)
         self.assertEquals(trs[0].name, u'deactivate')
@@ -148,7 +148,7 @@ class WorkflowTC(CubicWebTC):
         with security_enabled(self.session, write=False):
             ex = self.assertRaises(ValidationError, self.session.execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                               {'x': self.user().eid, 's': s.eid}, 'x')
+                               {'x': self.user().eid, 's': s.eid})
             self.assertEquals(ex.errors, {'in_state-subject': "state doesn't belong to entity's workflow. "
                                       "You may want to set a custom workflow for this entity first."})
 
@@ -430,9 +430,9 @@ class CustomWorkflowTC(CubicWebTC):
         wf = add_wf(self, 'Company')
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': self.member.eid}, 'x')
+                     {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow-subject': 'workflow isn\'t a workflow for this type'})
+        self.assertEquals(ex.errors, {'custom_workflow-subject': u"workflow isn't a workflow for this type"})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be

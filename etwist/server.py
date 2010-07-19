@@ -24,46 +24,31 @@ import sys
 import os
 import select
 import errno
+import traceback
+import threading
+from os.path import join
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
+from cgi import FieldStorage, parse_header
+from cStringIO import StringIO
 
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
-from twisted.web2 import channel, http, server, iweb
-from twisted.web2 import static, resource, responsecode
+from twisted.web import http, server
+from twisted.web import static, resource
+from twisted.web.server import NOT_DONE_YET
 
-from cubicweb import ConfigurationError, CW_EVENT_MANAGER
-from cubicweb.web import (AuthenticationError, NotFound, Redirect,
-                          RemoteCallFailed, DirectResponse, StatusResponse,
-                          ExplicitLogin)
+from cubicweb.web import dumps
+
+from logilab.common.decorators import monkeypatch
+
+from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
+from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
 from cubicweb.web.application import CubicWebPublisher
-
+from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
-
-def daemonize():
-    # XXX unix specific
-    # XXX factorize w/ code in cw.server.server and cw.server.serverctl
-    # (start-repository command)
-    # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
-    if os.fork():   # launch child and...
-        return 1
-    os.setsid()
-    if os.fork():   # launch child again.
-        return 1
-    # move to the root to avoit mount pb
-    os.chdir('/')
-    # set paranoid umask
-    os.umask(077)
-    null = os.open('/dev/null', os.O_RDWR)
-    for i in range(3):
-        try:
-            os.dup2(null, i)
-        except OSError, e:
-            if e.errno != errno.EBADF:
-                raise
-    os.close(null)
-    return None
+from cubicweb.etwist.http import HTTPResponse
 
 def start_task(interval, func):
     lc = task.LoopingCall(func)
@@ -80,8 +65,20 @@ def host_prefixed_baseurl(baseurl, host):
     return baseurl
 
 
-class LongTimeExpiringFile(static.File):
-    """overrides static.File and sets a far futre ``Expires`` date
+class ForbiddenDirectoryLister(resource.Resource):
+    def render(self, request):
+        return HTTPResponse(twisted_request=request,
+                            code=http.FORBIDDEN,
+                            stream='Access forbidden')
+
+class File(static.File):
+    """Prevent from listing directories"""
+    def directoryListing(self):
+        return ForbiddenDirectoryLister()
+
+
+class LongTimeExpiringFile(File):
+    """overrides static.File and sets a far future ``Expires`` date
     on the resouce.
 
     versions handling is done by serving static files by different
@@ -92,22 +89,16 @@ class LongTimeExpiringFile(static.File):
       etc.
 
     """
-    def renderHTTP(self, request):
-        def setExpireHeader(response):
-            response = iweb.IResponse(response)
-            # Don't provide additional resource information to error responses
-            if response.code < 400:
-                # the HTTP RFC recommands not going further than 1 year ahead
-                expires = date.today() + timedelta(days=6*30)
-                response.headers.setHeader('Expires', mktime(expires.timetuple()))
-            return response
-        d = maybeDeferred(super(LongTimeExpiringFile, self).renderHTTP, request)
-        return d.addCallback(setExpireHeader)
+    def render(self, request):
+        # XXX: Don't provide additional resource information to error responses
+        #
+        # the HTTP RFC recommands not going further than 1 year ahead
+        expires = date.today() + timedelta(days=6*30)
+        request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
+        return File.render(self, request)
 
 
-class CubicWebRootResource(resource.PostableResource):
-    addSlash = False
-
+class CubicWebRootResource(resource.Resource):
     def __init__(self, config, debug=None):
         self.debugmode = debug
         self.config = config
@@ -116,7 +107,11 @@ class CubicWebRootResource(resource.PostableResource):
         self.appli = CubicWebPublisher(config, debug=self.debugmode)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
-        self.versioned_datadir = 'data%s' % config.instance_md5_version()
+        self.children = {}
+        self.static_directories = set(('data%s' % config.instance_md5_version(),
+                                       'data', 'static', 'fckeditor'))
+        global MAX_POST_LENGTH
+        MAX_POST_LENGTH = config['max-post-length']
 
     def init_publisher(self):
         config = self.config
@@ -156,35 +151,38 @@ class CubicWebRootResource(resource.PostableResource):
         except select.error:
             return
 
-    def locateChild(self, request, segments):
+    def getChild(self, path, request):
         """Indicate which resource to use to process down the URL's path"""
-        if segments:
-            if segments[0] == 'https':
-                segments = segments[1:]
-            if len(segments) >= 2:
-                if segments[0] in (self.versioned_datadir, 'data', 'static'):
-                    # Anything in data/, static/ is treated as static files
-                    if segments[0] == 'static':
-                        # instance static directory
-                        datadir = self.config.static_directory
-                    elif segments[1] == 'fckeditor':
-                        fckeditordir = self.config.ext_resources['FCKEDITOR_PATH']
-                        return static.File(fckeditordir), segments[2:]
-                    else:
-                        # cube static data file
-                        datadir = self.config.locate_resource(segments[1])
-                        if datadir is None:
-                            return None, []
-                    self.debug('static file %s from %s', segments[-1], datadir)
-                    if segments[0] == 'data':
-                        return static.File(str(datadir)), segments[1:]
-                    else:
-                        return LongTimeExpiringFile(datadir), segments[1:]
-                elif segments[0] == 'fckeditor':
-                    fckeditordir = self.config.ext_resources['FCKEDITOR_PATH']
-                    return static.File(fckeditordir), segments[1:]
+        pre_path = request.path.split('/')[1:]
+        if pre_path[0] == 'https':
+            pre_path.pop(0)
+        directory = pre_path[0]
+        # Anything in data/, static/, fckeditor/ and the generated versioned
+        # data directory is treated as static files
+        if directory in self.static_directories:
+            # take care fckeditor may appears as root directory or as a data
+            # subdirectory
+            if directory == 'static':
+                return File(self.config.static_directory)
+            if directory == 'fckeditor':
+                return File(self.config.ext_resources['FCKEDITOR_PATH'])
+            if directory != 'data':
+                # versioned directory, use specific file with http cache
+                # headers so their are cached for a very long time
+                cls = LongTimeExpiringFile
+            else:
+                cls = File
+            if path == 'fckeditor':
+                return cls(self.config.ext_resources['FCKEDITOR_PATH'])
+            if path == directory: # recurse
+                return self
+            datadir = self.config.locate_resource(path)
+            if datadir is None:
+                return self # recurse
+            self.debug('static file %s from %s', path, datadir)
+            return cls(join(datadir, path))
         # Otherwise we use this single resource
-        return self, ()
+        return self
 
     def render(self, request):
         """Render a page from the root resource"""
@@ -194,9 +192,24 @@ class CubicWebRootResource(resource.PostableResource):
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)
         else:
-            return threads.deferToThread(self.render_request, request)
+            deferred = threads.deferToThread(self.render_request, request)
+            return NOT_DONE_YET
 
     def render_request(self, request):
+        try:
+            # processing HUGE files (hundred of megabytes) in http.processReceived
+            # blocks other HTTP requests processing
+            # due to the clumsy & slow parsing algorithm of cgi.FieldStorage
+            # so we deferred that part to the cubicweb thread
+            request.process_multipart()
+            return self._render_request(request)
+        except:
+            errorstream = StringIO()
+            traceback.print_exc(file=errorstream)
+            return HTTPResponse(stream='<pre>%s</pre>' % errorstream.getvalue(),
+                                code=500, twisted_request=request)
+
+    def _render_request(self, request):
         origpath = request.path
         host = request.host
         # dual http/https access handling: expect a rewrite rule to prepend
@@ -219,13 +232,11 @@ class CubicWebRootResource(resource.PostableResource):
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
         try:
             self.appli.connect(req)
-        except AuthenticationError:
-            return self.request_auth(req)
         except Redirect, ex:
-            return self.redirect(req, ex.location)
-        if https and req.cnx.anonymous_connection:
+            return self.redirect(request=req, location=ex.location)
+        if https and req.session.anonymous_session:
             # don't allow anonymous on https connection
-            return self.request_auth(req)
+            return self.request_auth(request=req)
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
             try:
@@ -242,234 +253,146 @@ class CubicWebRootResource(resource.PostableResource):
         except DirectResponse, ex:
             return ex.response
         except StatusResponse, ex:
-            return http.Response(stream=ex.content, code=ex.status,
-                                 headers=req.headers_out or None)
-        except RemoteCallFailed, ex:
-            req.set_header('content-type', 'application/json')
-            return http.Response(stream=ex.dumps(),
-                                 code=responsecode.INTERNAL_SERVER_ERROR)
-        except NotFound:
-            result = self.appli.notfound_content(req)
-            return http.Response(stream=result, code=responsecode.NOT_FOUND,
-                                 headers=req.headers_out or None)
-        except ExplicitLogin:  # must be before AuthenticationError
-            return self.request_auth(req)
-        except AuthenticationError, ex:
-            if self.config['auth-mode'] == 'cookie' and getattr(ex, 'url', None):
-                return self.redirect(req, ex.url)
+            return HTTPResponse(stream=ex.content, code=ex.status,
+                                twisted_request=req._twreq,
+                                headers=req.headers_out)
+        except AuthenticationError:
+            return self.request_auth(request=req)
+        except LogOut, ex:
+            if self.config['auth-mode'] == 'cookie' and ex.url:
+                return self.redirect(request=req, location=ex.url)
             # in http we have to request auth to flush current http auth
             # information
-            return self.request_auth(req, loggedout=True)
+            return self.request_auth(request=req, loggedout=True)
         except Redirect, ex:
-            return self.redirect(req, ex.location)
+            return self.redirect(request=req, location=ex.location)
         # request may be referenced by "onetime callback", so clear its entity
         # cache to avoid memory usage
         req.drop_entity_cache()
-        return http.Response(stream=result, code=responsecode.OK,
-                             headers=req.headers_out or None)
+        return HTTPResponse(twisted_request=req._twreq, code=http.OK,
+                            stream=result, headers=req.headers_out)
 
-    def redirect(self, req, location):
-        req.headers_out.setHeader('location', str(location))
-        self.debug('redirecting to %s', location)
+    def redirect(self, request, location):
+        self.debug('redirecting to %s', str(location))
+        request.headers_out.setHeader('location', str(location))
         # 303 See other
-        return http.Response(code=303, headers=req.headers_out)
+        return HTTPResponse(twisted_request=request._twreq, code=303,
+                            headers=request.headers_out)
 
-    def request_auth(self, req, loggedout=False):
-        if self.https_url and req.base_url() != self.https_url:
-            req.headers_out.setHeader('location', self.https_url + 'login')
-            return http.Response(code=303, headers=req.headers_out)
+    def request_auth(self, request, loggedout=False):
+        if self.https_url and request.base_url() != self.https_url:
+            return self.redirect(request, self.https_url + 'login')
         if self.config['auth-mode'] == 'http':
-            code = responsecode.UNAUTHORIZED
+            code = http.UNAUTHORIZED
         else:
-            code = responsecode.FORBIDDEN
+            code = http.FORBIDDEN
         if loggedout:
-            if req.https:
-                req._base_url =  self.base_url
-                req.https = False
-            content = self.appli.loggedout_content(req)
+            if request.https:
+                request._base_url =  self.base_url
+                request.https = False
+            content = self.appli.loggedout_content(request)
         else:
-            content = self.appli.need_login_content(req)
-        return http.Response(code, req.headers_out, content)
+            content = self.appli.need_login_content(request)
+        return HTTPResponse(twisted_request=request._twreq,
+                            stream=content, code=code,
+                            headers=request.headers_out)
 
-from twisted.internet import defer
-from twisted.web2 import fileupload
 
-# XXX set max file size to 200MB: put max upload size in the configuration
-# line below for twisted >= 8.0, default param value for earlier version
-resource.PostableResource.maxSize = 200*1024*1024
-def parsePOSTData(request, maxMem=100*1024, maxFields=1024,
-                  maxSize=200*1024*1024):
-    if request.stream.length == 0:
-        return defer.succeed(None)
+JSON_PATHS = set(('json',))
+FRAME_POST_PATHS = set(('validateform',))
 
-    ctype = request.headers.getHeader('content-type')
+orig_gotLength = http.Request.gotLength
+@monkeypatch(http.Request)
+def gotLength(self, length):
+    orig_gotLength(self, length)
+    if length > MAX_POST_LENGTH: # length is 0 on GET
+        path = self.channel._path.split('?', 1)[0].rstrip('/').rsplit('/', 1)[-1]
+        self.clientproto = 'HTTP/1.1' # not yet initialized
+        self.channel.persistent = 0   # force connection close on cleanup
+        self.setResponseCode(http.BAD_REQUEST)
+        if path in JSON_PATHS: # XXX better json path detection
+            self.setHeader('content-type',"application/json")
+            body = dumps({'reason': 'request max size exceeded'})
+        elif path in FRAME_POST_PATHS: # XXX better frame post path detection
+            self.setHeader('content-type',"text/html")
+            body = ('<script type="text/javascript">'
+                    'window.parent.handleFormValidationResponse(null, null, null, %s, null);'
+                    '</script>' % dumps( (False, 'request max size exceeded', None) ))
+        else:
+            self.setHeader('content-type',"text/html")
+            body = ("<html><head><title>Processing Failed</title></head><body>"
+                    "<b>request max size exceeded</b></body></html>")
+        self.setHeader('content-length', str(len(body)))
+        self.write(body)
+        # see request.finish(). Done here since we get error due to not full
+        # initialized request
+        self.finished = 1
+        if not self.queued:
+            self._cleanup()
+        for d in self.notifications:
+            d.callback(None)
+        self.notifications = []
 
-    if ctype is None:
-        return defer.succeed(None)
+@monkeypatch(http.Request)
+def requestReceived(self, command, path, version):
+    """Called by channel when all data has been received.
 
-    def updateArgs(data):
-        args = data
-        request.args.update(args)
-
-    def updateArgsAndFiles(data):
-        args, files = data
-        request.args.update(args)
-        request.files.update(files)
-
-    def error(f):
-        f.trap(fileupload.MimeFormatError)
-        raise http.HTTPError(responsecode.BAD_REQUEST)
-
-    if ctype.mediaType == 'application' and ctype.mediaSubtype == 'x-www-form-urlencoded':
-        d = fileupload.parse_urlencoded(request.stream, keep_blank_values=True)
-        d.addCallbacks(updateArgs, error)
-        return d
-    elif ctype.mediaType == 'multipart' and ctype.mediaSubtype == 'form-data':
-        boundary = ctype.params.get('boundary')
-        if boundary is None:
-            return defer.fail(http.HTTPError(
-                http.StatusResponse(responsecode.BAD_REQUEST,
-                                    "Boundary not specified in Content-Type.")))
-        d = fileupload.parseMultipartFormData(request.stream, boundary,
-                                              maxMem, maxFields, maxSize)
-        d.addCallbacks(updateArgsAndFiles, error)
-        return d
+    This method is not intended for users.
+    """
+    self.content.seek(0, 0)
+    self.args = {}
+    self.files = {}
+    self.stack = []
+    self.method, self.uri = command, path
+    self.clientproto = version
+    x = self.uri.split('?', 1)
+    if len(x) == 1:
+        self.path = self.uri
     else:
-        raise http.HTTPError(responsecode.BAD_REQUEST)
+        self.path, argstring = x
+        self.args = http.parse_qs(argstring, 1)
+    # cache the client and server information, we'll need this later to be
+    # serialized and sent with the request so CGIs will work remotely
+    self.client = self.channel.transport.getPeer()
+    self.host = self.channel.transport.getHost()
+    # Argument processing
+    ctype = self.getHeader('content-type')
+    self._do_process_multipart = False
+    if self.method == "POST" and ctype:
+        key, pdict = parse_header(ctype)
+        if key == 'application/x-www-form-urlencoded':
+            self.args.update(http.parse_qs(self.content.read(), 1))
+        elif key == 'multipart/form-data':
+            # defer this as it can be extremely time consumming
+            # with big files
+            self._do_process_multipart = True
+    self.process()
 
-server.parsePOSTData = parsePOSTData
 
+@monkeypatch(http.Request)
+def process_multipart(self):
+    if not self._do_process_multipart:
+        return
+    form = FieldStorage(self.content, self.received_headers,
+                        environ={'REQUEST_METHOD': 'POST'},
+                        keep_blank_values=1,
+                        strict_parsing=1)
+    for key in form:
+        value = form[key]
+        if isinstance(value, list):
+            self.args[key] = [v.value for v in value]
+        elif value.filename:
+            if value.done != -1: # -1 is transfer has been interrupted
+                self.files[key] = (value.filename, value.file)
+            else:
+                self.files[key] = (None, None)
+        else:
+            self.args[key] = value.value
 
 from logging import getLogger
 from cubicweb import set_log_methods
-set_log_methods(CubicWebRootResource, getLogger('cubicweb.twisted'))
-
-
-listiterator = type(iter([]))
-
-def _gc_debug(all=True):
-    import gc
-    from pprint import pprint
-    from cubicweb.appobject import AppObject
-    gc.collect()
-    count = 0
-    acount = 0
-    fcount = 0
-    rcount = 0
-    ccount = 0
-    scount = 0
-    ocount = {}
-    from rql.stmts import Union
-    from cubicweb.schema import CubicWebSchema
-    from cubicweb.rset import ResultSet
-    from cubicweb.dbapi import Connection, Cursor
-    from cubicweb.req import RequestSessionBase
-    from cubicweb.server.repository import Repository
-    from cubicweb.server.sources.native import NativeSQLSource
-    from cubicweb.server.session import Session
-    from cubicweb.devtools.testlib import CubicWebTC
-    from logilab.common.testlib import TestSuite
-    from optparse import Values
-    import types, weakref
-    for obj in gc.get_objects():
-        if isinstance(obj, RequestSessionBase):
-            count += 1
-            if isinstance(obj, Session):
-                print '   session', obj, referrers(obj, True)
-        elif isinstance(obj, AppObject):
-            acount += 1
-        elif isinstance(obj, ResultSet):
-            rcount += 1
-            #print '   rset', obj, referrers(obj)
-        elif isinstance(obj, Repository):
-            print '   REPO', obj, referrers(obj, True)
-        #elif isinstance(obj, NativeSQLSource):
-        #    print '   SOURCe', obj, referrers(obj)
-        elif isinstance(obj, CubicWebTC):
-            print '   TC', obj, referrers(obj)
-        elif isinstance(obj, TestSuite):
-            print '   SUITE', obj, referrers(obj)
-        #elif isinstance(obj, Values):
-        #    print '   values', '%#x' % id(obj), referrers(obj, True)
-        elif isinstance(obj, Connection):
-            ccount += 1
-            #print '   cnx', obj, referrers(obj)
-        #elif isinstance(obj, Cursor):
-        #    ccount += 1
-        #    print '   cursor', obj, referrers(obj)
-        elif isinstance(obj, file):
-            fcount += 1
-        #    print '   open file', file.name, file.fileno
-        elif isinstance(obj, CubicWebSchema):
-            scount += 1
-            print '   schema', obj, referrers(obj)
-        elif not isinstance(obj, (type, tuple, dict, list, set, frozenset,
-                                  weakref.ref, weakref.WeakKeyDictionary,
-                                  listiterator,
-                                  property, classmethod,
-                                  types.ModuleType, types.MemberDescriptorType,
-                                  types.FunctionType, types.MethodType)):
-            try:
-                ocount[obj.__class__] += 1
-            except KeyError:
-                ocount[obj.__class__] = 1
-            except AttributeError:
-                pass
-    if count:
-        print ' NB REQUESTS/SESSIONS', count
-    if acount:
-        print ' NB APPOBJECTS', acount
-    if ccount:
-        print ' NB CONNECTIONS', ccount
-    if rcount:
-        print ' NB RSETS', rcount
-    if scount:
-        print ' NB SCHEMAS', scount
-    if fcount:
-        print ' NB FILES', fcount
-    if all:
-        ocount = sorted(ocount.items(), key=lambda x: x[1], reverse=True)[:20]
-        pprint(ocount)
-    if gc.garbage:
-        print 'UNREACHABLE', gc.garbage
-
-def referrers(obj, showobj=False):
-    try:
-        return sorted(set((type(x), showobj and x or getattr(x, '__name__', '%#x' % id(x)))
-                          for x in _referrers(obj)))
-    except TypeError:
-        s = set()
-        unhashable = []
-        for x in _referrers(obj):
-            try:
-                s.add(x)
-            except TypeError:
-                unhashable.append(x)
-        return sorted(s) + unhashable
-
-def _referrers(obj, seen=None, level=0):
-    import gc, types
-    from cubicweb.schema import CubicWebRelationSchema, CubicWebEntitySchema
-    interesting = []
-    if seen is None:
-        seen = set()
-    for x in gc.get_referrers(obj):
-        if id(x) in seen:
-            continue
-        seen.add(id(x))
-        if isinstance(x, types.FrameType):
-            continue
-        if isinstance(x, (CubicWebRelationSchema, CubicWebEntitySchema)):
-            continue
-        if isinstance(x, (list, tuple, set, dict, listiterator)):
-            if level >= 5:
-                pass
-                #interesting.append(x)
-            else:
-                interesting += _referrers(x, seen, level+1)
-        else:
-            interesting.append(x)
-    return interesting
+LOGGER = getLogger('cubicweb.twisted')
+set_log_methods(CubicWebRootResource, LOGGER)
 
 def run(config, debug):
     # create the site
@@ -477,22 +400,16 @@ def run(config, debug):
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
-    reactor.listenTCP(port, channel.HTTPFactory(website))
+    reactor.listenTCP(port, website)
     logger = getLogger('cubicweb.twisted')
     if not debug:
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "
                                      "commands (e.g : 'net start my_instance)'")
+        from logilab.common.daemon import daemonize
         print 'instance starting in the background'
-        if daemonize():
+        if daemonize(config['pid-file']):
             return # child process
-        if config['pid-file']:
-            # ensure the directory where the pid-file should be set exists (for
-            # instance /var/run/cubicweb may be deleted on computer restart)
-            piddir = os.path.dirname(config['pid-file'])
-            if not os.path.exists(piddir):
-                os.makedirs(piddir)
-            file(config['pid-file'], 'w').write(str(os.getpid()))
     root_resource.init_publisher() # before changing uid
     if config['uid'] is not None:
         try:
@@ -503,8 +420,11 @@ def run(config, debug):
         os.setuid(uid)
     root_resource.start_service()
     logger.info('instance started on %s', root_resource.base_url)
+    # avoid annoying warnign if not in Main Thread
+    signals = threading.currentThread().getName() == 'MainThread'
     if config['profile']:
         import cProfile
-        cProfile.runctx('reactor.run()', globals(), locals(), config['profile'])
+        cProfile.runctx('reactor.run(installSignalHandlers=%s)' % signals,
+                        globals(), locals(), config['profile'])
     else:
-        reactor.run()
+        reactor.run(installSignalHandlers=signals)

@@ -43,9 +43,9 @@ class SupervisingTC(CubicWebTC):
         # do some modification
         user = self.execute('INSERT CWUser X: X login "toto", X upassword "sosafe", X in_group G '
                             'WHERE G name "users"').get_entity(0, 0)
-        self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': user.eid}, 'x')
+        self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': user.eid})
         self.execute('DELETE Card B WHERE B title "une news !"')
-        self.execute('SET X bookmarked_by U WHERE X is Bookmark, U eid %(x)s', {'x': user.eid}, 'x')
+        self.execute('SET X bookmarked_by U WHERE X is Bookmark, U eid %(x)s', {'x': user.eid})
         self.execute('SET X content "duh?" WHERE X is Comment')
         self.execute('DELETE X comments Y WHERE Y is Card, Y title "une autre news !"')
         # check only one supervision email operation
@@ -104,7 +104,7 @@ class SupervisingTC(CubicWebTC):
     def test_nonregr1(self):
         session = self.session
         # do some unlogged modification
-        self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': session.user.eid}, 'x')
+        self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': session.user.eid})
         self.commit() # no crash
 
 

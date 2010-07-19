@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -16,18 +15,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""default templates for CubicWeb web client
+"""default templates for CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import match_kwargs
+from cubicweb.selectors import match_kwargs, no_cnx, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
-from cubicweb.utils import UStringIO, can_do_pdf_conversion
+from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
 from cubicweb.web import component, formfields as ff, formwidgets as fw
 from cubicweb.web.views import forms
@@ -60,6 +58,7 @@ class LogInOutTemplate(MainTemplate):
 
 class LogInTemplate(LogInOutTemplate):
     __regid__ = 'login'
+    __select__ = anonymous_user()
     title = 'log in'
 
     def content(self, w):
@@ -80,6 +79,7 @@ class LoggedOutTemplate(LogInOutTemplate):
                 xml_escape(indexurl),
                 self._cw._('go back to the index page')))
 
+
 @objectify_selector
 def templatable_view(cls, req, rset, *args, **kwargs):
     view = kwargs.pop('view', None)
@@ -90,7 +90,6 @@ def templatable_view(cls, req, rset, *args, **kwargs):
     if req.form.has_key('__notemplate'):
         return 0
     return view.templatable
-
 
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
@@ -205,9 +204,9 @@ class TheMainTemplate(MainTemplate):
 
 
 class ErrorTemplate(TheMainTemplate):
-    """fallback template if an internal error occured during displaying the
-    main template. This template may be called for authentication error,
-    which means that req.cnx and req.user may not be set.
+    """fallback template if an internal error occured during displaying the main
+    template. This template may be called for authentication error, which means
+    that req.cnx and req.user may not be set.
     """
     __regid__ = 'error-template'
 
@@ -281,61 +280,6 @@ class SimpleMainTemplate(TheMainTemplate):
             self.w(u'</td>\n')
             self.w(u'</tr></table>\n')
 
-if can_do_pdf_conversion():
-    try:
-        from xml.etree.cElementTree import ElementTree
-    except ImportError: #python2.4
-        from elementtree import ElementTree
-    from subprocess import Popen as sub
-    from StringIO import StringIO
-    from tempfile import NamedTemporaryFile
-    from cubicweb.ext.xhtml2fo import ReportTransformer
-
-
-    class PdfViewComponent(component.EntityVComponent):
-        __regid__ = 'pdfview'
-
-        context = 'ctxtoolbar'
-
-        def cell_call(self, row, col, view):
-            entity = self.cw_rset.get_entity(row, col)
-            url = entity.absolute_url(vid=view.__regid__, __template='pdf-main-template')
-            iconurl = self._cw.build_url('data/pdf_icon.gif')
-            label = self._cw._('Download page as pdf')
-            self.w(u'<a href="%s" title="%s" class="toolbarButton"><img src="%s" alt="%s"/></a>' %
-                   (xml_escape(url), label, xml_escape(iconurl), label))
-
-    class PdfMainTemplate(TheMainTemplate):
-        __regid__ = 'pdf-main-template'
-
-        def call(self, view):
-            """build the standard view, then when it's all done, convert xhtml to pdf
-            """
-            super(PdfMainTemplate, self).call(view)
-            section = self._cw.form.pop('section', 'contentmain')
-            pdf = self.to_pdf(self._stream, section)
-            self._cw.set_content_type('application/pdf', filename='report.pdf')
-            self.binary = True
-            self.w = None
-            self.set_stream()
-            # pylint needs help
-            self.w(pdf)
-
-        def to_pdf(self, stream, section):
-            # XXX see ticket/345282
-            stream = stream.getvalue().replace('&nbsp;', '&#160;').encode('utf-8')
-            xmltree = ElementTree()
-            xmltree.parse(StringIO(stream))
-            foptree = ReportTransformer(section).transform(xmltree)
-            foptmp = NamedTemporaryFile()
-            pdftmp = NamedTemporaryFile()
-            foptree.write(foptmp)
-            foptmp.flush()
-            fopproc = sub(['/usr/bin/fop', foptmp.name, pdftmp.name])
-            fopproc.wait()
-            pdftmp.seek(0)
-            pdf = pdftmp.read()
-            return pdf
 
 # page parts templates ########################################################
 
@@ -418,7 +362,7 @@ class HTMLPageHeader(View):
         self.w(u'<td id="lastcolumn">')
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
-        if self._cw.cnx.anonymous_connection:
+        if self._cw.session.anonymous_session:
             self.wview('logform', rset=self.cw_rset, id='popupLoginBox',
                        klass='hidden', title=False, showmessage=False)
 
@@ -502,9 +446,10 @@ class LogForm(forms.FieldsForm):
     form_buttons = [fw.SubmitButton(label=_('log in'),
                                     attrs={'class': 'loginButton'})]
 
-    @property
-    def action(self):
-        return xml_escape(login_form_url(self._cw))
+    def form_action(self):
+        if self.action is None:
+            return login_form_url(self._cw)
+        return super(LogForm, self).form_action()
 
 
 class LogFormView(View):
@@ -536,7 +481,7 @@ class LogFormView(View):
         if cw.vreg.config['allow-email-login']:
             label = cw._('login or email')
         else:
-            label = cw._('login')
+            label = cw.pgettext('CWUser', 'login')
         form.field_by_name('__login').label = label
         self.w(form.render(table_class='', display_progress_div=False))
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')

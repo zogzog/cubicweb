@@ -48,17 +48,17 @@ class InsertAttrRelationTC(CubicWebTC):
     def test_1(self):
         self.assertEquals(self._generate(self.select, 'in_state', 'subject', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
-                          "B in_state A, A name C, B is CWUser")
+                          "B in_state A, B is CWUser, A name C")
 
     def test_2(self):
         self.assertEquals(self._generate(self.select, 'tags', 'object', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
-                          "A tags B, A name C, B is CWUser")
+                          "A tags B, B is CWUser, A name C")
 
     def test_3(self):
         self.assertEquals(self._generate(self.select, 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
-                          "B created_by A, A login C, B is CWUser")
+                          "B created_by A, B is CWUser, A login C")
 
     def test_4(self):
         self.assertEquals(self._generate(self.parse('Any X WHERE X is CWUser'), 'created_by', 'subject', 'login'),
@@ -73,7 +73,7 @@ class InsertAttrRelationTC(CubicWebTC):
                             'V in_state VS, VS name "published", T created_by U')
         self.assertEquals(self._generate(select, 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE T created_by U, "
-                          "T created_by A, A login B, T is Bookmark")
+                          "T created_by A, T is Bookmark, A login B")
 
     def test_nonregr2(self):
         #'DISTINCT Any X,TMP,N WHERE P name TMP, X version_of P, P is Project, X is Version, not X in_state S,S name "published", X num N ORDERBY TMP,N'
@@ -85,7 +85,7 @@ class InsertAttrRelationTC(CubicWebTC):
         try:
             self.assertEquals(self._generate(select, 'in_state', 'subject', 'name'),
                               "DISTINCT Any A,B ORDERBY B WHERE V is CWUser, "
-                              "NOT V in_state VS, VS name 'published', "
+                              "NOT EXISTS(V in_state VS), VS name 'published', "
                               "V in_state A, A name B")
         finally:
             for rdefs in rschema.rdefs.values():

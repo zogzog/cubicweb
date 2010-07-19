@@ -157,8 +157,8 @@ class UndoableTransactionTC(CubicWebTC):
         undotxuuid = self.commit()
         self.assertEquals(undotxuuid, None) # undo not undoable
         self.assertEquals(errors, [])
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}, 'x'))
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}, 'x'))
+        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
+        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
         self.failUnless(self.execute('Any X WHERE X has_text "toto@logilab"'))
         self.assertEquals(toto.state, 'activated')
         self.assertEquals(toto.get_email(), 'toto@logilab.org')
@@ -229,8 +229,8 @@ class UndoableTransactionTC(CubicWebTC):
         errors = self.cnx.undo_transaction(txuuid)
         self.commit()
         self.failIf(errors)
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}, 'x'))
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}, 'x'))
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
+        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
         self.failIf(self.execute('Any X,Y WHERE X fiche Y'))
         self.session.set_pool()
         for eid in (p.eid, c.eid):
@@ -283,3 +283,7 @@ class UndoableTransactionTC(CubicWebTC):
         #                    'required on CWUser (%s)' % self.toto.eid})
 
     # test implicit 'replacement' of an inlined relation
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()

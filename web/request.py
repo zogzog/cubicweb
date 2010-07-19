@@ -15,13 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract class for http request
+"""abstract class for http request"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import Cookie
-import sha
+import hashlib
 import time
 import random
 import base64
@@ -42,6 +41,8 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse, json)
+from cubicweb.web.http_headers import Headers
+
 dumps = json.dumps
 
 _MARKER = object()
@@ -100,6 +101,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.pageid = None
         self.datadir_url = self._datadir_url()
         self._set_pageid()
+        # prepare output header
+        self.headers_out = Headers()
 
     def _set_pageid(self):
         """initialize self.pageid
@@ -131,11 +134,11 @@ class CubicWebRequestBase(DBAPIRequest):
             self.set_page_data('rql_varmaker', varmaker)
         return varmaker
 
-    def set_connection(self, cnx, user=None):
+    def set_session(self, session, user=None):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
         """
-        super(CubicWebRequestBase, self).set_connection(cnx, user)
+        super(CubicWebRequestBase, self).set_session(session, user)
         # set request language
         vreg = self.vreg
         if self.user:
@@ -160,8 +163,9 @@ class CubicWebRequestBase(DBAPIRequest):
         gettext, self.pgettext = self.translations[lang]
         self._ = self.__ = gettext
         self.lang = lang
-        self.cnx.set_session_props(lang=lang)
         self.debug('request language: %s', lang)
+        if self.cnx:
+            self.cnx.set_session_props(lang=lang)
 
     # input form parameters management ########################################
 
@@ -245,7 +249,7 @@ class CubicWebRequestBase(DBAPIRequest):
     @property
     def message(self):
         try:
-            return self.get_session_data(self._msgid, default=u'', pop=True)
+            return self.session.data.pop(self._msgid, '')
         except AttributeError:
             try:
                 return self._msg
@@ -266,17 +270,17 @@ class CubicWebRequestBase(DBAPIRequest):
     def set_redirect_message(self, msg):
         assert isinstance(msg, unicode)
         msgid = self.redirect_message_id()
-        self.set_session_data(msgid, msg)
+        self.session.data[msgid] = msg
         return msgid
 
     def append_to_redirect_message(self, msg):
         msgid = self.redirect_message_id()
-        currentmsg = self.get_session_data(msgid)
+        currentmsg = self.session.data.get(msgid)
         if currentmsg is not None:
             currentmsg = '%s %s' % (currentmsg, msg)
         else:
             currentmsg = msg
-        self.set_session_data(msgid, currentmsg)
+        self.session.data[msgid] = currentmsg
         return msgid
 
     def reset_message(self):
@@ -288,8 +292,8 @@ class CubicWebRequestBase(DBAPIRequest):
     def update_search_state(self):
         """update the current search state"""
         searchstate = self.form.get('__mode')
-        if not searchstate and self.cnx is not None:
-            searchstate = self.get_session_data('search_state', 'normal')
+        if not searchstate and self.cnx:
+            searchstate = self.session.data.get('search_state', 'normal')
         self.set_search_state(searchstate)
 
     def set_search_state(self, searchstate):
@@ -299,8 +303,8 @@ class CubicWebRequestBase(DBAPIRequest):
         else:
             self.search_state = ('linksearch', searchstate.split(':'))
             assert len(self.search_state[-1]) == 4
-        if self.cnx is not None:
-            self.set_session_data('search_state', searchstate)
+        if self.cnx:
+            self.session.data['search_state'] = searchstate
 
     def match_search_state(self, rset):
         """when searching an entity to create a relation, return True if entities in
@@ -317,12 +321,12 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""
-        searchstate = self.get_session_data('search_state')
+        searchstate = self.session.data.get('search_state')
         if searchstate == 'normal':
-            breadcrumbs = self.get_session_data('breadcrumbs', None)
+            breadcrumbs = self.session.data.get('breadcrumbs')
             if breadcrumbs is None:
                 breadcrumbs = SizeConstrainedList(10)
-                self.set_session_data('breadcrumbs', breadcrumbs)
+                self.session.data['breadcrumbs'] = breadcrumbs
                 breadcrumbs.append(self.url())
             else:
                 url = self.url()
@@ -330,7 +334,7 @@ class CubicWebRequestBase(DBAPIRequest):
                     breadcrumbs.append(url)
 
     def last_visited_page(self):
-        breadcrumbs = self.get_session_data('breadcrumbs', None)
+        breadcrumbs = self.session.data.get('breadcrumbs')
         if breadcrumbs:
             return breadcrumbs.pop()
         return self.base_url()
@@ -355,15 +359,15 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
-            sha.sha('%s%s%s%s' % (time.time(), func.__name__,
-                                  random.random(),
-                                  self.user.login)).hexdigest())
+            hashlib.sha1('%s%s%s%s' % (time.time(), func.__name__,
+                                       random.random(),
+                                       self.user.login)).hexdigest())
         def _cb(req):
             try:
                 ret = func(req, *args)
             except TypeError:
                 from warnings import warn
-                warn('user callback should now take request as argument')
+                warn('[3.2] user callback should now take request as argument')
                 ret = func(*args)
             self.unregister_callback(self.pageid, cbname)
             return ret
@@ -377,11 +381,10 @@ class CubicWebRequestBase(DBAPIRequest):
         self.del_page_data(cbname)
 
     def clear_user_callbacks(self):
-        if self.cnx is not None:
-            sessdata = self.session_data()
-            callbacks = [key for key in sessdata if key.startswith('cb_')]
-            for callback in callbacks:
-                self.del_session_data(callback)
+        if self.session is not None: # XXX
+            for key in self.session.data.keys():
+                if key.startswith('cb_'):
+                    del self.session.data[key]
 
     # web edition helpers #####################################################
 
@@ -447,13 +450,13 @@ class CubicWebRequestBase(DBAPIRequest):
         This is needed when the edition is completed (whether it's validated
         or cancelled)
         """
-        self.del_session_data('pending_insert')
-        self.del_session_data('pending_delete')
+        self.session.data.pop('pending_insert', None)
+        self.session.data.pop('pending_delete', None)
 
     def cancel_edition(self, errorurl):
         """remove pending operations and `errorurl`'s specific stored data
         """
-        self.del_session_data(errorurl)
+        self.session.data.pop(errorurl, None)
         self.remove_pending_operations()
 
     # high level methods for HTTP headers management ##########################
@@ -672,17 +675,26 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         raise NotImplementedError()
 
-    def set_header(self, header, value):
+    def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
-        raise NotImplementedError()
+        if raw:
+            # adding encoded header is important, else page content
+            # will be reconverted back to unicode and apart unefficiency, this
+            # may cause decoding problem (e.g. when downloading a file)
+            self.headers_out.setRawHeaders(header, [str(value)])
+        else:
+            self.headers_out.setHeader(header, value)
 
     def add_header(self, header, value):
         """add an output HTTP header"""
-        raise NotImplementedError()
+        # adding encoded header is important, else page content
+        # will be reconverted back to unicode and apart unefficiency, this
+        # may cause decoding problem (e.g. when downloading a file)
+        self.headers_out.addRawHeader(header, str(value))
 
     def remove_header(self, header):
         """remove an output HTTP header"""
-        raise NotImplementedError()
+        self.headers_out.removeHeader(header)
 
     def header_authorization(self):
         """returns a couple (auth-type, auth-value)"""
@@ -747,27 +759,30 @@ class CubicWebRequestBase(DBAPIRequest):
     # page data management ####################################################
 
     def get_page_data(self, key, default=None):
-        """return value associated to `key` in curernt page data"""
-        page_data = self.cnx.get_session_data(self.pageid, {})
+        """return value associated to `key` in current page data"""
+        page_data = self.session.data.get(self.pageid)
+        if page_data is None:
+            return default
         return page_data.get(key, default)
 
     def set_page_data(self, key, value):
         """set value associated to `key` in current page data"""
         self.html_headers.add_unload_pagedata()
-        page_data = self.cnx.get_session_data(self.pageid, {})
+        page_data = self.session.data.setdefault(self.pageid, {})
         page_data[key] = value
-        return self.cnx.set_session_data(self.pageid, page_data)
+        self.session.data[self.pageid] = page_data
 
     def del_page_data(self, key=None):
         """remove value associated to `key` in current page data
         if `key` is None, all page data will be cleared
         """
         if key is None:
-            self.cnx.del_session_data(self.pageid)
+            self.session.data.pop(self.pageid, None)
         else:
-            page_data = self.cnx.get_session_data(self.pageid, {})
-            page_data.pop(key, None)
-            self.cnx.set_session_data(self.pageid, page_data)
+            try:
+                del self.session.data[self.pageid][key]
+            except KeyError:
+                pass
 
     # user-agent detection ####################################################
 

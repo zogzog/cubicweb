@@ -1,6 +1,15 @@
 CubicWeb semantic web framework
 ===============================
 
+CubicWeb is a entities / relations based knowledge management system
+developped at Logilab.
+
+This package contains:
+* a repository server
+* a RQL command line client to the repository
+* an adaptative modpython interface to the server
+* a bunch of other management tools
+
 Install
 -------
 

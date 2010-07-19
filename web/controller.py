@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract controller classe for CubicWeb web client
+"""abstract controller classe for CubicWeb web client"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape

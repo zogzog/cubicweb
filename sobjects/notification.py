@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""some views to handle notification on data changes
+"""some views to handle notification on data changes"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 

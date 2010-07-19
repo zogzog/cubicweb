@@ -21,8 +21,8 @@
 - perform physical update on the source when necessary
 
 checking for schema consistency is done in hooks.py
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from copy import copy
@@ -83,7 +83,7 @@ def add_inline_relation_column(session, etype, rtype):
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        session.system_sql(str('ALTER TABLE %s ADD COLUMN %s integer'
+        session.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
     except:
@@ -144,15 +144,17 @@ class DropColumn(hook.Operation):
     table = column = None # make pylint happy
     def precommit_event(self):
         session, table, column = self.session, self.table, self.column
+        source = session.repo.system_source
         # drop index if any
-        session.pool.source('system').drop_index(session, table, column)
-        try:
+        source.drop_index(session, table, column)
+        if source.dbhelper.alter_column_support:
             session.system_sql('ALTER TABLE %s DROP COLUMN %s'
                                % (table, column), rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
-        except Exception, ex:
+        else:
             # not supported by sqlite for instance
-            self.error('error while altering table %s: %s', table, ex)
+            self.error('dropping column not supported by the backend, handle '
+                       'it yourself (%s.%s)', table, column)
 
 
 # base operations for in-memory schema synchronization  ########################
@@ -249,12 +251,11 @@ class SourceDbCWRTypeUpdate(hook.Operation):
             return
         session = self.session
         if 'fulltext_container' in self.values:
-            ftiupdates = session.transaction_data.setdefault(
-                'fti_update_etypes', set())
             for subjtype, objtype in rschema.rdefs:
-                ftiupdates.add(subjtype)
-                ftiupdates.add(objtype)
-            UpdateFTIndexOp(session)
+                hook.set_operation(session, 'fti_update_etypes', subjtype,
+                                   UpdateFTIndexOp)
+                hook.set_operation(session, 'fti_update_etypes', objtype,
+                                   UpdateFTIndexOp)
         if not 'inlined' in self.values:
             return # nothing to do
         inlined = self.values['inlined']
@@ -283,9 +284,10 @@ class SourceDbCWRTypeUpdate(hook.Operation):
                 sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
                         % (rtype, eidcolumn, column, table, column))
             # drop existant columns
+            #if session.repo.system_source.dbhelper.alter_column_support:
             for etype in rschema.subjects():
                 DropColumn(session, table=SQL_PREFIX + str(etype),
-                             column=SQL_PREFIX + rtype)
+                           column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
@@ -363,7 +365,7 @@ class SourceDbCWAttributeAdd(hook.Operation):
         sysource = session.pool.source('system')
         attrtype = y2sql.type_from_constraints(
             sysource.dbhelper, rdef.object, rdef.constraints)
-        # XXX should be moved somehow into lgc.adbh: sqlite doesn't support to
+        # XXX should be moved somehow into lgdb: sqlite doesn't support to
         # add a new column with UNIQUE, it should be added after the ALTER TABLE
         # using ADD INDEX
         if sysource.dbdriver == 'sqlite' and 'UNIQUE' in attrtype:
@@ -376,7 +378,7 @@ class SourceDbCWAttributeAdd(hook.Operation):
         table = SQL_PREFIX + rdef.subject
         column = SQL_PREFIX + rdef.name
         try:
-            session.system_sql(str('ALTER TABLE %s ADD COLUMN %s %s'
+            session.system_sql(str('ALTER TABLE %s ADD %s %s'
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
@@ -502,23 +504,21 @@ class SourceDbRDefUpdate(hook.Operation):
             else:
                 sysource.drop_index(session, table, column)
         if 'cardinality' in self.values and self.rschema.final:
-            adbh = session.pool.source('system').dbhelper
-            if not adbh.alter_column_support:
+            syssource = session.pool.source('system')
+            if not syssource.dbhelper.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
-                # no worry)
+                # no worry) XXX (syt) then should we set NOT NULL below ??
                 return
             atype = self.rschema.objects(etype)[0]
             constraints = self.rschema.rdef(etype, atype).constraints
-            coltype = y2sql.type_from_constraints(adbh, atype, constraints,
+            coltype = y2sql.type_from_constraints(syssource.dbhelper, atype, constraints,
                                                   creating=False)
             # XXX check self.values['cardinality'][0] actually changed?
-            notnull = self.values['cardinality'][0] != '1'
-            sql = adbh.sql_set_null_allowed(table, column, coltype, notnull)
-            session.system_sql(sql)
+            syssource.set_null_allowed(self.session, table, column, coltype,
+                                       self.values['cardinality'][0] != '1')
         if 'fulltextindexed' in self.values:
-            UpdateFTIndexOp(session)
-            session.transaction_data.setdefault(
-                'fti_update_etypes', set()).add(etype)
+            hook.set_operation(session, 'fti_update_etypes', etype,
+                               UpdateFTIndexOp)
 
 
 class SourceDbCWConstraintAdd(hook.Operation):
@@ -544,15 +544,14 @@ class SourceDbCWConstraintAdd(hook.Operation):
         # alter the physical schema on size constraint changes
         if newcstr.type() == 'SizeConstraint' and (
             oldcstr is None or oldcstr.max != newcstr.max):
-            adbh = self.session.pool.source('system').dbhelper
+            syssource = self.session.pool.source('system')
             card = rtype.rdef(subjtype, objtype).cardinality
-            coltype = y2sql.type_from_constraints(adbh, objtype, [newcstr],
-                                                  creating=False)
-            sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
+            coltype = y2sql.type_from_constraints(syssource.dbhelper, objtype,
+                                                  [newcstr], creating=False)
             try:
-                session.system_sql(sql, rollback_on_failure=False)
-                self.info('altered column %s of table %s: now VARCHAR(%s)',
-                          column, table, newcstr.max)
+                syssource.change_col_type(session, table, column, coltype, card[0] != '1')
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -567,16 +566,19 @@ class SourceDbCWConstraintDel(hook.Operation):
 
     def precommit_event(self):
         cstrtype = self.cstr.type()
-        table = SQL_PREFIX + str(self.subjtype)
-        column = SQL_PREFIX + str(self.rtype)
+        table = SQL_PREFIX + str(self.rdef.subject)
+        column = SQL_PREFIX + str(self.rdef.rtype)
         # alter the physical schema on size/unique constraint changes
         if cstrtype == 'SizeConstraint':
+            syssource = self.session.pool.source('system')
+            coltype = y2sql.type_from_constraints(syssource.dbhelper,
+                                                  self.rdef.object, [],
+                                                  creating=False)
             try:
-                self.session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE TEXT'
-                                        % (table, column),
-                                        rollback_on_failure=False)
-                self.info('altered column %s of table %s: now TEXT',
-                          column, table)
+                syssource.change_col_type(session, table, column, coltype,
+                                          self.rdef.cardinality[0] != '1')
+                self.info('altered column %s of table %s: now %s',
+                          column, table, coltype)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
@@ -1017,7 +1019,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             DropRelationTable(session, rschema.type)
         # if this is the last instance, drop associated relation type
         if lastrel and not self.eidto in pendings:
-            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto}, 'x')
+            execute('DELETE CWRType X WHERE X eid %(x)s', {'x': self.eidto})
         MemSchemaRDefDel(session, (subjschema, rschema, objschema))
 
 
@@ -1107,8 +1109,7 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
         except IndexError:
             self._cw.critical('constraint type no more accessible')
         else:
-            SourceDbCWConstraintDel(self._cw, cstr=cstr,
-                                    subjtype=rdef.subject, rtype=rdef.rtype)
+            SourceDbCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
             MemSchemaCWConstraintDel(self._cw, rdef=rdef, cstr=cstr)
 
 
@@ -1164,7 +1165,7 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
     def postcommit_event(self):
         session = self.session
         source = session.repo.system_source
-        to_reindex = session.transaction_data.get('fti_update_etypes', ())
+        to_reindex = session.transaction_data.pop('fti_update_etypes', ())
         self.info('%i etypes need full text indexed reindexation',
                   len(to_reindex))
         schema = self.session.repo.vreg.schema
@@ -1177,7 +1178,7 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                 source.fti_unindex_entity(session, entity.eid)
                 for container in entity.fti_containers():
                     if still_fti or container is not entity:
-                        source.fti_unindex_entity(session, entity.eid)
+                        source.fti_unindex_entity(session, container.eid)
                         source.fti_index_entity(session, container)
         if len(to_reindex):
             # Transaction have already been committed

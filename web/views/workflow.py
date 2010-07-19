@@ -19,10 +19,13 @@
 
 * IWorkflowable views and forms
 * workflow entities views (State, Transition, TrInfo)
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
+
+import tempfile
+import os
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
@@ -31,17 +34,24 @@ from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 implements, score_entity)
+from cubicweb.utils import make_uid
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin, forms, primary, autoform
+from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
 _pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
 _pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'wf_info_for', '*'), 'hidden')
+for rtype in ('in_state', 'by_transition', 'from_state', 'to_state'):
+    _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
+    _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+_pvs.tag_object_of(('*', 'wf_info_for', '*'), 'hidden')
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
@@ -142,7 +152,7 @@ class WFHistoryView(EntityView):
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
         rql = '%s %s, X eid %%(x)s' % (sel, rql)
         try:
-            rset = self._cw.execute(rql, {'x': eid}, 'x')
+            rset = self._cw.execute(rql, {'x': eid})
         except Unauthorized:
             return
         if rset:
@@ -200,6 +210,7 @@ _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
 _pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
 _pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'default_workflow', 'Workflow'), 'hidden')
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
@@ -211,14 +222,10 @@ _abaa.tag_object_of(('BaseTransition', 'transition_of', 'Workflow'), False)
 _abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
 _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 
-class WorkflowPrimaryView(primary.PrimaryView):
+class WorkflowPrimaryView(TabbedPrimaryView):
     __select__ = implements('Workflow')
-
-    def render_entity_attributes(self, entity):
-        self.w(entity.view('reledit', rtype='description'))
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(entity.absolute_url(vid='wfgraph')),
-            xml_escape(self._cw._('graphical workflow for %s') % entity.name)))
+    tabs = [  _('wf_tab_info'), _('wfgraph'),]
+    default_tab = 'wf_tab_info'
 
 
 class CellView(view.EntityView):
@@ -237,6 +244,59 @@ class StateInContextView(view.EntityView):
     def cell_call(self, row, col):
         self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
                                         row=row, col=col)))
+
+class WorkflowTabTextView(PrimaryTab):
+    __regid__ = 'wf_tab_info'
+    __select__ = PrimaryTab.__select__ & one_line_rset() & implements('Workflow')
+
+    def render_entity_attributes(self, entity):
+        _ = self._cw._
+        self.w(u'<div>%s</div>' % (entity.printable_value('description')))
+        self.w(u'<span>%s%s</span>' % (_("workflow_of").capitalize(), _(" :")))
+        html = []
+        for e in  entity.workflow_of:
+            view = e.view('outofcontext')
+            if entity.eid == e.default_workflow[0].eid:
+                view += u' <span>[%s]</span>' % _('default_workflow')
+            html.append(view)
+        self.w(', '.join(v for v in html))
+        self.w(u'<h2>%s</h2>' % _("Transition_plural"))
+        rset = self._cw.execute(
+            'Any T,T,DS,T,TT ORDERBY TN WHERE T transition_of WF, WF eid %(x)s,'
+            'T type TT, T name TN, T destination_state DS?', {'x': entity.eid})
+        self.wview('editable-table', rset, 'null',
+                   cellvids={ 1: 'trfromstates', 2: 'outofcontext', 3:'trsecurity',},
+                   headers = (_('Transition'),  _('from_state'),
+                              _('to_state'), _('permissions'), _('type') ),
+                   )
+
+
+class TransitionSecurityTextView(view.EntityView):
+    __regid__ = 'trsecurity'
+    __select__ = implements('Transition')
+
+    def cell_call(self, row, col):
+        _ = self._cw._
+        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
+        if entity.require_group:
+            self.w(u'<div>%s%s %s</div>' %
+                   (_('groups'), _(" :"),
+                    u', '.join((g.view('incontext') for g
+                               in entity.require_group))))
+        if entity.condition:
+            self.w(u'<div>%s%s %s</div>' %
+                   ( _('conditions'), _(" :"),
+                     u'<br/>'.join((e.dc_title() for e
+                                in entity.condition))))
+
+class TransitionAllowedTextView(view.EntityView):
+    __regid__ = 'trfromstates'
+    __select__ = implements('Transition')
+
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
+        self.w(u', '.join((e.view('outofcontext') for e
+                           in entity.reverse_allowed_transition)))
 
 
 # workflow entity types edition ################################################
@@ -297,24 +357,18 @@ class WorkflowDotPropsHandler(object):
     def node_properties(self, stateortransition):
         """return default DOT drawing options for a state or transition"""
         props = {'label': stateortransition.printable_value('name'),
-                 'fontname': 'Courier'}
+                 'fontname': 'Courier', 'fontsize':10,
+                 'href': stateortransition.absolute_url(),
+                 }
         if hasattr(stateortransition, 'state_of'):
             props['shape'] = 'box'
             props['style'] = 'filled'
             if stateortransition.reverse_initial_state:
-                props['color'] = '#88CC88'
+                props['fillcolor'] = '#88CC88'
         else:
             props['shape'] = 'ellipse'
             descr = []
             tr = stateortransition
-            if tr.require_group:
-                descr.append('%s %s'% (
-                    self._('groups:'),
-                    ','.join(g.printable_value('name') for g in tr.require_group)))
-            if tr.condition:
-                descr.append('%s %s'% (
-                    self._('condition:'),
-                    ' | '.join(e.expression for e in tr.condition)))
             if descr:
                 props['label'] += escape('\n'.join(descr))
         return props
@@ -344,17 +398,43 @@ class WorkflowVisitor:
                 yield transition.eid, outgoingstate.eid, transition
 
 
-class WorkflowImageView(TmpFileViewMixin, view.EntityView):
+class WorkflowGraphView(view.EntityView):
     __regid__ = 'wfgraph'
-    __select__ = implements('Workflow')
-    content_type = 'image/png'
+    __select__ = EntityView.__select__ & one_line_rset() & implements('Workflow')
 
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
         visitor = WorkflowVisitor(entity)
         prophdlr = WorkflowDotPropsHandler(self._cw)
-        generator = GraphGenerator(DotBackend('workflow', 'LR',
-                                              ratio='compress', size='30,12'))
-        return generator.generate(visitor, prophdlr, tmpfile)
+        wfname = 'workflow%s' % str(entity.eid)
+        generator = GraphGenerator(DotBackend(wfname, None,
+                                              ratio='compress', size='30,10'))
+        # map file
+        pmap, mapfile = tempfile.mkstemp(".map", wfname)
+        os.close(pmap)
+        # image file
+        fd, tmpfile = tempfile.mkstemp('.png')
+        os.close(fd)
+        generator.generate(visitor, prophdlr, tmpfile, mapfile)
+        filekeyid = make_uid()
+        self._cw.session.data[filekeyid] = tmpfile
+        self.w(u'<img src="%s" alt="%s" usemap="#%s" />' % (
+            xml_escape(entity.absolute_url(vid='tmppng', tmpfile=filekeyid)),
+            xml_escape(self._cw._('graphical workflow for %s') % entity.name),
+            wfname))
+        stream = open(mapfile, 'r').read()
+        stream = stream.decode(self._cw.encoding)
+        self.w(stream)
+        os.unlink(mapfile)
 
+
+class TmpPngView(TmpFileViewMixin, view.EntityView):
+    __regid__ = 'tmppng'
+    __select__ = match_form_params('tmpfile')
+    content_type = 'image/png'
+    binary = True
+
+    def cell_call(self, row=0, col=0):
+        tmpfile = self._cw.session.data[self._cw.form['tmpfile']]
+        self.w(open(tmpfile, 'rb').read())
+        os.unlink(tmpfile)

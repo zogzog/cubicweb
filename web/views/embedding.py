@@ -17,9 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Objects interacting together to provides the external page embeding
 functionality.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 import re

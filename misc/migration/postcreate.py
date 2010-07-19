@@ -56,7 +56,7 @@ if hasattr(config, 'anonymous_user'):
 # need this since we already have at least one user in the database (the default admin)
 for user in rql('Any X WHERE X is CWUser').entities():
     rql('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-        {'x': user.eid, 's': activated.eid}, 'x')
+        {'x': user.eid, 's': activated.eid})
 
 # on interactive mode, ask for level 0 persistent options
 if interactive_mode:
@@ -68,11 +68,12 @@ if interactive_mode:
             default = cfg.option_default(optname, optdict)
             # only record values differing from default
             if value != default:
-                rql('INSERT CWProperty X: X pkey %(k)s, X value %(v)s', {'k': key, 'v': value})
+                rql('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
+                    {'k': key, 'v': value})
 
 # add PERM_USE_TEMPLATE_FORMAT permission
 from cubicweb.schema import PERM_USE_TEMPLATE_FORMAT
 usetmplperm = create_entity('CWPermission', name=PERM_USE_TEMPLATE_FORMAT,
                             label=_('use template languages'))
 rql('SET X require_group G WHERE G name "managers", X eid %(x)s',
-    {'x': usetmplperm.eid}, 'x')
+    {'x': usetmplperm.eid})

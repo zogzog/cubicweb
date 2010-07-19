@@ -24,7 +24,7 @@ from yams import BadSchemaDefinition
 from rql import parse, nodes, RQLHelper
 
 from cubicweb import Unauthorized
-from cubicweb.schema import RRQLExpression
+from cubicweb.schema import RRQLExpression, ERQLExpression
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
@@ -349,6 +349,20 @@ class RQLRewriteTC(TestCase):
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'S')
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any C WHERE C is Card, EXISTS(C owned_by A, A is CWUser)")
+
+    def test_rqlexpr_not_relation1(self):
+        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
+        rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
+
+    def test_rqlexpr_not_relation2(self):
+        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        rqlst = rqlhelper.parse('Affaire A WHERE NOT A documented_by C', annotate=False)
+        rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
 
 if __name__ == '__main__':

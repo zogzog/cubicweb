@@ -130,11 +130,14 @@ class NavigationComponent(Component):
         params = dict(params)
         params.update({self.start_param : start,
                        self.stop_param : stop,})
-        if path == 'json':
+        view = self.cw_extra_kwargs.get('view')
+        if view is not None and hasattr(view, 'page_navigation_url'):
+            url = view.page_navigation_url(self, path, params)
+        elif path == 'json':
             rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-                json.dumps(params.get('divid', 'paginated-content')),
+                json.dumps(params.get('divid', 'pageContent')),
                 json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
         else:
             url = self._cw.build_url(path, **params)
@@ -181,7 +184,7 @@ class RelatedObjectsVComponent(EntityVComponent):
             rset = entity.related(self.rtype, role(self))
         else:
             eid = self.cw_rset[row][col]
-            rset = self._cw.execute(self.rql(), {'x': eid}, 'x')
+            rset = self._cw.execute(self.rql(), {'x': eid})
         if not rset.rowcount:
             return
         self.w(u'<div class="%s">' % self.div_class())

@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML automatic forms to create, delete, copy or edit a single entity
 or a list of entities of the same type
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -27,10 +27,11 @@ from copy import copy
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
+from cubicweb import tags
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, implements, yes)
 from cubicweb.view import EntityView
-from cubicweb import tags
+from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, eid_param, dumps, \
      formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
@@ -306,7 +307,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self._cw.add_js('cubicweb.edition.js')
         self._cw.add_css('cubicweb.form.css')
         if default is None:
-            default = xml_escape(self._cw._('<no value>'))
+            default = xml_escape(self._cw._('<%s not specified>')
+                                 % display_name(self._cw, rtype, role))
         schema = self._cw.vreg.schema
         entity = self.cw_rset.get_entity(row, col)
         rschema = schema.rschema(rtype)
@@ -338,16 +340,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                            self._build_renderer(entity, rtype, role))
 
     def should_edit_attribute(self, entity, rschema, form):
-        rtype = str(rschema)
-        rdef = entity.e_schema.rdef(rtype)
-        afs = uicfg.autoform_section.etype_get(
-            entity.__regid__, rtype, 'subject', rdef.object)
-        if 'main_hidden' in afs or not entity.has_perm('update'):
+        if not entity.has_perm('update'):
             return False
+        rdef = entity.e_schema.rdef(rschema)
         if not rdef.has_perm(self._cw, 'update', eid=entity.eid):
             return False
         try:
-            form.field_by_name(rtype, 'subject', entity.e_schema)
+            form.field_by_name(str(rschema), 'subject', entity.e_schema)
         except FieldNotFound:
             return False
         return True
@@ -435,15 +434,27 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
     _onclick = (u"loadInlineEditionForm(%(eid)s, '%(rtype)s', '%(role)s', "
                 "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
 
+    def should_edit_attribute(self, entity, rschema, form):
+        rdef = entity.e_schema.rdef(rschema)
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rschema, 'subject', rdef.object)
+        if 'main_hidden' in afs:
+            return False
+        return super(AutoClickAndEditFormView, self).should_edit_attribute(
+            entity, rschema, form)
+
     def should_edit_relation(self, entity, rschema, role, rvid):
         eschema = entity.e_schema
-        rtype = str(rschema)
-        # XXX check autoform_section. what if 'generic'?
-        dispctrl = _pvdc.etype_get(eschema, rtype, role)
+        dispctrl = _pvdc.etype_get(eschema, rschema, role)
         vid = dispctrl.get('vid', 'reledit')
         if vid != 'reledit': # reledit explicitly disabled
             return False
-        if eschema.rdef(rschema, role).composite == role:
+        rdef = eschema.rdef(rschema, role)
+        if rdef.composite == role:
+            return False
+        afs = uicfg.autoform_section.etype_get(
+            entity.__regid__, rschema, role, rdef.object)
+        if 'main_hidden' in afs:
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
             entity, rschema, role, rvid)

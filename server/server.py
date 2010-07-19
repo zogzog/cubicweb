@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Pyro RQL server
+"""Pyro RQL server"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
@@ -83,7 +82,6 @@ class RepositoryServer(object):
         self.quiting = None
         # event queue
         self.events = []
-        # start repository looping tasks
 
     def add_event(self, event):
         """add an event to the loop"""
@@ -103,6 +101,7 @@ class RepositoryServer(object):
 
     def run(self, req_timeout=5.0):
         """enter the service loop"""
+        # start repository looping tasks
         self.repo.start_looping_tasks()
         while self.quiting is None:
             try:
@@ -130,35 +129,7 @@ class RepositoryServer(object):
         signal.signal(signal.SIGINT, lambda x, y, s=self: s.quit())
         signal.signal(signal.SIGTERM, lambda x, y, s=self: s.quit())
 
-    def daemonize(self, pid_file=None):
-        """daemonize the process"""
-        # fork so the parent can exist
-        if (os.fork()):
-            return -1
-        # deconnect from tty and create a new session
-        os.setsid()
-        # fork again so the parent, (the session group leader), can exit.
-        # as a non-session group leader, we can never regain a controlling
-        # terminal.
-        if (os.fork()):
-            return -1
-        # move to the root to avoit mount pb
-        os.chdir('/')
-        # set paranoid umask
-        os.umask(077)
-        if pid_file is not None:
-            # write pid in a file
-            f = open(pid_file, 'w')
-            f.write(str(os.getpid()))
-            f.close()
-        # filter warnings
-        warnings.filterwarnings('ignore')
-        # close standard descriptors
-        sys.stdin.close()
-        sys.stdout.close()
-        sys.stderr.close()
-
 from logging import getLogger
 from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.reposerver')
-set_log_methods(CubicWebConfiguration, LOGGER)
+set_log_methods(RepositoryServer, LOGGER)

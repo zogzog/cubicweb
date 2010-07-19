@@ -19,7 +19,7 @@
 
 """
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, ObjectRelation,
+                            SubjectRelation,
                             RichString, String, Int, Boolean, Datetime, Date)
 from yams.constraints import SizeConstraint, UniqueConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
@@ -95,7 +95,9 @@ class Folder2(EntityType):
                   constraints=[UniqueConstraint(), SizeConstraint(64)])
     description = RichString(fulltextindexed=True)
 
-    filed_under2 = ObjectRelation('*')
+class filed_under2(RelationDefinition):
+    subject ='*'
+    object = 'Folder2'
 
 
 class Personne(EntityType):

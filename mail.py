@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Common utilies to format / semd emails.
+"""Common utilies to format / semd emails."""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from base64 import b64encode, b64decode
@@ -85,8 +84,11 @@ def format_mail(uinfo, to_addrs, content, subject="",
     assert type(content) is unicode, repr(content)
     msg = MIMEText(content.encode('UTF-8'), 'plain', 'UTF-8')
     # safety: keep only the first newline
-    subject = subject.splitlines()[0]
-    msg['Subject'] = header(subject)
+    try:
+        subject = subject.splitlines()[0]
+        msg['Subject'] = header(subject)
+    except IndexError:
+        pass # no subject
     if uinfo.get('email'):
         email = uinfo['email']
     elif config and config['sender-addr']:

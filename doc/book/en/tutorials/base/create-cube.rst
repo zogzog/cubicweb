@@ -30,7 +30,7 @@ Create, run, and explore an instance of your cube.
 
 Customize the views of your data: how and which part of your data are showed.
 
-Note: views don't concern the look'n'feel or design of the site. For that, you should use CSS instead, and default CSS or your new cube are located in 'blog/data/'.
+.. note:: views do not define the look'n'feel and the design of your application. For that, you will use CSS and the files located 'blog/data/'.
 
 
 5. :ref:`DefineEntities`
@@ -396,6 +396,7 @@ While developping your cube, you may want to update your data model. Let's say y
 want to add a ``category`` attribute in the ``Blog`` data type. This is called a migration.
 
 The required steps are:
+
 1. modify the file ``schema.py``. The ``Blog`` class looks now like this:
 
 .. sourcecode:: python
@@ -405,7 +406,11 @@ The required steps are:
    description = String()
    category = String(required=True, vocabulary=(_('Professional'), _('Personal')), default='Personal')
 
-2. stop your ``blogdemo`` instance
+2. stop your ``blogdemo`` instance:
+
+.. sourcecode:: bash
+
+  cubicweb-ctl stop blogdemo
 
 3. start the cubicweb shell for your instance by running the following command:
 
@@ -413,15 +418,21 @@ The required steps are:
 
   cubicweb-ctl shell blogdemo
 
-4. in the shell, execute:
+4. at the cubicweb shell prompt, execute:
 
 .. sourcecode:: python
 
  add_attribute('Blog', 'category')
 
-5. you can restart your instance, modify a blog entity and check that the new attribute
+5. restart your instance:
+   
+.. sourcecode:: bash
+
+  cubicweb-ctl start blogdemo
+
+6. modify a blog entity and check that the new attribute
 ``category`` has been added.
 
-Of course, you may also want to add relations, entity types, ... See :ref:`migration`
+Of course, you may also want to add relations, entity types, etc. See :ref:`migration`
 for a list of all available migration commands.
 

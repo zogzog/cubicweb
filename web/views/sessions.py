@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractSessionManager
+from cubicweb.dbapi import DBAPISession
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
@@ -53,37 +54,40 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if self.has_expired(session):
             self.close_session(session)
             raise InvalidSession()
-        # give an opportunity to auth manager to hijack the session (necessary
-        # with the RepositoryAuthenticationManager in case the connection to the
-        # repository has expired)
         try:
-            session = self.authmanager.validate_session(req, session)
-            # necessary in case session has been hijacked
-            self._sessions[session.sessionid] = session
+            user = self.authmanager.validate_session(req, session)
         except InvalidSession:
             # invalid session
-            del self._sessions[sessionid]
+            self.close_session(session)
             raise
+        # associate the connection to the current request
+        req.set_session(session, user)
         return session
 
     def open_session(self, req):
-        """open and return a new session for the given request
+        """open and return a new session for the given request. The session is
+        also bound to the request.
 
-        :raise ExplicitLogin: if authentication is required
+        raise :exc:`cubicweb.AuthenticationError` if authentication failed
+        (no authentication info found or wrong user/password)
         """
-        session = self.authmanager.authenticate(req)
+        cnx, login, authinfo = self.authmanager.authenticate(req)
+        session = DBAPISession(cnx, login, authinfo)
         self._sessions[session.sessionid] = session
+        # associate the connection to the current request
+        req.set_session(session)
         return session
 
     def close_session(self, session):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
         """
-        self.info('closing http session %s' % session)
+        self.info('closing http session %s' % session.sessionid)
         del self._sessions[session.sessionid]
         try:
-            session.close()
+            session.cnx.close()
         except:
             # already closed, may occurs if the repository session expired but
             # not the web session
             pass
+        session.cnx = None

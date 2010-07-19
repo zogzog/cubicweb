@@ -22,8 +22,8 @@ Notes:
   from which it comes from) are stored in a varchar column encoded as a base64
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -33,6 +33,7 @@ from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 from contextlib import contextmanager
+from os.path import abspath
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -190,51 +191,52 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         ('db-driver',
          {'type' : 'string',
           'default': 'postgres',
-          'help': 'database driver (postgres, sqlite, sqlserver2005)',
-          'group': 'native-source', 'inputlevel': 1,
+          # XXX use choice type
+          'help': 'database driver (postgres, mysql, sqlite, sqlserver2005)',
+          'group': 'native-source', 'level': 1,
           }),
         ('db-host',
          {'type' : 'string',
           'default': '',
           'help': 'database host',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-port',
          {'type' : 'string',
           'default': '',
           'help': 'database port',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-name',
          {'type' : 'string',
           'default': Method('default_instance_id'),
           'help': 'database name',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-user',
          {'type' : 'string',
           'default': CubicWebNoAppConfiguration.mode == 'user' and getlogin() or 'cubicweb',
           'help': 'database user',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-password',
          {'type' : 'password',
           'default': '',
           'help': 'database password',
-          'group': 'native-source', 'inputlevel': 0,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-encoding',
          {'type' : 'string',
           'default': 'utf8',
           'help': 'database encoding',
-          'group': 'native-source', 'inputlevel': 1,
+          'group': 'native-source', 'level': 1,
           }),
         ('db-extra-arguments',
          {'type' : 'string',
           'default': '',
           'help': 'set to "Trusted_Connection" if you are using SQLServer and '
                   'want trusted authentication for the database connection',
-          'group': 'native-source', 'inputlevel': 2,
+          'group': 'native-source', 'level': 2,
           }),
     )
 
@@ -254,6 +256,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
         self._eid_creation_lock = Lock()
+        self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
         # entity types that may be used by other multi-sources instances
@@ -263,11 +266,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.dbdriver == 'sqlite' and \
                not getattr(repo.config, 'no_sqlite_wrap', False):
             from cubicweb.server.sources.extlite import ConnectionWrapper
+            self.dbhelper.dbname = abspath(self.dbhelper.dbname)
             self.get_connection = lambda: ConnectionWrapper(self)
             self.check_connection = lambda cnx: cnx
             def pool_reset(cnx):
                 cnx.close()
             self.pool_reset = pool_reset
+        if self.dbdriver == 'sqlite':
+            self._create_eid = None
+            self.create_eid = self._create_eid_sqlite
+        self.binary_to_str = self.dbhelper.dbapi_module.binary_to_str
+
 
     @property
     def _sqlcnx(self):
@@ -328,6 +337,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def init(self):
         self.init_creating()
 
+    def shutdown(self):
+        if self._eid_creation_cnx:
+            self._eid_creation_cnx.close()
+            self._eid_creation_cnx = None
+
     # XXX deprecates [un]map_attribute ?
     def map_attribute(self, etype, attr, cb, sourcedb=True):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = (cb, sourcedb)
@@ -347,6 +361,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if not self._storages[etype]:
             del self._storages[etype]
         self.unmap_attribute(etype, attr)
+
+    def storage(self, etype, attr):
+        """return the storage for the given entity type / attribute
+        """
+        try:
+            return self._storages[etype][attr]
+        except KeyError:
+            raise Exception('no custom storage set for %s.%s' % (etype, attr))
 
     # ISource interface #######################################################
 
@@ -429,11 +451,23 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             cursor = self.doexec(session, sql, args)
         except (self.OperationalError, self.InterfaceError):
+            if session.mode == 'write':
+                # do not attempt to reconnect if there has been some write
+                # during the transaction
+                raise
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect")
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
-        results = self.process_result(cursor, cbs)
+        except (self.DbapiError,), exc:
+            # We get this one with pyodbc and SQL Server when connection was reset
+            if exc.args[0] == '08S01' and session.mode != 'write':
+                self.warning("trying to reconnect")
+                session.pool.reconnect(self)
+                cursor = self.doexec(session, sql, args)
+            else:
+                raise
+        results = self.process_result(cursor, cbs, session=session)
         assert dbg_results(results)
         return results
 
@@ -644,9 +678,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # short cut to method requiring advanced db helper usage ##################
 
-    def binary_to_str(self, value):
-        return self.dbhelper.dbapi_module.binary_to_str(value)
-
     def create_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
@@ -654,6 +685,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def drop_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.drop_index(cursor, table, column, unique)
+
+    def change_col_type(self, session, table, column, coltype, null_allowed):
+        cursor = LogCursor(session.pool[self.uri])
+        self.dbhelper.change_col_type(cursor, table, column, coltype, null_allowed)
+
+    def set_null_allowed(self, session, table, column, coltype, null_allowed):
+        cursor = LogCursor(session.pool[self.uri])
+        self.dbhelper.set_null_allowed(cursor, table, column, coltype, null_allowed)
 
     # system source interface #################################################
 
@@ -692,7 +731,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return None
 
     def make_temp_table_name(self, table):
-        try: # XXX remove this once 
+        try: # XXX remove this once
             return self.dbhelper.temporary_table_name(table)
         except AttributeError:
             import warnings
@@ -710,7 +749,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.dbhelper.sql_temporary_table(table, schema, False)
         self.doexec(session, sql)
 
-    def create_eid(self, session):
+    def _create_eid_sqlite(self, session):
         self._eid_creation_lock.acquire()
         try:
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
@@ -718,6 +757,50 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return cursor.fetchone()[0]
         finally:
             self._eid_creation_lock.release()
+
+
+    def create_eid(self, session):
+        # lock needed to prevent 'Connection is busy with results for another command (0)' errors with SQLServer
+        self._eid_creation_lock.acquire()
+        try:
+            return self._create_eid()
+        finally:
+            self._eid_creation_lock.release()
+
+    def _create_eid(self):
+        # internal function doing the eid creation without locking.
+        # needed for the recursive handling of disconnections (otherwise we
+        # deadlock on self._eid_creation_lock
+        if self._eid_creation_cnx is None:
+            self._eid_creation_cnx = self.get_connection()
+        cnx = self._eid_creation_cnx
+        cursor = cnx.cursor()
+        try:
+            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
+                cursor.execute(sql)
+            eid = cursor.fetchone()[0]
+        except (self.OperationalError, self.InterfaceError):
+            # FIXME: better detection of deconnection pb
+            self.warning("trying to reconnect create eid connection")
+            self._eid_creation_cnx = None
+            return self._create_eid()
+        except (self.DbapiError,), exc:
+            # We get this one with pyodbc and SQL Server when connection was reset
+            if exc.args[0] == '08S01':
+                self.warning("trying to reconnect create eid connection")
+                self._eid_creation_cnx = None
+                return self._create_eid()
+            else:
+                raise
+        except: # WTF?
+            cnx.rollback()
+            self._eid_creation_cnx = None
+            self.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
+            raise
+        else:
+            cnx.commit()
+            return eid
+
 
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""

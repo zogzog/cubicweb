@@ -54,15 +54,15 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
         except KeyError:
             continue
         stinfo = var.stinfo
-        if stinfo.get('uidrels'):
+        if stinfo.get('uidrel') is not None:
             continue # eid specified, no need for additional type specification
         try:
-            typerels = rqlst.defined_vars[varname].stinfo.get('typerels')
+            typerel = rqlst.defined_vars[varname].stinfo.get('typerel')
         except KeyError:
             assert varname in rqlst.aliases
             continue
-        if newroot is rqlst and typerels:
-            mytyperel = iter(typerels).next()
+        if newroot is rqlst and typerel is not None:
+            mytyperel = typerel
         else:
             for vref in newroot.defined_vars[varname].references():
                 rel = vref.relation()
@@ -93,7 +93,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 # tree is not annotated yet, no scope set so add the restriction
                 # to the root
                 rel = newroot.add_type_restriction(var, possibletypes)
-            stinfo['typerels'] = frozenset((rel,))
+            stinfo['typerel'] = rel
             stinfo['possibletypes'] = possibletypes
 
 
@@ -155,7 +155,7 @@ class RQLRewriter(object):
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
         """
-        self.select = self.insert_scope = select
+        self.select = select
         self.solutions = solutions
         self.kwargs = kwargs
         self.u_varname = None
@@ -163,6 +163,7 @@ class RQLRewriter(object):
         self.exists_snippet = {}
         self.pending_keys = []
         self.existingvars = existingvars
+        self._insert_scope = None
         # we have to annotate the rqlst before inserting snippets, even though
         # we'll have to redo it latter
         self.annotate(select)
@@ -249,15 +250,19 @@ class RQLRewriter(object):
 
     def _insert_snippet(self, varmap, parent, new):
         if new is not None:
+            if self._insert_scope is None:
+                insert_scope = self.varinfo.get('stinfo', {}).get('scope', self.select)
+            else:
+                insert_scope = self._insert_scope
             if self.varinfo.get('stinfo', {}).get('optrelations'):
                 assert parent is None
-                self.insert_scope = self.snippet_subquery(varmap, new)
+                self._insert_scope = self.snippet_subquery(varmap, new)
                 self.insert_pending()
-                self.insert_scope = self.select
+                self._insert_scope = None
                 return
             new = n.Exists(new)
             if parent is None:
-                self.insert_scope.add_restriction(new)
+                insert_scope.add_restriction(new)
             else:
                 grandpa = parent.parent
                 or_ = n.Or(parent, new)
@@ -274,9 +279,9 @@ class RQLRewriter(object):
                         self._cleanup_inserted(new)
                     raise
                 else:
-                    self.insert_scope = new
+                    self._insert_scope = new
                     self.insert_pending()
-                    self.insert_scope = self.select
+                    self._insert_scope = None
             return new
         self.insert_pending()
 
@@ -348,7 +353,7 @@ class RQLRewriter(object):
         if need_null_test:
             snippetrqlst = n.Or(
                 n.make_relation(subselectvar, 'is', (None, None), n.Constant,
-                                operator='IS'),
+                                operator='='),
                 snippetrqlst)
         subselect.add_restriction(snippetrqlst)
         if self.u_varname:

@@ -46,8 +46,8 @@ Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
 `timestamp` attributes, but *their `_cw` attribute is None*.
 
 Session hooks (eg session_open, session_close) have no special attribute.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -122,6 +122,7 @@ for event in ALL_HOOKS:
 _MARKER = object()
 def entity_oldnewvalue(entity, attr):
     """returns the couple (old attr value, new attr value)
+
     NOTE: will only work in a before_update_entity hook
     """
     # get new value and remove from local dict to force a db query to
@@ -130,6 +131,8 @@ def entity_oldnewvalue(entity, attr):
     oldvalue = getattr(entity, attr)
     if newvalue is not _MARKER:
         entity[attr] = newvalue
+    else:
+        newvalue = oldvalue
     return oldvalue, newvalue
 
 
@@ -304,9 +307,9 @@ class PropagateSubjectRelationHook(Hook):
             assert self.rtype in self.object_relations
             meid, seid = self.eidto, self.eidfrom
         self._cw.execute(
-            'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
+            'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'
             % (self.main_rtype, self.main_rtype, self.main_rtype),
-            {'x': meid, 'e': seid}, ('x', 'e'))
+            {'x': meid, 'e': seid})
 
 
 class PropagateSubjectRelationAddHook(Hook):
@@ -326,12 +329,12 @@ class PropagateSubjectRelationAddHook(Hook):
             if rel in eschema.subjrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R, NOT R %s P' % (self.rtype, rel, self.rtype),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
             if rel in eschema.objrels:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X, NOT R %s P' % (self.rtype, rel, self.rtype),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
 
 
 class PropagateSubjectRelationDelHook(Hook):
@@ -351,12 +354,12 @@ class PropagateSubjectRelationDelHook(Hook):
             if rel in eschema.subjrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R' % (self.rtype, rel),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
             if rel in eschema.objrels:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X' % (self.rtype, rel),
-                        {'x': self.eidfrom, 'p': self.eidto}, 'x')
+                        {'x': self.eidfrom, 'p': self.eidto})
 
 
 # abstract classes for operation ###############################################
@@ -366,10 +369,10 @@ class Operation(object):
     commit / rollback transations. Possible events are:
 
     precommit:
-      the pool is preparing to commit. You shouldn't do anything things which
-      has to be reverted if the commit fail at this point, but you can freely
+      the pool is preparing to commit. You shouldn't do anything which
+      has to be reverted if the commit fails at this point, but you can freely
       do any heavy computation or raise an exception if the commit can't go.
-      You can add some new operation during this phase but their precommit
+      You can add some new operations during this phase but their precommit
       event won't be triggered
 
     commit:
@@ -387,6 +390,12 @@ class Operation(object):
        * a precommit event failed, all operations are rollbacked
        * a commit event failed, all operations which are not been triggered for
          commit are rollbacked
+
+    postcommit:
+      The transaction is over. All the ORM entities are
+      invalid. If you need to work on the database, you need to stard
+      a new transaction, for instance using a new internal_session,
+      which you will need to commit (and close!).
 
     order of operations may be important, and is controlled according to
     the insert_index's method output
@@ -473,23 +482,27 @@ class Operation(object):
 
 set_log_methods(Operation, getLogger('cubicweb.session'))
 
+def _container_add(container, value):
+    {set: set.add, list: list.append}[container.__class__](container, value)
 
-def set_operation(session, datakey, value, opcls, **opkwargs):
+def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
     """Search for session.transaction_data[`datakey`] (expected to be a set):
 
     * if found, simply append `value`
 
-    * else, initialize it to set([`value`]) and instantiate the given `opcls`
-      operation class with additional keyword arguments.
+    * else, initialize it to containercls([`value`]) and instantiate the given
+      `opcls` operation class with additional keyword arguments. `containercls`
+      is a set by default. Give `list` if you want to keep arrival ordering.
 
     You should use this instead of creating on operation for each `value`,
     since handling operations becomes coslty on massive data import.
     """
     try:
-        session.transaction_data[datakey].add(value)
+        _container_add(session.transaction_data[datakey], value)
     except KeyError:
         opcls(session, **opkwargs)
-        session.transaction_data[datakey] = set((value,))
+        session.transaction_data[datakey] = containercls()
+        _container_add(session.transaction_data[datakey], value)
 
 
 class LateOperation(Operation):

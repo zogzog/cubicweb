@@ -173,15 +173,15 @@ Beside a few core functionalities, almost every feature of the framework is
 achieved by dynamic objects (`application objects` or `appobjects`) stored in a
 two-levels registry (the `vregistry`). Each object is affected to a registry with
 an identifier in this registry. You may have more than one object sharing an
-identifier in the same registry, At runtime, appobjects are selected in a
-registry according to the context. Selection is done by comparing *score*
+identifier in the same registry. At runtime, appobjects are selected in a
+registry according to the context. Selection is done by comparing the *score*
 returned by each appobject's *selector*.
 
 Application objects are stored in the vregistry using a two-level hierarchy :
 
   object's `__registry__` : object's `__regid__` : [list of app objects]
 
-E.g. the `vregistry` contains several (sub-)registries which hold a
+In other words, the `vregistry` contains several (sub-)registries which hold a
 list of appobjects associated to an identifier.
 
 The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
@@ -189,15 +189,15 @@ The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
 Selectors
 ~~~~~~~~~
 
-Each appobject has a selector, that is used to compute how well the object fits a
-given context. The better the object fits the context, the higher the score. They
-are the glue that tie appobjects to the data model. Using them appropriately is
+Each appobject has a selector that is used to compute how well the object fits a
+given context. The better the object fits the context, the higher the score. Scores
+are the glue that ties appobjects to the data model. Using them appropriately is
 an essential part of the construction of well behaved cubes.
 
 |cubicweb| provides a set of basic selectors that may be parametrized.  Also,
 selectors can be combined with the `~` unary operator (negation) and the binary
 operators `&` and `|` (respectivly 'and' and 'or') to build more complex
-selector. Of course complex selector may be combined too. Last but not least, you
+selectors. Of course complex selectors may be combined too. Last but not least, you
 can write your own selectors.
 
 The `vregistry`
@@ -339,5 +339,5 @@ Hooks and operation are an essential building block of any moderately complicate
 cubicweb application.
 
 .. note::
-   RQL queries executed in hooks and operations are *unsafe* by default, e.g. the
+   RQL queries executed in hooks and operations are *unsafe* by default, i.e. the
    read and write security is deactivated unless explicitly asked.

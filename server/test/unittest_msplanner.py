@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
@@ -748,7 +745,6 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_not_identity(self):
-        # both system and rql support all variables, can be
         self._test('Any X WHERE NOT X identity U, U eid %s' % self.session.user.eid,
                    [('OneFetchStep',
                      [('Any X WHERE NOT X identity 5, X is CWUser', [{'X': 'CWUser'}])],
@@ -1105,7 +1101,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [('Any L,X WHERE X login L, X is CWUser', [{'X': 'CWUser', 'L': 'String'}])],
                      [self.ldap, self.system], None, {'X': 'table2.C1', 'X.login': 'table2.C0', 'L': 'table2.C0'}, []),
                     ('OneFetchStep',
-                     [('Any G,L WHERE X in_group G, X login L, G name "managers", (EXISTS(X copain T, T login L, T is CWUser)) OR (EXISTS(X in_state S, S name "pascontent", NOT X copain T2, S is State, T2 is CWUser)), G is CWGroup, X is CWUser',
+                     [('Any G,L WHERE X in_group G, X login L, G name "managers", (EXISTS(X copain T, T login L, T is CWUser)) OR (EXISTS(X in_state S, S name "pascontent", NOT EXISTS(X copain T2), S is State)), G is CWGroup, T2 is CWUser, X is CWUser',
                        [{'G': 'CWGroup', 'L': 'String', 'S': 'State', 'T': 'CWUser', 'T2': 'CWUser', 'X': 'CWUser'}])],
                      None, None, [self.system],
                      {'T2': 'table1.C0', 'L': 'table2.C0',
@@ -1222,7 +1218,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # in the source where %(x)s is not coming from and will be removed during rql
         # generation for the external source
         self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
-                   [('OneFetchStep', [('Any SN WHERE NOT 5 in_state S, S name SN, S is State',
+                   [('OneFetchStep', [('Any SN WHERE NOT EXISTS(5 in_state S), S name SN, S is State',
                                        [{'S': 'State', 'SN': 'String'}])],
                      None, None, [self.cards, self.system], {}, [])],
                    {'x': ueid})
@@ -1233,7 +1229,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # the same plan may be used, since we won't find any record in the system source
         # linking 9999999 to a state
         self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
-                   [('OneFetchStep', [('Any SN WHERE NOT 999999 in_state S, S name SN, S is State',
+                   [('OneFetchStep', [('Any SN WHERE NOT EXISTS(999999 in_state S), S name SN, S is State',
                                        [{'S': 'State', 'SN': 'String'}])],
                      None, None, [self.cards, self.system], {}, [])],
                    {'x': 999999})
@@ -1246,12 +1242,12 @@ class MSPlannerTC(BaseMSPlannerTC):
                      []),
                     ('IntersectStep', None, None,
                      [('OneFetchStep',
-                       [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is Note',
+                       [('Any SN WHERE NOT EXISTS(X in_state S, X is Note), S name SN, S is State',
                          [{'S': 'State', 'SN': 'String', 'X': 'Note'}])],
                        None, None, [self.cards, self.system], {},
                        []),
                       ('OneFetchStep',
-                       [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is IN(Affaire, CWUser)',
+                       [('Any SN WHERE NOT EXISTS(X in_state S, X is IN(Affaire, CWUser)), S name SN, S is State',
                          [{'S': 'State', 'SN': 'String', 'X': 'Affaire'},
                           {'S': 'State', 'SN': 'String', 'X': 'CWUser'}])],
                        None, None, [self.system], {'S': 'table0.C1', 'S.name': 'table0.C0', 'SN': 'table0.C0'},
@@ -1505,7 +1501,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         self._test('Any Y WHERE X eid %(x)s, NOT X multisource_crossed_rel Y',
                    [('FetchStep', [('Any Y WHERE Y is Note', [{'Y': 'Note'}])],
                      [self.cards, self.system], None, {'Y': 'table0.C0'}, []),
-                    ('OneFetchStep', [('Any Y WHERE NOT 999999 multisource_crossed_rel Y, Y is Note',
+                    ('OneFetchStep', [('Any Y WHERE NOT EXISTS(999999 multisource_crossed_rel Y), Y is Note',
                                        [{'Y': 'Note'}])],
                      None, None, [self.system],
                      {'Y': 'table0.C0'},  [])],
@@ -1633,7 +1629,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('DELETE Note X WHERE X eid %(x)s, NOT Y multisource_rel X',
                    [('DeleteEntitiesStep',
-                     [('OneFetchStep', [('Any 999999 WHERE NOT Y multisource_rel 999999, Y is IN(Card, Note)',
+                     [('OneFetchStep', [('Any 999999 WHERE NOT EXISTS(Y multisource_rel 999999), Y is IN(Card, Note)',
                                          [{'Y': 'Card'}, {'Y': 'Note'}])],
                        None, None, [self.system], {}, [])
                       ])
@@ -2185,7 +2181,7 @@ class MSPlannerVCSSource(BasePlannerTC):
         self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998)
         self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999)
         self._test('Any X, Y WHERE NOT X multisource_rel Y, X eid 999998, Y eid 999999',
-                   [('OneFetchStep', [('Any 999998,999999 WHERE NOT 999998 multisource_rel 999999', [{}])],
+                   [('OneFetchStep', [('Any 999998,999999 WHERE NOT EXISTS(999998 multisource_rel 999999)', [{}])],
                      None, None, [self.vcs], {}, [])
                     ])
 

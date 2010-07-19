@@ -25,7 +25,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, role as get_role, target as get_target
 from cubicweb.schema import display_name
-from cubicweb.selectors import (one_line_rset,  primary_view,
+from cubicweb.selectors import (no_cnx, one_line_rset,  primary_view,
                                 match_context_prop, partial_has_related_entities)
 from cubicweb.view import View, ReloadableMixIn
 
@@ -50,7 +50,7 @@ class BoxTemplate(View):
         box.render(self.w)
     """
     __registry__ = 'boxes'
-    __select__ = match_context_prop()
+    __select__ = ~no_cnx() & match_context_prop()
 
     categories_in_order = ()
     cw_property_defs = {

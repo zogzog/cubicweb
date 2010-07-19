@@ -165,6 +165,7 @@ class SQLAdapterMixIn(object):
         dbapi_module = self.dbhelper.dbapi_module
         self.OperationalError = dbapi_module.OperationalError
         self.InterfaceError = dbapi_module.InterfaceError
+        self.DbapiError = dbapi_module.Error
         self._binary = dbapi_module.Binary
         self._process_value = dbapi_module.process_value
         self._dbencoding = dbencoding
@@ -201,7 +202,7 @@ class SQLAdapterMixIn(object):
             return newargs
         return query_args
 
-    def process_result(self, cursor, column_callbacks=None):
+    def process_result(self, cursor, column_callbacks=None, session=None):
         """return a list of CubicWeb compliant values from data in the given cursor
         """
         # use two different implementations to avoid paying the price of
@@ -209,9 +210,10 @@ class SQLAdapterMixIn(object):
         # lookup
         if not column_callbacks:
             return self._process_result(cursor)
-        return self._cb_process_result(cursor, column_callbacks)
+        assert session
+        return self._cb_process_result(cursor, column_callbacks, session)
 
-    def _process_result(self, cursor, column_callbacks=None):
+    def _process_result(self, cursor):
         # begin bind to locals for optimization
         descr = cursor.description
         encoding = self._dbencoding
@@ -229,7 +231,7 @@ class SQLAdapterMixIn(object):
             results[i] = result
         return results
 
-    def _cb_process_result(self, cursor, column_callbacks):
+    def _cb_process_result(self, cursor, column_callbacks, session):
         # begin bind to locals for optimization
         descr = cursor.description
         encoding = self._dbencoding
@@ -248,7 +250,7 @@ class SQLAdapterMixIn(object):
                     value = process_value(value, descr[col], encoding, binary)
                 else:
                     for cb in cbstack:
-                        value = cb(self, value)
+                        value = cb(self, session, value)
                 result.append(value)
             results[i] = result
         return results

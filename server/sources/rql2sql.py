@@ -44,10 +44,9 @@ cross RDMS note : read `Comparison of different SQL implementations`_
 by Troels Arvin. Features SQL ISO Standard, PG, mysql, Oracle, MS SQL, DB2
 and Informix.
 
-.. _Comparison of different SQL implementations: http://www.troels.arvin.dk/db/rdbms 
-
-
+.. _Comparison of different SQL implementations: http://www.troels.arvin.dk/db/rdbms
 """
+
 __docformat__ = "restructuredtext en"
 
 import threading
@@ -56,8 +55,8 @@ from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
 from rql.stmts import Union, Select
-from rql.nodes import (SortTerm, VariableRef, Constant, Function, Not,
-                       Variable, ColumnAlias, Relation, SubQuery, Exists)
+from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
+                       Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
 
 from cubicweb import QueryError
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -72,7 +71,7 @@ def default_update_cb_stack(self, stack):
 FunctionDescr.update_cb_stack = default_update_cb_stack
 
 LENGTH = SQL_FUNCTIONS_REGISTRY.get_function('LENGTH')
-def length_source_execute(source, value):
+def length_source_execute(source, session, value):
     return len(value.getvalue())
 LENGTH.source_execute = length_source_execute
 
@@ -106,13 +105,13 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     modified = False
     for varname in tuple(unstable):
         var = select.defined_vars[varname]
-        if not var.stinfo['optrelations']:
+        if not var.stinfo.get('optrelations'):
             continue
         modified = True
         unstable.remove(varname)
         torewrite.add(var)
         newselect = Select()
-        newselect.need_distinct = newselect.need_intersect = False
+        newselect.need_distinct = False
         myunion = Union()
         myunion.append(newselect)
         # extract aliases / selection
@@ -133,13 +132,13 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
             var.stinfo['relations'].remove(rel)
             newvar.stinfo['relations'].add(newrel)
             if rel.optional in ('left', 'both'):
-                newvar.stinfo['optrelations'].add(newrel)
+                newvar.add_optional_relation(newrel)
             for vref in newrel.children[1].iget_nodes(VariableRef):
                 var = vref.variable
                 var.stinfo['relations'].add(newrel)
                 var.stinfo['rhsrelations'].add(newrel)
                 if rel.optional in ('right', 'both'):
-                    var.stinfo['optrelations'].add(newrel)
+                    var.add_optional_relation(newrel)
         # extract subquery solutions
         mysolutions = [sol.copy() for sol in solutions]
         cleanup_solutions(newselect, mysolutions)
@@ -316,13 +315,15 @@ def update_source_cb_stack(state, stmt, node, stack):
 # IGenerator implementation for RQL->SQL #######################################
 
 class StateInfo(object):
-    def __init__(self, existssols, unstablevars):
+    def __init__(self, select, existssols, unstablevars):
         self.existssols = existssols
         self.unstablevars = unstablevars
         self.subtables = {}
         self.needs_source_cb = None
         self.subquery_source_cb = None
         self.source_cb_funcs = set()
+        self.scopes = {select: 0}
+        self.scope_nodes = []
 
     def reset(self, solution):
         """reset some visit variables"""
@@ -381,16 +382,62 @@ class StateInfo(object):
         self.solution = origsol
         self.tables = origtables
 
-    def push_scope(self):
+    def push_scope(self, scope_node):
+        self.scope_nodes.append(scope_node)
+        self.scopes[scope_node] = len(self.actual_tables)
         self.actual_tables.append([])
         self._restr_stack.append(self.restrictions)
         self.restrictions = []
 
     def pop_scope(self):
+        del self.scopes[self.scope_nodes[-1]]
+        self.scope_nodes.pop()
         restrictions = self.restrictions
         self.restrictions = self._restr_stack.pop()
         return restrictions, self.actual_tables.pop()
 
+def extract_fake_having_terms(having):
+    """RQL's HAVING may be used to contains stuff that should go in the WHERE
+    clause of the SQL query, due to RQL grammar limitation. Split them...
+
+    Return a list nodes that can be ANDed with query's WHERE clause. Having
+    subtrees updated in place.
+    """
+    fakehaving = []
+    for subtree in having:
+        ors, tocheck = set(), []
+        for compnode in subtree.get_nodes(Comparison):
+            for fnode in compnode.get_nodes(Function):
+                if fnode.descr().aggregat:
+                    p = compnode.parent
+                    oor = None
+                    while not isinstance(p, Select):
+                        if isinstance(p, Or):
+                            oor = p
+                        p = p.parent
+                    if oor is not None:
+                        ors.add(oor)
+                    break
+            else:
+                tocheck.append(compnode)
+        # tocheck hold a set of comparison not implying an aggregat function
+        # put them in fakehaving if the don't share an Or node as ancestor
+        # with another comparison containing an aggregat function
+        for compnode in tocheck:
+            parents = set()
+            p = compnode.parent
+            oor = None
+            while not isinstance(p, Select):
+                if p in ors or p is None: # p is None for nodes already in fakehaving
+                    break
+                if isinstance(p, Or):
+                    oor = p
+                p = p.parent
+            else:
+                node = oor or compnode
+                fakehaving.append(node)
+                node.parent.remove(node)
+    return fakehaving
 
 class SQLGenerator(object):
     """
@@ -442,7 +489,7 @@ class SQLGenerator(object):
         self._varmap = varmap
         self._query_attrs = {}
         self._state = None
-        self._not_scope_offset = 0
+        # self._not_scope_offset = 0
         try:
             # union query for each rqlst / solution
             sql = self.union_sql(union)
@@ -488,6 +535,7 @@ class SQLGenerator(object):
         sorts = select.orderby
         groups = select.groupby
         having = select.having
+        morerestr = extract_fake_having_terms(having)
         # remember selection, it may be changed and have to be restored
         origselection = select.selection[:]
         # check if the query will have union subquery, if it need sort term
@@ -509,7 +557,7 @@ class SQLGenerator(object):
                     needwrap = True
         else:
             existssols, unstable = {}, ()
-        state = StateInfo(existssols, unstable)
+        state = StateInfo(select, existssols, unstable)
         if self._state is not None:
             # state from a previous unioned select
             state.merge_source_cbs(self._state.needs_source_cb)
@@ -539,7 +587,8 @@ class SQLGenerator(object):
         self._in_wrapping_query = False
         self._state = state
         try:
-            sql = self._solutions_sql(select, sols, distinct, needalias or needwrap)
+            sql = self._solutions_sql(select, morerestr, sols, distinct,
+                                      needalias or needwrap)
             # generate groups / having before wrapping query selection to
             # get correct column aliases
             self._in_wrapping_query = needwrap
@@ -550,8 +599,8 @@ class SQLGenerator(object):
                                   if not isinstance(vref, Constant))
             if having:
                 # filter out constants as for GROUP BY
-                having = ','.join(vref.accept(self) for vref in having
-                                  if not isinstance(vref, Constant))
+                having = ' AND '.join(term.accept(self) for term in having
+                                      if not isinstance(term, Constant))
             if needwrap:
                 sql = '%s FROM (%s) AS T1' % (self._selection_sql(outerselection, distinct,
                                                                   needalias),
@@ -602,13 +651,15 @@ class SQLGenerator(object):
                 except KeyError:
                     continue
 
-    def _solutions_sql(self, select, solutions, distinct, needalias):
+    def _solutions_sql(self, select, morerestr, solutions, distinct, needalias):
         sqls = []
         for solution in solutions:
             self._state.reset(solution)
             # visit restriction subtree
             if select.where is not None:
                 self._state.add_restriction(select.where.accept(self))
+            for restriction in morerestr:
+                self._state.add_restriction(restriction.accept(self))
             sql = [self._selection_sql(select.selection, distinct, needalias)]
             if self._state.restrictions:
                 sql.append('WHERE %s' % ' AND '.join(self._state.restrictions))
@@ -622,12 +673,7 @@ class SQLGenerator(object):
             elif self._state.restrictions and self.dbhelper.needs_from_clause:
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
-        if select.need_intersect:
-            #if distinct or not self.dbhelper.intersect_all_support:
-            return '\nINTERSECT\n'.join(sqls)
-            #else:
-            #    return '\nINTERSECT ALL\n'.join(sqls)
-        elif distinct:
+        if distinct:
             return '\nUNION\n'.join(sqls)
         else:
             return '\nUNION ALL\n'.join(sqls)
@@ -682,32 +728,11 @@ class SQLGenerator(object):
         return ''
 
     def visit_not(self, node):
-        self._state.push_scope()
-        if isinstance(node.children[0], Relation):
-            self._not_scope_offset += 1
         csql = node.children[0].accept(self)
-        if isinstance(node.children[0], Relation):
-            self._not_scope_offset -= 1
-        sqls, tables = self._state.pop_scope()
         if node in self._state.done or not csql:
             # already processed or no sql generated by children
-            self._state.actual_tables[-1] += tables
-            self._state.restrictions += sqls
             return csql
-        if isinstance(node.children[0], Exists):
-            assert not sqls, (sqls, str(node.stmt))
-            assert not tables, (tables, str(node.stmt))
-            return 'NOT %s' % csql
-        sqls.append(csql)
-        if tables:
-            select = 'SELECT 1 FROM %s' % ','.join(tables)
-        else:
-            select = 'SELECT 1'
-        if sqls:
-            sql = 'NOT EXISTS(%s WHERE %s)' % (select, ' AND '.join(sqls))
-        else:
-            sql = 'NOT EXISTS(%s)' % select
-        return sql
+        return 'NOT (%s)' % csql
 
     def visit_exists(self, exists):
         """generate SQL name for a exists subquery"""
@@ -721,7 +746,7 @@ class SQLGenerator(object):
         return 'EXISTS(%s)' % ' UNION '.join(sqls)
 
     def _visit_exists(self, exists):
-        self._state.push_scope()
+        self._state.push_scope(exists)
         restriction = exists.children[0].accept(self)
         restrictions, tables = self._state.pop_scope()
         if restriction:
@@ -762,32 +787,29 @@ class SQLGenerator(object):
                 else:
                     # no variables in the RHS
                     sql = self._visit_attribute_relation(relation)
-                if relation.neged(strict=True):
-                    self._state.done.add(relation.parent)
-                    sql = 'NOT (%s)' % sql
-        else:
-            if rtype == 'is' and rhs.operator == 'IS':
-                # special case "C is NULL"
-                if lhs.name in self._varmap:
-                    lhssql = self._varmap[lhs.name]
-                else:
-                    lhssql = lhs.accept(self)
-                return '%s%s' % (lhssql, rhs.accept(self))
-            if '%s.%s' % (lhs, relation.r_type) in self._varmap:
-                # relation has already been processed by a previous step
-                return
-            if relation.optional:
-                # check it has not already been treaten (to get necessary
-                # information to add an outer join condition)
-                if relation in self._state.done:
-                    return
-                # OPTIONAL relation, generate a left|right outer join
-                sql = self._visit_outer_join_relation(relation, rschema)
-            elif rschema.inlined:
-                sql = self._visit_inlined_relation(relation)
+        elif (rtype == 'is' and isinstance(rhs.children[0], Constant)
+              and rhs.children[0].eval(self._args) is None):
+            # special case "C is NULL"
+            if lhs.name in self._varmap:
+                lhssql = self._varmap[lhs.name]
             else:
-                # regular (non final) relation
-                sql = self._visit_relation(relation, rschema)
+                lhssql = lhs.accept(self)
+            return '%s%s' % (lhssql, rhs.accept(self))
+        elif '%s.%s' % (lhs, relation.r_type) in self._varmap:
+            # relation has already been processed by a previous step
+            return ''
+        elif relation.optional:
+            # check it has not already been treaten (to get necessary
+            # information to add an outer join condition)
+            if relation in self._state.done:
+                return ''
+            # OPTIONAL relation, generate a left|right outer join
+            sql = self._visit_outer_join_relation(relation, rschema)
+        elif rschema.inlined:
+            sql = self._visit_inlined_relation(relation)
+        else:
+            # regular (non final) relation
+            sql = self._visit_relation(relation, rschema)
         return sql
 
     def _visit_inlined_relation(self, relation):
@@ -796,7 +818,7 @@ class SQLGenerator(object):
         assert lhsvar is not None
         if isinstance(relation.parent, Not) \
                and len(lhsvar.stinfo['relations']) > 1 \
-               and (rhsvar is None or rhsvar._q_invariant):
+               and (rhsvar is not None and rhsvar._q_invariant):
             self._state.done.add(relation.parent)
             return '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
@@ -806,10 +828,11 @@ class SQLGenerator(object):
             # if the rhs variable is only linked to this relation, this mean we
             # only want the relation to exists, eg NOT NULL in case of inlined
             # relation
-            if len(rhsvar.stinfo['relations']) == 1 and rhsvar._q_invariant:
-                return '%s IS NOT NULL' % lhssql
             if rhsvar._q_invariant:
-                return self._extra_join_sql(relation, lhssql, rhsvar)
+                sql = self._extra_join_sql(relation, lhssql, rhsvar)
+                if sql:
+                    return sql
+                return '%s IS NOT NULL' % lhssql
         return '%s=%s' % (lhssql, rhsvar.accept(self))
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
@@ -833,9 +856,6 @@ class SQLGenerator(object):
         if relation.r_type == 'identity':
             # special case "X identity Y"
             lhs, rhs = relation.get_parts()
-            if isinstance(relation.parent, Not):
-                self._state.done.add(relation.parent)
-                return 'NOT %s%s' % (lhs.accept(self), rhs.accept(self))
             return '%s%s' % (lhs.accept(self), rhs.accept(self))
         lhsvar, lhsconst, rhsvar, rhsconst = relation_info(relation)
         rid = self._relation_table(relation)
@@ -907,7 +927,7 @@ class SQLGenerator(object):
                         condition = '%s=%s' % (lhssql, rhsconst.accept(self))
                         if relation.r_type != 'identity':
                             condition = '(%s OR %s IS NULL)' % (condition, lhssql)
-                        if not lhsvar.stinfo['optrelations']:
+                        if not lhsvar.stinfo.get('optrelations'):
                             return condition
                         self.add_outer_join_condition(lhsvar, t1, condition)
                     return
@@ -1006,7 +1026,7 @@ class SQLGenerator(object):
                 sql = '%s%s' % (lhssql, rhssql)
         except AttributeError:
             sql = '%s%s' % (lhssql, rhssql)
-        if lhs.variable.stinfo['optrelations']:
+        if lhs.variable.stinfo.get('optrelations'):
             self.add_outer_join_condition(lhs.variable, table, sql)
         else:
             return sql
@@ -1021,7 +1041,7 @@ class SQLGenerator(object):
         lhsvar = lhs.variable
         me_is_principal = lhsvar.stinfo.get('principal') is rel
         if me_is_principal:
-            if not lhsvar.stinfo['typerels']:
+            if lhsvar.stinfo['typerel'] is None:
                 # the variable is using the fti table, no join needed
                 jointo = None
             elif not lhsvar.name in self._varmap:
@@ -1041,7 +1061,7 @@ class SQLGenerator(object):
         else:
             not_ = False
         return self.dbhelper.fti_restriction_sql(alias, const.eval(self._args),
-                                                    jointo, not_) + restriction
+                                                 jointo, not_) + restriction
 
     def visit_comparison(self, cmp):
         """generate SQL for a comparison"""
@@ -1052,7 +1072,7 @@ class SQLGenerator(object):
             lhs = None
             rhs = cmp.children[0]
         operator = cmp.operator
-        if operator in ('IS', 'LIKE', 'ILIKE'):
+        if operator in ('LIKE', 'ILIKE'):
             if operator == 'ILIKE' and not self.dbhelper.ilike_support:
                 operator = ' LIKE '
             else:
@@ -1076,7 +1096,8 @@ class SQLGenerator(object):
         operator = mexpr.operator
         try:
             if mexpr.operator == '+' and mexpr.get_type(self._state.solution, self._args) == 'String':
-                operator = '||'
+                return '(%s)' % self.dbhelper.sql_concat_string(lhs.accept(self),
+                                                                rhs.accept(self))
         except CoercionError:
             pass
         return '(%s %s %s)'% (lhs.accept(self), operator, rhs.accept(self))
@@ -1154,7 +1175,7 @@ class SQLGenerator(object):
                 vtablename = '_' + variable.name
                 self.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
-                if variable.stinfo['typerels']:
+                if variable.stinfo['typerel'] is not None:
                     # add additional restriction on entities.type column
                     pts = variable.stinfo['possibletypes']
                     if len(pts) == 1:
@@ -1203,25 +1224,27 @@ class SQLGenerator(object):
             pass
         return ''
 
+    def _temp_table_scope(self, select, table):
+        scope = 9999
+        for var, sql in self._varmap.iteritems():
+            # skip "attribute variable" in varmap (such 'T.login')
+            if not '.' in var and table == sql.split('.', 1)[0]:
+                try:
+                    scope = min(scope, self._state.scopes[select.defined_vars[var].scope])
+                except KeyError:
+                    scope = 0 # XXX
+                if scope == 0:
+                    break
+        return scope
+
     def _var_info(self, var):
-        # if current var or one of its attribute is selected , it *must*
-        # appear in the toplevel's FROM even if we're currently visiting
-        # a EXISTS node
-        if var.sqlscope is var.stmt:
-            scope = 0
-        # don't consider not_scope_offset if the variable is only used in one
-        # relation
-        elif len(var.stinfo['relations']) > 1:
-            scope = -1 - self._not_scope_offset
-        else:
-            scope = -1
         try:
             sql = self._varmap[var.name]
             tablealias = sql.split('.', 1)[0]
-            if scope < 0:
-                scope = self._varmap_table_scope(var.stmt, tablealias)
+            scope = self._temp_table_scope(var.stmt, tablealias)
             self.add_table(tablealias, scope=scope)
         except KeyError:
+            scope = self._state.scopes[var.scope]
             etype = self._state.solution[var.name]
             # XXX this check should be moved in rql.stcheck
             if self.schema.eschema(etype).final:
@@ -1235,7 +1258,7 @@ class SQLGenerator(object):
     def _inlined_var_sql(self, var, rtype):
         try:
             sql = self._varmap['%s.%s' % (var.name, rtype)]
-            scope = var.sqlscope is var.stmt and 0 or -1
+            scope = self._state.scopes[var.scope]
             self.add_table(sql.split('.', 1)[0], scope=scope)
         except KeyError:
             sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
@@ -1316,7 +1339,7 @@ class SQLGenerator(object):
             tablealias = self._state.outer_tables[table]
             actualtables = self._state.actual_tables[-1]
         except KeyError:
-            for rel in var.stinfo['optrelations']:
+            for rel in var.stinfo.get('optrelations'):
                 self.visit_relation(rel)
             assert self._state.outer_tables
             self.add_outer_join_condition(var, table, condition)
@@ -1358,7 +1381,7 @@ class SQLGenerator(object):
                 break
             # XXX may have a principal without being invariant for this generation,
             #     not sure this is a pb or not
-            if var.stinfo.get('principal') is relation and var.sqlscope is var.stmt:
+            if var.stinfo.get('principal') is relation and var.scope is var.stmt:
                 scope = 0
                 break
         else:
@@ -1379,15 +1402,3 @@ class SQLGenerator(object):
         alias = self.alias_and_add_table(self.dbhelper.fti_table)
         relation._q_sqltable = alias
         return alias
-
-    def _varmap_table_scope(self, select, table):
-        """since a varmap table may be used for multiple variable, its scope is
-        the most outer scope of each variables
-        """
-        scope = -1
-        for varname, alias in self._varmap.iteritems():
-            # check '.' in varname since there are 'X.attribute' keys in varmap
-            if not '.' in varname and alias.split('.', 1)[0] == table:
-                if select.defined_vars[varname].sqlscope is select:
-                    return 0
-        return scope

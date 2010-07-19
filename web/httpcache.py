@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""HTTP cache managers
+"""HTTP cache managers"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from time import mktime
@@ -56,6 +54,8 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     """
 
     def etag(self):
+        if not self.req.cnx: # session without established connection to the repo
+            return self.view.__regid__
         return self.view.__regid__ + '/' + ','.join(sorted(self.req.user.groups))
 
     def max_age(self):
@@ -143,9 +143,6 @@ viewmod.View.last_modified = last_modified
 viewmod.View.http_cache_manager = NoHTTPCacheManager
 # max-age=0 to actually force revalidation when needed
 viewmod.View.cache_max_age = 0
-
-
-viewmod.EntityView.http_cache_manager = EntityHTTPCacheManager
 
 viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
 viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default

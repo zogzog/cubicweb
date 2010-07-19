@@ -1,10 +1,10 @@
 # cubicweb i18n catalog
-# Copyright 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# Copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # Logilab <contact@logilab.fr>
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-11-27 07:59+0100\n"
+"PO-Revision-Date: 2010-11-27 07:59+0100\n"
 "Last-Translator: Celso Flores<jcelsoflores@gmail.com>\n"
 "Language-Team: es <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -35,6 +35,9 @@ msgstr ""
 msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  del estado %(fromstate)s hacia el estado %(tostate)s\n"
 
+msgid " :"
+msgstr ""
+
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr ""
@@ -54,6 +57,10 @@ msgstr "%(firstname)s %(surname)s"
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
+
+#, python-format
+msgid "%(value)r doesn't match the %(regexp)r regular expression"
+msgstr ""
 
 #, python-format
 msgid "%d days"
@@ -170,6 +177,10 @@ msgid "1?"
 msgstr "1 0..1"
 
 #, python-format
+msgid "<%s not specified>"
+msgstr ""
+
+#, python-format
 msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
@@ -177,9 +188,6 @@ msgstr ""
 "<div>Este esquema del modelo de datos <em>no incluye</em> los meta-datos, "
 "pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
 "div>"
-
-msgid "<no value>"
-msgstr ""
 
 msgid "?*"
 msgstr "0..1 0..n"
@@ -196,14 +204,14 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "Y"
 
-msgid "Add permissions"
-msgstr "Añadir autorizaciónes"
-
 msgid "Any"
 msgstr "Cualquiera"
 
-msgid "Attributes"
-msgstr "Atributos"
+msgid "Attributes permissions:"
+msgstr ""
+
+msgid "Attributes with non default permissions:"
+msgstr ""
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -227,6 +235,9 @@ msgid "Boolean_plural"
 msgstr "Booleanos"
 
 msgid "BoundConstraint"
+msgstr ""
+
+msgid "BoundaryConstraint"
 msgstr ""
 
 msgid "Browse by category"
@@ -370,13 +381,10 @@ msgstr "Decimal"
 msgid "Decimal_plural"
 msgstr "Decimales"
 
-msgid "Delete permissions"
-msgstr "Autorización de suprimir"
-
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
 
-msgid "Download page as pdf"
+msgid "Download schema as OWL"
 msgstr ""
 
 msgctxt "inlined:CWUser.use_email.subject"
@@ -391,6 +399,9 @@ msgstr "Direcciones de Correo Electrónico"
 
 msgid "Entities"
 msgstr "Entidades"
+
+msgid "Entity types"
+msgstr ""
 
 msgid "ExternalUri"
 msgstr ""
@@ -417,6 +428,9 @@ msgid "Garbage collection information"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "Index"
 msgstr ""
 
 msgid "Instance"
@@ -512,14 +526,26 @@ msgstr ""
 msgid "No result matching query"
 msgstr "Ningún resultado corresponde a su búsqueda"
 
+msgid "Non exhaustive list of views that may apply to entities of this type"
+msgstr ""
+
 msgid "OR"
 msgstr "O"
+
+msgid "Parent classes:"
+msgstr ""
 
 msgid "Password"
 msgstr "Contraseña"
 
 msgid "Password_plural"
 msgstr "Contraseñas"
+
+msgid "Permissions for entity types"
+msgstr ""
+
+msgid "Permissions for relations"
+msgstr ""
 
 msgid "Please note that this is only a shallow copy"
 msgstr "Recuerde que no es más que una copia superficial"
@@ -539,9 +565,6 @@ msgstr ""
 msgid "RQLVocabularyConstraint"
 msgstr ""
 
-msgid "Read permissions"
-msgstr "Autorización de leer"
-
 msgid "Recipients:"
 msgstr "Destinatarios"
 
@@ -549,6 +572,9 @@ msgid "RegexpConstraint"
 msgstr ""
 
 msgid "Registry's content"
+msgstr ""
+
+msgid "Relation types"
 msgstr ""
 
 msgid "Relations"
@@ -588,6 +614,9 @@ msgstr "Cadena de caracteres"
 msgid "String_plural"
 msgstr "Cadenas de caracteres"
 
+msgid "Sub-classes:"
+msgstr ""
+
 msgid "SubWorkflowExitPoint"
 msgstr ""
 
@@ -613,6 +642,9 @@ msgstr "La vista %s no puede ser aplicada a esta búsqueda"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vista %s no ha podido ser encontrada"
+
+msgid "There is no default workflow"
+msgstr ""
 
 msgid "This BaseTransition"
 msgstr ""
@@ -680,6 +712,9 @@ msgstr ""
 msgid "This WorkflowTransition"
 msgstr ""
 
+msgid "This entity type permissions:"
+msgstr ""
+
 msgid "Time"
 msgstr "Hora"
 
@@ -703,9 +738,6 @@ msgstr ""
 
 msgid "Unreachable objects"
 msgstr ""
-
-msgid "Update permissions"
-msgstr "Autorización de modificar"
 
 msgid "Used by:"
 msgstr "Utilizado por :"
@@ -799,182 +831,11 @@ msgstr "Sobre este Espacio"
 msgid "abstract base class for transitions"
 msgstr ""
 
-msgid "access type"
-msgstr "Tipo de Acceso"
-
 msgid "action(s) on this selection"
 msgstr "acción(es) en esta selección"
 
 msgid "actions"
 msgstr "acciones"
-
-msgid "actions_about"
-msgstr ""
-
-msgid "actions_about_description"
-msgstr ""
-
-msgid "actions_addentity"
-msgstr "agregar una entidad de este tipo"
-
-msgid "actions_addentity_description"
-msgstr ""
-
-msgid "actions_addrelated"
-msgstr ""
-
-msgid "actions_addrelated_description"
-msgstr ""
-
-msgid "actions_cancel"
-msgstr "Anular"
-
-msgid "actions_cancel_description"
-msgstr ""
-
-msgid "actions_changelog"
-msgstr ""
-
-msgid "actions_changelog_description"
-msgstr ""
-
-msgid "actions_copy"
-msgstr "Copiar"
-
-msgid "actions_copy_description"
-msgstr ""
-
-msgid "actions_delete"
-msgstr "Eliminar"
-
-msgid "actions_delete_description"
-msgstr ""
-
-msgid "actions_download_as_owl"
-msgstr "Download como OWL"
-
-msgid "actions_download_as_owl_description"
-msgstr ""
-
-msgid "actions_edit"
-msgstr "Modificar"
-
-msgid "actions_edit_description"
-msgstr ""
-
-msgid "actions_embed"
-msgstr "Embarcar"
-
-msgid "actions_embed_description"
-msgstr ""
-
-msgid "actions_entitiesoftype"
-msgstr ""
-
-msgid "actions_entitiesoftype_description"
-msgstr ""
-
-msgid "actions_follow"
-msgstr "Seguir"
-
-msgid "actions_follow_description"
-msgstr ""
-
-msgid "actions_help"
-msgstr ""
-
-msgid "actions_help_description"
-msgstr ""
-
-msgid "actions_logout"
-msgstr "Desconectarse"
-
-msgid "actions_logout_description"
-msgstr ""
-
-msgid "actions_manage"
-msgstr "Administración del sitio"
-
-msgid "actions_manage_description"
-msgstr ""
-
-msgid "actions_managepermission"
-msgstr "Administración de autorizaciónes"
-
-msgid "actions_managepermission_description"
-msgstr ""
-
-msgid "actions_muledit"
-msgstr "Edición múltiple"
-
-msgid "actions_muledit_description"
-msgstr ""
-
-msgid "actions_myinfos"
-msgstr "Información personal"
-
-msgid "actions_myinfos_description"
-msgstr ""
-
-msgid "actions_myprefs"
-msgstr "Preferencias del usuario"
-
-msgid "actions_myprefs_description"
-msgstr ""
-
-msgid "actions_poweredby"
-msgstr ""
-
-msgid "actions_poweredby_description"
-msgstr ""
-
-msgid "actions_prefs"
-msgstr "Preferencias"
-
-msgid "actions_prefs_description"
-msgstr ""
-
-msgid "actions_schema"
-msgstr "Ver el esquema"
-
-msgid "actions_schema_description"
-msgstr ""
-
-msgid "actions_select"
-msgstr "Seleccionar"
-
-msgid "actions_select_description"
-msgstr ""
-
-msgid "actions_sendemail"
-msgstr "Enviar un email"
-
-msgid "actions_sendemail_description"
-msgstr ""
-
-msgid "actions_siteconfig"
-msgstr "Configuración del sitio"
-
-msgid "actions_siteconfig_description"
-msgstr ""
-
-msgid "actions_siteinfo"
-msgstr ""
-
-msgid "actions_siteinfo_description"
-msgstr ""
-
-msgid "actions_view"
-msgstr "Ver"
-
-msgid "actions_view_description"
-msgstr ""
-
-msgid "actions_workflow"
-msgstr "Ver el workflow"
-
-msgid "actions_workflow_description"
-msgstr ""
 
 msgid "activate"
 msgstr "Activar"
@@ -1222,9 +1083,6 @@ msgstr ""
 
 msgid "attribute"
 msgstr "Atributo"
-
-msgid "attributes with modified permissions:"
-msgstr "atributos con autorizaciónes modificadas:"
 
 msgid "august"
 msgstr "Agosto"
@@ -1548,15 +1406,15 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr ""
 
-msgid "condition:"
-msgstr "condición:"
-
 msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr ""
 
 msgid "condition_object"
 msgstr "condición de"
+
+msgid "conditions"
+msgstr ""
 
 msgid "config mode"
 msgstr ""
@@ -1594,6 +1452,9 @@ msgstr "Restricciones"
 msgid "constraints applying on this relation"
 msgstr "Restricciones que se aplican a esta relación"
 
+msgid "content type"
+msgstr ""
+
 msgid "contentnavigation"
 msgstr "Componentes contextuales"
 
@@ -1607,12 +1468,6 @@ msgid "contentnavigation_metadata"
 msgstr ""
 
 msgid "contentnavigation_metadata_description"
-msgstr ""
-
-msgid "contentnavigation_pdfview"
-msgstr ""
-
-msgid "contentnavigation_pdfview_description"
 msgstr ""
 
 msgid "contentnavigation_prevnext"
@@ -1809,6 +1664,9 @@ msgstr ""
 msgid "creation"
 msgstr "Creación"
 
+msgid "creation date"
+msgstr ""
+
 msgid "creation time of an entity"
 msgstr "Fecha de creación de una entidad"
 
@@ -1844,17 +1702,32 @@ msgstr ""
 msgid "custom_workflow_object"
 msgstr ""
 
-msgid "cwetype-schema-image"
-msgstr "Esquema"
+msgid "cwetype-box"
+msgstr ""
 
-msgid "cwetype-schema-permissions"
-msgstr "Autorizaciónes"
+msgid "cwetype-description"
+msgstr ""
 
-msgid "cwetype-schema-text"
-msgstr "Modelo de datos"
+msgid "cwetype-permissions"
+msgstr ""
+
+msgid "cwetype-views"
+msgstr ""
 
 msgid "cwetype-workflow"
-msgstr "Workflow"
+msgstr ""
+
+msgid "cwgroup-main"
+msgstr ""
+
+msgid "cwgroup-permissions"
+msgstr ""
+
+msgid "cwrtype-description"
+msgstr ""
+
+msgid "cwrtype-permissions"
+msgstr ""
 
 msgid "cwuri"
 msgstr ""
@@ -1881,6 +1754,9 @@ msgid "default text format for rich text fields."
 msgstr "Formato de texto como opción por defecto para los campos texto"
 
 msgid "default user workflow"
+msgstr ""
+
+msgid "default value"
 msgstr ""
 
 msgid "default workflow for an entity type"
@@ -2111,17 +1987,11 @@ msgstr "Destino de"
 msgid "detach attached file"
 msgstr "soltar el archivo existente"
 
-msgid "display order of the action"
-msgstr "Orden de aparición de la acción"
-
 msgid "display order of the box"
 msgstr "Orden de aparición de la caja"
 
 msgid "display order of the component"
 msgstr "Orden de aparición del componente"
-
-msgid "display the action or not"
-msgstr "Mostrar la acción o no"
 
 msgid "display the box or not"
 msgstr "Mostrar la caja o no"
@@ -2335,6 +2205,9 @@ msgctxt "CWRType"
 msgid "final"
 msgstr ""
 
+msgid "first name"
+msgstr ""
+
 msgid "firstname"
 msgstr "Nombre"
 
@@ -2448,10 +2321,6 @@ msgstr "Regresar a la página de inicio"
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
 
-#, python-format
-msgid "graphical representation of %s"
-msgstr ""
-
 msgid "graphical representation of the instance'schema"
 msgstr ""
 
@@ -2474,9 +2343,6 @@ msgstr "Los grupos otorgan las autorizaciones al usuario"
 
 msgid "groups to which the permission is granted"
 msgstr "Grupos quienes tienen otorgada esta autorización"
-
-msgid "groups:"
-msgstr "Grupos :"
 
 msgid "guests"
 msgstr "Invitados"
@@ -2522,6 +2388,18 @@ msgstr ""
 msgid "i18n_login_popup"
 msgstr "Identificarse"
 
+msgid "i18ncard_*"
+msgstr ""
+
+msgid "i18ncard_+"
+msgstr ""
+
+msgid "i18ncard_1"
+msgstr ""
+
+msgid "i18ncard_?"
+msgstr ""
+
 msgid "i18nprevnext_next"
 msgstr "Siguiente"
 
@@ -2559,12 +2437,6 @@ msgstr ""
 msgid "image"
 msgstr "Imagen"
 
-msgid "in memory entity schema"
-msgstr "Esquema de la entidad en memoria"
-
-msgid "in memory relation schema"
-msgstr "Esquema de la relación en memoria"
-
 msgid "in_group"
 msgstr "En el grupo"
 
@@ -2594,9 +2466,6 @@ msgstr ""
 #, python-format
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
-
-msgid "index"
-msgstr "Indice"
 
 msgid "index this attribute's value in the plain text index"
 msgstr "Indexar el valor de este atributo en el índice de texto simple"
@@ -2668,8 +2537,18 @@ msgstr ""
 msgid "invalid action %r"
 msgstr "Acción %r invalida"
 
+#, python-format
+msgid "invalid value %(value)s, it must be one of %(choices)s"
+msgstr ""
+
 msgid "is"
 msgstr "es"
+
+msgid "is object of:"
+msgstr "es objeto de"
+
+msgid "is subject of:"
+msgstr "es sujeto de"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -2721,6 +2600,12 @@ msgstr "Idioma para la interface del usuario"
 
 msgid "last connection date"
 msgstr "Ultima fecha de conexión"
+
+msgid "last login time"
+msgstr ""
+
+msgid "last name"
+msgstr ""
 
 msgid "last usage"
 msgstr ""
@@ -2782,6 +2667,9 @@ msgstr "Lista"
 
 msgid "log in"
 msgstr "Identificarse"
+
+msgid "log out first"
+msgstr ""
 
 msgid "login"
 msgstr "Clave de acesso"
@@ -2870,6 +2758,9 @@ msgstr "Lundi"
 
 msgid "more actions"
 msgstr "mas acciones"
+
+msgid "more info about this workflow"
+msgstr ""
 
 msgid "multiple edit"
 msgstr "Edicion multiple"
@@ -3018,8 +2909,8 @@ msgstr "noviembre"
 msgid "object"
 msgstr "objeto"
 
-msgid "object_plural:"
-msgstr "objetos:"
+msgid "object type"
+msgstr ""
 
 msgid "october"
 msgstr "octubre"
@@ -3043,6 +2934,9 @@ msgid "opened sessions"
 msgstr ""
 
 msgid "opened web sessions"
+msgstr ""
+
+msgid "options"
 msgstr ""
 
 msgid "order"
@@ -3099,11 +2993,8 @@ msgstr ""
 msgid "permission"
 msgstr "Permiso"
 
-msgid "permissions for entities"
-msgstr "autorizaciónes para entidades"
-
-msgid "permissions for relations"
-msgstr "autorizaciónes para relaciones"
+msgid "permissions"
+msgstr ""
 
 msgid "permissions for this entity"
 msgstr "Permisos para esta entidad"
@@ -3179,6 +3070,12 @@ msgstr "Barra de progreso de avance"
 msgid "project"
 msgstr "Proyecto"
 
+msgid "rdef-description"
+msgstr ""
+
+msgid "rdef-permissions"
+msgstr ""
+
 msgid "read"
 msgstr "Lectura"
 
@@ -3220,6 +3117,9 @@ msgstr ""
 msgid "related entity has no workflow set"
 msgstr ""
 
+msgid "relation"
+msgstr ""
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
@@ -3247,9 +3147,6 @@ msgstr ""
 
 msgid "relation_type_object"
 msgstr "Definición"
-
-msgid "relations"
-msgstr "relaciones"
 
 msgid "relations deleted"
 msgstr "Relaciones eliminadas"
@@ -3291,6 +3188,9 @@ msgstr "Requiere autorización"
 
 msgid "require_permission_object"
 msgstr "Requerido por autorización"
+
+msgid "required"
+msgstr ""
 
 msgid "required attribute"
 msgstr "Atributo requerido"
@@ -3339,11 +3239,17 @@ msgstr "entidades del esquema"
 msgid "schema's permissions definitions"
 msgstr "definiciones de permisos del esquema"
 
-msgid "schema-image"
-msgstr "esquema imagen"
+msgid "schema-diagram"
+msgstr ""
 
-msgid "schema-text"
-msgstr "esquema text"
+msgid "schema-entity-types"
+msgstr ""
+
+msgid "schema-relation-types"
+msgstr ""
+
+msgid "schema-security"
+msgstr ""
 
 msgid "search"
 msgstr "buscar"
@@ -3534,11 +3440,11 @@ msgstr "estatus cambiara de %(st1)s a %(st2)s"
 msgid "subject"
 msgstr "sujeto"
 
+msgid "subject type"
+msgstr ""
+
 msgid "subject/object cardinality"
 msgstr "cardinalidad sujeto/objeto"
-
-msgid "subject_plural:"
-msgstr "sujetos:"
 
 msgid "subworkflow"
 msgstr ""
@@ -3942,6 +3848,9 @@ msgstr ""
 msgid "used to grant a permission to a group"
 msgstr "utilizado para otorgar permisos a un grupo"
 
+msgid "user"
+msgstr ""
+
 #, python-format
 msgid ""
 "user %s has made the following change(s):\n"
@@ -3982,6 +3891,26 @@ msgstr ""
 msgid "value associated to this key is not editable manually"
 msgstr "el valor asociado a este elemento no es editable manualmente"
 
+#, python-format
+msgid "value must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value must be >= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value should have maximum size of %s"
+msgstr ""
+
+#, python-format
+msgid "value should have minimum size of %s"
+msgstr ""
+
 msgid "vcard"
 msgstr "vcard"
 
@@ -4000,14 +3929,17 @@ msgstr "ver detalle de esta entidad"
 msgid "view history"
 msgstr ""
 
+msgid "view identifier"
+msgstr ""
+
+msgid "view title"
+msgstr ""
+
 msgid "view workflow"
 msgstr "ver workflow"
 
 msgid "view_index"
 msgstr ""
-
-msgid "views"
-msgstr "vistas"
 
 msgid "visible"
 msgstr "visible"
@@ -4030,6 +3962,12 @@ msgstr "historial de"
 
 msgid "wf_info_for_object"
 msgstr "historial de transiciones"
+
+msgid "wf_tab_info"
+msgstr ""
+
+msgid "wfgraph"
+msgstr ""
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "
@@ -4101,345 +4039,5 @@ msgstr "ha terminado la sesion"
 msgid "you should probably delete that property"
 msgstr "deberia probablamente suprimir esta propriedad"
 
-#~ msgid "%(fmt1)s, or without time: %(fmt2)s"
-#~ msgstr "%(fmt1)s, o bien sin especificar horario: %(fmt2)s"
-
-#~ msgid "%s results matching query"
-#~ msgstr "%s resultados de la demanda"
-
-#~ msgid "Application"
-#~ msgstr "Aplicación"
-
-#~ msgid "Debug level set to %s"
-#~ msgstr "Nivel de debug puesto a %s"
-
-#~ msgid "Environment"
-#~ msgstr "Ambiente"
-
-#~ msgid "No query has been executed"
-#~ msgstr "Ninguna búsqueda ha sido ejecutada"
-
-#~ msgid "Request"
-#~ msgstr "Petición"
-
-#~ msgid "Server"
-#~ msgstr "Servidor"
-
-#~ msgid "There is no workflow defined for this entity."
-#~ msgstr "No hay workflow para este entidad"
-
-#~ msgid "Unable to find anything named \"%s\" in the schema !"
-#~ msgstr "No encontramos el nombre \"%s\" en el esquema"
-
-#~ msgid "You are now connected to %s"
-#~ msgstr "Usted esta conectado a %s"
-
-#~ msgid ""
-#~ "You have no access to this view or it's not applyable to current data"
-#~ msgstr "No tiene acceso a esta vista o No es aplicable a los datos actuales"
-
-#~ msgid "__msg state changed"
-#~ msgstr "El estado a cambiado"
-
-#~ msgid "account state"
-#~ msgstr "Estado de la Cuenta"
-
-#~ msgid "add CWRType add_permission RQLExpression subject"
-#~ msgstr "Expresión RQL de agregación"
-
-#~ msgid "add CWRType delete_permission RQLExpression subject"
-#~ msgstr "Expresión RQL de eliminación"
-
-#~ msgid "add CWRType read_permission RQLExpression subject"
-#~ msgstr "Expresión RQL de lectura"
-
-#~ msgid "add State state_of CWEType object"
-#~ msgstr "Estado"
-
-#~ msgid "add Transition transition_of CWEType object"
-#~ msgstr "Transición"
-
-#~ msgid "add a Bookmark"
-#~ msgstr "Agregar un Favorito"
-
-#~ msgid "add a CWAttribute"
-#~ msgstr "Agregar un tipo de relación"
-
-#~ msgid "add a CWCache"
-#~ msgstr "Agregar un cache"
-
-#~ msgid "add a CWConstraint"
-#~ msgstr "Agregar una Restricción"
-
-#~ msgid "add a CWConstraintType"
-#~ msgstr "Agregar un tipo de Restricción"
-
-#~ msgid "add a CWEType"
-#~ msgstr "Agregar un tipo de entidad"
-
-#~ msgid "add a CWGroup"
-#~ msgstr "Agregar un grupo de usuarios"
-
-#~ msgid "add a CWPermission"
-#~ msgstr "Agregar una autorización"
-
-#~ msgid "add a CWProperty"
-#~ msgstr "Agregar una propiedad"
-
-#~ msgid "add a CWRType"
-#~ msgstr "Agregar un tipo de relación"
-
-#~ msgid "add a CWRelation"
-#~ msgstr "Agregar una relación"
-
-#~ msgid "add a CWUser"
-#~ msgstr "Agregar un usuario"
-
-#~ msgid "add a EmailAddress"
-#~ msgstr "Agregar un email"
-
-#~ msgid "add a RQLExpression"
-#~ msgstr "Agregar una expresión rql"
-
-#~ msgid "add a State"
-#~ msgstr "Agregar un estado"
-
-#~ msgid "add a TrInfo"
-#~ msgstr "Agregar una información de transición"
-
-#~ msgid "add a Transition"
-#~ msgstr "Agregar una transición"
-
-#~ msgid "add relation"
-#~ msgstr "Agregar una relación"
-
-#~ msgid ""
-#~ "added relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
-#~ "(toeid)s"
-#~ msgstr ""
-#~ "Relación agregada %(rtype)s de %(frometype)s #%(fromeid)s hacia %(toetype)"
-#~ "s #%(toeid)s"
-
-#~ msgid "allowed transition from this state"
-#~ msgstr "transición autorizada desde este estado"
-
-#~ msgid "button_reset"
-#~ msgstr "Cancelar los cambios"
-
-#~ msgid "canonical"
-#~ msgstr "canónico"
-
-#~ msgid "comment:"
-#~ msgstr "Comentario:"
-
-#~ msgid "copy edition"
-#~ msgstr "Edición de una copia"
-
-#~ msgid ""
-#~ "core relation giving to a group the permission to add an entity or "
-#~ "relation type"
-#~ msgstr ""
-#~ "Relación sistema que otorga a un grupo la autorización de agregar una "
-#~ "entidad o una relación"
-
-#~ msgid ""
-#~ "core relation giving to a group the permission to delete an entity or "
-#~ "relation type"
-#~ msgstr ""
-#~ "Relación sistema que otorga a un grupo la autorización de eliminar una "
-#~ "entidad o relación"
-
-#~ msgid ""
-#~ "core relation giving to a group the permission to read an entity or "
-#~ "relation type"
-#~ msgstr ""
-#~ "Relación sistema que otorga a un grupo la autorización de leer una "
-#~ "entidad o una relación "
-
-#~ msgid ""
-#~ "core relation giving to a group the permission to update an entity type"
-#~ msgstr ""
-#~ "Relación sistema que otorga a un grupo la autorización de actualizar una "
-#~ "entidad"
-
-#~ msgid ""
-#~ "creating RQLExpression (CWRType %(linkto)s add_permission RQLExpression)"
-#~ msgstr ""
-#~ "Creación de una expresión RQL para la autorización de agregar relaciones %"
-#~ "(linkto)s"
-
-#~ msgid ""
-#~ "creating RQLExpression (CWRType %(linkto)s delete_permission "
-#~ "RQLExpression)"
-#~ msgstr ""
-#~ "creación de una expresión RQL para autorizar la eliminación de relaciones "
-#~ "%(linkto)s"
-
-#~ msgid ""
-#~ "creating RQLExpression (CWRType %(linkto)s read_permission RQLExpression)"
-#~ msgstr ""
-#~ "Creación de una expresión RQL para autorizar la lectura de relaciones %"
-#~ "(linkto)s"
-
-#~ msgid "creating State (State state_of CWEType %(linkto)s)"
-#~ msgstr "Creación de un estado por el tipo %(linkto)s"
-
-#~ msgid "creating Transition (Transition transition_of CWEType %(linkto)s)"
-#~ msgstr "Creación de una transición para el tipo %(linkto)s"
-
-#~ msgid "currently attached file: %s"
-#~ msgstr "archivo adjunto: %s"
-
-#~ msgid ""
-#~ "deleted relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s "
-#~ "#%(toeid)s"
-#~ msgstr ""
-#~ "Eliminación de la relación %(rtype)s de %(frometype)s #%(fromeid)s hacia %"
-#~ "(toetype)s #%(toeid)s"
-
-#~ msgid "detach attached file %s"
-#~ msgstr "Quitar archivo adjunto %s"
-
-#~ msgid "element copied"
-#~ msgstr "Elemento copiado"
-
-#~ msgid "element created"
-#~ msgstr "Elemento creado"
-
-#~ msgid "element edited"
-#~ msgstr "Elemento editado"
-
-#~ msgid "entity types which may use this state"
-#~ msgstr "Tipo de entidades que pueden utilizar este estado"
-
-#~ msgid "entity types which may use this transition"
-#~ msgstr "Entidades que pueden utilizar esta transición"
-
-#~ msgid "groups allowed to add entities/relations of this type"
-#~ msgstr "Grupos autorizados a agregar entidades/relaciones de este tipo"
-
-#~ msgid "groups allowed to delete entities/relations of this type"
-#~ msgstr "Grupos autorizados a eliminar entidades/relaciones de este tipo"
-
-#~ msgid "groups allowed to read entities/relations of this type"
-#~ msgstr "Grupos autorizados a leer entidades/relaciones de este tipo"
-
-#~ msgid "groups allowed to update entities of this type"
-#~ msgstr "Grupos autorizados a actualizar entidades de este tipo"
-
-#~ msgid "home"
-#~ msgstr "Inicio"
-
-#~ msgid "initial state for entities of this type"
-#~ msgstr "Estado inicial para las entidades de este tipo"
-
-#~ msgid "invalid date"
-#~ msgstr "Esta fecha no es válida"
-
-#~ msgid "link a state to one or more entity type"
-#~ msgstr "liga un estado a una o mas entidades"
-
-#~ msgid "link a transition to one or more entity type"
-#~ msgstr "liga una transición a una o mas tipos de entidad"
-
-#~ msgid "link to each item in"
-#~ msgstr "ligar hacia cada elemento en"
-
-#~ msgid "loading"
-#~ msgstr "Cargando"
-
-#~ msgid "nothing to edit"
-#~ msgstr "nada que editar"
-
-#~ msgid "remove this Bookmark"
-#~ msgstr "Eliminar este Favorito"
-
-#~ msgid "remove this CWAttribute"
-#~ msgstr "Eliminar este atributo"
-
-#~ msgid "remove this CWCache"
-#~ msgstr "Eliminar esta cache de aplicación"
-
-#~ msgid "remove this CWConstraint"
-#~ msgstr "Eliminar esta restricción"
-
-#~ msgid "remove this CWConstraintType"
-#~ msgstr "Eliminar este tipo de restricción"
-
-#~ msgid "remove this CWEType"
-#~ msgstr "Eliminar este tipo de entidad"
-
-#~ msgid "remove this CWGroup"
-#~ msgstr "Eliminar este grupo"
-
-#~ msgid "remove this CWPermission"
-#~ msgstr "Eliminar este permiso"
-
-#~ msgid "remove this CWProperty"
-#~ msgstr "Eliminar esta propiedad"
-
-#~ msgid "remove this CWRType"
-#~ msgstr "Eliminar esta definición de relación"
-
-#~ msgid "remove this CWRelation"
-#~ msgstr "Eliminar esta relación"
-
-#~ msgid "remove this CWUser"
-#~ msgstr "Eliminar este usuario"
-
-#~ msgid "remove this EmailAddress"
-#~ msgstr "Eliminar este correo electronico"
-
-#~ msgid "remove this RQLExpression"
-#~ msgstr "Eliminar esta expresión RQL"
-
-#~ msgid "remove this State"
-#~ msgstr "Eliminar este estado"
-
-#~ msgid "remove this TrInfo"
-#~ msgstr "Eliminar información de esta transición"
-
-#~ msgid "remove this Transition"
-#~ msgstr "Eliminar esta transición"
-
-#~ msgid "rql expression allowing to add entities/relations of this type"
-#~ msgstr "expresion RQL permitiendo agregar entidades/relaciones de este tipo"
-
-#~ msgid "rql expression allowing to delete entities/relations of this type"
-#~ msgstr ""
-#~ "expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
-
-#~ msgid "rql expression allowing to read entities/relations of this type"
-#~ msgstr "expresion RQL permitiendo leer entidades/relaciones de este tipo"
-
-#~ msgid "rql expression allowing to update entities of this type"
-#~ msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
-
-#~ msgid "server debug information"
-#~ msgstr "server debug information"
-
-#~ msgid ""
-#~ "use to define a transition from one or multiple states to a destination "
-#~ "states in workflow's definitions."
-#~ msgstr ""
-#~ "utilizado para definir una transición desde uno o multiples estados hacia "
-#~ "uno o varios estados destino en las definiciones del workflow"
-
-#~ msgid ""
-#~ "user for which this property is applying. If this relation is not set, "
-#~ "the property is considered as a global property"
-#~ msgstr ""
-#~ "usuario para el cual aplica esta propiedad. Si no se establece esta "
-#~ "relación, la propiedad es considerada como una propiedad global."
-
-#~ msgid ""
-#~ "when multiple addresses are equivalent (such as python-projects@logilab."
-#~ "org and python-projects@lists.logilab.org), set this to true on one of "
-#~ "them which is the preferred form."
-#~ msgstr ""
-#~ "cuando multiples direcciones de correo son equivalentes (como python-"
-#~ "projects@logilab.org y python-projects@lists.logilab.org), establecer "
-#~ "esto como verdadero en una de ellas es la forma preferida "
-
-#~ msgid "workflow for %s"
-#~ msgstr "workflow para %s"
+#~ msgid "schema-image"
+#~ msgstr "esquema imagen"

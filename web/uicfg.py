@@ -80,18 +80,13 @@ def init_primaryview_section(rtag, sschema, rschema, oschema, role):
 primaryview_section = RelationTags('primaryview_section',
                                    init_primaryview_section,
                                    frozenset(('attributes', 'relations',
-                                               'sideboxes', 'hidden')))
+                                              'sideboxes', 'hidden')))
 
 
 class DisplayCtrlRelationTags(RelationTagsDict):
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
-        self._counter = 0
-
-    def tag_relation(self, key, tag):
-        tag = super(DisplayCtrlRelationTags, self).tag_relation(key, tag)
-        self._counter += 1
-        tag.setdefault('order', self._counter)
+        self.counter = 0
 
     def tag_subject_of(self, key, tag):
         subj, rtype, obj = key
@@ -117,7 +112,8 @@ def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
         sschema = '*'
         label = '%s_%s' % (rschema, role)
     rtag.setdefault((sschema, rschema, oschema, role), 'label', label)
-    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag._counter)
+    rtag.counter += 1
+    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag.counter)
 
 primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
                                                    init_primaryview_display_ctrl)
@@ -282,8 +278,19 @@ class AutoformSectionRelationTags(RelationTagsSet):
         rtags.add('%s_%s' % (formtype, section))
         return rtags
 
-    def init_get(self, *key):
-        return super(AutoformSectionRelationTags, self).get(*key)
+    def init_get(self, stype, rtype, otype, tagged):
+        key = (stype, rtype, otype, tagged)
+        rtags = {}
+        for key in self._get_keys(stype, rtype, otype, tagged):
+            tags = self._tagdefs.get(key, ())
+            for tag in tags:
+                assert '_' in tag, (tag, tags)
+                section, value = tag.split('_', 1)
+                rtags[section] = value
+        cls = self.tag_container_cls
+        rtags = cls('_'.join([section,value]) for section,value in rtags.iteritems())
+        return rtags
+
 
     def get(self, *key):
         # overriden to avoid recomputing done in parent classes

@@ -25,14 +25,14 @@ repository mainly:
   point to a cubicweb instance.
 * handles session management
 * provides method for pyro registration, to call if pyro is enabled
-
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
 import sys
+import threading
 import Queue
 from os.path import join
 from datetime import datetime
@@ -46,7 +46,7 @@ from yams import BadSchemaDefinition
 from yams.schema import role_name
 from rql import RQLSyntaxError
 
-from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
@@ -89,12 +89,12 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
             with security_enabled(session, read=False):
                 session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                                 'NOT Y eid %%(y)s' % rtype,
-                                {'x': eidfrom, 'y': eidto}, 'x')
+                                {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
         with security_enabled(session, read=False):
-            session.execute('DELETE X %sY WHERE Y eid %%(y)s, '
+            session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
                             'NOT X eid %%(x)s' % rtype,
-                            {'x': eidfrom, 'y': eidto}, 'y')
+                            {'x': eidfrom, 'y': eidto})
 
 
 class Repository(object):
@@ -125,6 +125,8 @@ class Repository(object):
         # sources
         self.sources = []
         self.sources_by_uri = {}
+        # shutdown flag
+        self.shutting_down = False
         # FIXME: store additional sources info in the system database ?
         # FIXME: sources should be ordered (add_entity priority)
         for uri, source_config in config.sources().items():
@@ -215,7 +217,6 @@ class Repository(object):
         for i in xrange(config['connections-pool-size']):
             self.pools.append(pool.ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
-        self._shutting_down = False
         if config.quick_start:
             config.init_cubes(self.get_cubes())
         self.hm = hook.HooksManager(self.vreg)
@@ -315,7 +316,6 @@ class Repository(object):
     def pinfo(self):
         # XXX: session.pool is accessed from a local storage, would be interesting
         #      to see if there is a pool set in any thread specific data)
-        import threading
         return '%s: %s (%s)' % (self._available_pools.qsize(),
                                 ','.join(session.user.login for session in self._sessions.values()
                                          if session.pool),
@@ -324,8 +324,9 @@ class Repository(object):
         """called on server stop event to properly close opened sessions and
         connections
         """
-        assert not self._shutting_down, 'already shutting down'
-        self._shutting_down = True
+        assert not self.shutting_down, 'already shutting down'
+        self.shutting_down = True
+        self.system_source.shutdown()
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
                 self.info('canceling task %s...', looptask.name)
@@ -351,7 +352,7 @@ class Repository(object):
             pyro_unregister(self.config)
         hits, misses = self.querier.cache_hit, self.querier.cache_miss
         try:
-            self.info('rqlt st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
+            self.info('rql st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
                       (hits * 100) / (hits + misses))
             hits, misses = self.system_source.cache_hit, self.system_source.cache_miss
             self.info('sql cache hit/miss: %s/%s (%s%% hits)', hits, misses,
@@ -361,28 +362,6 @@ class Repository(object):
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
-
-    def stats(self): # XXX restrict to managers session?
-        import threading
-        results = {}
-        querier = self.querier
-        source = self.system_source
-        for size, maxsize, hits, misses, title in (
-            (len(querier._rql_cache), self.config['rql-cache-size'],
-            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
-            (len(source._cache), self.config['rql-cache-size'],
-            source.cache_hit, source.cache_miss, 'sql'),
-            ):
-            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
-            results['%s_cache_hit' % title] =  hits
-            results['%s_cache_miss' % title] = misses
-            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
-        results['sql_no_cache'] = self.system_source.no_cache
-        results['nb_open_sessions'] = len(self._sessions)
-        results['nb_active_threads'] = threading.activeCount()
-        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
-        results['available_pools'] = self._available_pools.qsize()
-        return results
 
     def _login_from_email(self, login):
         session = self.internal_session()
@@ -421,7 +400,7 @@ class Repository(object):
         """return a CWUser entity for user with the given eid"""
         cls = self.vreg['etypes'].etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
-        rset = session.execute(rql, {'x': eid}, 'x')
+        rset = session.execute(rql, {'x': eid})
         assert len(rset) == 1, rset
         cwuser = rset.get_entity(0, 0)
         # pylint: disable-msg=W0104
@@ -432,6 +411,28 @@ class Repository(object):
         return cwuser
 
     # public (dbapi) interface ################################################
+
+    def stats(self): # XXX restrict to managers session?
+        results = {}
+        querier = self.querier
+        source = self.system_source
+        for size, maxsize, hits, misses, title in (
+            (len(querier._rql_cache), self.config['rql-cache-size'],
+            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
+            (len(source._cache), self.config['rql-cache-size'],
+            source.cache_hit, source.cache_miss, 'sql'),
+            ):
+            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
+            results['%s_cache_hit' % title] =  hits
+            results['%s_cache_miss' % title] = misses
+            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
+        results['sql_no_cache'] = self.system_source.no_cache
+        results['nb_open_sessions'] = len(self._sessions)
+        results['nb_active_threads'] = threading.activeCount()
+        results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
+        results['available_pools'] = self._available_pools.qsize()
+        results['threads'] = ', '.join(sorted(str(t) for t in threading.enumerate()))
+        return results
 
     def get_schema(self):
         """return the instance schema. This is a public method, not
@@ -504,9 +505,10 @@ class Repository(object):
         """return a result set containing system wide properties"""
         session = self.internal_session()
         try:
-            return session.execute('Any K,V WHERE P is CWProperty,'
-                                   'P pkey K, P value V, NOT P for_user U',
-                                   build_descr=False)
+            # don't use session.execute, we don't want rset.req set
+            return self.querier.execute(session, 'Any K,V WHERE P is CWProperty,'
+                                        'P pkey K, P value V, NOT P for_user U',
+                                        build_descr=False)
         finally:
             session.close()
 
@@ -573,14 +575,15 @@ class Repository(object):
         user._cw = user.cw_rset.req = session
         user.clear_related_cache()
         self._sessions[session.id] = session
-        self.info('opened %s', session)
+        self.info('opened session %s for user %s', session.id, login)
         self.hm.call_hooks('session_open', session)
         # commit session at this point in case write operation has been done
         # during `session_open` hooks
         session.commit()
         return session.id
 
-    def execute(self, sessionid, rqlstring, args=None, eid_key=None, build_descr=True):
+    def execute(self, sessionid, rqlstring, args=None, build_descr=True,
+                txid=None):
         """execute a RQL query
 
         * rqlstring should be an unicode string or a plain ascii string
@@ -588,11 +591,16 @@ class Repository(object):
         * build_descr is a flag indicating if the description should be
           built on select queries
         """
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             try:
-                return self.querier.execute(session, rqlstring, args, eid_key,
+                rset = self.querier.execute(session, rqlstring, args,
                                             build_descr)
+                # NOTE: the web front will (re)build it when needed
+                #       e.g in facets
+                #       Zeroed to avoid useless overhead with pyro
+                rset._rqlst = None
+                return rset
             except (Unauthorized, RQLSyntaxError):
                 raise
             except ValidationError, ex:
@@ -611,9 +619,9 @@ class Repository(object):
         finally:
             session.reset_pool()
 
-    def describe(self, sessionid, eid):
+    def describe(self, sessionid, eid, txid=None):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.type_and_source_from_eid(eid, session)
         finally:
@@ -639,32 +647,36 @@ class Repository(object):
         session = self._get_session(sessionid, setpool=False)
         session.set_shared_data(key, value, querydata)
 
-    def commit(self, sessionid):
+    def commit(self, sessionid, txid=None):
         """commit transaction for the session with the given id"""
         self.debug('begin commit for session %s', sessionid)
         try:
-            return self._get_session(sessionid).commit()
+            session = self._get_session(sessionid)
+            session.set_tx_data(txid)
+            return session.commit()
         except (ValidationError, Unauthorized):
             raise
         except:
             self.exception('unexpected error')
             raise
 
-    def rollback(self, sessionid):
+    def rollback(self, sessionid, txid=None):
         """commit transaction for the session with the given id"""
         self.debug('begin rollback for session %s', sessionid)
         try:
-            self._get_session(sessionid).rollback()
+            session = self._get_session(sessionid)
+            session.set_tx_data(txid)
+            session.rollback()
         except:
             self.exception('unexpected error')
             raise
 
-    def close(self, sessionid, checkshuttingdown=True):
+    def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
-        session = self._get_session(sessionid, setpool=True,
+        session = self._get_session(sessionid, setpool=True, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rollbacked before hook is called
-        session.rollback()
+        session.rollback(reset_pool=False)
         self.hm.call_hooks('session_close', session)
         # commit session at this point in case write operation has been done
         # during `session_close` hooks
@@ -695,34 +707,35 @@ class Repository(object):
         for prop, value in props.items():
             session.change_property(prop, value)
 
-    def undoable_transactions(self, sessionid, ueid=None, **actionfilters):
+    def undoable_transactions(self, sessionid, ueid=None, txid=None,
+                              **actionfilters):
         """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.undoable_transactions(session, ueid,
                                                             **actionfilters)
         finally:
             session.reset_pool()
 
-    def transaction_info(self, sessionid, txuuid):
+    def transaction_info(self, sessionid, txuuid, txid=None):
         """See :class:`cubicweb.dbapi.Connection.transaction_info`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.tx_info(session, txuuid)
         finally:
             session.reset_pool()
 
-    def transaction_actions(self, sessionid, txuuid, public=True):
+    def transaction_actions(self, sessionid, txuuid, public=True, txid=None):
         """See :class:`cubicweb.dbapi.Connection.transaction_actions`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.tx_actions(session, txuuid, public)
         finally:
             session.reset_pool()
 
-    def undo_transaction(self, sessionid, txuuid):
+    def undo_transaction(self, sessionid, txuuid, txid=None):
         """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True, txid=txid)
         try:
             return self.system_source.undo_transaction(session, txuuid)
         finally:
@@ -785,15 +798,17 @@ class Repository(object):
         session.set_pool()
         return session
 
-    def _get_session(self, sessionid, setpool=False, checkshuttingdown=True):
+    def _get_session(self, sessionid, setpool=False, txid=None,
+                     checkshuttingdown=True):
         """return the user associated to the given session identifier"""
-        if checkshuttingdown and self._shutting_down:
+        if checkshuttingdown and self.shutting_down:
             raise Exception('Repository is shutting down')
         try:
             session = self._sessions[sessionid]
         except KeyError:
             raise BadConnectionId('No such session %s' % sessionid)
         if setpool:
+            session.set_tx_data(txid) # must be done before set_pool
             session.set_pool()
         return session
 
@@ -849,6 +864,21 @@ class Repository(object):
         """return the source for the given entity's eid"""
         return self.sources_by_uri[self.type_and_source_from_eid(eid, session)[1]]
 
+    def querier_cache_key(self, session, rql, args, eidkeys):
+        cachekey = [rql]
+        for key in sorted(eidkeys):
+            try:
+                etype = self.type_from_eid(args[key], session)
+            except KeyError:
+                raise QueryError('bad cache key %s (no value)' % key)
+            except TypeError:
+                raise QueryError('bad cache key %s (value: %r)' % (
+                    key, args[key]))
+            cachekey.append(etype)
+            # ensure eid is correctly typed in args
+            args[key] = typed_eid(args[key])
+        return tuple(cachekey)
+
     def eid2extid(self, source, eid, session=None):
         """get local id from an eid"""
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
@@ -873,6 +903,7 @@ class Repository(object):
         if eid is not None:
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
+            # XXX used with extlite (eg vcsfile), probably not needed anymore
             if recreate:
                 entity = source.before_entity_insertion(session, extid, etype, eid)
                 entity._cw_recreating = True
@@ -901,10 +932,8 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
-            if not hasattr(entity, 'edited_attributes'):
-                entity.edited_attributes = set()
+            entity.edited_attributes = set(entity)
             if source.should_call_hooks:
-                entity.edited_attributes = set(entity)
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, extid)
@@ -914,7 +943,7 @@ class Repository(object):
             else:
                 # minimal meta-data
                 session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
-                                {'x': entity.eid, 'name': entity.__regid__}, 'x')
+                                {'x': entity.eid, 'name': entity.__regid__})
             session.commit(reset_pool)
             return eid
         except:
@@ -962,7 +991,7 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                session.execute(rql, {'x': eid}, 'x', build_descr=False)
+                session.execute(rql, {'x': eid}, build_descr=False)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
     def locate_relation_source(self, session, subject, rtype, object):
@@ -1085,8 +1114,6 @@ class Repository(object):
         orig_edited_attributes = getattr(entity, 'edited_attributes', None)
         entity.edited_attributes = edited_attributes
         try:
-            if session.is_hook_category_activated('integrity'):
-                entity.check()
             only_inline_rels, need_fti_update = True, False
             relations = []
             source = self.source_from_eid(entity.eid, session)
@@ -1117,6 +1144,8 @@ class Repository(object):
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
                 if not only_inline_rels:
                     hm.call_hooks('before_update_entity', session, entity=entity)
+            if session.is_hook_category_activated('integrity'):
+                entity.check()
             source.update_entity(session, entity)
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:

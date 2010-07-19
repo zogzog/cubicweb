@@ -1,24 +1,3 @@
-#########################################################
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of CubicWeb.
-#
-# CubicWeb is free software: you can redistribute it and/or modify it under the
-# terms of the GNU Lesser General Public License as published by the Free
-# Software Foundation, either version 2.1 of the License, or (at your option)
-# any later version.
-#
-# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
-# details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-XXX clarify this header
-"""
 # md5crypt.py
 #
 # 0423.2000 by michal wallace http://www.sabren.com/
@@ -36,6 +15,7 @@ XXX clarify this header
 # * remove usage of the string module
 # * don't include the magic string in the output string
 #   for true crypt.crypt compatibility
+# * use hashlib module instead of md5
 #########################################################
 """md5crypt.py - Provides interoperable MD5-based crypt() function
 
@@ -61,7 +41,7 @@ contains the following license in it:
 MAGIC = '$1$'                        # Magic string
 ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-import md5
+import hashlib as md5
 
 def to64 (v, n):
     ret = ''

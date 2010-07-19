@@ -27,12 +27,14 @@ from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups, objectify_selector)
+                                match_user_groups, objectify_selector,
+                                logged_user_in_rset)
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
-from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton, FieldWidget
+from cubicweb.web.formwidgets import (Select, TextInput, Button, SubmitButton,
+                                      FieldWidget)
 from cubicweb.web.views import primary, formrenderers
 
 uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
@@ -41,7 +43,6 @@ uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
 # groups
 _('navigation')
 _('ui')
-_('actions')
 _('boxes')
 _('components')
 _('contentnavigation')
@@ -120,9 +121,11 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         # user's preference but not site's configuration
         for key in vreg.user_property_keys(self.__regid__=='systempropertiesform'):
             parts = key.split('.')
-            if parts[0] in vreg:
+            if parts[0] in vreg and len(parts) >= 3:
                 # appobject configuration
-                reg, oid, propid = parts
+                reg = parts[0]
+                propid = parts[-1]
+                oid = '.'.join(parts[1:-1])
                 groupedopts.setdefault(reg, {}).setdefault(oid, []).append(key)
             else:
                 mainopts.setdefault(parts[0], []).append(key)
@@ -234,17 +237,12 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return subform
 
 
-@objectify_selector
-def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
-    return req.user.eid == rset[row or 0][col]
-
-
 class CWPropertiesForm(SystemCWPropertiesForm):
     """user's preferences properties edition form"""
     __regid__ = 'propertiesform'
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
-        | (one_line_rset() & match_user_groups('users') & is_user_prefs())
+        | (one_line_rset() & match_user_groups('users') & logged_user_in_rset())
         | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
         )
 
@@ -384,7 +382,7 @@ class CWPropertiesFormRenderer(formrenderers.FormRenderer):
                 w(u'%s' % self.render_label(form, field))
             error = form.field_error(field)
             if error:
-                w(u'<span class="error">%s</span>' % err)
+                w(u'<span class="error">%s</span>' % error)
             w(u'%s' % self.render_help(form, field))
             w(u'<div class="prefinput">')
             w(field.render(form, self))

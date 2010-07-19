@@ -16,16 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
-The automatic entity form
--------------------------
-
 .. autodocstring:: cubicweb.web.views.autoform::AutomaticEntityForm
 
 Configuration through uicfg
 ```````````````````````````
 
 It is possible to manage which and how an entity's attributes and relations
-will be edited in the various context where the automatic entity form is used
+will be edited in the various contexts where the automatic entity form is used
 by using proper uicfg tags.
 
 The details of the uicfg syntax can be found in the :ref:`uicfg` chapter.
@@ -53,7 +50,7 @@ additionally to the relation key: a `formtype` and a `section`.
 
 section may be one of:
 
-* 'hidden', don't display (not even in an hidden input, right?)
+* 'hidden', don't display (not even in a hidden input)
 
 * 'attributes', display in the attributes section
 
@@ -104,7 +101,11 @@ class. For instance:
    autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
                                        {'widget': fw.TextInput})
 
+.. note::
 
+   the widget argument can be either a class or an instance (the later
+   case being convenient to pass the Widget specific initialisation
+   options)
 
 Overriding permissions
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -124,8 +125,10 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
+from logilab.common.deprecation import deprecated
 
 from cubicweb import typed_eid, neg_role, uilib
+from cubicweb.vregistry import classid
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.selectors import (
@@ -235,13 +238,29 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
             self.peid, self.rtype, entity.eid)
         self.render_form(i18nctx, divonclick=divonclick, **kwargs)
 
+    def _get_removejs(self):
+        """
+        Don't display the remove link in edition form if the
+        cardinality is 1. Handled in InlineEntityCreationFormView for
+        creation form.
+        """
+        entity = self._entity()
+        if isinstance(self.peid, int):
+            pentity = self._cw.entity_from_eid(self.peid)
+            petype = pentity.e_schema.type
+            rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), petype)
+            card= rdef.role_cardinality(self.role)
+            if card == '1': # don't display remove link
+                return None
+        return self.removejs and self.removejs % (
+            self.peid, self.rtype, entity.eid)
+
     def render_form(self, i18nctx, **kwargs):
         """fetch and render the form"""
         entity = self._entity()
         divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
         title = self.form_title(entity, i18nctx)
-        removejs = self.removejs and self.removejs % (
-            self.peid, self.rtype, entity.eid)
+        removejs = self._get_removejs()
         countkey = '%s_count' % self.rtype
         try:
             self._cw.data[countkey] += 1
@@ -293,19 +312,20 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link
         # id to removeInlineForm.
-        if card not in '?1':
+        if card == '?':
+            divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
+            return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
+                self.role, divid)
+        elif card in '+*':
             return "removeInlineForm('%%s', '%%s', '%s', '%%s')" % self.role
-        divid = "addNew%s%s%s:%s" % (
-            self.etype, self.rtype, self.role, self.peid)
-        return "removeInlineForm('%%s', '%%s', '%s', '%%s', '%s')" % (
-            self.role, divid)
+        # don't do anything for card == '1'
 
     @cached
     def _entity(self):
         try:
             cls = self._cw.vreg['etypes'].etype_class(self.etype)
         except:
-            self.w(self._cw._('no such entity type %s') % etype)
+            self.w(self._cw._('no such entity type %s') % self.etype)
             return
         entity = cls(self._cw)
         entity.eid = self._cw.varmaker.next()
@@ -365,7 +385,7 @@ def get_pending_inserts(req, eid=None):
     This is where are stored relations being added while editing
     an entity. This used to be stored in a temporary cookie.
     """
-    pending = req.get_session_data('pending_insert') or ()
+    pending = req.session.data.get('pending_insert', ())
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
 
@@ -375,7 +395,7 @@ def get_pending_deletes(req, eid=None):
     This is where are stored relations being removed while editing
     an entity. This used to be stored in a temporary cookie.
     """
-    pending = req.get_session_data('pending_delete') or ()
+    pending = req.session.data.get('pending_delete', ())
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
 
@@ -398,7 +418,7 @@ def delete_relations(req, rdefs):
     execute = req.execute
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+        execute(rql, {'x': subj, 'y': obj})
     req.set_message(req._('relations deleted'))
 
 def insert_relations(req, rdefs):
@@ -406,7 +426,7 @@ def insert_relations(req, rdefs):
     execute = req.execute
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
-        execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
+        execute(rql, {'x': subj, 'y': obj})
 
 
 class GenericRelationsWidget(fw.FieldWidget):
@@ -621,13 +641,13 @@ class UnrelatedDivs(EntityView):
 # The automatic entity form ####################################################
 
 class AutomaticEntityForm(forms.EntityFieldsForm):
-    """AutomaticEntityForm is an automagic form to edit any entity. It is
-    designed to be fully generated from schema but highly configurable through
-    :ref:`uicfg`.
+    """AutomaticEntityForm is an automagic form to edit any entity. It
+    is designed to be fully generated from schema but highly
+    configurable through uicfg.
 
     Of course, as for other forms, you can also customise it by specifying
     various standard form parameters on selection, overriding, or
-    adding/removing fields in a selected instances.
+    adding/removing fields in selected instances.
     """
     __regid__ = 'edition'
 
@@ -642,6 +662,19 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # set this to a list of [(relation, role)] if you want to explictily tell
     # which relations should be edited
     display_fields = None
+    # action on the form tag
+    _default_form_action_path = 'validateform'
+
+    # pre 3.8.3 compat
+    def set_action(self, action):
+        self._action = action
+    def get_action(self):
+        try:
+            return self._action
+        except AttributeError:
+            return self._cw.build_url(self._default_form_action_path)
+    action = property(deprecated('[3.9] use form.form_action()')(get_action),
+                      set_action)
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
@@ -712,28 +745,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             return None
         return self.maxrelitems + 1
 
-    def action(self):
-        """return the form's action attribute. Default to validateform if not
-        explicitly overriden.
-        """
-        try:
-            return self._action
-        except AttributeError:
-            return self._cw.build_url('validateform')
-
-    def set_action(self, value):
-        """override default action"""
-        self._action = value
-
-    action = property(action, set_action)
-
     # autoform specific fields #################################################
 
     def _generic_relations_field(self):
         try:
             srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
             warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
-                 'override editable_relations instead' % classid(form),
+                 'override editable_relations instead' % classid(self),
                  DeprecationWarning)
         except AttributeError:
             srels_by_cat = self.editable_relations()

@@ -20,33 +20,17 @@
 software
 """
 
-distname = "cubicweb"
-modname = "cubicweb"
+modname = distname = "cubicweb"
 
-numversion = (3, 7, 5)
+numversion = (3, 8, 7)
 version = '.'.join(str(num) for num in numversion)
 
-license = 'LGPL'
-copyright = '''Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE).
-http://www.logilab.fr/ -- mailto:contact@logilab.fr'''
-
+description = "a repository of entities / relations for knowledge management"
 author = "Logilab"
 author_email = "contact@logilab.fr"
-
-short_desc = "a repository of entities / relations for knowledge management"
-long_desc = """CubicWeb is a entities / relations based knowledge management system
-developped at Logilab.
-
-This package contains:
-* a repository server
-* a RQL command line client to the repository
-* an adaptative modpython interface to the server
-* a bunch of other management tools
-"""
-
 web = 'http://www.cubicweb.org'
 ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
-pyversions = ['2.5', '2.6']
+license = 'LGPL'
 
 classifiers = [
            'Environment :: Web Environment',
@@ -55,6 +39,32 @@ classifiers = [
            'Programming Language :: JavaScript',
 ]
 
+__depends__ = {
+    'logilab-common': '>= 0.50.2',
+    'logilab-mtconverter': '>= 0.6.0',
+    'rql': '>= 0.26.2',
+    'yams': '>= 0.28.1',
+    'docutils': '>= 0.6',
+    #gettext                    # for xgettext, msgcat, etc...
+    # web dependancies
+    'simplejson': '>= 2.0.9',
+    'lxml': '',
+    'Twisted': '',
+    # XXX graphviz
+    # server dependencies
+    'logilab-database': '>= 1.0.5',
+    'pysqlite': '>= 2.5.5', # XXX install pysqlite2
+    }
+
+__recommends__ = {
+    'Pyro': '>= 3.9.1',
+    'PIL': '',                  # for captcha
+    'pycrypto': '',             # for crypto extensions
+    'fyzz': '>= 0.1.0',         # for sparql
+    'vobject': '>= 0.6.0',      # for ical view
+    #'Products.FCKeditor':'',
+    #'SimpleTAL':'>= 4.1.6',
+    }
 
 import sys
 from os import listdir, environ
@@ -65,57 +75,53 @@ scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
 include_dirs = [join('test', 'data'),
                 join('server', 'test', 'data'),
+                join('hooks', 'test', 'data'),
                 join('web', 'test', 'data'),
                 join('devtools', 'test', 'data'),
                 'schemas', 'skeleton']
 
 
-entities_dir = 'entities'
-schema_dir = 'schemas'
-sobjects_dir = 'sobjects'
-server_migration_dir = join('misc', 'migration')
-data_dir = join('web', 'data')
-wdoc_dir = join('web', 'wdoc')
-wdocimages_dir = join(wdoc_dir, 'images')
-views_dir = join('web', 'views')
-i18n_dir = 'i18n'
+_server_migration_dir = join('misc', 'migration')
+_data_dir = join('web', 'data')
+_wdoc_dir = join('web', 'wdoc')
+_wdocimages_dir = join(_wdoc_dir, 'images')
+_views_dir = join('web', 'views')
+_i18n_dir = 'i18n'
 
-if environ.get('APYCOT_ROOT'):
+_pyversion = '.'.join(str(num) for num in sys.version_info[0:2])
+if '--home' in sys.argv:
     # --home install
-    pydir = 'python'
+    pydir = 'python' + _pyversion
 else:
-    python_version = '.'.join(str(num) for num in sys.version_info[0:2])
-    pydir = join('python' + python_version, 'site-packages')
+    pydir = join('python' + _pyversion, 'site-packages')
 
 try:
     data_files = [
-        # common data
-        #[join('share', 'cubicweb', 'entities'),
-        # [join(entities_dir, filename) for filename in listdir(entities_dir)]],
         # server data
         [join('share', 'cubicweb', 'schemas'),
-         [join(schema_dir, filename) for filename in listdir(schema_dir)]],
-        #[join('share', 'cubicweb', 'sobjects'),
-        # [join(sobjects_dir, filename) for filename in listdir(sobjects_dir)]],
+         [join('schemas', filename) for filename in listdir('schemas')]],
         [join('share', 'cubicweb', 'migration'),
-         [join(server_migration_dir, filename)
-          for filename in listdir(server_migration_dir)]],
+         [join(_server_migration_dir, filename)
+          for filename in listdir(_server_migration_dir)]],
         # web data
         [join('share', 'cubicweb', 'cubes', 'shared', 'data'),
-         [join(data_dir, fname) for fname in listdir(data_dir) if not isdir(join(data_dir, fname))]],
+         [join(_data_dir, fname) for fname in listdir(_data_dir)
+          if not isdir(join(_data_dir, fname))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'timeline'),
-         [join(data_dir, 'timeline', fname) for fname in listdir(join(data_dir, 'timeline'))]],
+         [join(_data_dir, 'timeline', fname) for fname in listdir(join(_data_dir, 'timeline'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'images'),
-         [join(data_dir, 'images', fname) for fname in listdir(join(data_dir, 'images'))]],
+         [join(_data_dir, 'images', fname) for fname in listdir(join(_data_dir, 'images'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc'),
-         [join(wdoc_dir, fname) for fname in listdir(wdoc_dir) if not isdir(join(wdoc_dir, fname))]],
+         [join(_wdoc_dir, fname) for fname in listdir(_wdoc_dir)
+          if not isdir(join(_wdoc_dir, fname))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc', 'images'),
-         [join(wdocimages_dir, fname) for fname in listdir(wdocimages_dir)]],
-        # XXX: .pt install should be handled properly in a near future version
-        [join('lib', pydir, 'cubicweb', 'web', 'views'),
-         [join(views_dir, fname) for fname in listdir(views_dir) if fname.endswith('.pt')]],
+         [join(_wdocimages_dir, fname) for fname in listdir(_wdocimages_dir)]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
-         [join(i18n_dir, fname) for fname in listdir(i18n_dir)]],
+         [join(_i18n_dir, fname) for fname in listdir(_i18n_dir)]],
+        # XXX: drop .pt files
+        [join('lib', pydir, 'cubicweb', 'web', 'views'),
+         [join(_views_dir, fname) for fname in listdir(_views_dir)
+          if fname.endswith('.pt')]],
         # skeleton
         ]
 except OSError:

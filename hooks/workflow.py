@@ -146,7 +146,7 @@ class _SubWorkflowExitOp(hook.Operation):
 
 class WorkflowHook(hook.Hook):
     __abstract__ = True
-    category = 'worfklow'
+    category = 'workflow'
 
 
 class SetInitialStateHook(WorkflowHook):

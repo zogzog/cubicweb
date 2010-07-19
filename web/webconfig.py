@@ -75,7 +75,7 @@ class WebConfiguration(CubicWebConfiguration):
     """the WebConfiguration is a singleton object handling instance's
     configuration and preferences
     """
-    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['web/views'])
+    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set([join('web', 'views')])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['views'])
 
     options = merge_options(CubicWebConfiguration.options + (
@@ -83,20 +83,20 @@ class WebConfiguration(CubicWebConfiguration):
          {'type' : 'string',
           'default': None,
           'help': 'login of the CubicWeb user account to use for anonymous user (if you want to allow anonymous)',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'web', 'level': 1,
           }),
         ('anonymous-password',
          {'type' : 'string',
           'default': None,
           'help': 'password of the CubicWeb user account to use for anonymous user, '
           'if anonymous-user is set',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'web', 'level': 1,
           }),
         ('query-log-file',
          {'type' : 'string',
           'default': None,
           'help': 'web instance query log file',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         # web configuration
         ('https-url',
@@ -110,20 +110,20 @@ class WebConfiguration(CubicWebConfiguration):
           'differentiate between http vs https access. For instance: \n'\
           'RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]\n'\
           'where the cubicweb web server is listening on port 8080.',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('auth-mode',
          {'type' : 'choice',
           'choices' : ('cookie', 'http'),
           'default': 'cookie',
           'help': 'authentication mode (cookie / http)',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('realm',
          {'type' : 'string',
           'default': 'cubicweb',
           'help': 'realm to use on HTTP authentication mode',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('http-session-time',
          {'type' : 'time',
@@ -131,7 +131,7 @@ class WebConfiguration(CubicWebConfiguration):
           'help': "duration of the cookie used to store session identifier. "
           "If 0, the cookie will expire when the user exist its browser. "
           "Should be 0 or greater than repository\'s session-time.",
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 2,
           }),
         ('cleanup-session-time',
          {'type' : 'time',
@@ -142,7 +142,7 @@ class WebConfiguration(CubicWebConfiguration):
           'So even if http-session-time is 0 and the user don\'t close his '
           'browser, he will have to reauthenticate after this time of '
           'inactivity. Default to 24h.',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('cleanup-anonymous-session-time',
          {'type' : 'time',
@@ -150,14 +150,14 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'Same as cleanup-session-time but specific to anonymous '
           'sessions. You can have a much smaller timeout here since it will be '
           'transparent to the user. Default to 5min.',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('force-html-content-type',
          {'type' : 'yn',
           'default': False,
           'help': 'force text/html content type for your html pages instead of cubicweb user-agent based'\
           'deduction of an appropriate content type',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('embed-allowed',
          {'type' : 'regexp',
@@ -165,14 +165,14 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'regular expression matching URLs that may be embeded. \
 leave it blank if you don\'t want the embedding feature, or set it to ".*" \
 if you want to allow everything',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('submit-mail',
          {'type' : 'string',
           'default': None,
           'help': ('Mail used as recipient to report bug in this instance, '
                    'if you want this feature on'),
-          'group': 'web', 'inputlevel': 2,
+          'group': 'web', 'level': 2,
           }),
 
         ('language-negociation',
@@ -180,14 +180,14 @@ if you want to allow everything',
           'default': True,
           'help': 'use Accept-Language http header to try to set user '\
           'interface\'s language according to browser defined preferences',
-          'group': 'web', 'inputlevel': 2,
+          'group': 'web', 'level': 2,
           }),
 
         ('print-traceback',
          {'type' : 'yn',
           'default': CubicWebConfiguration.mode != 'system',
           'help': 'print the traceback on the error page when an error occured',
-          'group': 'web', 'inputlevel': 2,
+          'group': 'web', 'level': 2,
           }),
 
         ('captcha-font-file',
@@ -195,14 +195,14 @@ if you want to allow everything',
           'default': join(CubicWebConfiguration.shared_dir(), 'data', 'porkys.ttf'),
           'help': 'True type font to use for captcha image generation (you \
 must have the python imaging library installed to use captcha)',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
         ('captcha-font-size',
          {'type' : 'int',
           'default': 25,
           'help': 'Font size to use for captcha image generation (you must \
 have the python imaging library installed to use captcha)',
-          'group': 'web', 'inputlevel': 3,
+          'group': 'web', 'level': 3,
           }),
 
         ))

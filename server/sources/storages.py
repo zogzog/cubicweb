@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """custom storages for the system source"""
+
 from os import unlink, path as osp
 
 from yams.schema import role_name
 
-from cubicweb import Binary
-from cubicweb.server.hook import Operation
+from cubicweb import Binary, ValidationError
+from cubicweb.server import hook
 
 def set_attribute_storage(repo, etype, attr, storage):
     repo.system_source.set_storage(etype, attr, storage)
@@ -33,10 +34,10 @@ class Storage(object):
     """abstract storage
 
     * If `source_callback` is true (by default), the callback will be run during
-      query result process of fetched attribute's valu and should have the
+      query result process of fetched attribute's value and should have the
       following prototype::
 
-        callback(self, source, value)
+        callback(self, source, session, value)
 
       where `value` is the value actually stored in the backend. None values
       will be skipped (eg callback won't be called).
@@ -67,6 +68,9 @@ class Storage(object):
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         raise NotImplementedError()
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        raise NotImplementedError()
 
 # TODO
 # * make it configurable without code
@@ -79,7 +83,7 @@ def uniquify_path(dirpath, basename):
 
     XXX subject to race condition.
     """
-    path = osp.join(dirpath, basename)
+    path = osp.join(dirpath, basename.replace(osp.sep, '-'))
     if not osp.isfile(path):
         return path
     base, ext = osp.splitext(path)
@@ -89,19 +93,20 @@ def uniquify_path(dirpath, basename):
             return path
     return None
 
+
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
     def __init__(self, defaultdir, fsencoding='utf-8'):
         self.default_directory = defaultdir
         self.fsencoding = fsencoding
 
-    def callback(self, source, value):
+    def callback(self, source, session, value):
         """sql generator callback when some attribute with a custom storage is
         accessed
         """
         fpath = source.binary_to_str(value)
         try:
-            return Binary(file(fpath).read())
+            return Binary(file(fpath, 'rb').read())
         except OSError, ex:
             source.critical("can't open %s: %s", value, ex)
             return None
@@ -109,33 +114,58 @@ class BytesFileSystemStorage(Storage):
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
         if entity._cw.transaction_data.get('fs_importing'):
-            binary = Binary(file(entity[attr].getvalue()).read())
+            binary = Binary(file(entity[attr].getvalue(), 'rb').read())
         else:
             binary = entity.pop(attr)
             fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
             entity[attr] = Binary(fpath)
-            file(fpath, 'w').write(binary.getvalue())
-            AddFileOp(entity._cw, filepath=fpath)
+            file(fpath, 'wb').write(binary.getvalue())
+            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         return binary
 
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
+        # get the name of the previous file containing the value
+        oldpath = self.current_fs_path(entity, attr)
         if entity._cw.transaction_data.get('fs_importing'):
-            oldpath = self.current_fs_path(entity, attr)
+            # If we are importing from the filesystem, the file already exists.
+            # We do not need to create it but we need to fetch the content of
+            # the file as the actual content of the attribute
             fpath = entity[attr].getvalue()
-            if oldpath != fpath:
-                DeleteFileOp(entity._cw, filepath=oldpath)
-            binary = Binary(file(fpath).read())
+            binary = Binary(file(fpath, 'rb').read())
         else:
+            # We must store the content of the attributes
+            # into a file to stay consistent with the behaviour of entity_add.
+            # Moreover, the BytesFileSystemStorage expects to be able to
+            # retrieve the current value of the attribute at anytime by reading
+            # the file on disk. To be able to rollback things, use a new file
+            # and keep the old one that will be removed on commit if everything
+            # went ok.
+            #
+            # fetch the current attribute value in memory
             binary = entity.pop(attr)
-            fpath = self.current_fs_path(entity, attr)
-            UpdateFileOp(entity._cw, filepath=fpath, filedata=binary.getvalue())
+            # Get filename for it
+            fpath = self.new_fs_path(entity, attr)
+            assert not osp.exists(fpath)
+            # write attribute value on disk
+            file(fpath, 'wb').write(binary.getvalue())
+            # Mark the new file as added during the transaction.
+            # The file will be removed on rollback
+            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
+        if oldpath != fpath:
+            # register the new location for the file.
+            entity[attr] = Binary(fpath)
+            # Mark the old file as useless so the file will be removed at
+            # commit.
+            hook.set_operation(entity._cw, 'bfss_deleted', oldpath,
+                               DeleteFileOp)
         return binary
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
-        DeleteFileOp(entity._cw, filepath=self.current_fs_path(entity, attr))
+        fpath = self.current_fs_path(entity, attr)
+        hook.set_operation(entity._cw, 'bfss_deleted', fpath, DeleteFileOp)
 
     def new_fs_path(self, entity, attr):
         # We try to get some hint about how to name the file using attribute's
@@ -150,7 +180,7 @@ class BytesFileSystemStorage(Storage):
         fspath = uniquify_path(self.default_directory, '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
-                dirpath, '_'.join(basename))
+                self.default_directory, '_'.join(basename))
             raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
         return fspath
 
@@ -165,24 +195,30 @@ class BytesFileSystemStorage(Storage):
         return sysource._process_value(rawvalue, cu.description[0],
                                        binarywrap=str)
 
+    def migrate_entity(self, entity, attribute):
+        """migrate an entity attribute to the storage"""
+        entity.edited_attributes = set()
+        self.entity_added(entity, attribute)
+        session = entity._cw
+        source = session.repo.system_source
+        attrs = source.preprocess_entity(entity)
+        sql = source.sqlgen.update('cw_' + entity.__regid__, attrs,
+                                   ['cw_eid'])
+        source.doexec(session, sql, attrs)
 
-class AddFileOp(Operation):
+
+class AddFileOp(hook.Operation):
     def rollback_event(self):
-        try:
-            unlink(self.filepath)
-        except:
-            pass
+        for filepath in self.session.transaction_data.pop('bfss_added'):
+            try:
+                unlink(filepath)
+            except Exception, ex:
+                self.error('cant remove %s: %s' % (filepath, ex))
 
-class DeleteFileOp(Operation):
+class DeleteFileOp(hook.Operation):
     def commit_event(self):
-        try:
-            unlink(self.filepath)
-        except:
-            pass
-
-class UpdateFileOp(Operation):
-    def precommit_event(self):
-        try:
-            file(self.filepath, 'w').write(self.filedata)
-        except Exception, ex:
-            self.exception(str(ex))
+        for filepath in self.session.transaction_data.pop('bfss_deleted'):
+            try:
+                unlink(filepath)
+            except Exception, ex:
+                self.error('cant remove %s: %s' % (filepath, ex))

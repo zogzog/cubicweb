@@ -111,12 +111,12 @@ Here is a quick example:
 
     class UserLink(component.Component):
 	'''if the user is the anonymous user, build a link to login else a link
-	to the connected user object with a loggout link
+	to the connected user object with a logout link
 	'''
 	__regid__ = 'loggeduserlink'
 
 	def call(self):
-	    if self._cw.cnx.anonymous_connection:
+	    if self._cw.session.anonymous_session:
 		# display login link
 		...
 	    else:
@@ -191,6 +191,7 @@ manager to help with that, *if you're running your instance in debug mode*.
 
 .. |cubicweb| replace:: *CubicWeb*
 """
+
 __docformat__ = "restructuredtext en"
 
 import logging
@@ -623,28 +624,35 @@ class multi_columns_rset(multi_lines_rset):
         return rset and self.match_expected(len(rset.rows[0])) or 0
 
 
-@objectify_selector
-@lltrace
-def paginated_rset(cls, req, rset=None, **kwargs):
-    """Return 1 for result set with more rows than a page size.
+class paginated_rset(Selector):
+    """Return 1 or more for result set with more rows than one or more page
+    size.  You can specify expected number of pages to the initializer (default
+    to one), and you'll get that number of pages as score if the result set is
+    big enough.
 
     Page size is searched in (respecting order):
     * a `page_size` argument
     * a `page_size` form parameters
     * the :ref:`navigation.page-size` property
     """
-    if rset is None:
-        return 0
-    page_size = kwargs.get('page_size')
-    if page_size is None:
-        page_size = req.form.get('page_size')
+    def __init__(self, nbpages=1):
+        assert nbpages > 0
+        self.nbpages = nbpages
+
+    @lltrace
+    def __call__(self, cls, req, rset=None, **kwargs):
+        if rset is None:
+            return 0
+        page_size = kwargs.get('page_size')
         if page_size is None:
-            page_size = req.property_value('navigation.page-size')
-        else:
-            page_size = int(page_size)
-    if rset.rowcount <= page_size:
-        return 0
-    return 1
+            page_size = req.form.get('page_size')
+            if page_size is None:
+                page_size = req.property_value('navigation.page-size')
+            else:
+                page_size = int(page_size)
+        if rset.rowcount <= (page_size*self.nbpages):
+            return 0
+        return self.nbpages
 
 
 @objectify_selector
@@ -687,6 +695,16 @@ class multi_etypes_rset(multi_lines_rset):
     def __call__(self, cls, req, rset=None, col=0, **kwargs):
         # 'or 0' since we *must not* return None
         return rset and self.match_expected(len(rset.column_types(col))) or 0
+
+
+@objectify_selector
+def logged_user_in_rset(cls, req, rset=None, row=None, col=0, **kwargs):
+    """Return positive score if the result set at the specified row / col
+    contains the eid of the logged user.
+    """
+    if rset is None:
+        return 0
+    return req.user.eid == rset[row or 0][col]
 
 
 # entity selectors #############################################################
@@ -764,7 +782,7 @@ class relation_possible(EntitySelector):
 
     * `action`, a relation schema action (e.g. one of 'read', 'add', 'delete',
       default to 'read') which must be granted to the user, else a 0 score will
-      be returned
+      be returned. Give None if you don't want any permission checking.
 
     * `strict`, boolean (default to False) telling what to do when the user has
       not globally the permission for the action (eg the action is not granted
@@ -822,11 +840,14 @@ class relation_possible(EntitySelector):
         if self.target_etype is not None:
             try:
                 rdef = rschema.role_rdef(eschema, self.target_etype, self.role)
-                if not rdef.may_have_permission(self.action, req):
-                    return 0
             except KeyError:
                 return 0
-        else:
+            if self.action and not rdef.may_have_permission(self.action, req):
+                return 0
+            teschema = req.vreg.schema.eschema(self.target_etype)
+            if not teschema.may_have_permission('read', req):
+                return 0
+        elif self.action:
             return rschema.may_have_permission(self.action, req, eschema, self.role)
         return 1
 
@@ -834,13 +855,19 @@ class relation_possible(EntitySelector):
         rschema = self._get_rschema(entity)
         if rschema is None:
             return 0 # relation not supported
-        if self.target_etype is not None:
-            rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
-        if self.role == 'subject':
-            if not rschema.has_perm(entity._cw, 'add', fromeid=entity.eid):
+        if self.action:
+            if self.target_etype is not None:
+                rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
+            if self.role == 'subject':
+                if not rschema.has_perm(entity._cw, self.action, fromeid=entity.eid):
+                    return 0
+            elif not rschema.has_perm(entity._cw, self.action, toeid=entity.eid):
                 return 0
-        elif not rschema.has_perm(entity._cw, 'add', toeid=entity.eid):
-            return 0
+        if self.target_etype is not None:
+            req = entity._cw
+            teschema = req.vreg.schema.eschema(self.target_etype)
+            if not teschema.may_have_permission('read', req):
+                return 0
         return 1
 
 
@@ -1044,11 +1071,23 @@ class rql_condition(EntitySelector):
     def score(self, req, rset, row, col):
         try:
             return len(req.execute(self.rql, {'x': rset[row][col],
-                                              'u': req.user.eid}, 'x'))
+                                              'u': req.user.eid}))
         except Unauthorized:
             return 0
 
 # logged user selectors ########################################################
+
+@objectify_selector
+@lltrace
+def no_cnx(cls, req, **kwargs):
+    """Return 1 if the web session has no connection set. This occurs when
+    anonymous access is not allowed and user isn't authenticated.
+
+    May only be used on the web side, not on the data repository side.
+    """
+    if not req.cnx:
+        return 1
+    return 0
 
 @objectify_selector
 @lltrace
@@ -1057,7 +1096,7 @@ def authenticated_user(cls, req, **kwargs):
 
     May only be used on the web side, not on the data repository side.
     """
-    if req.cnx.anonymous_connection:
+    if req.session.anonymous_session:
         return 0
     return 1
 

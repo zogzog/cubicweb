@@ -14,7 +14,7 @@ build-stamp:
 	# and I can't get pbuilder find them in its chroot :(
 	# cd doc && make
 	# FIXME cleanup and use sphinx-build as build-depends ?
-	python setup.py build
+	NO_SETUPTOOLS=1 python setup.py build
 	touch build-stamp
 
 clean: 
@@ -33,7 +33,7 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_clean
 	dh_installdirs
 
-	python setup.py -q install --no-compile --prefix=debian/tmp/usr
+	NO_SETUPTOOLS=1 python setup.py -q install --no-compile --prefix=debian/tmp/usr
 
 	# Put all the python library and data in cubicweb-common
 	# and scripts in cubicweb-server

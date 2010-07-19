@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of tree-building widgets, based on jQuery treeview plugin
+"""Set of tree-building widgets, based on jQuery treeview plugin"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -143,7 +142,7 @@ class TreeViewItemView(EntityView):
         cookies = self._cw.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
-            return str(eeid) in treestate.value.split(';')
+            return str(eeid) in treestate.value.split(':')
         return self.default_branch_state_is_open
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',

@@ -82,6 +82,8 @@ class UnmodifiedField(Exception):
     it
     """
 
+def normalize_filename(filename):
+    return filename.split('\\')[-1]
 
 def vocab_sort(vocab):
     """sort vocabulary, considering option groups"""
@@ -433,9 +435,11 @@ class Field(object):
             # attribute or relation
             return True
         # if it's a non final relation, we need the eids
-        if isinstance(previous_value, tuple):
+        # XXX underlying regression: getattr(ent, 'foo') used to return
+        #     a tuple, now we get a list
+        if isinstance(previous_value, (list, tuple)):
             # widget should return a set of untyped eids
-            previous_value = set(unicode(e.eid) for e in previous_value)
+            previous_value = set(e.eid for e in previous_value)
         try:
             new_value = self.process_form_value(form)
         except ProcessFormError:
@@ -723,15 +727,18 @@ class FileField(StringField):
             # raise UnmodifiedField instead of returning None, since the later
             # will try to remove already attached file if any
             raise UnmodifiedField()
-        # skip browser submitted mime type
-        filename, _, stream = value
-        # value is a  3-uple (filename, mimetype, stream)
+        # value is a 2-uple (filename, stream)
+        try:
+            filename, stream = value
+        except ValueError:
+            raise UnmodifiedField()
+        # XXX avoid in memory loading of posted files. Requires Binary handling changes...
         value = Binary(stream.read())
         if not value.getvalue(): # usually an unexistant file
             value = None
         else:
             # set filename on the Binary instance, may be used later in hooks
-            value.filename = filename
+            value.filename = normalize_filename(filename)
         return value
 
 

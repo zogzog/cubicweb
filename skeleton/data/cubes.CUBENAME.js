@@ -1,1 +1,1 @@
-// This contains template-specific javascript
+// This contains cube-specific javascript

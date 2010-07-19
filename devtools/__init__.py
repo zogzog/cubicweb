@@ -100,18 +100,15 @@ class TestServerConfiguration(ServerConfiguration):
          {'type' : 'string',
           'default': None,
           'help': 'login of the CubicWeb user account to use for anonymous user (if you want to allow anonymous)',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('anonymous-password',
          {'type' : 'string',
           'default': None,
           'help': 'password of the CubicWeb user account matching login',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ))
-
-    if not os.environ.get('APYCOT_ROOT'):
-        REGISTRY_DIR = normpath(join(CW_SOFTWARE_ROOT, '../cubes'))
 
     def __init__(self, appid, log_threshold=logging.CRITICAL+10):
         ServerConfiguration.__init__(self, appid)
@@ -252,7 +249,7 @@ def init_test_database_sqlserver2005(config):
     """initialize a fresh sqlserver databse used for testing purpose"""
     if config.init_repository:
         from cubicweb.server import init_repository
-        init_repository(config, interactive=False, drop=True, vreg=vreg)
+        init_repository(config, interactive=False, drop=True)
 
 ### sqlite test database handling ##############################################
 
@@ -281,7 +278,6 @@ def reset_test_database_sqlite(config):
 def init_test_database_sqlite(config):
     """initialize a fresh sqlite databse used for testing purpose"""
     # remove database file if it exists
-    dbfile = config.sources()['system']['db-name']
     if not reset_test_database_sqlite(config):
         # initialize the database
         import shutil

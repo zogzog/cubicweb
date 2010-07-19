@@ -9,8 +9,8 @@ Relation tags
 
 .. _uicfg:
 
-The ``uicfg`` module
-~~~~~~~~~~~~~~~~~~~~
+The uicfg module
+~~~~~~~~~~~~~~~~
 
 .. note::
 

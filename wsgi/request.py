@@ -51,9 +51,9 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         post, files = self.get_posted_data()
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post)
         if files is not None:
-            for fdef in files.itervalues():
-                fdef[0] = unicode(fdef[0], self.encoding)
-            self.form.update(files)
+            for key, (name, _, stream) in files.iteritems():
+                name = unicode(name, self.encoding)
+                self.form[key] = (name, stream)
         # prepare output headers
         self.headers_out = {}
 

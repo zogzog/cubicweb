@@ -21,7 +21,6 @@ a search
 """
 __docformat__ = "restructuredtext en"
 
-from itertools import chain
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 
@@ -158,6 +157,10 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     if rqlst.groupby:
         rqlst.add_group_var(newvar)
     rqlst.add_selected(newvar)
+    # add is restriction if necessary
+    if mainvar.stinfo['typerel'] is None:
+        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
+        rqlst.add_type_restriction(mainvar, etypes)
     return newvar
 
 def _remove_relation(rqlst, rel, var):
@@ -211,10 +214,6 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
         _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
     # add attribute variable to selection
     rqlst.add_selected(attrvar)
-    # add is restriction if necessary
-    if not mainvar.stinfo['typerels']:
-        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
-        rqlst.add_type_restriction(mainvar, etypes)
     return var
 
 def _cleanup_rqlst(rqlst, mainvar):
@@ -241,10 +240,14 @@ def _cleanup_rqlst(rqlst, mainvar):
         for ovarname in linkedvars:
             vargraph[ovarname].remove(trvarname)
         # remove relation using this variable
-        for rel in chain(trvar.stinfo['relations'], trvar.stinfo['typerels']):
+        for rel in trvar.stinfo['relations']:
             if rel in removed:
                 # already removed
                 continue
+            rqlst.remove_node(rel)
+            removed.add(rel)
+        rel = trvar.stinfo['typerel']
+        if rel is not None and not rel in removed:
             rqlst.remove_node(rel)
             removed.add(rel)
         # cleanup groupby clause
@@ -342,9 +345,9 @@ class VocabularyFacet(AbstractFacet):
     def support_and(self):
         return False
 
-    def rqlexec(self, rql, args=None, cachekey=None):
+    def rqlexec(self, rql, args=None):
         try:
-            return self._cw.execute(rql, args, cachekey)
+            return self._cw.execute(rql, args)
         except Unauthorized:
             return []
 
@@ -385,7 +388,7 @@ class RelationFacet(VocabularyFacet):
             if self.target_type is not None:
                 rqlst.add_type_restriction(var, self.target_type)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
@@ -464,6 +467,7 @@ class AttributeFacet(RelationFacet):
     attrtype = 'String'
     # type of comparison: default is an exact match on the attribute value
     comparator = '=' # could be '<', '<=', '>', '>='
+    i18nable = True
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -476,7 +480,7 @@ class AttributeFacet(RelationFacet):
             newvar = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
@@ -488,7 +492,10 @@ class AttributeFacet(RelationFacet):
         return rset and self.rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
-        _ = self._cw._
+        if self.i18nable:
+            _ = self._cw._
+        else:
+            _ = unicode
         return [(_(value), value) for value, in rset]
 
     def support_and(self):
@@ -513,7 +520,7 @@ class FilterRQLBuilder(object):
     def build_rql(self):#, tablefilter=False):
         form = self._cw.form
         facetids = form['facets'].split(',')
-        select = parse(form['baserql']).children[0] # XXX Union unsupported yet
+        select = self._cw.vreg.parse(self._cw, form['baserql']).children[0] # XXX Union unsupported yet
         mainvar = filtered_variable(select)
         toupdate = []
         for facetid in facetids:

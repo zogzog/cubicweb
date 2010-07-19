@@ -174,12 +174,8 @@ class FormRenderer(AppObject):
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'
-        if form.action is None:
-            action = self._cw.build_url('edit')
-        else:
-            action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
-            xml_escape(action or '#'), enctype))
+            xml_escape(form.form_action() or '#'), enctype))
         if form.domid:
             tag += ' id="%s"' % form.domid
         if form.onsubmit:
@@ -401,10 +397,6 @@ class EntityFormRenderer(BaseFormRenderer):
     _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')
 
-    def render(self, form, values):
-        rendered = super(EntityFormRenderer, self).render(form, values)
-        return rendered + u'</div>' # close extra div introducted by open_form
-
     def open_form(self, form, values):
         attrs_fs_label = ''
         if self.main_form_title:
@@ -412,6 +404,13 @@ class EntityFormRenderer(BaseFormRenderer):
                                % self._cw._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
+
+    def close_form(self, form, values):
+        """seems dumb but important for consistency w/ close form, and necessary
+        for form renderers overriding open_form to use something else or more than
+        and <form>
+        """
+        return super(EntityFormRenderer, self).close_form(form, values) + '</div>'
 
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:
@@ -448,14 +447,20 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
-        values['removemsg'] = self._cw._('remove-inlined-entity-form')
-        w(u'<div class="iformTitle"><span>%(title)s</span> '
-          '#<span class="icounter">%(counter)s</span> '
-          '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
-          % values)
+        if values['removejs']:
+            values['removemsg'] = self._cw._('remove-inlined-entity-form')
+            w(u'<div class="iformTitle"><span>%(title)s</span> '
+              '#<span class="icounter">%(counter)s</span> '
+              '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
+              % values)
+        else:
+            w(u'<div class="iformTitle"><span>%(title)s</span> '
+              '#<span class="icounter">%(counter)s</span></div>'
+              % values)
+        # XXX that stinks
         # cleanup values
         for key in ('title', 'removejs', 'removemsg'):
-            values.pop(key)
+            values.pop(key, None)
         self.render_fields(w, form, values)
         w(u'</div></div>')
         return '\n'.join(data)

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The `ResultSet` class which is returned as result of an rql query
+"""The `ResultSet` class which is returned as result of an rql query"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache, copy_cache
@@ -45,14 +44,13 @@ class ResultSet(object):
     :type rql: str or unicode
     :param rql: the original RQL query string
     """
-    def __init__(self, results, rql, args=None, description=(), cachekey=None,
-                 rqlst=None):
+
+    def __init__(self, results, rql, args=None, description=(), rqlst=None):
         self.rows = results
         self.rowcount = results and len(results) or 0
         # original query and arguments
         self.rql = rql
         self.args = args
-        self.cachekey = cachekey
         # entity types for each cell (same shape as rows)
         # maybe discarded if specified when the query has been executed
         self.description = description
@@ -477,7 +475,10 @@ class ResultSet(object):
                 if role == 'subject':
                     rschema = eschema.subjrels[attr]
                     if rschema.final:
-                        entity[attr] = rowvalues[outerselidx]
+                        if attr == 'eid':
+                            entity.eid = rowvalues[outerselidx]
+                        else:
+                            entity[attr] = rowvalues[outerselidx]
                         continue
                 else:
                     rschema = eschema.objrels[attr]
@@ -599,7 +600,11 @@ class ResultSet(object):
         if rel is not None:
             index = rel.children[0].root_selection_index()
             if index is not None and self.rows[row][index]:
-                return self.get_entity(row, index), rel.r_type
+                try:
+                    entity = self.get_entity(row, index)
+                    return entity, rel.r_type
+                except NotAnEntity, exc:
+                    return None, None
         return None, None
 
     @cached

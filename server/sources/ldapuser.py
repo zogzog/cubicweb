@@ -19,8 +19,6 @@
 
 this source is for now limited to a read-only CWUser source
 
-
-
 Part of the code is coming form Zope's LDAPUserFolder
 
 Copyright (c) 2004 Jens Vagelpohl.
@@ -33,7 +31,7 @@ WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 FOR A PARTICULAR PURPOSE.
 """
-
+from __future__ import division
 from base64 import b64decode
 
 from logilab.common.textutils import splitstrip
@@ -72,27 +70,27 @@ class LDAPUserSource(AbstractSource):
           'default': 'ldap',
           'help': 'ldap host. It may contains port information using \
 <host>:<port> notation.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('protocol',
          {'type' : 'choice',
           'default': 'ldap',
           'choices': ('ldap', 'ldaps', 'ldapi'),
           'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('auth-mode',
          {'type' : 'choice',
           'default': 'simple',
           'choices': ('simple', 'cram_md5', 'digest_md5', 'gssapi'),
           'help': 'authentication mode used to authenticate user to the ldap.',
-          'group': 'ldap-source', 'inputlevel': 3,
+          'group': 'ldap-source', 'level': 3,
           }),
         ('auth-realm',
          {'type' : 'string',
           'default': None,
           'help': 'realm to use when using gssapi/kerberos authentication.',
-          'group': 'ldap-source', 'inputlevel': 3,
+          'group': 'ldap-source', 'level': 3,
           }),
 
         ('data-cnx-dn',
@@ -100,52 +98,52 @@ class LDAPUserSource(AbstractSource):
           'default': '',
           'help': 'user dn to use to open data connection to the ldap (eg used \
 to respond to rql queries).',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('data-cnx-password',
          {'type' : 'string',
           'default': '',
           'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries).',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
 
         ('user-base-dn',
          {'type' : 'string',
           'default': 'ou=People,dc=logilab,dc=fr',
           'help': 'base DN to lookup for users',
-          'group': 'ldap-source', 'inputlevel': 0,
+          'group': 'ldap-source', 'level': 0,
           }),
         ('user-scope',
          {'type' : 'choice',
           'default': 'ONELEVEL',
           'choices': ('BASE', 'ONELEVEL', 'SUBTREE'),
           'help': 'user search scope',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-classes',
          {'type' : 'csv',
           'default': ('top', 'posixAccount'),
           'help': 'classes of user',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-login-attr',
          {'type' : 'string',
           'default': 'uid',
           'help': 'attribute used as login on authentication',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-default-group',
          {'type' : 'csv',
           'default': ('users',),
           'help': 'name of a group in which ldap users will be by default. \
 You can set multiple groups by separating them by a comma.',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-attrs-map',
          {'type' : 'named',
           'default': {'uid': 'login', 'gecos': 'email'},
           'help': 'map from ldap user attributes to cubicweb attributes',
-          'group': 'ldap-source', 'inputlevel': 1,
+          'group': 'ldap-source', 'level': 1,
           }),
 
         ('synchronization-interval',
@@ -153,13 +151,13 @@ You can set multiple groups by separating them by a comma.',
           'default': '1d',
           'help': 'interval between synchronization with the ldap \
 directory (default to once a day).',
-          'group': 'ldap-source', 'inputlevel': 3,
+          'group': 'ldap-source', 'level': 3,
           }),
         ('cache-life-time',
          {'type' : 'time',
           'default': '2h',
-          'help': 'life time of query cache in minutes (default to two hours).',
-          'group': 'ldap-source', 'inputlevel': 3,
+          'help': 'life time of query cache (default to two hours).',
+          'group': 'ldap-source', 'level': 3,
           }),
 
     )
@@ -187,22 +185,28 @@ directory (default to once a day).',
                               for o in self.user_classes]
         self._conn = None
         self._cache = {}
-        ttlm = time_validator(None, None,
-                              source_config.get('cache-life-time', 2*60))
-        self._query_cache = TimedCache(ttlm)
+        # ttlm is in minutes!
+        self._cache_ttl = time_validator(None, None,
+                              source_config.get('cache-life-time', 2*60*60))
+        self._cache_ttl = max(71, self._cache_ttl)
+        self._query_cache = TimedCache(self._cache_ttl)
+        # interval is in seconds !
         self._interval = time_validator(None, None,
-                                        source_config.get('synchronization-interval',
-                                               24*60*60))
+                                    source_config.get('synchronization-interval',
+                                                      24*60*60))
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         self._cache = {}
-        self._query_cache = TimedCache(2*60)
+        self._query_cache = TimedCache(self._cache_ttl)
 
     def init(self):
         """method called by the repository once ready to handle request"""
-        self.repo.looping_task(self._interval, self.synchronize)
-        self.repo.looping_task(self._query_cache.ttl.seconds/10,
+        self.info('ldap init')
+        # set minimum period of 5min 1s (the additional second is to minimize
+        # resonnance effet)
+        self.repo.looping_task(max(301, self._interval), self.synchronize)
+        self.repo.looping_task(self._cache_ttl // 10,
                                self._query_cache.clear_expired)
 
     def synchronize(self):
@@ -221,8 +225,10 @@ directory (default to once a day).',
                                         "source='%s'" % self.uri)
             for eid, b64extid in cursor.fetchall():
                 extid = b64decode(b64extid)
+                self.debug('ldap eid %s', eid)
                 # if no result found, _search automatically delete entity information
                 res = self._search(session, extid, BASE)
+                self.debug('ldap search %s', res)
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
@@ -234,7 +240,7 @@ directory (default to once a day).',
                             if emailaddr == ldapemailaddr:
                                 break
                         else:
-                            self.info('updating email address of user %s to %s',
+                            self.debug('updating email address of user %s to %s',
                                       extid, ldapemailaddr)
                             emailrset = execute('EmailAddress A WHERE A address %(addr)s',
                                                 {'addr': ldapemailaddr})
@@ -245,10 +251,10 @@ directory (default to once a day).',
                             elif rset:
                                 if not execute('SET X address %(addr)s WHERE '
                                                'U primary_email X, U eid %(u)s',
-                                               {'addr': ldapemailaddr, 'u': eid}, 'u'):
+                                               {'addr': ldapemailaddr, 'u': eid}):
                                     execute('SET X address %(addr)s WHERE '
                                             'X eid %(x)s',
-                                            {'addr': ldapemailaddr, 'x': rset[0][0]}, 'x')
+                                            {'addr': ldapemailaddr, 'x': rset[0][0]})
                             else:
                                 # no email found, create it
                                 _insert_email(session, ldapemailaddr, eid)
@@ -269,7 +275,11 @@ directory (default to once a day).',
         two queries are needed since passwords are stored crypted, so we have
         to fetch the salt first
         """
-        if password is None:
+        self.info('ldap authenticate %s', login)
+        if not password:
+            # On Windows + ADAM this would have succeeded (!!!)
+            # You get Authenticated as: 'NT AUTHORITY\ANONYMOUS LOGON'.
+            # we really really don't want that
             raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
         searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
@@ -285,9 +295,12 @@ directory (default to once a day).',
         # check password by establishing a (unused) connection
         try:
             self._connect(user, password)
-        except Exception, ex:
-            self.info('while trying to authenticate %s: %s', user, ex)
+        except ldap.LDAPError, ex:
             # Something went wrong, most likely bad credentials
+            self.info('while trying to authenticate %s: %s', user, ex)
+            raise AuthenticationError()
+        except Exception:
+            self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
         return self.extid2eid(user['dn'], 'CWUser', session)
 
@@ -343,6 +356,7 @@ directory (default to once a day).',
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
+        self.debug('ldap syntax tree search')
         # XXX not handled : transform/aggregat function, join on multiple users...
         assert len(union.children) == 1, 'union not supported'
         rqlst = union.children[0]
@@ -494,26 +508,28 @@ directory (default to once a day).',
     def _search(self, session, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
+        self.debug('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
         cnx = session.pool.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
+            self.info('ldap NO SUCH OBJECT')
             eid = self.extid2eid(base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
                 self.repo.delete_info(session, entity, self.uri, base)
-                self._cache.pop(base, None)
+                self.reset_cache()
             return []
-##         except ldap.REFERRAL, e:
-##             cnx = self.handle_referral(e)
-##             try:
-##                 res = cnx.search_s(base, scope, searchstr, attrs)
-##             except ldap.PARTIAL_RESULTS:
-##                 res_type, res = cnx.result(all=0)
+        # except ldap.REFERRAL, e:
+        #     cnx = self.handle_referral(e)
+        #     try:
+        #         res = cnx.search_s(base, scope, searchstr, attrs)
+        #     except ldap.PARTIAL_RESULTS:
+        #         res_type, res = cnx.result(all=0)
         result = []
         for rec_dn, rec_dict in res:
             # When used against Active Directory, "rec_dict" may not be
@@ -541,6 +557,7 @@ directory (default to once a day).',
             self._cache[rec_dn] = rec_dict
             result.append(rec_dict)
         #print '--->', result
+        self.debug('ldap built results %s', len(result))
         return result
 
     def before_entity_insertion(self, session, lid, etype, eid):
@@ -551,6 +568,7 @@ directory (default to once a day).',
         This method must return the an Entity instance representation of this
         entity.
         """
+        self.debug('ldap before entity insertion')
         entity = super(LDAPUserSource, self).before_entity_insertion(session, lid, etype, eid)
         res = self._search(session, lid, BASE)[0]
         for attr in entity.e_schema.indexable_attributes():
@@ -561,10 +579,11 @@ directory (default to once a day).',
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
+        self.debug('ldap after entity insertion')
         super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
-                            {'x': entity.eid, 'group': group}, 'x')
+                            {'x': entity.eid, 'group': group})
         # search for existant email first
         try:
             emailaddr = self._cache[dn][self.user_rev_attrs['email']]
@@ -574,7 +593,7 @@ directory (default to once a day).',
                                {'addr': emailaddr})
         if rset:
             session.execute('SET U primary_email X WHERE U eid %(u)s, X eid %(x)s',
-                            {'x': rset[0][0], 'u': entity.eid}, 'u')
+                            {'x': rset[0][0], 'u': entity.eid})
         else:
             # not found, create it
             _insert_email(session, emailaddr, entity.eid)
@@ -589,7 +608,7 @@ directory (default to once a day).',
 
 def _insert_email(session, emailaddr, ueid):
     session.execute('INSERT EmailAddress X: X address %(addr)s, U primary_email X '
-                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid}, 'x')
+                    'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid})
 
 class GotDN(Exception):
     """exception used when a dn localizing the searched user has been found"""

@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -60,7 +60,7 @@ function loadAjaxHtmlHead(response) {
     //    returned several 'root' nodes and we need to keep the wrapper
     //    created by getDomFromResponse()
     if (response.childNodes.length == 1 &&
-	response.getAttribute('cubicweb:type') == 'cwResponseWrapper') {
+        response.getAttribute('cubicweb:type') == 'cwResponseWrapper') {
         return response.firstChild;
     }
     return response;
@@ -200,6 +200,7 @@ function remoteCallFailed(err, req) {
     if (req.status == 500) {
         updateMessage(err);
     } else {
+        log(err);
         updateMessage(_("an error occured while processing your request"));
     }
 }
@@ -286,6 +287,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
         if (node) {
             // make sure the component is visible
             removeElementClass(node, "hidden");
+            domnode = preprocessAjaxLoad(node, domnode);
             swapDOM(node, domnode);
             postAjaxLoad(domnode);
         }

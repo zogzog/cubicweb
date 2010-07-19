@@ -83,7 +83,7 @@ class EditControllerTC(CubicWebTC):
             'in_group-subject:'+eid:  groups,
             }
         path, params = self.expect_redirect_publish(req, 'edit')
-        e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}, 'x').get_entity(0, 0)
+        e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEquals(e.firstname, u'Sylvain')
         self.assertEquals(e.surname, u'Th\xe9nault')
         self.assertEquals(e.login, user.login)
@@ -123,7 +123,7 @@ class EditControllerTC(CubicWebTC):
             'surname-subject:'+eid:   u'Sylvain',
             }
         path, params = self.expect_redirect_publish(req, 'edit')
-        e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}, 'x').get_entity(0, 0)
+        e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEquals(e.login, user.login)
         self.assertEquals(e.firstname, u'Th\xe9nault')
         self.assertEquals(e.surname, u'Sylvain')
@@ -231,7 +231,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value -10'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value must be >= 0'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -240,7 +240,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value [0;100] constraint failed for value 110'})
+        self.assertEquals(ex.errors, {'amount-subject': 'value must be <= 100'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -259,7 +259,7 @@ class EditControllerTC(CubicWebTC):
         tmpgroup = self.request().create_entity('CWGroup', name=u"test")
         user = self.user()
         req = self.request(**req_form(user))
-        req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
+        req.session.data['pending_insert'] = set([(user.eid, 'in_group', tmpgroup.eid)])
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -278,7 +278,7 @@ class EditControllerTC(CubicWebTC):
         self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
         # now try to delete the relation
         req = self.request(**req_form(user))
-        req.set_session_data('pending_delete', set([(user.eid, 'in_group', groupeid)]))
+        req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -358,7 +358,7 @@ class EditControllerTC(CubicWebTC):
         self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         self.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
-                     {'x': self.session.user.eid, 'e': eid}, 'x')
+                     {'x': self.session.user.eid, 'e': eid})
         self.commit()
         req = req
         req.form = {'eid': u(eid), '__type:%s'%eid: 'EmailAddress',
@@ -397,7 +397,7 @@ class EditControllerTC(CubicWebTC):
             }
         try:
             path, params = self.expect_redirect_publish(req, 'edit')
-            e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}, 'x').get_entity(0, 0)
+            e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}).get_entity(0, 0)
             self.assertEquals(e.name, 'CWEType')
             self.assertEquals(sorted(g.eid for g in e.read_permission), groupeids)
         finally:
@@ -419,7 +419,7 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_publish(req, 'edit')
         self.failUnless(path.startswith('blogentry/'))
         eid = path.split('/')[1]
-        e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}, 'x').get_entity(0, 0)
+        e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
         self.assertEquals(e.title, '"13:03:40"')
         self.assertEquals(e.content, '"13:03:43"')
 
@@ -566,17 +566,21 @@ class JSONControllerTC(CubicWebTC):
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
-        self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
-                             ['python', 'cubicweb'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
-                          [['python']])
+        self.assertUnorderedIterableEquals(
+            [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
+            ['python', 'cubicweb'])
+        self.assertEquals(
+            self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
+            [['python']])
 
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
-        self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
-                             ['python', 'cubicweb', 'javascript'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
-                          [['javascript']])
+        self.assertUnorderedIterableEquals(
+            [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
+            ['python', 'cubicweb', 'javascript'])
+        self.assertEquals(
+            self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
+            [['javascript']])
 
     def test_pending_insertion(self):
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])

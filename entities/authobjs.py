@@ -109,7 +109,7 @@ class CWUser(AnyEntity):
         try:
             return self._cw.execute(
                 'Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
-                {'x': eid, 'u': self.eid}, 'x')
+                {'x': eid, 'u': self.eid})
         except Unauthorized:
             return False
     owns = cached(owns, keyarg=1)
@@ -118,13 +118,11 @@ class CWUser(AnyEntity):
         rql = 'Any P WHERE P is CWPermission, U eid %(u)s, U in_group G, '\
               'P name %(pname)s, P require_group G'
         kwargs = {'pname': pname, 'u': self.eid}
-        cachekey = None
         if contexteid is not None:
             rql += ', X require_permission P, X eid %(x)s'
             kwargs['x'] = contexteid
-            cachekey = 'x'
         try:
-            return self._cw.execute(rql, kwargs, cachekey)
+            return self._cw.execute(rql, kwargs)
         except Unauthorized:
             return False
 

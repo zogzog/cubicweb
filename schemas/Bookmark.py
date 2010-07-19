@@ -34,7 +34,7 @@ class Bookmark(EntityType):
         }
 
     title = String(required=True, maxsize=128, internationalizable=True)
-    path  = String(maxsize=512, required=True,
+    path  = String(maxsize=2048, required=True,
                    description=_("relative url of the bookmarked page"))
 
     bookmarked_by = SubjectRelation('CWUser',

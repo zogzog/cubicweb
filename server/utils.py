@@ -123,6 +123,10 @@ def ask_source_config(sourcetype, inputlevel=0):
 class LoopTask(object):
     """threaded task restarting itself once executed"""
     def __init__(self, interval, func, args):
+        if interval <= 0:
+            raise ValueError('Loop task interval must be > 0 '
+                             '(current value: %f for %s)' % \
+                             (interval, func.__name__))
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             try:
@@ -137,13 +141,15 @@ class LoopTask(object):
 
     def start(self):
         self._t = Timer(self.interval, self.func)
+        self._t.setName('%s-%s[%d]' % (self._t.getName(), self.name, self.interval))
         self._t.start()
 
     def cancel(self):
         self._t.cancel()
 
     def join(self):
-        self._t.join()
+        if self._t.isAlive():
+            self._t.join()
 
 
 class RepoThread(Thread):

@@ -49,7 +49,7 @@ class _GroupOperation(hook.Operation):
         no query should be emitted while comitting
         """
         rql = 'Any N WHERE G eid %(x)s, G name N'
-        result = session.execute(rql, {'x': kwargs['geid']}, 'x', build_descr=False)
+        result = session.execute(rql, {'x': kwargs['geid']}, build_descr=False)
         hook.Operation.__init__(self, session, *args, **kwargs)
         self.group = result[0][0]
 
@@ -229,7 +229,7 @@ class AddForUserRelationHook(SyncSessionHook):
         if not session.describe(eidfrom)[0] == 'CWProperty':
             return
         key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
-                                     {'x': eidfrom}, 'x')[0]
+                                     {'x': eidfrom})[0]
         if session.vreg.property_info(key)['sitewide']:
             qname = role_name('for_user', 'subject')
             msg = session._("site-wide property can't be set for user")
@@ -247,7 +247,7 @@ class DelForUserRelationHook(AddForUserRelationHook):
     def __call__(self):
         session = self._cw
         key = session.execute('Any K WHERE P eid %(x)s, P pkey K',
-                              {'x': self.eidfrom}, 'x')[0][0]
+                              {'x': self.eidfrom})[0][0]
         session.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
         for session_ in get_user_sessions(session.repo, self.eidto):

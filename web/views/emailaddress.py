@@ -25,7 +25,12 @@ from logilab.mtconverter import xml_escape
 from cubicweb.schema import display_name
 from cubicweb.selectors import implements
 from cubicweb import Unauthorized
+from cubicweb.web import uicfg
 from cubicweb.web.views import baseviews, primary
+
+_pvs = uicfg.primaryview_section
+_pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
+_pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 class EmailAddressPrimaryView(primary.PrimaryView):
     __select__ = implements('EmailAddress')

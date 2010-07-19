@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""navigation components definition for CubicWeb web client
+"""navigation components definition for CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -38,28 +37,51 @@ class PageNavigation(NavigationComponent):
 
     def call(self):
         """displays a resultset by page"""
-        w = self.w
-        req = self._cw
-        rset = self.cw_rset
-        page_size = self.page_size
-        start = 0
-        blocklist = []
-        params = dict(req.form)
+        params = dict(self._cw.form)
         self.clean_params(params)
-        basepath = req.relative_path(includeparams=False)
-        while start < rset.rowcount:
-            stop = min(start + page_size - 1, rset.rowcount - 1)
-            blocklist.append(self.page_link(basepath, params, start, stop,
-                                            self.index_display(start, stop)))
-            start = stop + 1
-        w(u'<div class="pagination">')
-        w(u'%s&#160;' % self.previous_link(basepath, params))
-        w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
-        w(u'&#160;%s' % self.next_link(basepath, params))
-        w(u'</div>')
+        basepath = self._cw.relative_path(includeparams=False)
+        self.w(u'<div class="pagination">')
+        self.w(u'%s&#160;' % self.previous_link(basepath, params))
+        self.w(u'[&#160;%s&#160;]' %
+               u'&#160;| '.join(self.iter_page_links(basepath, params)))
+        self.w(u'&#160;%s' % self.next_link(basepath, params))
+        self.w(u'</div>')
 
     def index_display(self, start, stop):
         return u'%s - %s' % (start+1, stop+1)
+
+    def iter_page_links(self, basepath, params):
+        rset = self.cw_rset
+        page_size = self.page_size
+        start = 0
+        while start < rset.rowcount:
+            stop = min(start + page_size - 1, rset.rowcount - 1)
+            yield self.page_link(basepath, params, start, stop,
+                                 self.index_display(start, stop))
+            start = stop + 1
+
+
+class PageNavigationSelect(PageNavigation):
+    """displays a resultset by page as PageNavigationSelect but in a <select>,
+    better when there are a lot of results.
+    """
+    __select__ = paginated_rset(4)
+
+    page_link_templ = u'<option value="%s" title="%s">%s</option>'
+    selected_page_link_templ = u'<option value="%s" selected="selected" title="%s">%s</option>'
+    def call(self):
+        params = dict(self._cw.form)
+        self.clean_params(params)
+        basepath = self._cw.relative_path(includeparams=False)
+        w = self.w
+        w(u'<div class="pagination">')
+        w(u'%s&#160;' % self.previous_link(basepath, params))
+        w(u'<select onchange="javascript: document.location=this.options[this.selectedIndex].value">')
+        for option in self.iter_page_links(basepath, params):
+            w(option)
+        w(u'</select>')
+        w(u'&#160;%s' % self.next_link(basepath, params))
+        w(u'</div>')
 
 
 class SortedNavigation(NavigationComponent):
@@ -215,7 +237,7 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     if w is None:
         w = view.w
     nav = req.vreg['components'].select_or_none(
-        'navigation', req, rset=rset, page_size=page_size)
+        'navigation', req, rset=rset, page_size=page_size, view=view)
     if nav:
         if w is None:
             w = view.w

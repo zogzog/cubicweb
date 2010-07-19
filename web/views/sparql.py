@@ -20,8 +20,8 @@
 """
 __docformat__ = "restructuredtext en"
 
-import rql
 from yams import xy
+from rql import TypeResolverException
 
 from lxml import etree
 from lxml.builder import E
@@ -51,24 +51,26 @@ class SparqlForm(forms.FieldsForm):
 class SparqlFormView(form.FormViewMixIn, StartupView):
     __regid__ = 'sparql'
     def call(self):
-        form = self._cw.vreg.select('forms', 'sparql', self._cw)
+        form = self._cw.vreg['forms'].select('sparql', self._cw)
         self.w(form.render())
         sparql = self._cw.form.get('sparql')
         vid = self._cw.form.get('resultvid', 'table')
         if sparql:
             try:
                 qinfo = Sparql2rqlTranslator(self._cw.vreg.schema).translate(sparql)
-            except rql.TypeResolverException:
-                self.w(self._cw._('can not resolve entity types:') + u' ' + unicode('ex'))
+            except TypeResolverException, exc:
+                self.w(self._cw._('can not resolve entity types:') + u' ' + unicode(exc))
             except UnsupportedQuery:
                 self.w(self._cw._('we are not yet ready to handle this query'))
-            except xy.UnsupportedVocabulary, ex:
-                self.w(self._cw._('unknown vocabulary:') + u' ' + unicode('ex'))
-            if vid == 'sparqlxml':
-                url = self._cw.build_url('view', rql=qinfo.finalize(), vid=vid)
-                raise Redirect(url)
-            rset = self._cw.execute(qinfo.finalize())
-            self.wview(vid, rset, 'null')
+            except xy.UnsupportedVocabulary, exc:
+                self.w(self._cw._('unknown vocabulary:') + u' ' + unicode(exc))
+            else:
+                rql, args = qinfo.finalize()
+                if vid == 'sparqlxml':
+                    url = self._cw.build_url('view', rql=(rql,args), vid=vid)
+                    raise Redirect(url)
+                rset = self._cw.execute(rql, args)
+                self.wview(vid, rset, 'null')
 
 
 ## sparql resultset views #####################################################

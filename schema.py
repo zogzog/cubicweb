@@ -174,7 +174,7 @@ def guess_rrqlexpr_mainvars(expression):
         mainvars.append('U')
     if not mainvars:
         raise Exception('unable to guess selection variables')
-    return ','.join(mainvars)
+    return ','.join(sorted(mainvars))
 
 def split_expression(rqlstring):
     for expr in rqlstring.split(','):
@@ -471,10 +471,14 @@ class CubicWebRelationSchema(RelationSchema):
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
                 subjtype = session.describe(kwargs['fromeid'])[0]
+            elif 'frometype' in kwargs:
+                subjtype = kwargs.pop('frometype')
             else:
                 subjtype = None
             if 'toeid' in kwargs:
                 objtype = session.describe(kwargs['toeid'])[0]
+            elif 'toetype' in kwargs:
+                objtype = kwargs.pop('toetype')
             else:
                 objtype = None
         if objtype and subjtype:
@@ -628,13 +632,13 @@ class BaseRQLConstraint(BaseConstraint):
         # start with a comma for bw compat, see below
         return ';' + self.mainvars + ';' + self.restriction
 
+    @classmethod
     def deserialize(cls, value):
         # XXX < 3.5.10 bw compat
         if not value.startswith(';'):
             return cls(value)
         _, mainvars, restriction = value.split(';', 2)
         return cls(restriction, mainvars)
-    deserialize = classmethod(deserialize)
 
     def check(self, entity, rtype, value):
         """return true if the value satisfy the constraint, else false"""
@@ -718,14 +722,14 @@ class RepoEnforcedRQLConstraintMixIn(object):
         if eidto is None:
             # checking constraint for an attribute relation
             restriction = 'S eid %(s)s, ' + self.restriction
-            args, ck = {'s': eidfrom}, 's'
+            args = {'s': eidfrom}
         else:
             restriction = 'S eid %(s)s, O eid %(o)s, ' + self.restriction
-            args, ck = {'s': eidfrom, 'o': eidto}, ('s', 'o')
+            args = {'s': eidfrom, 'o': eidto}
         rql = 'Any %s WHERE %s' % (self.mainvars,  restriction)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.execute(rql, args, ck, build_descr=False)
+        return session.execute(rql, args, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -845,16 +849,13 @@ class RQLExpression(object):
             except KeyError:
                 pass
         rql, has_perm_defs, keyarg = self.transform_has_permission()
-        if creating:
-            # when creating an entity, consider has_*_permission satisfied
-            if has_perm_defs:
-                return True
-            return False
+        # when creating an entity, expression related to X satisfied
+        if creating and 'X' in self.rqlst.defined_vars:
+            return True
         if keyarg is None:
             kwargs.setdefault('u', session.user.eid)
-            cachekey = kwargs.keys()
             try:
-                rset = session.execute(rql, kwargs, cachekey, build_descr=True)
+                rset = session.execute(rql, kwargs, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
@@ -864,6 +865,11 @@ class RQLExpression(object):
                 # some expression may not be resolvable with current kwargs
                 # (type conflict)
                 self.warning('%s: %s', rql, str(ex))
+                if self.eid is not None:
+                    session.local_perm_cache[key] = False
+                return False
+            except Unauthorized, ex:
+                self.debug('unauthorized %s: %s', rql, str(ex))
                 if self.eid is not None:
                     session.local_perm_cache[key] = False
                 return False
@@ -985,8 +991,8 @@ from yams.buildobjs import _add_relation as yams_add_relation
 
 class workflowable_definition(ybo.metadefinition):
     """extends default EntityType's metaclass to add workflow relations
-    (i.e. in_state and wf_info_for).
-    This is the default metaclass for WorkflowableEntityType
+    (i.e. in_state, wf_info_for and custom_workflow). This is the default
+    metaclass for WorkflowableEntityType.
     """
     def __new__(mcs, name, bases, classdict):
         abstract = classdict.pop('__abstract__', False)
@@ -996,23 +1002,33 @@ class workflowable_definition(ybo.metadefinition):
             make_workflowable(cls)
         return cls
 
+class WorkflowableEntityType(ybo.EntityType):
+    """Use this base class instead of :class:`EntityType` to have workflow
+    relations (i.e. `in_state`, `wf_info_for` and `custom_workflow`) on your
+    entity type.
+    """
+    __metaclass__ = workflowable_definition
+    __abstract__ = True
+
+
 def make_workflowable(cls, in_state_descr=None):
+    """Adds workflow relations as :class:`WorkflowableEntityType`, but usable on
+    existing classes which are not using that base class.
+    """
     existing_rels = set(rdef.name for rdef in cls.__relations__)
     # let relation types defined in cw.schemas.workflow carrying
     # cardinality, constraints and other relation definition properties
+    etype = getattr(cls, 'name', cls.__name__)
     if 'custom_workflow' not in existing_rels:
-        rdef = ybo.SubjectRelation('Workflow')
-        yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
+        rdef = ybo.RelationDefinition(etype, 'custom_workflow', 'Workflow')
+        yams_add_relation(cls.__relations__, rdef)
     if 'in_state' not in existing_rels:
-        rdef = ybo.SubjectRelation('State', description=in_state_descr)
-        yams_add_relation(cls.__relations__, rdef, 'in_state')
+        rdef = ybo.RelationDefinition(etype, 'in_state', 'State',
+                                      description=in_state_descr)
+        yams_add_relation(cls.__relations__, rdef)
     if 'wf_info_for' not in existing_rels:
-        rdef = ybo.ObjectRelation('TrInfo')
-        yams_add_relation(cls.__relations__, rdef, 'wf_info_for')
-
-class WorkflowableEntityType(ybo.EntityType):
-    __metaclass__ = workflowable_definition
-    __abstract__ = True
+        rdef = ybo.RelationDefinition('TrInfo', 'wf_info_for', etype)
+        yams_add_relation(cls.__relations__, rdef)
 
 
 # schema loading ##############################################################

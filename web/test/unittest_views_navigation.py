@@ -15,14 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb.web.views.navigation unit tests
-
-"""
+"""cubicweb.web.views.navigation unit tests"""
 
 from logilab.common.testlib import unittest_main, mock_object
-from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb.web.views.navigation import PageNavigation, SortedNavigation
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.web.views.navigation import (PageNavigation, SortedNavigation,
+                                           PageNavigationSelect)
 from cubicweb.web.views.ibreadcrumbs import BreadCrumbEntityVComponent
 
 BreadCrumbEntityVComponent.visible = True
@@ -41,14 +40,23 @@ class NavigationTC(CubicWebTC):
 
     def test_navigation_selection_ordered(self):
         req = self.request()
-        rset = self.execute('Any X,N ORDERBY N WHERE X name N')
-        navcomp = self.vreg['components'].select('navigation', req, rset=rset)
+        rset = self.execute('Any X,N ORDERBY N LIMIT 40 WHERE X name N')
+        navcomp = self.vreg['components'].select('navigation', req, rset=rset, page_size=20)
         self.assertIsInstance(navcomp, SortedNavigation)
         req.set_search_state('W:X:Y:Z')
-        navcomp = self.vreg['components'].select('navigation', req, rset=rset)
+        navcomp = self.vreg['components'].select('navigation', req, rset=rset, page_size=20)
         self.assertIsInstance(navcomp, SortedNavigation)
         req.set_search_state('normal')
         html = navcomp.render()
+
+    def test_navigation_selection_large_rset(self):
+        req = self.request()
+        rset = self.execute('Any X,N LIMIT 120 WHERE X name N')
+        navcomp = self.vreg['components'].select('navigation', req, rset=rset, page_size=20)
+        self.assertIsInstance(navcomp, PageNavigationSelect)
+        rset = self.execute('Any X,N ORDERBY N LIMIT 120 WHERE X name N')
+        navcomp = self.vreg['components'].select('navigation', req, rset=rset, page_size=20)
+        self.assertIsInstance(navcomp, PageNavigationSelect)
 
     def test_navigation_selection_not_enough(self):
         req = self.request()

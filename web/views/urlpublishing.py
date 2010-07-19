@@ -142,8 +142,7 @@ class EidPathEvaluator(URLPathEvaluator):
         if len(parts) != 1:
             raise PathDontMatch()
         try:
-            rset = req.execute('Any X WHERE X eid %(x)s',
-                               {'x': typed_eid(parts[0])}, 'x')
+            rset = req.execute('Any X WHERE X eid %(x)s', {'x': typed_eid(parts[0])})
         except ValueError:
             raise PathDontMatch()
         if rset.rowcount == 0:
@@ -190,7 +189,7 @@ class RestPathEvaluator(URLPathEvaluator):
         rql = u'Any X WHERE X is %s, X %s %%(x)s' % (etype, attrname)
         if attrname == 'eid':
             try:
-                rset = req.execute(rql, {'x': typed_eid(value)}, 'x')
+                rset = req.execute(rql, {'x': typed_eid(value)})
             except (ValueError, TypeResolverException):
                 # conflicting eid/type
                 raise PathDontMatch()

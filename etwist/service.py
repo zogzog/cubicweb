@@ -26,8 +26,7 @@ except ImportError:
     sys.exit(3)
 
 
-from cubicweb.etwist.server import (CubicWebRootResource, reactor, server,
-                                    parsePOSTData, channel)
+from cubicweb.etwist.server import (CubicWebRootResource, reactor, server)
 
 import logging
 from logging import getLogger, handlers
@@ -39,7 +38,7 @@ def _check_env(env):
     for var in env_vars:
         if var not in env:
             raise Exception('The environment variables %s must be set.' % \
-                            ', '.join(env_vars))            
+                            ', '.join(env_vars))
     if not env.get('USERNAME'):
         env['USERNAME'] = 'cubicweb'
 
@@ -53,7 +52,6 @@ class CWService(object, win32serviceutil.ServiceFramework):
         cwcfg.load_cwctl_plugins()
         logger = getLogger('cubicweb')
         set_log_methods(CubicWebRootResource, logger)
-        server.parsePOSTData = parsePOSTData
 
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -73,12 +71,14 @@ class CWService(object, win32serviceutil.ServiceFramework):
             _check_env(os.environ)
             # create the site
             config = cwcfg.config_for(self.instance)
+            config.init_log(force=True)
+            logger.info('starting cubicweb instance %s ', self.instance)
             root_resource = CubicWebRootResource(config, False)
             website = server.Site(root_resource)
             # serve it via standard HTTP on port set in the configuration
             port = config['port'] or 8080
             logger.info('listening on port %s' % port)
-            reactor.listenTCP(port, channel.HTTPFactory(website))
+            reactor.listenTCP(port, website)
             root_resource.init_publisher()
             root_resource.start_service()
             logger.info('instance started on %s', root_resource.base_url)

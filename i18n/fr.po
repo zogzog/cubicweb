@@ -1,10 +1,10 @@
 # cubicweb i18n catalog
-# Copyright 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# Copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # Logilab <contact@logilab.fr>
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2010-01-15 09:35+0100\n"
+"PO-Revision-Date: 2010-05-16 18:59+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -35,6 +35,9 @@ msgstr ""
 msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  de l'état %(fromstate)s vers l'état %(tostate)s\n"
 
+msgid " :"
+msgstr ""
+
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr "%(attr)s modifié à %(newvalue)s"
@@ -54,6 +57,10 @@ msgstr "%(firstname)s %(surname)s"
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
+
+#, python-format
+msgid "%(value)r doesn't match the %(regexp)r regular expression"
+msgstr "%(value)r ne correspond pas à l'expression régulière %(regexp)r"
 
 #, python-format
 msgid "%d days"
@@ -170,15 +177,16 @@ msgid "1?"
 msgstr "1 0..1"
 
 #, python-format
+msgid "<%s not specified>"
+msgstr "<%s non spécifié>"
+
+#, python-format
 msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 "<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
 "vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
-
-msgid "<no value>"
-msgstr "<non spécifié>"
 
 msgid "?*"
 msgstr "0..1 0..n"
@@ -195,14 +203,14 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "ET"
 
-msgid "Add permissions"
-msgstr "Permissions d'ajouter"
-
 msgid "Any"
 msgstr "N'importe"
 
-msgid "Attributes"
-msgstr "Attributs"
+msgid "Attributes permissions:"
+msgstr "Permissions des attributs"
+
+msgid "Attributes with non default permissions:"
+msgstr "Attributs ayant des permissions non-standard"
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -226,6 +234,9 @@ msgid "Boolean_plural"
 msgstr "Booléen"
 
 msgid "BoundConstraint"
+msgstr "contrainte de bornes"
+
+msgid "BoundaryConstraint"
 msgstr "contrainte de bornes"
 
 msgid "Browse by category"
@@ -381,14 +392,11 @@ msgstr "Nombre décimal"
 msgid "Decimal_plural"
 msgstr "Nombres décimaux"
 
-msgid "Delete permissions"
-msgstr "Permissions de supprimer"
-
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez-vous supprimer le(s) élément(s) suivant(s) ?"
 
-msgid "Download page as pdf"
-msgstr "télécharger la page au format PDF"
+msgid "Download schema as OWL"
+msgstr "Télécharger le schéma au format OWL"
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
@@ -402,6 +410,9 @@ msgstr "Adresses électroniques"
 
 msgid "Entities"
 msgstr "entités"
+
+msgid "Entity types"
+msgstr "Types d'entités"
 
 msgid "ExternalUri"
 msgstr "Uri externe"
@@ -429,6 +440,9 @@ msgstr "Information sur le ramasse-miette"
 
 msgid "Help"
 msgstr "Aide"
+
+msgid "Index"
+msgstr "Index"
 
 msgid "Instance"
 msgstr "Instance"
@@ -523,14 +537,26 @@ msgstr "Nouvelle transition workflow"
 msgid "No result matching query"
 msgstr "aucun résultat"
 
+msgid "Non exhaustive list of views that may apply to entities of this type"
+msgstr "Liste non exhausite des vues s'appliquant à ce type d'entité"
+
 msgid "OR"
 msgstr "OU"
+
+msgid "Parent classes:"
+msgstr "Classes parentes :"
 
 msgid "Password"
 msgstr "Mot de passe"
 
 msgid "Password_plural"
 msgstr "Mots de passe"
+
+msgid "Permissions for entity types"
+msgstr "Permissions pour les types d'entités"
+
+msgid "Permissions for relations"
+msgstr "Permissions pour les relations"
 
 msgid "Please note that this is only a shallow copy"
 msgstr "Attention, cela n'effectue qu'une copie de surface"
@@ -550,9 +576,6 @@ msgstr "contrainte rql d'unicité"
 msgid "RQLVocabularyConstraint"
 msgstr "contrainte rql de vocabulaire"
 
-msgid "Read permissions"
-msgstr "Permissions de lire"
-
 msgid "Recipients:"
 msgstr "Destinataires :"
 
@@ -561,6 +584,9 @@ msgstr "contrainte expression régulière"
 
 msgid "Registry's content"
 msgstr "Contenu du registre"
+
+msgid "Relation types"
+msgstr "Types de relation"
 
 msgid "Relations"
 msgstr "Relations"
@@ -599,6 +625,9 @@ msgstr "Chaîne de caractères"
 msgid "String_plural"
 msgstr "Chaînes de caractères"
 
+msgid "Sub-classes:"
+msgstr "Classes filles :"
+
 msgid "SubWorkflowExitPoint"
 msgstr "Sortie de sous-workflow"
 
@@ -624,6 +653,9 @@ msgstr "La vue %s ne peut être appliquée à cette requête"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vue %s est introuvable"
+
+msgid "There is no default workflow"
+msgstr "Ce type d'entité n'a pas de workflow par défault"
 
 msgid "This BaseTransition"
 msgstr "Cette transition abstraite"
@@ -691,6 +723,9 @@ msgstr "Ce workflow"
 msgid "This WorkflowTransition"
 msgstr "Cette transition workflow"
 
+msgid "This entity type permissions:"
+msgstr "Permissions pour ce type d'endité"
+
 msgid "Time"
 msgstr "Heure"
 
@@ -714,9 +749,6 @@ msgstr "contrainte d'unicité"
 
 msgid "Unreachable objects"
 msgstr "Objets inacessible"
-
-msgid "Update permissions"
-msgstr "Permissions de modifier"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
@@ -816,182 +848,11 @@ msgstr "à propos de ce site"
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
 
-msgid "access type"
-msgstr "type d'accès"
-
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
 
 msgid "actions"
 msgstr "actions"
-
-msgid "actions_about"
-msgstr "à propos"
-
-msgid "actions_about_description"
-msgstr ""
-
-msgid "actions_addentity"
-msgstr "ajouter une entité de ce type"
-
-msgid "actions_addentity_description"
-msgstr ""
-
-msgid "actions_addrelated"
-msgstr "menu ajouter"
-
-msgid "actions_addrelated_description"
-msgstr ""
-
-msgid "actions_cancel"
-msgstr "annuler la sélection"
-
-msgid "actions_cancel_description"
-msgstr ""
-
-msgid "actions_changelog"
-msgstr "changements récents"
-
-msgid "actions_changelog_description"
-msgstr ""
-
-msgid "actions_copy"
-msgstr "copier"
-
-msgid "actions_copy_description"
-msgstr ""
-
-msgid "actions_delete"
-msgstr "supprimer"
-
-msgid "actions_delete_description"
-msgstr ""
-
-msgid "actions_download_as_owl"
-msgstr "télécharger en owl"
-
-msgid "actions_download_as_owl_description"
-msgstr ""
-
-msgid "actions_edit"
-msgstr "modifier"
-
-msgid "actions_edit_description"
-msgstr ""
-
-msgid "actions_embed"
-msgstr "embarquer"
-
-msgid "actions_embed_description"
-msgstr ""
-
-msgid "actions_entitiesoftype"
-msgstr "voir les entités de ce type"
-
-msgid "actions_entitiesoftype_description"
-msgstr ""
-
-msgid "actions_follow"
-msgstr "suivre"
-
-msgid "actions_follow_description"
-msgstr ""
-
-msgid "actions_help"
-msgstr "aide"
-
-msgid "actions_help_description"
-msgstr ""
-
-msgid "actions_logout"
-msgstr "se déconnecter"
-
-msgid "actions_logout_description"
-msgstr ""
-
-msgid "actions_manage"
-msgstr "gestion du site"
-
-msgid "actions_manage_description"
-msgstr ""
-
-msgid "actions_managepermission"
-msgstr "gestion des permissions"
-
-msgid "actions_managepermission_description"
-msgstr ""
-
-msgid "actions_muledit"
-msgstr "édition multiple"
-
-msgid "actions_muledit_description"
-msgstr ""
-
-msgid "actions_myinfos"
-msgstr "informations personnelles"
-
-msgid "actions_myinfos_description"
-msgstr ""
-
-msgid "actions_myprefs"
-msgstr "préférences utilisateur"
-
-msgid "actions_myprefs_description"
-msgstr ""
-
-msgid "actions_poweredby"
-msgstr "powered by"
-
-msgid "actions_poweredby_description"
-msgstr ""
-
-msgid "actions_prefs"
-msgstr "préférences"
-
-msgid "actions_prefs_description"
-msgstr ""
-
-msgid "actions_schema"
-msgstr "voir le schéma"
-
-msgid "actions_schema_description"
-msgstr ""
-
-msgid "actions_select"
-msgstr "sélectionner"
-
-msgid "actions_select_description"
-msgstr ""
-
-msgid "actions_sendemail"
-msgstr "envoyer un email"
-
-msgid "actions_sendemail_description"
-msgstr ""
-
-msgid "actions_siteconfig"
-msgstr "configuration du site"
-
-msgid "actions_siteconfig_description"
-msgstr ""
-
-msgid "actions_siteinfo"
-msgstr "information sur ce site"
-
-msgid "actions_siteinfo_description"
-msgstr ""
-
-msgid "actions_view"
-msgstr "voir"
-
-msgid "actions_view_description"
-msgstr ""
-
-msgid "actions_workflow"
-msgstr "voir le workflow"
-
-msgid "actions_workflow_description"
-msgstr ""
 
 msgid "activate"
 msgstr "activer"
@@ -1241,9 +1102,6 @@ msgstr ""
 
 msgid "attribute"
 msgstr "attribut"
-
-msgid "attributes with modified permissions:"
-msgstr "attributs ayant des permissions modifiées :"
 
 msgid "august"
 msgstr "août"
@@ -1568,15 +1426,15 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr "condition"
 
-msgid "condition:"
-msgstr "condition :"
-
 msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr "condition de"
 
 msgid "condition_object"
 msgstr "condition de"
+
+msgid "conditions"
+msgstr "conditions"
 
 msgid "config mode"
 msgstr "mode de configuration"
@@ -1614,6 +1472,9 @@ msgstr "contraintes"
 msgid "constraints applying on this relation"
 msgstr "contraintes s'appliquant à cette relation"
 
+msgid "content type"
+msgstr "type MIME"
+
 msgid "contentnavigation"
 msgstr "composants contextuels"
 
@@ -1628,12 +1489,6 @@ msgid "contentnavigation_metadata"
 msgstr "méta-données de l'entité"
 
 msgid "contentnavigation_metadata_description"
-msgstr ""
-
-msgid "contentnavigation_pdfview"
-msgstr "icône pdf"
-
-msgid "contentnavigation_pdfview_description"
 msgstr ""
 
 msgid "contentnavigation_prevnext"
@@ -1832,6 +1687,9 @@ msgstr "création d'une transition workflow du workflow %(linkto)s"
 msgid "creation"
 msgstr "création"
 
+msgid "creation date"
+msgstr "date de création"
+
 msgid "creation time of an entity"
 msgstr "date de création d'une entité"
 
@@ -1867,17 +1725,32 @@ msgstr "workflow spécifique"
 msgid "custom_workflow_object"
 msgstr "workflow de"
 
-msgid "cwetype-schema-image"
-msgstr "schéma"
+msgid "cwetype-box"
+msgstr "vue \"boîte\""
 
-msgid "cwetype-schema-permissions"
+msgid "cwetype-description"
+msgstr "description"
+
+msgid "cwetype-permissions"
 msgstr "permissions"
 
-msgid "cwetype-schema-text"
-msgstr "description"
+msgid "cwetype-views"
+msgstr "vues"
 
 msgid "cwetype-workflow"
 msgstr "workflow"
+
+msgid "cwgroup-main"
+msgstr "description"
+
+msgid "cwgroup-permissions"
+msgstr "permissions"
+
+msgid "cwrtype-description"
+msgstr "description"
+
+msgid "cwrtype-permissions"
+msgstr "permissions"
 
 msgid "cwuri"
 msgstr "uri interne"
@@ -1905,6 +1778,9 @@ msgstr "format de texte par défaut pour les champs textes"
 
 msgid "default user workflow"
 msgstr "workflow par défaut des utilisateurs"
+
+msgid "default value"
+msgstr "valeur par défaut"
 
 msgid "default workflow for an entity type"
 msgstr "workflow par défaut pour un type d'entité"
@@ -2146,17 +2022,11 @@ msgstr "destination de"
 msgid "detach attached file"
 msgstr "détacher le fichier existant"
 
-msgid "display order of the action"
-msgstr "ordre d'affichage de l'action"
-
 msgid "display order of the box"
 msgstr "ordre d'affichage de la boîte"
 
 msgid "display order of the component"
 msgstr "ordre d'affichage du composant"
-
-msgid "display the action or not"
-msgstr "afficher l'action ou non"
 
 msgid "display the box or not"
 msgstr "afficher la boîte ou non"
@@ -2369,6 +2239,9 @@ msgctxt "CWRType"
 msgid "final"
 msgstr "final"
 
+msgid "first name"
+msgstr "prénom"
+
 msgid "firstname"
 msgstr "prénom"
 
@@ -2387,7 +2260,7 @@ msgid "follow this link for more information on this %s"
 msgstr "suivez ce lien pour plus d'information sur ce %s"
 
 msgid "follow this link if javascript is deactivated"
-msgstr ""
+msgstr "suivez ce lien si javascript est désactivé"
 
 msgid "for_user"
 msgstr "pour l'utilisateur"
@@ -2484,10 +2357,6 @@ msgstr "retourner sur la page d'accueil"
 msgid "granted to groups"
 msgstr "accordée aux groupes"
 
-#, python-format
-msgid "graphical representation of %s"
-msgstr "représentation graphique de %s"
-
 msgid "graphical representation of the instance'schema"
 msgstr "représentation graphique du schéma de l'instance"
 
@@ -2511,9 +2380,6 @@ msgstr "les groupes donnent des permissions à l'utilisateur"
 
 msgid "groups to which the permission is granted"
 msgstr "groupes auquels cette permission est donnée"
-
-msgid "groups:"
-msgstr "groupes :"
 
 msgid "guests"
 msgstr "invités"
@@ -2559,6 +2425,18 @@ msgstr "chemin"
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
 
+msgid "i18ncard_*"
+msgstr "0..n"
+
+msgid "i18ncard_+"
+msgstr "1..n"
+
+msgid "i18ncard_1"
+msgstr "1"
+
+msgid "i18ncard_?"
+msgstr "0..1"
+
 msgid "i18nprevnext_next"
 msgstr "suivant"
 
@@ -2596,12 +2474,6 @@ msgstr ""
 msgid "image"
 msgstr "image"
 
-msgid "in memory entity schema"
-msgstr "schéma de l'entité en mémoire"
-
-msgid "in memory relation schema"
-msgstr "schéma de la relation en mémoire"
-
 msgid "in_group"
 msgstr "dans le groupe"
 
@@ -2631,9 +2503,6 @@ msgstr "valeur de captcha incorrecte"
 #, python-format
 msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr "valeur %(value)s incorrecte pour le type \"%(type)s\""
-
-msgid "index"
-msgstr "index"
 
 msgid "index this attribute's value in the plain text index"
 msgstr "indexer la valeur de cet attribut dans l'index plein texte"
@@ -2705,8 +2574,18 @@ msgstr "internationalisable"
 msgid "invalid action %r"
 msgstr "action %r invalide"
 
+#, python-format
+msgid "invalid value %(value)s, it must be one of %(choices)s"
+msgstr "valeur %(value)s incorrect, doit être parmi %(choices)s"
+
 msgid "is"
 msgstr "de type"
+
+msgid "is object of:"
+msgstr "est object de"
+
+msgid "is subject of:"
+msgstr "est sujet de"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -2759,6 +2638,12 @@ msgstr "langue pour l'interface utilisateur"
 
 msgid "last connection date"
 msgstr "dernière date de connexion"
+
+msgid "last login time"
+msgstr "dernière date de connexion"
+
+msgid "last name"
+msgstr "nom"
 
 msgid "last usage"
 msgstr "dernier usage"
@@ -2820,6 +2705,9 @@ msgstr "liste"
 
 msgid "log in"
 msgstr "s'identifier"
+
+msgid "log out first"
+msgstr "déconnecter vous d'abord"
 
 msgid "login"
 msgstr "identifiant"
@@ -2908,6 +2796,9 @@ msgstr "lundi"
 
 msgid "more actions"
 msgstr "plus d'actions"
+
+msgid "more info about this workflow"
+msgstr "plus d'information sur ce workflow"
 
 msgid "multiple edit"
 msgstr "édition multiple"
@@ -3052,8 +2943,8 @@ msgstr "novembre"
 msgid "object"
 msgstr "objet"
 
-msgid "object_plural:"
-msgstr "objets :"
+msgid "object type"
+msgstr "type de l'objet"
 
 msgid "october"
 msgstr "octobre"
@@ -3078,6 +2969,9 @@ msgstr "sessions ouvertes"
 
 msgid "opened web sessions"
 msgstr "sessions web ouvertes"
+
+msgid "options"
+msgstr "options"
 
 msgid "order"
 msgstr "ordre"
@@ -3135,11 +3029,8 @@ msgstr "chemin"
 msgid "permission"
 msgstr "permission"
 
-msgid "permissions for entities"
-msgstr "permissions pour les entités"
-
-msgid "permissions for relations"
-msgstr "permissions pour les relations"
+msgid "permissions"
+msgstr "permissions"
 
 msgid "permissions for this entity"
 msgstr "permissions pour cette entité"
@@ -3215,6 +3106,12 @@ msgstr "barre d'avancement"
 msgid "project"
 msgstr "projet"
 
+msgid "rdef-description"
+msgstr "description"
+
+msgid "rdef-permissions"
+msgstr "permissions"
+
 msgid "read"
 msgstr "lecture"
 
@@ -3256,6 +3153,9 @@ msgstr "l'entité lié n'a pas d'état"
 msgid "related entity has no workflow set"
 msgstr "l'entité lié n'a pas de workflow"
 
+msgid "relation"
+msgstr "relation"
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relation %(relname)s de %(ent)s"
@@ -3283,9 +3183,6 @@ msgstr "définition"
 
 msgid "relation_type_object"
 msgstr "définition"
-
-msgid "relations"
-msgstr "relations"
 
 msgid "relations deleted"
 msgstr "relations supprimées"
@@ -3327,6 +3224,9 @@ msgstr "require permission"
 
 msgid "require_permission_object"
 msgstr "permission of"
+
+msgid "required"
+msgstr "requis"
 
 msgid "required attribute"
 msgstr "attribut requis"
@@ -3376,11 +3276,17 @@ msgstr "entités définissant le schéma"
 msgid "schema's permissions definitions"
 msgstr "permissions définies dans le schéma"
 
-msgid "schema-image"
-msgstr "schéma"
+msgid "schema-diagram"
+msgstr "diagramme"
 
-msgid "schema-text"
-msgstr "description"
+msgid "schema-entity-types"
+msgstr "types d'entités"
+
+msgid "schema-relation-types"
+msgstr "types de relations"
+
+msgid "schema-security"
+msgstr "permissions"
 
 msgid "search"
 msgstr "rechercher"
@@ -3573,11 +3479,11 @@ msgstr "l'entité passera de l'état %(st1)s à l'état %(st2)s"
 msgid "subject"
 msgstr "sujet"
 
+msgid "subject type"
+msgstr "type du sujet"
+
 msgid "subject/object cardinality"
 msgstr "cardinalité sujet/objet"
-
-msgid "subject_plural:"
-msgstr "sujets :"
 
 msgid "subworkflow"
 msgstr "sous-workflow"
@@ -3985,6 +3891,9 @@ msgstr "associe les états à un type d'entité pour définir un workflow"
 msgid "used to grant a permission to a group"
 msgstr "utiliser pour donner une permission à un groupe"
 
+msgid "user"
+msgstr "utilisateur"
+
 #, python-format
 msgid ""
 "user %s has made the following change(s):\n"
@@ -4025,6 +3934,26 @@ msgstr "valeur"
 msgid "value associated to this key is not editable manually"
 msgstr "la valeur associée à cette clé n'est pas éditable manuellement"
 
+#, python-format
+msgid "value must be %(op)s %(boundary)s"
+msgstr "la valeur doit être %(op)s %(boundary)s"
+
+#, python-format
+msgid "value must be <= %(boundary)s"
+msgstr "la valeur doit être <= %(boundary)s"
+
+#, python-format
+msgid "value must be >= %(boundary)s"
+msgstr "la valeur doit être >= %(boundary)s"
+
+#, python-format
+msgid "value should have maximum size of %s"
+msgstr "la valeur doit être de taille %s au maximum"
+
+#, python-format
+msgid "value should have minimum size of %s"
+msgstr "la valeur doit être de taille %s au minimum"
+
 msgid "vcard"
 msgstr "vcard"
 
@@ -4043,14 +3972,17 @@ msgstr "voir les détails de cette entité"
 msgid "view history"
 msgstr "voir l'historique"
 
+msgid "view identifier"
+msgstr "identifiant"
+
+msgid "view title"
+msgstr "titre"
+
 msgid "view workflow"
 msgstr "voir les états possibles"
 
 msgid "view_index"
 msgstr "accueil"
-
-msgid "views"
-msgstr "vues"
 
 msgid "visible"
 msgstr "visible"
@@ -4074,6 +4006,12 @@ msgstr "historique de"
 
 msgid "wf_info_for_object"
 msgstr "historique des transitions"
+
+msgid "wf_tab_info"
+msgstr "description"
+
+msgid "wfgraph"
+msgstr "image du workflow"
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "

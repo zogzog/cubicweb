@@ -15,12 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, ObjectRelation,
-                            RichString, String, Int, Boolean, Datetime)
+                            SubjectRelation, RichString, String, Int, Boolean, Datetime)
 from yams.constraints import SizeConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              ERQLExpression, RRQLExpression)
@@ -77,7 +74,10 @@ class Division(Societe):
 
 class SubDivision(Division):
     __specializes_schema__ = True
-    travaille_subdivision = ObjectRelation('Personne')
+
+class travaille_subdivision(RelationDefinition):
+    subject = 'Personne'
+    object = 'SubDivision'
 
 from cubicweb.schemas.base import CWUser
 CWUser.get_relations('login').next().fulltextindexed = True
@@ -85,7 +85,11 @@ CWUser.get_relations('login').next().fulltextindexed = True
 class Note(WorkflowableEntityType):
     date = String(maxsize=10)
     type = String(maxsize=6)
-    para = String(maxsize=512)
+    para = String(maxsize=512,
+                  __permissions__ = {
+                      'read':   ('managers', 'users', 'guests'),
+                      'update': ('managers', ERQLExpression('X in_state S, S name "todo"')),
+                      })
 
     migrated_from = SubjectRelation('Note')
     attachment = SubjectRelation(('File', 'Image'))
@@ -104,31 +108,18 @@ class Personne(EntityType):
     tel    = Int()
     fax    = Int()
     datenaiss = Datetime()
-    test   = Boolean()
+    test   = Boolean(__permissions__={
+        'read': ('managers', 'users', 'guests'),
+        'update': ('managers',),
+        })
     description = String()
     firstname = String(fulltextindexed=True, maxsize=64)
 
-    travaille = SubjectRelation('Societe')
     concerne = SubjectRelation('Affaire')
     connait = SubjectRelation('Personne')
     inline2 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
-    comments = ObjectRelation('Comment')
 
 
-class fiche(RelationType):
-    inlined = True
-    subject = 'Personne'
-    object = 'Card'
-    cardinality = '??'
-
-class multisource_inlined_rel(RelationType):
-    inlined = True
-    cardinality = '?*'
-    subject = ('Card', 'Note')
-    object = ('Affaire', 'Note')
-
-class ecrit_par(RelationType):
-    inlined = True
 
 class connait(RelationType):
     symmetric = True
@@ -140,23 +131,30 @@ class concerne(RelationType):
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
 
-class travaille(RelationType):
+class travaille(RelationDefinition):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
+    subject = 'Personne'
+    object = 'Societe'
 
-class para(RelationType):
-    __permissions__ = {
-        'read':   ('managers', 'users', 'guests'),
-        'update': ('managers', ERQLExpression('X in_state S, S name "todo"')),
-        }
+class comments(RelationDefinition):
+    subject = 'Comment'
+    object = 'Personne'
 
-class test(RelationType):
-    __permissions__ = {'read': ('managers', 'users', 'guests'),
-                       'update': ('managers',),
-                       }
+class fiche(RelationDefinition):
+    inlined = True
+    subject = 'Personne'
+    object = 'Card'
+    cardinality = '??'
+
+class multisource_inlined_rel(RelationDefinition):
+    inlined = True
+    cardinality = '?*'
+    subject = ('Card', 'Note')
+    object = ('Affaire', 'Note')
 
 class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')
@@ -179,6 +177,9 @@ class see_also_2(RelationDefinition):
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')
     object = ('Note')
+
+class ecrit_par(RelationType):
+    inlined = True
 
 class ecrit_par_1(RelationDefinition):
     name = 'ecrit_par'

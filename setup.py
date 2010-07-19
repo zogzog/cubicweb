@@ -24,38 +24,43 @@
 import os
 import sys
 import shutil
-from distutils.core import setup
-from distutils.command import install_lib
 from os.path import isdir, exists, join, walk
 
+try:
+    if os.environ.get('NO_SETUPTOOLS'):
+        raise ImportError() # do as there is no setuptools
+    from setuptools import setup
+    from setuptools.command import install_lib
+    USE_SETUPTOOLS = True
+except ImportError:
+    from distutils.core import setup
+    from distutils.command import install_lib
+    USE_SETUPTOOLS = False
+
 # import required features
-from __pkginfo__ import modname, version, license, short_desc, long_desc, \
-     web, author, author_email
+from __pkginfo__ import modname, version, license, description, web, \
+     author, author_email
+
+long_description = file('README').read()
+
 # import optional features
-try:
-    from __pkginfo__ import distname
-except ImportError:
-    distname = modname
-try:
-    from __pkginfo__ import scripts
-except ImportError:
-    scripts = []
-try:
-    from __pkginfo__ import data_files
-except ImportError:
-    data_files = None
-try:
-    from __pkginfo__ import subpackage_of
-except ImportError:
-    subpackage_of = None
-try:
-    from __pkginfo__ import include_dirs
-except ImportError:
-    include_dirs = []
-try:
-    from __pkginfo__ import ext_modules
-except ImportError:
-    ext_modules = None
+import __pkginfo__
+if USE_SETUPTOOLS:
+    requires = {}
+    for entry in ("__depends__", "__recommends__"):
+        requires.update(getattr(__pkginfo__, entry, {}))
+    install_requires = [("%s %s" % (d, v and v or "")).strip()
+                       for d, v in requires.iteritems()]
+else:
+    install_requires = []
+
+distname = getattr(__pkginfo__, 'distname', modname)
+scripts = getattr(__pkginfo__, 'scripts', ())
+include_dirs = getattr(__pkginfo__, 'include_dirs', ())
+data_files = getattr(__pkginfo__, 'data_files', None)
+subpackage_of = getattr(__pkginfo__, 'subpackage_of', None)
+ext_modules = getattr(__pkginfo__, 'ext_modules', None)
+
 
 BASE_BLACKLIST = ('CVS', 'debian', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
@@ -92,7 +97,8 @@ def get_packages(directory, prefix):
 
 def export(from_dir, to_dir,
            blacklist=BASE_BLACKLIST,
-           ignore_ext=IGNORED_EXTENSIONS):
+           ignore_ext=IGNORED_EXTENSIONS,
+           verbose=True):
     """make a mirror of from_dir in to_dir, omitting directories and files
     listed in the black list
     """
@@ -111,7 +117,8 @@ def export(from_dir, to_dir,
                 continue
             src = '%s/%s' % (directory, filename)
             dest = to_dir + src[len(from_dir):]
-            print >> sys.stderr, src, '->', dest
+            if verbose:
+               print >> sys.stderr, src, '->', dest
             if os.path.isdir(src):
                 if not exists(dest):
                     os.mkdir(dest)
@@ -154,28 +161,32 @@ class MyInstallLib(install_lib.install_lib):
                 base = modname
             for directory in include_dirs:
                 dest = join(self.install_dir, base, directory)
-                export(directory, dest)
+                export(directory, dest, verbose=False)
 
 def install(**kwargs):
     """setup entry point"""
+    if USE_SETUPTOOLS:
+        if '--force-manifest' in sys.argv:
+            sys.argv.remove('--force-manifest')
+    # install-layout option was introduced in 2.5.3-1~exp1
+    elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
+        sys.argv.remove('--install-layout=deb')
     if subpackage_of:
         package = subpackage_of + '.' + modname
         kwargs['package_dir'] = {package : '.'}
         packages = [package] + get_packages(os.getcwd(), package)
+        if USE_SETUPTOOLS:
+            kwargs['namespace_packages'] = [subpackage_of]
     else:
         kwargs['package_dir'] = {modname : '.'}
         packages = [modname] + get_packages(os.getcwd(), modname)
+    if USE_SETUPTOOLS:
+        kwargs['install_requires'] = install_requires
     kwargs['packages'] = packages
-    return setup(name = distname,
-                 version = version,
-                 license =license,
-                 description = short_desc,
-                 long_description = long_desc,
-                 author = author,
-                 author_email = author_email,
-                 url = web,
-                 scripts = ensure_scripts(scripts),
-                 data_files=data_files,
+    return setup(name=distname, version=version, license=license, url=web,
+                 description=description, long_description=long_description,
+                 author=author, author_email=author_email,
+                 scripts=ensure_scripts(scripts), data_files=data_files,
                  ext_modules=ext_modules,
                  cmdclass={'install_lib': MyInstallLib},
                  **kwargs

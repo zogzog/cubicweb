@@ -25,8 +25,8 @@ Base form classes
    using a form renderer. No display is actually done here, though you'll find
    some attributes of form that are used to control the rendering process.
 
-Besides the automagic form we'll see later, they are barely two form
-classes in |cubicweb|:
+Besides the automagic form we'll see later, there are roughly two main
+form classes in |cubicweb|:
 
 .. autoclass:: cubicweb.web.views.forms.FieldsForm
 .. autoclass:: cubicweb.web.views.forms.EntityFieldsForm
@@ -194,6 +194,16 @@ class FieldsForm(form.Form):
             for field in field.actual_fields(self):
                 field.form_init(self)
 
+    _default_form_action_path = 'edit'
+    def form_action(self):
+        try:
+            action = self.get_action() # avoid spurious warning w/ autoform bw compat property
+        except AttributeError:
+            action = self.action
+        if action is None:
+            return self._cw.build_url(self._default_form_action_path)
+        return action
+
     @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
     def form_add_hidden(self, name, value=None, **kwargs):
         return self.add_hidden(name, value, **kwargs)
@@ -222,8 +232,6 @@ class EntityFieldsForm(FieldsForm):
     __regid__ = 'base'
     __select__ = (match_kwargs('entity')
                   | (one_line_rset() & non_final_entity()))
-
-    internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
     @iclassmethod

@@ -100,6 +100,42 @@ class SelectorsTC(TestCase):
         csel = AndSelector(Selector(), sel)
         self.assertIs(csel.search_selector(implements), sel)
 
+    def test_inplace_and(self):
+        selector = _1_()
+        selector &= _1_()
+        selector &= _1_()
+        self.assertEquals(selector(None), 3)
+        selector = _1_()
+        selector &= _0_()
+        selector &= _1_()
+        self.assertEquals(selector(None), 0)
+        selector = _0_()
+        selector &= _1_()
+        selector &= _1_()
+        self.assertEquals(selector(None), 0)
+        selector = _0_()
+        selector &= _0_()
+        selector &= _0_()
+        self.assertEquals(selector(None), 0)
+
+    def test_inplace_or(self):
+        selector = _1_()
+        selector |= _1_()
+        selector |= _1_()
+        self.assertEquals(selector(None), 1)
+        selector = _1_()
+        selector |= _0_()
+        selector |= _1_()
+        self.assertEquals(selector(None), 1)
+        selector = _0_()
+        selector |= _1_()
+        selector |= _1_()
+        self.assertEquals(selector(None), 1)
+        selector = _0_()
+        selector |= _0_()
+        selector |= _0_()
+        self.assertEquals(selector(None), 0)
+
 
 class ImplementsSelectorTC(CubicWebTC):
     def test_etype_priority(self):

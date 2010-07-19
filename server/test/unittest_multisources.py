@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from os.path import dirname, join, abspath
 from datetime import datetime, timedelta
 
@@ -27,7 +24,6 @@ from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
 from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
 
-TestServerConfiguration.no_sqlite_wrap = True
 
 class TwoSourcesConfiguration(TestServerConfiguration):
     sourcefile = 'sources_multi'
@@ -51,6 +47,7 @@ PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
 def setup_module(*args):
+    TestServerConfiguration.no_sqlite_wrap = True
     # hi-jack PyroRQLSource.get_connection to access existing connection (no
     # pyro connection)
     PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
@@ -67,6 +64,7 @@ def teardown_module(*args):
     del repo2, cnx2, repo3, cnx3
     #del TwoSourcesTC.config.vreg
     #del TwoSourcesTC.config
+    TestServerConfiguration.no_sqlite_wrap = False
 
 class TwoSourcesTC(CubicWebTC):
     config = TwoSourcesConfiguration('data')
@@ -122,7 +120,7 @@ class TwoSourcesTC(CubicWebTC):
         self.assertEquals(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.sexecute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
-                             {'x': externent.eid}, 'x')[0][0]
+                             {'x': externent.eid})[0][0]
         self.assertEquals(etype, 'Card')
 
     def test_order_limit_offset(self):
@@ -142,7 +140,7 @@ class TwoSourcesTC(CubicWebTC):
         self.sexecute('INSERT Affaire X: X ref "no readable card"')[0][0]
         aff1 = self.sexecute('INSERT Affaire X: X ref "card"')[0][0]
         # grant read access
-        self.sexecute('SET X owned_by U WHERE X eid %(x)s, U login "anon"', {'x': aff1}, 'x')
+        self.sexecute('SET X owned_by U WHERE X eid %(x)s, U login "anon"', {'x': aff1})
         self.commit()
         cnx = self.login('anon')
         cu = cnx.cursor()
@@ -152,8 +150,8 @@ class TwoSourcesTC(CubicWebTC):
 
     def test_synchronization(self):
         cu = cnx2.cursor()
-        assert cu.execute('Any X WHERE X eid %(x)s', {'x': self.aff1}, 'x')
-        cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': self.aff1}, 'x')
+        assert cu.execute('Any X WHERE X eid %(x)s', {'x': self.aff1})
+        cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': self.aff1})
         aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX"')[0][0]
         cnx2.commit()
         try:
@@ -168,20 +166,20 @@ class TwoSourcesTC(CubicWebTC):
             self.failIf(rset)
         finally:
             # restore state
-            cu.execute('SET X ref "AFFREF" WHERE X eid %(x)s', {'x': self.aff1}, 'x')
+            cu.execute('SET X ref "AFFREF" WHERE X eid %(x)s', {'x': self.aff1})
             cnx2.commit()
 
     def test_simplifiable_var(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB',
-                            {'x': affeid}, 'x')
+                            {'x': affeid})
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][1], "pitetre")
 
     def test_simplifiable_var_2(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any E WHERE E eid %(x)s, E in_state S, NOT S name "moved"',
-                            {'x': affeid, 'u': self.session.user.eid}, 'x')
+                            {'x': affeid, 'u': self.session.user.eid})
         self.assertEquals(len(rset), 1)
 
     def test_sort_func(self):
@@ -229,7 +227,7 @@ class TwoSourcesTC(CubicWebTC):
             rset = self.sexecute('Any X,Y WHERE X is Card, Y is Affaire, X title T, Y ref T')
             self.assertEquals(len(rset), 2, rset.rows)
         finally:
-            cu.execute('DELETE Card X WHERE X eid %(x)s', {'x': ec2}, 'x')
+            cu.execute('DELETE Card X WHERE X eid %(x)s', {'x': ec2})
             cnx2.commit()
 
     def test_attr_unification_neq_1(self):
@@ -271,15 +269,15 @@ class TwoSourcesTC(CubicWebTC):
         userstate = self.session.user.in_state[0]
         states.remove((userstate.eid, userstate.name))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
-                                                       {'x': self.session.user.eid}, 'x'))
+                                                       {'x': self.session.user.eid}))
         self.assertSetEquals(notstates, states)
         aff1 = self.sexecute('Any X WHERE X is Affaire, X ref "AFFREF"')[0][0]
-        aff1stateeid, aff1statename = self.sexecute('Any S,SN WHERE X eid %(x)s, X in_state S, S name SN', {'x': aff1}, 'x')[0]
+        aff1stateeid, aff1statename = self.sexecute('Any S,SN WHERE X eid %(x)s, X in_state S, S name SN', {'x': aff1})[0]
         self.assertEquals(aff1statename, 'pitetre')
         states.add((userstate.eid, userstate.name))
         states.remove((aff1stateeid, aff1statename))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
-                                                       {'x': aff1}, 'x'))
+                                                       {'x': aff1}))
         self.assertSetEquals(notstates, states)
 
     def test_absolute_url_base_url(self):

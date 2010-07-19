@@ -82,7 +82,7 @@ class PrimaryView(EntityView):
             self.w(u'</td><td>')
             self.w(u'<div class="primaryRight">')
             if hasattr(self, 'render_side_related'):
-                warn('render_side_related is deprecated')
+                warn('[3.2] render_side_related is deprecated')
                 self.render_side_related(entity, [])
             self.render_side_boxes(boxes)
             self.w(u'</div>')
@@ -95,7 +95,7 @@ class PrimaryView(EntityView):
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
             except NotImplementedError:
-                warn('component %s doesnt implement cell_call, please update'
+                warn('[3.2] component %s doesnt implement cell_call, please update'
                      % comp.__class__, DeprecationWarning)
                 comp.render(w=self.w, view=self)
         self.w(u'</div>')
@@ -126,7 +126,7 @@ class PrimaryView(EntityView):
         """default implementation return an empty string"""
         return u''
 
-    def render_entity_attributes(self, entity, siderelations=None):
+    def render_entity_attributes(self, entity):
         display_attributes = []
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
@@ -152,7 +152,7 @@ class PrimaryView(EntityView):
                     self._render_attribute(rschema, value, role=role, table=True)
             self.w(u'</table>')
 
-    def render_entity_relations(self, entity, siderelations=None):
+    def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
@@ -176,9 +176,10 @@ class PrimaryView(EntityView):
                     warn('[3.5] box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
                          'please update %s' % self.__class__.__name__,
                          DeprecationWarning)
-                    label, rset, vid  = box
+                    label, rset, vid = box
+                    dispctrl = {}
                 self.w(u'<div class="sideBox">')
-                self.wview(vid, rset, title=label)
+                self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
                 self.w(u'</div>')
             else:
                 try:
@@ -265,30 +266,33 @@ class RelatedView(EntityView):
     __regid__ = 'autolimited'
 
     def call(self, **kwargs):
-        # nb: rset retreived using entity.related with limit + 1 if any
-        # because of that, we known that rset.printable_rql() will return
-        # rql with no limit set anyway (since it's handled manually)
+        # nb: rset is retreived using entity.related with limit + 1 if any.
+        # Because of that, we know that rset.printable_rql() will return rql
+        # with no limit set anyway (since it's handled manually)
         if 'dispctrl' in self.cw_extra_kwargs:
             limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
             limit = None
+            subvid = 'incontext'
         if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
-                self.wview('incontext', self.cw_rset, row=0)
+                self.wview(subvid, self.cw_rset, row=0)
             elif 1 < self.cw_rset.rowcount <= 5:
-                self.wview('csv', self.cw_rset)
+                self.wview('csv', self.cw_rset, subvid=subvid)
             else:
                 self.w(u'<div>')
-                self.wview('simplelist', self.cw_rset)
+                self.wview('simplelist', self.cw_rset, subvid=subvid)
                 self.w(u'</div>')
         # else show links to display related entities
         else:
             rql = self.cw_rset.printable_rql()
             self.cw_rset.limit(limit) # remove extra entity
             self.w(u'<div>')
-            self.wview('simplelist', self.cw_rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
-                                               self._cw._('see them all')))
+            self.wview('simplelist', self.cw_rset, subvid=subvid)
+            self.w(u'[<a href="%s">%s</a>]' % (
+                xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                self._cw._('see them all')))
             self.w(u'</div>')
 
 
@@ -310,18 +314,7 @@ class URLAttributeView(EntityView):
 
 _pvs = uicfg.primaryview_section
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
-              'is', 'is_instance_of', 'identity',
-              'owned_by', 'created_by', 'in_state',
-              'wf_info_for', 'by_transition', 'from_state', 'to_state',
-              'require_permission', 'from_entity', 'to_entity',
-              'see_also'):
+              'is', 'is_instance_of', 'identity', 'owned_by', 'created_by',
+              'require_permission', 'see_also'):
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
-
-_pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
-_pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
-
-for attr in ('name', 'final'):
-    _pvs.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'final', 'symmetric', 'inlined'):
-    _pvs.tag_attribute(('CWRType', attr), 'hidden')

@@ -21,8 +21,8 @@ FIXME : this code needs refactoring. Some problems :
 * get data from the parent plan, the latest step, temporary table...
 * each step has is own members (this is not necessarily bad, but a bit messy
   for now)
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from rql.nodes import VariableRef, Variable, Function
@@ -37,11 +37,11 @@ def remove_clauses(union, keepgroup):
     for select in union.children:
         if keepgroup:
             having, orderby = select.having, select.orderby
-            select.having, select.orderby = None, None
+            select.having, select.orderby = (), ()
             clauses.append( (having, orderby) )
         else:
             groupby, having, orderby = select.groupby, select.having, select.orderby
-            select.groupby, select.having, select.orderby = None, None, None
+            select.groupby, select.having, select.orderby = (), (), ()
             clauses.append( (groupby, having, orderby) )
     return clauses
 
@@ -74,7 +74,7 @@ class FetchStep(OneFetchStep):
             if not isinstance(vref, VariableRef):
                 continue
             var = vref.variable
-            if var.stinfo['attrvars']:
+            if var.stinfo.get('attrvars'):
                 for lhsvar, rtype in var.stinfo['attrvars']:
                     if lhsvar.name in srqlst.defined_vars:
                         key = '%s.%s' % (lhsvar.name, rtype)

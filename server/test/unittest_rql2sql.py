@@ -15,10 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
-
 """unit tests for module cubicweb.server.sources.rql2sql"""
 
 import sys
@@ -180,11 +176,10 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
      "NOT EXISTS(X owned_by U, U in_group G, G name 'lulufanclub' OR G name 'managers');",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE _X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers)))'''),
-
-
+WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
 ]
+
 
 ADVANCED= [
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
@@ -276,7 +271,7 @@ WHERE _X.cw_from_entity=44 AND _SE.cw_eid=44 AND _X.cw_relation_type=139 AND _R.
     ('Any O WHERE NOT S ecrit_par O, S eid 1, S inline1 P, O inline2 P',
      '''SELECT _O.cw_eid
 FROM cw_Note AS _S, cw_Personne AS _O
-WHERE NOT EXISTS(SELECT 1 WHERE _S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _O.cw_inline2=_S.cw_inline1'''),
+WHERE NOT (_S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
 
     ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
@@ -299,7 +294,7 @@ WHERE rel_evaluee1.eid_to=rel_todo_by0.eid_from AND rel_todo_by0.eid_to=2 AND re
     (' Any X,U WHERE C owned_by U, NOT X owned_by U, C eid 1, X eid 2',
      '''SELECT 2, rel_owned_by0.eid_to
 FROM owned_by_relation AS rel_owned_by0
-WHERE rel_owned_by0.eid_from=1 AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_owned_by1.eid_from=2 AND rel_owned_by0.eid_to=rel_owned_by1.eid_to)'''),
+WHERE rel_owned_by0.eid_from=1 AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_owned_by1.eid_from=2 AND rel_owned_by0.eid_to=rel_owned_by1.eid_to))'''),
 
     ('Any GN WHERE X in_group G, G name GN, (G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon")))',
      '''SELECT _G.cw_name
@@ -353,7 +348,7 @@ WHERE _X.cw_login=admin AND _X.cw_eid=_Y.cw_eid'''),
     ('Any L WHERE X login "admin", NOT X identity Y, Y login L',
      '''SELECT _Y.cw_login
 FROM cw_CWUser AS _X, cw_CWUser AS _Y
-WHERE _X.cw_login=admin AND NOT _X.cw_eid=_Y.cw_eid'''),
+WHERE _X.cw_login=admin AND NOT (_X.cw_eid=_Y.cw_eid)'''),
 
     ('Any L WHERE X login "admin", X identity Y?, Y login L',
      '''SELECT _Y.cw_login
@@ -391,31 +386,31 @@ WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read
     ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)',
      '''SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_CWGroup AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))'''),
 
     # should generate the same query as above
     ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
      '''SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_CWGroup AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))
 UNION
 SELECT DISTINCT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))'''),
 
     # neged relation, can't be inveriant
     ('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
      '''SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_CWGroup AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))
 UNION ALL
 SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_CWEType AS _X, cw_RQLExpression AS _Y
-WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid)'''),
+WHERE _X.cw_name=CWGroup AND _Y.cw_eid IN(1, 2, 3) AND NOT (EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=_X.cw_eid AND rel_read_permission0.eid_to=_Y.cw_eid))'''),
 
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N, X is IN (Basket, Folder, Tag);',
      '''SELECT (MAX(T1.C0) + MIN(T1.C0)), T1.C1 FROM (SELECT _X.cw_eid AS C0, _X.cw_name AS C1
@@ -552,7 +547,7 @@ ORDER BY 2) AS T1'''),
      'EXISTS(A use_email O, EXISTS(A identity B, NOT B in_group D, D name "guests", D is CWGroup), A is CWUser), B eid 2',
      '''SELECT _O.cw_eid, _O.cw_address, _O.cw_alias, _O.cw_modification_date
 FROM cw_EmailAddress AS _O
-WHERE NOT EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=_O.cw_eid) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=_O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS _D WHERE rel_use_email1.eid_from=2 AND NOT EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=_D.cw_eid) AND _D.cw_name=guests))
+WHERE NOT (EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=_O.cw_eid)) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=_O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS _D WHERE rel_use_email1.eid_from=2 AND NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=_D.cw_eid)) AND _D.cw_name=guests))
 ORDER BY 4 DESC'''),
 
 
@@ -585,6 +580,7 @@ ORDER BY T1.C2'''),
 
     ]
 
+
 MULTIPLE_SEL = [
     ("DISTINCT Any X,Y where P is Personne, P nom X , P prenom Y;",
      '''SELECT DISTINCT _P.cw_nom, _P.cw_prenom
@@ -599,21 +595,23 @@ FROM cw_Personne AS _X, cw_Personne AS _Y
 WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)''')
     ]
 
+
 NEGATIONS = [
+
     ("Personne X WHERE NOT X evaluee Y;",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_X.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_X.cw_eid))'''),
 
     ("Note N WHERE NOT X evaluee N, X eid 0",
      '''SELECT _N.cw_eid
 FROM cw_Note AS _N
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=0 AND rel_evaluee0.eid_to=_N.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=0 AND rel_evaluee0.eid_to=_N.cw_eid))'''),
 
     ('Any X WHERE NOT X travaille S, X is Personne',
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid))'''),
 
     ("Personne P where not P datenaiss TODAY",
      '''SELECT _P.cw_eid
@@ -623,16 +621,16 @@ WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
     ("Personne P where NOT P concerne A",
      '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_from=_P.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_from=_P.cw_eid))'''),
 
     ("Affaire A where not P concerne A",
      '''SELECT _A.cw_eid
 FROM cw_Affaire AS _A
-WHERE NOT EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_to=_A.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_to=_A.cw_eid))'''),
     ("Personne P where not P concerne A, A sujet ~= 'TEST%'",
      '''SELECT _P.cw_eid
 FROM cw_Affaire AS _A, cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_from=_P.cw_eid AND rel_concerne0.eid_to=_A.cw_eid) AND _A.cw_sujet ILIKE TEST%'''),
+WHERE NOT (EXISTS(SELECT 1 FROM concerne_relation AS rel_concerne0 WHERE rel_concerne0.eid_from=_P.cw_eid AND rel_concerne0.eid_to=_A.cw_eid)) AND _A.cw_sujet ILIKE TEST%'''),
 
     ('Any S WHERE NOT T eid 28258, T tags S',
      '''SELECT rel_tags0.eid_to
@@ -660,33 +658,33 @@ WHERE rel_created_by0.eid_from=5 AND NOT (rel_created_by0.eid_to=6)'''),
     ('Note X WHERE NOT Y evaluee X',
      '''SELECT _X.cw_eid
 FROM cw_Note AS _X
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_to=_X.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_to=_X.cw_eid))'''),
 
     ('Any Y WHERE NOT Y evaluee X',
      '''SELECT _Y.cw_eid
 FROM cw_CWUser AS _Y
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid)
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid))
 UNION ALL
 SELECT _Y.cw_eid
 FROM cw_Division AS _Y
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid)
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid))
 UNION ALL
 SELECT _Y.cw_eid
 FROM cw_Personne AS _Y
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid)
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid))
 UNION ALL
 SELECT _Y.cw_eid
 FROM cw_Societe AS _Y
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid)
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid))
 UNION ALL
 SELECT _Y.cw_eid
 FROM cw_SubDivision AS _Y
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid))'''),
 
     ('Any X WHERE NOT Y evaluee X, Y is CWUser',
      '''SELECT _X.cw_eid
 FROM cw_Note AS _X
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0,cw_CWUser AS _Y WHERE rel_evaluee0.eid_from=_Y.cw_eid AND rel_evaluee0.eid_to=_X.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0, cw_CWUser AS _Y WHERE rel_evaluee0.eid_from=_Y.cw_eid AND rel_evaluee0.eid_to=_X.cw_eid))'''),
 
     ('Any X,RT WHERE X relation_type RT, NOT X is CWAttribute',
      '''SELECT _X.cw_eid, _X.cw_relation_type
@@ -701,17 +699,13 @@ WHERE _P.cw_for_user IS NULL'''),
     ('Any S WHERE NOT X in_state S, X is IN(Affaire, CWUser)',
      '''SELECT _S.cw_eid
 FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid)
-INTERSECT
-SELECT _S.cw_eid
-FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid UNION SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid))'''),
 
     ('Any S WHERE NOT(X in_state S, S name "somename"), X is CWUser',
      '''SELECT _S.cw_eid
 FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=somename)'''),
-   
+WHERE NOT (EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=somename))'''),
+
 # XXXFIXME fail
 #         ('Any X,RT WHERE X relation_type RT?, NOT X is CWAttribute',
 #      '''SELECT _X.cw_eid, _X.cw_relation_type
@@ -844,7 +838,7 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid), cw_Note AS _S
-WHERE NOT EXISTS(SELECT 1 WHERE _S.cw_inline1=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE NOT (_S.cw_inline1=_O.cw_eid) AND _S.cw_eid=123''')
     ]
 
 VIRTUAL_VARS = [
@@ -919,7 +913,7 @@ FUNCS = [
 FROM cw_Personne AS _P'''),
     ]
 
-SYMETRIC = [
+SYMMETRIC = [
     ('Any P WHERE X eid 0, X connait P',
      '''SELECT DISTINCT _P.cw_eid
 FROM connait_relation AS rel_connait0, cw_Personne AS _P
@@ -941,17 +935,17 @@ WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)'''
     ('Any P WHERE X eid 0, NOT X connait P',
      '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid))'''),
+WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid)))'''),
 
     ('Any P WHERE NOT X connait P',
     '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid))'''),
+WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid)))'''),
 
     ('Any X WHERE NOT X connait P',
     '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid))'''),
+WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)))'''),
 
     ('Any P WHERE X connait P, P nom "nom"',
      '''SELECT DISTINCT _P.cw_eid
@@ -980,6 +974,12 @@ WHERE (rel_connait0.eid_from=_P.cw_eid AND rel_connait0.eid_to=_S.cw_eid OR rel_
     ]
 
 INLINE = [
+
+    ('Any P WHERE N eid 1, N ecrit_par P, NOT P owned_by P2',
+     '''SELECT _N.cw_ecrit_par
+FROM cw_Note AS _N
+WHERE _N.cw_eid=1 AND _N.cw_ecrit_par IS NOT NULL AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE _N.cw_ecrit_par=rel_owned_by0.eid_from))'''),
+
     ('Any P, L WHERE N ecrit_par P, P nom L, N eid 0',
      '''SELECT _P.cw_eid, _P.cw_nom
 FROM cw_Note AS _N, cw_Personne AS _P
@@ -988,7 +988,12 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any N WHERE NOT N ecrit_par P, P nom "toto"',
      '''SELECT _N.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 WHERE _N.cw_ecrit_par=_P.cw_eid) AND _P.cw_nom=toto'''),
+WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _P.cw_nom=toto'''),
+
+    ('Any P WHERE NOT N ecrit_par P, P nom "toto"',
+     '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+WHERE NOT (EXISTS(SELECT 1 FROM cw_Note AS _N WHERE _N.cw_ecrit_par=_P.cw_eid)) AND _P.cw_nom=toto'''),
 
     ('Any P WHERE N ecrit_par P, N eid 0',
     '''SELECT _N.cw_ecrit_par
@@ -1003,12 +1008,13 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any P WHERE NOT N ecrit_par P, P is Personne, N eid 512',
      '''SELECT _P.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT EXISTS(SELECT 1 WHERE _N.cw_ecrit_par=_P.cw_eid) AND _N.cw_eid=512'''),
+WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
+     # XXX "_T.cw_destination_state IS NOT NULL" could be avoided here but it's not worth it
      '''SELECT _T.cw_destination_state, rel_allowed_transition1.eid_from, _T.cw_eid
 FROM allowed_transition_relation AS rel_allowed_transition1, cw_Transition AS _T, cw_Workflow AS _ET, state_of_relation AS rel_state_of0
-WHERE _T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=_ET.cw_eid AND _ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=_T.cw_eid'''),
+WHERE _T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=_ET.cw_eid AND _ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=_T.cw_eid AND _T.cw_destination_state IS NOT NULL'''),
 
     ('Any O WHERE S eid 0, S in_state O',
      '''SELECT _S.cw_in_state
@@ -1025,55 +1031,50 @@ WHERE _S.cw_eid=0 AND _S.cw_in_state IS NOT NULL'''),
 
     ('Any X WHERE NOT Y for_user X, X eid 123',
      '''SELECT 123
-WHERE NOT EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123)
-'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123))'''),
 
+    ('DISTINCT Any X WHERE X from_entity OET, NOT X from_entity NET, OET name "Image", NET eid 1',
+     '''SELECT DISTINCT _X.cw_eid
+FROM cw_CWAttribute AS _X, cw_CWEType AS _OET
+WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image
+UNION
+SELECT DISTINCT _X.cw_eid
+FROM cw_CWEType AS _OET, cw_CWRelation AS _X
+WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image'''),
     ]
 
 INTERSECT = [
     ('Any SN WHERE NOT X in_state S, S name SN',
      '''SELECT _S.cw_name
 FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid)
-INTERSECT
-SELECT _S.cw_name
-FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid)
-INTERSECT
-SELECT _S.cw_name
-FROM cw_State AS _S
-WHERE NOT EXISTS(SELECT 1 FROM cw_Note AS _X WHERE _X.cw_in_state=_S.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid UNION SELECT 1 FROM cw_Note AS _X WHERE _X.cw_in_state=_S.cw_eid UNION SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid))'''),
 
     ('Any PN WHERE NOT X travaille S, X nom PN, S is IN(Division, Societe)',
      '''SELECT _X.cw_nom
 FROM cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,cw_Division AS _S WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid)
-INTERSECT
-SELECT _X.cw_nom
-FROM cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,cw_Societe AS _S WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0, cw_Division AS _S WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid UNION SELECT 1 FROM travaille_relation AS rel_travaille1, cw_Societe AS _S WHERE rel_travaille1.eid_from=_X.cw_eid AND rel_travaille1.eid_to=_S.cw_eid))'''),
 
     ('Any PN WHERE NOT X travaille S, S nom PN, S is IN(Division, Societe)',
      '''SELECT _S.cw_nom
 FROM cw_Division AS _S
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=_S.cw_eid)
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=_S.cw_eid))
 UNION ALL
 SELECT _S.cw_nom
 FROM cw_Societe AS _S
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=_S.cw_eid)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=_S.cw_eid))'''),
 
     ('Personne X WHERE NOT X travaille S, S nom "chouette"',
      '''SELECT _X.cw_eid
 FROM cw_Division AS _S, cw_Personne AS _X
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid) AND _S.cw_nom=chouette
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid)) AND _S.cw_nom=chouette
 UNION ALL
 SELECT _X.cw_eid
 FROM cw_Personne AS _X, cw_Societe AS _S
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid) AND _S.cw_nom=chouette
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid)) AND _S.cw_nom=chouette
 UNION ALL
 SELECT _X.cw_eid
 FROM cw_Personne AS _X, cw_SubDivision AS _S
-WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid) AND _S.cw_nom=chouette'''),
+WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid)) AND _S.cw_nom=chouette'''),
 
     ('Any X WHERE X is ET, ET eid 2',
      '''SELECT rel_is0.eid_from
@@ -1222,6 +1223,10 @@ WHERE _X.cw_login IS NULL''')
                     '''SELECT CAST(EXTRACT(MONTH from _P.cw_creation_date) AS INTEGER)
 FROM cw_Personne AS _P''')
 
+    def test_substring(self):
+        self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
+                    '''SELECT SUBSTR(_P.cw_nom, 1, 1)
+FROM cw_Personne AS _P''')
 
     def test_parser_parse(self):
         for t in self._parse(PARSER):
@@ -1341,7 +1346,7 @@ GROUP BY _ET.cw_name'''),
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
     def test_symmetric(self):
-        for t in self._parse(SYMETRIC):
+        for t in self._parse(SYMMETRIC):
             yield t
 
     def test_inline(self):
@@ -1389,7 +1394,7 @@ WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_
 WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS _T WHERE _T.cw_name=managers)'''),
                    ('Any X,Y WHERE NOT X created_by Y, X eid 5, Y eid 6',
                     '''SELECT 5, 6
-WHERE NOT EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6))'''),
                    ]
         for t in self._parse(queries):
             yield t
@@ -1427,6 +1432,18 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
             self.o.attr_map.clear()
 
 
+    def test_concat_string(self):
+        self._check('Any "A"+R WHERE X ref R',
+                    '''SELECT (A || _X.cw_ref)
+FROM cw_Affaire AS _X''')
+
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
 
     def setUp(self):
@@ -1435,7 +1452,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
         self.o = SQLGenerator(schema, dbhelper)
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('\nINTERSECT ALL\n', '\nINTERSECT\n')
+        return sql.strip().replace(' ILIKE ', ' LIKE ')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
@@ -1534,6 +1551,13 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
             yield t
 
 
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
 
@@ -1567,7 +1591,7 @@ WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS _T WHERE _T.cw_name=managers)'''),
                    ('Any X,Y WHERE NOT X created_by Y, X eid 5, Y eid 6',
                     '''SELECT 5, 6
 FROM (SELECT 1) AS _T
-WHERE NOT EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6)'''),
+WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6))'''),
                    ]
         for t in self._parse(queries):
             yield t
@@ -1614,12 +1638,24 @@ FROM concerne_relation AS rel_concerne0, cw_Affaire AS _A LEFT OUTER JOIN tags_r
 WHERE rel_concerne0.eid_from=_A.cw_eid AND rel_concerne0.eid_to=_N.cw_eid
 GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
 
+    def test_substring(self):
+        self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
+                    '''SELECT SUBSTRING(_P.cw_nom, 1, 1)
+FROM cw_Personne AS _P''')
+
+
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
         rqlst = mock_object(defined_vars={})
-        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
-        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
@@ -1629,8 +1665,8 @@ class removeUnsusedSolutionsTC(TestCase):
 
     def test_invariant_varying(self):
         rqlst = mock_object(defined_vars={})
-        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=True)
-        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={'optrelations':False}, _q_invariant=False)
+        rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
+        rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())

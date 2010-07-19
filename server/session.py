@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Repository users' and internal' sessions.
+"""Repository users' and internal' sessions."""
 
-"""
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -26,9 +25,10 @@ import sys
 import threading
 from time import time
 from uuid import uuid4
+from warnings import warn
 
 from logilab.common.deprecation import deprecated
-from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
+from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, schema
@@ -47,17 +47,6 @@ NO_UNDO_TYPES.add('CWCache')
 NO_UNDO_TYPES.add('is')
 NO_UNDO_TYPES.add('is_instance_of')
 # XXX rememberme,forgotpwd,apycot,vcsfile
-
-def is_final(rqlst, variable, args):
-    # try to find if this is a final var or not
-    for select in rqlst.children:
-        for sol in select.solutions:
-            etype = variable.get_type(sol, args)
-            if etype is None:
-                continue
-            if etype in BASE_TYPES:
-                return True
-            return False
 
 def _make_description(selected, args, solution):
     """return a description for a result set"""
@@ -128,6 +117,9 @@ class security_enabled(object):
 #            print INDENT + 'reset write to', self.oldwrite
 
 
+class TransactionData(object):
+    def __init__(self, txid):
+        self.transactionid = txid
 
 class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
@@ -142,8 +134,7 @@ class Session(RequestSessionBase):
         self.user = user
         self.repo = repo
         self.cnxtype = cnxprops.cnxtype
-        self.creation = time()
-        self.timestamp = self.creation
+        self.timestamp = time()
         self.default_mode = 'read'
         # support undo for Create Update Delete entity / Add Remove relation
         if repo.config.creating or repo.config.repairing or self.is_internal_session:
@@ -160,13 +151,31 @@ class Session(RequestSessionBase):
         # i18n initialization
         self.set_language(cnxprops.lang)
         # internals
-        self._threaddata = threading.local()
+        self._tx_data = {}
+        self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
 
     def __unicode__(self):
         return '<%ssession %s (%s 0x%x)>' % (
             self.cnxtype, unicode(self.user.login), self.id, id(self))
+
+    def set_tx_data(self, txid=None):
+        if txid is None:
+            txid = threading.currentThread().getName()
+        try:
+            self.__threaddata.txdata = self._tx_data[txid]
+        except KeyError:
+            self.__threaddata.txdata = self._tx_data[txid] = TransactionData(txid)
+
+    @property
+    def _threaddata(self):
+        try:
+            return self.__threaddata.txdata
+        except AttributeError:
+            self.set_tx_data()
+            return self.__threaddata.txdata
+
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
@@ -295,8 +304,10 @@ class Session(RequestSessionBase):
         try:
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
         except (source.OperationalError, source.InterfaceError):
+            if not rollback_on_failure:
+                raise
             source.warning("trying to reconnect")
-            self.pool.reconnect(self)
+            self.pool.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
     def set_language(self, language):
@@ -348,11 +359,14 @@ class Session(RequestSessionBase):
     @property
     def read_security(self):
         """return a boolean telling if read security is activated or not"""
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
         try:
-            return self._threaddata.read_security
+            return txstore.read_security
         except AttributeError:
-            self._threaddata.read_security = self.DEFAULT_SECURITY
-            return self._threaddata.read_security
+            txstore.read_security = self.DEFAULT_SECURITY
+            return txstore.read_security
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -361,8 +375,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        oldmode = self.read_security
-        self._threaddata.read_security = activated
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'read_security', self.DEFAULT_SECURITY)
+        txstore.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
         # issued on the session). This is tricky since we the execution model of
         # a (write) user query is:
@@ -379,18 +396,21 @@ class Session(RequestSessionBase):
         # else (False actually) is not perfect but should be enough
         #
         # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        self._threaddata.dbapi_query = (oldmode is self.DEFAULT_SECURITY
-                                        or activated is self.DEFAULT_SECURITY)
+        txstore.dbapi_query = (oldmode is self.DEFAULT_SECURITY
+                               or activated is self.DEFAULT_SECURITY)
         return oldmode
 
     @property
     def write_security(self):
         """return a boolean telling if write security is activated or not"""
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
         try:
-            return self._threaddata.write_security
+            return txstore.write_security
         except:
-            self._threaddata.write_security = self.DEFAULT_SECURITY
-            return self._threaddata.write_security
+            txstore.write_security = self.DEFAULT_SECURITY
+            return txstore.write_security
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -399,8 +419,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        oldmode = self.write_security
-        self._threaddata.write_security = activated
+        txstore = self._threaddata
+        if txstore is None:
+            return self.DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'write_security', self.DEFAULT_SECURITY)
+        txstore.write_security = activated
         return oldmode
 
     @property
@@ -539,11 +562,15 @@ class Session(RequestSessionBase):
     @property
     def pool(self):
         """connections pool, set according to transaction mode for each query"""
+        if self._closed:
+            self.reset_pool(True)
+            raise Exception('try to access pool on a closed session')
         return getattr(self._threaddata, 'pool', None)
 
-    def set_pool(self, checkclosed=True):
+    def set_pool(self):
         """the session need a pool to execute some queries"""
-        if checkclosed and self._closed:
+        if self._closed:
+            self.reset_pool(True)
             raise Exception('try to set pool on a closed session')
         if self.pool is None:
             # get pool first to avoid race-condition
@@ -554,30 +581,39 @@ class Session(RequestSessionBase):
                 self._threaddata.pool = None
                 self.repo._free_pool(pool)
                 raise
-            self._threads_in_transaction.add(threading.currentThread())
+            self._threads_in_transaction.add(
+                (threading.currentThread(), pool) )
         return self._threaddata.pool
+
+    def _free_thread_pool(self, thread, pool, force_close=False):
+        try:
+            self._threads_in_transaction.remove( (thread, pool) )
+        except KeyError:
+            # race condition on pool freeing (freed by commit or rollback vs
+            # close)
+            pass
+        else:
+            if force_close:
+                pool.reconnect()
+            else:
+                pool.pool_reset()
+            # free pool once everything is done to avoid race-condition
+            self.repo._free_pool(pool)
 
     def reset_pool(self, ignoremode=False):
         """the session is no longer using its pool, at least for some time"""
         # pool may be none if no operation has been done since last commit
         # or rollback
-        if self.pool is not None and (ignoremode or self.mode == 'read'):
+        pool = getattr(self._threaddata, 'pool', None)
+        if pool is not None and (ignoremode or self.mode == 'read'):
             # even in read mode, we must release the current transaction
-            pool = self.pool
-            try:
-                self._threads_in_transaction.remove(threading.currentThread())
-            except KeyError:
-                pass
-            pool.pool_reset()
+            self._free_thread_pool(threading.currentThread(), pool)
             del self._threaddata.pool
-            # free pool once everything is done to avoid race-condition
-            self.repo._free_pool(pool)
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
         self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
-        self._threaddata.mode = self.default_mode
 
     # shared data handling ###################################################
 
@@ -655,23 +691,41 @@ class Session(RequestSessionBase):
         return self.repo.source_from_eid(eid, self)
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
-        """db-api like method directly linked to the querier execute method"""
-        rset = self._execute(self, rql, kwargs, eid_key, build_descr)
+        """db-api like method directly linked to the querier execute method.
+
+        See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
+        """
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        self.timestamp = time() # update timestamp
+        rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
         return rset
 
-    def _clear_thread_data(self):
+    def _clear_thread_data(self, reset_pool=True):
         """remove everything from the thread local storage, except pool
         which is explicitly removed by reset_pool, and mode which is set anyway
         by _touch
         """
-        store = self._threaddata
-        for name in ('commit_state', 'transaction_data', 'pending_operations',
-                     '_rewriter'):
-            try:
-                delattr(store, name)
-            except AttributeError:
-                pass
+        try:
+            txstore = self.__threaddata.txdata
+        except AttributeError:
+            pass
+        else:
+            if reset_pool:
+                self._tx_data.pop(txstore.transactionid, None)
+                try:
+                    del self.__threaddata.txdata
+                except AttributeError:
+                    pass
+            else:
+                for name in ('commit_state', 'transaction_data',
+                             'pending_operations', '_rewriter'):
+                    try:
+                        delattr(txstore, name)
+                    except AttributeError:
+                        continue
 
     def commit(self, reset_pool=True):
         """commit the current session's transaction"""
@@ -683,13 +737,13 @@ class Session(RequestSessionBase):
             return
         if self.commit_state:
             return
-        # by default, operations are executed with security turned off
-        with security_enabled(self, False, False):
-            # on rollback, an operation should have the following state
-            # information:
-            # - processed by the precommit/commit event or not
-            # - if processed, is it the failed operation
-            try:
+        # on rollback, an operation should have the following state
+        # information:
+        # - processed by the precommit/commit event or not
+        # - if processed, is it the failed operation
+        try:
+            # by default, operations are executed with security turned off
+            with security_enabled(self, False, False):
                 for trstate in ('precommit', 'commit'):
                     processed = []
                     self.commit_state = trstate
@@ -733,23 +787,24 @@ class Session(RequestSessionBase):
                                       exc_info=sys.exc_info())
                 self.info('%s session %s done', trstate, self.id)
                 return self.transaction_uuid(set=False)
-            finally:
-                self._clear_thread_data()
-                self._touch()
-                if reset_pool:
-                    self.reset_pool(ignoremode=True)
+        finally:
+            self._touch()
+            if reset_pool:
+                self.reset_pool(ignoremode=True)
+            self._clear_thread_data(reset_pool)
 
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
-        if self.pool is None:
-            assert not self.pending_operations
+        # don't use self.pool, rollback may be called with _closed == True
+        pool = getattr(self._threaddata, 'pool', None)
+        if pool is None:
             self._clear_thread_data()
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
             return
-        # by default, operations are executed with security turned off
-        with security_enabled(self, False, False):
-            try:
+        try:
+            # by default, operations are executed with security turned off
+            with security_enabled(self, False, False):
                 while self.pending_operations:
                     try:
                         operation = self.pending_operations.pop(0)
@@ -757,19 +812,19 @@ class Session(RequestSessionBase):
                     except:
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
-                self.pool.rollback()
+                pool.rollback()
                 self.debug('rollback for session %s done', self.id)
-            finally:
-                self._clear_thread_data()
-                self._touch()
-                if reset_pool:
-                    self.reset_pool(ignoremode=True)
+        finally:
+            self._touch()
+            if reset_pool:
+                self.reset_pool(ignoremode=True)
+            self._clear_thread_data(reset_pool)
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
         self._closed = True
         # copy since _threads_in_transaction maybe modified while waiting
-        for thread in self._threads_in_transaction.copy():
+        for thread, pool in self._threads_in_transaction.copy():
             if thread is threading.currentThread():
                 continue
             self.info('waiting for thread %s', thread)
@@ -779,13 +834,15 @@ class Session(RequestSessionBase):
             for i in xrange(10):
                 thread.join(1)
                 if not (thread.isAlive() and
-                        thread in self._threads_in_transaction):
+                        (thread, pool) in self._threads_in_transaction):
                     break
             else:
                 self.error('thread %s still alive after 10 seconds, will close '
                            'session anyway', thread)
+                self._free_thread_pool(thread, pool, force_close=True)
         self.rollback()
-        del self._threaddata
+        del self.__threaddata
+        del self._tx_data
 
     # transaction data/operations management ##################################
 
@@ -863,32 +920,37 @@ class Session(RequestSessionBase):
         """
         # not so easy, looks for variable which changes from one solution
         # to another
-        unstables = rqlst.get_variable_variables()
-        basedescription = []
+        unstables = rqlst.get_variable_indices()
+        basedescr = []
         todetermine = []
-        selected = rqlst.children[0].selection # sample selection
-        for i, term in enumerate(selected):
-            if isinstance(term, Function) and term.descr().rtype is not None:
-                basedescription.append(term.get_type(term.descr().rtype, args))
-                continue
-            for vref in term.get_nodes(VariableRef):
-                if vref.name in unstables:
-                    basedescription.append(None)
-                    todetermine.append( (i, is_final(rqlst, vref.variable, args)) )
-                    break
+        sampleselect = rqlst.children[0]
+        samplesols = sampleselect.solutions[0]
+        for i, term in enumerate(sampleselect.selection):
+            try:
+                ttype = term.get_type(samplesols, args)
+            except CoercionError:
+                ttype = None
+                isfinal = True
             else:
-                # sample etype
-                etype = rqlst.children[0].solutions[0]
-                basedescription.append(term.get_type(etype, args))
+                if ttype is None or ttype == 'Any':
+                    ttype = None
+                    isfinal = True
+                else:
+                    isfinal = ttype in BASE_TYPES
+            if ttype is None or i in unstables:
+                basedescr.append(None)
+                todetermine.append( (i, isfinal) )
+            else:
+                basedescr.append(ttype)
         if not todetermine:
-            return RepeatList(len(result), tuple(basedescription))
-        return self._build_descr(result, basedescription, todetermine)
+            return RepeatList(len(result), tuple(basedescr))
+        return self._build_descr(result, basedescr, todetermine)
 
     def _build_descr(self, result, basedescription, todetermine):
         description = []
         etype_from_eid = self.describe
         for row in result:
-            row_descr = basedescription
+            row_descr = basedescription[:]
             for index, isfinal in todetermine:
                 value = row[index]
                 if value is None:
@@ -901,7 +963,8 @@ class Session(RequestSessionBase):
                     try:
                         row_descr[index] = etype_from_eid(value)[0]
                     except UnknownEid:
-                        self.critical('wrong eid %s in repository, should check database' % value)
+                        self.critical('wrong eid %s in repository, you should '
+                                      'db-check the database' % value)
                         row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
@@ -967,6 +1030,14 @@ class InternalSession(Session):
         self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.disable_hook_categories('integrity')
+
+    @property
+    def pool(self):
+        """connections pool, set according to transaction mode for each query"""
+        if self.repo.shutting_down:
+            self.reset_pool(True)
+            raise Exception('repository is shutting down')
+        return getattr(self._threaddata, 'pool', None)
 
 
 class InternalManager(object):

@@ -22,8 +22,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb import AuthenticationError
-from cubicweb.web import (NotFound, Redirect, DirectResponse, StatusResponse,
-                          ExplicitLogin)
+from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.wsgi.request import CubicWebWsgiRequest
 
@@ -126,8 +125,6 @@ class CubicWebWSGIApplication(object):
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
         try:
             self.appli.connect(req)
-        except AuthenticationError:
-            return self.request_auth(req)
         except Redirect, ex:
             return self.redirect(req, ex.location)
         path = req.path
@@ -139,12 +136,9 @@ class CubicWebWSGIApplication(object):
             return WSGIResponse(200, req, ex.response)
         except StatusResponse, ex:
             return WSGIResponse(ex.status, req, ex.content)
-        except NotFound:
-            result = self.appli.notfound_content(req)
-            return WSGIResponse(404, req, result)
-        except ExplicitLogin:  # must be before AuthenticationError
+        except AuthenticationError:  # must be before AuthenticationError
             return self.request_auth(req)
-        except AuthenticationError:
+        except LogOut:
             if self.config['auth-mode'] == 'cookie':
                 # in cookie mode redirecting to the index view is enough :
                 # either anonymous connection is allowed and the page will

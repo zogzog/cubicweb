@@ -4,6 +4,41 @@
 .. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
+.. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+
+2010-06-11  --  3.8.4
+   * support full text prefix search for instances using postgres > 8.4 as database: try it
+     by using search such as 'cubic*'
+
+
+2010-04-20  --  3.8.0
+   * nicer schema_ and workflow views (clickable image!)
+
+   * more power to undo, though not yet complete (missing entity updates, soon available...)
+
+   * pdf export functionnality moved to its own cube. If it's no more
+     present on this site while you found it useful, ask you site
+     administrator to install the pdfexport_ cube.
+
+
+2010-03-16  --  3.7.0
+   * experimental support for undoing of deletion. If you're not proposed to *undo*
+     deletion of one or several entities, ask you site administrator to activate
+     the feature.
+
+
+2010-02-10  --  3.6.0
+   * nice 'demo widget' to edit bookmark's path, e.g. a relative url, splitted
+     as path and parameters and dealing nicely with url encodings. Try to
+     edit your bookmarks!
+
+   * hell lot of refactorings, but you should hopefuly not see that from the outside
+
+2009-09-17  --  3.5.0
+
+    * selectable workflows: authorized users may change the workflow used
+      by some workflowable entities
+
 
 2009-08-07  --  3.4.0
 

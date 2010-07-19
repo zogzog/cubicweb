@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Base class for entity objects manipulated in clients
+"""Base class for entity objects manipulated in clients"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -432,12 +431,12 @@ class Entity(AppObject, dict):
     def has_perm(self, action):
         return self.e_schema.has_perm(self._cw, action, eid=self.eid)
 
-    def view(self, __vid, __registry='views', **kwargs):
+    def view(self, __vid, __registry='views', w=None, **kwargs):
         """shortcut to apply a view on this entity"""
         view = self._cw.vreg[__registry].select(__vid, self._cw, rset=self.cw_rset,
                                                 row=self.cw_row, col=self.cw_col,
                                                 **kwargs)
-        return view.render(row=self.cw_row, col=self.cw_col, **kwargs)
+        return view.render(row=self.cw_row, col=self.cw_col, w=w, **kwargs)
 
     def absolute_url(self, *args, **kwargs):
         """return an absolute url to view this entity"""
@@ -574,7 +573,7 @@ class Entity(AppObject, dict):
                 continue
             rql = 'SET X %s V WHERE X eid %%(x)s, Y eid %%(y)s, Y %s V' % (
                 rschema.type, rschema.type)
-            execute(rql, {'x': self.eid, 'y': ceid}, ('x', 'y'))
+            execute(rql, {'x': self.eid, 'y': ceid})
             self.clear_related_cache(rschema.type, 'subject')
         for rschema in self.e_schema.object_relations():
             if rschema.meta:
@@ -592,7 +591,7 @@ class Entity(AppObject, dict):
                 continue
             rql = 'SET V %s X WHERE X eid %%(x)s, Y eid %%(y)s, V %s Y' % (
                 rschema.type, rschema.type)
-            execute(rql, {'x': self.eid, 'y': ceid}, ('x', 'y'))
+            execute(rql, {'x': self.eid, 'y': ceid})
             self.clear_related_cache(rschema.type, 'object')
 
     # data fetching methods ###################################################
@@ -694,8 +693,7 @@ class Entity(AppObject, dict):
             # if some outer join are included to fetch inlined relations
             rql = 'Any %s,%s %s' % (V, ','.join(var for attr, var in selected),
                                     ','.join(rql))
-            rset = self._cw.execute(rql, {'x': self.eid}, 'x',
-                                    build_descr=False)[0]
+            rset = self._cw.execute(rql, {'x': self.eid}, build_descr=False)[0]
             # handle attributes
             for i in xrange(1, lastattr):
                 self[str(selected[i-1][0])] = rset[i]
@@ -724,7 +722,7 @@ class Entity(AppObject, dict):
                 return None
             rql = "Any A WHERE X eid %%(x)s, X %s A" % name
             try:
-                rset = self._cw.execute(rql, {'x': self.eid}, 'x')
+                rset = self._cw.execute(rql, {'x': self.eid})
             except Unauthorized:
                 self[name] = value = None
             else:
@@ -753,9 +751,12 @@ class Entity(AppObject, dict):
             return self.related_cache(rtype, role, entities, limit)
         except KeyError:
             pass
-        assert self.has_eid()
+        if not self.has_eid():
+            if entities:
+                return []
+            return self.empty_rset()
         rql = self.related_rql(rtype, role)
-        rset = self._cw.execute(rql, {'x': self.eid}, 'x')
+        rset = self._cw.execute(rql, {'x': self.eid})
         self.set_related_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
@@ -881,7 +882,7 @@ class Entity(AppObject, dict):
         if limit is not None:
             before, after = rql.split(' WHERE ', 1)
             rql = '%s LIMIT %s WHERE %s' % (before, limit, after)
-        return self._cw.execute(rql, args, tuple(args))
+        return self._cw.execute(rql, args)
 
     # relations cache handling ################################################
 
@@ -964,7 +965,7 @@ class Entity(AppObject, dict):
         # and now update the database
         kwargs['x'] = self.eid
         self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                         kwargs, 'x')
+                         kwargs)
         kwargs.pop('x')
         # update current local object _after_ the rql query to avoid
         # interferences between the query execution itself and the
@@ -987,13 +988,13 @@ class Entity(AppObject, dict):
                 restr = 'X %s Y' % attr
             if values is None:
                 self._cw.execute('DELETE %s WHERE X eid %%(x)s' % restr,
-                                 {'x': self.eid}, 'x')
+                                 {'x': self.eid})
                 continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
             self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(r.eid) for r in values)),
-                             {'x': self.eid}, 'x')
+                             {'x': self.eid})
 
     def delete(self, **kwargs):
         assert self.has_eid(), self.eid

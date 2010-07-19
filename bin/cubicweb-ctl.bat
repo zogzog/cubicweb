@@ -8,8 +8,8 @@ goto exit
 """
 # -------------------- Python section --------------------
 import sys
-from os.path import join, dirname
-sys.path.insert(0, join(dirname(__file__), '..', '..'))
+from os.path import join, dirname, normpath
+sys.path.insert(0, normpath(join(dirname(__file__), '..', '..')))
 from cubicweb.cwctl import run
 run(sys.argv[1:])
 

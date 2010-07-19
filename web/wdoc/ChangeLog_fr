@@ -4,6 +4,49 @@
 .. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
+.. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+
+2010-06-11  --  3.8.4
+   * support pour la recherche de préfixe pour les instances utilisant postgres > 8.4 :
+     essayez en cherchant par ex. 'cubic*'
+
+2010-04-20  --  3.8.0
+
+   * amélioration des vues de schema_ et des vues de workflows
+     (images clickable !)
+
+   * meilleure support du "undo", mais il manque toujours le support
+     sur la modification d'entité (bientôt...)
+
+   * la fonctionnalité d'export d'pdf a été déplacé dans son propre
+     cube. Si cette fonctionalité n'est plus disponible sur ce site et
+     que vous la trouviez utile, demander à l'administrateur
+     d'installer le cube pdfexport_.
+
+
+2010-03-16  --  3.7.0
+
+   * support experimental pour l'annulation ("undo") de la
+     suppression. Si, après une suppression d'une ou plusieurs
+     entités, on ne vous propose pas d'annuler l'opération, demander à
+     l'administrateur d'activé la fonctionnalité
+
+
+2010-02-10  --  3.6.0
+
+   * nouvelle widget (de démonstration :) pour éditer le chemin des
+     signets. Celui-ci, une url relative finalement, est décomposée de
+     chemin et paramètres que vous pouvez éditer individuellement et
+     surtout lisiblement car la gestion de l'échappement de l'url est
+     géré de manière transparente
+
+   * beaucoup de refactoring, mais vous ne devriez rien remarquer :)
+
+2009-09-17  --  3.5.0
+
+    * workflow sélectionnable: les utilisateurs autorisés peuvent
+      changer le workflow à utilister pour les entités le supportant
+
 
 2009-08-07  --  3.4.0
 

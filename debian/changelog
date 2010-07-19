@@ -1,3 +1,51 @@
+cubicweb (3.8.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Julien Jehannet <julien.jehannet@logilab.fr>  Wed, 07 Jul 2010 11:42:02 +0200
+
+cubicweb (3.8.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 02 Jul 2010 00:39:36 +0200
+
+cubicweb (3.8.5-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 21 Jun 2010 10:42:01 +0200
+
+cubicweb (3.8.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 11 Jun 2010 11:36:50 +0200
+
+cubicweb (3.8.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 07 Jun 2010 09:19:50 +0200
+
+cubicweb (3.8.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 18 May 2010 14:59:07 +0200
+
+cubicweb (3.8.1-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 26 Apr 2010 17:11:36 +0200
+
+cubicweb (3.8.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 20 Apr 2010 16:31:44 +0200
+
 cubicweb (3.7.5-1) unstable; urgency=low
 
   * new upstream release on the 3.7 branch
@@ -38,7 +86,7 @@ cubicweb (3.7.0-1) unstable; urgency=low
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 16 Mar 2010 17:55:37 +0100
 
- cubicweb (3.6.3-1) unstable; urgency=low
+cubicweb (3.6.3-1) unstable; urgency=low
 
   * remove postgresql-contrib from cubicweb dependency (using tsearch
     which is included with postgres >= 8.3)

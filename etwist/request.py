@@ -22,22 +22,13 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from twisted.web2 import http, http_headers
+from twisted.web import http
 
 from cubicweb.web import DirectResponse
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.web.httpcache import GMTOFFSET
-
-def cleanup_files(dct, encoding):
-    d = {}
-    for k, infos in dct.items():
-        for (filename, mt, stream) in infos:
-            if filename:
-                # XXX: suppose that no file submitted <-> no filename
-                filename = unicode(filename, encoding)
-                mt = u'%s/%s' % (mt.mediaType, mt.mediaSubtype)
-                d[k] = (filename, mt, stream)
-    return d
+from cubicweb.web.http_headers import Headers
+from cubicweb.etwist.http import not_modified_response
 
 
 class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
@@ -45,10 +36,15 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         self._twreq = req
         self._base_url = base_url
         super(CubicWebTwistedRequestAdapter, self).__init__(vreg, https, req.args)
-        self.form.update(cleanup_files(req.files, self.encoding))
-        # prepare output headers
-        self.headers_out = http_headers.Headers()
-        self._headers = req.headers
+        for key, (name, stream) in req.files.iteritems():
+            if name is None:
+                self.form[key] = (name, stream)
+            else:
+                self.form[key] = (unicode(name, self.encoding), stream)
+        # XXX can't we keep received_headers?
+        self._headers_in = Headers()
+        for k, v in req.received_headers.iteritems():
+            self._headers_in.addRawHeader(k, v)
 
     def base_url(self):
         """return the root url of the instance"""
@@ -76,29 +72,8 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         raise KeyError if the header is not set
         """
         if raw:
-            return self._twreq.headers.getRawHeaders(header, [default])[0]
-        return self._twreq.headers.getHeader(header, default)
-
-    def set_header(self, header, value, raw=True):
-        """set an output HTTP header"""
-        if raw:
-            # adding encoded header is important, else page content
-            # will be reconverted back to unicode and apart unefficiency, this
-            # may cause decoding problem (e.g. when downloading a file)
-            self.headers_out.setRawHeaders(header, [str(value)])
-        else:
-            self.headers_out.setHeader(header, value)
-
-    def add_header(self, header, value):
-        """add an output HTTP header"""
-        # adding encoded header is important, else page content
-        # will be reconverted back to unicode and apart unefficiency, this
-        # may cause decoding problem (e.g. when downloading a file)
-        self.headers_out.addRawHeader(header, str(value))
-
-    def remove_header(self, header):
-        """remove an output HTTP header"""
-        self.headers_out.removeHeader(header)
+            return self._headers_in.getRawHeaders(header, [default])[0]
+        return self._headers_in.getHeader(header, default)
 
     def _validate_cache(self):
         """raise a `DirectResponse` exception if a cached page along the way
@@ -108,11 +83,22 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
             # Expires header seems to be required by IE7
             self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
             return
-        try:
-            http.checkPreconditions(self._twreq, _PreResponse(self))
-        except http.HTTPError, ex:
-            self.info('valid http cache, no actual rendering')
-            raise DirectResponse(ex.response)
+        # when using both 'Last-Modified' and 'ETag' response headers
+        # (i.e. using respectively If-Modified-Since and If-None-Match request
+        # headers, see
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4 for
+        # reference
+        last_modified = self.headers_out.getHeader('last-modified')
+        if last_modified is not None:
+            status = self._twreq.setLastModified(last_modified)
+            if status != http.CACHED:
+                return
+        etag = self.headers_out.getRawHeaders('etag')
+        if etag is not None:
+            status = self._twreq.setETag(etag[0])
+            if status == http.CACHED:
+                response = not_modified_response(self._twreq, self._headers_in)
+                raise DirectResponse(response)
         # Expires header seems to be required by IE7
         self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
 
@@ -133,9 +119,3 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
             # :/ twisted is returned a localized time stamp
             return datetime.fromtimestamp(mtime) + GMTOFFSET
         return None
-
-
-class _PreResponse(object):
-    def __init__(self, request):
-        self.headers = request.headers_out
-        self.code = 200

@@ -106,10 +106,7 @@ class RequestSessionBase(object):
         return rset
 
     def empty_rset(self):
-        """return a result set for the given eid without doing actual query
-        (we have the eid, we can suppose it exists and user has access to the
-        entity)
-        """
+        """ return a guaranteed empty result """
         rset = ResultSet([], 'Any X WHERE X eid -1')
         rset.req = self
         return rset
@@ -292,7 +289,7 @@ class RequestSessionBase(object):
     # formating methods #######################################################
 
     def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
-             initargs=None, **kwargs):
+             initargs=None, w=None, **kwargs):
         """Select object with the given id (`__oid`) then render it.  If the
         object isn't selectable, try to select fallback object if
         `__fallback_oid` is specified.
@@ -310,15 +307,17 @@ class RequestSessionBase(object):
         try:
             view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
         except RegistryException:
+            if __fallback_oid is None:
+                raise
             view =  self.vreg[__registry].select(__fallback_oid, self,
                                                  rset=rset, **initargs)
-        return view.render(**kwargs)
+        return view.render(w=w, **kwargs)
 
     def format_date(self, date, date_format=None, time=False):
         """return a string for a date time according to instance's
         configuration
         """
-        if date:
+        if date is not None:
             if date_format is None:
                 if time:
                     date_format = self.property_value('ui.datetime-format')
@@ -331,7 +330,7 @@ class RequestSessionBase(object):
         """return a string for a time according to instance's
         configuration
         """
-        if time:
+        if time is not None:
             return ustrftime(time, self.property_value('ui.time-format'))
         return u''
 

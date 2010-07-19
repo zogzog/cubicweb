@@ -1,7 +1,7 @@
 /* styles for access control forms)
  *
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -17,13 +17,13 @@ h2.schema{
 }
 
 
-h3.schema{ 
+h3.schema{
  font-weight: bold;
 }
 
 h4 a,
 h4 a:link,
-h4 a:visited{ 
+h4 a:visited{
  color:#000;
  }
 
@@ -39,11 +39,11 @@ table.schemaInfo th,
 table.schemaInfo td {
   padding: .3em .5em;
   border: 1px solid grey;
-  width:33%; 
+  width:33%;
 }
 
 
-table.schemaInfo tr th {   
+table.schemaInfo tr th {
  padding: 0.2em 0px 0.2em 5px;
  background-image:none;
  background-color:#dfdfdf;
@@ -51,47 +51,46 @@ table.schemaInfo tr th {
 
 table.schemaInfo thead tr {
   border: 1px solid #dfdfdf;
-} 
+}
 
 table.schemaInfo td {
-  padding: 3px 10px 3px 5px; 
+  padding: 3px 10px 3px 5px;
 
 }
 
-.users{ 
+a.users{
  color : #00CC33;
  font-weight: bold }
 
-.guests{ 
+a.guests{
  color :  #ff7700;
  font-weight: bold;
 }
 
-.staff{  
- color : #0083ab;
- font-weight: bold;
-}
-
-.owners{ 
+a.owners{
  color : #8b0000;
  font-weight: bold;
 }
 
+a.managers{
+ color: #000000;
+}
+
 .discret,
-a.grey{ 
+a.grey{
  color:#666;
 }
 
-a.grey:hover{ 
+a.grey:hover{
  color:#000;
 }
 
-.red{ 
+.red{
  color :  #ff7700;
  }
 
-div#schema_security{ 
- width:780px;
+div#schema_security{
+ width:100%;
  }
 /******************************************************************************/
 /* user groups edition form (views/euser.py)                                  */

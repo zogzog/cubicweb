@@ -30,9 +30,9 @@ from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
+from cubicweb.web.views.tableview import EntityAttributesTableView
 
-
-class ProgressTableView(EntityView):
+class ProgressTableView(EntityAttributesTableView):
     """The progress table view is able to display progress information
     of any object implement IMileStone.
 
@@ -52,25 +52,12 @@ class ProgressTableView(EntityView):
     __regid__ = 'progress_table_view'
     title = _('task progression')
     __select__ = implements(IMileStone)
+    table_css = "progress"
+    css_files = ('cubicweb.iprogress.css',)
 
     # default columns of the table
     columns = (_('project'), _('milestone'), _('state'), _('eta_date'),
                _('cost'), _('progress'), _('todo_by'))
-
-
-    def call(self, columns=None):
-        """displays all versions in a table"""
-        self._cw.add_css('cubicweb.iprogress.css')
-        _ = self._cw._
-        self.columns = columns or self.columns
-        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
-        self.w(u'<table class="progress">')
-        self.table_header(ecls)
-        self.w(u'<tbody>')
-        for row in xrange(self.cw_rset.rowcount):
-            self.cell_call(row=row, col=0)
-        self.w(u'</tbody>')
-        self.w(u'</table>')
 
     def cell_call(self, row, col):
         _ = self._cw._
@@ -103,20 +90,6 @@ class ProgressTableView(EntityView):
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
         return display_name(self._cw, ecls.__regid__)
-
-    def table_header(self, ecls):
-        """builds the table's header"""
-        self.w(u'<thead><tr>')
-        _ = self._cw._
-        for column in self.columns:
-            meth = getattr(self, 'header_for_%s' % column, None)
-            if meth:
-                colname = meth(ecls)
-            else:
-                colname = _(column)
-            self.w(u'<th>%s</th>' % xml_escape(colname))
-        self.w(u'</tr></thead>\n')
-
 
     ## cell management ########################################################
     def build_project_cell(self, entity):

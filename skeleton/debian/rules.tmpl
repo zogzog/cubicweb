@@ -7,7 +7,7 @@
 build: build-stamp
 build-stamp:
 	dh_testdir
-	python setup.py -q build
+	NO_SETUPTOOLS=1 python setup.py -q build
 	touch build-stamp
 
 clean:
@@ -23,7 +23,7 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs -i
-	python setup.py -q install --no-compile --prefix=debian/%(distname)s/usr/
+	NO_SETUPTOOLS=1 python setup.py -q install --no-compile --prefix=debian/%(distname)s/usr/
 	# remove generated .egg-info file
 	rm -rf debian/%(distname)s/usr/lib/python*
 

@@ -103,7 +103,7 @@ class TableViewTC(CubicWebTC):
         req = self.request()
         e = req.create_entity("State", name=u'<toto>', description=u'loo"ong blabla')
         rset = req.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
-                            {'x': e.eid}, 'x')
+                           {'x': e.eid})
         view = self.vreg['views'].select('table', req, rset=rset)
         return e, rset, view
 

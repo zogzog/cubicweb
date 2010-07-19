@@ -252,7 +252,7 @@ class AddRelatedActions(action.Action):
     __select__ = action.Action.__select__ & one_line_rset() & non_final_entity()
 
     submenu = _('addrelated')
-    order = 20
+    order = 17
 
     def fill_menu(self, box, menu):
         # when there is only one item in the sub-menu, replace the sub-menu by
@@ -260,16 +260,24 @@ class AddRelatedActions(action.Action):
         menu.label_prefix = self._cw._('add')
         super(AddRelatedActions, self).fill_menu(box, menu)
 
+    def redirect_params(self, entity):
+        return {'__redirectpath': entity.rest_path(), # should not be url quoted!
+                '__redirectvid': self._cw.form.get('vid', '')}
+
     def actual_actions(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         eschema = entity.e_schema
-        for rschema, teschema, x in self.add_related_schemas(entity):
-            if x == 'subject':
-                label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
-                url = self.linkto_url(entity, rschema, teschema, 'object')
+        params = self.redirect_params(entity)
+        for rschema, teschema, role in self.add_related_schemas(entity):
+            if rschema.role_rdef(eschema, teschema, role).role_cardinality(role) in '1?':
+                if entity.related(rschema, role):
+                    continue
+            if role == 'subject':
+                label = 'add %s %s %s %s' % (eschema, rschema, teschema, role)
+                url = self.linkto_url(entity, rschema, teschema, 'object', **params)
             else:
-                label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
-                url = self.linkto_url(entity, rschema, teschema, 'subject')
+                label = 'add %s %s %s %s' % (teschema, rschema, eschema, role)
+                url = self.linkto_url(entity, rschema, teschema, 'subject', **params)
             yield self.build_action(self._cw._(label), url)
 
     def add_related_schemas(self, entity):
@@ -305,11 +313,9 @@ class AddRelatedActions(action.Action):
                     if teschema.may_have_permission('add', req):
                         yield rschema, teschema, role
 
-    def linkto_url(self, entity, rtype, etype, target):
+    def linkto_url(self, entity, rtype, etype, target, **kwargs):
         return self._cw.build_url('add/%s' % etype,
-                                  __linkto='%s:%s:%s' % (rtype, entity.eid, target),
-                                  __redirectpath=entity.rest_path(), # should not be url quoted!
-                                  __redirectvid=self._cw.form.get('vid', ''))
+                                  __linkto='%s:%s:%s' % (rtype, entity.eid, target), **kwargs)
 
 
 class ViewSameCWEType(action.Action):

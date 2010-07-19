@@ -41,7 +41,7 @@ class SetUseEmailRelationOp(hook.Operation):
         if self.condition():
             self.session.execute(
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
-                {'x': self.entity.eid, 'y': self.email.eid}, 'x')
+                {'x': self.entity.eid, 'y': self.email.eid})
 
 
 class SetPrimaryEmailRelationOp(SetUseEmailRelationOp):

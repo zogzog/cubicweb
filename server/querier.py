@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -29,7 +29,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import Relation, VariableRef, Constant, SubQuery
+from rql.nodes import Relation, VariableRef, Constant, SubQuery, Exists, Not
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -112,7 +112,16 @@ def check_read_access(session, rqlst, solution, args):
                 ex = Unauthorized('read', solution[varname])
                 ex.var = varname
                 raise ex
-            localchecks[varname] = erqlexprs
+            # don't insert security on variable only referenced by 'NOT X relation Y' or
+            # 'NOT EXISTS(X relation Y)'
+            varinfo = rqlst.defined_vars[varname].stinfo
+            if varinfo['selected'] or (
+                len([r for r in varinfo['relations']
+                     if (not schema.rschema(r.r_type).final
+                         and ((isinstance(r.parent, Exists) and r.parent.neged(strict=True))
+                              or isinstance(r.parent, Not)))])
+                != len(varinfo['relations'])):
+                localchecks[varname] = erqlexprs
     return localchecks
 
 def add_noinvariant(noinvariant, restricted, select, nbtrees):
@@ -269,6 +278,7 @@ class ExecutionPlan(object):
                 # transform in subquery when len(localchecks)>1 and groups
                 if nbtrees > 1 and (select.orderby or select.groupby or
                                     select.having or select.has_aggregat or
+                                    select.distinct or
                                     select.limit or select.offset):
                     newselect = Select()
                     # only select variables in subqueries
@@ -303,6 +313,7 @@ class ExecutionPlan(object):
                         select.offset = 0
                     myunion = Union()
                     newselect.set_with([SubQuery(aliases, myunion)], check=False)
+                    newselect.distinct = select.distinct
                     solutions = [sol.copy() for sol in select.solutions]
                     cleanup_solutions(newselect, solutions)
                     newselect.set_possible_types(solutions)
@@ -353,16 +364,9 @@ class ExecutionPlan(object):
         varkwargs = {}
         if not session.transaction_data.get('security-rqlst-cache'):
             for var in rqlst.defined_vars.itervalues():
-                for rel in var.stinfo['uidrels']:
-                    const = rel.children[1].children[0]
-                    try:
-                        varkwargs[var.name] = typed_eid(const.eval(self.args))
-                        break
-                    except AttributeError:
-                        #from rql.nodes import Function
-                        #assert isinstance(const, Function)
-                        # X eid IN(...)
-                        pass
+                if var.stinfo['constnode'] is not None:
+                    eid = var.stinfo['constnode'].eval(self.args)
+                    varkwargs[var.name] = typed_eid(eid)
         # dictionnary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
@@ -424,7 +428,7 @@ class InsertPlan(ExecutionPlan):
         # list of new or updated entities definition (utils.Entity)
         self.e_defs = [[]]
         # list of new relation definition (3-uple (from_eid, r_type, to_eid)
-        self.r_defs = []
+        self.r_defs = set()
         # indexes to track entity definitions bound to relation definitions
         self._r_subj_index = {}
         self._r_obj_index = {}
@@ -437,7 +441,7 @@ class InsertPlan(ExecutionPlan):
 
     def add_relation_def(self, rdef):
         """add an relation definition to build"""
-        self.r_defs.append(rdef)
+        self.r_defs.add(rdef)
         if not isinstance(rdef[0], int):
             self._r_subj_index.setdefault(rdef[0], []).append(rdef)
         if not isinstance(rdef[2], int):
@@ -463,9 +467,9 @@ class InsertPlan(ExecutionPlan):
         for i, row in enumerate(self.e_defs[:]):
             self.e_defs[i][colidx] = edefs[0]
             samplerow = self.e_defs[i]
-            for edef in edefs[1:]:
+            for edef_ in edefs[1:]:
                 row = samplerow[:]
-                row[colidx] = edef
+                row[colidx] = edef_
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
@@ -474,8 +478,8 @@ class InsertPlan(ExecutionPlan):
                 expanded = self._expanded(rdef)
                 result = []
                 for exp_rdef in expanded:
-                    for edef in edefs:
-                        result.append( (edef, exp_rdef[1], exp_rdef[2]) )
+                    for edef_ in edefs:
+                        result.append( (edef_, exp_rdef[1], exp_rdef[2]) )
                 self._expanded_r_defs[rdef] = result
         # and finally, see if this entity def is referenced as object in some
         # relation definition
@@ -484,8 +488,8 @@ class InsertPlan(ExecutionPlan):
                 expanded = self._expanded(rdef)
                 result = []
                 for exp_rdef in expanded:
-                    for edef in edefs:
-                        result.append( (exp_rdef[0], exp_rdef[1], edef) )
+                    for edef_ in edefs:
+                        result.append( (exp_rdef[0], exp_rdef[1], edef_) )
                 self._expanded_r_defs[rdef] = result
 
     def _expanded(self, rdef):
@@ -556,16 +560,22 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
+        # rql st and solution cache. Don't bother using a Cache instance: we
+        # should have a limited number of queries in there, since there are no
+        # entries in this cache for user queries (which have no args)
+        self._rql_cache = {}
+        # rql cache key cache
+        self._rql_ck_cache = Cache(repo.config['rql-cache-size'])
+        # some cache usage stats
+        self.cache_hit, self.cache_miss = 0, 0
         # rql parsing / analysing helper
         self.solutions = repo.vreg.solutions
-        self._rql_cache = Cache(repo.config['rql-cache-size'])
-        self.cache_hit, self.cache_miss = 0, 0
-        # rql planner
-        # note: don't use repo.sources, may not be built yet, and also "admin"
-        #       isn't an actual source
         rqlhelper = repo.vreg.rqlhelper
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
+        # rql planner
+        # note: don't use repo.sources, may not be built yet, and also "admin"
+        #       isn't an actual source
         if len([uri for uri in repo.config.sources() if uri != 'admin']) < 2:
             from cubicweb.server.ssplanner import SSPlanner
             self._planner = SSPlanner(schema, rqlhelper)
@@ -588,7 +598,7 @@ class QuerierHelper(object):
             return InsertPlan(self, rqlst, args, session)
         return ExecutionPlan(self, rqlst, args, session)
 
-    def execute(self, session, rql, args=None, eid_key=None, build_descr=True):
+    def execute(self, session, rql, args=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
@@ -597,12 +607,6 @@ class QuerierHelper(object):
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty
           list)
-        * `eid_key` must be both a key in args and a substitution in the rql
-          query. It should be used to enhance cacheability of rql queries.
-          It may be a tuple for keys in args.
-          `eid_key` must be provided in cases where a eid substitution is provided
-          and resolves ambiguities in the possible solutions inferred for each
-          variable in the query.
 
         on INSERT queries, there will be one row with the eid of each inserted
         entity
@@ -618,40 +622,33 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', rql, args
         # parse the query and binds variables
-        if eid_key is not None:
-            if not isinstance(eid_key, (tuple, list)):
-                eid_key = (eid_key,)
-            cachekey = [rql]
-            for key in eid_key:
-                try:
-                    etype = self._repo.type_from_eid(args[key], session)
-                except KeyError:
-                    raise QueryError('bad cache key %s (no value)' % key)
-                except TypeError:
-                    raise QueryError('bad cache key %s (value: %r)' % (
-                        key, args[key]))
-                except UnknownEid:
-                    # we want queries such as "Any X WHERE X eid 9999"
-                    # return an empty result instead of raising UnknownEid
-                    return empty_rset(rql, args)
-                cachekey.append(etype)
-                # ensure eid is correctly typed in args
-                args[key] = typed_eid(args[key])
-            cachekey = tuple(cachekey)
-        else:
-            cachekey = rql
         try:
+            cachekey = rql
+            if args:
+                eidkeys = self._rql_ck_cache[rql]
+                if eidkeys:
+                    try:
+                        cachekey = self._repo.querier_cache_key(session, rql,
+                                                                args, eidkeys)
+                    except UnknownEid:
+                        # we want queries such as "Any X WHERE X eid 9999"
+                        # return an empty result instead of raising UnknownEid
+                        return empty_rset(rql, args)
             rqlst = self._rql_cache[cachekey]
             self.cache_hit += 1
         except KeyError:
             self.cache_miss += 1
             rqlst = self.parse(rql)
             try:
-                self.solutions(session, rqlst, args)
+                eidkeys = self.solutions(session, rqlst, args)
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
+            self._rql_ck_cache[rql] = eidkeys
+            if eidkeys:
+                cachekey = self._repo.querier_cache_key(session, rql, args,
+                                                        eidkeys)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if rqlst.TYPE != 'select':
@@ -711,7 +708,7 @@ class QuerierHelper(object):
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
         # return a result set object
-        return ResultSet(results, rql, args, descr, eid_key, orig_rqlst)
+        return ResultSet(results, rql, args, descr, orig_rqlst)
 
 from logging import getLogger
 from cubicweb import set_log_methods

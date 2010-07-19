@@ -36,12 +36,12 @@ USER_OPTIONS =  (
                'default': 'admin',
                'help': "cubicweb manager account's login "
                '(this user will be created)',
-               'inputlevel': 0,
+               'level': 0,
                }),
     ('password', {'type' : 'password',
                   'default': REQUIRED,
                   'help': "cubicweb manager account's password",
-                  'inputlevel': 0,
+                  'level': 0,
                   }),
     )
 
@@ -106,39 +106,39 @@ class ServerConfiguration(CubicWebConfiguration):
          {'type' : 'string',
           'default': None,
           'help': 'host name if not correctly detectable through gethostname',
-          'group': 'main', 'inputlevel': 1,
+          'group': 'main', 'level': 1,
           }),
         ('pid-file',
          {'type' : 'string',
           'default': Method('default_pid_file'),
           'help': 'repository\'s pid file',
-          'group': 'main', 'inputlevel': 2,
+          'group': 'main', 'level': 2,
           }),
         ('uid',
          {'type' : 'string',
           'default': None,
           'help': 'if this option is set, use the specified user to start \
 the repository rather than the user running the command',
-          'group': 'main', 'inputlevel': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
+          'group': 'main', 'level': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
           }),
         ('session-time',
          {'type' : 'time',
           'default': '30min',
           'help': 'session expiration time, default to 30 minutes',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('connections-pool-size',
          {'type' : 'int',
           'default': 4,
           'help': 'size of the connections pools. Each source supporting multiple \
 connections will have this number of opened connections.',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('rql-cache-size',
          {'type' : 'int',
           'default': 300,
           'help': 'size of the parsed rql cache size.',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('undo-support',
          {'type' : 'string', 'default': '',
@@ -146,20 +146,20 @@ connections will have this number of opened connections.',
 [C]reate [U]pdate [D]elete entities / [A]dd [R]emove relation. Leave it empty \
 for no undo support, set it to CUDAR for full undo support, or to DR for \
 support undoing of deletion only.',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('keep-transaction-lifetime',
          {'type' : 'int', 'default': 7,
           'help': 'number of days during which transaction records should be \
 kept (hence undoable).',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
         ('multi-sources-etypes',
          {'type' : 'csv', 'default': (),
           'help': 'defines which entity types from this repository are used \
 by some other instances. You should set this properly so those instances to \
 detect updates / deletions.',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
 
         ('delay-full-text-indexation',
@@ -168,7 +168,7 @@ detect updates / deletions.',
           ' to be done when entity are added/modified by users, activate this '
           'option and setup a job using cubicweb-ctl db-rebuild-fti on your '
           'system (using cron for instance).',
-          'group': 'main', 'inputlevel': 3,
+          'group': 'main', 'level': 3,
           }),
 
         # email configuration
@@ -181,7 +181,7 @@ to find recipients, recipients will be found according to this mode. Available \
 modes are "default-dest-addrs" (emails specified in the configuration \
 variable with the same name), "users" (every users which has activated \
 account with an email set), "none" (no notification).',
-          'group': 'email', 'inputlevel': 2,
+          'group': 'email', 'level': 2,
           }),
         ('default-dest-addrs',
          {'type' : 'csv',
@@ -189,14 +189,14 @@ account with an email set), "none" (no notification).',
           'help': 'comma separated list of email addresses that will be used \
 as default recipient when an email is sent and the notification has no \
 specific recipient rules.',
-          'group': 'email', 'inputlevel': 2,
+          'group': 'email', 'level': 2,
           }),
         ('supervising-addrs',
          {'type' : 'csv',
           'default': (),
           'help': 'comma separated list of email addresses that will be \
 notified of every changes.',
-          'group': 'email', 'inputlevel': 2,
+          'group': 'email', 'level': 2,
           }),
         # pyro server.serverconfig
         ('pyro-host',
@@ -205,7 +205,7 @@ notified of every changes.',
           'help': 'Pyro server host, if not detectable correctly through \
 gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
-          'group': 'pyro', 'inputlevel': 3,
+          'group': 'pyro', 'level': 3,
           }),
         ) + CubicWebConfiguration.options)
 

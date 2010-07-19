@@ -3,7 +3,7 @@
 db-driver   = sqlite
 db-host     = 
 adapter     = native
-db-name     = tmpdb
+db-name     = tmpdb-multi
 db-encoding = UTF-8
 db-user     = admin
 db-password = gingkow

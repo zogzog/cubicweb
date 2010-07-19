@@ -21,13 +21,13 @@
 * primary, sidebox
 * oneline, incontext, outofcontext, text
 * list
-
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from datetime import timedelta
+from warnings import warn
 
 from rql import nodes
 
@@ -308,6 +308,18 @@ class SimpleListView(ListItemView):
     __regid__ = 'simplelist'
     redirect_vid = 'incontext'
 
+    def call(self, subvid=None, **kwargs):
+        """display a list of entities by calling their <item_vid> view
+
+        :param listid: the DOM id to use for the root element
+        """
+        if subvid is None and 'vid' in kwargs:
+            warn("should give a 'subvid' argument instead of 'vid'",
+                 DeprecationWarning, stacklevel=2)
+        else:
+            kwargs['vid'] = subvid
+        return super(SimpleListView, self).call(**kwargs)
+
 
 class SameETypeListView(EntityView):
     """list of entities of the same type, when asked explicitly for same etype list
@@ -344,10 +356,15 @@ class CSVView(SimpleListView):
     __regid__ = 'csv'
     redirect_vid = 'incontext'
 
-    def call(self, **kwargs):
+    def call(self, subvid=None, **kwargs):
+        if subvid is None and 'vid' in kwargs:
+            warn("should give a 'subvid' argument instead of 'vid'",
+                 DeprecationWarning, stacklevel=2)
+        else:
+            kwargs['vid'] = subvid
         rset = self.cw_rset
         for i in xrange(len(rset)):
-            self.cell_call(i, 0, vid=kwargs.get('vid'))
+            self.cell_call(i, 0, **kwargs)
             if i < rset.rowcount-1:
                 self.w(u", ")
 

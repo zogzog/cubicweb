@@ -70,6 +70,7 @@ We can use subpackages instead of python modules for ``views.py``, ``entities.py
   |-- entities.py
   |-- hooks.py
   `-- views/
+      |-- __init__.py
       |-- forms.py
       |-- primary.py
       `-- widgets.py
@@ -78,14 +79,14 @@ We can use subpackages instead of python modules for ``views.py``, ``entities.py
 where :
 
 * ``schema`` contains the schema definition (server side only)
-* ``entities`` contains the entities definition (server side and web interface)
+* ``entities`` contains the entity definitions (server side and web interface)
 * ``hooks`` contains hooks and/or views notifications (server side only)
 * ``views`` contains the web interface components (web interface only)
 * ``test`` contains tests related to the cube (not installed)
 * ``i18n`` contains message catalogs for supported languages (server side and
   web interface)
-* ``data`` contains data files for static content (images, css, javascripts)
-  ...(web interface only)
+* ``data`` contains data files for static content (images, css,
+  javascript code)...(web interface only)
 * ``migration`` contains initialization files for new instances (``postcreate.py``)
   and a file containing dependencies of the component depending on the version
   (``depends.map``)
@@ -102,10 +103,12 @@ At least you should have the file ``__pkginfo__.py``.
 The :file:`__init__.py` and :file:`site_cubicweb.py` files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. XXX WRITEME
+
 The :file:`__pkginfo__.py` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It contains metadata describing your cubes, mostly useful for
+It contains metadata describing your cube, mostly useful for
 packaging.
 
 

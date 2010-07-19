@@ -15,8 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-generic boxes for CubicWeb web client:
+"""Generic boxes for CubicWeb web client:
 
 * actions box
 * possible views box
@@ -24,8 +23,8 @@ generic boxes for CubicWeb web client:
 additional (disabled by default) boxes
 * schema box
 * startup views box
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -185,7 +184,6 @@ class StartupViewsBox(BoxTemplate):
         for view in self._cw.vreg['views'].possible_views(self._cw, None):
             if view.category == 'startupview':
                 box.append(self.box_action(view))
-
         if not box.is_empty():
             box.render(self.w)
 
@@ -201,20 +199,5 @@ class SideBoxView(EntityView):
         if title:
             self.w(u'<div class="sideBoxTitle"><span>%s</span></div>' % title)
         self.w(u'<div class="%s"><div class="sideBoxBody">' % boxclass)
-        # if not too much entities, show them all in a list
-        maxrelated = self._cw.property_value('navigation.related-limit')
-        if self.cw_rset.rowcount <= maxrelated:
-            if len(self.cw_rset) == 1:
-                self.wview('incontext', self.cw_rset, row=0)
-            elif 1 < len(self.cw_rset) < 5:
-                self.wview('csv', self.cw_rset)
-            else:
-                self.wview('simplelist', self.cw_rset)
-        # else show links to display related entities
-        else:
-            self.cw_rset.limit(maxrelated)
-            rql = self.cw_rset.printable_rql(encoded=False)
-            self.wview('simplelist', self.cw_rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
-                                               self._cw._('see them all')))
+        self.wview('autolimited', self.cw_rset, **self.cw_extra_kwargs)
         self.w(u'</div>\n</div>\n')

@@ -262,13 +262,13 @@ class EditController(basecontrollers.ViewController):
             rql = 'DELETE %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
                 subjvar, rschema, objvar)
             for reid in origvalues.difference(values):
-                self.relations_rql.append((rql, {'x': eid, 'y': reid}, ('x', 'y')))
+                self.relations_rql.append((rql, {'x': eid, 'y': reid}))
         seteids = values.difference(origvalues)
         if seteids:
             rql = 'SET %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
                 subjvar, rschema, objvar)
             for reid in seteids:
-                self.relations_rql.append((rql, {'x': eid, 'y': reid}, ('x', 'y')))
+                self.relations_rql.append((rql, {'x': eid, 'y': reid}))
 
     def delete_entities(self, eidtypes):
         """delete entities from the repository"""

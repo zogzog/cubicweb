@@ -23,6 +23,7 @@ from cubicweb.spa2rql import Sparql2rqlTranslator
 xy.add_equivalence('Project', 'doap:Project')
 xy.add_equivalence('Project creation_date', 'doap:Project doap:created')
 xy.add_equivalence('Project name', 'doap:Project doap:name')
+xy.add_equivalence('Project name', 'doap:Project dc:title')
 
 
 config = TestServerConfiguration('data')
@@ -50,6 +51,14 @@ class XYTC(TestCase):
       ?project a doap:Project;
     }''', 'Any PROJECT WHERE PROJECT is Project')
 
+    def test_base_rdftype(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    SELECT ?project
+    WHERE  {
+      ?project rdf:type doap:Project.
+    }''', 'Any PROJECT WHERE PROJECT is Project')
 
     def test_base_attr_sel(self):
         self._test('''
@@ -170,6 +179,16 @@ class XYTC(TestCase):
       ?project a doap:Project;
               doap:name "cubicweb".
     }''', 'Any PROJECT WHERE PROJECT name %(a)s, PROJECT is Project', {'a': 'cubicweb'})
+
+    def test_dctitle_both_project_cwuser(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    PREFIX dc: <http://purl.org/dc/elements/1.1/>
+    SELECT ?project ?title
+    WHERE  {
+      ?project a doap:Project;
+              dc:title ?title.
+    }''', 'Any PROJECT, TITLE WHERE PROJECT name TITLE, PROJECT is Project')
 
 # # Two elements in the group
 # PREFIX :  <http://example.org/ns#>

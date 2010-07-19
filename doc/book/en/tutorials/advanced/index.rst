@@ -8,12 +8,12 @@ Desired features
 
 * basically a photo gallery
 
-* photo stored onto the fs and displayed dynamically through a web interface
+* photo stored on the file system and displayed dynamically through a web interface
 
 * navigation through folder (album), tags, geographical zone, people on the
   picture... using facets
 
-* advanced security (eg not everyone can see everything). More on this later.
+* advanced security (not everyone can see everything). More on this later.
 
 
 Cube creation and schema definition
@@ -24,7 +24,7 @@ Cube creation and schema definition
 Step 1: creating a new cube for my web site
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One note about my development environment: I wanted to use packaged
+One note about my development environment: I wanted to use the packaged
 version of CubicWeb and cubes while keeping my cube in my user
 directory, let's say `~src/cubes`.  I achieve this by setting the
 following environment variables::
@@ -43,10 +43,10 @@ site using::
 Step 2: pick building blocks into existing cubes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Almost everything I want represent in my web-site is somewhat already modelized in
-some cube that I'll extend for my need. So I'll pick the following cubes:
+Almost everything I want to handle in my web-site is somehow already modelized in
+existing cubes that I'll extend for my need. So I'll pick the following cubes:
 
-* `folder`, containing `Folder` entity type, which will be used as
+* `folder`, containing the `Folder` entity type, which will be used as
   both 'album' and a way to map file system folders. Entities are
   added to a given folder using the `filed_under` relation.
 
@@ -62,7 +62,7 @@ some cube that I'll extend for my need. So I'll pick the following cubes:
 * `comment`, providing a full commenting system allowing one to comment entity types
   supporting the `comments` relation by adding a `Comment` entity.
 
-* `tag`, providing a full tagging system as a easy and powerful way to classify
+* `tag`, providing a full tagging system as an easy and powerful way to classify
   entities supporting the `tags` relation by linking the to `Tag` entities. This
   will allows navigation into a large number of picture.
 
@@ -131,20 +131,20 @@ This schema:
   picture.
 
 This schema will probably have to evolve as time goes (for security handling at
-least), but since the possibility to make schema evolving is one of CubicWeb
-feature (and goal), we won't worry and see that later when needed.
+least), but since the possibility to let a schema evolve is one of CubicWeb's
+features (and goals), we won't worry about it for now and see that later when needed.
 
 
 Step 4: creating the instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now that I've a schema, I want to create an instance so I can start To
-create an instance using this new 'sytweb' cube, I run::
+Now that I have a schema, I want to create an instance. To
+do so using this new 'sytweb' cube, I run::
 
   cubicweb-ctl create sytweb sytweb_instance
 
-hint : if you get an error while the database is initialized, you can
-avoid having to reanswer to questions by runing ::
+Hint: if you get an error while the database is initialized, you can
+avoid having to answer the questions again by running::
 
    cubicweb-ctl db-create sytweb_instance
 
@@ -161,7 +161,7 @@ to start the instance, check you can connect on it, etc...
 Security, testing and migration
 -------------------------------
 
-This post will cover various topics:
+This part will cover various topics:
 
 * configuring security
 * migrating existing instance
@@ -174,10 +174,10 @@ Here is the ``read`` security model I want:
   - ``authenticated``, only authenticated users can see it
   - ``restricted``, only a subset of authenticated users can see it
 * managers (e.g. me) can see everything
-* only authenticated user can see people
-* everyone can  see classifier entities, eg tag and zone
+* only authenticated users can see people
+* everyone can see classifier entities, such as tag and zone
 
-Also, unless explicity specified, visibility of an image should be the same as
+Also, unless explicitly specified, the visibility of an image should be the same as
 its parent folder, as well as visibility of a comment should be the same as the
 commented entity. If there is no parent entity, the default visibility is
 ``authenticated``.
@@ -198,19 +198,19 @@ Step 1: configuring security into the schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In schema, you can grant access according to groups, or to some RQL expressions:
-users get access it the expression return some results. To implements the read
-security defined earlier, groups are not enough, we'll need RQL expression. Here
+users get access if the expression returns some results. To implement the read
+security defined earlier, groups are not enough, we'll need some RQL expression. Here
 is the idea:
 
-* add a `visibility` attribute on folder, image and comment, which may be one of
+* add a `visibility` attribute on Folder, Image and Comment, which may be one of
   the value explained above
 
-* add a `may_be_read_by` relation from folder, image and comment to users,
+* add a `may_be_read_by` relation from Folder, Image and Comment to users,
   which will define who can see the entity
 
 * security propagation will be done in hook.
 
-So the first thing to do is to modify my cube'schema.py to define those
+So the first thing to do is to modify my cube's schema.py to define those
 relations:
 
 .. sourcecode:: python
@@ -319,9 +319,9 @@ This kind of `active` rule will be done using CubicWeb's hook
 system. Hooks are triggered on database event such as addition of new
 entity or relation.
 
-The trick part of the requirement is in *unless explicitly specified*, notably
-because when the entity addition hook is added, we don't know yet its 'parent'
-entity (eg folder of an image, image commented by a comment). To handle such things,
+The tricky part of the requirement is in *unless explicitly specified*, notably
+because when the entity is added, we don't know yet its 'parent'
+entity (e.g. Folder of an Image, Image commented by a Comment). To handle such things,
 CubicWeb provides `Operation`, which allow to schedule things to do at commit time.
 
 In our case we will:
@@ -508,9 +508,11 @@ model, in *test/unittest_sytweb.py*:
 It's not complete, but show most things you'll want to do in tests: adding some
 content, creating users and connecting as them in the test, etc...
 
-To run it type: ::
+To run it type:
 
-    [syt@scorpius test]$ pytest unittest_sytweb.py
+.. sourcecode:: bash
+
+    $ pytest unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     -> creating tables [....................]
     -> inserting default user and default groups.
@@ -524,9 +526,11 @@ To run it type: ::
 
 
 The first execution is taking time, since it creates a sqlite database for the
-test instance. The second one will be much quicker: ::
+test instance. The second one will be much quicker:
 
-    [syt@scorpius test]$ pytest unittest_sytweb.py
+.. sourcecode:: bash
+    
+    $ pytest unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     .
     ----------------------------------------------------------------------
@@ -537,12 +541,11 @@ test instance. The second one will be much quicker: ::
 If you do some changes in your schema, you'll have to force regeneration of that
 database. You do that by removing the tmpdb files before running the test: ::
 
-    [syt@scorpius test]$ rm tmpdb*
+    $ rm tmpdb*
 
 
 .. Note::
-  pytest is a very convenient utilities to control test execution, from the `logilab-common`_
-  package
+  pytest is a very convenient utility used to control test execution. It is available from the `logilab-common`_ package.
 
 .. _`logilab-common`: http://www.logilab.org/project/logilab-common
 
@@ -551,7 +554,7 @@ database. You do that by removing the tmpdb files before running the test: ::
 Step 4: writing the migration script and migrating the instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Prior to those changes, Iv'e created an instance, feeded it with some data, so I
+Prior to those changes, I  created an instance, feeded it with some data, so I
 don't want to create a new one, but to migrate the existing one. Let's see how to
 do that.
 
@@ -573,12 +576,12 @@ that's it! Those instructions will:
 * update the instance's schema by adding our two new relations and update the
   underlying database tables accordingly (the two first instructions)
 
-* update schema's permissions definition (the later instruction)
+* update schema's permissions definition (the last instruction)
 
 
 To migrate my instance I simply type::
 
-   [syt@scorpius ~]$ cubicweb-ctl upgrade sytweb
+   cubicweb-ctl upgrade sytweb
 
 I'll then be asked some questions to do the migration step by step. You should say
 YES when it asks if a backup of your database should be done, so you can get back

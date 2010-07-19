@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-1 -*-
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -16,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for cubicweb.web.application
-
-"""
+"""unit tests for cubicweb.web.application"""
 
 import base64, Cookie
 import sys
@@ -27,9 +24,10 @@ from urllib import unquote
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
 
+from cubicweb import AuthenticationError, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
-from cubicweb.web import Redirect, AuthenticationError, ExplicitLogin, INTERNAL_FIELD_VALUE
+from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
 
 class FakeMapping:
@@ -42,7 +40,7 @@ class FakeMapping:
 class MockCursor:
     def __init__(self):
         self.executed = []
-    def execute(self, rql, args=None, cachekey=None):
+    def execute(self, rql, args=None, build_descr=False):
         args = args or {}
         self.executed.append(rql % args)
 
@@ -52,10 +50,12 @@ class FakeController(ViewController):
     def __init__(self, form=None):
         self._cw = FakeRequest()
         self._cw.form = form or {}
-        self._cursor = self._cw.cursor = MockCursor()
+        self._cursor = MockCursor()
+        self._cw.execute = self._cursor.execute
 
     def new_cursor(self):
-        self._cursor = self._cw.cursor = MockCursor()
+        self._cursor = MockCursor()
+        self._cw.execute = self._cursor.execute
 
     def set_form(self, form):
         self._cw.form = form
@@ -191,7 +191,7 @@ class ApplicationTC(CubicWebTC):
             '__errorurl': 'view?vid=edition...'
             }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
-        forminfo = req.get_session_data('view?vid=edition...')
+        forminfo = req.session.data['view?vid=edition...']
         eidmap = forminfo['eidmap']
         self.assertEquals(eidmap, {})
         values = forminfo['values']
@@ -221,7 +221,7 @@ class ApplicationTC(CubicWebTC):
                     '__errorurl': 'view?vid=edition...',
                     }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
-        forminfo = req.get_session_data('view?vid=edition...')
+        forminfo = req.session.data['view?vid=edition...']
         self.assertEquals(set(forminfo['eidmap']), set('XY'))
         self.assertEquals(forminfo['eidmap']['X'], None)
         self.assertIsInstance(forminfo['eidmap']['Y'], int)
@@ -250,7 +250,7 @@ class ApplicationTC(CubicWebTC):
                     '__errorurl': 'view?vid=edition...',
                     }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
-        forminfo = req.get_session_data('view?vid=edition...')
+        forminfo = req.session.data['view?vid=edition...']
         self.assertEquals(set(forminfo['eidmap']), set('XY'))
         self.assertIsInstance(forminfo['eidmap']['X'], int)
         self.assertIsInstance(forminfo['eidmap']['Y'], int)
@@ -296,6 +296,11 @@ class ApplicationTC(CubicWebTC):
         self.commit()
         self.assertEquals(vreg.property_value('ui.language'), 'en')
 
+    def test_login_not_available_to_authenticated(self):
+        req = self.request()
+        ex = self.assertRaises(Unauthorized, self.app_publish, req, 'login')
+        self.assertEquals(str(ex), 'log out first')
+
     def test_fb_login_concept(self):
         """see data/views.py"""
         self.set_option('auth-mode', 'cookie')
@@ -312,29 +317,29 @@ class ApplicationTC(CubicWebTC):
     # authentication tests ####################################################
 
     def test_http_auth_no_anon(self):
-        req, origcnx = self.init_authentication('http')
+        req, origsession = self.init_authentication('http')
         self.assertAuthFailure(req)
-        self.assertRaises(ExplicitLogin, self.app_publish, req, 'login')
+        self.assertRaises(AuthenticationError, self.app_publish, req, 'login')
         self.assertEquals(req.cnx, None)
-        authstr = base64.encodestring('%s:%s' % (origcnx.login, origcnx.authinfo['password']))
+        authstr = base64.encodestring('%s:%s' % (origsession.login, origsession.authinfo['password']))
         req._headers['Authorization'] = 'basic %s' % authstr
-        self.assertAuthSuccess(req, origcnx)
-        self.assertEquals(req.cnx.authinfo, {'password': origcnx.authinfo['password']})
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'logout')
+        self.assertAuthSuccess(req, origsession)
+        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
-        req, origcnx = self.init_authentication('cookie')
+        req, origsession = self.init_authentication('cookie')
         self.assertAuthFailure(req)
         form = self.app_publish(req, 'login')
         self.failUnless('__login' in form)
         self.failUnless('__password' in form)
         self.assertEquals(req.cnx, None)
-        req.form['__login'] = origcnx.login
-        req.form['__password'] = origcnx.authinfo['password']
-        self.assertAuthSuccess(req, origcnx)
-        self.assertEquals(req.cnx.authinfo, {'password': origcnx.authinfo['password']})
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'logout')
+        req.form['__login'] = origsession.login
+        req.form['__password'] = origsession.authinfo['password']
+        self.assertAuthSuccess(req, origsession)
+        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
     def test_login_by_email(self):
@@ -344,71 +349,72 @@ class ApplicationTC(CubicWebTC):
                      'WHERE U login %(login)s', {'address': address, 'login': login})
         self.commit()
         # option allow-email-login not set
-        req, origcnx = self.init_authentication('cookie')
+        req, origsession = self.init_authentication('cookie')
         req.form['__login'] = address
-        req.form['__password'] = origcnx.authinfo['password']
+        req.form['__password'] = origsession.authinfo['password']
         self.assertAuthFailure(req)
         # option allow-email-login set
-        origcnx.login = address
+        origsession.login = address
         self.set_option('allow-email-login', True)
         req.form['__login'] = address
-        req.form['__password'] = origcnx.authinfo['password']
-        self.assertAuthSuccess(req, origcnx)
-        self.assertEquals(req.cnx.authinfo, {'password': origcnx.authinfo['password']})
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'logout')
+        req.form['__password'] = origsession.authinfo['password']
+        self.assertAuthSuccess(req, origsession)
+        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
     def _reset_cookie(self, req):
         # preparing the suite of the test
         # set session id in cookie
         cookie = Cookie.SimpleCookie()
-        cookie['__session'] = req.cnx.sessionid
+        cookie['__session'] = req.session.sessionid
         req._headers['Cookie'] = cookie['__session'].OutputString()
         clear_cache(req, 'get_authorization')
-        # reset cnx as if it was a new incoming request
-        req.cnx = None
+        # reset session as if it was a new incoming request
+        req.session = req.cnx = None
 
     def _test_auth_anon(self, req):
         self.app.connect(req)
-        acnx = req.cnx
+        asession = req.session
         self.assertEquals(len(self.open_sessions), 1)
-        self.assertEquals(acnx.login, 'anon')
-        self.assertEquals(acnx.authinfo['password'], 'anon')
-        self.failUnless(acnx.anonymous_connection)
+        self.assertEquals(asession.login, 'anon')
+        self.assertEquals(asession.authinfo['password'], 'anon')
+        self.failUnless(asession.anonymous_session)
         self._reset_cookie(req)
 
     def _test_anon_auth_fail(self, req):
         self.assertEquals(len(self.open_sessions), 1)
         self.app.connect(req)
         self.assertEquals(req.message, 'authentication failure')
-        self.assertEquals(req.cnx.anonymous_connection, True)
+        self.assertEquals(req.session.anonymous_session, True)
         self.assertEquals(len(self.open_sessions), 1)
         self._reset_cookie(req)
 
     def test_http_auth_anon_allowed(self):
-        req, origcnx = self.init_authentication('http', 'anon')
+        req, origsession = self.init_authentication('http', 'anon')
         self._test_auth_anon(req)
         authstr = base64.encodestring('toto:pouet')
         req._headers['Authorization'] = 'basic %s' % authstr
         self._test_anon_auth_fail(req)
-        authstr = base64.encodestring('%s:%s' % (origcnx.login, origcnx.authinfo['password']))
+        authstr = base64.encodestring('%s:%s' % (origsession.login, origsession.authinfo['password']))
         req._headers['Authorization'] = 'basic %s' % authstr
-        self.assertAuthSuccess(req, origcnx)
-        self.assertEquals(req.cnx.authinfo, {'password': origcnx.authinfo['password']})
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'logout')
+        self.assertAuthSuccess(req, origsession)
+        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
     def test_cookie_auth_anon_allowed(self):
-        req, origcnx = self.init_authentication('cookie', 'anon')
+        req, origsession = self.init_authentication('cookie', 'anon')
         self._test_auth_anon(req)
         req.form['__login'] = 'toto'
         req.form['__password'] = 'pouet'
         self._test_anon_auth_fail(req)
-        req.form['__login'] = origcnx.login
-        req.form['__password'] = origcnx.authinfo['password']
-        self.assertAuthSuccess(req, origcnx)
-        self.assertEquals(req.cnx.authinfo, {'password': origcnx.authinfo['password']})
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'logout')
+        req.form['__login'] = origsession.login
+        req.form['__password'] = origsession.authinfo['password']
+        self.assertAuthSuccess(req, origsession)
+        self.assertEquals(req.session.authinfo,
+                          {'password': origsession.authinfo['password']})
+        self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
     def test_non_regr_optional_first_var(self):

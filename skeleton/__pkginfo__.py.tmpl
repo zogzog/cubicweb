@@ -7,15 +7,12 @@ distname = '%(distname)s'
 numversion = (0, 1, 0)
 version = '.'.join(str(num) for num in numversion)
 
-license = 'LCL'
-copyright = '''Copyright (c) %(year)s %(author)s.
-%(author-web-site)s -- mailto:%(author-email)s'''
+license = '%(license)s'
 
 author = '%(author)s'
 author_email = '%(author-email)s'
 
-short_desc = '%(shortdesc)s'
-long_desc = '''%(longdesc)s'''
+description = '%(shortdesc)s'
 
 web = 'http://www.cubicweb.org/project/%%s' %% distname
 
@@ -37,18 +34,12 @@ data_files = [
     [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
     ]
 # check for possible extended cube layout
-for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n', 'migration'):
+for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'wdoc', 'i18n', 'migration'):
     if isdir(dname):
         data_files.append([join(THIS_CUBE_DIR, dname), listdir(dname)])
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
-# a dict; you might want to provide a version specification
-# of the form '>= x.y.z'
-__depends__ = {'cubicweb': '>= 3.7.0'}
-__depends_cubes__ = %(dependencies)s
-__recommends_cubes__ = {}
-# obsolete (will be gone in cw 3.8.0)
-__use__ = tuple(__depends_cubes__)
-__recommend__ = tuple(__recommends_cubes__)
+__depends__ =  %(dependencies)s
+__recommends__ = {}
 

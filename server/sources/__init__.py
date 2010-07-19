@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb server sources support
+"""cubicweb server sources support"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from os.path import join, splitext
@@ -52,9 +51,11 @@ def dbg_results(results):
     return True
 
 class TimedCache(dict):
-    def __init__(self, ttlm, ttls=0):
-        # time to live in minutes
-        self.ttl = timedelta(0, ttlm*60 + ttls, 0)
+    def __init__(self, ttl):
+        # time to live in seconds
+        if ttl <= 0:
+            raise ValueError('TimedCache initialized with a ttl of %ss' % self.ttl.seconds)
+        self.ttl = timedelta(seconds=ttl)
 
     def __setitem__(self, key, value):
         dict.__setitem__(self, key, (datetime.now(), value))

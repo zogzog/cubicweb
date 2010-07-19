@@ -116,6 +116,12 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
+    def test_8(self):
+        # DISTINCT Any P WHERE P require_group %(g)s, NOT %(u)s has_group_permission P, P is CWPermission
+        rqlst = self._prepare('DISTINCT Any X WHERE A concerne X, NOT N migrated_from X, '
+                              'X is Note, N eid 1')
+        self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
+
     def test_diff_scope_identity_deamb(self):
         rqlst = self._prepare('Any X WHERE X concerne Y, Y is Note, EXISTS(Y identity Z, Z migrated_from N)')
         self.assertEquals(rqlst.defined_vars['Z']._q_invariant, True)

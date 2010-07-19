@@ -29,9 +29,8 @@
   current state (req, rset, row, col). At the end of the selection, if
   a appobject class has been found, an instance of this class is
   returned. The selector is instantiated at appobject registration
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -385,7 +384,7 @@ class VRegistry(dict):
             registry.register(obj, oid=oid, clear=clear)
             self.debug('registered appobject %s in registry %s with id %s',
                        vname, registryname, oid or class_regid(obj))
-        self._loadedmods[obj.__module__][classid(obj)] = obj
+        self._loadedmods.setdefault(obj.__module__, {})[classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
         """unregister `obj` application object from the registry `registryname` or
@@ -414,11 +413,11 @@ class VRegistry(dict):
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload=False, extrapath=None):
+    def register_objects(self, path, extrapath=None):
         # load views from each directory in the instance's path
         filemods = self.init_registration(path, extrapath)
         for filepath, modname in filemods:
-            self.load_file(filepath, modname, force_reload)
+            self.load_file(filepath, modname)
         self.initialization_completed()
 
     def initialization_completed(self):
@@ -448,12 +447,15 @@ class VRegistry(dict):
                 mdate = self._mdate(fileordir)
                 if mdate is None:
                     continue # backup file, see _mdate implementation
+                elif "flymake" in fileordir:
+                    # flymake + pylint in use, don't consider these they will corrupt the registry
+                    continue
                 if fileordir not in lastmodifs or lastmodifs[fileordir] < mdate:
                     self.info('File %s changed since last visit', fileordir)
                     return True
         return False
 
-    def load_file(self, filepath, modname, force_reload=False):
+    def load_file(self, filepath, modname):
         """load app objects from a python file"""
         from logilab.common.modutils import load_module_from_name
         if modname in self._loadedmods:
@@ -462,12 +464,15 @@ class VRegistry(dict):
         mdate = self._mdate(filepath)
         if mdate is None:
             return # backup file, see _mdate implementation
+        elif "flymake" in filepath:
+            # flymake + pylint in use, don't consider these they will corrupt the registry
+            return
         # set update time before module loading, else we get some reloading
         # weirdness in case of syntax error or other error while importing the
         # module
         self._lastmodifs[filepath] = mdate
         # load the module
-        module = load_module_from_name(modname, use_sys=not force_reload)
+        module = load_module_from_name(modname)
         self.load_module(module)
 
     def load_module(self, module):

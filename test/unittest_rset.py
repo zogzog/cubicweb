@@ -21,6 +21,7 @@
 """
 
 from urlparse import urlsplit
+import pickle
 
 from rql import parse
 
@@ -84,6 +85,9 @@ class ResultSetTC(CubicWebTC):
             params2 = dict(pair.split('=') for pair in info1[3].split('&'))
             self.assertDictEquals(params1, params2)
 
+    def test_pickle(self):
+        del self.rset.req
+        self.assertEquals(len(pickle.dumps(self.rset)), 392)
 
     def test_build_url(self):
         req = self.request()
@@ -225,7 +229,7 @@ class ResultSetTC(CubicWebTC):
     def test_get_entity_simple(self):
         self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                         surname=u'di mascio', firstname=u'adrien')
-        e = self.entity('Any X,T WHERE X login "adim", X surname T')
+        e = self.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
         self.assertEquals(e['surname'], 'di mascio')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
         self.assertRaises(KeyError, e.__getitem__, 'creation_date')
@@ -396,6 +400,10 @@ class ResultSetTC(CubicWebTC):
                           'UNION '
                           '(Any X,N WHERE X is CWGroup, X name N)'
                           ')')
+
+    def test_count_users_by_date(self):
+        rset = self.execute('Any D, COUNT(U) GROUPBY D WHERE U is CWUser, U creation_date D')
+        self.assertEquals(rset.related_entity(0,0), (None, None))
 
 if __name__ == '__main__':
     unittest_main()

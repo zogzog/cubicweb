@@ -57,8 +57,8 @@ class EntityTC(CubicWebTC):
         p = req.create_entity('Personne', nom=u'toto')
         oe = req.create_entity('Note', type=u'x')
         self.execute('SET T ecrit_par U WHERE T eid %(t)s, U eid %(u)s',
-                     {'t': oe.eid, 'u': p.eid}, ('t','u'))
-        self.execute('SET TAG tags X WHERE X eid %(x)s', {'x': oe.eid}, 'x')
+                     {'t': oe.eid, 'u': p.eid})
+        self.execute('SET TAG tags X WHERE X eid %(x)s', {'x': oe.eid})
         e = req.create_entity('Note', type=u'z')
         e.copy_relations(oe.eid)
         self.assertEquals(len(e.ecrit_par), 1)
@@ -73,7 +73,7 @@ class EntityTC(CubicWebTC):
         oe = req.create_entity('Note', type=u'x')
         self.schema['ecrit_par'].rdef('Note', 'Personne').composite = 'subject'
         self.execute('SET T ecrit_par U WHERE T eid %(t)s, U eid %(u)s',
-                     {'t': oe.eid, 'u': p.eid}, ('t','u'))
+                     {'t': oe.eid, 'u': p.eid})
         e = req.create_entity('Note', type=u'z')
         e.copy_relations(oe.eid)
         self.failIf(e.ecrit_par)
@@ -82,12 +82,12 @@ class EntityTC(CubicWebTC):
     def test_copy_with_composite(self):
         user = self.user()
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
-        e = self.entity('Any X WHERE X eid %(x)s', {'x':user.eid}, 'x')
+        e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEquals(e.use_email[0].address, "toto@logilab.org")
         self.assertEquals(e.use_email[0].eid, adeleid)
         usereid = self.execute('INSERT CWUser X: X login "toto", X upassword "toto", X in_group G '
                                'WHERE G name "users"')[0][0]
-        e = self.entity('Any X WHERE X eid %(x)s', {'x':usereid}, 'x')
+        e = self.execute('Any X WHERE X eid %(x)s', {'x': usereid}).get_entity(0, 0)
         e.copy_relations(user.eid)
         self.failIf(e.use_email)
         self.failIf(e.primary_email)
@@ -100,14 +100,14 @@ class EntityTC(CubicWebTC):
         user.fire_transition('deactivate')
         self.commit()
         eid2 = self.execute('INSERT CWUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
-        e = self.entity('Any X WHERE X eid %(x)s', {'x': eid2}, 'x')
+        e = self.execute('Any X WHERE X eid %(x)s', {'x': eid2}).get_entity(0, 0)
         e.copy_relations(user.eid)
         self.commit()
         e.clear_related_cache('in_state', 'subject')
         self.assertEquals(e.state, 'activated')
 
     def test_related_cache_both(self):
-        user = self.entity('Any X WHERE X eid %(x)s', {'x':self.user().eid}, 'x')
+        user = self.execute('Any X WHERE X eid %(x)s', {'x':self.user().eid}).get_entity(0, 0)
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
         self.commit()
         self.assertEquals(user._related_cache, {})
@@ -248,10 +248,10 @@ class EntityTC(CubicWebTC):
         #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
         self.login('anon')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                          'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                          'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
         #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
@@ -273,7 +273,7 @@ class EntityTC(CubicWebTC):
         unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
         self.failUnless(p.eid in unrelated)
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
-        e = self.entity('Any X WHERE X is Tag')
+        e = self.execute('Any X WHERE X is Tag').get_entity(0, 0)
         unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
         self.failIf(p.eid in unrelated)
 
@@ -294,7 +294,7 @@ class EntityTC(CubicWebTC):
         self.assertEquals([x.address for x in rset.entities()], [u'hop'])
         self.create_user('toto')
         self.login('toto')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')
         self.assertEquals([x.login for x in rset.entities()], ['toto'])
         user = self.request().user
@@ -304,7 +304,7 @@ class EntityTC(CubicWebTC):
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
         self.assertEquals([x.address for x in rset.entities()], [])
         self.login('anon')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')
         self.assertEquals([x.login for x in rset.entities()], [])
         user = self.request().user
@@ -356,8 +356,15 @@ du :eid:`1:*ReST*`'''
                             data_encoding=u'ascii', data_name=u'toto.py')
         from cubicweb import mttransforms
         if mttransforms.HAS_PYGMENTS_TRANSFORMS:
-            self.assertEquals(e.printable_value('data'),
-                              '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
+            import pygments
+            if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
+                self.assertEquals(e.printable_value('data'),
+                                  '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
+</pre></div>
+''')
+            else:
+                self.assertEquals(e.printable_value('data'),
+                                  '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
 </pre></div>
 ''')
         else:
@@ -452,7 +459,7 @@ du :eid:`1:*ReST*`'''
         eid = session.execute(
             'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
             'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
-        trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
+        trinfo = self.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
         trinfo.complete()
         self.failUnless(isinstance(trinfo['creation_date'], datetime))
         self.failUnless(trinfo.relation_cached('from_state', 'subject'))
@@ -462,9 +469,9 @@ du :eid:`1:*ReST*`'''
 
     def test_request_cache(self):
         req = self.request()
-        user = self.entity('CWUser X WHERE X login "admin"', req=req)
+        user = self.execute('CWUser X WHERE X login "admin"', req=req).get_entity(0, 0)
         state = user.in_state[0]
-        samestate = self.entity('State X WHERE X name "activated"', req=req)
+        samestate = self.execute('State X WHERE X name "activated"', req=req).get_entity(0, 0)
         self.failUnless(state is samestate)
 
     def test_rest_path(self):
@@ -494,7 +501,7 @@ du :eid:`1:*ReST*`'''
         self.assertEquals(person.prenom, u'adrien')
         self.assertEquals(person.nom, u'di mascio')
         person.set_attributes(prenom=u'sylvain', nom=u'thénault')
-        person = self.entity('Personne P') # XXX retreival needed ?
+        person = self.execute('Personne P').get_entity(0, 0) # XXX retreival needed ?
         self.assertEquals(person.prenom, u'sylvain')
         self.assertEquals(person.nom, u'thénault')
 

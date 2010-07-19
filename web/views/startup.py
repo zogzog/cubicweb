@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML startup views. A startup view is global, e.g. doesn't
 apply to a result set.
-
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -97,7 +97,8 @@ class ManageView(StartupView):
         self.startupviews_table()
 
     def startupviews_table(self):
-        for v in self._cw.vreg['views'].possible_views(self._cw, None):
+        views = self._cw.vreg['views'].possible_views(self._cw, None)
+        for v in sorted(views, key=lambda x: self._cw._(x.title)):
             if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (

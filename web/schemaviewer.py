@@ -25,6 +25,9 @@ from logilab.common.ureports import Section, Title, Table, Link, Span, Text
 
 from yams.schema2dot import CARD_MAP
 from yams.schema import RelationDefinitionSchema
+from operator import attrgetter
+
+TYPE_GETTER = attrgetter('type')
 
 I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
 
@@ -34,58 +37,71 @@ class SchemaViewer(object):
     def __init__(self, req=None, encoding=None):
         self.req = req
         if req is not None:
-            self.req.add_css('cubicweb.schema.css')
-            self._possible_views = req.vreg['views'].possible_views
-            if not encoding:
+            req.add_css('cubicweb.schema.css')
+            if encoding is None:
                 encoding = req.encoding
+            self._ = req._
         else:
-            self._possible_views = lambda x: ()
+            encoding = 'ascii'
+            self._ = unicode
         self.encoding = encoding
 
-    def format_acls(self, schema, access_types):
-        """return a layout displaying access control lists"""
-        data = [self.req._('access type'), self.req._('groups')]
-        for access_type in access_types:
-            data.append(self.req._(access_type))
-            acls = [Link(self.req.build_url('cwgroup/%s' % group), self.req._(group))
-                    for group in schema.get_groups(access_type)]
-            acls += (Text(rqlexp.expression) for rqlexp in schema.get_rqlexprs(access_type))
-            acls = [n for _n in acls for n in (_n, Text(', '))][:-1]
-            data.append(Span(children=acls))
-        return Section(children=(Table(cols=2, cheaders=1, rheaders=1, children=data),),
-                       klass='acl')
+    # no self.req managements
 
+    def may_read(self, rdef, action='read'):
+        """Return true if request user may read the given schema.
+        Always return True when no request is provided.
+        """
+        if self.req is None:
+            return True
+        return rdef.may_have_permission(action, self.req)
+
+    def format_eschema(self, eschema):
+        text = eschema.type
+        if self.req is None:
+            return Text(text)
+        return Link(self.req.build_url('cwetype/%s' % eschema), text)
+
+    def format_rschema(self, rschema, label=None):
+        if label is None:
+            label = rschema.type
+        if self.req is None:
+            return Text(label)
+        return Link(self.req.build_url('cwrtype/%s' % rschema), label)
+
+    # end of no self.req managements
 
     def visit_schema(self, schema, display_relations=0, skiptypes=()):
         """get a layout for a whole schema"""
-        title = Title(self.req._('Schema %s') % schema.name,
+        title = Title(self._('Schema %s') % schema.name,
                       klass='titleUnderline')
         layout = Section(children=(title,))
-        esection = Section(children=(Title(self.req._('Entities'),
+        esection = Section(children=(Title(self._('Entities'),
                                            klass='titleUnderline'),))
         layout.append(esection)
         eschemas = [eschema for eschema in schema.entities()
                     if not (eschema.final or eschema in skiptypes)]
-        for eschema in sorted(eschemas):
+        for eschema in sorted(eschemas, key=TYPE_GETTER):
             esection.append(self.visit_entityschema(eschema, skiptypes))
         if display_relations:
-            title = Title(self.req._('Relations'), klass='titleUnderline')
+            title = Title(self._('Relations'), klass='titleUnderline')
             rsection = Section(children=(title,))
             layout.append(rsection)
-            relations = [rschema for rschema in schema.relations()
+            relations = [rschema for rschema in sorted(schema.relations(), key=TYPE_GETTER)
                          if not (rschema.final or rschema.type in skiptypes)]
             keys = [(rschema.type, rschema) for rschema in relations]
-            for key, rschema in sorted(keys):
+            for key, rschema in sorted(keys, cmp=(lambda x, y: cmp(x[1], y[1]))):
                 relstr = self.visit_relationschema(rschema)
                 rsection.append(relstr)
         return layout
 
     def _entity_attributes_data(self, eschema):
-        _ = self.req._
+        _ = self._
         data = [_('attribute'), _('type'), _('default'), _('constraints')]
-        for rschema, aschema in eschema.attribute_definitions():
+        attributes = sorted(eschema.attribute_definitions(), cmp=(lambda x, y: cmp(x[0].type, y[0].type)))
+        for rschema, aschema in attributes:
             rdef = eschema.rdef(rschema)
-            if not rdef.may_have_permission('read', self.req):
+            if not self.may_read(rdef):
                 continue
             aname = rschema.type
             if aname == 'eid':
@@ -105,16 +121,6 @@ class SchemaViewer(object):
             data.append(', '.join(str(constr) for constr in constraints))
         return data
 
-    def eschema_link_url(self, eschema):
-        return self.req.build_url('cwetype/%s' % eschema)
-
-    def rschema_link_url(self, rschema):
-        return self.req.build_url('cwrtype/%s' % rschema)
-
-    def possible_views(self, etype):
-        rset = self.req.etype_rset(etype)
-        return [v for v in self._possible_views(self.req, rset)
-                if v.category != 'startupview']
 
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
@@ -124,11 +130,8 @@ class SchemaViewer(object):
         etype = eschema.type
         layout = Section(children=' ', klass='clear')
         layout.append(Link(etype,'&#160;' , id=etype)) # anchor
-        title = Link(self.eschema_link_url(eschema), etype)
-        boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
-        table = Table(cols=4, rheaders=1, klass='listing',
-                      children=self._entity_attributes_data(eschema))
-        boxchild.append(Section(children=(table,), klass='body'))
+        title = self.format_eschema(eschema)
+        boxchild = [Section(children=(title,), klass='title')]
         data = []
         data.append(Section(children=boxchild, klass='box'))
         data.append(Section(children='', klass='vl'))
@@ -136,13 +139,16 @@ class SchemaViewer(object):
         t_vars = []
         rels = []
         first = True
-        for rschema, targetschemas, role in eschema.relation_definitions():
+
+        rel_defs = sorted(eschema.relation_definitions(),
+                          cmp=(lambda x, y: cmp((x[0].type, x[0].cardinality),
+                          (y[0].type, y[0].cardinality))))
+        for rschema, targetschemas, role in rel_defs:
             if rschema.type in skiptypes:
                 continue
-            rschemaurl = self.rschema_link_url(rschema)
-            for oeschema in targetschemas:
+            for oeschema in sorted(targetschemas, key=TYPE_GETTER):
                 rdef = rschema.role_rdef(eschema, oeschema, role)
-                if not rdef.may_have_permission('read', self.req):
+                if not self.may_read(rdef):
                     continue
                 label = rschema.type
                 if role == 'subject':
@@ -150,11 +156,10 @@ class SchemaViewer(object):
                 else:
                     cards = rschema.rproperty(oeschema, eschema, 'cardinality')
                     cards = cards[::-1]
-                label = '%s %s (%s) %s' % (CARD_MAP[cards[1]], label,
-                                           display_name(self.req, label, role),
-                                           CARD_MAP[cards[0]])
-                rlink = Link(rschemaurl, label)
-                elink = Link(self.eschema_link_url(oeschema), oeschema.type)
+                label = '%s %s %s' % (CARD_MAP[cards[1]], label,
+                                      CARD_MAP[cards[0]])
+                rlink = self.format_rschema(rschema, label)
+                elink = self.format_eschema(oeschema)
                 if first:
                     t_vars.append(Section(children=(elink,), klass='firstvar'))
                     rels.append(Section(children=(rlink,), klass='firstrel'))
@@ -165,23 +170,13 @@ class SchemaViewer(object):
         data.append(Section(children=rels, klass='rels'))
         data.append(Section(children=t_vars, klass='vars'))
         layout.append(Section(children=data, klass='entityAttributes'))
-        if eschema.final: # stop here for final entities
-            return layout
-        _ = self.req._
-        if self.req.user.matching_groups('managers'):
-            # layout.append(self.format_acls(eschema, ('read', 'add', 'delete', 'update')))
-            # possible views for this entity type
-            views = [_(view.title) for view in self.possible_views(etype)]
-            layout.append(Section(children=(Table(cols=1, rheaders=1,
-                                                  children=[_('views')]+views),),
-                                  klass='views'))
         return layout
 
     def visit_relationschema(self, rschema, title=True):
         """get a layout for a relation schema"""
-        _ = self.req._
+        _ = self._
         if title:
-            title = Link(self.rschema_link_url(rschema), rschema.type)
+            title = self.format_rschema(rschema)
             stereotypes = []
             if rschema.meta:
                 stereotypes.append('meta')
@@ -189,7 +184,7 @@ class SchemaViewer(object):
                 stereotypes.append('symmetric')
             if rschema.inlined:
                 stereotypes.append('inlined')
-            title = Section(children=(title, ' (%s)'%rschema.display_name(self.req)), klass='title')
+            title = Section(children=(title,), klass='title')
             if stereotypes:
                 title.append(self.stereotype(','.join(stereotypes)))
             layout = Section(children=(title,), klass='schema')
@@ -207,21 +202,30 @@ class SchemaViewer(object):
         data += [_(prop) for prop in properties]
         cols = len(data)
         done = set()
-        for subjtype, objtypes in rschema.associations():
+        for subjtype, objtypes in sorted(rschema.associations()):
             for objtype in objtypes:
                 if (subjtype, objtype) in done:
                     continue
                 done.add((subjtype, objtype))
                 if rschema.symmetric:
                     done.add((objtype, subjtype))
-                data.append(Link(self.eschema_link_url(schema[subjtype]), subjtype))
-                data.append(Link(self.eschema_link_url(schema[objtype]), objtype))
+                data.append(self.format_eschema(schema[subjtype]))
+                data.append(self.format_eschema(schema[objtype]))
                 rdef = rschema.rdef(subjtype, objtype)
                 for prop in properties:
                     val = getattr(rdef, prop)
                     if val is None:
                         val = ''
+                    elif prop == 'constraints':
+                        val = ', '.join([c.restriction for c in val])
+                    elif isinstance(val, dict):
+                        for key, value in val.iteritems():
+                            if isinstance(value, (list, tuple)):
+                                val[key] = ', '.join(sorted( str(v) for v in value))
+                        val = str(val)
+
                     elif isinstance(val, (list, tuple)):
+                        val = sorted(val)
                         val = ', '.join(str(v) for v in val)
                     elif val and isinstance(val, basestring):
                         val = _(val)
@@ -230,8 +234,6 @@ class SchemaViewer(object):
                     data.append(Text(val))
         table = Table(cols=cols, rheaders=1, children=data, klass='listing')
         layout.append(Section(children=(table,), klass='relationDefinition'))
-        #if self.req.user.matching_groups('managers'):
-        #    layout.append(self.format_acls(rschema, ('read', 'add', 'delete')))
         layout.append(Section(children='', klass='clear'))
         return layout
 

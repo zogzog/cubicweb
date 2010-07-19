@@ -29,9 +29,9 @@ This command assumes that you have root access to the /etc/ path. In order to in
 Instance parameters
 ~~~~~~~~~~~~~~~~~~~
 
-If the database installation failed, you'd like to change some instance parameters, for example, the database host or the user name. These informations can be edited in the `source` file located in the /etc/cubicweb.d/myblog directory.
+If you would like to change some instance parameters, for example, the database host or the user name, edit the `source` file located in the /etc/cubicweb.d/myblog directory.
 
-Then relaunch the database creation:
+Then relaunch the database creation::
 
      cubicweb-ctl db-create myblog
 

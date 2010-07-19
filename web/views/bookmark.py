@@ -125,7 +125,7 @@ class BookmarksBox(box.UserRQLBoxTemplate):
                 else:
                     # we can't edit shared bookmarks we don't own
                     bookmarksrql = 'Bookmark B WHERE B bookmarked_by U, B owned_by U, U eid %(x)s'
-                    erset = req.execute(bookmarksrql, {'x': ueid}, 'x',
+                    erset = req.execute(bookmarksrql, {'x': ueid},
                                         build_descr=False)
                     bookmarksrql %= {'x': ueid}
                 if erset:

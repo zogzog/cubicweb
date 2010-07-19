@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""security management and error screens
+"""security management and error screens"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -29,56 +27,14 @@ from cubicweb.view import AnyRsetView, StartupView, EntityView, View
 from cubicweb.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
+from cubicweb.web.views.schema import SecurityViewMixIn
+
+from yams.buildobjs import EntityType
 
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
 
-
-class SecurityViewMixIn(object):
-    """display security information for a given schema """
-
-    def schema_definition(self, eschema, link=True,  access_types=None):
-        w = self.w
-        _ = self._cw._
-        if not access_types:
-            access_types = eschema.ACTIONS
-        w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
-            _("permission"), _('granted to groups'), _('rql expressions')))
-        for access_type in access_types:
-            w(u'<tr>')
-            w(u'<td>%s</td>' % self._cw.__('%s_perm' % access_type))
-            groups = eschema.get_groups(access_type)
-            l = []
-            groups = [(_(group), group) for group in groups]
-            for trad, group in sorted(groups):
-                if link:
-                    # XXX we should get a group entity and call its absolute_url
-                    # method
-                    l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
-                    self._cw.build_url('cwgroup/%s' % group), group, trad))
-                else:
-                    l.append(u'<div class="%s">%s</div>' % (group, trad))
-            w(u'<td>%s</td>' % u''.join(l))
-            rqlexprs = eschema.get_rqlexprs(access_type)
-            w(u'<td>%s</td>' % u'<br/><br/>'.join(expr.expression for expr in rqlexprs))
-            w(u'</tr>\n')
-        w(u'</table>')
-
-    def has_schema_modified_permissions(self, eschema, access_types):
-        """ return True if eschema's actual permissions are diffrents
-        from the default ones
-        """
-        for access_type in access_types:
-            if eschema.get_rqlexprs(access_type):
-                return True
-            if eschema.get_groups(access_type) != \
-                    frozenset(eschema.get_default_groups()[access_type]):
-                return True
-        return False
-
-
-class SecurityManagementView(EntityView, SecurityViewMixIn):
+class SecurityManagementView(SecurityViewMixIn, EntityView):
     """display security information for a given entity"""
     __regid__ = 'security'
     __select__ = EntityView.__select__ & authenticated_user()
@@ -101,7 +57,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
              xml_escape(entity.dc_title())))
         # first show permissions defined by the schema
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
-        self.schema_definition(entity.e_schema)
+        self.permissions_table(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
         # ownership information
         if self._cw.vreg.schema.rschema('owned_by').has_perm(self._cw, 'add',
@@ -253,7 +209,7 @@ class ErrorView(AnyRsetView):
         # creates a bug submission link if submit-mail is set
         if self._cw.vreg.config['submit-mail']:
             form = self._cw.vreg['forms'].select('base', self._cw, rset=None,
-                                             mainform=False)
+                                                 mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.add_hidden('description', binfo,
                             # we must use a text area to keep line breaks

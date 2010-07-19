@@ -29,6 +29,7 @@ from os.path import exists, join, basename, splitext
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
 from logilab.common.shellutils import ASK
+from logilab.common.changelog import Version
 
 from cubicweb import ConfigurationError
 
@@ -319,7 +320,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """a configuration option has been renamed"""
         self._option_changes.append(('renamed', oldname, newname))
 
-    def cmd_option_group_change(self, option, oldgroup, newgroup):
+    def cmd_option_group_changed(self, option, oldgroup, newgroup):
         """a configuration option has been moved in another group"""
         self._option_changes.append(('moved', option, oldgroup, newgroup))
 
@@ -387,3 +388,75 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
 from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(MigrationHelper, getLogger('cubicweb.migration'))
+
+
+def version_strictly_lower(a, b):
+    if a:
+        a = Version(a)
+    if b:
+        b = Version(b)
+    return a < b
+
+def max_version(a, b):
+    return str(max(Version(a), Version(b)))
+
+class ConfigurationProblem(object):
+    """Each cube has its own list of dependencies on other cubes/versions.
+
+    The ConfigurationProblem is used to record the loaded cubes, then to detect
+    inconsistencies in their dependencies.
+
+    See configuration management on wikipedia for litterature.
+    """
+
+    def __init__(self, config):
+        self.cubes = {}
+        self.config = config
+
+    def add_cube(self, name, version):
+        self.cubes[name] = version
+
+    def solve(self):
+        self.warnings = []
+        self.errors = []
+        self.read_constraints()
+        for cube, versions in sorted(self.constraints.items()):
+            oper, version = None, None
+            # simplify constraints
+            if versions:
+                for constraint in versions:
+                    op, ver = constraint
+                    if oper is None:
+                        oper = op
+                        version = ver
+                    elif op == '>=' and oper == '>=':
+                        version = max_version(ver, version)
+                    else:
+                        print 'unable to handle this case', oper, version, op, ver
+            # "solve" constraint satisfaction problem
+            if cube not in self.cubes:
+                self.errors.append( ('add', cube, version) )
+            elif versions:
+                lower_strict = version_strictly_lower(self.cubes[cube], version)
+                if oper in ('>=','='):
+                    if lower_strict:
+                        self.errors.append( ('update', cube, version) )
+                else:
+                    print 'unknown operator', oper
+
+    def read_constraints(self):
+        self.constraints = {}
+        self.reverse_constraints = {}
+        for cube in self.cubes:
+            use = self.config.cube_dependencies(cube)
+            for name, constraint in use.iteritems():
+                self.constraints.setdefault(name,set())
+                if constraint:
+                    try:
+                        oper, version = constraint.split()
+                        self.constraints[name].add( (oper, version) )
+                    except:
+                        self.warnings.append(
+                            'cube %s depends on %s but constraint badly '
+                            'formatted: %s' % (cube, name, constraint))
+                self.reverse_constraints.setdefault(name, set()).add(cube)
