@@ -360,6 +360,7 @@ class ExecutionPlan(object):
                     select.set_possible_types(localchecks[()])
                     add_types_restriction(self.schema, select)
                     add_noinvariant(noinvariant, restricted, select, nbtrees)
+                self.rqlhelper.annotate(union)
 
     def _check_permissions(self, rqlst):
         """return a dict defining "local checks", e.g. RQLExpression defined in

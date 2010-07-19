@@ -1155,7 +1155,6 @@ class MSPlanner(SSPlanner):
                 sunion = Union()
                 for select in queries:
                     sunion.append(select)
-                    self.rqlhelper.annotate(select)
                 if temptable:
                     steps.append(FetchStep(plan, sunion, sources, temptable, True, inputmap))
                 else:
