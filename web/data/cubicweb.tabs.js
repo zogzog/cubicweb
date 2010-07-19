@@ -1,6 +1,7 @@
 function set_tab(tabname, cookiename) {
     // set appropriate cookie
-    asyncRemoteExec('set_cookie', cookiename, tabname);
+    loadRemote('json', ajaxFuncArgs('set_cookie', null, cookiename, tabname));
     // trigger show + tabname event
     trigger_load(tabname);
 }
+

@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """CubicWeb is a generic framework to quickly build applications which describes
 relations between entitites.
-
 """
+
 __docformat__ = "restructuredtext en"
 
 # ignore the pygments UserWarnings

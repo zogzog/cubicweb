@@ -15,20 +15,36 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""html calendar views
+"""html calendar views"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from datetime import datetime, date, timedelta
 
 from logilab.mtconverter import xml_escape
-from logilab.common.date import strptime, date_range, todate, todatetime
+from logilab.common.date import ONEDAY, strptime, date_range, todate, todatetime
 
 from cubicweb.interfaces import ICalendarable
-from cubicweb.selectors import implements
-from cubicweb.view import EntityView
+from cubicweb.selectors import implements, adaptable
+from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
+
+
+class ICalendarableAdapter(EntityAdapter):
+    __regid__ = 'ICalendarable'
+    __select__ = implements(ICalendarable, warn=False) # XXX for bw compat, should be abstract
+
+    @property
+    @implements_adapter_compat('ICalendarable')
+    def start(self):
+        """return start date"""
+        raise NotImplementedError
+
+    @property
+    @implements_adapter_compat('ICalendarable')
+    def stop(self):
+        """return stop state"""
+        raise NotImplementedError
 
 
 # useful constants & functions ################################################
@@ -52,7 +68,7 @@ try:
 
         Does apply to ICalendarable compatible entities
         """
-        __select__ = implements(ICalendarable)
+        __select__ = adaptable('ICalendarable')
         paginable = False
         content_type = 'text/calendar'
         title = _('iCalendar')
@@ -66,10 +82,11 @@ try:
                 event = ical.add('vevent')
                 event.add('summary').value = task.dc_title()
                 event.add('description').value = task.dc_description()
-                if task.start:
-                    event.add('dtstart').value = task.start
-                if task.stop:
-                    event.add('dtend').value = task.stop
+                icalendarable = task.cw_adapt_to('ICalendarable')
+                if icalendarable.start:
+                    event.add('dtstart').value = icalendarable.start
+                if icalendarable.stop:
+                    event.add('dtend').value = icalendarable.stop
 
             buff = ical.serialize()
             if not isinstance(buff, unicode):
@@ -85,7 +102,7 @@ class hCalView(EntityView):
     Does apply to ICalendarable compatible entities
     """
     __regid__ = 'hcal'
-    __select__ = implements(ICalendarable)
+    __select__ = adaptable('ICalendarable')
     paginable = False
     title = _('hCalendar')
     #templatable = False
@@ -98,10 +115,15 @@ class hCalView(EntityView):
             self.w(u'<h3 class="summary">%s</h3>' % xml_escape(task.dc_title()))
             self.w(u'<div class="description">%s</div>'
                    % task.dc_description(format='text/html'))
-            if task.start:
-                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self._cw.format_date(task.start)))
-            if task.stop:
-                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self._cw.format_date(task.stop)))
+            icalendarable = task.cw_adapt_to('ICalendarable')
+            if icalendarable.start:
+                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>'
+                       % (icalendarable.start.isoformat(),
+                          self._cw.format_date(icalendarable.start)))
+            if icalendarable.stop:
+                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>'
+                       % (icalendarable.stop.isoformat(),
+                          self._cw.format_date(icalendarable.stop)))
             self.w(u'</div>')
         self.w(u'</div>')
 
@@ -113,10 +135,15 @@ class CalendarItemView(EntityView):
         task = self.cw_rset.complete_entity(row, 0)
         task.view('oneline', w=self.w)
         if dates:
-            if task.start and task.stop:
-                self.w('<br/>' % self._cw._('from %(date)s' % {'date': self._cw.format_date(task.start)}))
-                self.w('<br/>' % self._cw._('to %(date)s' % {'date': self._cw.format_date(task.stop)}))
-                self.w('<br/>to %s'%self._cw.format_date(task.stop))
+            icalendarable = task.cw_adapt_to('ICalendarable')
+            if icalendarable.start and icalendarable.stop:
+                self.w('<br/> %s' % self._cw._('from %(date)s')
+                       % {'date': self._cw.format_date(icalendarable.start)})
+                self.w('<br/> %s' % self._cw._('to %(date)s')
+                       % {'date': self._cw.format_date(icalendarable.stop)})
+            else:
+                self.w('<br/>%s'%self._cw.format_date(icalendarable.start
+                                                      or icalendarable.stop))
 
 class CalendarLargeItemView(CalendarItemView):
     __regid__ = 'calendarlargeitem'
@@ -128,22 +155,25 @@ class _TaskEntry(object):
         self.color = color
         self.index = index
         self.length = 1
+        icalendarable = task.cw_adapt_to('ICalendarable')
+        self.start = icalendarable.start
+        self.stop = icalendarable.stop
 
     def in_working_hours(self):
         """predicate returning True is the task is in working hours"""
-        if todatetime(self.task.start).hour > 7 and todatetime(self.task.stop).hour < 20:
+        if todatetime(self.start).hour > 7 and todatetime(self.stop).hour < 20:
             return True
         return False
 
     def is_one_day_task(self):
-        task = self.task
-        return task.start and task.stop and task.start.isocalendar() ==  task.stop.isocalendar()
+        return self.start and self.stop and self.start.isocalendar() == self.stop.isocalendar()
 
 
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __regid__ = 'onemonthcal'
-    __select__ = implements(ICalendarable)
+    __select__ = adaptable('ICalendarable')
+
     paginable = False
     title = _('one month')
 
@@ -181,13 +211,14 @@ class OneMonthCal(EntityView):
             else:
                 user = None
             the_dates = []
-            tstart = task.start
+            icalendarable = task.cw_adapt_to('ICalendarable')
+            tstart = icalendarable.start
             if tstart:
-                tstart = todate(task.start)
+                tstart = todate(icalendarable.start)
                 if tstart > lastday:
                     continue
                 the_dates = [tstart]
-            tstop = task.stop
+            tstop = icalendarable.stop
             if tstop:
                 tstop = todate(tstop)
                 if tstop < firstday:
@@ -199,7 +230,7 @@ class OneMonthCal(EntityView):
                         the_dates = [tstart]
                 else:
                     the_dates = date_range(max(tstart, firstday),
-                                           min(tstop, lastday))
+                                           min(tstop + ONEDAY, lastday))
             if not the_dates:
                 continue
 
@@ -278,12 +309,14 @@ class OneMonthCal(EntityView):
         prevdate = curdate - timedelta(31)
         nextdate = curdate + timedelta(31)
         rql = self.cw_rset.printable_rql()
-        prevlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                                   year=prevdate.year,
-                                                   month=prevdate.month)
-        nextlink = self._cw.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                                   year=nextdate.year,
-                                                   month=nextdate.month)
+        prevlink = self._cw.ajax_replace_url('onemonthcalid', rql=rql,
+                                             vid='onemonthcal',
+                                             year=prevdate.year,
+                                             month=prevdate.month)
+        nextlink = self._cw.ajax_replace_url('onemonthcalid', rql=rql,
+                                             vid='onemonthcal',
+                                             year=nextdate.year,
+                                             month=nextdate.month)
         return prevlink, nextlink
 
     def _build_calendar_cell(self, celldate, rows, curdate):
@@ -335,7 +368,8 @@ class OneMonthCal(EntityView):
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __regid__ = 'oneweekcal'
-    __select__ = implements(ICalendarable)
+    __select__ = adaptable('ICalendarable')
+
     paginable = False
     title = _('one week')
 
@@ -361,15 +395,16 @@ class OneWeekCal(EntityView):
         # colors here are class names defined in cubicweb.css
         colors = [ "col%x" % i for i in range(12) ]
         next_color_index = 0
-        done_tasks = []
+        done_tasks = set()
         for row in xrange(self.cw_rset.rowcount):
             task = self.cw_rset.get_entity(row, 0)
-            if task in done_tasks:
+            if task.eid in done_tasks:
                 continue
-            done_tasks.append(task)
+            done_tasks.add(task.eid)
             the_dates = []
-            tstart = task.start
-            tstop = task.stop
+            icalendarable = task.cw_adapt_to('ICalendarable')
+            tstart = icalendarable.start
+            tstop = icalendarable.stop
             if tstart:
                 tstart = todate(tstart)
                 if tstart > lastday:
@@ -382,7 +417,7 @@ class OneWeekCal(EntityView):
                 the_dates = [tstop]
             if tstart and tstop:
                 the_dates = date_range(max(tstart, firstday),
-                                       min(tstop, lastday))
+                                       min(tstop + ONEDAY, lastday))
             if not the_dates:
                 continue
 
@@ -462,7 +497,7 @@ class OneWeekCal(EntityView):
     def _build_calendar_cell(self, date, task_descrs):
         inday_tasks = [t for t in task_descrs if t.is_one_day_task() and  t.in_working_hours()]
         wholeday_tasks = [t for t in task_descrs if not t.is_one_day_task()]
-        inday_tasks.sort(key=lambda t:t.task.start)
+        inday_tasks.sort(key=lambda t:t.start)
         sorted_tasks = []
         for i, t in enumerate(wholeday_tasks):
             t.index = i
@@ -470,7 +505,7 @@ class OneWeekCal(EntityView):
         while inday_tasks:
             t = inday_tasks.pop(0)
             for i, c in enumerate(sorted_tasks):
-                if not c or c[-1].task.stop <= t.task.start:
+                if not c or c[-1].stop <= t.start:
                     c.append(t)
                     t.index = i+ncols
                     break
@@ -491,15 +526,15 @@ class OneWeekCal(EntityView):
             start_min = 0
             stop_hour = 20
             stop_min = 0
-            if task.start:
-                if date < todate(task.start) < date + ONEDAY:
-                    start_hour = max(8, task.start.hour)
-                    start_min = task.start.minute
-            if task.stop:
-                if date < todate(task.stop) < date + ONEDAY:
-                    stop_hour = min(20, task.stop.hour)
+            if task_desc.start:
+                if date < todate(task_desc.start) < date + ONEDAY:
+                    start_hour = max(8, task_desc.start.hour)
+                    start_min = task_desc.start.minute
+            if task_desc.stop:
+                if date < todate(task_desc.stop) < date + ONEDAY:
+                    stop_hour = min(20, task_desc.stop.hour)
                     if stop_hour < 20:
-                        stop_min = task.stop.minute
+                        stop_min = task_desc.stop.minute
 
             height = 100.0*(stop_hour+stop_min/60.0-start_hour-start_min/60.0)/(20-8)
             top = 100.0*(start_hour+start_min/60.0-8)/(20-8)
@@ -518,7 +553,7 @@ class OneWeekCal(EntityView):
             self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % xml_escape(url))
             task.view('tooltip', w=self.w)
             self.w(u'</div>')
-            if task.start is None:
+            if task_desc.start is None:
                 self.w(u'<div class="bottommarker">')
                 self.w(u'<div class="bottommarkerline" style="margin: 0px 3px 0px 3px; height: 1px;">')
                 self.w(u'</div>')
@@ -535,10 +570,12 @@ class OneWeekCal(EntityView):
         prevdate = curdate - timedelta(7)
         nextdate = curdate + timedelta(7)
         rql = self.cw_rset.printable_rql()
-        prevlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                                   year=prevdate.year,
-                                                   week=prevdate.isocalendar()[1])
-        nextlink = self._cw.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                                   year=nextdate.year,
-                                                   week=nextdate.isocalendar()[1])
+        prevlink = self._cw.ajax_replace_url('oneweekcalid', rql=rql,
+                                             vid='oneweekcal',
+                                             year=prevdate.year,
+                                             week=prevdate.isocalendar()[1])
+        nextlink = self._cw.ajax_replace_url('oneweekcalid', rql=rql,
+                                             vid='oneweekcal',
+                                             year=nextdate.year,
+                                             week=nextdate.isocalendar()[1])
         return prevlink, nextlink

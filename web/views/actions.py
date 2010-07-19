@@ -15,13 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of HTML base actions
+"""Set of HTML base actions"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from warnings import warn
+
+from logilab.mtconverter import xml_escape
 
 from cubicweb.schema import display_name
 from cubicweb.appobject import objectify_selector
@@ -29,7 +30,7 @@ from cubicweb.selectors import (EntitySelector, yes,
     one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
-    has_permission, has_add_permission, implements,
+    has_permission, has_add_permission, is_instance, debug_mode,
     )
 from cubicweb.web import uicfg, controller, action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
@@ -322,7 +323,7 @@ class ViewSameCWEType(action.Action):
     """when displaying the schema of a CWEType, offer to list entities of that type
     """
     __regid__ = 'entitiesoftype'
-    __select__ = one_line_rset() & implements('CWEType')
+    __select__ = one_line_rset() & is_instance('CWEType')
     category = 'mainactions'
     order = 40
 
@@ -398,12 +399,6 @@ class ManageAction(ManagersAction):
     title = _('manage')
     order = 20
 
-class SiteInfoAction(ManagersAction):
-    __regid__ = 'siteinfo'
-    __select__ = match_user_groups('users','managers')
-    title = _('info')
-    order = 30
-
 
 # footer actions ###############################################################
 
@@ -418,6 +413,20 @@ class PoweredByAction(action.Action):
     def url(self):
         return 'http://www.cubicweb.org'
 
+class GotRhythmAction(action.Action):
+    __regid__ = 'rhythm'
+    __select__ = debug_mode()
+
+    category = 'footer'
+    order = 3
+    title = _('Got rhythm?')
+
+    def url(self):
+        return xml_escape(self._cw.url()+'#')
+
+    def html_class(self):
+        self._cw.add_js('cubicweb.rhythm.js')
+        return 'rhythm'
 
 ## default actions ui configuration ###########################################
 

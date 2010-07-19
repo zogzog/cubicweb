@@ -1,0 +1,152 @@
+==========================
+Use Windmill with CubicWeb
+==========================
+
+Windmill_ implements cross browser testing, in-browser recording and playback,
+and functionality for fast accurate debugging and test environment integration.
+
+.. _Windmill: http://www.getwindmill.com/
+
+`Online features list <http://www.getwindmill.com/features>`_ is available.
+
+
+Installation
+============
+
+Windmill
+--------
+
+You have to install Windmill manually for now. If you're using Debian, there is
+no binary package (`yet <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=579109>`_).
+
+The simplest solution is to use a *setuptools/pip* command (for a clean
+environment, take a look to the `virtualenv
+<http://pypi.python.org/pypi/virtualenv>`_ project as well)::
+
+    pip install windmill
+    curl -O http://github.com/windmill/windmill/tarball/master
+
+However, the Windmill project doesn't release frequently. Our recommandation is
+to used the last snapshot of the Git repository:
+
+.. sourcecode:: shell
+
+    git clone git://github.com/windmill/windmill.git HEAD
+    cd windmill
+    python setup.py develop
+
+Install instructions are `available <http://wiki.github.com/windmill/windmill/installing>`_.
+
+Be sure to have the windmill module in your PYTHONPATH afterwards::
+
+    python -c "import windmill"
+
+X dummy
+-------
+
+In order to reduce unecessary system load from your test machines, It's
+recommended to use X dummy server for testing the Unix web clients, you need a
+dummy video X driver (as xserver-xorg-video-dummy package in Debian) coupled
+with a light X server as `Xvfb <http://en.wikipedia.org/wiki/Xvfb>`_.
+
+    The dummy driver is a special driver available with the XFree86 DDX. To use
+    the dummy driver, simply substitue it for your normal card driver in the
+    Device section of your xorg.conf configuration file. For example, if you
+    normally uses an ati driver, then you will have a Device section with
+    Driver "ati" to let the X server know that you want it to load and use the
+    ati driver; however, for these conformance tests, you would change that
+    line to Driver "dummy" and remove any other ati specific options from the
+    Device section.
+
+    *From: http://www.x.org/wiki/XorgTesting*
+
+Then, you can run the X server with the following command :
+
+    /usr/bin/X11/Xvfb :1 -ac -screen 0 1280x1024x8 -fbdir /tmp
+
+
+Windmill usage
+==============
+
+Record your use case
+--------------------
+
+- start your instance manually
+- start Windmill_ with url site as last argument (read Usage_ or use *'-h'*
+  option to find required command line arguments)
+- use the record button
+- click on save to obtain python code of your use case
+- copy the content to a new file in a *windmill* directory
+
+.. _Usage: http://wiki.github.com/windmill/windmill/running-tests
+
+If you are using firefox as client, consider the "firebug" option.
+
+You can refine the test by the *loadtest* windmill option:
+
+    windmill -m firebug loadtest=<test_file.py> <instance url>
+
+But use the internal windmill shell to explore available commands:
+
+    windmill -m firebug shell <instance url>
+
+.. sourcecode:: python
+
+    >>> load_test(<your test file>)
+    >>> run_test(<your test file>)
+
+
+
+Integrate Windmill tests into CubicWeb
+======================================
+
+Run your tests
+--------------
+
+You can easily run your windmill test suite through `pytest` or :mod:`unittest`.
+You have to copy a *test_windmill.py* file from :mod:`web.test`.
+
+By default, CubicWeb will use **firefox** as the default browser and will try
+to run test instance server on localhost. In the general case, You've no need
+to change anything.
+
+Check the :class:`cubicweb.devtools.cwwindmill.CubicWebServerTC` class for server
+parameters and :class:`cubicweb.devtools.cwwindmill.CubicWebWindmillUseCase` for
+Windmill configuration.
+
+Best practises
+--------------
+
+Don't run another instance on the same port. You risk to silence some
+regressions (test runner will automatically fail in further versions).
+
+Start your use case by using an assert on the expected primary url page.
+Otherwise all your tests could fail without clear explanation of the used
+navigation.
+
+In the same location of the *test_windmill.py*, create a *windmill/* with your
+windmill recorded use cases.
+
+Then, you can launch the test series with::
+
+    % pytest test/test_windmill.py
+
+For instance, you can start CubicWeb framework use tests by::
+
+    % pytest web/test/test_windmill.py
+
+
+Preferences
+===========
+
+A *.windmill/prefs.py* could be used to redefine default configuration values.
+
+.. define CubicWeb preferences in the parent test case instead with a dedicated firefox profile
+
+For managing browser extensions, read `advanced topic chapter
+<http://wiki.github.com/windmill/windmill/advanced-topics>`_.
+
+More configuration examples could be seen in *windmill/conf/global_settings.py*
+as template.
+
+

@@ -611,12 +611,14 @@ class SQLGenerator(object):
                 sql += '\nHAVING %s' % having
             # sort
             if sorts:
-                sql += '\nORDER BY %s' % ','.join(self._sortterm_sql(sortterm,
-                                                                     fselectidx)
-                                                  for sortterm in sorts)
-                if fneedwrap:
-                    selection = ['T1.C%s' % i for i in xrange(len(origselection))]
-                    sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
+                sqlsortterms = [self._sortterm_sql(sortterm, fselectidx)
+                                for sortterm in sorts]
+                sqlsortterms = [x for x in sqlsortterms if x is not None]
+                if sqlsortterms:
+                    sql += '\nORDER BY %s' % ','.join(sqlsortterms)
+                    if sorts and fneedwrap:
+                        selection = ['T1.C%s' % i for i in xrange(len(origselection))]
+                        sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
             state.finalize_source_cbs()
         finally:
             select.selection = origselection
@@ -696,12 +698,14 @@ class SQLGenerator(object):
     def _sortterm_sql(self, sortterm, selectidx):
         term = sortterm.term
         try:
-            sqlterm = str(selectidx.index(str(term)) + 1)
+            sqlterm = selectidx.index(str(term)) + 1
         except ValueError:
             # Constant node or non selected term
-            sqlterm = str(term.accept(self))
+            sqlterm = term.accept(self)
+            if sqlterm is None:
+                return None
         if sortterm.asc:
-            return sqlterm
+            return str(sqlterm)
         else:
             return '%s DESC' % sqlterm
 
@@ -1060,7 +1064,8 @@ class SQLGenerator(object):
             not_ = True
         else:
             not_ = False
-        return self.dbhelper.fti_restriction_sql(alias, const.eval(self._args),
+        query = const.eval(self._args)
+        return self.dbhelper.fti_restriction_sql(alias, query,
                                                  jointo, not_) + restriction
 
     def visit_comparison(self, cmp):
@@ -1104,6 +1109,15 @@ class SQLGenerator(object):
 
     def visit_function(self, func):
         """generate SQL name for a function"""
+        if func.name == 'FTIRANK':
+            try:
+                rel = iter(func.children[0].variable.stinfo['ftirels']).next()
+            except KeyError:
+                raise BadRQLQuery("can't use FTIRANK on variable not used in an"
+                                  " 'has_text' relation (eg full-text search)")
+            const = rel.get_parts()[1].children[0]
+            return self.dbhelper.fti_rank_order(self._fti_table(rel),
+                                                const.eval(self._args))
         args = [c.accept(self) for c in func.children]
         if func in self._state.source_cb_funcs:
             # function executed as a callback on the source
@@ -1132,8 +1146,6 @@ class SQLGenerator(object):
                 _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
-            if isinstance(value, unicode):
-                value = value.encode(self.dbencoding)
             self._query_attrs[_id] = value
         return '%%(%s)s' % _id
 

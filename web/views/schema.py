@@ -15,27 +15,31 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for schema related entities
+"""Specific views for schema related entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from itertools import cycle
 
+import tempfile
+import os, os.path as osp
+
+from logilab.common.graph import GraphGenerator, DotBackend
 from logilab.common.ureports import Section, Table
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 from yams.buildobjs import DEFAULT_ATTRPERMS
 
-from cubicweb.selectors import (implements, yes, match_user_groups,
-                                has_related_entities, authenticated_user)
+from cubicweb.selectors import (is_instance, match_user_groups, match_kwargs,
+                                has_related_entities, authenticated_user, yes)
 from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
+from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, StartupView
 from cubicweb import tags, uilib
 from cubicweb.web import action, facet, uicfg, schemaviewer
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import primary, baseviews, tabs, tableview, iprogress
+from cubicweb.web.views import primary, baseviews, tabs, tableview, ibreadcrumbs
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
 SKIP_TYPES  = (ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES | WORKFLOW_TYPES
@@ -83,7 +87,7 @@ class SecurityViewMixIn(object):
         self._cw.add_css('cubicweb.acl.css')
         w = self.w
         _ = self._cw._
-        w(u'<table class="schemaInfo">')
+        w(u'<table class="listing schemaInfo">')
         w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
         for action in erschema.ACTIONS:
@@ -158,10 +162,7 @@ class SchemaImageTab(StartupView):
         self.w(u'<div><a href="%s">%s</a></div>' %
                (self._cw.build_url('view', vid='owl'),
                 self._cw._(u'Download schema as OWL')))
-        self.w(u'<img src="%s" alt="%s"/>\n' % (
-            xml_escape(self._cw.build_url('view', vid='schemagraph', skipmeta=1)),
-            self._cw._("graphical representation of the instance'schema")))
-
+        self.wview('schemagraph')
 
 class SchemaETypeTab(StartupView):
     __regid__ = 'schema-entity-types'
@@ -202,13 +203,13 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
         url = xml_escape(self._cw.build_url('schema'))
         self.w(u'<div id="schema_security">')
         self.w(u'<h2 class="schema">%s</h2>' % _('Index'))
-        self.w(u'<h4 id="entities">%s</h4>' % _('Entity types'))
+        self.w(u'<h3 id="entities">%s</h3>' % _('Entity types'))
         ents = []
         for eschema in sorted(entities):
             ents.append(u'<a class="grey" href="%s#%s">%s</a>' % (
                 url,  eschema.type, eschema.type))
         self.w(u', '.join(ents))
-        self.w(u'<h4 id="relations">%s</h4>' % _('Relation types'))
+        self.w(u'<h3 id="relations">%s</h3>' % _('Relation types'))
         rels = []
         for rschema in sorted(relations):
             rels.append(u'<a class="grey" href="%s#%s">%s</a>' %  (
@@ -248,7 +249,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
                 eschema.type, self._cw.build_url('cwetype/%s' % eschema.type),
                 eschema.type, _(eschema.type)))
             self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.external_resource('UP_ICON'), _('up')))
+                url,  self._cw.uiprops['UP_ICON'], _('up')))
             self.w(u'</h3>')
             self.w(u'<div style="margin: 0px 1.5em">')
             self.permissions_table(eschema)
@@ -277,7 +278,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
                 rschema.type, self._cw.build_url('cwrtype/%s' % rschema.type),
                 rschema.type, _(rschema.type)))
             self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.external_resource('UP_ICON'), _('up')))
+                url,  self._cw.uiprops['UP_ICON'], _('up')))
             self.w(u'</h3>')
             self.grouped_permissions_table(rschema)
 
@@ -288,7 +289,7 @@ class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
 _('i18ncard_1'), _('i18ncard_?'), _('i18ncard_+'), _('i18ncard_*')
 
 class CWETypePrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
     tabs = [_('cwetype-description'), _('cwetype-box'), _('cwetype-workflow'),
             _('cwetype-views'), _('cwetype-permissions')]
     default_tab = 'cwetype-description'
@@ -296,7 +297,7 @@ class CWETypePrimaryView(tabs.TabbedPrimaryView):
 
 class CWETypeDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'cwetype-description'
-    __select__ = tabs.PrimaryTab.__select__ & implements('CWEType')
+    __select__ = tabs.PrimaryTab.__select__ & is_instance('CWEType')
 
     def render_entity_attributes(self, entity):
         super(CWETypeDescriptionTab, self).render_entity_attributes(entity)
@@ -311,9 +312,7 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
             self.wview('csv', entity.related('specializes', 'object'))
             self.w(u'</div>')
         # entity schema image
-        self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(entity.absolute_url(vid='schemagraph')),
-            xml_escape(_('graphical schema for %s') % entity.name)))
+        self.wview('schemagraph', etype=entity.name)
         # entity schema attributes
         self.w(u'<h2>%s</h2>' % _('CWAttribute_plural'))
         rset = self._cw.execute(
@@ -380,7 +379,7 @@ class CWETypeRelationCardinalityCell(baseviews.FinalView):
 
 class CWETypeBoxTab(EntityView):
     __regid__ = 'cwetype-box'
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
 
     def cell_call(self, row, col):
         viewer = schemaviewer.SchemaViewer(self._cw)
@@ -393,7 +392,7 @@ class CWETypeBoxTab(EntityView):
 
 class CWETypePermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'cwetype-permissions'
-    __select__ = implements('CWEType') & authenticated_user()
+    __select__ = is_instance('CWEType') & authenticated_user()
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -413,7 +412,7 @@ class CWETypePermTab(SecurityViewMixIn, EntityView):
 
 class CWETypeWorkflowTab(EntityView):
     __regid__ = 'cwetype-workflow'
-    __select__ = (implements('CWEType')
+    __select__ = (is_instance('CWEType')
                   & has_related_entities('workflow_of', 'object'))
 
     def cell_call(self, row, col):
@@ -444,7 +443,7 @@ class CWETypeWorkflowTab(EntityView):
 class CWETypeViewsTab(EntityView):
     """possible views for this entity type"""
     __regid__ = 'cwetype-views'
-    __select__ = EntityView.__select__ & implements('CWEType')
+    __select__ = EntityView.__select__ & is_instance('CWEType')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -464,7 +463,7 @@ class CWETypeViewsTab(EntityView):
 
 
 class CWETypeOneLineView(baseviews.OneLineView):
-    __select__ = implements('CWEType')
+    __select__ = is_instance('CWEType')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
@@ -478,22 +477,20 @@ class CWETypeOneLineView(baseviews.OneLineView):
 # CWRType ######################################################################
 
 class CWRTypePrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWRType')
+    __select__ = is_instance('CWRType')
     tabs = [_('cwrtype-description'), _('cwrtype-permissions')]
     default_tab = 'cwrtype-description'
 
 
 class CWRTypeDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'cwrtype-description'
-    __select__ = implements('CWRType')
+    __select__ = is_instance('CWRType')
 
     def render_entity_attributes(self, entity):
         super(CWRTypeDescriptionTab, self).render_entity_attributes(entity)
         _ = self._cw._
         if not entity.final:
-            msg = _('graphical schema for %s') % entity.name
-            self.w(tags.img(src=entity.absolute_url(vid='schemagraph'),
-                            alt=msg))
+            self.wview('schemagraph', rtype=entity.name)
         rset = self._cw.execute('Any R,C,R,R, RT WHERE '
                                 'R relation_type RT, RT eid %(x)s, '
                                 'R cardinality C', {'x': entity.eid})
@@ -506,7 +503,7 @@ class CWRTypeDescriptionTab(tabs.PrimaryTab):
 
 class CWRTypePermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'cwrtype-permissions'
-    __select__ = implements('CWRType') & authenticated_user()
+    __select__ = is_instance('CWRType') & authenticated_user()
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -517,14 +514,14 @@ class CWRTypePermTab(SecurityViewMixIn, EntityView):
 # CWAttribute / CWRelation #####################################################
 
 class RDEFPrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
     tabs = [_('rdef-description'), _('rdef-permissions')]
     default_tab = 'rdef-description'
 
 
 class RDEFDescriptionTab(tabs.PrimaryTab):
     __regid__ = 'rdef-description'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def render_entity_attributes(self, entity):
         super(RDEFDescriptionTab, self).render_entity_attributes(entity)
@@ -536,7 +533,7 @@ class RDEFDescriptionTab(tabs.PrimaryTab):
 
 class RDEFPermTab(SecurityViewMixIn, EntityView):
     __regid__ = 'rdef-permissions'
-    __select__ = implements('CWRelation', 'CWAttribute') & authenticated_user()
+    __select__ = is_instance('CWRelation', 'CWAttribute') & authenticated_user()
 
     def cell_call(self, row, col):
         self.permissions_table(self.cw_rset.get_entity(row, col).yams_schema())
@@ -548,7 +545,7 @@ class RDEFNameView(tableview.CellView):
     for instance)
     """
     __regid__ = 'rdef-name-cell'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -561,7 +558,7 @@ class RDEFObjectNameView(tableview.CellView):
     """same as RDEFNameView but when the context is the object entity
     """
     __regid__ = 'rdef-object-name-cell'
-    __select__ = implements('CWRelation', 'CWAttribute')
+    __select__ = is_instance('CWRelation', 'CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -572,7 +569,7 @@ class RDEFObjectNameView(tableview.CellView):
 
 class RDEFConstraintsCell(EntityView):
     __regid__ = 'rdef-constraints-cell'
-    __select__ = implements('CWAttribute', 'CWRelation')
+    __select__ = is_instance('CWAttribute', 'CWRelation')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -583,7 +580,7 @@ class RDEFConstraintsCell(EntityView):
 
 class CWAttributeOptionsCell(EntityView):
     __regid__ = 'rdef-options-cell'
-    __select__ = implements('CWAttribute')
+    __select__ = is_instance('CWAttribute')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -598,7 +595,7 @@ class CWAttributeOptionsCell(EntityView):
 
 class CWRelationOptionsCell(EntityView):
     __regid__ = 'rdef-options-cell'
-    __select__ = implements('CWRelation',)
+    __select__ = is_instance('CWRelation',)
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
@@ -644,48 +641,152 @@ class OneHopRSchemaVisitor(RestrictedSchemaVisitorMixIn,
                            s2d.OneHopRSchemaVisitor):
     pass
 
+class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
+    def __init__(self, visitor):
+        self.visitor = visitor
+        self.nextcolor = cycle( ('#ff7700', '#000000',
+                                 '#ebbc69', '#888888') ).next
+        self.colors = {}
 
-class SchemaImageView(TmpFileViewMixin, StartupView):
+    def node_properties(self, eschema):
+        """return DOT drawing options for an entity schema include href"""
+        label = ['{',eschema.type,'|']
+        label.append(r'\l'.join('%s (%s)' % (rel.type, eschema.rdef(rel.type).object)
+                                for rel in eschema.ordered_relations()
+                                    if rel.final and self.visitor.should_display_attr(eschema, rel)))
+        label.append(r'\l}') # trailing \l ensure alignement of the last one
+        return {'label' : ''.join(label), 'shape' : "record",
+                'fontname' : "Courier", 'style' : "filled",
+                'href': 'cwetype/%s' % eschema.type,
+                'fontsize': '10px'
+                }
+
+    def edge_properties(self, rschema, subjnode, objnode):
+        """return default DOT drawing options for a relation schema"""
+        # symmetric rels are handled differently, let yams decide what's best
+        if rschema.symmetric:
+            kwargs = {'label': rschema.type,
+                      'color': '#887788', 'style': 'dashed',
+                      'dir': 'both', 'arrowhead': 'normal', 'arrowtail': 'normal',
+                      'fontsize': '10px', 'href': 'cwrtype/%s' % rschema.type}
+        else:
+            kwargs = {'label': rschema.type,
+                      'color' : 'black',  'style' : 'filled', 'fontsize': '10px',
+                      'href': 'cwrtype/%s' % rschema.type}
+            rdef = rschema.rdef(subjnode, objnode)
+            composite = rdef.composite
+            if rdef.composite == 'subject':
+                kwargs['arrowhead'] = 'none'
+                kwargs['arrowtail'] = 'diamond'
+            elif rdef.composite == 'object':
+                kwargs['arrowhead'] = 'diamond'
+                kwargs['arrowtail'] = 'none'
+            else:
+                kwargs['arrowhead'] = 'open'
+                kwargs['arrowtail'] = 'none'
+            # UML like cardinalities notation, omitting 1..1
+            if rdef.cardinality[1] != '1':
+                kwargs['taillabel'] = s2d.CARD_MAP[rdef.cardinality[1]]
+            if rdef.cardinality[0] != '1':
+                kwargs['headlabel'] = s2d.CARD_MAP[rdef.cardinality[0]]
+            try:
+                kwargs['color'] = self.colors[rschema]
+            except KeyError:
+                kwargs['color'] = self.nextcolor()
+                self.colors[rschema] = kwargs['color']
+        kwargs['fontcolor'] = kwargs['color']
+        # dot label decoration is just awful (1 line underlining the label
+        # + 1 line going to the closest edge spline point)
+        kwargs['decorate'] = 'false'
+        #kwargs['labelfloat'] = 'true'
+        return kwargs
+
+
+class SchemaGraphView(StartupView):
     __regid__ = 'schemagraph'
-    content_type = 'image/png'
 
-    def _generate(self, tmpfile):
-        """display global schema information"""
-        visitor = FullSchemaVisitor(self._cw, self._cw.vreg.schema,
-                                    skiptypes=skip_types(self._cw))
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+    def call(self, etype=None, rtype=None, alt=''):
+        schema = self._cw.vreg.schema
+        if etype:
+            assert rtype is None
+            visitor = OneHopESchemaVisitor(self._cw, schema.eschema(etype),
+                                           skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of the %(etype)s '
+                             'entity type from %(appid)s data model')
+        elif rtype:
+            visitor = OneHopRSchemaVisitor(self._cw, schema.rschema(rtype),
+                                           skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of the %(rtype)s '
+                             'relation type from %(appid)s data model')
+        else:
+            visitor = FullSchemaVisitor(self._cw, schema,
+                                        skiptypes=skip_types(self._cw))
+            alt = self._cw._('graphical representation of %(appid)s data model')
+        alt %= {'rtype': rtype, 'etype': etype,
+                'appid': self._cw.vreg.config.appid}
+        prophdlr = CWSchemaDotPropsHandler(visitor)
+        generator = GraphGenerator(DotBackend('schema', 'BT',
+                                              ratio='compress',size=None,
+                                              renderer='dot',
+                                              additionnal_param={
+                                                  'overlap':'false',
+                                                  'splines':'true',
+                                                  'sep':'0.2',
+                                              }))
+        # map file
+        pmap, mapfile = tempfile.mkstemp(".map")
+        os.close(pmap)
+        # image file
+        fd, tmpfile = tempfile.mkstemp('.png')
+        os.close(fd)
+        generator.generate(visitor, prophdlr, tmpfile, mapfile)
+        filekeyid = make_uid()
+        self._cw.session.data[filekeyid] = tmpfile
+        self.w(u'<img src="%s" alt="%s" usemap="#schema" />' % (
+            xml_escape(self._cw.build_url(vid='tmppng', tmpfile=filekeyid)),
+            xml_escape(self._cw._(alt))))
+        stream = open(mapfile, 'r').read()
+        stream = stream.decode(self._cw.encoding)
+        self.w(stream)
+        os.unlink(mapfile)
 
+# breadcrumbs ##################################################################
 
-class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
-    __regid__ = 'schemagraph'
-    __select__ = implements('CWEType')
-    content_type = 'image/png'
+class CWRelationIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWRelation')
+    def parent_entity(self):
+        return self.entity.rtype
 
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
-        eschema = self._cw.vreg.schema.eschema(entity.name)
-        visitor = OneHopESchemaVisitor(self._cw, eschema,
-                                       skiptypes=skip_types(self._cw))
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+class CWAttributeIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWAttribute')
+    def parent_entity(self):
+        return self.entity.stype
 
+class CWConstraintIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWConstraint')
+    def parent_entity(self):
+        if self.entity.reverse_constrained_by:
+            return self.entity.reverse_constrained_by[0]
 
-class CWRTypeSchemaImageView(CWETypeSchemaImageView):
-    __select__ = implements('CWRType')
+class RQLExpressionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('RQLExpression')
+    def parent_entity(self):
+        return self.entity.expression_of
 
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.cw_rset.get_entity(self.cw_row, self.cw_col)
-        rschema = self._cw.vreg.schema.rschema(entity.name)
-        visitor = OneHopRSchemaVisitor(self._cw, rschema)
-        s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+class CWPermissionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWPermission')
+    def parent_entity(self):
+        # XXX useless with permission propagation
+        permissionof = getattr(self.entity, 'reverse_require_permission', ())
+        if len(permissionof) == 1:
+            return permissionof[0]
 
 
 # misc: facets, actions ########################################################
 
 class CWFinalFacet(facet.AttributeFacet):
     __regid__ = 'cwfinal-facet'
-    __select__ = facet.AttributeFacet.__select__ & implements('CWEType', 'CWRType')
+    __select__ = facet.AttributeFacet.__select__ & is_instance('CWEType', 'CWRType')
     rtype = 'final'
 
 class ViewSchemaAction(action.Action):

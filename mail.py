@@ -184,7 +184,7 @@ class NotificationView(EntityView):
             # previous email
             if not self.msgid_timestamp:
                 refs = [self.construct_message_id(eid)
-                        for eid in entity.notification_references(self)]
+                        for eid in entity.cw_adapt_to('INotifiable').notification_references(self)]
             else:
                 refs = ()
             msgid = self.construct_message_id(entity.eid)
@@ -198,7 +198,7 @@ class NotificationView(EntityView):
             if isinstance(something, Entity):
                 # hi-jack self._cw to get a session for the returned user
                 self._cw = self._cw.hijack_user(something)
-                emailaddr = something.get_email()
+                emailaddr = something.cw_adapt_to('IEmailable').get_email()
             else:
                 emailaddr, lang = something
                 self._cw.set_language(lang)
@@ -246,7 +246,8 @@ class NotificationView(EntityView):
     # email generation helpers #################################################
 
     def construct_message_id(self, eid):
-        return construct_message_id(self._cw.vreg.config.appid, eid, self.msgid_timestamp)
+        return construct_message_id(self._cw.vreg.config.appid, eid,
+                                    self.msgid_timestamp)
 
     def format_field(self, attr, value):
         return ':%(attr)s: %(value)s' % {'attr': attr, 'value': value}

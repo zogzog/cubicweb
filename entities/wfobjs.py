@@ -15,9 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""workflow definition and history related entities
+"""workflow handling:
 
+* entity types defining workflow (Workflow, State, Transition...)
+* workflow history (TrInfo)
+* adapter for workflowable entities (IWorkflowableAdapter)
 """
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -27,7 +31,8 @@ from logilab.common.deprecation import deprecated
 from logilab.common.compat import any
 
 from cubicweb.entities import AnyEntity, fetch_config
-from cubicweb.interfaces import IWorkflowable
+from cubicweb.view import EntityAdapter
+from cubicweb.selectors import relation_possible
 from cubicweb.mixins import MI_REL_TRIGGERS
 
 class WorkflowException(Exception): pass
@@ -46,15 +51,6 @@ class Workflow(AnyEntity):
         """
         return any(et for et in self.reverse_default_workflow
                    if et.name == etype)
-
-    # XXX define parent() instead? what if workflow of multiple types?
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.workflow_of:
-            return self.workflow_of[0].rest_path(), {'vid': 'workflow'}
-        return super(Workflow, self).after_deletion_path()
 
     def iter_workflows(self, _done=None):
         """return an iterator on actual workflows, eg this workflow and its
@@ -177,7 +173,7 @@ class Workflow(AnyEntity):
                 {'os': todelstate.eid, 'ns': replacement.eid})
         execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
                 {'os': todelstate.eid, 'ns': replacement.eid})
-        todelstate.delete()
+        todelstate.cw_delete()
 
 
 class BaseTransition(AnyEntity):
@@ -226,14 +222,6 @@ class BaseTransition(AnyEntity):
             return False
         return True
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.transition_of:
-            return self.transition_of[0].rest_path(), {}
-        return super(BaseTransition, self).after_deletion_path()
-
     def set_permissions(self, requiredgroups=(), conditions=(), reset=True):
         """set or add (if `reset` is False) groups and conditions for this
         transition
@@ -277,7 +265,7 @@ class Transition(BaseTransition):
         try:
             return self.destination_state[0]
         except IndexError:
-            return entity.latest_trinfo().previous_state
+            return entity.cw_adapt_to('IWorkflowable').latest_trinfo().previous_state
 
     def potential_destinations(self):
         try:
@@ -287,9 +275,6 @@ class Transition(BaseTransition):
                 for tr in incomingstate.reverse_destination_state:
                     for previousstate in tr.reverse_allowed_transition:
                         yield previousstate
-
-    def parent(self):
-        return self.workflow
 
 
 class WorkflowTransition(BaseTransition):
@@ -331,7 +316,7 @@ class WorkflowTransition(BaseTransition):
             return None
         if tostateeid is None:
             # go back to state from which we've entered the subworkflow
-            return entity.subworkflow_input_trinfo().previous_state
+            return entity.cw_adapt_to('IWorkflowable').subworkflow_input_trinfo().previous_state
         return self._cw.entity_from_eid(tostateeid)
 
     @cached
@@ -358,9 +343,6 @@ class SubWorkflowExitPoint(AnyEntity):
     def destination(self):
         return self.destination_state and self.destination_state[0] or None
 
-    def parent(self):
-        return self.reverse_subworkflow_exit[0]
-
 
 class State(AnyEntity):
     """customized class for State entities"""
@@ -371,10 +353,7 @@ class State(AnyEntity):
     @property
     def workflow(self):
         # take care, may be missing in multi-sources configuration
-        return self.state_of and self.state_of[0]
-
-    def parent(self):
-        return self.workflow
+        return self.state_of and self.state_of[0] or None
 
 
 class TrInfo(AnyEntity):
@@ -399,22 +378,99 @@ class TrInfo(AnyEntity):
     def transition(self):
         return self.by_transition and self.by_transition[0] or None
 
-    def parent(self):
-        return self.for_entity
-
 
 class WorkflowableMixIn(object):
     """base mixin providing workflow helper methods for workflowable entities.
     This mixin will be automatically set on class supporting the 'in_state'
     relation (which implies supporting 'wf_info_for' as well)
     """
-    __implements__ = (IWorkflowable,)
+
+    @property
+    @deprecated('[3.5] use printable_state')
+    def displayable_state(self):
+        return self._cw._(self.state)
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').main_workflow")
+    def main_workflow(self):
+        return self.cw_adapt_to('IWorkflowable').main_workflow
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').current_workflow")
+    def current_workflow(self):
+        return self.cw_adapt_to('IWorkflowable').current_workflow
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').current_state")
+    def current_state(self):
+        return self.cw_adapt_to('IWorkflowable').current_state
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').state")
+    def state(self):
+        return self.cw_adapt_to('IWorkflowable').state
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').printable_state")
+    def printable_state(self):
+        return self.cw_adapt_to('IWorkflowable').printable_state
+    @property
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').workflow_history")
+    def workflow_history(self):
+        return self.cw_adapt_to('IWorkflowable').workflow_history
+
+    @deprecated('[3.5] get transition from current workflow and use its may_be_fired method')
+    def can_pass_transition(self, trname):
+        """return the Transition instance if the current user can fire the
+        transition with the given name, else None
+        """
+        tr = self.current_workflow and self.current_workflow.transition_by_name(trname)
+        if tr and tr.may_be_fired(self.eid):
+            return tr
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').cwetype_workflow()")
+    def cwetype_workflow(self):
+        return self.cw_adapt_to('IWorkflowable').main_workflow()
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').latest_trinfo()")
+    def latest_trinfo(self):
+        return self.cw_adapt_to('IWorkflowable').latest_trinfo()
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').possible_transitions()")
+    def possible_transitions(self, type='normal'):
+        return self.cw_adapt_to('IWorkflowable').possible_transitions(type)
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').fire_transition()")
+    def fire_transition(self, tr, comment=None, commentformat=None):
+        return self.cw_adapt_to('IWorkflowable').fire_transition(tr, comment, commentformat)
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').change_state()")
+    def change_state(self, statename, comment=None, commentformat=None, tr=None):
+        return self.cw_adapt_to('IWorkflowable').change_state(statename, comment, commentformat, tr)
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').subworkflow_input_trinfo()")
+    def subworkflow_input_trinfo(self):
+        return self.cw_adapt_to('IWorkflowable').subworkflow_input_trinfo()
+    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').subworkflow_input_transition()")
+    def subworkflow_input_transition(self):
+        return self.cw_adapt_to('IWorkflowable').subworkflow_input_transition()
+
+
+MI_REL_TRIGGERS[('in_state', 'subject')] = WorkflowableMixIn
+
+
+
+class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
+    """base adapter providing workflow helper methods for workflowable entities.
+    """
+    __regid__ = 'IWorkflowable'
+    __select__ = relation_possible('in_state')
+
+    @cached
+    def cwetype_workflow(self):
+        """return the default workflow for entities of this type"""
+        # XXX CWEType method
+        wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
+                                  'ET name %(et)s', {'et': self.entity.__regid__})
+        if wfrset:
+            return wfrset.get_entity(0, 0)
+        self.warning("can't find any workflow for %s", self.entity.__regid__)
+        return None
 
     @property
     def main_workflow(self):
         """return current workflow applied to this entity"""
-        if self.custom_workflow:
-            return self.custom_workflow[0]
+        if self.entity.custom_workflow:
+            return self.entity.custom_workflow[0]
         return self.cwetype_workflow()
 
     @property
@@ -425,14 +481,14 @@ class WorkflowableMixIn(object):
     @property
     def current_state(self):
         """return current state entity"""
-        return self.in_state and self.in_state[0] or None
+        return self.entity.in_state and self.entity.in_state[0] or None
 
     @property
     def state(self):
         """return current state name"""
         try:
-            return self.in_state[0].name
-        except IndexError:
+            return self.current_state.name
+        except AttributeError:
             self.warning('entity %s has no state', self)
             return None
 
@@ -449,25 +505,14 @@ class WorkflowableMixIn(object):
         """return the workflow history for this entity (eg ordered list of
         TrInfo entities)
         """
-        return self.reverse_wf_info_for
+        return self.entity.reverse_wf_info_for
 
     def latest_trinfo(self):
         """return the latest transition information for this entity"""
         try:
-            return self.reverse_wf_info_for[-1]
+            return self.workflow_history[-1]
         except IndexError:
             return None
-
-    @cached
-    def cwetype_workflow(self):
-        """return the default workflow for entities of this type"""
-        # XXX CWEType method
-        wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
-                                  'ET name %(et)s', {'et': self.__regid__})
-        if wfrset:
-            return wfrset.get_entity(0, 0)
-        self.warning("can't find any workflow for %s", self.__regid__)
-        return None
 
     def possible_transitions(self, type='normal'):
         """generates transition that MAY be fired for the given entity,
@@ -483,8 +528,36 @@ class WorkflowableMixIn(object):
             {'x': self.current_state.eid, 'type': type,
              'wfeid': self.current_workflow.eid})
         for tr in rset.entities():
-            if tr.may_be_fired(self.eid):
+            if tr.may_be_fired(self.entity.eid):
                 yield tr
+
+    def subworkflow_input_trinfo(self):
+        """return the TrInfo which has be recorded when this entity went into
+        the current sub-workflow
+        """
+        if self.main_workflow.eid == self.current_workflow.eid:
+            return # doesn't make sense
+        subwfentries = []
+        for trinfo in self.workflow_history:
+            if (trinfo.transition and
+                trinfo.previous_state.workflow.eid != trinfo.new_state.workflow.eid):
+                # entering or leaving a subworkflow
+                if (subwfentries and
+                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid and
+                    subwfentries[-1].previous_state.workflow.eid == trinfo.new_state.workflow.eid):
+                    # leave
+                    del subwfentries[-1]
+                else:
+                    # enter
+                    subwfentries.append(trinfo)
+        if not subwfentries:
+            return None
+        return subwfentries[-1]
+
+    def subworkflow_input_transition(self):
+        """return the transition which has went through the current sub-workflow
+        """
+        return getattr(self.subworkflow_input_trinfo(), 'transition', None)
 
     def _add_trinfo(self, comment, commentformat, treid=None, tseid=None):
         kwargs = {}
@@ -492,7 +565,7 @@ class WorkflowableMixIn(object):
             kwargs['comment'] = comment
             if commentformat is not None:
                 kwargs['comment_format'] = commentformat
-        kwargs['wf_info_for'] = self
+        kwargs['wf_info_for'] = self.entity
         if treid is not None:
             kwargs['by_transition'] = self._cw.entity_from_eid(treid)
         if tseid is not None:
@@ -532,51 +605,3 @@ class WorkflowableMixIn(object):
             stateeid = state.eid
         # XXX try to find matching transition?
         return self._add_trinfo(comment, commentformat, tr and tr.eid, stateeid)
-
-    def subworkflow_input_trinfo(self):
-        """return the TrInfo which has be recorded when this entity went into
-        the current sub-workflow
-        """
-        if self.main_workflow.eid == self.current_workflow.eid:
-            return # doesn't make sense
-        subwfentries = []
-        for trinfo in self.workflow_history:
-            if (trinfo.transition and
-                trinfo.previous_state.workflow.eid != trinfo.new_state.workflow.eid):
-                # entering or leaving a subworkflow
-                if (subwfentries and
-                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid and
-                    subwfentries[-1].previous_state.workflow.eid == trinfo.new_state.workflow.eid):
-                    # leave
-                    del subwfentries[-1]
-                else:
-                    # enter
-                    subwfentries.append(trinfo)
-        if not subwfentries:
-            return None
-        return subwfentries[-1]
-
-    def subworkflow_input_transition(self):
-        """return the transition which has went through the current sub-workflow
-        """
-        return getattr(self.subworkflow_input_trinfo(), 'transition', None)
-
-    def clear_all_caches(self):
-        super(WorkflowableMixIn, self).clear_all_caches()
-        clear_cache(self, 'cwetype_workflow')
-
-    @deprecated('[3.5] get transition from current workflow and use its may_be_fired method')
-    def can_pass_transition(self, trname):
-        """return the Transition instance if the current user can fire the
-        transition with the given name, else None
-        """
-        tr = self.current_workflow and self.current_workflow.transition_by_name(trname)
-        if tr and tr.may_be_fired(self.eid):
-            return tr
-
-    @property
-    @deprecated('[3.5] use printable_state')
-    def displayable_state(self):
-        return self._cw._(self.state)
-
-MI_REL_TRIGGERS[('in_state', 'subject')] = WorkflowableMixIn

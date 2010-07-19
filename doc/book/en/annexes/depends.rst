@@ -27,6 +27,9 @@ to have installed in order for CubicWeb to work:
 * logilab-common - http://www.logilab.org/project/logilab-common -
   http://pypi.python.org/pypi/logilab-common/ - included in the forest
 
+* logilab-database - http://www.logilab.org/project/logilab-database -
+  http://pypi.python.org/pypi/logilab-database/ - included in the forest
+
 * logilab-constraint - http://www.logilab.org/project/logilab-constraint -
   http://pypi.python.org/pypi/constraint/ - included in the forest
 
@@ -44,7 +47,7 @@ to have installed in order for CubicWeb to work:
 
 To use network communication between cubicweb instances / clients:
 
-* Pyro - http://pyro.sourceforge.net/ - http://pypi.python.org/pypi/Pyro
+* Pyro - http://www.xs4all.nl/~irmen/pyro3/ - http://pypi.python.org/pypi/Pyro
 
 If you're using a Postgres database (recommended):
 

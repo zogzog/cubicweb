@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""CubicWeb web client application object
+"""CubicWeb web client application object"""
 
-"""
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -234,7 +233,7 @@ class CookieSessionHandler(object):
     def _update_last_login_time(self, req):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
-        if req.user.metainformation()['source']['adapter'] == 'ldapuser':
+        if req.user.cw_metainformation()['source']['adapter'] == 'ldapuser':
             return
         try:
             req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
@@ -282,12 +281,12 @@ class CubicWebPublisher(object):
     to publish HTTP request.
     """
 
-    def __init__(self, config, debug=None,
+    def __init__(self, config,
                  session_handler_fact=CookieSessionHandler,
                  vreg=None):
         self.info('starting web instance from %s', config.apphome)
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
+            vreg = cwvreg.CubicWebVRegistry(config)
         self.vreg = vreg
         # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)

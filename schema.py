@@ -417,7 +417,7 @@ class CubicWebEntitySchema(EntitySchema):
             # avoid deleting the relation type accidentally...
             self.schema['has_text'].del_relation_def(self, self.schema['String'])
 
-    def schema_entity(self):
+    def schema_entity(self): # XXX @property for consistency with meta
         """return True if this entity type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -441,7 +441,7 @@ class CubicWebRelationSchema(RelationSchema):
     def meta(self):
         return self.type in META_RTYPES
 
-    def schema_relation(self):
+    def schema_relation(self): # XXX @property for consistency with meta
         """return True if this relation type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -572,7 +572,13 @@ class CubicWebSchema(Schema):
         rdef.name = rdef.name.lower()
         rdef.subject = bw_normalize_etype(rdef.subject)
         rdef.object = bw_normalize_etype(rdef.object)
-        rdefs = super(CubicWebSchema, self).add_relation_def(rdef)
+        try:
+            rdefs = super(CubicWebSchema, self).add_relation_def(rdef)
+        except BadSchemaDefinition:
+            reversed_etype_map = dict( (v, k) for k, v in ETYPE_NAME_MAP.iteritems() )
+            if rdef.subject in reversed_etype_map or rdef.object in reversed_etype_map:
+                return
+            raise
         if rdefs:
             try:
                 self._eid_index[rdef.eid] = rdefs

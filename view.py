@@ -34,6 +34,7 @@ from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.schema import display_name
+from cubicweb.vregistry import classid
 
 # robots control
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'
@@ -366,6 +367,17 @@ class EntityView(View):
     __select__ = non_final_entity()
     category = 'entityview'
 
+    def call(self, **kwargs):
+        if self.cw_rset is None:
+            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+        else:
+            super(EntityView, self).call(**kwargs)
+
+    def cell_call(self, row, col, **kwargs):
+        self.entity_call(self.cw_rset.get_entity(row, col), **kwargs)
+
+    def entity_call(self, entity, **kwargs):
+        raise NotImplementedError()
 
 class StartupView(View):
     """base class for views which doesn't need a particular result set to be
@@ -519,3 +531,37 @@ class Component(ReloadableMixIn, View):
     # XXX a generic '%s%s' % (self.__regid__, self.__registry__.capitalize()) would probably be nicer
     def div_id(self):
         return '%sComponent' % self.__regid__
+
+
+class Adapter(AppObject):
+    """base class for adapters"""
+    __registry__ = 'adapters'
+
+
+class EntityAdapter(Adapter):
+    """base class for entity adapters (eg adapt an entity to an interface)"""
+    def __init__(self, _cw, **kwargs):
+        try:
+            self.entity = kwargs.pop('entity')
+        except KeyError:
+            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
+                                                    kwargs.get('col') or 0)
+        Adapter.__init__(self, _cw, **kwargs)
+
+
+def implements_adapter_compat(iface):
+    def _pre39_compat(func):
+        def decorated(self, *args, **kwargs):
+            entity = self.entity
+            if hasattr(entity, func.__name__):
+                warn('[3.9] %s method is deprecated, define it on a custom '
+                     '%s for %s instead' % (func.__name__, iface,
+                                            classid(entity.__class__)),
+                     DeprecationWarning)
+                member = getattr(entity, func.__name__)
+                if callable(member):
+                    return member(*args, **kwargs)
+                return member
+            return func(self, *args, **kwargs)
+        return decorated
+    return _pre39_compat

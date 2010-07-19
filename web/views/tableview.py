@@ -16,17 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """generic table view, including filtering abilities"""
-__docformat__ = "restructuredtext en"
 
-try:
-    from json import dumps
-except ImportError:
-    from simplejson import dumps
+__docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import nonempty_rset, match_form_params
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, json_dumps
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb import tags
 from cubicweb.uilib import toggle_action, limitsize, htmlescape
@@ -77,7 +73,7 @@ class TableView(AnyRsetView):
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
-          xml_escape(dumps([divid, self.__regid__, False, vidargs])))
+          xml_escape(json_dumps([divid, self.__regid__, False, vidargs])))
         w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         w(u'<input type="hidden" name="divid" value="%s" />' % divid)
         w(u'<input type="hidden" name="fromformfilter" value="1" />')
@@ -197,7 +193,8 @@ class TableView(AnyRsetView):
         rql = params.pop('rql', self.cw_rset.printable_rql())
         # latest 'true' used for 'swap' mode
         return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-            dumps(divid), dumps(rql), dumps(self.__regid__), dumps(params))
+            json_dumps(divid), json_dumps(rql), json_dumps(self.__regid__),
+            json_dumps(params))
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
@@ -213,7 +210,7 @@ class TableView(AnyRsetView):
 
     def render_actions(self, divid, actions):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = tags.img(src=self._cw.external_resource('PUCE_DOWN'),
+        label = tags.img(src=self._cw.uiprops['PUCE_DOWN'],
                          alt=xml_escape(self._cw._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)
@@ -386,9 +383,9 @@ class EntityAttributesTableView(EntityView):
             self._cw.add_css(self.css_files)
         _ = self._cw._
         self.columns = columns or self.columns
-        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
+        sample = self.cw_rset.get_entity(0, 0)
         self.w(u'<table class="%s">' % self.table_css)
-        self.table_header(ecls)
+        self.table_header(sample)
         self.w(u'<tbody>')
         for row in xrange(self.cw_rset.rowcount):
             self.cell_call(row=row, col=0)
@@ -407,22 +404,21 @@ class EntityAttributesTableView(EntityView):
             else:
                 content = entity.printable_value(col)
             infos[col] = content
-        self.w(u"""<tr onmouseover="addElementClass(this, 'highlighted');"
-            onmouseout="removeElementClass(this, 'highlighted')">""")
+        self.w(u"""<tr onmouseover="$(this).addClass('highlighted');"
+            onmouseout="$(this).removeClass('highlighted')">""")
         line = u''.join(u'<td>%%(%s)s</td>' % col for col in self.columns)
         self.w(line % infos)
         self.w(u'</tr>\n')
 
-    def table_header(self, ecls):
+    def table_header(self, sample):
         """builds the table's header"""
         self.w(u'<thead><tr>')
-        _ = self._cw._
         for column in self.columns:
             meth = getattr(self, 'header_for_%s' % column, None)
             if meth:
-                colname = meth(ecls)
+                colname = meth(sample)
             else:
-                colname = _(column)
+                colname = self._cw._(column)
             self.w(u'<th>%s</th>' % xml_escape(colname))
         self.w(u'</tr></thead>\n')
 

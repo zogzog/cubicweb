@@ -22,17 +22,14 @@ object to handle publication.
 
 __docformat__ = "restructuredtext en"
 
-from smtplib import SMTP
-
-from logilab.common.decorators import cached
 from logilab.common.date import strptime
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
-from cubicweb.utils import CubicWebJsonEncoder
+from cubicweb.utils import json, json_dumps
 from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, json_dumps, json
+from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
@@ -44,7 +41,7 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 def jsonize(func):
-    """decorator to sets correct content_type and calls `json.dumps` on
+    """decorator to sets correct content_type and calls `json_dumps` on
     results
     """
     def wrapper(self, *args, **kwargs):
@@ -130,7 +127,7 @@ class ViewController(Controller):
         if rset is None and not hasattr(req, '_rql_processed'):
             req._rql_processed = True
             if req.cnx:
-                rset = self.process_rql(req.form.get('rql'))
+                rset = self.process_rql()
             else:
                 rset = None
         if rset and rset.rowcount == 1 and '__method' in req.form:
@@ -246,7 +243,7 @@ class FormValidatorController(Controller):
         errback = str(self._cw.form.get('__onfailure', 'null'))
         cbargs = str(self._cw.form.get('__cbargs', 'null'))
         self._cw.set_content_type('text/html')
-        jsargs = json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
+        jsargs = json_dumps((status, args, entity))
         return """<script type="text/javascript">
  window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
 </script>""" %  (domid, callback, errback, jsargs, cbargs)
@@ -260,6 +257,12 @@ class FormValidatorController(Controller):
             self._cw.encoding)
         return self.response(domid, status, args, entity)
 
+def optional_kwargs(extraargs):
+    if extraargs is None:
+        return {}
+    else: # we receive unicode keys which is not supported by the **syntax
+        return dict((str(key), value)
+                    for key, value in extraargs.items())
 
 class JSonController(Controller):
     __regid__ = 'json'
@@ -339,12 +342,11 @@ class JSonController(Controller):
             return None
         return None
 
-    def _call_view(self, view, **kwargs):
-        req = self._cw
-        divid = req.form.get('divid', 'pageContent')
+    def _call_view(self, view, paginate=False, **kwargs):
+        divid = self._cw.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
         stream = view.set_stream()
-        if req.form.get('paginate'):
+        if paginate:
             if divid == 'pageContent':
                 # mimick main template behaviour
                 stream.write(u'<div id="pageContent">')
@@ -355,12 +357,12 @@ class JSonController(Controller):
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
-        extresources = req.html_headers.getvalue(skiphead=True)
+        extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
             stream.write(extresources)
             stream.write(u'</div>\n')
-        if req.form.get('paginate') and divid == 'pageContent':
+        if paginate and divid == 'pageContent':
             stream.write(u'</div></div>')
         return stream.getvalue()
 
@@ -371,6 +373,8 @@ class JSonController(Controller):
         rql = req.form.get('rql')
         if rql:
             rset = self._exec(rql)
+        elif 'eid' in req.form:
+            rset = self._cw.eid_rset(req.form['eid'])
         else:
             rset = None
         vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
@@ -380,7 +384,7 @@ class JSonController(Controller):
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
-        return self._call_view(view)
+        return self._call_view(view, paginate=req.form.get('paginate'))
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
@@ -418,16 +422,19 @@ class JSonController(Controller):
                                               **extraargs)
         #except NoSelectableObject:
         #    raise RemoteCallFailed('unselectable')
-        extraargs = extraargs or {}
-        stream = comp.set_stream()
-        comp.render(**extraargs)
-        # XXX why not _call_view ?
-        extresources = self._cw.html_headers.getvalue(skiphead=True)
-        if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n')
-            stream.write(extresources)
-            stream.write(u'</div>\n')
-        return stream.getvalue()
+        return self._call_view(comp, **extraargs)
+
+    @xhtmlize
+    def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
+        if eid is not None:
+            rset = self._cw.eid_rset(eid)
+        elif 'rql' in self._cw.form:
+            rset = self._cw.execute(self._cw.form['rql'])
+        else:
+            rset = None
+        selectargs = optional_kwargs(selectargs)
+        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset, **selectargs)
+        return self._call_view(view, **optional_kwargs(renderargs))
 
     @check_pageid
     @xhtmlize
@@ -448,23 +455,15 @@ class JSonController(Controller):
     @xhtmlize
     def js_reledit_form(self):
         req = self._cw
-        args = dict((x, self._cw.form[x])
-                    for x in frozenset(('rtype', 'role', 'reload', 'landing_zone')))
-        entity = self._cw.entity_from_eid(int(self._cw.form['eid']))
-        # note: default is reserved in js land
-        args['default'] = self._cw.form['default_value']
-        args['reload'] = json.loads(args['reload'])
-        rset = req.eid_rset(int(self._cw.form['eid']))
+        args = dict((x, req.form[x])
+                    for x in ('formid', 'rtype', 'role', 'reload', 'default_value'))
+        rset = req.eid_rset(typed_eid(self._cw.form['eid']))
+        try:
+            args['reload'] = json.loads(args['reload'])
+        except ValueError: # not true/false, an absolute url
+            assert args['reload'].startswith('http')
         view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
-        stream = view.set_stream()
-        view.render(**args)
-        # XXX why not _call_view ?
-        extresources = req.html_headers.getvalue(skiphead=True)
-        if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n')
-            stream.write(extresources)
-            stream.write(u'</div>\n')
-        return stream.getvalue()
+        return self._call_view(view, **args)
 
     @jsonize
     def js_i18n(self, msgids):
@@ -480,7 +479,7 @@ class JSonController(Controller):
     @jsonize
     def js_external_resource(self, resource):
         """returns the URL of the external resource named `resource`"""
-        return self._cw.external_resource(resource)
+        return self._cw.uiprops[resource]
 
     @check_pageid
     @jsonize
@@ -580,52 +579,10 @@ class JSonController(Controller):
     def js_add_pending_delete(self, (eidfrom, rel, eidto)):
         self._add_pending(eidfrom, rel, eidto, 'delete')
 
-    # XXX specific code. Kill me and my AddComboBox friend
-    @jsonize
-    def js_add_and_link_new_entity(self, etype_to, rel, eid_to, etype_from, value_from):
-        # create a new entity
-        eid_from = self._cw.execute('INSERT %s T : T name "%s"' % ( etype_from, value_from ))[0][0]
-        # link the new entity to the main entity
-        rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
-        return eid_from
 
 # XXX move to massmailing
-class SendMailController(Controller):
-    __regid__ = 'sendmail'
-    __select__ = authenticated_user() & match_form_params('recipient', 'mailbody', 'subject')
 
-    def recipients(self):
-        """returns an iterator on email's recipients as entities"""
-        eids = self._cw.form['recipient']
-        # eids may be a string if only one recipient was specified
-        if isinstance(eids, basestring):
-            rset = self._cw.execute('Any X WHERE X eid %(x)s', {'x': eids})
-        else:
-            rset = self._cw.execute('Any X WHERE X eid in (%s)' % (','.join(eids)))
-        return rset.entities()
-
-    def sendmail(self, recipient, subject, body):
-        msg = format_mail({'email' : self._cw.user.get_email(),
-                           'name' : self._cw.user.dc_title(),},
-                          [recipient], body, subject)
-        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
-            msg = self._cw._('could not connect to the SMTP server')
-            url = self._cw.build_url(__message=msg)
-            raise Redirect(url)
-
-    def publish(self, rset=None):
-        # XXX this allows users with access to an cubicweb instance to use it as
-        # a mail relay
-        body = self._cw.form['mailbody']
-        subject = self._cw.form['subject']
-        for recipient in self.recipients():
-            text = body % recipient.as_email_context()
-            self.sendmail(recipient.get_email(), subject, text)
-        url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
-        raise Redirect(url)
-
-
-class MailBugReportController(SendMailController):
+class MailBugReportController(Controller):
     __regid__ = 'reportbug'
     __select__ = match_form_params('description')
 
@@ -636,7 +593,7 @@ class MailBugReportController(SendMailController):
         raise Redirect(url)
 
 
-class UndoController(SendMailController):
+class UndoController(Controller):
     __regid__ = 'undo'
     __select__ = authenticated_user() & match_form_params('txuuid')
 

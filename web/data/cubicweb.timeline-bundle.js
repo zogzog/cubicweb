@@ -1,14 +1,14 @@
 var SimileAjax_urlPrefix = baseuri() + 'data/';
 var Timeline_urlPrefix = baseuri() + 'data/';
 
-/*==================================================
+/*
  *  Simile Ajax API
  *
  *  Include this file in your HTML file as follows:
  *
  *    <script src="http://simile.mit.edu/ajax/api/simile-ajax-api.js" type="text/javascript"></script>
  *
- *==================================================
+ *
  */
 
 if (typeof SimileAjax == "undefined") {
@@ -213,9 +213,9 @@ if (typeof SimileAjax == "undefined") {
         SimileAjax.loaded = true;
     })();
 }
-/*==================================================
+/*
  *  Platform Utility Functions and Constants
- *==================================================
+ *
  */
 
 /*  This must be called after our jQuery has been loaded
@@ -319,9 +319,10 @@ SimileAjax.Platform.browser = {
 
 SimileAjax.Platform.getDefaultLocale = function() {
     return SimileAjax.Platform.clientLocale;
-};/*==================================================
+};
+/*
  *  Debug Utility Functions
- *==================================================
+ *
  */
 
 SimileAjax.Debug = {
@@ -678,9 +679,9 @@ SimileAjax.JSON = new Object();
         }
     };
 })();
-/*==================================================
+/*
  *  DOM Utility Functions
- *==================================================
+ *
  */
 
 SimileAjax.DOM = new Object();
@@ -1040,9 +1041,9 @@ if (!SimileAjax.Graphics.pngIsTranslucent) {
     SimileAjax.includeCssFile(document, SimileAjax.urlPrefix + "styles/graphics-ie6.css");
 }
 
-/*==================================================
+/*
  *  Opacity, translucency
- *==================================================
+ *
  */
 SimileAjax.Graphics._createTranslucentImage1 = function(url, verticalAlign) {
     var elmt = document.createElement("img");
@@ -1119,9 +1120,9 @@ SimileAjax.Graphics.setOpacity = function(elmt, opacity) {
     }
 };
 
-/*==================================================
+/*
  *  Bubble
- *==================================================
+ *
  */
 
 SimileAjax.Graphics.bubbleConfig = {
@@ -1479,9 +1480,9 @@ SimileAjax.Graphics.createMessageBubble = function(doc) {
     };
 };
 
-/*==================================================
+/*
  *  Animation
- *==================================================
+ *
  */
 
 /**
@@ -1549,11 +1550,11 @@ SimileAjax.Graphics._Animation.prototype.step = function() {
     }
 };
 
-/*==================================================
+/*
  *  CopyPasteButton
  *
  *  Adapted from http://spaces.live.com/editorial/rayozzie/demo/liveclip/liveclipsample/techPreview.html.
- *==================================================
+ *
  */
 
 /**
@@ -1606,9 +1607,9 @@ SimileAjax.Graphics.createStructuredDataCopyButton = function(image, width, heig
     return div;
 };
 
-/*==================================================
+/*
  *  getWidthHeight
- *==================================================
+ *
  */
 SimileAjax.Graphics.getWidthHeight = function(el) {
     // RETURNS hash {width:  w, height: h} in pixels
@@ -1633,9 +1634,9 @@ SimileAjax.Graphics.getWidthHeight = function(el) {
 };
 
 
-/*==================================================
+/*
  *  FontRenderingContext
- *==================================================
+ *
  */
 SimileAjax.Graphics.getFontRenderingContext = function(elmt, width) {
     return new SimileAjax.Graphics._FontRenderingContext(elmt, width);
@@ -2127,9 +2128,9 @@ SimileAjax.DateTime.getTimezone = function() {
     var d = new Date().getTimezoneOffset();
     return d / -60;
 };
-/*==================================================
+/*
  *  String Utility Functions and Constants
- *==================================================
+ *
  */
 
 String.prototype.trim = function() {
@@ -2170,9 +2171,9 @@ String.substitute = function(s, objects) {
     }
     return result;
 };
-/*==================================================
+/*
  *  HTML Utility Functions
- *==================================================
+ *
  */
 
 SimileAjax.HTML = new Object();
@@ -2655,9 +2656,9 @@ SimileAjax.SortedArray.prototype.getLast = function() {
     return (this._a.length > 0) ? this._a[this._a.length - 1] : null;
 };
 
-/*==================================================
+/*
  *  Event Index
- *==================================================
+ *
  */
 
 SimileAjax.EventIndex = function(unit) {
@@ -2889,9 +2890,9 @@ SimileAjax.EventIndex._AllIterator.prototype = {
         return this._index < this._events.length() ?
             this._events.elementAt(this._index++) : null;
     }
-};/*==================================================
+};/*
  *  Default Unit
- *==================================================
+ *
  */
 
 SimileAjax.NativeDateUnit = new Object();
@@ -2953,9 +2954,9 @@ SimileAjax.NativeDateUnit.change = function(v, n) {
     return new Date(v.getTime() + n);
 };
 
-/*==================================================
+/*
  *  General, miscellaneous SimileAjax stuff
- *==================================================
+ *
  */
 
 SimileAjax.ListenerQueue = function(wildcardHandlerName) {
@@ -2998,7 +2999,7 @@ SimileAjax.ListenerQueue.prototype.fire = function(handlerName, args) {
     }
 };
 
-/*======================================================================
+/*
  *  History
  *
  *  This is a singleton that keeps track of undoable user actions and
@@ -3020,7 +3021,7 @@ SimileAjax.ListenerQueue.prototype.fire = function(handlerName, args) {
  *
  *  An iframe is inserted into the document's body element to track
  *  onload events.
- *======================================================================
+ *
  */
 
 SimileAjax.History = {
@@ -3632,7 +3633,7 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
     }
     return elmt;
 };
-/*==================================================
+/*
  *  Timeline API
  *
  *  This file will load all the Javascript files
@@ -3696,7 +3697,7 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
  * Note that the Ajax version is usually NOT the same as the Timeline version.
  * See variable simile_ajax_ver below for the current version
  *
- *==================================================
+ *
  */
 
 (function() {
@@ -3928,7 +3929,7 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
         loadMe();
     }
 })();
-/*=================================================
+/*
  *
  * Coding standards:
  *
@@ -3950,14 +3951,14 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
  * We also want to use jslint:  http://www.jslint.com/
  *
  *
- *==================================================
+ *
  */
 
 
 
-/*==================================================
+/*
  *  Timeline VERSION
- *==================================================
+ *
  */
 // Note: version is also stored in the build.xml file
 Timeline.version = 'pre 2.4.0';  // use format 'pre 1.2.3' for trunk versions
@@ -3965,9 +3966,9 @@ Timeline.ajax_lib_version = SimileAjax.version;
 Timeline.display_version = Timeline.version + ' (with Ajax lib ' + Timeline.ajax_lib_version + ')';
  // cf method Timeline.writeVersion
 
-/*==================================================
+/*
  *  Timeline
- *==================================================
+ *
  */
 Timeline.strings = {}; // localization string tables
 Timeline.HORIZONTAL = 0;
@@ -4183,9 +4184,9 @@ Timeline.writeVersion = function(el_id) {
 
 
 
-/*==================================================
+/*
  *  Timeline Implementation object
- *==================================================
+ *
  */
 Timeline._Impl = function(elmt, bandInfos, orientation, unit, timelineID) {
     SimileAjax.WindowManager.initialize();
@@ -4585,7 +4586,7 @@ Timeline._Impl.prototype.zoom = function (zoomIn, x, y, target) {
   this.paint();
 };
 
-/*=================================================
+/*
  *
  * Coding standards:
  *
@@ -4607,14 +4608,14 @@ Timeline._Impl.prototype.zoom = function (zoomIn, x, y, target) {
  * We also want to use jslint:  http://www.jslint.com/
  *
  *
- *==================================================
+ *
  */
 
 
 
-/*==================================================
+/*
  *  Band
- *==================================================
+ *
  */
 Timeline._Band = function(timeline, bandInfo, index) {
     // hack for easier subclassing
@@ -5344,9 +5345,9 @@ Timeline._Band.prototype._softPaintDecorators = function() {
 Timeline._Band.prototype.closeBubble = function() {
     SimileAjax.WindowManager.cancelPopups();
 };
-/*==================================================
+/*
  *  Classic Theme
- *==================================================
+ *
  */
 
 
@@ -5523,14 +5524,14 @@ Timeline.ClassicTheme._Impl = function() {
     };
 
     this.mouseWheel = 'scroll'; // 'default', 'zoom', 'scroll'
-};/*==================================================
+};/*
  *  An "ether" is a object that maps date/time to pixel coordinates.
- *==================================================
+ *
  */
 
-/*==================================================
+/*
  *  Linear Ether
- *==================================================
+ *
  */
 
 Timeline.LinearEther = function(params) {
@@ -5601,9 +5602,9 @@ Timeline.LinearEther.prototype.zoom = function(zoomIn) {
 };
 
 
-/*==================================================
+/*
  *  Hot Zone Ether
- *==================================================
+ *
  */
 
 Timeline.HotZoneEther = function(params) {
@@ -5828,9 +5829,9 @@ Timeline.HotZoneEther.prototype._pixelOffsetToDate = function(pixels, fromDate) 
 Timeline.HotZoneEther.prototype._getScale = function() {
     return this._interval / this._pixelsPerInterval;
 };
-/*==================================================
+/*
  *  Gregorian Ether Painter
- *==================================================
+ *
  */
 
 Timeline.GregorianEtherPainter = function(params) {
@@ -5919,9 +5920,9 @@ Timeline.GregorianEtherPainter.prototype.zoom = function(netIntervalChange) {
 };
 
 
-/*==================================================
+/*
  *  Hot Zone Gregorian Ether Painter
- *==================================================
+ *
  */
 
 Timeline.HotZoneGregorianEtherPainter = function(params) {
@@ -6080,9 +6081,9 @@ Timeline.HotZoneGregorianEtherPainter.prototype.zoom = function(netIntervalChang
   }
 };
 
-/*==================================================
+/*
  *  Year Count Ether Painter
- *==================================================
+ *
  */
 
 Timeline.YearCountEtherPainter = function(params) {
@@ -6169,9 +6170,9 @@ Timeline.YearCountEtherPainter.prototype.paint = function() {
 Timeline.YearCountEtherPainter.prototype.softPaint = function() {
 };
 
-/*==================================================
+/*
  *  Quarterly Ether Painter
- *==================================================
+ *
  */
 
 Timeline.QuarterlyEtherPainter = function(params) {
@@ -6257,9 +6258,9 @@ Timeline.QuarterlyEtherPainter.prototype.paint = function() {
 Timeline.QuarterlyEtherPainter.prototype.softPaint = function() {
 };
 
-/*==================================================
+/*
  *  Ether Interval Marker Layout
- *==================================================
+ *
  */
 
 Timeline.EtherIntervalMarkerLayout = function(timeline, band, theme, align, showLine) {
@@ -6363,9 +6364,9 @@ Timeline.EtherIntervalMarkerLayout = function(timeline, band, theme, align, show
     };
 };
 
-/*==================================================
+/*
  *  Ether Highlight Layout
- *==================================================
+ *
  */
 
 Timeline.EtherHighlight = function(timeline, band, theme, backgroundLayer) {
@@ -6404,9 +6405,9 @@ Timeline.EtherHighlight = function(timeline, band, theme, backgroundLayer) {
         }
     }
 };
-/*==================================================
+/*
  *  Event Utils
- *==================================================
+ *
  */
 Timeline.EventUtils = {};
 
@@ -6421,7 +6422,7 @@ Timeline.EventUtils.getNewEventID = function() {
 };
 
 Timeline.EventUtils.decodeEventElID = function(elementID) {
-    /*==================================================
+    /*
      *
      * Use this function to decode an event element's id on a band (label div,
      * tape div or icon img).
@@ -6447,7 +6448,7 @@ Timeline.EventUtils.decodeEventElID = function(elementID) {
      * by using Timeline.getTimeline, Timeline.getBand, or
      * Timeline.getEvent and passing in the element's id
      *
-     *==================================================
+     *
      */
 
     var parts = elementID.split('-');
@@ -6467,9 +6468,9 @@ Timeline.EventUtils.encodeEventElID = function(timeline, band, elType, evt) {
     // elType should be one of {label | icon | tapeN | highlightN}
     return elType + "-tl-" + timeline.timelineID +
        "-" + band.getIndex() + "-" + evt.getID();
-};/*==================================================
+};/*
  *  Gregorian Date Labeller
- *==================================================
+ *
  */
 
 Timeline.GregorianDateLabeller = function(locale, timeZone) {
@@ -6558,9 +6559,9 @@ Timeline.GregorianDateLabeller.prototype.defaultLabelInterval = function(date, i
     return { text: text, emphasized: emphasized };
 }
 
-/*==================================================
+/*
  *  Default Event Source
- *==================================================
+ *
  */
 
 
@@ -7125,12 +7126,12 @@ Timeline.DefaultEventSource.Event.prototype = {
 };
 
 
-/*==================================================
+/*
  *  Original Event Painter
- *==================================================
+ *
  */
 
-/*==================================================
+/*
  *
  * To enable a single event listener to monitor everything
  * on a Timeline, we need a way to map from an event's icon,
@@ -7152,7 +7153,7 @@ Timeline.DefaultEventSource.Event.prototype = {
  * You can then retrieve the band/timeline objects and event object
  * by using Timeline.EventUtils.decodeEventElID
  *
- *==================================================
+ *
  */
 
 /*
@@ -7818,9 +7819,9 @@ Timeline.OriginalEventPainter.prototype._fireEventPaintListeners = function(op, 
         this._eventPaintListeners[i](this._band, op, evt, els);
     }
 };
-/*==================================================
+/*
  *  Detailed Event Painter
- *==================================================
+ *
  */
 
 // Note: a number of features from original-painter
@@ -8509,9 +8510,9 @@ Timeline.DetailedEventPainter.prototype._fireOnSelect = function(eventID) {
         this._onSelectListeners[i](eventID);
     }
 };
-/*==================================================
+/*
  *  Overview Event Painter
- *==================================================
+ *
  */
 
 Timeline.OverviewEventPainter = function(params) {
@@ -8767,9 +8768,9 @@ Timeline.OverviewEventPainter.prototype._createHighlightDiv = function(highlight
 Timeline.OverviewEventPainter.prototype.showBubble = function(evt) {
     // not implemented
 };
-/*==================================================
+/*
  *  Compact Event Painter
- *==================================================
+ *
  */
 
 Timeline.CompactEventPainter = function(params) {
@@ -9831,9 +9832,9 @@ Timeline.CompactEventPainter.prototype._fireOnSelect = function(eventIDs) {
         this._onSelectListeners[i](eventIDs);
     }
 };
-/*==================================================
+/*
  *  Span Highlight Decorator
- *==================================================
+ *
  */
 
 Timeline.SpanHighlightDecorator = function(params) {
@@ -9948,9 +9949,9 @@ Timeline.SpanHighlightDecorator.prototype.paint = function() {
 Timeline.SpanHighlightDecorator.prototype.softPaint = function() {
 };
 
-/*==================================================
+/*
  *  Point Highlight Decorator
- *==================================================
+ *
  */
 
 Timeline.PointHighlightDecorator = function(params) {
@@ -10015,9 +10016,9 @@ Timeline.PointHighlightDecorator.prototype.paint = function() {
 
 Timeline.PointHighlightDecorator.prototype.softPaint = function() {
 };
-/*==================================================
+/*
  *  Default Unit
- *==================================================
+ *
  */
 
 Timeline.NativeDateUnit = new Object();
@@ -10083,35 +10084,35 @@ Timeline.NativeDateUnit.change = function(v, n) {
     return new Date(v.getTime() + n);
 };
 
-/*==================================================
+/*
  *  Common localization strings
- *==================================================
+ *
  */
 
 Timeline.strings["fr"] = {
     wikiLinkLabel:  "Discute"
 };
 
-/*==================================================
+/*
  *  Localization of labellers.js
- *==================================================
+ *
  */
 
 Timeline.GregorianDateLabeller.monthNames["fr"] = [
     "jan", "fev", "mar", "avr", "mai", "jui", "jui", "aou", "sep", "oct", "nov", "dec"
 ];
-/*==================================================
+/*
  *  Common localization strings
- *==================================================
+ *
  */
 
 Timeline.strings["en"] = {
     wikiLinkLabel:  "Discuss"
 };
 
-/*==================================================
+/*
  *  Localization of labellers.js
- *==================================================
+ *
  */
 
 Timeline.GregorianDateLabeller.monthNames["en"] = [

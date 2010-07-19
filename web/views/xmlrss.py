@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""base xml and rss views
+"""base xml and rss views"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -25,8 +24,10 @@ from time import timezone
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import non_final_entity, one_line_rset, appobject_selectable
-from cubicweb.view import EntityView, AnyRsetView, Component
+from cubicweb.selectors import (is_instance, non_final_entity, one_line_rset,
+                                appobject_selectable, adaptable)
+from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
+from cubicweb.view import implements_adapter_compat
 from cubicweb.uilib import simple_sgml_tag
 from cubicweb.web import httpcache, box
 
@@ -120,6 +121,16 @@ class XMLRsetView(AnyRsetView):
 
 # RSS stuff ###################################################################
 
+class IFeedAdapter(EntityAdapter):
+    __regid__ = 'IFeed'
+    __select__ = is_instance('Any')
+
+    @implements_adapter_compat('IFeed')
+    def rss_feed_url(self):
+        """return an url to the rss feed for this entity"""
+        return self.entity.absolute_url(vid='rss')
+
+
 class RSSFeedURL(Component):
     __regid__ = 'rss_feed_url'
     __select__ = non_final_entity()
@@ -130,10 +141,11 @@ class RSSFeedURL(Component):
 
 class RSSEntityFeedURL(Component):
     __regid__ = 'rss_feed_url'
-    __select__ = non_final_entity() & one_line_rset()
+    __select__ = one_line_rset() & adaptable('IFeed')
 
     def feed_url(self):
-        return self.cw_rset.get_entity(0, 0).rss_feed_url()
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        return entity.cw_adapt_to('IFeed').rss_feed_url()
 
 
 class RSSIconBox(box.BoxTemplate):
@@ -147,7 +159,7 @@ class RSSIconBox(box.BoxTemplate):
 
     def call(self, **kwargs):
         try:
-            rss = self._cw.external_resource('RSS_LOGO')
+            rss = self._cw.uiprops['RSS_LOGO']
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return

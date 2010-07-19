@@ -121,6 +121,9 @@ class RepeatList(object):
     def __init__(self, size, item):
         self._size = size
         self._item = item
+    def __repr__(self):
+        return '<cubicweb.utils.RepeatList at %s item=%s size=%s>' % (
+            id(self), self._item, self._size)
     def __len__(self):
         return self._size
     def __nonzero__(self):
@@ -324,32 +327,23 @@ class HTMLStream(object):
 
 try:
     # may not be there if cubicweb-web not installed
-    if sys.version_info < (2,6):
+    if sys.version_info < (2, 6):
         import simplejson as json
     else:
         import json
 except ImportError:
-    pass
+    json_dumps = None
+
 else:
 
     class CubicWebJsonEncoder(json.JSONEncoder):
         """define a json encoder to be able to encode yams std types"""
 
-        # _iterencode is the only entry point I've found to use a custom encode
-        # hook early enough: .default() is called if nothing else matched before,
-        # .iterencode() is called once on the main structure to encode and then
-        # never gets called again.
-        # For the record, our main use case is in FormValidateController with:
-        #   json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
-        # where we want all the entity attributes, including eid, to be part
-        # of the json object dumped.
-        # This would have once more been easier if Entity didn't extend dict.
-        def _iterencode(self, obj, markers=None):
-            if hasattr(obj, '__json_encode__'):
-                obj = obj.__json_encode__()
-            return json.JSONEncoder._iterencode(self, obj, markers)
-
         def default(self, obj):
+            if hasattr(obj, 'eid'):
+                d = obj.cw_attr_cache.copy()
+                d['eid'] = obj.eid
+                return d
             if isinstance(obj, datetime.datetime):
                 return obj.strftime('%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
@@ -366,6 +360,9 @@ else:
                 # we never ever want to fail because of an unknown type,
                 # just return None in those cases.
                 return None
+
+    def json_dumps(value):
+        return json.dumps(value, cls=CubicWebJsonEncoder)
 
 
 @deprecated('[3.7] merge_dicts is deprecated')

@@ -21,6 +21,7 @@
 __docformat__ = "restructuredtext en"
 
 import os
+import sys
 import logging
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
@@ -181,12 +182,9 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
 
-    def ext_resources_file(self):
-        """return instance's external resources file"""
-        return join(self.apphome, 'data', 'external_resources')
-
     def pyro_enabled(self):
-        # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and threads
+        # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
+        # threads
         return True
 
 
@@ -210,8 +208,6 @@ def init_test_database(config=None, configdir='data'):
         init_test_database_sqlite(config)
     elif driver == 'postgres':
         init_test_database_postgres(config)
-    elif driver == 'sqlserver2005':
-        init_test_database_sqlserver2005(config)
     else:
         raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
@@ -227,10 +223,8 @@ def reset_test_database(config):
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)
-    elif driver in ('sqlserver2005', 'postgres'):
-        # XXX do something with dump/restore ?
-        print 'resetting the database is not done for', driver
-        print 'you should handle it manually'
+    elif driver == 'postgres':
+        init_test_database_postgres(config)
     else:
         raise ValueError('no reset function for driver %r' % driver)
 
@@ -239,11 +233,46 @@ def reset_test_database(config):
 
 def init_test_database_postgres(config):
     """initialize a fresh postgresql databse used for testing purpose"""
-    if config.init_repository:
-        from cubicweb.server import init_repository
-        init_repository(config, interactive=False, drop=True)
+    from logilab.database import get_db_helper
+    from cubicweb.server import init_repository
+    from cubicweb.server.serverctl import (createdb, system_source_cnx,
+                                           _db_sys_cnx)
+    source = config.sources()['system']
+    dbname = source['db-name']
+    templdbname = dbname + '_template'
+    helper = get_db_helper('postgres')
+    # connect on the dbms system base to create our base
+    dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=0)
+    cursor = dbcnx.cursor()
+    try:
+        if dbname in helper.list_databases(cursor):
+            cursor.execute('DROP DATABASE %s' % dbname)
+        if not templdbname in helper.list_databases(cursor):
+            source['db-name'] = templdbname
+            createdb(helper, source, dbcnx, cursor)
+            dbcnx.commit()
+            cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=0)
+            templcursor = cnx.cursor()
+            # XXX factorize with db-create code
+            helper.init_fti_extensions(templcursor)
+            # install plpythonu/plpgsql language if not installed by the cube
+            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
+            for extlang in langs:
+                helper.create_language(templcursor, extlang)
+            cnx.commit()
+            templcursor.close()
+            cnx.close()
+            init_repository(config, interactive=False)
+            source['db-name'] = dbname
+    except:
+        dbcnx.rollback()
+        # XXX drop template
+        raise
+    createdb(helper, source, dbcnx, cursor, template=templdbname)
+    dbcnx.commit()
+    dbcnx.close()
 
-### sqlserver2005 test database handling ############################################
+### sqlserver2005 test database handling #######################################
 
 def init_test_database_sqlserver2005(config):
     """initialize a fresh sqlserver databse used for testing purpose"""

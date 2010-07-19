@@ -33,7 +33,7 @@ from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError)
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
@@ -202,7 +202,7 @@ class RepositoryTC(CubicWebTC):
         session = repo._get_session(cnxid)
         session.set_pool()
         user = session.user
-        user.fire_transition('deactivate')
+        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
         repo.rollback(cnxid)
@@ -390,7 +390,7 @@ class RepositoryTC(CubicWebTC):
         # local hook
         class DummyBeforeHook(Hook):
             __regid__ = 'dummy-before-hook'
-            __select__ = Hook.__select__ & implements('EmailAddress')
+            __select__ = Hook.__select__ & is_instance('EmailAddress')
             events = ('before_update_entity',)
             def __call__(self):
                 # safety belt: avoid potential infinite recursion if the test
@@ -411,7 +411,7 @@ class RepositoryTC(CubicWebTC):
         # local hook
         class DummyBeforeHook(Hook):
             __regid__ = 'dummy-before-hook'
-            __select__ = Hook.__select__ & implements('EmailAddress')
+            __select__ = Hook.__select__ & is_instance('EmailAddress')
             events = ('before_add_entity',)
             def __call__(self):
                 # set_attributes is forbidden within before_add_entity()
@@ -430,7 +430,7 @@ class RepositoryTC(CubicWebTC):
         class DummyBeforeHook(Hook):
             _test = self # keep reference to test instance
             __regid__ = 'dummy-before-hook'
-            __select__ = Hook.__select__ & implements('Affaire')
+            __select__ = Hook.__select__ & is_instance('Affaire')
             events = ('before_update_entity',)
             def __call__(self):
                 # invoiced attribute shouldn't be considered "edited" before the hook

@@ -77,10 +77,16 @@ class ResultSet(object):
         rows = self.rows
         if len(rows) > 10:
             rows = rows[:10] + ['...']
+        if len(rows) > 1:
+            # add a line break before first entity if more that one.
+            pattern = '<resultset %r (%s rows):\n%s>' 
+        else:
+            pattern = '<resultset %r (%s rows): %s>'
+
         if not self.description:
-            return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+            return pattern % (self.rql, len(self.rows),
                                                      '\n'.join(str(r) for r in rows))
-        return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+        return pattern % (self.rql, len(self.rows),
                                                  '\n'.join('%s (%s)' % (r, d)
                                                            for r, d in zip(rows, self.description)))
 
@@ -453,7 +459,7 @@ class ResultSet(object):
         etype = self.description[row][col]
         entity = self.req.vreg['etypes'].etype_class(etype)(req, rset=self,
                                                             row=row, col=col)
-        entity.set_eid(eid)
+        entity.eid = eid
         # cache entity
         req.set_entity_cache(entity)
         eschema = entity.e_schema
@@ -494,7 +500,7 @@ class ResultSet(object):
                         rrset.req = req
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
-                    entity.set_related_cache(attr, role, rrset)
+                    entity.cw_set_relation_cache(attr, role, rrset)
         return entity
 
     @cached

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""utilities for instances migration
+"""utilities for instances migration"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -111,7 +110,7 @@ class MigrationHelper(object):
         self.config = config
         if config:
             # no config on shell to a remote instance
-            self.config.init_log(logthreshold=logging.ERROR, debug=True)
+            self.config.init_log(logthreshold=logging.ERROR)
         # 0: no confirmation, 1: only main commands confirmed, 2 ask for everything
         self.verbosity = verbosity
         self.need_wrap = True
@@ -281,14 +280,25 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         return context
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
-        """execute a migration script
-        in interactive mode,  display the migration script path, ask for
-        confirmation and execute it if confirmed
+        """execute a migration script in interactive mode
+
+        Display the migration script path, ask for confirmation and execute it
+        if confirmed
+
+        Context environment can have these variables defined:
+        - __name__ : will be determine by funcname parameter
+        - __file__ : is the name of the script if it exists
+        - __args__ : script arguments coming from command-line
+
+        :param migrscript: name of the script
+        :param funcname: defines __name__ inside the shell (or use __main__)
+        :params args: optional arguments for funcname
+        :keyword scriptargs: optional arguments of the script
         """
         migrscript = os.path.normpath(migrscript)
         if migrscript.endswith('.py'):
             script_mode = 'python'
-        elif migrscript.endswith('.txt') or migrscript.endswith('.rst'):
+        elif migrscript.endswith(('.txt', '.rst')):
             script_mode = 'doctest'
         else:
             raise Exception('This is not a valid cubicweb shell input')
@@ -300,7 +310,8 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 pyname = '__main__'
             else:
                 pyname = splitext(basename(migrscript))[0]
-            scriptlocals.update({'__file__': migrscript, '__name__': pyname})
+            scriptlocals.update({'__file__': migrscript, '__name__': pyname,
+                                 '__args__': kwargs.pop("scriptargs", [])})
             execfile(migrscript, scriptlocals)
             if funcname is not None:
                 try:

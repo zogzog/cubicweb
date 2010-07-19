@@ -31,7 +31,7 @@ from warnings import warn
 
 import yams.schema
 
-from logilab.common.testlib import TestCase, InnerTest
+from logilab.common.testlib import TestCase, InnerTest, Tags
 from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
@@ -163,6 +163,7 @@ class CubicWebTC(TestCase):
     appid = 'data'
     configcls = devtools.ApptestConfiguration
     reset_schema = reset_vreg = False # reset schema / vreg between tests
+    tags= TestCase.tags | Tags('cubicweb', 'cw_repo')
 
     @classproperty
     def config(cls):
@@ -313,7 +314,7 @@ class CubicWebTC(TestCase):
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),
                     {'x': user.eid})
-        user.clear_related_cache('in_group', 'subject')
+        user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
             req.cnx.commit()
         return user
@@ -633,10 +634,10 @@ class CubicWebTC(TestCase):
         view = viewsreg.select(vid, req, **kwargs)
         # set explicit test description
         if rset is not None:
-            self.set_description("testing %s, mod=%s (%s)" % (
+            self.set_description("testing vid=%s defined in %s with (%s)" % (
                 vid, view.__module__, rset.printable_rql()))
         else:
-            self.set_description("testing %s, mod=%s (no rset)" % (
+            self.set_description("testing vid=%s defined in %s without rset" % (
                 vid, view.__module__))
         if template is None: # raw view testing, no template
             viewfunc = view.render
@@ -704,7 +705,7 @@ class CubicWebTC(TestCase):
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
-            return None
+            return output.strip()
         validator = validatorclass()
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
@@ -785,6 +786,8 @@ def how_many_dict(schema, cursor, how_many, skip):
 class AutoPopulateTest(CubicWebTC):
     """base class for test with auto-populating of the database"""
     __abstract__ = True
+
+    tags = CubicWebTC.tags | Tags('autopopulated')
 
     pdbclass = CubicWebDebugger
     # this is a hook to be able to define a list of rql queries
@@ -911,6 +914,9 @@ class AutoPopulateTest(CubicWebTC):
 
 class AutomaticWebTest(AutoPopulateTest):
     """import this if you wan automatic tests to be ran"""
+
+    tags = AutoPopulateTest.tags | Tags('web', 'generated')
+
     def setUp(self):
         AutoPopulateTest.setUp(self)
         # access to self.app for proper initialization of the authentication

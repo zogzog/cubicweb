@@ -188,6 +188,9 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.failIf(self.index_exists('State', 'state_of'))
             rset = self.execute('Any X, Y WHERE X state_of Y')
             self.assertEquals(len(rset), 2) # user states
+        except:
+            import traceback
+            traceback.print_exc()
         finally:
             self.execute('SET X inlined TRUE WHERE X name "state_of"')
             self.failIf(self.schema['state_of'].inlined)

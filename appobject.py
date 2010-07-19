@@ -39,6 +39,92 @@ from logilab.common.deprecation import deprecated
 from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
 
+from cubicweb.cwconfig import CubicWebConfiguration
+
+def class_regid(cls):
+    """returns a unique identifier for an appobject class"""
+    if 'id' in cls.__dict__:
+        warn('[3.6] %s.%s: id is deprecated, use __regid__'
+             % (cls.__module__, cls.__name__), DeprecationWarning)
+        cls.__regid__ = cls.id
+    if hasattr(cls, 'id') and not isinstance(cls.id, property):
+        return cls.id
+    return cls.__regid__
+
+# helpers for debugging selectors
+TRACED_OIDS = None
+
+def _trace_selector(cls, selector, args, ret):
+    # /!\ lltrace decorates pure function or __call__ method, this
+    #     means argument order may be different
+    if isinstance(cls, Selector):
+        selname = str(cls)
+        vobj = args[0]
+    else:
+        selname = selector.__name__
+        vobj = cls
+    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
+        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
+        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
+
+def lltrace(selector):
+    """use this decorator on your selectors so the becomes traceable with
+    :class:`traced_selection`
+    """
+    # don't wrap selectors if not in development mode
+    if CubicWebConfiguration.mode == 'system': # XXX config.debug
+        return selector
+    def traced(cls, *args, **kwargs):
+        ret = selector(cls, *args, **kwargs)
+        if TRACED_OIDS is not None:
+            _trace_selector(cls, selector, args, ret)
+        return ret
+    traced.__name__ = selector.__name__
+    traced.__doc__ = selector.__doc__
+    return traced
+
+class traced_selection(object):
+    """
+    Typical usage is :
+
+    .. sourcecode:: python
+
+        >>> from cubicweb.selectors import traced_selection
+        >>> with traced_selection():
+        ...     # some code in which you want to debug selectors
+        ...     # for all objects
+
+    Don't forget the 'from __future__ import with_statement' at the module top-level
+    if you're using python prior to 2.6.
+
+    This will yield lines like this in the logs::
+
+        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+    You can also give to :class:`traced_selection` the identifiers of objects on
+    which you want to debug selection ('oid1' and 'oid2' in the example above).
+
+    .. sourcecode:: python
+
+        >>> with traced_selection( ('regid1', 'regid2') ):
+        ...     # some code in which you want to debug selectors
+        ...     # for objects with __regid__ 'regid1' and 'regid2'
+
+    A potentially usefull point to set up such a tracing function is
+    the `cubicweb.vregistry.Registry.select` method body.
+    """
+
+    def __init__(self, traced='all'):
+        self.traced = traced
+
+    def __enter__(self):
+        global TRACED_OIDS
+        TRACED_OIDS = self.traced
+
+    def __exit__(self, exctype, exc, traceback):
+        global TRACED_OIDS
+        TRACED_OIDS = None
+        return traceback is None
 
 # selector base classes and operations ########################################
 
@@ -175,6 +261,7 @@ class MultiSelector(Selector):
 
 class AndSelector(MultiSelector):
     """and-chained selectors (formerly known as chainall)"""
+    @lltrace
     def __call__(self, cls, *args, **kwargs):
         score = 0
         for selector in self.selectors:
@@ -187,6 +274,7 @@ class AndSelector(MultiSelector):
 
 class OrSelector(MultiSelector):
     """or-chained selectors (formerly known as chainfirst)"""
+    @lltrace
     def __call__(self, cls, *args, **kwargs):
         for selector in self.selectors:
             partscore = selector(cls, *args, **kwargs)
@@ -199,6 +287,7 @@ class NotSelector(Selector):
     def __init__(self, selector):
         self.selector = selector
 
+    @lltrace
     def __call__(self, cls, *args, **kwargs):
         score = self.selector(cls, *args, **kwargs)
         return int(not score)

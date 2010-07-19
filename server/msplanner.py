@@ -96,7 +96,7 @@ from logilab.common.decorators import cached
 
 from rql.stmts import Union, Select
 from rql.nodes import (VariableRef, Comparison, Relation, Constant, Variable,
-                       Not, Exists)
+                       Not, Exists, SortTerm, Function)
 
 from cubicweb import server
 from cubicweb.utils import make_uid
@@ -1330,6 +1330,12 @@ class TermsFiltererVisitor(object):
                                                orderby.append)
                 if orderby:
                     newroot.set_orderby(orderby)
+            elif rqlst.orderby:
+                for sortterm in rqlst.orderby:
+                    if any(f for f in sortterm.iget_nodes(Function) if f.name == 'FTIRANK'):
+                        newnode, oldnode = sortterm.accept(self, newroot, terms)
+                        if newnode is not None:
+                            newroot.add_sort_term(newnode)
             self.process_selection(newroot, terms, rqlst)
         elif not newroot.where:
             # no restrictions have been copied, just select terms and add
@@ -1530,12 +1536,38 @@ class TermsFiltererVisitor(object):
             copy.operator = '='
         return copy, node
 
+    def visit_function(self, node, newroot, terms):
+        if node.name == 'FTIRANK':
+            # FTIRANK is somewhat special... Rank function should be included in
+            # the same query has the has_text relation, potentially added to
+            # selection for latter usage
+            if not self.hasaggrstep and self.final and node not in self.skip:
+                return self.visit_default(node, newroot, terms)
+            elif any(s for s in self.sources if s.uri != 'system'):
+                return None, node
+            # p = node.parent
+            # while p is not None and not isinstance(p, SortTerm):
+            #     p = p.parent
+            # if isinstance(p, SortTerm):
+            if not self.hasaggrstep and self.final and node in self.skip:
+                return Constant(self.skip[node], 'Int'), node
+            # XXX only if not yet selected
+            newroot.append_selected(node.copy(newroot))
+            self.skip[node] = len(newroot.selection)
+            return None, node
+        return self.visit_default(node, newroot, terms)
+
     def visit_default(self, node, newroot, terms):
         subparts, node = self._visit_children(node, newroot, terms)
         return copy_node(newroot, node, subparts), node
 
-    visit_mathexpression = visit_constant = visit_function = visit_default
-    visit_sort = visit_sortterm = visit_default
+    visit_mathexpression = visit_constant = visit_default
+
+    def visit_sortterm(self, node, newroot, terms):
+        subparts, node = self._visit_children(node, newroot, terms)
+        if not subparts:
+            return None, node
+        return copy_node(newroot, node, subparts), node
 
     def _visit_children(self, node, newroot, terms):
         subparts = []

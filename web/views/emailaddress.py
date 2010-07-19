@@ -23,17 +23,17 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 
 from cubicweb.schema import display_name
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb import Unauthorized
 from cubicweb.web import uicfg
-from cubicweb.web.views import baseviews, primary
+from cubicweb.web.views import baseviews, primary, ibreadcrumbs
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')
 _pvs.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 class EmailAddressPrimaryView(primary.PrimaryView):
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, skipeids=None):
         self.skipeids = skipeids
@@ -72,7 +72,7 @@ class EmailAddressPrimaryView(primary.PrimaryView):
 
 
 class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
     __regid__ = 'shortprimary'
     title = None # hidden view
 
@@ -83,7 +83,7 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
 
 
 class EmailAddressOneLineView(baseviews.OneLineView):
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
@@ -104,7 +104,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     'mailto:'"""
 
     __regid__ = 'mailto'
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
@@ -127,14 +127,21 @@ class EmailAddressMailToView(baseviews.OneLineView):
 
 
 class EmailAddressInContextView(baseviews.InContextView):
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
         self.wview('mailto', self.cw_rset, row=row, col=col, **kwargs)
 
 
 class EmailAddressTextView(baseviews.TextView):
-    __select__ = implements('EmailAddress')
+    __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
         self.w(self.cw_rset.get_entity(row, col).display_address())
+
+
+class EmailAddressIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('EmailAddress')
+
+    def parent_entity(self):
+        return self.entity.email_of

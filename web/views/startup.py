@@ -26,7 +26,7 @@ from logilab.common.textutils import unormalize
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
-from cubicweb.selectors import match_user_groups, implements
+from cubicweb.selectors import match_user_groups, is_instance
 from cubicweb.schema import display_name
 from cubicweb.web import ajax_replace_url, uicfg, httpcache
 
@@ -42,7 +42,7 @@ class ManageView(StartupView):
     def call(self, **kwargs):
         """The default view representing the instance's management"""
         self._cw.add_css('cubicweb.manageview.css')
-        self.w(u'<div>\n')
+        self.w(u'<h1>%s</h1>' % self._cw.property_value('ui.site-title'))
         if not self.display_folders():
             self._main_index()
         else:
@@ -53,7 +53,6 @@ class ManageView(StartupView):
             self.folders()
             self.w(u'</td>')
             self.w(u'</tr></table>\n')
-        self.w(u'</div>\n')
 
     def _main_index(self):
         req = self._cw
@@ -79,8 +78,8 @@ class ManageView(StartupView):
             self.w(u'<br/><a href="%s">%s</a>\n' % (xml_escape(href), label))
 
     def folders(self):
-        self.w(u'<h4>%s</h4>\n' % self._cw._('Browse by category'))
-        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
+        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w, maxlevel=1)
 
     def create_links(self):
         self.w(u'<ul class="createLink">')
@@ -93,20 +92,24 @@ class ManageView(StartupView):
         self.w(u'</ul>')
 
     def startup_views(self):
-        self.w(u'<h4>%s</h4>\n' % self._cw._('Startup views'))
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Startup views'))
         self.startupviews_table()
 
     def startupviews_table(self):
         views = self._cw.vreg['views'].possible_views(self._cw, None)
+        if not views:
+            return
+        self.w(u'<ul class="startup">')
         for v in sorted(views, key=lambda x: self._cw._(x.title)):
             if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue
-            self.w('<p><a href="%s">%s</a></p>' % (
+            self.w('<li><a href="%s">%s</a></li>' % (
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
+        self.w(u'</ul>')
 
     def entities(self):
         schema = self._cw.vreg.schema
-        self.w(u'<h4>%s</h4>\n' % self._cw._('The repository holds the following entities'))
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
         manager = self._cw.user.matching_groups('managers')
         self.w(u'<table class="startup">')
         if manager:

@@ -15,11 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.sobjects.notification import StatusChangeMixIn, NotificationView
 
 class UserStatusChangeView(StatusChangeMixIn, NotificationView):
-    __select__ = NotificationView.__select__ & implements('CWUser')
+    __select__ = NotificationView.__select__ & is_instance('CWUser')

@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # apply monkey patches first
     goa.do_monkey_patch()
     # get instance's configuration (will be loaded from app.conf file)
-    GAEConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
+    GAEConfiguration.uiprops['JAVASCRIPTS'].append('DATADIR/goa.js')
     config = GAEConfiguration('toto', APPLROOT)
     # create default groups
     create_groups()

@@ -255,9 +255,6 @@ class DBAPIRequest(RequestSessionBase):
             self.session = None
             self.cnx = self.user = _NeedAuthAccessMock()
 
-    def base_url(self):
-        return self.vreg.config['base-url']
-
     def from_controller(self):
         return 'view'
 
@@ -582,6 +579,7 @@ class Connection(object):
         """
         from cubicweb.web.request import CubicWebRequestBase as cwrb
         DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func
+        DBAPIRequest.ajax_replace_url = cwrb.ajax_replace_url.im_func
         DBAPIRequest.list_form_param = cwrb.list_form_param.im_func
         DBAPIRequest.property_value = _fake_property_value
         DBAPIRequest.next_tabindex = count().next

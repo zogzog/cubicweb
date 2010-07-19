@@ -31,7 +31,7 @@ goa.do_monkey_patch()
 
 # get instance's configuration (will be loaded from app.conf file)
 from cubicweb.goa.goaconfig import GAEConfiguration
-GAEConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
+GAEConfiguration.uiprops['JAVASCRIPTS'].append('DATADIR/goa.js')
 config = GAEConfiguration('toto', APPLROOT)
 
 # dynamic objects registry

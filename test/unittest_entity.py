@@ -97,27 +97,27 @@ class EntityTC(CubicWebTC):
         user = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
                            {'pwd': 'toto'}).get_entity(0, 0)
         self.commit()
-        user.fire_transition('deactivate')
+        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         self.commit()
         eid2 = self.execute('INSERT CWUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
         e = self.execute('Any X WHERE X eid %(x)s', {'x': eid2}).get_entity(0, 0)
         e.copy_relations(user.eid)
         self.commit()
-        e.clear_related_cache('in_state', 'subject')
-        self.assertEquals(e.state, 'activated')
+        e.cw_clear_relation_cache('in_state', 'subject')
+        self.assertEquals(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
     def test_related_cache_both(self):
         user = self.execute('Any X WHERE X eid %(x)s', {'x':self.user().eid}).get_entity(0, 0)
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
         self.commit()
-        self.assertEquals(user._related_cache, {})
+        self.assertEquals(user._cw_related_cache, {})
         email = user.primary_email[0]
-        self.assertEquals(sorted(user._related_cache), ['primary_email_subject'])
-        self.assertEquals(email._related_cache.keys(), ['primary_email_object'])
+        self.assertEquals(sorted(user._cw_related_cache), ['primary_email_subject'])
+        self.assertEquals(email._cw_related_cache.keys(), ['primary_email_object'])
         groups = user.in_group
-        self.assertEquals(sorted(user._related_cache), ['in_group_subject', 'primary_email_subject'])
+        self.assertEquals(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
-            self.failIf('in_group_subject' in group._related_cache, group._related_cache.keys())
+            self.failIf('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
 
     def test_related_limit(self):
         req = self.request()
@@ -197,20 +197,20 @@ class EntityTC(CubicWebTC):
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
         SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
         p = self.request().create_entity('Personne', nom=u'pouet')
-        self.assertEquals(p.related_rql('evaluee'),
+        self.assertEquals(p.cw_related_rql('evaluee'),
                           'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
                           'X type AA, X modification_date AB')
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
-        self.assertEquals(p.related_rql('evaluee'),
+        self.assertEquals(p.cw_related_rql('evaluee'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E evaluee X, X modification_date AA')
 
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
-        self.assertEquals(tag.related_rql('tags', 'subject'),
+        self.assertEquals(tag.cw_related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
-        self.assertEquals(tag.related_rql('tags', 'subject', ('Personne',)),
+        self.assertEquals(tag.cw_related_rql('tags', 'subject', ('Personne',)),
                           'Any X,AA,AB ORDERBY AA ASC '
                           'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
                           'X modification_date AB')
@@ -219,47 +219,47 @@ class EntityTC(CubicWebTC):
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
         for ttype in self.schema['tags'].objects():
             self.vreg['etypes'].etype_class(ttype).fetch_attrs = ('modification_date',)
-        self.assertEquals(tag.related_rql('tags', 'subject'),
+        self.assertEquals(tag.cw_related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
 
     def test_unrelated_rql_security_1(self):
         user = self.request().user
-        rql = user.unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
+        rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
                           'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         self.create_user('toto')
         self.login('toto')
         user = self.request().user
-        rql = user.unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
+        rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
                           'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
-        self.assertRaises(Unauthorized, user.unrelated_rql, 'use_email', 'EmailAddress', 'subject')
+        self.assertRaises(Unauthorized, user.cw_unrelated_rql, 'use_email', 'EmailAddress', 'subject')
         self.login('anon')
         user = self.request().user
-        self.assertRaises(Unauthorized, user.unrelated_rql, 'use_email', 'EmailAddress', 'subject')
+        self.assertRaises(Unauthorized, user.cw_unrelated_rql, 'use_email', 'EmailAddress', 'subject')
 
     def test_unrelated_rql_security_2(self):
         email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
-        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA ASC '
                           'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD')
-        #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
+        #rql = email.cw_unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
         self.login('anon')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
-        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                           'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
-        #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
+        #rql = email.cw_unrelated_rql('use_email', 'Person', 'object')[0]
         #self.assertEquals(rql, '')
 
     def test_unrelated_rql_security_nonexistant(self):
         self.login('anon')
         email = self.vreg['etypes'].etype_class('EmailAddress')(self.request())
-        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                           'WHERE S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
@@ -442,8 +442,8 @@ du :eid:`1:*ReST*`'''
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
-        self.assertEquals(set(e.get_words()),
-                          set(['an', 'html', 'file', 'du', 'html', 'some', 'data']))
+        self.assertEquals(e.cw_adapt_to('IFTIndexable').get_words(),
+                          {'C': [u'du', u'html', 'an', 'html', 'file', u'some', u'data']})
 
 
     def test_nonregr_relation_cache(self):
@@ -462,9 +462,9 @@ du :eid:`1:*ReST*`'''
         trinfo = self.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
         trinfo.complete()
         self.failUnless(isinstance(trinfo['creation_date'], datetime))
-        self.failUnless(trinfo.relation_cached('from_state', 'subject'))
-        self.failUnless(trinfo.relation_cached('to_state', 'subject'))
-        self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))
+        self.failUnless(trinfo.cw_relation_cached('from_state', 'subject'))
+        self.failUnless(trinfo.cw_relation_cached('to_state', 'subject'))
+        self.failUnless(trinfo.cw_relation_cached('wf_info_for', 'subject'))
         self.assertEquals(trinfo.by_transition, ())
 
     def test_request_cache(self):
@@ -508,7 +508,7 @@ du :eid:`1:*ReST*`'''
     def test_metainformation_and_external_absolute_url(self):
         req = self.request()
         note = req.create_entity('Note', type=u'z')
-        metainf = note.metainformation()
+        metainf = note.cw_metainformation()
         self.assertEquals(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
         self.assertEquals(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()

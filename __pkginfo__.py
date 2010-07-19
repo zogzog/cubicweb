@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 8, 7)
+numversion = (3, 9, 2)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
@@ -41,9 +41,9 @@ classifiers = [
 
 __depends__ = {
     'logilab-common': '>= 0.50.2',
-    'logilab-mtconverter': '>= 0.6.0',
+    'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.26.2',
-    'yams': '>= 0.28.1',
+    'yams': '>= 0.29.1',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
@@ -52,7 +52,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.0.5',
+    'logilab-database': '>= 1.1.0',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 
@@ -77,6 +77,7 @@ include_dirs = [join('test', 'data'),
                 join('server', 'test', 'data'),
                 join('hooks', 'test', 'data'),
                 join('web', 'test', 'data'),
+                join('devtools', 'data'),
                 join('devtools', 'test', 'data'),
                 'schemas', 'skeleton']
 

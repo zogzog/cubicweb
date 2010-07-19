@@ -132,14 +132,14 @@ class TheMainTemplate(MainTemplate):
             'etypenavigation', self._cw, rset=self.cw_rset)
         if etypefilter and etypefilter.cw_propval('visible'):
             etypefilter.render(w=w)
-        self.nav_html = UStringIO()
+        nav_html = UStringIO()
         if view:
-            view.paginate(w=self.nav_html.write)
-        w(_(self.nav_html.getvalue()))
+            view.paginate(w=nav_html.write)
+        w(_(nav_html.getvalue()))
         w(u'<div id="contentmain">\n')
         view.render(w=w)
         w(u'</div>\n') # close id=contentmain
-        w(_(self.nav_html.getvalue()))
+        w(_(nav_html.getvalue()))
         w(u'</div>\n') # closes id=pageContent
         self.template_footer(view)
 
@@ -168,7 +168,7 @@ class TheMainTemplate(MainTemplate):
         self.wview('header', rset=self.cw_rset, view=view)
         w(u'<div id="page"><table width="100%" border="0" id="mainLayout"><tr>\n')
         self.nav_column(view, 'left')
-        w(u'<td id="contentcol">\n')
+        w(u'<td id="contentColumn">\n')
         components = self._cw.vreg['components']
         rqlcomp = components.select_or_none('rqlinput', self._cw, rset=self.cw_rset)
         if rqlcomp:
@@ -190,7 +190,7 @@ class TheMainTemplate(MainTemplate):
         boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
-            self.w(u'<td class="navcol"><div class="navboxes">\n')
+            self.w(u'<td id="navColumn%s"><div class="navboxes">\n' % context.capitalize())
             for box in boxes:
                 box.render(w=self.w, view=view)
             self.w(u'</div></td>\n')
@@ -254,7 +254,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<body>\n')
         w(u'<div id="page">')
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
-        w(u'<td class="navcol">\n')
+        w(u'<td id="navColumnLeft">\n')
         self.topleft_header()
         boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context='left'))
@@ -272,7 +272,7 @@ class SimpleMainTemplate(TheMainTemplate):
 
     def topleft_header(self):
         logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
-                                                      rset=self.cw_rset)
+                                                          rset=self.cw_rset)
         if logo and logo.cw_propval('visible'):
             self.w(u'<table id="header"><tr>\n')
             self.w(u'<td>')
@@ -294,22 +294,22 @@ class HTMLHeader(View):
         self.alternates()
 
     def favicon(self):
-        favicon = self._cw.external_resource('FAVICON', None)
+        favicon = self._cw.uiprops.get('FAVICON', None)
         if favicon:
             self.whead(u'<link rel="shortcut icon" href="%s"/>\n' % favicon)
 
     def stylesheets(self):
         req = self._cw
         add_css = req.add_css
-        for css in req.external_resource('STYLESHEETS'):
+        for css in req.uiprops['STYLESHEETS']:
             add_css(css, localfile=False)
-        for css in req.external_resource('STYLESHEETS_PRINT'):
+        for css in req.uiprops['STYLESHEETS_PRINT']:
             add_css(css, u'print', localfile=False)
-        for css in req.external_resource('IE_STYLESHEETS'):
+        for css in req.uiprops['STYLESHEETS_IE']:
             add_css(css, localfile=False, ieonly=True)
 
     def javascripts(self):
-        for jscript in self._cw.external_resource('JAVASCRIPTS'):
+        for jscript in self._cw.uiprops['JAVASCRIPTS']:
             self._cw.add_js(jscript, localfile=False)
 
     def alternates(self):
@@ -389,13 +389,15 @@ class HTMLPageFooter(View):
 
     def call(self, **kwargs):
         req = self._cw
-        self.w(u'<div class="footer">')
+        self.w(u'<div id="footer">')
         actions = self._cw.vreg['actions'].possible_actions(self._cw,
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
-            self.w(u'<a href="%s">%s</a>' % (action.url(),
-                                             self._cw._(action.title)))
+            self.w(u'<a href="%s"' % action.url())
+            if getattr(action, 'html_class'):
+                self.w(u' class="%s"' % action.html_class())
+            self.w(u'>%s</a>' % self._cw._(action.title))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
         self.w(u'</div>')
@@ -469,7 +471,7 @@ class LogFormView(View):
             self.w(u'<div id="loginTitle">%s</div>' % stitle)
         self.w(u'<div id="loginContent">\n')
         if showmessage and self._cw.message:
-            self.w(u'<div class="simpleMessage">%s</div>\n' % self._cw.message)
+            self.w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
         if self._cw.vreg.config['auth-mode'] != 'http':
             # Cookie authentication
             self.login_form(id)

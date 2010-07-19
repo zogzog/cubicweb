@@ -104,10 +104,10 @@ class Repository(object):
     XXX protect pyro access
     """
 
-    def __init__(self, config, vreg=None, debug=False):
+    def __init__(self, config, vreg=None):
         self.config = config
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config, debug)
+            vreg = cwvreg.CubicWebVRegistry(config)
         self.vreg = vreg
         self.pyro_registered = False
         self.info('starting repository from %s', self.config.apphome)
@@ -154,13 +154,6 @@ class Repository(object):
                 if not isinstance(session.user, InternalManager):
                     session.user.__class__ = usercls
 
-    def _bootstrap_hook_registry(self):
-        """called during bootstrap since we need the metadata hooks"""
-        hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
-        self.vreg.init_registration([hooksdirectory])
-        self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
-                            'cubicweb.hooks.metadata')
-
     def open_connections_pools(self):
         config = self.config
         self._available_pools = Queue.Queue()
@@ -186,7 +179,9 @@ class Repository(object):
             for modname in ('__init__', 'authobjs', 'wfobjs'):
                 self.vreg.load_file(join(etdirectory, '%s.py' % modname),
                                     'cubicweb.entities.%s' % modname)
-            self._bootstrap_hook_registry()
+            hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
+            self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
+                                'cubicweb.hooks.metadata')
         elif config.read_instance_schema:
             # normal start: load the instance schema from the database
             self.fill_schema()
@@ -234,8 +229,7 @@ class Repository(object):
         if resetvreg:
             if self.config._cubes is None:
                 self.config.init_cubes(self.get_cubes())
-            # full reload of all appobjects
-            self.vreg.reset()
+            # trigger full reload of all appobjects
             self.vreg.set_schema(schema)
         else:
             self.vreg._set_schema(schema)
@@ -392,7 +386,7 @@ class Repository(object):
             raise AuthenticationError('authentication failed with all sources')
         cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
-               not cwuser.state in cwuser.AUTHENTICABLE_STATES:
+               not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
         return cwuser
 
@@ -573,7 +567,7 @@ class Repository(object):
             session.close()
         session = Session(user, self, cnxprops)
         user._cw = user.cw_rset.req = session
-        user.clear_related_cache()
+        user.cw_clear_relation_cache()
         self._sessions[session.id] = session
         self.info('opened session %s for user %s', session.id, login)
         self.hm.call_hooks('session_open', session)
@@ -932,7 +926,7 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
-            entity.edited_attributes = set(entity)
+            entity.edited_attributes = set(entity.cw_attr_cache)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
@@ -1042,37 +1036,32 @@ class Repository(object):
         the entity instance
         """
         # init edited_attributes before calling before_add_entity hooks
-        entity._is_saved = False # entity has an eid but is not yet saved
-        entity.edited_attributes = set(entity)
-        entity_ = entity.pre_add_hook()
-        # XXX kill that transmutation feature !
-        if not entity_ is entity:
-            entity.__class__ = entity_.__class__
-            entity.__dict__.update(entity_.__dict__)
+        entity._cw_is_saved = False # entity has an eid but is not yet saved
+        entity.edited_attributes = set(entity.cw_attr_cache) # XXX cw_edited_attributes
         eschema = entity.e_schema
         source = self.locate_etype_source(entity.__regid__)
         # allocate an eid to the entity before calling hooks
-        entity.set_eid(self.system_source.create_eid(session))
+        entity.eid = self.system_source.create_eid(session)
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', entity.__regid__, entity.eid, dict(entity)
+            print 'ADD entity', self, entity.__regid__, entity.eid, entity.cw_attr_cache
         relations = []
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
         # XXX use entity.keys here since edited_attributes is not updated for
         # inline relations XXX not true, right? (see edited_attributes
         # affectation above)
-        for attr in entity.iterkeys():
+        for attr in entity.cw_attr_cache.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
                 relations.append((attr, entity[attr]))
-        entity.set_defaults()
+        entity._cw_set_defaults()
         if session.is_hook_category_activated('integrity'):
-            entity.check(creation=True)
+            entity._cw_check(creation=True)
         source.add_entity(session, entity)
         self.add_info(session, entity, source, extid, complete=False)
-        entity._is_saved = True # entity has an eid and is saved
+        entity._cw_is_saved = True # entity has an eid and is saved
         # prefill entity relation caches
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
@@ -1081,12 +1070,13 @@ class Repository(object):
             if rschema.final:
                 entity.setdefault(rtype, None)
             else:
-                entity.set_related_cache(rtype, 'subject', session.empty_rset())
+                entity.cw_set_relation_cache(rtype, 'subject',
+                                             session.empty_rset())
         for rschema in eschema.object_relations():
             rtype = str(rschema)
             if rtype in schema.VIRTUAL_RTYPES:
                 continue
-            entity.set_related_cache(rtype, 'object', session.empty_rset())
+            entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
         # set inline relation cache before call to after_add_entity
         for attr, value in relations:
             session.update_rel_cache_add(entity.eid, attr, value)
@@ -1107,7 +1097,7 @@ class Repository(object):
         """
         if server.DEBUG & server.DBG_REPO:
             print 'UPDATE entity', entity.__regid__, entity.eid, \
-                  dict(entity), edited_attributes
+                  entity.cw_attr_cache, edited_attributes
         hm = self.hm
         eschema = entity.e_schema
         session.set_entity_cache(entity)
@@ -1145,7 +1135,7 @@ class Repository(object):
                 if not only_inline_rels:
                     hm.call_hooks('before_update_entity', session, entity=entity)
             if session.is_hook_category_activated('integrity'):
-                entity.check()
+                entity._cw_check()
             source.update_entity(session, entity)
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
@@ -1153,7 +1143,7 @@ class Repository(object):
                     hm.call_hooks('after_update_entity', session, entity=entity)
                 for attr, value, prevvalue in relations:
                     # if the relation is already cached, update existant cache
-                    relcache = entity.relation_cached(attr, 'subject')
+                    relcache = entity.cw_relation_cached(attr, 'subject')
                     if prevvalue is not None:
                         hm.call_hooks('after_delete_relation', session,
                                       eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
@@ -1163,8 +1153,8 @@ class Repository(object):
                     if relcache is not None:
                         session.update_rel_cache_add(entity.eid, attr, value)
                     else:
-                        entity.set_related_cache(attr, 'subject',
-                                                 session.eid_rset(value))
+                        entity.cw_set_relation_cache(attr, 'subject',
+                                                     session.eid_rset(value))
                     hm.call_hooks('after_add_relation', session,
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:

@@ -15,16 +15,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""html calendar views
+"""html timetable views"""
 
-"""
+__docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
-from logilab.common.date import date_range, todatetime
+from logilab.common.date import ONEDAY, date_range, todatetime
 
-from cubicweb.interfaces import ITimetableViews
-from cubicweb.selectors import implements
-from cubicweb.view import AnyRsetView
+from cubicweb.selectors import adaptable
+from cubicweb.view import EntityView
 
 
 class _TaskEntry(object):
@@ -37,10 +37,10 @@ class _TaskEntry(object):
 MIN_COLS = 3  # minimum number of task columns for a single user
 ALL_USERS = object()
 
-class TimeTableView(AnyRsetView):
+class TimeTableView(EntityView):
     __regid__ = 'timetable'
     title = _('timetable')
-    __select__ = implements(ITimetableViews)
+    __select__ = adaptable('ICalendarable')
     paginable = False
 
     def call(self, title=None):
@@ -53,20 +53,22 @@ class TimeTableView(AnyRsetView):
         # XXX: try refactoring with calendar.py:OneMonthCal
         for row in xrange(self.cw_rset.rowcount):
             task = self.cw_rset.get_entity(row, 0)
+            icalendarable = task.cw_adapt_to('ICalendarable')
             if len(self.cw_rset[row]) > 1:
                 user = self.cw_rset.get_entity(row, 1)
             else:
                 user = ALL_USERS
             the_dates = []
-            if task.start and task.stop:
-                if task.start.toordinal() == task.stop.toordinal():
-                    the_dates.append(task.start)
+            if icalendarable.start and icalendarable.stop:
+                if icalendarable.start.toordinal() == icalendarable.stop.toordinal():
+                    the_dates.append(icalendarable.start)
                 else:
-                    the_dates += date_range( task.start, task.stop )
-            elif task.start:
-                the_dates.append(task.start)
-            elif task.stop:
-                the_dates.append(task.stop)
+                    the_dates += date_range(icalendarable.start,
+                                            icalendarable.stop + ONEDAY)
+            elif icalendarable.start:
+                the_dates.append(icalendarable.start)
+            elif icalendarable.stop:
+                the_dates.append(icalendarable.stop)
             for d in the_dates:
                 d = todatetime(d)
                 d_users = dates.setdefault(d, {})
@@ -91,7 +93,7 @@ class TimeTableView(AnyRsetView):
 
         visited_tasks = {} # holds a description of a task for a user
         task_colors = {}   # remember a color assigned to a task
-        for date in date_range(date_min, date_max):
+        for date in date_range(date_min, date_max + ONEDAY):
             columns = [date]
             d_users = dates.get(date, {})
             for user in users:

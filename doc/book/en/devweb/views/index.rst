@@ -12,6 +12,7 @@ in |cubicweb|.
    views
    basetemplates
    primary
+   reledit
    baseviews
    startup
    boxes

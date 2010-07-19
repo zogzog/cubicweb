@@ -174,7 +174,7 @@ class BytesFileSystemStorage(Storage):
         # PIL processing that use filename extension to detect content-type, as
         # well as providing more understandable file names on the fs.
         basename = [str(entity.eid), attr]
-        name = entity.attr_metadata(attr, 'name')
+        name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
             basename.append(name.encode(self.fsencoding))
         fspath = uniquify_path(self.default_directory, '_'.join(basename))

@@ -133,7 +133,7 @@ class RequestSessionBase(object):
         Example (in a shell session):
 
         >>> c = create_entity('Company', name=u'Logilab')
-        >>> create_entity('Person', firstname=u'John', lastname=u'Doe',
+        >>> create_entity('Person', firstname=u'John', surname=u'Doe',
         ...               works_for=c)
 
         """
@@ -279,7 +279,7 @@ class RequestSessionBase(object):
         user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
-        userinfo['email'] = user.get_email()
+        userinfo['email'] = user.cw_adapt_to('IEmailable').get_email()
         return userinfo
 
     def is_internal_session(self):
@@ -373,11 +373,11 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    # abstract methods to override according to the web front-end #############
-
     def base_url(self):
         """return the root url of the instance"""
-        raise NotImplementedError
+        return self.vreg.config['base-url']
+
+    # abstract methods to override according to the web front-end #############
 
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""

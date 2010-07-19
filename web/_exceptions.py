@@ -16,12 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""exceptions used in the core of the CubicWeb web application
+"""exceptions used in the core of the CubicWeb web application"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb._exceptions import *
+from cubicweb.utils import json_dumps
 
 class PublishException(CubicWebException):
     """base class for publishing related exception"""
@@ -66,8 +66,7 @@ class RemoteCallFailed(RequestError):
         self.reason = reason
 
     def dumps(self):
-        from cubicweb.web import json
-        return json.dumps({'reason': self.reason})
+        return json_dumps({'reason': self.reason})
 
 class LogOut(PublishException):
     """raised to ask for deauthentication of a logged in user"""

@@ -705,10 +705,10 @@ var Sortable = {};
 	ts.addParser({
 	    id: "json",
 	    is: function(s) {
-	        return s.startsWith('json:');
+	        return s.startswith('json:');
 	    },
 	    format: function(s,table,cell) {
-		return evalJSON(s.slice(5));
+		return cw.evalJSON(s.slice(5));
 	    },
 	  type: "text"
 	});

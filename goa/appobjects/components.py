@@ -98,7 +98,7 @@ from cubicweb.web.views.basecontrollers import SendMailController
 def sendmail(self, recipient, subject, body):
     sender = '%s <%s>' % (
         self.req.user.dc_title() or self.config['sender-name'],
-        self.req.user.get_email() or self.config['sender-addr'])
+        self.req.user.cw_adapt_to('IEmailable').get_email() or self.config['sender-addr'])
     mail.send_mail(sender=sender, to=recipient,
                    subject=subject, body=body)
 

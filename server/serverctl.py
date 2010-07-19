@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-ctl commands and command handlers specific to the server.serverconfig
+"""cubicweb-ctl commands and command handlers specific to the repository"""
 
-"""
 __docformat__ = 'restructuredtext en'
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -48,14 +47,16 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
-    print '-> connecting to %s database' % driver,
-    if dbhost:
-        print '%s@%s' % (dbname, dbhost),
-    else:
-        print dbname,
+    if verbose:
+        print '-> connecting to %s database' % driver,
+        if dbhost:
+            print '%s@%s' % (dbname, dbhost),
+        else:
+            print dbname,
     if not verbose or (not special_privs and source.get('db-user')):
         user = source['db-user']
-        print 'as', user
+        if verbose:
+            print 'as', user
         if source.get('db-password'):
             password = source['db-password']
         else:
@@ -152,8 +153,8 @@ class RepositoryCreateHandler(CommandHandler):
     cfgname = 'repository'
 
     def bootstrap(self, cubes, inputlevel=0):
-        """create an instance by copying files from the given cube and by
-        asking information necessary to build required configuration files
+        """create an instance by copying files from the given cube and by asking
+        information necessary to build required configuration files
         """
         from cubicweb.server.utils import ask_source_config
         config = self.config
@@ -249,11 +250,12 @@ class RepositoryStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'repository'
 
-    def start_server(self, ctlconf, debug):
+    def start_server(self, config):
         command = ['cubicweb-ctl start-repository ']
-        if debug:
+        if config.debugmode:
             command.append('--debug')
-        command.append(self.config.appid)
+        command.append('--loglevel %s' % config['log-threshold'].lower())
+        command.append(config.appid)
         os.system(' '.join(command))
 
 
@@ -262,8 +264,7 @@ class RepositoryStopHandler(CommandHandler):
     cfgname = 'repository'
 
     def poststop(self):
-        """if pyro is enabled, ensure the repository is correctly
-        unregistered
+        """if pyro is enabled, ensure the repository is correctly unregistered
         """
         if self.config.pyro_enabled():
             from cubicweb.server.repository import pyro_unregister
@@ -271,6 +272,14 @@ class RepositoryStopHandler(CommandHandler):
 
 
 # repository specific commands ################################################
+
+def createdb(helper, source, dbcnx, cursor, **kwargs):
+    if dbcnx.logged_user != source['db-user']:
+        helper.create_database(cursor, source['db-name'], source['db-user'],
+                               source['db-encoding'], **kwargs)
+    else:
+        helper.create_database(cursor, source['db-name'],
+                               dbencoding=source['db-encoding'], **kwargs)
 
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
@@ -314,14 +323,13 @@ class CreateInstanceDBCommand(Command):
         source = config.sources()['system']
         dbname = source['db-name']
         driver = source['db-driver']
-        create_db = self.config.create_db
         helper = get_db_helper(driver)
         if driver == 'sqlite':
             if os.path.exists(dbname) and (
                 automatic or
                 ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
-        elif create_db:
+        elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
@@ -338,12 +346,7 @@ class CreateInstanceDBCommand(Command):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
                         return
-                if dbcnx.logged_user != source['db-user']:
-                    helper.create_database(cursor, dbname, source['db-user'],
-                                           source['db-encoding'])
-                else:
-                    helper.create_database(cursor, dbname,
-                                           dbencoding=source['db-encoding'])
+                createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
@@ -523,22 +526,28 @@ class StartRepositoryCommand(Command):
         ('debug',
          {'short': 'D', 'action' : 'store_true',
           'help': 'start server in debug mode.'}),
+        ('loglevel',
+         {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
+          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
         )
 
     def run(self, args):
         from logilab.common.daemon import daemonize
+        from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.server import RepositoryServer
         appid = pop_arg(args, msg='No instance specified !')
-        config = ServerConfiguration.config_for(appid)
-        if sys.platform == 'win32':
-            if not self.config.debug:
-                from logging import getLogger
-                logger = getLogger('cubicweb.ctl')
-                logger.info('Forcing debug mode on win32 platform')
-                self.config.debug = True
-        debug = self.config.debug
+        debug = self['debug']
+        if sys.platform == 'win32' and not debug:
+            from logging import getLogger
+            logger = getLogger('cubicweb.ctl')
+            logger.info('Forcing debug mode on win32 platform')
+            debug = True
+        config = ServerConfiguration.config_for(appid, debugmode=debug)
+        init_cmdline_log_threshold(config, self['loglevel'])
         # create the server
-        server = RepositoryServer(config, debug)
+        server = RepositoryServer(config)
         # ensure the directory where the pid-file should be set exists (for
         # instance /var/run/cubicweb may be deleted on computer restart)
         pidfile = config['pid-file']

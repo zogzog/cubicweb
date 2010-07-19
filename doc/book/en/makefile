@@ -11,11 +11,16 @@ SPHINXBUILD   = sphinx-build
 PAPER         =
 #BUILDDIR      = build
 BUILDDIR      = ~/tmp/cwdoc
+CWDIR         = ../../..
+JSDIR         = ${CWDIR}/web/data
+JSTORST       = ${CWDIR}/doc/tools/pyjsrest.py
+BUILDJS       = devweb/js_api
 
 # Internal variables for sphinx
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d ${BUILDDIR}/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+
 
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
@@ -36,6 +41,7 @@ clean:
 	rm -rf apidoc/
 	rm -f *.html
 	-rm -rf ${BUILDDIR}/*
+	-rm -rf ${BUILDJS}
 
 all: ${TARGET} apidoc html
 
@@ -48,11 +54,15 @@ apidoc:
 	epydoc --html -o apidoc -n "cubicweb" --exclude=setup --exclude=__pkginfo__ ../../../
 
 # run sphinx ###
-html:
+html: js
 	mkdir -p ${BUILDDIR}/html ${BUILDDIR}/doctrees
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ${BUILDDIR}/html
 	@echo
 	@echo "Build finished. The HTML pages are in ${BUILDDIR}/html."
+
+js:
+	mkdir -p ${BUILDJS}
+	$(JSTORST) -p ${JSDIR} -o ${BUILDJS}
 
 pickle:
 	mkdir -p ${BUILDDIR}/pickle ${BUILDDIR}/doctrees

@@ -1,0 +1,862 @@
+/*
+ *  :organization: Logilab
+ *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+/***************************************/
+/* xhtml tags                          */
+/***************************************/
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
+html, body {
+  background: #e2e2e2;
+}
+
+body {
+  font-size: 69%;
+  font-weight: normal;
+  font-family: Verdana, sans-serif;
+}
+
+h1 {
+  font-size: 188%;
+  margin: 0.2em 0px 0.3em;
+  border-bottom: 1px solid #000;
+}
+
+h2, h3 {
+  margin-top: 0.2em;
+  margin-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 135%;
+}
+
+h3 {
+  font-size: 130%;
+}
+
+h4 {
+  font-size: 120%;
+  margin: 0.2em 0px;
+}
+
+h5 {
+  font-size:110%;
+}
+
+h6{
+  font-size:105%;
+}
+
+a, a:active, a:visited, a:link {
+  color: #ff4500;
+  text-decoration: none;
+}
+
+a:hover{
+  text-decoration: underline;
+}
+
+a img, img {
+  border: none;
+  text-align: center;
+}
+
+p {
+  margin: 0em 0px 0.2em;
+  padding-top: 2px;
+}
+
+table, td, input, select{
+  font-size: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  border: none;
+}
+
+table th, table td {
+  vertical-align: top;
+}
+
+table td img {
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+ol {
+  margin: 1px 0px 1px 16px;
+}
+
+ul{
+  margin: 1px 0px 1px 4px;
+  list-style-type: none;
+}
+
+ul li {
+  margin-top: 2px;
+  padding: 0px 0px 2px 8px;
+  background: url("bullet_orange.png") 0% 6px no-repeat;
+}
+
+dt {
+  font-size:1.17em;
+  font-weight:600;
+}
+
+dd {
+  margin: 0.6em 0 1.5em 2em;
+}
+
+fieldset {
+  border: none;
+}
+
+legend {
+  padding: 0px 2px;
+  font: bold 1em Verdana, sans-serif;
+}
+
+input, textarea {
+  padding: 0.2em;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+}
+
+input:focus {
+  border: 1px inset #ff7700;
+}
+
+label, .label {
+  font-weight: bold;
+}
+
+iframe {
+  border: 0px;
+}
+
+pre {
+  font-family: Courier, "Courier New", Monaco, monospace;
+  font-size: 100%;
+  color: #000;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+}
+
+code {
+  font-size: 120%;
+  color: #000;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+}
+
+blockquote {
+  font-family: Courier, "Courier New", serif;
+  font-size: 120%;
+  margin: 5px 0px;
+  padding: 0.8em;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+}
+
+/***************************************/
+/* generic classes                     */
+/***************************************/
+
+.odd {
+  background-color: #f7f6f1;
+}
+
+.even {
+  background-color: transparent;
+}
+
+.hr {
+  border-bottom: 1px dotted #ccc;
+  margin: 1em 0px;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.clear {
+  clear: both;
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+li.invisible { list-style: none; background: none; padding: 0px 0px
+1px 1px; }
+
+li.invisible div{
+  display: inline;
+}
+
+
+/***************************************/
+/*   LAYOUT                            */
+/***************************************/
+
+/* header */
+
+table#header {
+  background: #ff7700 url("banner.png") left top repeat-x;
+  text-align: left;
+}
+
+table#header td {
+  vertical-align: middle;
+}
+
+table#header a {
+color: #000;
+}
+
+span#appliName {
+ font-weight: bold;
+ color: #000;
+ white-space: nowrap;
+}
+
+table#header td#headtext {
+  width: 100%;
+}
+
+/* FIXME appear with 4px width in IE6 */
+div#stateheader{
+  min-width: 66%;
+}
+
+/* Popup on login box and userActionBox */
+div.popupWrapper{
+ position:relative;
+ z-index:100;
+}
+
+div.popup {
+  position: absolute;
+  background: #fff;
+  border: 1px solid black;
+  text-align: left;
+  z-index:400;
+}
+
+div.popup ul li a {
+  text-decoration: none;
+  color: black;
+}
+
+/* main zone */
+
+div#page {
+  background: #e2e2e2;
+  position: relative;
+  min-height: 800px;
+}
+
+table#mainLayout{
+ margin:0px 3px;
+}
+
+table#mainLayout td#contentColumn {
+  padding: 8px 10px 5px;
+}
+
+table#mainLayout td#navColumnLeft,
+table#mainLayout td#navColumnRight {
+  width: 16em;
+}
+
+#contentheader {
+  margin: 0px;
+  padding: 0.2em 0.5em 0.5em 0.5em;
+}
+
+#contentheader a {
+  color: #000;
+}
+
+div#pageContent {
+  clear: both;
+  padding: 10px 1em 2em;
+  background: #ffffff;
+  border: 1px solid #ccc;
+}
+
+/* rql bar */
+
+div#rqlinput {
+  border: 1px solid #cfceb7;
+  margin-bottom: 8px;
+  padding: 3px;
+  background: #cfceb7;
+}
+
+input#rql{
+  width: 95%;
+}
+
+/* boxes */
+div.navboxes {
+ margin-top: 8px;
+}
+
+div.boxFrame {
+  width: 100%;
+}
+
+div.boxTitle {
+  padding-top: 0px;
+  padding-bottom: 0.2em;
+  font: bold 100% Georgia;
+  overflow: hidden;
+  color: #fff;
+  background: #ff9900 url("search.png") left bottom repeat-x;
+}
+
+div.searchBoxFrame div.boxTitle,
+div.greyBoxFrame div.boxTitle {
+  background: #cfceb7;
+}
+
+div.boxTitle span,
+div.sideBoxTitle span {
+  padding: 0px 5px;
+  white-space: nowrap;
+}
+
+div.sideBoxTitle span,
+div.searchBoxFrame div.boxTitle span,
+div.greyBoxFrame div.boxTitle span {
+  color: #222211;
+}
+
+.boxFrame a {
+  color: #000;
+}
+
+div.boxContent {
+  padding: 3px 0px;
+  background: #fff;
+  border-top: none;
+}
+
+ul.boxListing {
+  margin: 0px;
+  padding: 0px 3px;
+}
+
+ul.boxListing li,
+ul.boxListing ul li {
+  display: inline;
+  margin: 0px;
+  padding: 0px;
+  background-image: none;
+}
+
+ul.boxListing ul {
+  margin: 0px 0px 0px 7px;
+  padding: 1px 3px;
+}
+
+ul.boxListing a {
+  color: #000;
+  display: block;
+  padding: 1px 9px 1px 3px;
+}
+
+ul.boxListing .selected {
+  color: #FF4500;
+  font-weight: bold;
+}
+
+ul.boxListing a.boxBookmark:hover,
+ul.boxListing a:hover,
+ul.boxListing ul li a:hover {
+  text-decoration: none;
+  background: #eeedd9;
+  color: #111100;
+}
+
+ul.boxListing a.boxMenu:hover {
+                                background: #eeedd9 url(puce_down.png) no-repeat scroll 98% 6px;
+                                cursor:pointer;
+                                border-top:medium none;
+                                }
+a.boxMenu {
+  background: transparent url("puce_down.png") 98% 6px no-repeat;
+  display: block;
+  padding: 1px 9px 1px 3px;
+}
+
+
+a.popupMenu {
+  background: transparent url("puce_down_black.png") 2% 6px no-repeat;
+  padding-left: 2em;
+}
+
+ul.boxListing ul li a:hover {
+  background: #eeedd9  url("bullet_orange.png") 0% 6px no-repeat;
+}
+
+a.boxMenu:hover {
+  background: #eeedd9 url("puce_down.png") 98% 6px no-repeat;
+  cursor: pointer;
+}
+
+ul.boxListing a.boxBookmark {
+  padding-left: 3px;
+  background-image:none;
+  background:#fff;
+}
+
+ul.boxListing ul li a {
+  background: #fff url("bullet_orange.png") 0% 6px no-repeat;
+  padding: 1px 3px 0px 10px;
+}
+
+div.searchBoxFrame div.boxContent {
+  padding: 4px 4px 3px;
+  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
+}
+
+div.shadow{
+  height: 14px;
+  background: url("shadow.gif") no-repeat top right;
+}
+
+div.sideBoxTitle {
+  background: #cfceb7;
+  display: block;
+  font: bold 100% Georgia;
+}
+
+div.sideBox {
+  padding: 0 0 0.2em;
+  margin-bottom: 0.5em;
+}
+
+ul.sideBox li{
+ list-style: none;
+ background: none;
+ padding: 0px 0px 1px 1px;
+ }
+
+div.sideBoxBody {
+  padding: 0.2em 5px;
+  background: #eeedd9;
+}
+
+div.sideBoxBody a {
+  color:#555544;
+}
+
+div.sideBoxBody a:hover {
+  text-decoration: underline;
+}
+
+div.sideBox table td {
+  padding-right: 1em;
+}
+
+input.rqlsubmit{
+  background: #fffff8 url("go.png") 50% 50% no-repeat;
+  width: 20px;
+  height: 20px;
+  margin: 0px;
+}
+
+input#norql{
+  width:13em;
+  margin-right: 2px;
+}
+
+/* user actions menu */
+a.logout, a.logout:visited, a.logout:hover{
+  color: #fff;
+  text-decoration: none;
+}
+
+div#userActionsBox {
+  width: 14em;
+  text-align: right;
+}
+
+div#userActionsBox a.popupMenu {
+  color: black;
+  text-decoration: underline;
+  padding-right: 2em;
+}
+
+/* download box XXX move to its own file? */
+div.downloadBoxTitle{
+ background : #8FBC8F;
+ font-weight: bold;
+}
+
+div.downloadBox{
+ font-weight: bold;
+}
+
+div.downloadBox div.sideBoxBody{
+ background : #EEFED9;
+}
+
+/**************/
+/* navigation */
+/**************/
+div#etyperestriction {
+  margin-bottom: 1ex;
+  border-bottom: 1px solid #ccc;
+}
+
+span.slice a:visited,
+span.slice a:hover{
+  color: #555544;
+}
+
+span.selectedSlice a:visited,
+span.selectedSlice a {
+  color: #000;
+}
+
+/* FIXME should be moved to cubes/folder */
+div.navigation a {
+  text-align: center;
+  text-decoration: none;
+}
+
+div.prevnext {
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+div.prevnext a {
+  color: #000;
+}
+
+/***************************************/
+/* entity views                        */
+/***************************************/
+
+.mainInfo  {
+  margin-right: 1em;
+  padding: 0.2em;
+}
+
+
+div.mainRelated {
+  border: none;
+  margin-right: 1em;
+  padding: 0.5em 0.2em 0.2em;
+}
+
+div.primaryRight{
+ }
+
+div.metadata {
+  font-size: 90%;
+  margin: 5px 0px 3px;
+  color: #666;
+  font-style: italic;
+  text-align: right;
+}
+
+div.section {
+  margin-top: 0.5em;
+  width:100%;
+}
+
+div.section a:hover {
+  text-decoration: none;
+}
+
+/* basic entity view */
+
+tr.entityfield th {
+  text-align: left;
+  padding-right: 0.5em;
+}
+
+div.field {
+  display: inline;
+}
+
+div.ctxtoolbar {
+  float: right;
+  padding-left: 24px;
+  position: relative;
+}
+div.toolbarButton {
+  display: inline;
+}
+
+/***************************************/
+/* messages                            */
+/***************************************/
+
+.warning,
+.message,
+.errorMessage ,
+.searchMessage{
+  padding: 0.3em 0.3em 0.3em 1em;
+  font-weight: bold;
+}
+
+.loginMessage {
+  margin: 4px 0px;
+  font-weight: bold;
+  color: #ff7700;
+}
+
+div#appMsg, div.appMsg{
+  border: 1px solid #cfceb7;
+  margin-bottom: 8px;
+  padding: 3px;
+  background: #f8f8ee;
+}
+
+.message {
+  margin: 0px;
+  background: #f8f8ee url("information.png") 5px center no-repeat;
+  padding-left: 15px;
+}
+
+.errorMessage {
+  margin: 10px 0px;
+  padding-left: 25px;
+  background: #f7f6f1 url("critical.png") 2px center no-repeat;
+  color: #ed0d0d;
+  border: 1px solid #cfceb7;
+}
+
+.searchMessage {
+  margin-top: 0.5em;
+  border-top: 1px solid #cfceb7;
+  background: #eeedd9 url("information.png") 0% 50% no-repeat; /*dcdbc7*/
+}
+
+.stateMessage {
+  border: 1px solid #ccc;
+  background: #f8f8ee url("information.png") 10px 50% no-repeat;
+  padding:4px 0px 4px 20px;
+  border-width: 1px 0px 1px 0px;
+}
+
+/* warning messages like "There are too many results ..." */
+.warning {
+  padding-left: 25px;
+  background: #f2f2f2 url("critical.png") 3px 50% no-repeat;
+}
+
+/* label shown in the top-right hand corner during form validation */
+div#progress {
+  position: fixed;
+  right: 5px;
+  top: 0px;
+  background: #222211;
+  color: white;
+  font-weight: bold;
+  display: none;
+}
+
+/***************************************/
+/* listing table                       */
+/***************************************/
+
+table.listing {
+ padding: 10px 0em;
+ color: #000;
+ width: 100%;
+ border-right: 1px solid #dfdfdf;
+}
+
+
+table.listing thead th.over {
+  background-color: #746B6B;
+  cursor: pointer;
+}
+
+table.listing tr th {
+  border: 1px solid #dfdfdf;
+  border-right:none;
+  font-size: 8pt;
+  padding: 4px;
+}
+
+table.listing tr .header {
+  border-right: 1px solid #dfdfdf;
+  cursor: pointer;
+}
+
+table.listing td {
+  color: #3D3D3D;
+  padding: 4px;
+  background-color: #FFF;
+  vertical-align: top;
+}
+
+table.listing th,
+table.listing td {
+  padding: 3px 0px 3px 5px;
+  border: 1px solid #dfdfdf;
+  border-right: none;
+}
+
+table.listing th {
+  font-weight: bold;
+  background: #ebe8d9 url("button.png") repeat-x;
+}
+
+table.listing td a,
+table.listing td a:visited {
+  color: #666;
+}
+
+table.listing a:hover,
+table.listing tr.highlighted td a {
+  color:#000;
+}
+
+table.listing td.top {
+  border: 1px solid white;
+  border-bottom: none;
+  text-align: right ! important;
+  /* insane IE row bug workaround */
+  position: relative;
+  left: -1px;
+  top: -1px;
+}
+
+table.htableForm {
+  vertical-align: middle;
+}
+table.htableForm td{
+  padding-left: 1em;
+  padding-top: 0.5em;
+}
+table.htableForm th{
+  padding-left: 1em;
+}
+table.htableForm .validateButton {
+  margin-right: 0.2em;
+  vertical-align: top;
+  margin-bottom: 0.2em; /* because vertical-align doesn't seems to have any effect */
+}
+
+/***************************************/
+/* error view (views/management.py)    */
+/***************************************/
+
+div.pycontext { /* html traceback */
+  font-family: Verdana, sans-serif;
+  font-size: 80%;
+  padding: 1em;
+  margin: 10px 0px 5px 20px;
+  background-color: #dee7ec;
+}
+
+div.pycontext span.name {
+  color: #ff0000;
+}
+
+
+/***************************************/
+/* addcombobox                         */
+/***************************************/
+
+input#newopt{
+ width:120px ;
+ display:block;
+ float:left;
+ }
+
+div#newvalue{
+ margin-top:2px;
+ }
+
+#add_newopt{
+ background: #fffff8 url("go.png") 50% 50% no-repeat;
+ width: 20px;
+ line-height: 20px;
+ display:block;
+ float:left;
+}
+
+/***************************************/
+/* buttons                             */
+/***************************************/
+
+input.button{
+  margin: 1em 1em 0px 0px;
+  border: 1px solid #edecd2;
+  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
+  background: #fffff8 url("button.png") bottom left repeat-x;
+}
+
+/* FileItemInnerView  jquery.treeview.css */
+.folder {
+  /* disable odd/even under folder class */
+  background-color: transparent;
+}
+
+/***************************************/
+/* footer                              */
+/***************************************/
+
+div#footer {
+  text-align: center;
+}
+div#footer a {
+  color: #000;
+  text-decoration: none;
+}
+
+
+/****************************************/
+/* FIXME must by managed by cubes       */
+/****************************************/
+.needsvalidation {
+  font-style: italic;
+  color: gray;
+}
+
+
+/***************************************/
+/* FIXME : Deprecated ? entity view ?  */
+/***************************************/
+.title {
+  text-align: left;
+  font-size:  large;
+  font-weight: bold;
+}
+
+.validateButton {
+  margin: 1em 1em 0px 0px;
+  border: 1px solid #edecd2;
+  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
+  background: #fffff8 url("button.png") bottom left repeat-x;
+}
+
+/********************************/
+/* placement of alt. view icons */
+/********************************/
+
+.otherView {
+  float: right;
+}

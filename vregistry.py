@@ -44,7 +44,7 @@ from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
-from cubicweb.appobject import AppObject
+from cubicweb.appobject import AppObject, class_regid
 
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
@@ -82,16 +82,6 @@ def _toload_info(path, extrapath, _toload=None):
 def classid(cls):
     """returns a unique identifier for an appobject class"""
     return '%s.%s' % (cls.__module__, cls.__name__)
-
-def class_regid(cls):
-    """returns a unique identifier for an appobject class"""
-    if 'id' in cls.__dict__:
-        warn('[3.6] %s.%s: id is deprecated, use __regid__'
-             % (cls.__module__, cls.__name__), DeprecationWarning)
-        cls.__regid__ = cls.id
-    if hasattr(cls, 'id') and not isinstance(cls.id, property):
-        return cls.id
-    return cls.__regid__
 
 def class_registries(cls, registryname):
     if registryname:
@@ -235,8 +225,8 @@ class Registry(dict):
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
         if len(winners) > 1:
-            # log in production environement, error while debugging
-            if self.config.debugmode:
+            # log in production environement / test, error while debugging
+            if self.config.debugmode or self.config.mode == 'test':
                 raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
                                 % (args, kwargs.keys(),
                                    [repr(v) for v in winners]))
@@ -405,6 +395,7 @@ class VRegistry(dict):
     # initialization methods ###################################################
 
     def init_registration(self, path, extrapath=None):
+        self.reset()
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path, extrapath)
         # XXX is _loadedmods still necessary ? It seems like it's useful

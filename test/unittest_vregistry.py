@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main, TestCase
 
 from os.path import join
@@ -27,7 +25,7 @@ from cubicweb.appobject import AppObject
 from cubicweb.cwvreg import CubicWebVRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.interfaces import IMileStone
+from cubicweb.view import EntityAdapter
 
 from cubes.card.entities import Card
 
@@ -56,21 +54,26 @@ class VRegistryTC(TestCase):
 
 
     def test_load_subinterface_based_appobjects(self):
-        self.vreg.reset()
         self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar was kicked
         self.failIf(self.vreg['views'].get('progressbar'))
-        class MyCard(Card):
-            __implements__ = (IMileStone,)
-        self.vreg.reset()
+        # we've to emulate register_objects to add custom MyCard objects
+        path = [join(BASE, 'entities', '__init__.py'),
+                join(BASE, 'entities', 'adapters.py'),
+                join(BASE, 'web', 'views', 'iprogress.py')]
+        filemods = self.vreg.init_registration(path, None)
+        for filepath, modname in filemods:
+            self.vreg.load_file(filepath, modname)
+        class CardIProgressAdapter(EntityAdapter):
+            __regid__ = 'IProgress'
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(MyCard)
-        self.vreg.register_objects([join(BASE, 'entities', '__init__.py'),
-                                    join(BASE, 'web', 'views', 'iprogress.py')])
+        self.vreg.register(CardIProgressAdapter)
+        self.vreg.initialization_completed()
         # check progressbar isn't kicked
         self.assertEquals(len(self.vreg['views']['progressbar']), 1)
 
     def test_properties(self):
+        self.vreg.reset()
         self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
         self.failUnless(self.vreg.property_info('system.version.cubicweb'))
         self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')

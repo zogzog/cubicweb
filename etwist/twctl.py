@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-clt handlers for twisted
-
-"""
+"""cubicweb-clt handlers for twisted"""
 
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
@@ -32,9 +30,9 @@ class TWStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'twisted'
 
-    def start_server(self, config, debug):
+    def start_server(self, config):
         from cubicweb.etwist import server
-        server.run(config, debug)
+        server.run(config)
 
 class TWStopHandler(CommandHandler):
     cmdname = 'stop'

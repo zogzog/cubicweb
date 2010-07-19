@@ -114,13 +114,10 @@ class CoreHooksTC(CubicWebTC):
         self.assertEquals(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
 
     def test_unsatisfied_constraints(self):
-        releid = self.execute('INSERT CWRelation X: X from_entity FE, X relation_type RT, X to_entity TE '
-                              'WHERE FE name "CWUser", RT name "in_group", TE name "String"')[0][0]
-        self.execute('SET X read_permission Y WHERE X eid %(x)s, Y name "managers"',
-                     {'x': releid}, 'x')
+        releid = self.execute('SET U in_group G WHERE G name "owners", U login "admin"')[0][0]
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors,
-                          {'to_entity-object': 'RQLConstraint O final FALSE failed'})
+                          {'in_group-object': u'RQLConstraint NOT O name "owners" failed'})
 
     def test_html_tidy_hook(self):
         req = self.request()

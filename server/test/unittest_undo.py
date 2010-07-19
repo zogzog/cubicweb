@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from __future__ import with_statement
 
 from cubicweb import ValidationError
@@ -104,7 +101,7 @@ class UndoableTransactionTC(CubicWebTC):
                                        address=u'toto@logilab.org',
                                        reverse_use_email=toto)
         txuuid1 = self.commit()
-        toto.delete()
+        toto.cw_delete()
         txuuid2 = self.commit()
         undoable_transactions = self.cnx.undoable_transactions
         txs = undoable_transactions(action='D')
@@ -147,7 +144,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.commit()
         txs = self.cnx.undoable_transactions()
         self.assertEquals(len(txs), 2)
-        toto.delete()
+        toto.cw_delete()
         txuuid = self.commit()
         actions = self.cnx.transaction_info(txuuid).actions_list()
         self.assertEquals(len(actions), 1)
@@ -160,8 +157,8 @@ class UndoableTransactionTC(CubicWebTC):
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
         self.failUnless(self.execute('Any X WHERE X has_text "toto@logilab"'))
-        self.assertEquals(toto.state, 'activated')
-        self.assertEquals(toto.get_email(), 'toto@logilab.org')
+        self.assertEquals(toto.cw_adapt_to('IWorkflowable').state, 'activated')
+        self.assertEquals(toto.cw_adapt_to('IEmailable').get_email(), 'toto@logilab.org')
         self.assertEquals([(p.pkey, p.value) for p in toto.reverse_for_user],
                           [('ui.default-text-format', 'text/rest')])
         self.assertEquals([g.name for g in toto.in_group],
@@ -186,7 +183,7 @@ class UndoableTransactionTC(CubicWebTC):
         c = session.create_entity('Card', title=u'hop', content=u'hop')
         p = session.create_entity('Personne', nom=u'louis', fiche=c)
         self.commit()
-        c.delete()
+        c.cw_delete()
         txuuid = self.commit()
         c2 = session.create_entity('Card', title=u'hip', content=u'hip')
         p.set_relations(fiche=c2)
@@ -207,9 +204,9 @@ class UndoableTransactionTC(CubicWebTC):
         session.execute('DELETE U in_group G WHERE U eid %(x)s', {'x': self.toto.eid})
         self.toto.set_relations(in_group=g)
         self.commit()
-        self.toto.delete()
+        self.toto.cw_delete()
         txuuid = self.commit()
-        g.delete()
+        g.cw_delete()
         self.commit()
         errors = self.cnx.undo_transaction(txuuid)
         self.assertEquals(errors,

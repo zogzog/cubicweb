@@ -26,7 +26,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
-from cubicweb.selectors import (one_line_rset, none_rset, implements,
+from cubicweb.selectors import (one_line_rset, none_rset, is_instance,
                                 match_user_groups, objectify_selector,
                                 logged_user_in_rset)
 from cubicweb.view import StartupView
@@ -35,7 +35,7 @@ from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import (Select, TextInput, Button, SubmitButton,
                                       FieldWidget)
-from cubicweb.web.views import primary, formrenderers
+from cubicweb.web.views import primary, formrenderers, editcontroller
 
 uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
 
@@ -74,7 +74,7 @@ def css_class(someclass):
 
 
 class CWPropertyPrimaryView(primary.PrimaryView):
-    __select__ = implements('CWProperty')
+    __select__ = is_instance('CWProperty')
     skip_none = False
 
 
@@ -144,7 +144,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group))
-            w(u'<h2 class="propertiesform">%s</h2>\n' %
+            w(u'<div class="propertiesform">%s</div>\n' %
             (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
             w(u'<fieldset class="preferences">')
@@ -154,7 +154,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
             status = css_class(self._group_status(group))
-            w(u'<h2 class="propertiesform">%s</h2>\n' %
+            w(u'<div class="propertiesform">%s</div>\n' %
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
             # create selection
@@ -243,7 +243,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
         | (one_line_rset() & match_user_groups('users') & logged_user_in_rset())
-        | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
+        | (one_line_rset() & match_user_groups('managers') & is_instance('CWUser'))
         )
 
     title = _('preferences')
@@ -395,6 +395,15 @@ class CWPropertiesFormRenderer(formrenderers.FormRenderer):
             w(u'%s\n' % button.render(form))
         w(u'</div>')
 
+
+class CWPropertyIEditControlAdapter(editcontroller.IEditControlAdapter):
+    __select__ = is_instance('CWProperty')
+
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        return 'view', {}
 
 _afs = uicfg.autoform_section
 _afs.tag_subject_of(('*', 'for_user', '*'), 'main', 'hidden')

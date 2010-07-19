@@ -29,9 +29,9 @@ from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     eid = entity.eid
     eschema = entity.e_schema
-    # .skip_security_attributes is there to bypass security for attributes
+    # ._cw_skip_security_attributes is there to bypass security for attributes
     # set by hooks by modifying the entity's dictionnary
-    dontcheck = entity.skip_security_attributes
+    dontcheck = entity._cw_skip_security_attributes
     if editedattrs is None:
         try:
             editedattrs = entity.edited_attributes
@@ -59,7 +59,7 @@ class _CheckEntityPermissionOp(hook.LateOperation):
         for values in session.transaction_data.pop('check_entity_perm_op'):
             entity = session.entity_from_eid(values[0])
             action = values[1]
-            entity.check_perm(action)
+            entity.cw_check_perm(action)
             check_entity_attributes(session, entity, values[2:],
                                     creation=self.creation)
 
@@ -110,10 +110,10 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
     def __call__(self):
         try:
             # check user has permission right now, if not retry at commit time
-            self.entity.check_perm('update')
+            self.entity.cw_check_perm('update')
             check_entity_attributes(self._cw, self.entity)
         except Unauthorized:
-            self.entity.clear_local_perm_cache('update')
+            self.entity._cw_clear_local_perm_cache('update')
             # save back editedattrs in case the entity is reedited later in the
             # same transaction, which will lead to edited_attributes being
             # overwritten
@@ -127,7 +127,7 @@ class BeforeDelEntitySecurityHook(SecurityHook):
     events = ('before_delete_entity',)
 
     def __call__(self):
-        self.entity.check_perm('delete')
+        self.entity.cw_check_perm('delete')
 
 
 class BeforeAddRelationSecurityHook(SecurityHook):

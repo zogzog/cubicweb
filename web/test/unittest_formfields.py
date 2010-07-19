@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unittests for cw.web.formfields
-
-"""
+"""unittests for cw.web.formfields"""
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 
@@ -53,10 +51,10 @@ class GuessFieldTC(TestCase):
         self.assertEquals(description_field.required, False)
         self.assertEquals(description_field.format_field, None)
 
-        description_format_field = guess_field(schema['State'], schema['description_format'])
-        self.assertEquals(description_format_field, None)
+        # description_format_field = guess_field(schema['State'], schema['description_format'])
+        # self.assertEquals(description_format_field, None)
 
-        description_format_field = guess_field(schema['State'], schema['description_format'], skip_meta_attr=False)
+        description_format_field = guess_field(schema['State'], schema['description_format'])
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
 
@@ -88,12 +86,12 @@ class GuessFieldTC(TestCase):
 
 
     def test_file_fields(self):
-        data_format_field = guess_field(schema['File'], schema['data_format'])
-        self.assertEquals(data_format_field, None)
-        data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
-        self.assertEquals(data_encoding_field, None)
-        data_name_field = guess_field(schema['File'], schema['data_name'])
-        self.assertEquals(data_name_field, None)
+        # data_format_field = guess_field(schema['File'], schema['data_format'])
+        # self.assertEquals(data_format_field, None)
+        # data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
+        # self.assertEquals(data_encoding_field, None)
+        # data_name_field = guess_field(schema['File'], schema['data_name'])
+        # self.assertEquals(data_name_field, None)
 
         data_field = guess_field(schema['File'], schema['data'])
         self.assertIsInstance(data_field, FileField)

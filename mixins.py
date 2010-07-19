@@ -21,9 +21,10 @@ __docformat__ = "restructuredtext en"
 from itertools import chain
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated, class_deprecated
 
 from cubicweb.selectors import implements
-from cubicweb.interfaces import IEmailable, ITree
+from cubicweb.interfaces import ITree
 
 
 class TreeMixIn(object):
@@ -33,6 +34,9 @@ class TreeMixIn(object):
     tree_attribute, parent_target and children_target class attribute to
     benefit from this default implementation
     """
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.9] TreeMixIn is deprecated, use/override ITreeAdapter instead'
+
     tree_attribute = None
     # XXX misnamed
     parent_target = 'subject'
@@ -117,16 +121,6 @@ class TreeMixIn(object):
             return chain([self], _uptoroot(self))
         return _uptoroot(self)
 
-    def notification_references(self, view):
-        """used to control References field of email send on notification
-        for this entity. `view` is the notification view.
-
-        Should return a list of eids which can be used to generate message ids
-        of previously sent email
-        """
-        return self.path()[:-1]
-
-
     ## ITree interface ########################################################
     def parent(self):
         """return the parent entity if any, else None (e.g. if we are on the
@@ -151,7 +145,7 @@ class TreeMixIn(object):
                                 entities=entities)
 
     def children_rql(self):
-        return self.related_rql(self.tree_attribute, self.children_target)
+        return self.cw_related_rql(self.tree_attribute, self.children_target)
 
     def is_leaf(self):
         return len(self.children()) == 0
@@ -171,36 +165,13 @@ class EmailableMixIn(object):
     NOTE: The default implementation is based on the
     primary_email / use_email scheme
     """
-    __implements__ = (IEmailable,)
-
+    @deprecated("[3.9] use entity.cw_adapt_to('IEmailable').get_email()")
     def get_email(self):
         if getattr(self, 'primary_email', None):
             return self.primary_email[0].address
         if getattr(self, 'use_email', None):
             return self.use_email[0].address
         return None
-
-    @classmethod
-    def allowed_massmail_keys(cls):
-        """returns a set of allowed email substitution keys
-
-        The default is to return the entity's attribute list but an
-        entity class might override this method to allow extra keys.
-        For instance, the Person class might want to return a `companyname`
-        key.
-        """
-        return set(rschema.type
-                   for rschema, attrtype in cls.e_schema.attribute_definitions()
-                   if attrtype.type not in ('Password', 'Bytes'))
-
-    def as_email_context(self):
-        """returns the dictionary as used by the sendmail controller to
-        build email bodies.
-
-        NOTE: the dictionary keys should match the list returned by the
-        `allowed_massmail_keys` method.
-        """
-        return dict( (attr, getattr(self, attr)) for attr in self.allowed_massmail_keys() )
 
 
 """pluggable mixins system: plug classes registered in MI_REL_TRIGGERS on entity
@@ -215,7 +186,7 @@ MI_REL_TRIGGERS = {
     }
 
 
-
+# XXX move to cubicweb.web.views.treeview once we delete usage from this file
 def _done_init(done, view, row, col):
     """handle an infinite recursion safety belt"""
     if done is None:
@@ -223,7 +194,7 @@ def _done_init(done, view, row, col):
     entity = view.cw_rset.get_entity(row, col)
     if entity.eid in done:
         msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
-            'rel': entity.tree_attribute,
+            'rel': entity.cw_adapt_to('ITree').tree_relation,
             'eid': entity.eid
             }
         return None, msg
@@ -233,16 +204,20 @@ def _done_init(done, view, row, col):
 
 class TreeViewMixIn(object):
     """a recursive tree view"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.9] TreeViewMixIn is deprecated, use/override BaseTreeView instead'
+
     __regid__ = 'tree'
+    __select__ = implements(ITree, warn=False)
     item_vid = 'treeitem'
-    __select__ = implements(ITree)
 
     def call(self, done=None, **kwargs):
         if done is None:
             done = set()
         super(TreeViewMixIn, self).call(done=done, **kwargs)
 
-    def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
+    def cell_call(self, row, col=0, vid=None, done=None, maxlevel=None, **kwargs):
+        assert maxlevel is None or maxlevel > 0
         done, entity = _done_init(done, self, row, col)
         if done is None:
             # entity is actually an error message
@@ -250,8 +225,14 @@ class TreeViewMixIn(object):
             return
         self.open_item(entity)
         entity.view(vid or self.item_vid, w=self.w, **kwargs)
+        if maxlevel is not None:
+            maxlevel -= 1
+            if maxlevel == 0:
+                self.close_item(entity)
+                return
         relatedrset = entity.children(entities=False)
-        self.wview(self.__regid__, relatedrset, 'null', done=done, **kwargs)
+        self.wview(self.__regid__, relatedrset, 'null', done=done,
+                   maxlevel=maxlevel, **kwargs)
         self.close_item(entity)
 
     def open_item(self, entity):
@@ -262,6 +243,8 @@ class TreeViewMixIn(object):
 
 class TreePathMixIn(object):
     """a recursive path view"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.9] TreePathMixIn is deprecated, use/override TreePathView instead'
     __regid__ = 'path'
     item_vid = 'oneline'
     separator = u'&#160;&gt;&#160;'
@@ -286,6 +269,8 @@ class TreePathMixIn(object):
 
 class ProgressMixIn(object):
     """provide a default implementations for IProgress interface methods"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.9] ProgressMixIn is deprecated, use/override IProgressAdapter instead'
 
     @property
     def cost(self):

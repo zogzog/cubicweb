@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.server.sources.storages
-
-"""
+"""unit tests for module cubicweb.server.sources.storages"""
 
 from __future__ import with_statement
 
@@ -29,13 +27,13 @@ import shutil
 import tempfile
 
 from cubicweb import Binary, QueryError
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.server.sources import storages
 from cubicweb.server.hook import Hook, Operation
 
 class DummyBeforeHook(Hook):
     __regid__ = 'dummy-before-hook'
-    __select__ = Hook.__select__ & implements('File')
+    __select__ = Hook.__select__ & is_instance('File')
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -44,7 +42,7 @@ class DummyBeforeHook(Hook):
 
 class DummyAfterHook(Hook):
     __regid__ = 'dummy-after-hook'
-    __select__ = Hook.__select__ & implements('File')
+    __select__ = Hook.__select__ & is_instance('File')
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -89,11 +87,11 @@ class StorageTC(CubicWebTC):
         f1.set_attributes(data=Binary('the new data'))
         self.rollback()
         self.assertEquals(file(expected_filepath).read(), 'the-data')
-        f1.delete()
+        f1.cw_delete()
         self.failUnless(osp.isfile(expected_filepath))
         self.rollback()
         self.failUnless(osp.isfile(expected_filepath))
-        f1.delete()
+        f1.cw_delete()
         self.commit()
         self.failIf(osp.isfile(expected_filepath))
 
@@ -133,11 +131,17 @@ class StorageTC(CubicWebTC):
         ex = self.assertRaises(QueryError, self.execute,
                                '(Any D WHERE X data D, X is File)'
                                ' UNION '
-                               '(Any D WHERE X data D, X is Image)')
+                               '(Any D WHERE X title D, X is Bookmark)')
         self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
-        ex = self.assertRaises(QueryError,
-                               self.execute, 'Any D WHERE X data D')
-        self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+
+        storages.set_attribute_storage(self.repo, 'State', 'name',
+                                       storages.BytesFileSystemStorage(self.tempdir))
+        try:
+            ex = self.assertRaises(QueryError,
+                                   self.execute, 'Any D WHERE X name D, X is IN (State, Transition)')
+            self.assertEquals(str(ex), 'query fetch some source mapped attribute, some not')
+        finally:
+            storages.unset_attribute_storage(self.repo, 'State', 'name')
 
     def test_source_mapped_attribute_advanced(self):
         f1 = self.create_file()

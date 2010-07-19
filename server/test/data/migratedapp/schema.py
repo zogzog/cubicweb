@@ -69,7 +69,7 @@ class Note(Para):
     mydate = Date(default='TODAY')
     shortpara = String(maxsize=64)
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
-    attachment = SubjectRelation(('File', 'Image'))
+    attachment = SubjectRelation('File')
 
 class Text(Para):
     __specializes_schema__ = True

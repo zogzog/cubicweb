@@ -342,7 +342,7 @@ class AbstractSource(object):
         entity.
         """
         entity = self.repo.vreg['etypes'].etype_class(etype)(session)
-        entity.set_eid(eid)
+        entity.eid = eid
         return entity
 
     def after_entity_insertion(self, session, lid, entity):

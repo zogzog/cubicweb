@@ -232,6 +232,8 @@ directory (default to once a day).',
                 if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
+                        if isinstance(ldapemailaddr, list):
+                            ldapemailaddr = ldapemailaddr[0] # XXX consider only the first email in the list
                         rset = execute('Any X,A WHERE '
                                        'X address A, U use_email X, U eid %(u)s',
                                        {'u': eid})
@@ -522,7 +524,7 @@ directory (default to once a day).',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
                 self.repo.delete_info(session, entity, self.uri, base)
-                self.reset_cache()
+                self.reset_caches()
             return []
         # except ldap.REFERRAL, e:
         #     cnx = self.handle_referral(e)
@@ -589,6 +591,8 @@ directory (default to once a day).',
             emailaddr = self._cache[dn][self.user_rev_attrs['email']]
         except KeyError:
             return
+        if isinstance(emailaddr, list):
+            emailaddr = emailaddr[0] # XXX consider only the first email in the list
         rset = session.execute('EmailAddress X WHERE X address %(addr)s',
                                {'addr': emailaddr})
         if rset:

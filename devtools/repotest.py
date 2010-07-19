@@ -18,8 +18,8 @@
 """some utilities to ease repository testing
 
 This module contains functions to initialize a new repository.
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from pprint import pprint
@@ -134,24 +134,32 @@ def restore_schema_eids_idx(schema, schema_eids):
             schema._eid_index[rdef.eid] = rdef
 
 
-from logilab.common.testlib import TestCase
+from logilab.common.testlib import TestCase, mock_object
+from logilab.database import get_db_helper
+
 from rql import RQLHelper
+
 from cubicweb.devtools.fake import FakeRepo, FakeSession
 from cubicweb.server import set_debug
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
-from cubicweb.server.sources.rql2sql import remove_unused_solutions
+from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
 class RQLGeneratorTC(TestCase):
-    schema = None # set this in concret test
+    schema = backend = None # set this in concret test
 
     def setUp(self):
         self.repo = FakeRepo(self.schema)
+        self.repo.system_source = mock_object(dbdriver=self.backend)
         self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
-                                                                   'has_text': 'fti'})
+                                                                   'has_text': 'fti'},
+                                   backend=self.backend)
         self.qhelper = QuerierHelper(self.repo, self.schema)
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
+        if self.backend is not None:
+            dbhelper = get_db_helper(self.backend)
+            self.o = SQLGenerator(self.schema, dbhelper)
 
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
@@ -270,6 +278,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.system = self.sources[-1]
         do_monkey_patch()
         self._dumb_sessions = [] # by hi-jacked parent setup
+        self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
 
     def add_source(self, sourcecls, uri):
         self.sources.append(sourcecls(self.repo, self.o.schema,

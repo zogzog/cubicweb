@@ -243,6 +243,9 @@ msgstr ""
 msgid "Browse by category"
 msgstr "Busca por categoría"
 
+msgid "Browse by entity type"
+msgstr ""
+
 msgid "Bytes"
 msgstr "Bytes"
 
@@ -425,6 +428,9 @@ msgid "From:"
 msgstr "De: "
 
 msgid "Garbage collection information"
+msgstr ""
+
+msgid "Got rhythm?"
 msgstr ""
 
 msgid "Help"
@@ -631,9 +637,6 @@ msgstr "Enviar un reporte de error (bug)"
 
 msgid "Submit bug report by mail"
 msgstr "Enviar este reporte por email"
-
-msgid "The repository holds the following entities"
-msgstr "El repositorio contiene las entidades siguientes"
 
 #, python-format
 msgid "The view %s can not be applied to this query"
@@ -978,6 +981,9 @@ msgstr ""
 msgid "add_permission_object"
 msgstr "tiene la autorización para agregar"
 
+msgid "add_relation"
+msgstr ""
+
 #, python-format
 msgid "added %(etype)s #%(eid)s (%(title)s)"
 msgstr "Agregado %(etype)s #%(eid)s (%(title)s)"
@@ -1309,6 +1315,12 @@ msgstr "ver la entidad creada"
 
 msgid "click on the box to cancel the deletion"
 msgstr "Seleccione la zona de edición para cancelar la eliminación"
+
+msgid "click to add a value"
+msgstr ""
+
+msgid "click to delete this value"
+msgstr ""
 
 msgid "click to edit this field"
 msgstr ""
@@ -2321,12 +2333,21 @@ msgstr "Regresar a la página de inicio"
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
 
-msgid "graphical representation of the instance'schema"
+#, python-format
+msgid "graphical representation of %(appid)s data model"
 msgstr ""
 
 #, python-format
-msgid "graphical schema for %s"
-msgstr "Gráfica del esquema por %s"
+msgid ""
+"graphical representation of the %(etype)s entity type from %(appid)s data "
+"model"
+msgstr ""
+
+#, python-format
+msgid ""
+"graphical representation of the %(rtype)s relation type from %(appid)s data "
+"model"
+msgstr ""
 
 #, python-format
 msgid "graphical workflow for %s"
@@ -2873,6 +2894,9 @@ msgstr "no autorización relacionada"
 
 #, python-format
 msgid "no edited fields specified for entity %s"
+msgstr ""
+
+msgid "no related entity"
 msgstr ""
 
 msgid "no related project"
@@ -3792,6 +3816,9 @@ msgstr ""
 msgid "update_permission_object"
 msgstr "objeto de autorización de modificaciones"
 
+msgid "update_relation"
+msgstr ""
+
 msgid "updated"
 msgstr ""
 
@@ -4038,6 +4065,12 @@ msgstr "ha terminado la sesion"
 
 msgid "you should probably delete that property"
 msgstr "deberia probablamente suprimir esta propriedad"
+
+#~ msgid "The repository holds the following entities"
+#~ msgstr "El repositorio contiene las entidades siguientes"
+
+#~ msgid "graphical schema for %s"
+#~ msgstr "Gráfica del esquema por %s"
 
 #~ msgid "schema-image"
 #~ msgstr "esquema imagen"

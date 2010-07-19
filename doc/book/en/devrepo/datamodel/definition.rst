@@ -1,5 +1,7 @@
  .. -*- coding: utf-8 -*-
 
+.. _datamodel_definition:
+
 Yams *schema*
 -------------
 
@@ -10,6 +12,8 @@ library; or more specific types defined in cubes. The schema for a
 cube is defined in a `schema` python module or package.
 
 .. _`Yams`: http://www.logilab.org/project/yams
+
+.. _datamodel_overview:
 
 Overview
 ~~~~~~~~
@@ -408,7 +412,7 @@ The principles are the same but with the following restrictions:
 * special relations "has_<ACTION>_permission" can not be used
 
 
-
+.. _yams_example:
 
 Defining your schema using yams
 -------------------------------
@@ -494,15 +498,15 @@ for more details).
 means that you need two separate entities that implement the `ITree` interface and
 get the result from `.children()` which ever entity is concerned.
 
-Inheritance
-```````````
-XXX feed me
+.. Inheritance
+.. ```````````
+.. XXX feed me
 
 
 Definition of relations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-XXX add note about defining relation type / definition
+.. XXX add note about defining relation type / definition
 
 A relation is defined by a Python class heriting `RelationType`. The name
 of the class corresponds to the name of the type. The class then contains
@@ -546,7 +550,7 @@ the entity type for the object of the relation.
 :Historical note:
 
    It has been historically possible to use `ObjectRelation` which
-   defines a relation in the opposite direction. This feature is soon to be
+   defines a relation in the opposite direction. This feature is
    deprecated and therefore should not be used in newly written code.
 
 :Future deprecation note:

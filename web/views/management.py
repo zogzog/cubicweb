@@ -122,7 +122,7 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
                                           cwperm.view('oneline')))
                 else:
                     w(u'<td>%s</td>' % cwperm.view('oneline'))
-                w(u'<td>%s</td>' % self.view('csv', cwperm.related('require_group'), 'null'))
+                w(u'<td>%s</td>' % self._cw.view('csv', cwperm.related('require_group'), 'null'))
                 w(u'</tr>\n')
             w(u'</table>')
         else:
@@ -203,7 +203,7 @@ class ErrorView(AnyRsetView):
         cversions = []
         for cube in self._cw.vreg.config.cubes():
             cubeversion = vcconf.get(cube, self._cw._('no version information'))
-            w(u"<b>Package %s version:</b> %s<br/>\n" % (cube, cubeversion))
+            w(u"<b>Cube %s version:</b> %s<br/>\n" % (cube, cubeversion))
             cversions.append((cube, cubeversion))
         w(u"</div>")
         # creates a bug submission link if submit-mail is set
@@ -237,7 +237,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
         binfo += u'\n'.join(u'  * %s = %s' % (k, v) for k, v in req.form.iteritems())
     binfo += u'\n\n:CubicWeb version: %s\n'  % (eversion,)
     for pkg, pkgversion in cubes:
-        binfo += u":Package %s version: %s\n" % (pkg, pkgversion)
+        binfo += u":Cube %s version: %s\n" % (pkg, pkgversion)
     binfo += '\n'
     return binfo
 

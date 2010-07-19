@@ -235,6 +235,9 @@ msgstr ""
 msgid "Browse by category"
 msgstr ""
 
+msgid "Browse by entity type"
+msgstr ""
+
 msgid "Bytes"
 msgstr "Bytes"
 
@@ -417,6 +420,9 @@ msgid "From:"
 msgstr ""
 
 msgid "Garbage collection information"
+msgstr ""
+
+msgid "Got rhythm?"
 msgstr ""
 
 msgid "Help"
@@ -622,9 +628,6 @@ msgid "Submit bug report"
 msgstr ""
 
 msgid "Submit bug report by mail"
-msgstr ""
-
-msgid "The repository holds the following entities"
 msgstr ""
 
 #, python-format
@@ -955,6 +958,9 @@ msgstr "used to define add permission on"
 msgid "add_permission_object"
 msgstr "has permission to add"
 
+msgid "add_relation"
+msgstr "add"
+
 #, python-format
 msgid "added %(etype)s #%(eid)s (%(title)s)"
 msgstr ""
@@ -1280,6 +1286,12 @@ msgid "click here to see created entity"
 msgstr ""
 
 msgid "click on the box to cancel the deletion"
+msgstr ""
+
+msgid "click to add a value"
+msgstr ""
+
+msgid "click to delete this value"
 msgstr ""
 
 msgid "click to edit this field"
@@ -2271,11 +2283,20 @@ msgstr ""
 msgid "granted to groups"
 msgstr ""
 
-msgid "graphical representation of the instance'schema"
+#, python-format
+msgid "graphical representation of %(appid)s data model"
 msgstr ""
 
 #, python-format
-msgid "graphical schema for %s"
+msgid ""
+"graphical representation of the %(etype)s entity type from %(appid)s data "
+"model"
+msgstr ""
+
+#, python-format
+msgid ""
+"graphical representation of the %(rtype)s relation type from %(appid)s data "
+"model"
 msgstr ""
 
 #, python-format
@@ -2799,6 +2820,9 @@ msgstr ""
 
 #, python-format
 msgid "no edited fields specified for entity %s"
+msgstr ""
+
+msgid "no related entity"
 msgstr ""
 
 msgid "no related project"
@@ -3710,6 +3734,9 @@ msgstr "has permission to update"
 
 msgid "update_permission_object"
 msgstr "has permission to update"
+
+msgid "update_relation"
+msgstr "update"
 
 msgid "updated"
 msgstr ""

@@ -19,13 +19,13 @@
 
 from yams import xy
 
-xy.register_prefix('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf')
-xy.register_prefix('http://purl.org/dc/elements/1.1/', 'dc')
-xy.register_prefix('http://xmlns.com/foaf/0.1/',       'foaf')
-xy.register_prefix('http://usefulinc.com/ns/doap#',    'doap')
-xy.register_prefix('http://rdfs.org/sioc/ns#',         'sioc')
-xy.register_prefix('http://www.w3.org/2002/07/owl#',   'owl')
-xy.register_prefix('http://purl.org/dc/terms/',        'dcterms')
+xy.register_prefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+xy.register_prefix('dc', 'http://purl.org/dc/elements/1.1/')
+xy.register_prefix('foaf', 'http://xmlns.com/foaf/0.1/')
+xy.register_prefix('doap', 'http://usefulinc.com/ns/doap#')
+xy.register_prefix('sioc', 'http://rdfs.org/sioc/ns#')
+xy.register_prefix('owl', 'http://www.w3.org/2002/07/owl#')
+xy.register_prefix('dcterms', 'http://purl.org/dc/terms/')
 
 xy.add_equivalence('creation_date', 'dc:date')
 xy.add_equivalence('created_by', 'dc:creator')

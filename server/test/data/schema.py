@@ -92,7 +92,7 @@ class Note(WorkflowableEntityType):
                       })
 
     migrated_from = SubjectRelation('Note')
-    attachment = SubjectRelation(('File', 'Image'))
+    attachment = SubjectRelation('File')
     inline1 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
     todo_by = SubjectRelation('CWUser')
 

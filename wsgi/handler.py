@@ -100,9 +100,8 @@ class CubicWebWSGIApplication(object):
     NOTE: no pyro
     """
 
-    def __init__(self, config, debug=None, vreg=None):
-        self.appli = CubicWebPublisher(config, debug=debug, vreg=vreg)
-        self.debugmode = debug
+    def __init__(self, config, vreg=None):
+        self.appli = CubicWebPublisher(config, vreg=vreg)
         self.config = config
         self.base_url = None
 #         self.base_url = config['base-url'] or config.default_base_url()

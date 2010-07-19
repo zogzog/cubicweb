@@ -206,7 +206,7 @@ class SchemaBasedRewriter(URLRewriter):
     __regid__ = 'schemabased'
     rules = [
         # rgxp : callback
-        (rgx('/search/(.+)'), build_rset(rql=r'Any X WHERE X has_text %(text)s',
+        (rgx('/search/(.+)'), build_rset(rql=r'Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s',
                                          rgxgroups=[('text', 1)])),
         ]
 

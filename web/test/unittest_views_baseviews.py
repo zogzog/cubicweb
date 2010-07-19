@@ -15,21 +15,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
 from cubicweb.devtools.testlib import CubicWebTC
-
+from cubicweb.utils import json
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
-from cubicweb.web import json
-loads = json.loads
 
 def loadjson(value):
-    return loads(html_unescape(value))
+    return json.loads(html_unescape(value))
 
 class VidFromRsetTC(CubicWebTC):
 

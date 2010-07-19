@@ -15,10 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""a query preprocesser to handle quick search shortcuts for cubicweb
-
-
-"""
+"""a query processor to handle quick search shortcuts for cubicweb"""
 
 __docformat__ = "restructuredtext en"
 
@@ -282,7 +279,13 @@ class QSPreProcessor(BaseQueryProcessor):
         if len(word2) == 1 and word2.isupper():
             return '%s %s' % (etype, word2),
         # else, suppose it's a shortcut like : Person Smith
-        rql = '%s %s WHERE %s' % (etype, etype[0], self._complete_rql(word2, etype))
+        restriction = self._complete_rql(word2, etype)
+        if ' has_text ' in restriction:
+            rql = '%s %s ORDERBY FTIRANK(%s) DESC WHERE %s' % (
+                etype, etype[0], etype[0], restriction)
+        else:
+            rql = '%s %s WHERE %s' % (
+                etype, etype[0], restriction)
         return rql, {'text': word2}
 
     def _three_words_query(self, word1, word2, word3):
@@ -314,10 +317,17 @@ class QSPreProcessor(BaseQueryProcessor):
         # by 'rtype'
         mainvar = etype[0]
         searchvar = mainvar  + '1'
-        rql =  '%s %s WHERE %s %s %s, %s' % (etype, mainvar,  # Person P
-                                             mainvar, rtype, searchvar, # P worksAt C
-                                             self._complete_rql(searchstr, etype,
-                                                                rtype=rtype, var=searchvar))
+        restriction = self._complete_rql(searchstr, etype, rtype=rtype,
+                                         var=searchvar)
+        if ' has_text ' in restriction:
+            rql =  ('%s %s ORDERBY FTIRANK(%s) DESC '
+                    'WHERE %s %s %s, %s' % (etype, mainvar, searchvar,
+                                            mainvar, rtype, searchvar, # P worksAt C
+                                            restriction))
+        else:
+            rql =  ('%s %s WHERE %s %s %s, %s' % (etype, mainvar,
+                                            mainvar, rtype, searchvar, # P worksAt C
+                                            restriction))
         return rql, {'text': searchstr}
 
 
@@ -352,7 +362,7 @@ class FullTextTranslator(BaseQueryProcessor):
 
     def preprocess_query(self, uquery):
         """suppose it's a plain text query"""
-        return 'Any X WHERE X has_text %(text)s', {'text': uquery}
+        return 'Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s', {'text': uquery}
 
 
 
@@ -385,7 +395,6 @@ class MagicSearchComponent(Component):
                     try:
                         return proc.process_query(uquery)
                     except TypeError, exc: # cw 3.5 compat
-                        print "EXC", exc
                         warn("[3.6] %s.%s.process_query() should now accept uquery "
                              "as unique argument, use self._cw instead of req"
                              % (proc.__module__, proc.__class__.__name__),

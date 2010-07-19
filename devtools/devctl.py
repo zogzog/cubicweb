@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""additional cubicweb-ctl commands and command handlers for cubicweb and cubicweb's
-cubes development
-
+"""additional cubicweb-ctl commands and command handlers for cubicweb and
+cubicweb's cubes development
 """
+
 __docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -67,7 +67,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         return None
     def main_config_file(self):
         return None
-    def init_log(self, debug=None):
+    def init_log(self):
         pass
     def load_configuration(self):
         pass
@@ -603,7 +603,7 @@ layout, and a full featured cube with "full" layout.',
         exclude = SKEL_EXCLUDE
         if self['layout'] == 'simple':
             exclude += ('sobjects.py*', 'precreate.py*', 'realdb_test*',
-                        'cubes.*', 'external_resources*')
+                        'cubes.*', 'uiprops.py*')
         copy_skeleton(skeldir, cubedir, context, exclude=exclude)
 
     def _ask_for_dependencies(self):
@@ -741,10 +741,21 @@ class GenerateSchema(Command):
             p = Popen((viewer, out))
             p.wait()
 
+
+class GenerateQUnitHTML(Command):
+    """Generate a QUnit html file to see test in your browser"""
+    name = "qunit-html"
+    arguments = '<test file> [<dependancy js file>...]'
+
+    def run(self, args):
+        from cubicweb.devtools.qunit import make_qunit_html
+        print make_qunit_html(args[0], args[1:])
+
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    #LiveServerCommand,
                    NewCubeCommand,
                    ExamineLogCommand,
                    GenerateSchema,
+                   GenerateQUnitHTML,
                    ))

@@ -584,7 +584,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
             kwargs[k] = getattr(v, 'eid', v)
         entity, rels = self.metagen.base_etype_dicts(etype)
         entity = copy(entity)
-        entity._related_cache = {}
+        entity.cw_clear_relation_cache()
         self.metagen.init_entity(entity)
         entity.update(kwargs)
         entity.edited_attributes = set(entity)

@@ -350,3 +350,47 @@ Javascript library: overview
 There is also javascript support for massmailing, gmap (google maps),
 fckcwconfig (fck editor), timeline, calendar, goa (CubicWeb over
 AppEngine), flot (charts drawing), tabs and bookmarks.
+
+API
+~~~
+
+.. toctree::
+    :maxdepth: 1
+    
+    js_api/index
+
+
+Testing javascript
+~~~~~~~~~~~~~~~~~~~~~~
+
+You with the ``cubicweb.qunit.QUnitTestCase`` can include standard Qunit tests
+inside the python unittest run . You simply have to define a new class that
+inherit from ``QUnitTestCase`` and register your javascript test file in the
+``all_js_tests`` lclass attribut. This  ``all_js_tests`` is a sequence a
+3-tuple (<test_file, [<dependencies> ,] [<data_files>]):
+
+The <test_file> should contains the qunit test. <dependencies> defines the list
+of javascript file that must be imported before the test script.  Dependencies
+are included their definition order. <data_files> are additional files copied in the
+test directory. both <dependencies> and <data_files> are optionnal.
+``jquery.js`` is preincluded in for all test.
+
+.. sourcecode:: python
+
+    from cubicweb.qunit import QUnitTestCase
+
+    class MyQUnitTest(QUnitTestCase):
+
+        all_js_tests = (
+            ("relative/path/to/my_simple_testcase.js",)
+            ("relative/path/to/my_qunit_testcase.js",(
+                "rel/path/to/dependency_1.js",
+                "rel/path/to/dependency_2.js",)),
+            ("relative/path/to/my_complexe_qunit_testcase.js",(
+                 "rel/path/to/dependency_1.js",
+                 "rel/path/to/dependency_2.js",
+               ),(
+                 "rel/path/file_dependency.html",
+                 "path/file_dependency.json")
+                ),
+            )

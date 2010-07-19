@@ -60,7 +60,6 @@ Ajax / javascript widgets
 .. autoclass:: cubicweb.web.formwidgets.AjaxWidget
 .. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
 
-.. kill or document AddComboBoxWidget
 .. kill or document StaticFileAutoCompletionWidget
 .. kill or document LazyRestrictedAutoCompletionWidget
 .. kill or document RestrictedAutoCompletionWidget
@@ -550,7 +549,7 @@ class DateTimePicker(TextInput):
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
-                   form._cw.external_resource('CALENDAR_ICON'),
+                   form._cw.uiprops['CALENDAR_ICON'],
                    form._cw._('calendar'), helperid) )
 
 
@@ -571,10 +570,10 @@ class JQueryDatePicker(FieldWidget):
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
         fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
-        req.add_onload(u'jqNode("%s").datepicker('
+        req.add_onload(u'cw.jqNode("%s").datepicker('
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
-                           domid, req.external_resource('CALENDAR_ICON'), fmt))
+                           domid, req.uiprops['CALENDAR_ICON'], fmt))
         if self.datestr is None:
             value = self.values(form, field)[0]
         else:
@@ -599,7 +598,7 @@ class JQueryTimePicker(FieldWidget):
     def _render(self, form, field, renderer):
         req = form._cw
         domid = field.dom_id(form, self.suffix)
-        req.add_onload(u'jqNode("%s").timePicker({selectedTime: "%s", step: %s, separator: "%s"})' % (
+        req.add_onload(u'cw.jqNode("%s").timePicker({selectedTime: "%s", step: %s, separator: "%s"})' % (
             domid, self.timestr, self.timesteps, self.separator))
         if self.timestr is None:
             value = self.values(form, field)[0]
@@ -776,24 +775,6 @@ class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
         return entity.view('combobox')
 
 
-class AddComboBoxWidget(Select):
-    def attributes(self, form, field):
-        attrs = super(AddComboBoxWidget, self).attributes(form, field)
-        init_ajax_attributes(attrs, 'AddComboBox')
-        # XXX entity form specific
-        entity = form.edited_entity
-        attrs['cubicweb:etype_to'] = entity.e_schema
-        etype_from = entity.e_schema.subjrels[field.name].objects(entity.e_schema)[0]
-        attrs['cubicweb:etype_from'] = etype_from
-        return attrs
-
-    def _render(self, form, field, renderer):
-        return super(AddComboBoxWidget, self)._render(form, field, renderer) + u'''
-<div id="newvalue">
-  <input type="text" id="newopt" />
-  <a href="javascript:noop()" id="add_newopt">&#160;</a></div>
-'''
-
 # more widgets #################################################################
 
 class IntervalWidget(FieldWidget):
@@ -954,7 +935,7 @@ class Button(Input):
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
         if self.icon:
-            img = tags.img(src=form._cw.external_resource(self.icon), alt=self.icon)
+            img = tags.img(src=form._cw.uiprops[self.icon], alt=self.icon)
         else:
             img = u''
         return tags.button(img + xml_escape(label), escapecontent=False,
@@ -985,7 +966,7 @@ class ImgButton(object):
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)
-        imgsrc = form._cw.external_resource(self.imgressource)
+        imgsrc = form._cw.uiprops[self.imgressource]
         return '<a id="%(domid)s" href="%(href)s">'\
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
             'label': label, 'imgsrc': imgsrc,

@@ -15,20 +15,70 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for SIOC interfaces
+"""Specific views for SIOC (Semantically-Interlinked Online Communities)
 
+http://sioc-project.org
 """
+
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.view import EntityView
-from cubicweb.selectors import implements
+from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
+from cubicweb.selectors import implements, adaptable
 from cubicweb.interfaces import ISiocItem, ISiocContainer
+
+
+class ISIOCItemAdapter(EntityAdapter):
+    """interface for entities which may be represented as an ISIOC items"""
+    __regid__ = 'ISIOCItem'
+    __select__ = implements(ISiocItem, warn=False) # XXX for bw compat, should be abstract
+
+    @implements_adapter_compat('ISIOCItem')
+    def isioc_content(self):
+        """return item's content"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('ISIOCItem')
+    def isioc_container(self):
+        """return container entity"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('ISIOCItem')
+    def isioc_type(self):
+        """return container type (post, BlogPost, MailMessage)"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('ISIOCItem')
+    def isioc_replies(self):
+        """return replies items"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('ISIOCItem')
+    def isioc_topics(self):
+        """return topics items"""
+        raise NotImplementedError
+
+
+class ISIOCContainerAdapter(EntityAdapter):
+    """interface for entities which may be represented as an ISIOC container"""
+    __regid__ = 'ISIOCContainer'
+    __select__ = implements(ISiocContainer, warn=False) # XXX for bw compat, should be abstract
+
+    @implements_adapter_compat('ISIOCContainer')
+    def isioc_type(self):
+        """return container type (forum, Weblog, MailingList)"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('ISIOCContainer')
+    def isioc_items(self):
+        """return contained items"""
+        raise NotImplementedError
+
 
 class SIOCView(EntityView):
     __regid__ = 'sioc'
-    __select__ = EntityView.__select__ & implements(ISiocItem, ISiocContainer)
+    __select__ = adaptable('ISIOCItem', 'ISIOCContainer')
     title = _('sioc')
     templatable = False
     content_type = 'text/xml'
@@ -52,48 +102,51 @@ class SIOCView(EntityView):
 
 class SIOCContainerView(EntityView):
     __regid__ = 'sioc_element'
-    __select__ = EntityView.__select__ & implements(ISiocContainer)
+    __select__ = adaptable('ISIOCContainer')
     templatable = False
     content_type = 'text/xml'
 
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)
-        sioct = xml_escape(entity.isioc_type())
+        isioc = entity.cw_adapt_to('ISIOCContainer')
+        isioct = isioc.isioc_type()
         self.w(u'<sioc:%s rdf:about="%s">\n'
-               % (sioct, xml_escape(entity.absolute_url())))
+               % (isioct, xml_escape(entity.absolute_url())))
         self.w(u'<dcterms:title>%s</dcterms:title>'
                % xml_escape(entity.dc_title()))
         self.w(u'<dcterms:created>%s</dcterms:created>'
-               % entity.creation_date)
+               % entity.creation_date) # XXX format
         self.w(u'<dcterms:modified>%s</dcterms:modified>'
-               % entity.modification_date)
+               % entity.modification_date) # XXX format
         self.w(u'<!-- FIXME : here be items -->')#entity.isioc_items()
-        self.w(u'</sioc:%s>\n' % sioct)
+        self.w(u'</sioc:%s>\n' % isioct)
 
 
 class SIOCItemView(EntityView):
     __regid__ = 'sioc_element'
-    __select__ = EntityView.__select__ & implements(ISiocItem)
+    __select__ = adaptable('ISIOCItem')
     templatable = False
     content_type = 'text/xml'
 
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)
-        sioct = xml_escape(entity.isioc_type())
+        isioc = entity.cw_adapt_to('ISIOCItem')
+        isioct = isioc.isioc_type()
         self.w(u'<sioc:%s rdf:about="%s">\n'
-               %  (sioct, xml_escape(entity.absolute_url())))
+               % (isioct, xml_escape(entity.absolute_url())))
         self.w(u'<dcterms:title>%s</dcterms:title>'
                % xml_escape(entity.dc_title()))
         self.w(u'<dcterms:created>%s</dcterms:created>'
-               % entity.creation_date)
+               % entity.creation_date) # XXX format
         self.w(u'<dcterms:modified>%s</dcterms:modified>'
-               % entity.modification_date)
-        if entity.content:
-            self.w(u'<sioc:content>%s</sioc:content>'''
-                   % xml_escape(entity.isioc_content()))
-        if entity.related('entry_of'):
+               % entity.modification_date) # XXX format
+        content = isioc.isioc_content()
+        if content:
+            self.w(u'<sioc:content>%s</sioc:content>' % xml_escape(content))
+        container = isioc.isioc_container()
+        if container:
             self.w(u'<sioc:has_container rdf:resource="%s"/>\n'
-                   % xml_escape(entity.isioc_container().absolute_url()))
+                   % xml_escape(container.absolute_url()))
         if entity.creator:
             self.w(u'<sioc:has_creator>\n')
             self.w(u'<sioc:User rdf:about="%s">\n'
@@ -103,5 +156,5 @@ class SIOCItemView(EntityView):
             self.w(u'</sioc:has_creator>\n')
         self.w(u'<!-- FIXME : here be topics -->')#entity.isioc_topics()
         self.w(u'<!-- FIXME : here be replies -->')#entity.isioc_replies()
-        self.w(u' </sioc:%s>\n' % sioct)
+        self.w(u' </sioc:%s>\n' % isioct)
 
