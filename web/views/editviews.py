@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Some views used to help to the edition process
+"""Some views used to help to the edition process"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -62,7 +61,7 @@ class SearchForAssociationView(EntityView):
         rql, args = entity.cw_unrelated_rql(rtype, etype, role,
                                             ordermethod='fetch_order',
                                             vocabconstraints=False)
-        rset = self._cw.execute(rql, args, tuple(args))
+        rset = self._cw.execute(rql, args)
         return rset, 'list', "search-associate-content", True
 
 
