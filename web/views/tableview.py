@@ -345,7 +345,7 @@ class InitialTableView(TableView):
             mainindex = self.main_var_index()
         if mainindex is not None:
             actions = self.form_filter(divid, displaycols, displayactions,
-                                       paginate, True)
+                                       displayfilter=True, paginate=paginate, hidden=True)
         else:
             actions = ()
         if not subvid and 'subvid' in self._cw.form:
