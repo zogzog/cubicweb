@@ -865,23 +865,30 @@ class ServerMigrationHelper(MigrationHelper):
                               if (rschema.final or rschema.inlined)
                               and not rschema in PURE_VIRTUAL_RTYPES])
             self.sqlexec('INSERT INTO %s%s(%s) SELECT %s FROM %s%s' % (
-                SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname))
+                SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname),
+                         ask_confirm=False)
             # old entity type has not been added to the schema, can't gather it
             new = schema.eschema(newname)
             oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s', {'on': oldname},
                                   ask_confirm=False)[0][0]
             # backport old type relations to new type
             # XXX workflows, other relations?
-            self.rqlexec('SET X from_entity NET WHERE X from_entity OET, '
-                         'NOT EXISTS(X2 from_entity NET, X relation_type XRT, X2 relation_type XRT, '
-                         'X to_entity XTE, X2 to_entity XTE), '
-                         'OET eid %(o)s, NET eid %(n)s',
-                         {'o': oldeid, 'n': new.eid}, ask_confirm=False)
-            self.rqlexec('SET X to_entity NET WHERE X to_entity OET, '
-                         'NOT EXISTS(X2 to_entity NET, X relation_type XRT, X2 relation_type XRT, '
-                         'X from_entity XTE, X2 from_entity XTE), '
-                         'OET eid %(o)s, NET eid %(n)s',
-                         {'o': oldeid, 'n': new.eid}, ask_confirm=False)
+            for r1, rr1 in [('from_entity', 'to_entity'),
+                            ('to_entity', 'from_entity')]:
+                self.rqlexec('SET X %(r1)s NET WHERE X %(r1)s OET, '
+                             'NOT EXISTS(X2 %(r1)s NET, X relation_type XRT, '
+                             'X2 relation_type XRT, X %(rr1)s XTE, X2 %(rr1)s XTE), '
+                             'OET eid %%(o)s, NET eid %%(n)s' % locals(),
+                             {'o': oldeid, 'n': new.eid}, ask_confirm=False)
+            # backport is / is_instance_of relation to new type
+            for rtype in ('is', 'is_instance_of'):
+                self.sqlexec('UPDATE %s_relation SET eid_to=%s WHERE eid_to=%s'
+                             % (rtype, new.eid, oldeid), ask_confirm=False)
+            # delete relations using SQL to avoid relations content removal
+            # triggered by schema synchronization hooks
+            self.sqlexec('DELETE FROM cw_CWRelation '
+                         'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
+                         {'eid': oldeid}, ask_confirm=False)
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
