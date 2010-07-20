@@ -330,7 +330,8 @@ function loadRemote(url, form, reqtype, sync) {
             data: form,
             async: false
         });
-        if (result) {
+        // check result.responseText instead of result to avoid error encountered with IE
+        if (result.responseText) {
             // XXX no good reason to force json here, 
             // it should depends on request content-type
             result = cw.evalJSON(result.responseText);
