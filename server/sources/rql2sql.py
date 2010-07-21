@@ -818,26 +818,35 @@ class SQLGenerator(object):
 
     def _visit_inlined_relation(self, relation):
         lhsvar, _, rhsvar, rhsconst = relation_info(relation)
-        # we are sure here to have a lhsvar
-        assert lhsvar is not None
-        if isinstance(relation.parent, Not) \
-               and len(lhsvar.stinfo['relations']) > 1 \
-               and (rhsvar is not None and rhsvar._q_invariant):
-            self._state.done.add(relation.parent)
-            return '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
+        # we are sure lhsvar is not None
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
-        if rhsconst is not None:
-            return '%s=%s' % (lhssql, rhsconst.accept(self))
-        if isinstance(rhsvar, Variable) and not rhsvar.name in self._varmap:
+        if rhsvar is None:
+            moresql = None
+        else:
+            moresql = self._extra_join_sql(relation, lhssql, rhsvar)
+        if isinstance(relation.parent, Not):
+            self._state.done.add(relation.parent)
+            if rhsvar is not None and rhsvar._q_invariant:
+                sql = '%s IS NULL' % lhssql
+            else:
+                # column != 1234 may not get back rows where column is NULL...
+                sql = '(%s IS NULL OR %s!=%s)' % (
+                    lhssql, lhssql, (rhsvar or rhsconst).accept(self))
+        elif rhsconst is not None:
+            sql = '%s=%s' % (lhssql, rhsconst.accept(self))
+        elif isinstance(rhsvar, Variable) and rhsvar._q_invariant and \
+                 not rhsvar.name in self._varmap:
             # if the rhs variable is only linked to this relation, this mean we
             # only want the relation to exists, eg NOT NULL in case of inlined
             # relation
-            if rhsvar._q_invariant:
-                sql = self._extra_join_sql(relation, lhssql, rhsvar)
-                if sql:
-                    return sql
-                return '%s IS NOT NULL' % lhssql
-        return '%s=%s' % (lhssql, rhsvar.accept(self))
+            if moresql is not None:
+                return moresql
+            return '%s IS NOT NULL' % lhssql
+        else:
+            sql = '%s=%s' % (lhssql, rhsvar.accept(self))
+        if moresql is None:
+            return sql
+        return '%s AND %s' % (sql, moresql)
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
         if termconst or not termvar._q_invariant:
@@ -849,7 +858,7 @@ class SQLGenerator(object):
                 termsql = termvar.accept(self)
                 yield '%s.%s=%s' % (rid, relfield, termsql)
             extrajoin = self._extra_join_sql(relation, '%s.%s' % (rid, relfield), termvar)
-            if extrajoin:
+            if extrajoin is not None:
                 yield extrajoin
 
     def _visit_relation(self, relation, rschema):
@@ -1234,7 +1243,7 @@ class SQLGenerator(object):
             # no principal defined, relation is necessarily the principal and
             # so nothing to return here
             pass
-        return ''
+        return None
 
     def _temp_table_scope(self, select, table):
         scope = 9999

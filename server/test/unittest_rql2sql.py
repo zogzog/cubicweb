@@ -271,7 +271,7 @@ WHERE _X.cw_from_entity=44 AND _SE.cw_eid=44 AND _X.cw_relation_type=139 AND _R.
     ('Any O WHERE NOT S ecrit_par O, S eid 1, S inline1 P, O inline2 P',
      '''SELECT _O.cw_eid
 FROM cw_Note AS _S, cw_Personne AS _O
-WHERE NOT (_S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
+WHERE (_S.cw_ecrit_par IS NULL OR _S.cw_ecrit_par!=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
 
     ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
@@ -832,7 +832,7 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid), cw_Note AS _S
-WHERE NOT (_S.cw_inline1=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
     ]
 
 VIRTUAL_VARS = [
@@ -982,7 +982,7 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any N WHERE NOT N ecrit_par P, P nom "toto"',
      '''SELECT _N.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _P.cw_nom=toto'''),
+WHERE (_N.cw_ecrit_par IS NULL OR _N.cw_ecrit_par!=_P.cw_eid) AND _P.cw_nom=toto'''),
 
     ('Any P WHERE NOT N ecrit_par P, P nom "toto"',
      '''SELECT _P.cw_eid
@@ -1002,7 +1002,7 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any P WHERE NOT N ecrit_par P, P is Personne, N eid 512',
      '''SELECT _P.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _N.cw_eid=512'''),
+WHERE (_N.cw_ecrit_par IS NULL OR _N.cw_ecrit_par!=_P.cw_eid) AND _N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
      # XXX "_T.cw_destination_state IS NOT NULL" could be avoided here but it's not worth it
@@ -1030,11 +1030,12 @@ WHERE NOT (EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123))''
     ('DISTINCT Any X WHERE X from_entity OET, NOT X from_entity NET, OET name "Image", NET eid 1',
      '''SELECT DISTINCT _X.cw_eid
 FROM cw_CWAttribute AS _X, cw_CWEType AS _OET
-WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image
+WHERE _X.cw_from_entity=_OET.cw_eid AND (_X.cw_from_entity IS NULL OR _X.cw_from_entity!=1) AND _OET.cw_name=Image
 UNION
 SELECT DISTINCT _X.cw_eid
 FROM cw_CWEType AS _OET, cw_CWRelation AS _X
-WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image'''),
+WHERE _X.cw_from_entity=_OET.cw_eid AND (_X.cw_from_entity IS NULL OR _X.cw_from_entity!=1) AND _OET.cw_name=Image'''),
+
     ]
 
 INTERSECT = [
