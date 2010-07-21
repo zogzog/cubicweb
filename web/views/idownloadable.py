@@ -118,6 +118,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         adapter = entity.cw_adapt_to('IDownloadable')
         contenttype = adapter.download_content_type()
         if contenttype.startswith('image/'):
+            self._cw.add_js('cubicweb.image.js')
             self.wview('image', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
                        link=True, klass='contentimage')
         else:
@@ -160,11 +161,11 @@ class ImageView(EntityView):
 
     title = _('image')
 
-    def call(self):
+    def call(self, **kwargs):
         rset = self.cw_rset
         for i in xrange(len(rset)):
             self.w(u'<div class="efile">')
-            self.wview(self.__regid__, rset, row=i, col=0)
+            self.wview(self.__regid__, rset, row=i, col=0, **kwargs)
             self.w(u'</div>')
 
     def cell_call(self, row, col, link=False, **kwargs):
