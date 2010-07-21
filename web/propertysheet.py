@@ -23,6 +23,10 @@ import re
 import os
 import os.path as osp
 
+TYPE_CHECKS = [('STYLESHEETS', list), ('JAVASCRIPTS', list),
+               ('STYLESHEETS_IE', list), ('STYLESHEETS_PRINT', list),
+               ]
+
 class lazystr(object):
     def __init__(self, string, context):
         self.string = string
@@ -54,6 +58,11 @@ class PropertySheet(dict):
         scriptglobals = self.context.copy()
         scriptglobals['__file__'] = fpath
         execfile(fpath, scriptglobals, self)
+        for name, type in TYPE_CHECKS:
+            if name in self:
+                if not isinstance(self[name], type):
+                    msg = "Configuration error: %s.%s should be a %s" % (fpath, name, type)
+                    raise Exception(msg)
         self._propfile_mtime[fpath] = os.stat(fpath)[-2]
         self._ordered_propfiles.append(fpath)
 
