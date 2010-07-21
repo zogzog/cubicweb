@@ -580,7 +580,7 @@ class RDefDelOp(MemSchemaOperation):
 class RDefUpdateOp(MemSchemaOperation):
     """actually update some properties of a relation definition"""
     rschema = rdefkey = values = None # make pylint happy
-    oldvalues = None
+    rdef = oldvalues = None
     indexed_changed = null_allowed_changed = False
 
     def precommit_event(self):
@@ -604,6 +604,8 @@ class RDefUpdateOp(MemSchemaOperation):
                                UpdateFTIndexOp)
 
     def revertprecommit_event(self):
+        if self.rdef is None:
+            return
         # revert changes on in memory schema
         self.rdef.update(self.oldvalues)
         # revert changes on database
