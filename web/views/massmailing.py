@@ -58,7 +58,7 @@ def recipient_vocabulary(form, field):
 class MassMailingForm(forms.FieldsForm):
     __regid__ = 'massmailing'
 
-    needs_js = ('cubicweb.widgets.js',)
+    needs_js = ('cubicweb.edition.js', 'cubicweb.widgets.js',)
     needs_css = ('cubicweb.mailform.css')
     domid = 'sendmail'
     action = 'sendmail'

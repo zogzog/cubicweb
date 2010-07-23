@@ -95,6 +95,7 @@ class TreePathView(EntityView):
             self.w(self.separator)
         entity.view(vid or self.item_vid, w=self.w)
 
+
 class TreeComboBoxView(TreePathView):
     """display folder in edition's combobox"""
     __regid__ = 'combobox'
