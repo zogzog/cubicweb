@@ -91,6 +91,7 @@ def templatable_view(cls, req, rset, *args, **kwargs):
         return 0
     return view.templatable
 
+
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
     __regid__ = 'main-template'
@@ -472,10 +473,15 @@ class LogFormView(View):
         self.w(u'<div id="loginContent">\n')
         if showmessage and self._cw.message:
             self.w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
-        if self._cw.vreg.config['auth-mode'] != 'http':
-            # Cookie authentication
-            self.login_form(id)
-        self.w(u'</div></div>\n')
+        config = self._cw.vreg.config
+        if config['auth-mode'] != 'http':
+            self.login_form(id) # Cookie authentication
+        self.w(u'</div>')
+        if self._cw.https and config.anonymous_user()[0]:
+            path = config['base-url'] + self._cw.relative_path()
+            self.w(u'<div class="loginMessage"><a href="%s">%s</a></div>\n'
+                   % (path, self._cw._('No account? Try public access at %s') % path))
+        self.w(u'</div>\n')
 
     def login_form(self, id):
         cw = self._cw
@@ -489,6 +495,7 @@ class LogFormView(View):
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)
+
 
 def login_form_url(req):
     if req.https:
