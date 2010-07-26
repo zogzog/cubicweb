@@ -462,15 +462,21 @@ class adaptable(appobject_selectable):
       (usually entities) should be adaptable. One of them should be selectable
       when multiple identifiers are given.
     """
-    # being adaptable to an interface takes precedence other is_instance('Any'),
-    # hence return 2 (is_instance('Any') score is 1)
-    selectable_score = 2
     def __init__(self, *regids):
         super(adaptable, self).__init__('adapters', *regids)
 
     def __call__(self, cls, req, **kwargs):
         kwargs.setdefault('accept_none', False)
-        return super(adaptable, self).__call__(cls, req, **kwargs)
+        # being adaptable to an interface should takes precedence other is_instance('Any'),
+        # but not other explicit is_instance('SomeEntityType'), and:
+        # * is_instance('Any') score is 1
+        # * is_instance('SomeEntityType') score is at least 2
+        score = super(adaptable, self).__call__(cls, req, **kwargs)
+        if score >= 2:
+            return score - 0.5
+        if score == 1:
+            return score + 0.5
+        return score
 
 # rset selectors ##############################################################
 
