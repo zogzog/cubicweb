@@ -71,7 +71,7 @@ class TreeMixIn(object):
             _done = set()
         for child in self.children():
             if child.eid in _done:
-                self.error('loop in %s tree', self.__regid__.lower())
+                self.error('loop in %s tree: %s', self.__regid__.lower(), child)
                 continue
             yield child
             _done.add(child.eid)
@@ -94,7 +94,7 @@ class TreeMixIn(object):
         parent = self
         while parent:
             if parent.eid in path:
-                self.error('loop in %s tree', self.__regid__.lower())
+                self.error('loop in %s tree: %s', self.__regid__.lower(), parent)
                 break
             path.append(parent.eid)
             try:
