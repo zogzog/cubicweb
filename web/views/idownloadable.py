@@ -113,7 +113,6 @@ class IDownloadablePrimaryView(primary.PrimaryView):
     __select__ = adaptable('IDownloadable')
 
     def render_entity_attributes(self, entity):
-        super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
         self.w(u'<div class="content">')
         adapter = entity.cw_adapt_to('IDownloadable')
         contenttype = adapter.download_content_type()
@@ -121,7 +120,9 @@ class IDownloadablePrimaryView(primary.PrimaryView):
             self._cw.add_js('cubicweb.image.js')
             self.wview('image', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
                        link=True, klass='contentimage')
+            super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
         else:
+            super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
             self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
             self.render_data(entity, contenttype, 'text/html')
         self.w(u'</div>')
