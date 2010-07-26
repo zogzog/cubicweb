@@ -135,17 +135,6 @@ class WebConfiguration(CubicWebConfiguration):
           "Should be 0 or greater than repository\'s session-time.",
           'group': 'web', 'level': 2,
           }),
-        ('cleanup-session-time',
-         {'type' : 'time',
-          'default': '24h',
-          'help': 'duration of inactivity after which a connection '
-          'will be closed, to limit memory consumption (avoid sessions that '
-          'never expire and cause memory leak when http-session-time is 0). '
-          'So even if http-session-time is 0 and the user don\'t close his '
-          'browser, he will have to reauthenticate after this time of '
-          'inactivity. Default to 24h.',
-          'group': 'web', 'level': 3,
-          }),
         ('cleanup-anonymous-session-time',
          {'type' : 'time',
           'default': '5min',

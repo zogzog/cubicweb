@@ -507,10 +507,12 @@ class Connection(object):
         return DBAPIRequest(self.vreg, DBAPISession(self))
 
     def check(self):
-        """raise `BadConnectionId` if the connection is no more valid"""
+        """raise `BadConnectionId` if the connection is no more valid, else
+        return its latest activity timestamp.
+        """
         if self._closed is not None:
             raise ProgrammingError('Closed connection')
-        self._repo.check_session(self.sessionid)
+        return self._repo.check_session(self.sessionid)
 
     def set_session_props(self, **props):
         """raise `BadConnectionId` if the connection is no more valid"""

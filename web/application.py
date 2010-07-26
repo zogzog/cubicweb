@@ -31,7 +31,7 @@ from rql import BadRQLQuery
 from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
-    RepositoryError, CW_EVENT_MANAGER)
+    RepositoryError, BadConnectionId, CW_EVENT_MANAGER)
 from cubicweb.dbapi import DBAPISession
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
@@ -48,47 +48,42 @@ class AbstractSessionManager(component.Component):
 
     def __init__(self, vreg):
         self.session_time = vreg.config['http-session-time'] or None
-        if self.session_time is not None:
-            assert self.session_time > 0
-            self.cleanup_session_time = self.session_time
-        else:
-            self.cleanup_session_time = vreg.config['cleanup-session-time'] or 1440 * 60
-            assert self.cleanup_session_time > 0
-        self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
-        assert self.cleanup_anon_session_time > 0
         self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
+        interval = (self.session_time or 0) / 2.
         if vreg.config.anonymous_user() is not None:
-            self.clean_sessions_interval = max(
-                5 * 60, min(self.cleanup_session_time / 2.,
-                            self.cleanup_anon_session_time / 2.))
-        else:
-            self.clean_sessions_interval = max(
-                5 * 60,
-                self.cleanup_session_time / 2.)
+            self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
+            assert self.cleanup_anon_session_time > 0
+            if self.session_time is not None:
+                self.cleanup_anon_session_time = min(self.session_time,
+                                                     self.cleanup_anon_session_time)
+            interval = self.cleanup_anon_session_time / 2.
+        # we don't want to check session more than once every 5 minutes
+        self.clean_sessions_interval = max(5 * 60, interval)
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
         time. Return the number of sessions which have been closed.
         """
         self.debug('cleaning http sessions')
+        session_time = self.session_time
         closed, total = 0, 0
         for session in self.current_sessions():
-            no_use_time = (time() - session.last_usage_time)
             total += 1
-            if session.anonymous_session:
-                if no_use_time >= self.cleanup_anon_session_time:
-                    self.close_session(session)
-                    closed += 1
-            elif no_use_time >= self.cleanup_session_time:
+            try:
+                last_usage_time = session.cnx.check()
+            except BadConnectionId:
                 self.close_session(session)
                 closed += 1
+            else:
+                no_use_time = (time() - last_usage_time)
+                if session.anonymous_session:
+                    if no_use_time >= self.cleanup_anon_session_time:
+                        self.close_session(session)
+                        closed += 1
+                elif session_time is not None and no_use_time >= session_time:
+                    self.close_session(session)
+                    closed += 1
         return closed, total - closed
-
-    def has_expired(self, session):
-        """return True if the web session associated to the session is expired
-        """
-        return not (self.session_time is None or
-                    time() < session.last_usage_time + self.session_time)
 
     def current_sessions(self):
         """return currently open sessions"""
@@ -213,8 +208,6 @@ class CookieSessionHandler(object):
                 except AuthenticationError:
                     req.remove_cookie(cookie, self.SESSION_VAR)
                     raise
-        # remember last usage time for web session tracking
-        session.last_usage_time = time()
 
     def get_session(self, req, sessionid):
         return self.session_manager.get_session(req, sessionid)
@@ -224,8 +217,6 @@ class CookieSessionHandler(object):
         cookie = req.get_cookie()
         cookie[self.SESSION_VAR] = session.sessionid
         req.set_cookie(cookie, self.SESSION_VAR, maxage=None)
-        # remember last usage time for web session tracking
-        session.last_usage_time = time()
         if not session.anonymous_session:
             self._postlogin(req)
         return session

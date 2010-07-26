@@ -74,7 +74,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         self.repo = vreg.config.repository(vreg)
         self.log_queries = vreg.config['query-log-file']
         self.authinforetreivers = sorted(vreg['webauth'].possible_objects(vreg),
-                                    key=lambda x: x.order)
+                                         key=lambda x: x.order)
         # 2-uple login / password, login is None when no anonymous access
         # configured
         self.anoninfo = vreg.config.anonymous_user()
@@ -98,25 +98,11 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         if login and session.login != login:
             raise InvalidSession('login mismatch')
         try:
-            lock = session.reconnection_lock
-        except AttributeError:
-            lock = session.reconnection_lock = Lock()
-        # need to be locked two avoid duplicated reconnections on concurrent
-        # requests
-        with lock:
-            cnx = session.cnx
-            try:
-                # calling cnx.user() check connection validity, raise
-                # BadConnectionId on failure
-                user = cnx.user(req)
-            except BadConnectionId:
-                # check if a connection should be automatically restablished
-                if (login is None or login == session.login):
-                    cnx = self._authenticate(session.login, session.authinfo)
-                    user = cnx.user(req)
-                    session.cnx = cnx
-                else:
-                    raise InvalidSession('bad connection id')
+            # calling cnx.user() check connection validity, raise
+            # BadConnectionId on failure
+            user = session.cnx.user(req)
+        except BadConnectionId:
+            raise InvalidSession('bad connection id')
         return user
 
     def authenticate(self, req):

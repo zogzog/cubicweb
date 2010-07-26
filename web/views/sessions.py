@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """web session component: by dfault the session is actually the db connection
 object :/
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from cubicweb.web import InvalidSession
@@ -51,9 +51,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if not sessionid in self._sessions:
             raise InvalidSession()
         session = self._sessions[sessionid]
-        if self.has_expired(session):
-            self.close_session(session)
-            raise InvalidSession()
         try:
             user = self.authmanager.validate_session(req, session)
         except InvalidSession:

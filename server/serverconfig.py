@@ -120,10 +120,16 @@ class ServerConfiguration(CubicWebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'level': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
           }),
-        ('session-time',
+        ('cleanup-session-time',
          {'type' : 'time',
-          'default': '30min',
-          'help': 'session expiration time, default to 30 minutes',
+          'default': '24h',
+          'help': 'duration of inactivity after which a session '
+          'will be closed, to limit memory consumption (avoid sessions that '
+          'never expire and cause memory leak when http-session-time is 0, or '
+          'because of bad client that never closes their connection). '
+          'So notice that even if http-session-time is 0 and the user don\'t '
+          'close his browser, he will have to reauthenticate after this time '
+          'of inactivity. Default to 24h.',
           'group': 'main', 'level': 3,
           }),
         ('connections-pool-size',

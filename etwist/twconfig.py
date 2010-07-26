@@ -76,12 +76,6 @@ class TwistedConfiguration(WebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'level': WebConfiguration.mode == 'system'
           }),
-        ('session-time',
-         {'type' : 'time',
-          'default': '30min',
-          'help': 'session expiration time, default to 30 minutes',
-          'group': 'main', 'level': 1,
-          }),
         ('pyro-server',
          {'type' : 'yn',
           # pyro is only a recommends by default, so don't activate it here

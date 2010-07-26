@@ -118,10 +118,15 @@ class ProcessInformationView(StartupView):
         if sessions:
             w(u'<ul>')
             for session in sessions:
+                try:
+                    last_usage_time = session.cnx.check()
+                except BadConnectionId:
+                    w(u'<li>%s (INVALID)</li>' % session.sessionid)
+                    continue
                 w(u'<li>%s (%s: %s)<br/>' % (
                     session.sessionid,
                     _('last usage'),
-                    strftime(dtformat, localtime(session.last_usage_time))))
+                    strftime(dtformat, localtime(last_usage_time))))
                 dict_to_html(w, session.data)
                 w(u'</li>')
             w(u'</ul>')

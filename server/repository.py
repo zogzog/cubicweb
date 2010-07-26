@@ -267,7 +267,10 @@ class Repository(object):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3., self.clean_sessions)
+            self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
+            assert self.cleanup_session_time > 0
+            cleanup_session_interval = min(60*60, self.cleanup_session_time / 3)
+            self.looping_task(cleanup_session_interval, self.clean_sessions)
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
             self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)
@@ -622,8 +625,10 @@ class Repository(object):
             session.reset_pool()
 
     def check_session(self, sessionid):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        self._get_session(sessionid, setpool=False)
+        """raise `BadConnectionId` if the connection is no more valid, else
+        return its latest activity timestamp.
+        """
+        return self._get_session(sessionid, setpool=False).timestamp
 
     def get_shared_data(self, sessionid, key, default=None, pop=False):
         """return the session's data dictionary"""
@@ -771,7 +776,7 @@ class Repository(object):
         """close sessions not used since an amount of time specified in the
         configuration
         """
-        mintime = time() - self.config['session-time']
+        mintime = time() - self.cleanup_session_time
         self.debug('cleaning session unused since %s',
                    strftime('%T', localtime(mintime)))
         nbclosed = 0
