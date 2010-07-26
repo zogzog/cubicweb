@@ -223,25 +223,31 @@ class NextPrevNavigationComponent(EntityVComponent):
             textsize = self._cw.property_value('navigation.short-line-size')
             self.w(u'<div class="prevnext">')
             if previous:
-                self.w(u'<div class="previousEntity left">')
-                self.w(self.previous_link(previous, textsize))
-                self.w(u'</div>')
-                self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
-                                              % xml_escape(previous.absolute_url()))
+                self.previous_div(previous, textsize)
             if next:
-                self.w(u'<div class="nextEntity right">')
-                self.w(self.next_link(next, textsize))
-                self.w(u'</div>')
-                self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
-                                              % xml_escape(next.absolute_url()))
+                self.next_div(next, textsize)
             self.w(u'</div>')
             self.w(u'<div class="clear"></div>')
+
+    def previous_div(self, previous, textsize):
+        self.w(u'<div class="previousEntity left">')
+        self.w(self.previous_link(previous, textsize))
+        self.w(u'</div>')
+        self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
+                                      % xml_escape(previous.absolute_url()))
 
     def previous_link(self, previous, textsize):
         return u'<a href="%s" title="%s">&lt;&lt; %s</a>' % (
             xml_escape(previous.absolute_url()),
             self._cw._('i18nprevnext_previous'),
             xml_escape(cut(previous.dc_title(), textsize)))
+
+    def next_div(self, next, textsize):
+        self.w(u'<div class="nextEntity right">')
+        self.w(self.next_link(next, textsize))
+        self.w(u'</div>')
+        self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
+                                      % xml_escape(next.absolute_url()))
 
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
