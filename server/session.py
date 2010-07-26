@@ -618,16 +618,20 @@ class Session(RequestSessionBase):
 
     # shared data handling ###################################################
 
-    def get_shared_data(self, key, default=None, pop=False):
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
-        if pop:
-            return self.data.pop(key, default)
+        if txdata:
+            data = self.transaction_data
         else:
-            return self.data.get(key, default)
+            data = self.data
+        if pop:
+            return data.pop(key, default)
+        else:
+            return data.get(key, default)
 
-    def set_shared_data(self, key, value, querydata=False):
+    def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
-        if querydata:
+        if txdata:
             self.transaction_data[key] = value
         else:
             self.data[key] = value

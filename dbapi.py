@@ -313,19 +313,17 @@ class DBAPIRequest(RequestSessionBase):
 
     # low level session data management #######################################
 
-    def get_shared_data(self, key, default=None, pop=False):
-        """return value associated to `key` in shared data"""
-        return self.cnx.get_shared_data(key, default, pop)
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
+        """see :meth:`Connection.get_shared_data`"""
+        return self.cnx.get_shared_data(key, default, pop, txdata)
 
-    def set_shared_data(self, key, value, querydata=False):
-        """set value associated to `key` in shared data
-
-        if `querydata` is true, the value will be added to the repository
-        session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
-        """
-        return self.cnx.set_shared_data(key, value, querydata)
+    def set_shared_data(self, key, value, txdata=False, querydata=None):
+        """see :meth:`Connection.set_shared_data`"""
+        if querydata is not None:
+            txdata = querydata
+            warn('[3.10] querydata argument has been renamed to txdata',
+                 DeprecationWarning, stacklevel=2)
+        return self.cnx.set_shared_data(key, value, txdata)
 
     # server session compat layer #############################################
 
@@ -520,23 +518,29 @@ class Connection(object):
             raise ProgrammingError('Closed connection')
         self._repo.set_session_props(self.sessionid, props)
 
-    def get_shared_data(self, key, default=None, pop=False):
-        """return value associated to `key` in shared data"""
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        return self._repo.get_shared_data(self.sessionid, key, default, pop)
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
+        """return value associated to key in the session's data dictionary or
+        session's transaction's data if `txdata` is true.
 
-    def set_shared_data(self, key, value, querydata=False):
-        """set value associated to `key` in shared data
+        If pop is True, value will be removed from the dictionnary.
 
-        if `querydata` is true, the value will be added to the repository
-        session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
+        If key isn't defined in the dictionnary, value specified by the
+        `default` argument will be returned.
         """
         if self._closed is not None:
             raise ProgrammingError('Closed connection')
-        return self._repo.set_shared_data(self.sessionid, key, value, querydata)
+        return self._repo.get_shared_data(self.sessionid, key, default, pop, txdata)
+
+    def set_shared_data(self, key, value, txdata=False):
+        """set value associated to `key` in shared data
+
+        if `txdata` is true, the value will be added to the repository session's
+        transaction's data which are cleared on commit/rollback of the current
+        transaction.
+        """
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
+        return self._repo.set_shared_data(self.sessionid, key, value, txdata)
 
     def get_schema(self):
         """Return the schema currently used by the repository.
