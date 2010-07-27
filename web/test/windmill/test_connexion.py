@@ -9,15 +9,20 @@ def test_connect():
     client = WindmillTestClient(__name__)
 
     client.open(url=u'/')
+    client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u"$('#loginForm').is(':visible')")
     client.type(text=LOGIN, id=u'__login')
     client.type(text=PASSWORD, id=u'__password')
+
     client.execJS(js=u"$('#loginForm').submit()")
     client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u'$(\'.message\').text() == "welcome %s !"' % LOGIN)
     client.open(url=u'/logout')
+    client.waits.forPageLoad(timeout=u'20000')
     client.open(url=u'/')
+    client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u"$('#loginForm').is(':visible')")
+
 
 def test_wrong_connect():
     client = WindmillTestClient(__name__)
@@ -32,4 +37,5 @@ def test_wrong_connect():
     client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertTextIn(validator=u'authentication failure', id=u'loginBox')
     client.open(url=u'/')
+    client.waits.forPageLoad(timeout=u'20000')
     client.asserts.assertJS(js=u"$('#loginForm').is(':visible')")
