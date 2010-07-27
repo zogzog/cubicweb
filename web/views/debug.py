@@ -89,7 +89,7 @@ class ProcessInformationView(StartupView):
                    % (element, xml_escape(unicode(stats[element])),
                       element.endswith('percent') and '%' or '' ))
         w(u'</table>')
-        if req.cnx._cnxtype == 'inmemory':
+        if req.cnx._cnxtype == 'inmemory' and req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
             sessions = repo._sessions.values()
             if sessions:
@@ -112,21 +112,22 @@ class ProcessInformationView(StartupView):
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('data directory url'), req.datadir_url))
         w(u'</table>')
-        from cubicweb.web.application import SESSION_MANAGER
-        sessions = SESSION_MANAGER.current_sessions()
-        w(u'<h3>%s</h3>' % _('opened web sessions'))
-        if sessions:
-            w(u'<ul>')
-            for session in sessions:
-                w(u'<li>%s (%s: %s)<br/>' % (
-                    session.sessionid,
-                    _('last usage'),
-                    strftime(dtformat, localtime(session.last_usage_time))))
-                dict_to_html(w, session.data)
-                w(u'</li>')
-            w(u'</ul>')
-        else:
-            w(u'<p>%s</p>' % _('no web sessions found'))
+        if req.user.is_in_group('managers'):
+            from cubicweb.web.application import SESSION_MANAGER
+            sessions = SESSION_MANAGER.current_sessions()
+            w(u'<h3>%s</h3>' % _('opened web sessions'))
+            if sessions:
+                w(u'<ul>')
+                for session in sessions:
+                    w(u'<li>%s (%s: %s)<br/>' % (
+                        session.sessionid,
+                        _('last usage'),
+                        strftime(dtformat, localtime(session.last_usage_time))))
+                    dict_to_html(w, session.data)
+                    w(u'</li>')
+                w(u'</ul>')
+            else:
+                w(u'<p>%s</p>' % _('no web sessions found'))
 
 
 
