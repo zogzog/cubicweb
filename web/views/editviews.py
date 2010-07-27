@@ -89,7 +89,7 @@ class ComboboxView(EntityView):
     __regid__ = 'combobox'
     title = None
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the combo-box view for an entity: same as text out of context view
         by default
         """

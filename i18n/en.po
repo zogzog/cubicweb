@@ -521,6 +521,10 @@ msgstr "New workflow"
 msgid "New WorkflowTransition"
 msgstr "New workflow-transition"
 
+#, python-format
+msgid "No account? Try public access at %s"
+msgstr ""
+
 msgid "No result matching query"
 msgstr ""
 
