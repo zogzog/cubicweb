@@ -540,6 +540,10 @@ msgstr "Nouveau workflow"
 msgid "New WorkflowTransition"
 msgstr "Nouvelle transition workflow"
 
+#, python-format
+msgid "No account? Try public access at %s"
+msgstr "Pas de compte ? Accédez au site public : %s"
+
 msgid "No result matching query"
 msgstr "Aucun résultat ne correspond à la requête"
 
