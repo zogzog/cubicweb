@@ -1449,7 +1449,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
         two queries are needed since passwords are stored crypted, so we have
         to fetch the salt first
         """
-        args = {'login': login, 'pwd' : password}
+        args = {'login': login, 'pwd' : None}
         if password is not None:
             rset = self.source.syntax_tree_search(session, self._passwd_rqlst, args)
             try:
