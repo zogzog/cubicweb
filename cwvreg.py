@@ -616,7 +616,7 @@ class CubicWebVRegistry(VRegistry):
                                    or iface
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                    self.debug('kicking appobject %s (no implemented '
+                    self.debug('unregister %s (no implemented '
                                'interface among %s)', obj, ifaces)
                     self.unregister(obj)
             # since 3.9: remove appobjects which depending on other, unexistant
@@ -625,14 +625,14 @@ class CubicWebVRegistry(VRegistry):
                 try:
                     registry = self[regname]
                 except RegistryNotFound:
-                    self.debug('kicking %s (no registry %s)', obj, regname)
+                    self.debug('unregister %s (no registry %s)', obj, regname)
                     self.unregister(obj)
                     continue
                 for regid in regids:
                     if registry.get(regid):
                         break
                 else:
-                    self.debug('kicking %s (no %s object in registry %s)',
+                    self.debug('unregister %s (no %s object in registry %s)',
                                obj, ' or '.join(regids), regname)
                     self.unregister(obj)
         super(CubicWebVRegistry, self).initialization_completed()

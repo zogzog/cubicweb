@@ -372,7 +372,7 @@ class VRegistry(dict):
         for registryname in class_registries(obj, registryname):
             registry = self.setdefault(registryname)
             registry.register(obj, oid=oid, clear=clear)
-            self.debug('registered appobject %s in registry %s with id %s',
+            self.debug('register %s in %s[\'%s\']',
                        vname, registryname, oid or class_regid(obj))
         self._loadedmods.setdefault(obj.__module__, {})[classid(obj)] = obj
 
