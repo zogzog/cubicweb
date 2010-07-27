@@ -443,7 +443,8 @@ class GenericRelationsWidget(fw.FieldWidget):
         for rschema, role, related in field.relations_table(form):
             # already linked entities
             if related:
-                w(u'<tr><th class="labelCol">%s</th>' % rschema.display_name(req, role))
+                label = rschema.display_name(req, role, context=form.edited_entity.__regid__)
+                w(u'<tr><th class="labelCol">%s</th>' % label)
                 w(u'<td>')
                 w(u'<ul>')
                 for viewparams in related:

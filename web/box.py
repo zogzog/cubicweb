@@ -165,7 +165,8 @@ class RelatedEntityBoxTemplate(EntityBoxTemplate):
         role = get_role(self)
         self.w(u'<div class="sideBox">')
         self.wview('sidebox', entity.related(self.rtype, role, limit=limit),
-                   title=display_name(self._cw, self.rtype, role))
+                   title=display_name(self._cw, self.rtype, role,
+                                      context=entity.__regid__))
         self.w(u'</div>')
 
 
@@ -180,7 +181,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     def cell_call(self, row, col, view=None, **kwargs):
         self._cw.add_js('cubicweb.ajax.js')
         entity = self.cw_rset.get_entity(row, col)
-        box = SideBoxWidget(display_name(self._cw, self.rtype), self.__regid__)
+        title = display_name(self._cw, self.rtype, get_role(self), context=entity.__regid__)
+        box = SideBoxWidget(title, self.__regid__)
         related = self.related_boxitems(entity)
         unrelated = self.unrelated_boxitems(entity)
         box.extend(related)
@@ -292,7 +294,7 @@ class AjaxEditRelationBoxTemplate(EntityBoxTemplate):
         divid = domid(self.__regid__) + unicode(entity.eid)
         w(u'<div class="sideBox" id="%s%s">' % (domid(self.__regid__), entity.eid))
         w(u'<div class="sideBoxTitle"><span>%s</span></div>' %
-               rdef.rtype.display_name(req, self.role))
+               rdef.rtype.display_name(req, self.role, context=entity.__regid__))
         w(u'<div class="sideBox"><div class="sideBoxBody">')
         if related:
             w(u'<table>')
