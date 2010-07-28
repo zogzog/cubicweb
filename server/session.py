@@ -779,7 +779,7 @@ class Session(RequestSessionBase):
                     except:
                         self.critical('error while %sing', trstate,
                                       exc_info=sys.exc_info())
-                self.info('%s session %s done', trstate, self.id)
+                self.debug('%s session %s done', trstate, self.id)
                 return self.transaction_uuid(set=False)
         finally:
             self._touch()
