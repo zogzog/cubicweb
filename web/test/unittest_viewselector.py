@@ -41,7 +41,7 @@ USERACTIONS = [actions.UserPreferencesAction,
 SITEACTIONS = [actions.SiteConfigurationAction,
                actions.ManageAction,
                schema.ViewSchemaAction,
-               actions.SiteInfoAction]
+               debug.SiteInfoAction]
 FOOTERACTIONS = [wdoc.HelpAction,
                  wdoc.ChangeLogAction,
                  wdoc.AboutAction,
