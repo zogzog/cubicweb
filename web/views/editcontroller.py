@@ -177,7 +177,7 @@ class EditController(basecontrollers.ViewController):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
         entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
-        entity.eid = formparams['eid']
+        entity.eid = valerror_eid(formparams['eid'])
         is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff
         entity.cw_adapt_to('IEditControl').pre_web_edit()
