@@ -1076,14 +1076,14 @@ class MSPlanner(SSPlanner):
 
         the rqlst should not be tagged at this point
         """
-        if server.DEBUG & server.DBG_MS:
-            print '-'*80
-            print 'PLANNING', rqlst
         # preprocess deals with security insertion and returns a new syntax tree
         # which have to be executed to fulfill the query: according
         # to permissions for variable's type, different rql queries may have to
         # be executed
         plan.preprocess(rqlst)
+        if server.DEBUG & server.DBG_MS:
+            print '-'*80
+            print 'PLANNING', rqlst
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
         steps = self._union_plan(plan, ppis)
