@@ -161,7 +161,7 @@ class RepositoryTC(CubicWebTC):
     def test_check_session(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEquals(repo.check_session(cnxid), None)
+        self.assertIsInstance(repo.check_session(cnxid), float)
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.check_session, cnxid)
 
