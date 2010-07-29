@@ -49,7 +49,7 @@ from logilab.common.testlib import mock_object
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
-from cubicweb import AuthenticationError
+from cubicweb import AuthenticationError, ExecutionError
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
@@ -117,26 +117,18 @@ class ServerMigrationHelper(MigrationHelper):
             super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
-        """execute a migration script
-        in interactive mode,  display the migration script path, ask for
-        confirmation and execute it if confirmed
-        """
         try:
-            if migrscript.endswith('.sql'):
-                if self.execscript_confirm(migrscript):
-                    sqlexec(open(migrscript).read(), self.session.system_sql)
-            elif migrscript.endswith('.py') or migrscript.endswith('.txt'):
-                return super(ServerMigrationHelper, self).cmd_process_script(
-                    migrscript, funcname, *args, **kwargs)
-            else:
-                print >> sys.stderr
-                print >> sys.stderr, ('-> ignoring %s, only .py .sql and .txt scripts are considered' %
-                       migrscript)
-                print >> sys.stderr
+            super(ServerMigrationHelper, self).cmd_process_script(
+                  migrscript, funcname, *args, **kwargs)
             self.commit()
+        except ExecutionError, err:
+            print >> sys.stderr, "-> %s" % err
         except:
             self.rollback()
             raise
+
+    # Adjust docstring
+    cmd_process_script.__doc__ = MigrationHelper.cmd_process_script.__doc__
 
     # server specific migration methods ########################################
 

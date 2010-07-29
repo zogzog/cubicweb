@@ -24,13 +24,15 @@ import os
 import logging
 import tempfile
 from os.path import exists, join, basename, splitext
+from itertools import chain
 
+from logilab.common import IGNORED_EXTENSIONS
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
 from logilab.common.shellutils import ASK
 from logilab.common.changelog import Version
 
-from cubicweb import ConfigurationError
+from cubicweb import ConfigurationError, ExecutionError
 
 
 def filter_scripts(config, directory, fromversion, toversion, quiet=True):
@@ -51,8 +53,7 @@ def filter_scripts(config, directory, fromversion, toversion, quiet=True):
         return []
     result = []
     for fname in os.listdir(directory):
-        if fname.endswith('.pyc') or fname.endswith('.pyo') \
-               or fname.endswith('~'):
+        if fname.endswith(IGNORED_EXTENSIONS):
             continue
         fpath = join(directory, fname)
         try:
@@ -73,9 +74,6 @@ def filter_scripts(config, directory, fromversion, toversion, quiet=True):
         result.append((tver, fpath))
     # be sure scripts are executed in order
     return sorted(result)
-
-
-IGNORED_EXTENSIONS = ('.swp', '~')
 
 
 def execscript_confirm(scriptpath):
@@ -285,6 +283,16 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         Display the migration script path, ask for confirmation and execute it
         if confirmed
 
+        Allowed input file formats for migration scripts:
+        - `python` (.py)
+        - `sql` (.sql)
+        - `doctest` (.txt or .rst)
+
+        .. warning:: sql migration scripts are not available in web-only instance
+
+        You can pass script parameters with using double dash (--) in the
+        command line
+
         Context environment can have these variables defined:
         - __name__ : will be determine by funcname parameter
         - __file__ : is the name of the script if it exists
@@ -295,13 +303,20 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         :params args: optional arguments for funcname
         :keyword scriptargs: optional arguments of the script
         """
+        ftypes = {'python':  ('.py',),
+                  'doctest': ('.txt', '.rst'),
+                  'sql':     ('.sql',)}
+        # sql migration scripts are not available in web-only instance
+        if not hasattr(self, "session"):
+            ftypes.pop('sql')
         migrscript = os.path.normpath(migrscript)
-        if migrscript.endswith('.py'):
-            script_mode = 'python'
-        elif migrscript.endswith(('.txt', '.rst')):
-            script_mode = 'doctest'
+        for (script_mode, ftype) in ftypes.items():
+            if migrscript.endswith(ftype):
+                break
         else:
-            raise Exception('This is not a valid cubicweb shell input')
+            ftypes = ', '.join(chain(*ftypes.values()))
+            msg = 'ignoring %s, not a valid script extension (%s)'
+            raise ExecutionError(msg % (migrscript, ftypes))
         if not self.execscript_confirm(migrscript):
             return
         scriptlocals = self._create_context().copy()
@@ -322,6 +337,9 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     self.critical('no %s in script %s', funcname, migrscript)
                     return None
                 return func(*args, **kwargs)
+        elif script_mode == 'sql':
+            from cubicweb.server.sqlutils import sqlexec
+            sqlexec(open(migrscript).read(), self.session.system_sql)
         else: # script_mode == 'doctest'
             import doctest
             doctest.testfile(migrscript, module_relative=False,
