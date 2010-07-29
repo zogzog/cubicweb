@@ -92,6 +92,8 @@ class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
             # see windmill.bin.admin_options.Firebug
             import windmill
             windmill.settings['INSTALL_FIREBUG'] = 'firebug'
+            windmill.settings['MOZILLA_PLUGINS'].append('/usr/share/mozilla-extensions/')
+            windmill.settings['MOZILLA_PLUGINS'].append('/usr/share/xul-ext/')
 
         self.windmill_shell_objects['start_' + self.browser]()
         self.windmill_shell_objects['do_test'](self.test_dir,
