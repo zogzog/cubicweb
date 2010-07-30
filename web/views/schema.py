@@ -304,7 +304,7 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
         _ = self._cw._
         # inheritance
         if entity.specializes:
-            self.w(u'<div>%s' % _('Parent classes:'))
+            self.w(u'<div>%s' % _('Parent class:'))
             self.wview('csv', entity.related('specializes', 'subject'))
             self.w(u'</div>')
         if entity.reverse_specializes:
