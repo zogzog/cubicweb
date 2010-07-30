@@ -418,17 +418,27 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_score_entity_selector(self):
         image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))
-        # image primary view priority
+        # image/ehtml primary view priority
         req = self.request()
         rset = req.execute('File X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
-        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('bim'))
-        # image primary view priority
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'ehtml', req, rset=rset)
+
+        fileobj = self.request().create_entity('File', data_name=u'bim.html', data=Binary('<html>bam</html'))
+        # image/ehtml primary view priority
+        req = self.request()
+        rset = req.execute('File X WHERE X data_name "bim.html"')
+        self.assertIsInstance(self.vreg['views'].select('ehtml', req, rset=rset),
+                              idownloadable.EHTMLView)
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
+
+        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('boum'))
+        # image/ehtml primary view priority
         req = self.request()
         rset = req.execute('File X WHERE X data_name "bim.txt"')
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
-
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'ehtml', req, rset=rset)
 
 
     def _test_view(self, vid, rql, args):
