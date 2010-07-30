@@ -23,7 +23,6 @@ _ = unicode
 from cStringIO import StringIO
 from warnings import warn
 
-from cubicweb.utils import json
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
@@ -33,6 +32,7 @@ from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
+from cubicweb.uilib import domid, js
 from cubicweb.schema import display_name
 from cubicweb.vregistry import classid
 
@@ -506,12 +506,11 @@ class ReloadableMixIn(object):
 
     def build_update_js_call(self, cbname, msg):
         rql = self.cw_rset.printable_rql()
-        return "javascript:userCallbackThenUpdateUI('%s', '%s', %s, %s, '%s', '%s')" % (
-            cbname, self.id, json.dumps(rql), json.dumps(msg),
-            self.__registry__, self.div_id())
+        return "javascript: %s" % js.userCallbackThenUpdateUI(
+            cbname, self.__regid__, rql, msg, self.__registry__, self.domid)
 
     def build_reload_js_call(self, cbname, msg):
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (cbname, json.dumps(msg))
+        return "javascript: %s" % js.userCallbackThenReloadPage(cbname, msg)
 
     build_js = build_update_js_call # expect updatable component by default
 
