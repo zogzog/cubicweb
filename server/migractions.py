@@ -118,9 +118,8 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         try:
-            super(ServerMigrationHelper, self).cmd_process_script(
+            return super(ServerMigrationHelper, self).cmd_process_script(
                   migrscript, funcname, *args, **kwargs)
-            self.commit()
         except ExecutionError, err:
             print >> sys.stderr, "-> %s" % err
         except:

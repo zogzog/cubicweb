@@ -340,6 +340,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         elif script_mode == 'sql':
             from cubicweb.server.sqlutils import sqlexec
             sqlexec(open(migrscript).read(), self.session.system_sql)
+            self.commit()
         else: # script_mode == 'doctest'
             import doctest
             doctest.testfile(migrscript, module_relative=False,
