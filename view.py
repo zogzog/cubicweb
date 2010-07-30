@@ -335,7 +335,8 @@ class View(AppObject):
         """ return the url of the entity creation form for a given entity type"""
         return self._cw.build_url('add/%s' % etype, **kwargs)
 
-    def field(self, label, value, row=True, show_label=True, w=None, tr=True, table=False):
+    def field(self, label, value, row=True, show_label=True, w=None, tr=True,
+              table=False):
         """read-only field"""
         if w is None:
             w = self.w

@@ -271,13 +271,14 @@ class AbstractFacet(AppObject):
     __registry__ = 'facets'
     cw_property_defs = {
         _('visible'): dict(type='Boolean', default=True,
-                           help=_('display the box or not')),
+                           help=_('display the facet or not')),
         _('order'):   dict(type='Int', default=99,
-                           help=_('display order of the box')),
+                           help=_('display order of the facet')),
         _('context'): dict(type='String', default='',
                            # None <-> both
                            vocabulary=(_('tablefilter'), _('facetbox'), ''),
-                           help=_('context where this box should be displayed')),
+                           help=_('context where this facet should be displayed, '
+                                  'leave empty for both')),
         }
     visible = True
     context = ''
