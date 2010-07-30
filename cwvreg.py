@@ -205,7 +205,7 @@ from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
                       CW_EVENT_MANAGER)
 from cubicweb.utils import dump_class
-from cubicweb.vregistry import VRegistry, Registry, class_regid
+from cubicweb.vregistry import VRegistry, Registry, class_regid, classid
 from cubicweb.rtags import RTAGS
 
 def clear_rtag_objects():
@@ -617,7 +617,7 @@ class CubicWebVRegistry(VRegistry):
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
                     self.debug('unregister %s (no implemented '
-                               'interface among %s)', obj, ifaces)
+                               'interface among %s)', classid(obj), ifaces)
                     self.unregister(obj)
             # since 3.9: remove appobjects which depending on other, unexistant
             # appobjects
@@ -625,7 +625,8 @@ class CubicWebVRegistry(VRegistry):
                 try:
                     registry = self[regname]
                 except RegistryNotFound:
-                    self.debug('unregister %s (no registry %s)', obj, regname)
+                    self.debug('unregister %s (no registry %s)', classid(obj),
+                               regname)
                     self.unregister(obj)
                     continue
                 for regid in regids:
@@ -633,7 +634,7 @@ class CubicWebVRegistry(VRegistry):
                         break
                 else:
                     self.debug('unregister %s (no %s object in registry %s)',
-                               obj, ' or '.join(regids), regname)
+                               classid(obj), ' or '.join(regids), regname)
                     self.unregister(obj)
         super(CubicWebVRegistry, self).initialization_completed()
         for rtag in RTAGS:
