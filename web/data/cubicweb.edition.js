@@ -586,7 +586,7 @@ function validateForm(formid, action, onsuccess, onfailure) {
     try {
         var zipped = cw.utils.formContents(formid);
         var args = ajaxFuncArgs('validate_form', null, action, zipped[0], zipped[1]);
-        var d = loadRemote('json', args);
+        var d = loadRemote('json', args, 'POST');
     } catch(ex) {
         log('got exception', ex);
         return false;

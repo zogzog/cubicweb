@@ -151,6 +151,11 @@ class ImplementsSelectorTC(CubicWebTC):
         cls = self.vreg['etypes'].etype_class('Personne')
         self.failIf(is_instance('Societe').score_class(cls, self.request()))
 
+    def test_yams_inheritance(self):
+        cls = self.vreg['etypes'].etype_class('Transition')
+        self.assertEquals(is_instance('BaseTransition').score_class(cls, self.request()),
+                          3)
+
 
 class MatchUserGroupsTC(CubicWebTC):
     def test_owners_group(self):
