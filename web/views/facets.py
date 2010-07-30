@@ -97,9 +97,9 @@ class FilterBox(BoxTemplate):
             return
         if vid is None:
             vid = req.form.get('vid')
-        if self.bk_linkbox_template:
-            self.display_bookmark_link(rset)
         w = self.w
+        if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
+            w(self.bookmark_link(rset))
         w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
             divid, xml_escape(json_dumps([divid, vid, paginate, self.facetargs()]))))
         w(u'<fieldset>')
@@ -113,22 +113,22 @@ class FilterBox(BoxTemplate):
             wdg.render(w=self.w)
         w(u'</fieldset>\n</form>\n')
 
-    def display_bookmark_link(self, rset):
-        eschema = self._cw.vreg.schema.eschema('Bookmark')
-        if eschema.has_perm(self._cw, 'add'):
-            bk_path = 'rql=%s' % self._cw.url_quote(rset.printable_rql())
-            if self._cw.form.get('vid'):
-                bk_path += '&vid=%s' % self._cw.url_quote(self._cw.form['vid'])
-            bk_path = 'view?' + bk_path
-            bk_title = self._cw._('my custom search')
-            linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
-            bk_add_url = self._cw.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
-            bk_base_url = self._cw.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
-            bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
-                    xml_escape(bk_base_url),
-                    xml_escape(bk_add_url),
-                    self._cw._('bookmark this search'))
-            self.w(self.bk_linkbox_template % bk_link)
+    def bookmark_link(self, rset):
+        req = self._cw
+        bk_path = u'rql=%s' % req.url_quote(rset.printable_rql())
+        if req.form.get('vid'):
+            bk_path += u'&vid=%s' % req.url_quote(req.form['vid'])
+        bk_path = u'view?' + bk_path
+        bk_title = req._('my custom search')
+        linkto = u'bookmarked_by:%s:subject' % req.user.eid
+        bkcls = req.vreg['etypes'].etype_class('Bookmark')
+        bk_add_url = bkcls.cw_create_url(req, path=bk_path, title=bk_title,
+                                         __linkto=linkto)
+        bk_base_url = bkcls.cw_create_url(req, title=bk_title, __linkto=linkto)
+        bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
+                xml_escape(bk_base_url), xml_escape(bk_add_url),
+                req._('bookmark this search'))
+        return self.bk_linkbox_template % bk_link
 
     def get_facets(self, rset, rqlst, mainvar):
         return self._cw.vreg['facets'].poss_visible_objects(
