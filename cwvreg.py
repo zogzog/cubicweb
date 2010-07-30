@@ -310,11 +310,10 @@ class ETypeRegistry(CWRegistry):
     @cached
     def parent_classes(self, etype):
         if etype == 'Any':
-            return [self.etype_class('Any')]
-        eschema = self.schema.eschema(etype)
-        parents = [self.etype_class(e.type) for e in eschema.ancestors()]
-        parents.append(self.etype_class('Any'))
-        return parents
+            return (), self.etype_class('Any')
+        parents = tuple(self.etype_class(e.type)
+                        for e in self.schema.eschema(etype).ancestors())
+        return parents, self.etype_class('Any')
 
     @cached
     def etype_class(self, etype):

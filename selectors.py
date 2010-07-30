@@ -212,24 +212,24 @@ from cubicweb.schema import split_expression
 
 from cubicweb.appobject import traced_selection # XXX for bw compat
 
-def score_interface(etypesreg, cls_or_inst, cls, iface):
+def score_interface(etypesreg, eclass, iface):
     """Return XXX if the give object (maybe an instance or class) implements
     the interface.
     """
     if getattr(iface, '__registry__', None) == 'etypes':
         # adjust score if the interface is an entity class
-        parents = etypesreg.parent_classes(cls_or_inst.__regid__)
-        if iface is cls:
+        parents, any = etypesreg.parent_classes(eclass.__regid__)
+        if iface is eclass:
             return len(parents) + 4
-        if iface is parents[-1]: # Any
+        if iface is any: # Any
             return 1
-        for index, basecls in enumerate(reversed(parents[:-1])):
+        for index, basecls in enumerate(reversed(parents)):
             if iface is basecls:
                 return index + 3
         return 0
     # XXX iface in implements deprecated in 3.9
-    if implements_iface(cls_or_inst, iface):
-        # implenting an interface takes precedence other special Any interface
+    if implements_iface(eclass, iface):
+        # implementing an interface takes precedence other special Any interface
         return 2
     return 0
 
@@ -699,9 +699,6 @@ class implements(EClassSelector):
                            ','.join(str(s) for s in self.expected_ifaces))
 
     def score_class(self, eclass, req):
-        return self.score_interfaces(req, eclass, eclass)
-
-    def score_interfaces(self, req, cls_or_inst, cls):
         score = 0
         etypesreg = req.vreg['etypes']
         for iface in self.expected_ifaces:
@@ -711,7 +708,7 @@ class implements(EClassSelector):
                     iface = etypesreg.etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
-            score += score_interface(etypesreg, cls_or_inst, cls, iface)
+            score += score_interface(etypesreg, eclass, iface)
         return score
 
 def _reset_is_instance_cache(vreg):
@@ -744,9 +741,6 @@ class is_instance(EClassSelector):
                            ','.join(str(s) for s in self.expected_etypes))
 
     def score_class(self, eclass, req):
-        return self.score_etypes(req, eclass, eclass)
-
-    def score_etypes(self, req, cls_or_inst, cls):
         # cache on vreg to avoid reloading issues
         cache = req.vreg._is_instance_selector_cache
         try:
@@ -758,22 +752,20 @@ class is_instance(EClassSelector):
             expected_eclasses = cache[self] = []
             for etype in self.expected_etypes:
                 try:
-                    expected_eclasses.append(
-                        (etypesreg.etype_class(etype),
-                         etypesreg.parent_classes(etype))
-                        )
+                    expected_eclasses.append(etypesreg.etype_class(etype))
                 except KeyError:
                     continue # entity type not in the schema
+        parents, any = req.vreg['etypes'].parent_classes(eclass.__regid__)
         score = 0
-        for iface, parents in expected_eclasses:
+        for expectedcls in expected_eclasses:
             # adjust score according to class proximity
-            if iface is cls:
+            if expectedcls is eclass:
                 score += len(parents) + 4
-            elif iface is parents[-1]: # Any
+            elif expectedcls is any: # Any
                 score += 1
             else:
-                for index, basecls in enumerate(reversed(parents[:-1])):
-                    if iface is basecls:
+                for index, basecls in enumerate(reversed(parents)):
+                    if expectedcls is basecls:
                         score += index + 3
                         break
         return score
