@@ -169,7 +169,9 @@ class CreationFormView(EditionFormView):
 
     def url(self):
         """return the url associated with this view"""
-        return self.create_url(self._cw.form.get('etype'))
+        req = self._cw
+        return req.vreg["etypes"].etype_class(req.form['etype']).cw_create_url(
+            req)
 
     def submited_message(self):
         """return the message that will be displayed on successful edition"""

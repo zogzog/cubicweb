@@ -115,7 +115,8 @@ class BookmarksBox(box.UserRQLBoxTemplate):
             path = req.relative_path()
             # XXX if vtitle specified in params, extract it and use it as default value
             # for bookmark's title
-            url = self.create_url(self.etype, __linkto=linkto, path=path)
+            url = req.vreg['etypes'].etype_class('Bookmark').cw_create_url(
+                req, __linkto=linkto, path=path)
             boxmenu.append(self.mk_action(req._('bookmark this page'), url,
                                           category='manage', id='bookmark'))
             if rset:

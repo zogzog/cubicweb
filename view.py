@@ -319,21 +319,11 @@ class View(AppObject):
             clabel = vtitle
         return u'%s (%s)' % (clabel, self._cw.property_value('ui.site-title'))
 
-    def output_url_builder( self, name, url, args ):
-        self.w(u'<script language="JavaScript"><!--\n' \
-               u'function %s( %s ) {\n' % (name, ','.join(args) ) )
-        url_parts = url.split("%s")
-        self.w(u' url="%s"' % url_parts[0] )
-        for arg, part in zip(args, url_parts[1:]):
-            self.w(u'+str(%s)' % arg )
-            if part:
-                self.w(u'+"%s"' % part)
-        self.w('\n document.window.href=url;\n')
-        self.w('}\n-->\n</script>\n')
-
+    @deprecated('[3.10] use vreg["etypes"].etype_class(etype).cw_create_url(req)')
     def create_url(self, etype, **kwargs):
         """ return the url of the entity creation form for a given entity type"""
-        return self._cw.build_url('add/%s' % etype, **kwargs)
+        return self._cw.vreg["etypes"].etype_class(etype).cw_create_url(
+            self._cw, **kwargs)
 
     def field(self, label, value, row=True, show_label=True, w=None, tr=True, table=False):
         """read-only field"""
