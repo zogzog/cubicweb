@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""overrides some base views for cubicweb on google appengine
+"""overrides some base views for cubicweb on google appengine"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -88,7 +87,8 @@ def entity_types_no_count(self, eschemas):
         view = self.vreg.select('views', 'list', req, req.etype_rset(etype))
         url = view.url()
         etypelink = u'&#160;<a href="%s">%s</a>' % (xml_escape(url), label)
-        yield (label, etypelink, self.add_entity_link(eschema, req))
+        if eschema.has_perm(req, 'add'):
+            yield (label, etypelink, self.add_entity_link(etype))
 
 ManageView.entity_types = entity_types_no_count
 

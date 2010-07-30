@@ -159,15 +159,14 @@ class ManageView(StartupView):
             url = self._cw.build_url(etype)
             etypelink = u'&#160;<a href="%s">%s</a> (%d)' % (
                 xml_escape(url), label, nb)
-            yield (label, etypelink, self.add_entity_link(eschema, req))
+            if eschema.has_perm(req, 'add'):
+                yield (label, etypelink, self.add_entity_link(etype))
 
-    def add_entity_link(self, eschema, req):
-        """creates a [+] link for adding an entity if user has permission to do so"""
-        if not eschema.has_perm(req, 'add'):
-            return u''
+    def add_entity_link(self, etype):
+        """creates a [+] link for adding an entity"""
+        url = self._cw.vreg["etypes"].etype_class(etype).cw_create_url(self._cw)
         return u'[<a href="%s" title="%s">+</a>]' % (
-            xml_escape(self.create_url(eschema.type)),
-            self._cw.__('add a %s' % eschema))
+            xml_escape(url), self._cw.__('add a %s' % etype))
 
 
 class IndexView(ManageView):
