@@ -101,15 +101,12 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     subquery. This function check this and rewrite the rql syntax tree if
     necessary (in place). Return a boolean telling if the tree has been modified
     """
-    torewrite = set()
     modified = False
     for varname in tuple(unstable):
         var = select.defined_vars[varname]
         if not var.stinfo.get('optrelations'):
             continue
-        modified = True
         unstable.remove(varname)
-        torewrite.add(var)
         newselect = Select()
         newselect.need_distinct = False
         myunion = Union()
@@ -139,10 +136,17 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
                 var.stinfo['rhsrelations'].add(newrel)
                 if rel.optional in ('right', 'both'):
                     var.add_optional_relation(newrel)
+        if not select.where and not modified:
+            # oops, generated the same thing as the original select....
+            # restore original query, else we'll indefinitly loop
+            for var, rel in towrap_rels:
+                select.add_restriction(rel)
+            continue
+        modified = True
         # extract subquery solutions
         mysolutions = [sol.copy() for sol in solutions]
         cleanup_solutions(newselect, mysolutions)
-        newselect.set_possible_types(solutions)
+        newselect.set_possible_types(mysolutions)
         # full sub-query
         aliases = [VariableRef(select.get_variable(avar.name, i))
                    for i, avar in enumerate(newselect.selection)]

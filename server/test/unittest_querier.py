@@ -836,7 +836,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any X, NOW - CD WHERE X is Personne, X creation_date CD')
         self.failUnlessEqual(rset.description[0][1], 'Interval')
 
-    def test_select_subquery_aggregat(self):
+    def test_select_subquery_aggregat_1(self):
         # percent users by groups
         self.execute('SET X in_group G WHERE G name "users"')
         rset = self.execute('Any GN, COUNT(X)*100/T GROUPBY GN ORDERBY 2,1'
@@ -844,6 +844,17 @@ class QuerierTC(BaseQuerierTC):
                             ' WITH T BEING (Any COUNT(U) WHERE U is CWUser)')
         self.assertEquals(rset.rows, [[u'guests', 50], [u'managers', 50], [u'users', 100]])
         self.assertEquals(rset.description, [('String', 'Int'), ('String', 'Int'), ('String', 'Int')])
+
+    def test_select_subquery_aggregat_2(self):
+        expected = self.execute('Any X, 0, COUNT(T) GROUPBY X '
+                                'WHERE X is Workflow, T transition_of X').rows
+        rset = self.execute('''
+Any P1,B,E WHERE P1 identity P2 WITH
+  P1,B BEING (Any P,COUNT(T) GROUPBY P WHERE P is Workflow, T is Transition,
+              T? transition_of P, T type "auto"),
+  P2,E BEING (Any P,COUNT(T) GROUPBY P WHERE P is Workflow, T is Transition,
+              T? transition_of P, T type "normal")''')
+        self.assertEquals(sorted(rset.rows), sorted(expected))
 
     def test_select_subquery_const(self):
         rset = self.execute('Any X WITH X BEING ((Any NULL) UNION (Any "toto"))')
