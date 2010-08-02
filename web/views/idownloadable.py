@@ -121,6 +121,10 @@ class IDownloadablePrimaryView(primary.PrimaryView):
             self.wview('image', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
                        link=True, klass='contentimage')
             super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
+        elif contenttype.endswith('html'):
+            self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
+            self.wview('ehtml', entity.cw_rset, row=entity.cw_row, col=entity.cw_col,
+                       height='600px', width='100%')
         else:
             super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
             self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
@@ -156,11 +160,10 @@ class IDownloadableLineView(baseviews.OneLineView):
                (url, name, durl, self._cw._('download')))
 
 
-class ImageView(EntityView):
-    __regid__ = 'image'
-    __select__ = has_mimetype('image/')
+class AbstractEmbeddedView(EntityView):
+    __abstract__ = True
 
-    title = _('image')
+    _embedding_tag = None
 
     def call(self, **kwargs):
         rset = self.cw_rset
@@ -172,13 +175,29 @@ class ImageView(EntityView):
     def cell_call(self, row, col, link=False, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         adapter = entity.cw_adapt_to('IDownloadable')
-        imgtag = tags.img(src=adapter.download_url(),
-                          alt=(self._cw._('download %s') % adapter.download_file_name()),
-                          **kwargs)
+        tag = self._embedding_tag(src=adapter.download_url(),
+                                  alt=(self._cw._('download %s') % adapter.download_file_name()),
+                                  **kwargs)
         if link:
-            self.w(u'<a href="%s">%s</a>' % (entity.absolute_url(vid='download'),
-                                             imgtag))
+            self.w(u'<a href="%s">%s</a>' % (adapter.download_url(), tag))
         else:
-            self.w(imgtag)
+            self.w(tag)
+
+
+class ImageView(AbstractEmbeddedView):
+    __regid__ = 'image'
+    __select__ = has_mimetype('image/')
+
+    title = _('image')
+    _embedding_tag = tags.img
+
+
+class EHTMLView(AbstractEmbeddedView):
+    __regid__ = 'ehtml'
+    __select__ = has_mimetype('text/html')
+
+    title = _('embedded html')
+    _embedding_tag = tags.iframe
+
 
 

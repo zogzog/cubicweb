@@ -553,8 +553,8 @@ msgstr "Liste non exhausite des vues s'appliquant à ce type d'entité"
 msgid "OR"
 msgstr "OU"
 
-msgid "Parent classes:"
-msgstr "Classes parentes :"
+msgid "Parent class:"
+msgstr "Classe parente"
 
 msgid "Password"
 msgstr "Mot de passe"
@@ -1540,6 +1540,9 @@ msgstr "contexte dans lequel la boite devrait être affichée"
 msgid "context where this component should be displayed"
 msgstr "contexte où ce composant doit être affiché"
 
+msgid "context where this facet should be displayed, leave empty for both"
+msgstr ""
+
 msgid "control subject entity's relations order"
 msgstr "contrôle l'ordre des relations de l'entité sujet"
 
@@ -2044,11 +2047,17 @@ msgstr "ordre d'affichage de la boîte"
 msgid "display order of the component"
 msgstr "ordre d'affichage du composant"
 
+msgid "display order of the facet"
+msgstr "ordre d'affichage de la facette"
+
 msgid "display the box or not"
 msgstr "afficher la boîte ou non"
 
 msgid "display the component or not"
 msgstr "afficher le composant ou non"
+
+msgid "display the facet or not"
+msgstr "afficher la facette ou non"
 
 msgid ""
 "distinct label to distinguate between other permission entity of the same "
@@ -2096,6 +2105,9 @@ msgstr "courriels envoyés avec succès"
 
 msgid "embed"
 msgstr "embarqué"
+
+msgid "embedded html"
+msgstr "HTML contenu"
 
 msgid "embedding this url is forbidden"
 msgstr "l'inclusion de cette url est interdite"

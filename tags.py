@@ -48,6 +48,7 @@ h5 = tag('h5')
 tr = tag('tr')
 th = tag('th')
 td = tag('td')
+iframe = tag('iframe')
 
 def select(name, id=None, multiple=False, options=[], **attrs):
     if multiple:

@@ -542,7 +542,7 @@ msgstr ""
 msgid "OR"
 msgstr "O"
 
-msgid "Parent classes:"
+msgid "Parent class:"
 msgstr ""
 
 msgid "Password"
@@ -1519,6 +1519,9 @@ msgstr "Contexto en el cual la caja debe aparecer en el sistema"
 msgid "context where this component should be displayed"
 msgstr "Contexto en el cual el componente debe aparecer en el sistema"
 
+msgid "context where this facet should be displayed, leave empty for both"
+msgstr ""
+
 msgid "control subject entity's relations order"
 msgstr "Controla el orden de relaciones de la entidad sujeto"
 
@@ -2009,11 +2012,17 @@ msgstr "Orden de aparición de la caja"
 msgid "display order of the component"
 msgstr "Orden de aparición del componente"
 
+msgid "display order of the facet"
+msgstr ""
+
 msgid "display the box or not"
 msgstr "Mostrar la caja o no"
 
 msgid "display the component or not"
 msgstr "Mostrar el componente o no"
+
+msgid "display the facet or not"
+msgstr ""
 
 msgid ""
 "distinct label to distinguate between other permission entity of the same "
@@ -2061,6 +2070,9 @@ msgstr "Mensajes enviados con éxito"
 
 msgid "embed"
 msgstr "Incrustrado"
+
+msgid "embedded html"
+msgstr ""
 
 msgid "embedding this url is forbidden"
 msgstr "La inclusión de este url esta prohibida"
