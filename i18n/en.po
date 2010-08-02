@@ -534,7 +534,7 @@ msgstr ""
 msgid "OR"
 msgstr ""
 
-msgid "Parent classes:"
+msgid "Parent class:"
 msgstr ""
 
 msgid "Password"
@@ -1486,6 +1486,9 @@ msgstr ""
 msgid "context where this component should be displayed"
 msgstr ""
 
+msgid "context where this facet should be displayed, leave empty for both"
+msgstr ""
+
 msgid "control subject entity's relations order"
 msgstr ""
 
@@ -1966,10 +1969,16 @@ msgstr ""
 msgid "display order of the component"
 msgstr ""
 
+msgid "display order of the facet"
+msgstr ""
+
 msgid "display the box or not"
 msgstr ""
 
 msgid "display the component or not"
+msgstr ""
+
+msgid "display the facet or not"
 msgstr ""
 
 msgid ""
@@ -2015,6 +2024,9 @@ msgid "emails successfully sent"
 msgstr ""
 
 msgid "embed"
+msgstr ""
+
+msgid "embedded html"
 msgstr ""
 
 msgid "embedding this url is forbidden"
