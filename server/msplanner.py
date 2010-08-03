@@ -1441,13 +1441,14 @@ class TermsFiltererVisitor(object):
                     return None, node
             if not self._relation_supported(node):
                 raise UnsupportedBranch()
-        # don't copy type restriction unless this is the only relation for the
-        # rhs variable, else they'll be reinserted later as needed (else we may
-        # copy a type restriction while the variable is not actually used)
-        elif not any(self._relation_supported(rel)
-                     for rel in node.children[0].variable.stinfo['relations']):
-            rel, node = self.visit_default(node, newroot, terms)
-            return rel, node
+        # don't copy type restriction unless this is the only supported relation
+        # for the lhs variable, else they'll be reinserted later as needed (in
+        # other cases we may copy a type restriction while the variable is not
+        # actually used)
+        elif not (node.neged(strict=True) or
+                  any(self._relation_supported(rel)
+                      for rel in node.children[0].variable.stinfo['relations'])):
+            return self.visit_default(node, newroot, terms)
         else:
             raise UnsupportedBranch()
         rschema = self.schema.rschema(node.r_type)
