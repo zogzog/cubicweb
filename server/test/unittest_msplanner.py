@@ -2256,8 +2256,6 @@ class FakeVCSSource(AbstractSource):
     support_entities = {'Card': True, 'Note': True}
     support_relations = {'multisource_inlined_rel': True,
                          'multisource_rel': True}
-    #dont_cross_relations = set(('fiche', 'in_state'))
-    #cross_relations = set(('multisource_crossed_rel',))
 
     def syntax_tree_search(self, *args, **kwargs):
         return []

@@ -182,7 +182,7 @@ class AbstractSource(object):
             wsupport = self.support_relations[rtype]
         except KeyError:
             rschema = self.schema.rschema(rtype)
-            if not rschema.final or rschema == 'has_text':
+            if not rschema.final or rschema.type == 'has_text':
                 return False
             for etype in rschema.subjects():
                 try:
