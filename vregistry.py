@@ -173,7 +173,7 @@ class Registry(dict):
         assert len(objects) == 1, objects
         return objects[0](*args, **kwargs)
 
-    def select(self, oid, *args, **kwargs):
+    def select(self, __oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context.
 
@@ -181,14 +181,14 @@ class Registry(dict):
 
         raise :exc:`NoSelectableObject` if not object apply
         """
-        return self._select_best(self[oid], *args, **kwargs)
+        return self._select_best(self[__oid], *args, **kwargs)
 
-    def select_or_none(self, oid, *args, **kwargs):
+    def select_or_none(self, __oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context, or None if no object applies.
         """
         try:
-            return self.select(oid, *args, **kwargs)
+            return self.select(__oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
     select_object = deprecated('[3.6] use select_or_none instead of select_object'
