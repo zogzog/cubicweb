@@ -37,7 +37,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.mail import header
 from cubicweb.uilib import remove_html_tags
-from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid, json_dumps
+from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid, js
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
@@ -342,23 +342,37 @@ class CubicWebRequestBase(DBAPIRequest):
             return breadcrumbs.pop()
         return self.base_url()
 
-    def user_rql_callback(self, args, msg=None):
+    def user_rql_callback(self, rqlargs, *args, **kwargs):
         """register a user callback to execute some rql query and return an url
-        to call it ready to be inserted in html
+        to call it ready to be inserted in html.
+
+        rqlargs should be a tuple containing argument to give to the execute function.
+
+        For other allowed arguments, see :meth:`user_callback` method
         """
         def rqlexec(req, rql, args=None, key=None):
             req.execute(rql, args, key)
-        return self.user_callback(rqlexec, args, msg)
+        return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
 
-    def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
-        inserted in html
+    def user_callback(self, cb, cbargs, *args, **kwargs):
+        """register the given user callback and return an url to call it ready
+        to be inserted in html.
+
+        You can specify the underlying js function to call using a 'jsfunc'
+        named args, to one of :func:`userCallback`,
+        ':func:`userCallbackThenUpdateUI`, ':func:`userCallbackThenReloadPage`
+        (the default). Take care arguments may vary according to the used
+        function.
         """
         self.add_js('cubicweb.ajax.js')
-        cbname = self.register_onetime_callback(cb, *args)
-        msg = json_dumps(msg or '')
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (
-            cbname, msg)
+        jsfunc = kwargs.pop('jsfunc', 'userCallbackThenReloadPage')
+        if 'msg' in kwargs:
+            warn('[3.10] msg should be given as positional argument',
+                 DeprecationWarning, stacklevel=2)
+            args = (kwargs.pop('msg'),) + args
+        assert not kwargs, 'dunno what to do with remaining kwargs: %s' % kwargs
+        cbname = self.register_onetime_callback(cb, *cbargs)
+        return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)
 
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
@@ -589,8 +603,8 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         extraparams.setdefault('fname', 'view')
         url = self.build_url('json', **extraparams)
-        return "javascript: $('#%s').loadxhtml(%s, null, 'get', '%s'); noop()" % (
-                nodeid, json_dumps(url), replacemode)
+        return "javascript: $('#%s').%s; noop()" % (
+            nodeid, js.loadxtml(url, None, 'get', replacemode)
 
     # urls/path management ####################################################
 
