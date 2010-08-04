@@ -100,9 +100,9 @@ def get_repository(method, database=None, config=None, vreg=None):
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy
+        pyroid = database or config['pyro-instance-id'] or config.appid
         try:
-            return ns_get_proxy(database,
-                                defaultnsgroup=config['pyro-ns-group'],
+            return ns_get_proxy(pyroid, defaultnsgroup=config['pyro-ns-group'],
                                 nshost=config['pyro-ns-host'])
         except Exception, ex:
             raise ConnectionError(str(ex))

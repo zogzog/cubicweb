@@ -2196,14 +2196,66 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
 
+    def test_nonregr_not_is(self):
+        self._test("Any X WHERE X owned_by U, U login 'anon', NOT X is Comment",
+                   [('FetchStep', [('Any X WHERE X is IN(Card, Note, State)',
+                                    [{'X': 'Note'}, {'X': 'State'}, {'X': 'Card'}])],
+                     [self.cards, self.cards2, self.system],
+                     None, {'X': 'table0.C0'}, []),
+                    ('UnionStep', None, None,
+                     [('OneFetchStep',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                         [{'U': 'CWUser', 'X': 'Affaire'},
+                          {'U': 'CWUser', 'X': 'BaseTransition'},
+                          {'U': 'CWUser', 'X': 'Basket'},
+                          {'U': 'CWUser', 'X': 'Bookmark'},
+                          {'U': 'CWUser', 'X': 'CWAttribute'},
+                          {'U': 'CWUser', 'X': 'CWCache'},
+                          {'U': 'CWUser', 'X': 'CWConstraint'},
+                          {'U': 'CWUser', 'X': 'CWConstraintType'},
+                          {'U': 'CWUser', 'X': 'CWEType'},
+                          {'U': 'CWUser', 'X': 'CWGroup'},
+                          {'U': 'CWUser', 'X': 'CWPermission'},
+                          {'U': 'CWUser', 'X': 'CWProperty'},
+                          {'U': 'CWUser', 'X': 'CWRType'},
+                          {'U': 'CWUser', 'X': 'CWRelation'},
+                          {'U': 'CWUser', 'X': 'CWUser'},
+                          {'U': 'CWUser', 'X': 'Division'},
+                          {'U': 'CWUser', 'X': 'Email'},
+                          {'U': 'CWUser', 'X': 'EmailAddress'},
+                          {'U': 'CWUser', 'X': 'EmailPart'},
+                          {'U': 'CWUser', 'X': 'EmailThread'},
+                          {'U': 'CWUser', 'X': 'ExternalUri'},
+                          {'U': 'CWUser', 'X': 'File'},
+                          {'U': 'CWUser', 'X': 'Folder'},
+                          {'U': 'CWUser', 'X': 'Personne'},
+                          {'U': 'CWUser', 'X': 'RQLExpression'},
+                          {'U': 'CWUser', 'X': 'Societe'},
+                          {'U': 'CWUser', 'X': 'SubDivision'},
+                          {'U': 'CWUser', 'X': 'SubWorkflowExitPoint'},
+                          {'U': 'CWUser', 'X': 'Tag'},
+                          {'U': 'CWUser', 'X': 'TrInfo'},
+                          {'U': 'CWUser', 'X': 'Transition'},
+                          {'U': 'CWUser', 'X': 'Workflow'},
+                          {'U': 'CWUser', 'X': 'WorkflowTransition'}])],
+                       None, None,
+                       [self.system], {}, []),
+                      ('OneFetchStep',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Card, Note, State)',
+                         [{'U': 'CWUser', 'X': 'Note'},
+                          {'U': 'CWUser', 'X': 'State'},
+                          {'U': 'CWUser', 'X': 'Card'}])],
+                       None, None,
+                       [self.system], {'X': 'table0.C0'}, [])
+                      ])
+                    ])
+
 
 class FakeVCSSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True}
     support_relations = {'multisource_inlined_rel': True,
                          'multisource_rel': True}
-    #dont_cross_relations = set(('fiche', 'in_state'))
-    #cross_relations = set(('multisource_crossed_rel',))
 
     def syntax_tree_search(self, *args, **kwargs):
         return []

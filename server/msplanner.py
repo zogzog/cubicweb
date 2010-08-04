@@ -419,9 +419,9 @@ class PartPlanInformation(object):
                         self._set_source_for_term(source, const)
                         # if system source is used, add every rewritten constant
                         # to its supported terms even when associated entity
-                        # doesn't actually come from it so we get a changes
-                        # that allequals will return True as expected when
-                        # computing needsplit
+                        # doesn't actually come from it so we get a changes that
+                        # allequals will return True as expected when computing
+                        # needsplit
                         # check const is used in a relation restriction
                         if const.relation() and self.system_source in sourcesterms:
                             self._set_source_for_term(self.system_source, const)
@@ -432,7 +432,7 @@ class PartPlanInformation(object):
             # process non final relations only
             # note: don't try to get schema for 'is' relation (not available
             # during bootstrap)
-            if not rel.is_types_restriction() and not rschema(rel.r_type).final:
+            if not (rel.is_types_restriction() or rschema(rel.r_type).final):
                 # nothing to do if relation is not supported by multiple sources
                 # or if some source has it listed in its cross_relations
                 # attribute
@@ -1429,8 +1429,8 @@ class TermsFiltererVisitor(object):
         if not node.is_types_restriction():
             if node in self.skip and self.solindices.issubset(self.skip[node]):
                 if not self.schema.rschema(node.r_type).final:
-                    # can't really skip the relation if one variable is selected and only
-                    # referenced by this relation
+                    # can't really skip the relation if one variable is selected
+                    # and only referenced by this relation
                     for vref in node.iget_nodes(VariableRef):
                         stinfo = vref.variable.stinfo
                         if stinfo['selected'] and len(stinfo['relations']) == 1:
@@ -1441,13 +1441,14 @@ class TermsFiltererVisitor(object):
                     return None, node
             if not self._relation_supported(node):
                 raise UnsupportedBranch()
-        # don't copy type restriction unless this is the only relation for the
-        # rhs variable, else they'll be reinserted later as needed (else we may
-        # copy a type restriction while the variable is not actually used)
-        elif not any(self._relation_supported(rel)
-                     for rel in node.children[0].variable.stinfo['relations']):
-            rel, node = self.visit_default(node, newroot, terms)
-            return rel, node
+        # don't copy type restriction unless this is the only supported relation
+        # for the lhs variable, else they'll be reinserted later as needed (in
+        # other cases we may copy a type restriction while the variable is not
+        # actually used)
+        elif not (node.neged(strict=True) or
+                  any(self._relation_supported(rel)
+                      for rel in node.children[0].variable.stinfo['relations'])):
+            return self.visit_default(node, newroot, terms)
         else:
             raise UnsupportedBranch()
         rschema = self.schema.rschema(node.r_type)

@@ -1227,15 +1227,17 @@ class Repository(object):
 
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
-        import tempfile
-        from logilab.common.pyro_ext import register_object, config
-        config.PYRO_STORAGE = tempfile.gettempdir() # XXX until lgc > 0.45.1 is out
-        appid = self.config['pyro-instance-id'] or self.config.appid
-        daemon = register_object(self, appid, self.config['pyro-ns-group'],
-                                 self.config['pyro-host'],
-                                 self.config['pyro-ns-host'])
-        msg = 'repository registered as a pyro object using group %s and id %s'
-        self.info(msg, self.config['pyro-ns-group'], appid)
+        from logilab.common import pyro_ext as pyro
+        config = self.config
+        appid = '%s.%s' % pyro.ns_group_and_id(
+            config['pyro-instance-id'] or config.appid,
+            config['pyro-ns-group'])
+        # ensure config['pyro-instance-id'] is a full qualified pyro name
+        config['pyro-instance-id'] = appid
+        daemon = pyro.register_object(self, appid,
+                                      daemonhost=config['pyro-host'],
+                                      nshost=config['pyro-ns-host'])
+        self.info('repository registered as a pyro object %s', appid)
         self.pyro_registered = True
         return daemon
 

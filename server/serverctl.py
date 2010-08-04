@@ -42,32 +42,35 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     given server.serverconfig
     """
     from getpass import getpass
-    from logilab.database import get_connection
+    from logilab.database import get_connection, get_db_helper
     dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
+    dbhelper = get_db_helper(driver)
     if verbose:
         print '-> connecting to %s database' % driver,
         if dbhost:
             print '%s@%s' % (dbname, dbhost),
         else:
             print dbname,
-    if not verbose or (not special_privs and source.get('db-user')):
-        user = source['db-user']
-        if verbose:
-            print 'as', user
-        if source.get('db-password'):
-            password = source['db-password']
+    if dbhelper.users_support:
+        if not verbose or (not special_privs and source.get('db-user')):
+            user = source['db-user']
+            if verbose:
+                print 'as', user
+            if source.get('db-password'):
+                password = source['db-password']
+            else:
+                password = getpass('password: ')
         else:
-            password = getpass('password: ')
-    else:
-        print
-        if special_privs:
-            print 'WARNING'
-            print 'the user will need the following special access rights on the database:'
-            print special_privs
             print
+            if special_privs:
+                print 'WARNING'
+                print ('the user will need the following special access rights '
+                       'on the database:')
+                print special_privs
+                print
         default_user = source.get('db-user', os.environ.get('USER', ''))
         user = raw_input('Connect as user ? [%r]: ' % default_user)
         user = user or default_user
@@ -75,6 +78,8 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             password = source['db-password']
         else:
             password = getpass('password: ')
+    else:
+        user = password = None
     extra_args = source.get('db-extra-arguments')
     extra = extra_args and {'extra_args': extra_args} or {}
     cnx = get_connection(driver, dbhost, dbname, user, password=password,

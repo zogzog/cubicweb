@@ -227,11 +227,7 @@ have the python imaging library installed to use captcha)',
             return self.__repo
         except AttributeError:
             from cubicweb.dbapi import get_repository
-            if self.repo_method == 'inmemory':
-                repo = get_repository('inmemory', vreg=vreg, config=self)
-            else:
-                repo = get_repository('pyro', self['pyro-instance-id'],
-                                      config=self)
+            repo = get_repository(self.repo_method, vreg=vreg, config=self)
             self.__repo = repo
             return repo
 
