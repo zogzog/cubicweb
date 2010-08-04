@@ -25,6 +25,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
+from cubicweb.utils import support_args
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.schema import VIRTUAL_RTYPES, display_name
@@ -142,10 +143,15 @@ class PrimaryView(EntityView):
         if display_attributes:
             self.w(u'<table>')
             for rschema, role, dispctrl, value in display_attributes:
-                try:
-                    self._render_attribute(dispctrl, rschema, value,
-                                           role=role, table=True)
-                except TypeError:
+                if support_args(self._render_attribute, 'label'):
+                    label = self._rel_label(entity, rschema, role, dispctrl)
+                    self._render_attribute(label, value, table=True)
+                elif support_args(self._render_attribute, 'dispctrl'):
+                    warn('[3.10] _render_attribute prototype has changed, please'
+                         ' update %s' % self.__class___, DeprecationWarning)
+                    self._render_attribute(dispctrl, rschema, value, role=role,
+                                           table=True)
+                else:
                     warn('[3.6] _render_attribute prototype has changed, please'
                          ' update %s' % self.__class___, DeprecationWarning)
                     self._render_attribute(rschema, value, role=role, table=True)
@@ -155,9 +161,14 @@ class PrimaryView(EntityView):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
-                try:
+                if support_args(self._render_relation, 'label'):
+                    label = self._rel_label(entity, rschema, role, dispctrl)
+                    self._render_relation(label, dispctrl, rset, 'autolimited')
+                elif not support_args(self._render_relation, 'showlabel'):
+                    warn('[3.10] _render_relation prototype has changed, '
+                         'please update %s' % self.__class__, DeprecationWarning)
                     self._render_relation(dispctrl, rset, 'autolimited')
-                except TypeError:
+                else:
                     warn('[3.6] _render_relation prototype has changed, '
                          'please update %s' % self.__class__, DeprecationWarning)
                     self._render_relation(rset, dispctrl, 'autolimited',
@@ -194,7 +205,7 @@ class PrimaryView(EntityView):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
                 continue
-            label = display_name(self._cw, rschema.type, role)
+            label = self._rel_label(entity, rschema, role, dispctrl)
             vid = dispctrl.get('vid', 'sidebox')
             sideboxes.append( (label, rset, vid, dispctrl) )
         sideboxes += self._cw.vreg['boxes'].poss_visible_objects(
@@ -240,26 +251,30 @@ class PrimaryView(EntityView):
             rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, dispctrl, rset, defaultvid):
+    def _render_relation(self, label, dispctrl, rset, defaultvid):
         self.w(u'<div class="section">')
-        if dispctrl.get('showlabel', self.show_rel_label):
-            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
+        if label:
+            self.w(u'<h4>%s</h4>' % label)
         self.wview(dispctrl.get('vid', defaultvid), rset,
                    initargs={'dispctrl': dispctrl})
         self.w(u'</div>')
 
-    def _render_attribute(self, dispctrl, rschema, value,
-                          role='subject', table=False):
+    def _render_attribute(self, label, value, table=False):
+        self.field(label, value, tr=False, table=table)
+
+    def _rel_label(self, entity, rschema, role, dispctrl):
         if rschema.final:
             showlabel = dispctrl.get('showlabel', self.show_attr_label)
         else:
             showlabel = dispctrl.get('showlabel', self.show_rel_label)
-        if dispctrl.get('label'):
-            label = self._cw._(dispctrl.get('label'))
-        else:
-            label = display_name(self._cw, rschema.type, role)
-        self.field(label, value, show_label=showlabel, tr=False, table=table)
-
+        if showlabel:
+            if dispctrl.get('label'):
+                label = self._cw._(dispctrl['label'])
+            else:
+                label = display_name(self._cw, rschema.type, role,
+                                     context=entity.__regid__)
+            return label
+        return u''
 
 class RelatedView(EntityView):
     __regid__ = 'autolimited'

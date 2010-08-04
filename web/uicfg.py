@@ -107,11 +107,8 @@ class DisplayCtrlRelationTags(RelationTagsDict):
 def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     if role == 'subject':
         oschema = '*'
-        label = rschema.type
     else:
         sschema = '*'
-        label = '%s_%s' % (rschema, role)
-    rtag.setdefault((sschema, rschema, oschema, role), 'label', label)
     rtag.counter += 1
     rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag.counter)
 

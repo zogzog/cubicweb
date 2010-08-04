@@ -24,6 +24,7 @@ import sys
 import decimal
 import datetime
 import random
+from inspect import getargspec
 from itertools import repeat
 from uuid import uuid4
 from warnings import warn
@@ -64,6 +65,15 @@ def dump_class(cls, clsname):
                                        '__doc__': cls.__doc__,
                                        '__module__': cls.__module__})
 
+def support_args(callable, *argnames):
+    """return true if the callable support given argument names"""
+    argspec = getargspec(callable)
+    if argspec[2]:
+        return True
+    for argname in argnames:
+        if argname not in argspec[0]:
+            return False
+    return True
 
 # use networkX instead ?
 # http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
