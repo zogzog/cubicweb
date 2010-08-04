@@ -145,7 +145,7 @@ Usage with restore_connection:
    connection from another !
 
 Email notifications tests
--------------------------
+`````````````````````````
 
 When running tests potentially generated e-mails are not really sent
 but is found in the list `MAILBOX` of module
@@ -211,6 +211,21 @@ mechanism. These are:
 * `application_rql`, may contain a list of rql expressions that
   auto_populate cannot guess by itself; these must yield resultsets
   against which views may be selected.
+
+Testing with other cubes
+------------------------
+
+Sometimes a small component cannot be tested all by itself, so one
+needs to specify other cubes to be used as part of the the unit test
+suite. This is handled by the ``bootstrap_cubes`` file located under
+``mycube\test\data``. One example from the `preview` cube::
+
+ card, file, preview
+
+The format is:
+
+* possibly several empy lines or lines starting with ``#`` (comment lines)
+* one line containing a coma separated list of cube names.
 
 
 Test APIS
