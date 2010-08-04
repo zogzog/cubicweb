@@ -353,7 +353,7 @@ class PropertyValueField(StringField):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                self.choices = list(vocab(form._cw))
+                self.choices = list(vocab())
             else:
                 self.choices = vocab
             wdg = Select()

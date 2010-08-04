@@ -713,7 +713,7 @@ class CubicWebVRegistry(VRegistry):
         vocab = pdef['vocabulary']
         if vocab is not None:
             if callable(vocab):
-                vocab = vocab(key, None) # XXX need a req object
+                vocab = vocab(None) # XXX need a req object
             if not value in vocab:
                 raise ValueError(_('unauthorized value'))
         return value
