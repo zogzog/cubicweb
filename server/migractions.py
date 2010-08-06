@@ -911,10 +911,15 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
             gmap = self.group_mapping()
             cmap = self.cstrtype_mapping()
+            done = set()
             for rdef in rschema.rdefs.itervalues():
                 if not (reposchema.has_entity(rdef.subject)
                         and reposchema.has_entity(rdef.object)):
                     continue
+                # symmetric relations appears twice
+                if (rdef.subject, rdef.object) in done:
+                    continue
+                done.add( (rdef.subject, rdef.object) )
                 self._set_rdef_eid(rdef)
                 ss.execschemarql(execute, rdef,
                                  ss.rdef2rql(rdef, cmap, gmap))
