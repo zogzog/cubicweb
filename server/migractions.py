@@ -876,7 +876,15 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec('UPDATE %s_relation SET eid_to=%s WHERE eid_to=%s'
                              % (rtype, new.eid, oldeid), ask_confirm=False)
             # delete relations using SQL to avoid relations content removal
-            # triggered by schema synchronization hooks
+            # triggered by schema synchronization hooks. Should add deleted eids
+            # into pending eids else we may get some validation error on commit
+            # since integrity hooks may think some required relation is
+            # missing...
+            pending = self.session.transaction_data.setdefault('pendingeids', set())
+            for eid, in self.sqlexec('SELECT cw_eid FROM cw_CWRelation '
+                                     'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
+                                     {'eid': oldeid}, ask_confirm=False):
+                pending.add(eid)
             self.sqlexec('DELETE FROM cw_CWRelation '
                          'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
                          {'eid': oldeid}, ask_confirm=False)
