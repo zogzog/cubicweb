@@ -378,9 +378,13 @@ class ServerMigrationHelper(MigrationHelper):
             for gname in newgroups:
                 if not confirm or self.confirm('Grant %s permission of %s to %s?'
                                                % (action, erschema, gname)):
-                    self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
-                                 % (perm, teid),
-                                 {'x': gm[gname]}, ask_confirm=False)
+                    try:
+                        self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
+                                     % (perm, teid),
+                                     {'x': gm[gname]}, ask_confirm=False)
+                    except KeyError:
+                        self.error('can grant %s perm to unexistant group %s',
+                                   action, gname)
             # handle rql expressions
             newexprs = dict((expr.expression, expr) for expr in erschema.get_rqlexprs(action))
             for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
@@ -876,7 +880,15 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec('UPDATE %s_relation SET eid_to=%s WHERE eid_to=%s'
                              % (rtype, new.eid, oldeid), ask_confirm=False)
             # delete relations using SQL to avoid relations content removal
-            # triggered by schema synchronization hooks
+            # triggered by schema synchronization hooks. Should add deleted eids
+            # into pending eids else we may get some validation error on commit
+            # since integrity hooks may think some required relation is
+            # missing...
+            pending = self.session.transaction_data.setdefault('pendingeids', set())
+            for eid, in self.sqlexec('SELECT cw_eid FROM cw_CWRelation '
+                                     'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
+                                     {'eid': oldeid}, ask_confirm=False):
+                pending.add(eid)
             self.sqlexec('DELETE FROM cw_CWRelation '
                          'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
                          {'eid': oldeid}, ask_confirm=False)
@@ -911,10 +923,15 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
             gmap = self.group_mapping()
             cmap = self.cstrtype_mapping()
+            done = set()
             for rdef in rschema.rdefs.itervalues():
                 if not (reposchema.has_entity(rdef.subject)
                         and reposchema.has_entity(rdef.object)):
                     continue
+                # symmetric relations appears twice
+                if (rdef.subject, rdef.object) in done:
+                    continue
+                done.add( (rdef.subject, rdef.object) )
                 self._set_rdef_eid(rdef)
                 ss.execschemarql(execute, rdef,
                                  ss.rdef2rql(rdef, cmap, gmap))

@@ -71,13 +71,13 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
                        'on the database:')
                 print special_privs
                 print
-        default_user = source.get('db-user', os.environ.get('USER', ''))
-        user = raw_input('Connect as user ? [%r]: ' % default_user)
-        user = user or default_user
-        if user == source.get('db-user') and source.get('db-password'):
-            password = source['db-password']
-        else:
-            password = getpass('password: ')
+            default_user = source.get('db-user', os.environ.get('USER', ''))
+            user = raw_input('Connect as user ? [%r]: ' % default_user)
+            user = user or default_user
+            if user == source.get('db-user') and source.get('db-password'):
+                password = source['db-password']
+            else:
+                password = getpass('password: ')
     else:
         user = password = None
     extra_args = source.get('db-extra-arguments')

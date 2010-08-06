@@ -104,6 +104,28 @@ def add_inline_relation_column(session, etype, rtype):
     session.info('added index on %s(%s)', table, column)
 
 
+def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
+    # XXX 'infered': True/False, not clear actually
+    props.update({'constraints': rdefdef.constraints,
+                  'description': rdefdef.description,
+                  'cardinality': rdefdef.cardinality,
+                  'permissions': rdefdef.get_permissions(),
+                  'order': rdefdef.order,
+                  'infered': False, 'eid': None
+                  })
+    cstrtypemap = ss.cstrtype_mapping(session)
+    groupmap = group_mapping(session)
+    object = rschema.schema.eschema(rdefdef.object)
+    for specialization in eschema.specialized_by(False):
+        if (specialization, rdefdef.object) in rschema.rdefs:
+            continue
+        print 'adding infered', specialization, rschema.type, object
+        sperdef = RelationDefinitionSchema(specialization, rschema,
+                                           object, props)
+        ss.execschemarql(session.execute, sperdef,
+                         ss.rdef2rql(sperdef, cstrtypemap, groupmap))
+
+
 def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
@@ -454,25 +476,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         # if relation type has been inserted in the same transaction, its final
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
-        # XXX 'infered': True/False, not clear actually
-        props.update({'constraints': rdefdef.constraints,
-                      'description': rdefdef.description,
-                      'cardinality': rdefdef.cardinality,
-                      'constraints': rdefdef.constraints,
-                      'permissions': rdefdef.get_permissions(),
-                      'order': rdefdef.order,
-                      'infered': False, 'eid': None
-                      })
-        cstrtypemap = ss.cstrtype_mapping(session)
-        groupmap = group_mapping(session)
-        object = schema.eschema(rdefdef.object)
-        for specialization in eschema.specialized_by(False):
-            if (specialization, rdefdef.object) in rschema.rdefs:
-                continue
-            sperdef = RelationDefinitionSchema(specialization, rschema,
-                                               object, props)
-            ss.execschemarql(session.execute, sperdef,
-                             ss.rdef2rql(sperdef, cstrtypemap, groupmap))
+        insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props)
         # set default value, using sql for performance and to avoid
         # modification_date update
         if default:
@@ -514,6 +518,9 @@ class CWRelationAddOp(CWAttributeAddOp):
             # first occurence of "Subject relation Something" whatever Something
             if len(rschema.objects(rdefdef.subject)) == 1:
                 add_inline_relation_column(session, rdefdef.subject, rtype)
+            eschema = schema[rdefdef.subject]
+            insert_rdef_on_subclasses(session, eschema, rschema, rdefdef,
+                                      {'composite': entity.composite})
         else:
             # need to create the relation if no relation definition in the
             # schema and if it has not been added during other event of the same
