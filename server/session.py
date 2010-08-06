@@ -1021,7 +1021,7 @@ class InternalSession(Session):
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
-        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
+        self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.disable_hook_categories('integrity')
 
