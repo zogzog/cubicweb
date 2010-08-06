@@ -378,9 +378,13 @@ class ServerMigrationHelper(MigrationHelper):
             for gname in newgroups:
                 if not confirm or self.confirm('Grant %s permission of %s to %s?'
                                                % (action, erschema, gname)):
-                    self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
-                                 % (perm, teid),
-                                 {'x': gm[gname]}, ask_confirm=False)
+                    try:
+                        self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
+                                     % (perm, teid),
+                                     {'x': gm[gname]}, ask_confirm=False)
+                    except KeyError:
+                        self.error('can grant %s perm to unexistant group %s',
+                                   action, gname)
             # handle rql expressions
             newexprs = dict((expr.expression, expr) for expr in erschema.get_rqlexprs(action))
             for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
