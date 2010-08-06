@@ -129,7 +129,7 @@ class PrimaryView(EntityView):
         display_attributes = []
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
-            if rschema.final or vid == 'reledit':
+            if rschema.final or vid == 'reledit' or dispctrl.get('rtypevid'):
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
