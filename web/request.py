@@ -27,6 +27,7 @@ import base64
 from datetime import date
 from urlparse import urlsplit
 from itertools import count
+from warnings import warn
 
 from rql.utils import rqlvar_maker
 
@@ -383,7 +384,6 @@ class CubicWebRequestBase(DBAPIRequest):
             try:
                 ret = func(req, *args)
             except TypeError:
-                from warnings import warn
                 warn('[3.2] user callback should now take request as argument')
                 ret = func(*args)
             self.unregister_callback(self.pageid, cbname)
@@ -447,7 +447,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 name, peid = param.split(':', 1)
             except ValueError:
                 if not param.startswith('__') and param != "eid":
-                    self.warning('param %s mis-formatted', param)
+                    warn('param %s mis-formatted', param)
                 continue
             if peid == eid:
                 value = form[param]
