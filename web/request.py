@@ -447,7 +447,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 name, peid = param.split(':', 1)
             except ValueError:
                 if not param.startswith('__') and param != "eid":
-                    warn('param %s mis-formatted', param)
+                    self.warning('param %s mis-formatted', param)
                 continue
             if peid == eid:
                 value = form[param]
