@@ -15,13 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Views to display bare python values
-
+"""Basic views for python values (eg without any result set)
 """
 __docformat__ = "restructuredtext en"
 
 from cubicweb.view import View
 from cubicweb.selectors import match_kwargs
+
 
 class PyValTableView(View):
     __regid__ = 'pyvaltable'
