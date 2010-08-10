@@ -24,17 +24,15 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-import tempfile
 import os
 
 from logilab.mtconverter import xml_escape
-from logilab.common.graph import escape, GraphGenerator, DotBackend
+from logilab.common.graph import escape
 
 from cubicweb import Unauthorized, view
 from cubicweb.selectors import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 score_entity, is_instance, adaptable)
-from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, action, component, form, action
@@ -42,6 +40,7 @@ from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import forms, primary, autoform, ibreadcrumbs
 from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
+from cubicweb.web.views.dotgraphview import DotGraphView, DotPropsHandler
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
@@ -374,16 +373,11 @@ class TrInfoIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
 
 # workflow images ##############################################################
 
-class WorkflowDotPropsHandler(object):
-    def __init__(self, req):
-        self._ = req._
+class WorkflowDotPropsHandler(DotPropsHandler):
 
     def node_properties(self, stateortransition):
         """return default DOT drawing options for a state or transition"""
-        props = {'label': stateortransition.printable_value('name'),
-                 'fontname': 'Courier', 'fontsize':10,
-                 'href': stateortransition.absolute_url(),
-                 }
+        props = super(WorkflowDotPropsHandler, self).node_properties(stateortransition)
         if hasattr(stateortransition, 'state_of'):
             props['shape'] = 'box'
             props['style'] = 'filled'
@@ -396,10 +390,6 @@ class WorkflowDotPropsHandler(object):
             if descr:
                 props['label'] += escape('\n'.join(descr))
         return props
-
-    def edge_properties(self, transition, fromstate, tostate):
-        return {'label': '', 'dir': 'forward',
-                'color': 'black', 'style': 'filled'}
 
 
 class WorkflowVisitor:
@@ -421,35 +411,15 @@ class WorkflowVisitor:
             for outgoingstate in transition.potential_destinations():
                 yield transition.eid, outgoingstate.eid, transition
 
-
-class WorkflowGraphView(view.EntityView):
+class WorkflowGraphView(DotGraphView):
     __regid__ = 'wfgraph'
     __select__ = EntityView.__select__ & one_line_rset() & is_instance('Workflow')
 
-    def cell_call(self, row, col):
-        entity = self.cw_rset.get_entity(row, col)
-        visitor = WorkflowVisitor(entity)
-        prophdlr = WorkflowDotPropsHandler(self._cw)
-        wfname = 'workflow%s' % str(entity.eid)
-        generator = GraphGenerator(DotBackend(wfname, None,
-                                              ratio='compress', size='30,10'))
-        # map file
-        pmap, mapfile = tempfile.mkstemp(".map", wfname)
-        os.close(pmap)
-        # image file
-        fd, tmpfile = tempfile.mkstemp('.png')
-        os.close(fd)
-        generator.generate(visitor, prophdlr, tmpfile, mapfile)
-        filekeyid = make_uid()
-        self._cw.session.data[filekeyid] = tmpfile
-        self.w(u'<img src="%s" alt="%s" usemap="#%s" />' % (
-            xml_escape(entity.absolute_url(vid='tmppng', tmpfile=filekeyid)),
-            xml_escape(self._cw._('graphical workflow for %s') % entity.name),
-            wfname))
-        stream = open(mapfile, 'r').read()
-        stream = stream.decode(self._cw.encoding)
-        self.w(stream)
-        os.unlink(mapfile)
+    def build_visitor(self, entity):
+        return WorkflowVisitor(entity)
+
+    def build_dotpropshandler(self):
+        return WorkflowPropsHandler(self._cw)
 
 
 class TmpPngView(TmpFileViewMixin, view.EntityView):
