@@ -287,6 +287,7 @@ class PrimaryView(EntityView):
             return label
         return u''
 
+
 class RelatedView(EntityView):
     __regid__ = 'autolimited'
 
