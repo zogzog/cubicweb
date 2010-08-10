@@ -17,7 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, RichString, String, Int, Boolean, Datetime)
+                            SubjectRelation, RichString, String, Int, Float,
+                            Boolean, Datetime)
 from yams.constraints import SizeConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              ERQLExpression, RRQLExpression)
@@ -39,7 +40,7 @@ class Affaire(WorkflowableEntityType):
                        description=_('more detailed description'))
 
     duration = Int()
-    invoiced = Int()
+    invoiced = Float()
 
     depends_on = SubjectRelation('Affaire')
     require_permission = SubjectRelation('CWPermission')
