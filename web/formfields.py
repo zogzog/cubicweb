@@ -73,6 +73,7 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb import Binary, tags, uilib
+from cubicweb.utils import support_args
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
      formwidgets as fw, uicfg
 
@@ -345,7 +346,12 @@ class Field(object):
     def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
-                return self.value(form)
+                if support_args(self.value, 'form', 'field'):
+                    return self.value(form, self)
+                else:
+                    warn("[3.10] field's value callback must now take form and field as argument",
+                         DeprecationWarning)
+                    return self.value(form)
             return self.value
         formattr = '%s_%s_default' % (self.role, self.name)
         if hasattr(form, formattr):

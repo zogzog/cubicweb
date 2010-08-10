@@ -41,7 +41,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import is_instance, yes
-from cubicweb.utils import json_dumps
+from cubicweb.utils import json_dumps, support_args
 from cubicweb.web import eid_param, formwidgets as fwdgs
 
 
@@ -53,6 +53,8 @@ def checkbox(name, value, attrs='', checked=None):
         name, value, checked, attrs)
 
 def field_label(form, field):
+    if callable(field.label):
+        return field.label(form, field)
     # XXX with 3.6 we can now properly rely on 'if field.role is not None' and
     # stop having a tuple for label
     if isinstance(field.label, tuple): # i.e. needs contextual translation
@@ -133,7 +135,12 @@ class FormRenderer(AppObject):
         help = []
         descr = field.help
         if callable(descr):
-            descr = descr(form)
+            if support_args(descr, 'form', 'field'):
+                descr = descr(form, field)
+            else:
+                warn("[3.10] field's help callback must now take form and field as argument",
+                     DeprecationWarning)
+                descr = descr(form)
         if descr:
             help.append('<div class="helper">%s</div>' % self._cw._(descr))
         example = field.example_format(self._cw)
