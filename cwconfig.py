@@ -742,7 +742,7 @@ this option is set to yes",
         # XXX extrapath argument to load_module_from_file only in lgc > 0.50.2
         from logilab.common.modutils import load_module_from_modpath, modpath_from_file
         module = load_module_from_modpath(modpath_from_file(sitefile, self.extrapath))
-        self.info('%s loaded', sitefile)
+        self.debug('%s loaded', sitefile)
         return module
 
     def eproperty_definitions(self):

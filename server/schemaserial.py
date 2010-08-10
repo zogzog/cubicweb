@@ -152,6 +152,8 @@ def deserialize_schema(schema, session):
     for etype, stype in session.execute(
         'Any XN, ETN WHERE X is CWEType, X name XN, X specializes ET, ET name ETN',
         build_descr=False):
+        etype = ETYPE_NAME_MAP.get(etype, etype)
+        stype = ETYPE_NAME_MAP.get(stype, stype)
         schema.eschema(etype)._specialized_type = stype
         schema.eschema(stype)._specialized_by.append(etype)
     for eid, rtype, desc, sym, il, ftc in session.execute(

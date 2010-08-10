@@ -113,7 +113,7 @@ class SecurityViewMixIn(object):
         perms = {}
         for rdef in rschema.rdefs.itervalues():
             rdef_perms = []
-            for action in ('read', 'add', 'delete'):
+            for action in rdef.ACTIONS:
                 groups = sorted(rdef.get_groups(action))
                 exprs = sorted(e.expression for e in rdef.get_rqlexprs(action))
                 rdef_perms.append( (action, (tuple(groups), tuple(exprs))) )

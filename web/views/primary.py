@@ -131,7 +131,8 @@ class PrimaryView(EntityView):
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
             if rschema.final or vid == 'reledit' or dispctrl.get('rtypevid'):
-                value = entity.view(vid, rtype=rschema.type, role=role)
+                value = entity.view(vid, rtype=rschema.type, role=role,
+                                    initargs={'dispctrl': dispctrl})
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
                 if rset:
@@ -159,6 +160,16 @@ class PrimaryView(EntityView):
 
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
+            if rschema.final:
+                self.w(u'<div class="section">')
+                label = self._rel_label(entity, rschema, role, dispctrl)
+                if label:
+                    self.w(u'<h4>%s</h4>' % label)
+                vid = dispctrl.get('vid', 'reledit')
+                entity.view(vid, rtype=rschema.type, role=role, w=self.w,
+                            initargs={'dispctrl': dispctrl})
+                self.w(u'</div>')
+                continue
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
                 if support_args(self._render_relation, 'label'):

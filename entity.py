@@ -456,11 +456,15 @@ class Entity(AppObject):
     def cw_has_perm(self, action):
         return self.e_schema.has_perm(self._cw, action, eid=self.eid)
 
-    def view(self, __vid, __registry='views', w=None, **kwargs): # XXX cw_view
+    def view(self, __vid, __registry='views', w=None, initargs=None, **kwargs): # XXX cw_view
         """shortcut to apply a view on this entity"""
+        if initargs is None:
+            initargs = kwargs
+        else:
+            initargs.update(kwargs)
         view = self._cw.vreg[__registry].select(__vid, self._cw, rset=self.cw_rset,
                                                 row=self.cw_row, col=self.cw_col,
-                                                **kwargs)
+                                                **initargs)
         return view.render(row=self.cw_row, col=self.cw_col, w=w, **kwargs)
 
     def absolute_url(self, *args, **kwargs): # XXX cw_url
