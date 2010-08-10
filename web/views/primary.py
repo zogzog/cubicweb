@@ -271,6 +271,19 @@ class PrimaryView(EntityView):
             label = display_name(self._cw, rschema.type, role)
         self.field(label, value, show_label=showlabel, tr=False, table=table)
 
+    def _rel_label(self, entity, rschema, role, dispctrl):
+        if rschema.final:
+            showlabel = dispctrl.get('showlabel', self.show_attr_label)
+        else:
+            showlabel = dispctrl.get('showlabel', self.show_rel_label)
+        if showlabel:
+            if dispctrl.get('label'):
+                label = self._cw._(dispctrl['label'])
+            else:
+                label = display_name(self._cw, rschema.type, role,
+                                     context=entity.__regid__)
+            return label
+        return u''
 
 class RelatedView(EntityView):
     __regid__ = 'autolimited'
