@@ -328,12 +328,9 @@ class HTMLPageHeader(View):
 
     def call(self, view, **kwargs):
         self.main_header(view)
-        self.w(u'''
-  <div id="stateheader">''')
+        self.w(u'<div id="stateheader">')
         self.state_header()
-        self.w(u'''
-  </div>
-  ''')
+        self.w(u'</div>')
 
     def main_header(self, view):
         """build the top menu with authentification info and the rql box"""
@@ -478,7 +475,7 @@ class LogFormView(View):
             self.login_form(id) # Cookie authentication
         self.w(u'</div>')
         if self._cw.https and config.anonymous_user()[0]:
-            path = config['base-url'] + self._cw.relative_path()
+            path = xml_escape(config['base-url'] + self._cw.relative_path())
             self.w(u'<div class="loginMessage"><a href="%s">%s</a></div>\n'
                    % (path, self._cw._('No account? Try public access at %s') % path))
         self.w(u'</div>\n')
