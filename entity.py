@@ -481,9 +481,12 @@ class Entity(AppObject):
         # XXX search_state is web specific
         if getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
             kwargs['base_url'] = self.cw_metainformation()['source'].get('base-url')
+            use_ext_id = True
+        else:
+            use_ext_id = False
         if method in (None, 'view'):
             try:
-                kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+                kwargs['_restpath'] = self.rest_path(use_ext_id)
             except TypeError:
                 warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
                      'please update' % self.__regid__, DeprecationWarning)
