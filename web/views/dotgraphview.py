@@ -70,7 +70,7 @@ class DotPropsHandler(object):
 
     def node_properties(self, entity):
         """return default DOT drawing options for a state or transition"""
-        return {'label': entity.printable_value('name'),
+        return {'label': entity.dc_title(),
                 'href': entity.absolute_url(),
                 'fontname': 'Courier', 'fontsize': 10, 'shape':'box',
                  }
