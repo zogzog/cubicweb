@@ -119,7 +119,6 @@ def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
     for specialization in eschema.specialized_by(False):
         if (specialization, rdefdef.object) in rschema.rdefs:
             continue
-        print 'adding infered', specialization, rschema.type, object
         sperdef = RelationDefinitionSchema(specialization, rschema,
                                            object, props)
         ss.execschemarql(session.execute, sperdef,
