@@ -51,6 +51,18 @@ def greater_card(rschema, subjtypes, objtypes, index):
                 return card
     return '1'
 
+def can_use_rest_path(value):
+    """return True if value can be used at the end of a Rest URL path"""
+    if value is None:
+        return False
+    value = unicode(value)
+    # the check for ?, /, & are to prevent problems when running
+    # behind Apache mod_proxy
+    if value == u'' or u'?' in value or u'/' in value or u'&' in value:
+        return False
+    return True
+
+
 
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
@@ -502,7 +514,7 @@ class Entity(AppObject):
         path = etype.lower()
         if mainattr != 'eid':
             value = getattr(self, mainattr)
-            if value is None or unicode(value) == u'':
+            if not can_use_rest_path(value):
                 mainattr = 'eid'
                 path += '/eid'
             elif needcheck:
