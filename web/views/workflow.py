@@ -392,7 +392,7 @@ class WorkflowDotPropsHandler(DotPropsHandler):
         return props
 
 
-class WorkflowVisitor:
+class WorkflowVisitor(object):
     def __init__(self, entity):
         self.entity = entity
 
@@ -419,7 +419,7 @@ class WorkflowGraphView(DotGraphView):
         return WorkflowVisitor(entity)
 
     def build_dotpropshandler(self):
-        return WorkflowPropsHandler(self._cw)
+        return WorkflowDotPropsHandler(self._cw)
 
 
 class TmpPngView(TmpFileViewMixin, view.EntityView):
