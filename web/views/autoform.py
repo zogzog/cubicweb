@@ -952,6 +952,10 @@ def registration_callback(vreg):
 
     def etype_relation_field(etype, rtype, role='subject'):
         eschema = vreg.schema.eschema(etype)
-        return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+        try:
+            return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+        except f.FieldNotFound:
+            AutomaticEntityForm.error('field for %s %s may not be found in schema' % (rtype, role))
+            return None
 
     vreg.register_all(globals().values(), __name__)
