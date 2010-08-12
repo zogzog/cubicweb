@@ -492,8 +492,14 @@ du :eid:`1:*ReST*`'''
         # unique attr with None value (wikiid in this case)
         card1 = req.create_entity('Card', title=u'hop')
         self.assertEquals(card1.rest_path(), 'card/eid/%s' % card1.eid)
-        card2 = req.create_entity('Card', title=u'pod', wikiid=u'zob/i')
-        self.assertEquals(card2.rest_path(), 'card/zob%2Fi')
+        # don't use rest if we have /, ? or & in the path (breaks mod_proxy)
+        card2 = req.create_entity('Card', title=u'pod', wikiid=u'zo/bi')
+        self.assertEquals(card2.rest_path(), 'card/eid/%d' % card2.eid)
+        card3 = req.create_entity('Card', title=u'pod', wikiid=u'zo&bi')
+        self.assertEquals(card3.rest_path(), 'card/eid/%d' % card3.eid)
+        card4 = req.create_entity('Card', title=u'pod', wikiid=u'zo?bi')
+        self.assertEquals(card4.rest_path(), 'card/eid/%d' % card4.eid)
+        
 
     def test_set_attributes(self):
         req = self.request()

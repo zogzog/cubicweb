@@ -51,6 +51,18 @@ def greater_card(rschema, subjtypes, objtypes, index):
                 return card
     return '1'
 
+def can_use_rest_path(value):
+    """return True if value can be used at the end of a Rest URL path"""
+    if value is None:
+        return False
+    value = unicode(value)
+    # the check for ?, /, & are to prevent problems when running
+    # behind Apache mod_proxy
+    if value == u'' or u'?' in value or u'/' in value or u'&' in value:
+        return False
+    return True
+
+
 
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
@@ -479,11 +491,15 @@ class Entity(AppObject):
         # in linksearch mode, we don't want external urls else selecting
         # the object for use in the relation is tricky
         # XXX search_state is web specific
-        if getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
+        if 'base-url' not in kwargs and \
+               getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
             kwargs['base_url'] = self.cw_metainformation()['source'].get('base-url')
+            use_ext_id = bool(kwargs['base_url'])
+        else:
+            use_ext_id = False
         if method in (None, 'view'):
             try:
-                kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+                kwargs['_restpath'] = self.rest_path(use_ext_id)
             except TypeError:
                 warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
                      'please update' % self.__regid__, DeprecationWarning)
@@ -499,7 +515,7 @@ class Entity(AppObject):
         path = etype.lower()
         if mainattr != 'eid':
             value = getattr(self, mainattr)
-            if value is None or unicode(value) == u'':
+            if not can_use_rest_path(value):
                 mainattr = 'eid'
                 path += '/eid'
             elif needcheck:
