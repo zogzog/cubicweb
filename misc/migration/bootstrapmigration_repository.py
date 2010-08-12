@@ -18,7 +18,6 @@
 """allways executed before all others in server migration
 
 it should only include low level schema changes
-
 """
 from __future__ import with_statement
 
