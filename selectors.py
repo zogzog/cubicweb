@@ -201,12 +201,13 @@ from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 
-from yams import BASE_TYPES
+from yams.schema import BASE_TYPES, role_name
 from rql.nodes import Function
 
 from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       CW_EVENT_MANAGER, role)
 # even if not used, let yes here so it's importable through this module
+from cubicweb.uilib import eid_param
 from cubicweb.appobject import Selector, objectify_selector, lltrace, yes
 from cubicweb.schema import split_expression
 
@@ -792,6 +793,21 @@ class score_entity(EntitySelector):
             return 1
         self.score_entity = intscore
 
+class attribute_edited(EntitySelector):
+    """Scores if the specified attribute has been edited
+    This is useful for selection of forms by the edit controller.
+    The initial use case is on a form, in conjunction with match_transition,
+    which will not score at edit time::
+
+     is_instance('Version') & (match_transition('ready') |
+                               attribute_edited('publication_date'))
+    """
+    def __init__(self, attribute, once_is_enough=False):
+        super(attribute_edited, self).__init__(once_is_enough)
+        self._attribute = attribute
+
+    def score_entity(self, entity):
+        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
 
 class has_mimetype(EntitySelector):
     """Return 1 if the entity adapt to IDownloadable and has the given MIME type.
@@ -1324,19 +1340,13 @@ class specified_etype_implements(is_instance):
 
 
 class match_transition(ExpectedValueSelector):
-    """Return 1 if:
-
-    * a `transition` argument is found in the input context which
-      has a `.name` attribute matching one of the expected names given to the
-      initializer
-
-    * no transition specified.
+    """Return 1 if `transition` argument is found in the input context
+      which has a `.name` attribute matching one of the expected names
+      given to the initializer
     """
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
-        if transition is None:
-            return 1
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
