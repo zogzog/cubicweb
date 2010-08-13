@@ -621,7 +621,7 @@ class CubicWebTC(TestCase):
              **kwargs):
         """This method tests the view `vid` on `rset` using `template`
 
-        If no error occured while rendering the view, the HTML is analyzed
+        If no error occurred while rendering the view, the HTML is analyzed
         and parsed.
 
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
@@ -653,7 +653,7 @@ class CubicWebTC(TestCase):
     def _test_view(self, viewfunc, view, template='main-template', kwargs={}):
         """this method does the actual call to the view
 
-        If no error occured while rendering the view, the HTML is analyzed
+        If no error occurred while rendering the view, the HTML is analyzed
         and parsed.
 
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`

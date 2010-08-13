@@ -457,7 +457,7 @@ class GrantUserOnInstanceCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occured:', ex
+            print '-> an error occurred:', ex
         else:
             cnx.commit()
             print '-> rights granted to %s on instance %s.' % (appid, user)
@@ -509,7 +509,7 @@ class ResetAdminPasswordCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occured:', ex
+            print '-> an error occurred:', ex
         else:
             cnx.commit()
             print '-> password reset, sources file regenerated.'
@@ -595,7 +595,7 @@ def _remote_dump(host, appid, output, sudo=False):
     rmcmd = 'ssh -t %s "rm -f /tmp/%s"' % (host, filename)
     print rmcmd
     if os.system(rmcmd) and not ASK.confirm(
-        'An error occured while deleting remote dump at /tmp/%s. '
+        'An error occurred while deleting remote dump at /tmp/%s. '
         'Continue anyway?' % filename):
         raise ExecutionError('Error while deleting remote dump at /tmp/%s' % filename)
 

@@ -139,7 +139,7 @@ class SubWorkflowExitPoint(EntityType):
     subworkflow_state = SubjectRelation(
         'State', cardinality='1*',
         constraints=[RQLConstraint('T subworkflow_exit S, T subworkflow WF, O state_of WF',
-                                   msg=_('exit state must a subworkflow state'))],
+                                   msg=_('exit state must be a subworkflow state'))],
         description=_('subworkflow state'))
     destination_state = SubjectRelation(
         'State', cardinality='?*',

@@ -195,7 +195,7 @@ class CookieSessionHandler(object):
         if no session id is found, open a new session for the connected user
         or request authentification as needed
 
-        :raise Redirect: if authentication has occured and succeed
+        :raise Redirect: if authentication has occurred and succeed
         """
         cookie = req.get_cookie()
         try:

@@ -298,7 +298,7 @@ class JSonController(Controller):
         except (RemoteCallFailed, DirectResponse):
             raise
         except Exception, ex:
-            self.exception('an exception occured while calling js_%s(%s): %s',
+            self.exception('an exception occurred while calling js_%s(%s): %s',
                            fname, args, ex)
             raise RemoteCallFailed(repr(ex))
         if result is None:
@@ -413,7 +413,7 @@ class JSonController(Controller):
         # XXX while it sounds good, addition of the try/except below cause pb:
         # when filtering using facets return an empty rset, the edition box
         # isn't anymore selectable, as expected. The pb is that with the
-        # try/except below, we see a "an error occured" message in the ui, while
+        # try/except below, we see a "an error occurred" message in the ui, while
         # we don't see it without it. Proper fix would probably be to deal with
         # this by allowing facet handling code to tell to js_component that such
         # error is expected and should'nt be reported.
@@ -601,7 +601,7 @@ class UndoController(Controller):
         txuuid = self._cw.form['txuuid']
         errors = self._cw.cnx.undo_transaction(txuuid)
         if errors:
-            self.w(self._cw._('some errors occured:'))
+            self.w(self._cw._('some errors occurred:'))
             self.wview('pyvalist', pyvalue=errors)
         else:
             self.redirect()

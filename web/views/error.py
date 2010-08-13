@@ -37,4 +37,4 @@ class ErrorOccured(StartupView):
     def call(self):
         _ = self._cw._
         self.w(u"<h1>%s</h1>" %
-               _('an error occured, the request cannot be fulfilled'))
+               _('an error occurred, the request cannot be fulfilled'))
