@@ -28,10 +28,10 @@ from cubicweb.utils import json_dumps
 from cubicweb.selectors import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.web import uicfg, stdmsgs
-from cubicweb.web.form import FormViewMixIn, FieldNotFound
+from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formwidgets import Button, SubmitButton
 
-class DummyForm(object):
+class _DummyForm(object):
     __slots__ = ('event_args',)
     def form_render(self, **_args):
         return u''
@@ -84,53 +84,61 @@ class ClickAndEditFormView(EntityView):
         rschema = self._cw.vreg.schema[rtype]
         reload = self._compute_reload(entity, rschema, role, reload)
         default_value = self._compute_default_value(entity, rschema, role, default_value)
-        # compute value, checking perms, build & display form
         divid = self._build_divid(rtype, role, entity.eid)
         if rschema.final:
-            value = entity.printable_value(rtype)
-            form, renderer = self._build_form(entity, rtype, role, divid, 'base',
-                                              default_value, reload)
-            if not self._should_edit_attribute(entity, rschema, form):
-                self.w(value)
-                return
-            value = value or default_value
+            self._handle_attributes(entity, rschema, role, divid, reload, default_value)
+        else:
+            self._handle_relations(entity, rschema, role, divid, reload, default_value, formid)
+
+    def _handle_attributes(self, entity, rschema, role, divid, reload, default_value):
+        rtype = rschema.type
+        value = entity.printable_value(rtype)
+        form, renderer = self._build_form(entity, rtype, role, divid, 'base',
+                                          default_value, reload)
+        if not self._should_edit_attribute(entity, rschema, form):
+            self.w(value)
+            return
+        value = value or default_value
+        field = form.field_by_name(rtype, role, entity.e_schema)
+        form.append_field(field)
+        self.view_form(divid, value, form, renderer)
+
+    def _handle_relations(self, entity, rschema, role, divid, reload, default_value, formid):
+        rtype = rschema.type
+        rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+        related_rset = entity.related(rtype, role)
+        if related_rset:
+            value = self._cw.view(rvid, related_rset)
+        else:
+            value = default_value
+        ttypes = self._compute_ttypes(rschema, role)
+
+        if not self._should_edit_relation(entity, rschema, role):
+            self.w(value)
+            return
+        # this is for attribute-like composites (1 target type, 1 related entity at most)
+        add_related = self._may_add_related(related_rset, entity, rschema, role, ttypes)
+        edit_related = self._may_edit_related_entity(related_rset, entity, rschema, role, ttypes)
+        delete_related = edit_related and self._may_delete_related(related_rset, entity, rschema, role)
+        # compute formid
+        if len(ttypes) > 1: # redundant safety belt
+            formid = 'base'
+        else:
+            afs = uicfg.autoform_section.etype_get(entity.e_schema, rschema, role, ttypes[0])
+            # is there an afs spec that says we should edit
+            # the rschema as an attribute ?
+            if afs and 'main_attributes' in afs:
+                formid = 'base'
+
+        form, renderer = self._build_form(entity, rtype, role, divid, formid, default_value,
+                                          reload, dict(vid=rvid),
+                                          edit_related, add_related and ttypes[0])
+        if formid == 'base':
             field = form.field_by_name(rtype, role, entity.e_schema)
             form.append_field(field)
-            self.view_form(divid, value, form, renderer)
-        else:
-            rvid = self._compute_best_vid(entity.e_schema, rschema, role)
-            related_rset = entity.related(rtype, role)
-            if related_rset:
-                value = self._cw.view(rvid, related_rset)
-            else:
-                value = default_value
-            ttypes = self._compute_ttypes(rschema, role)
+        self.view_form(divid, value, form, renderer, edit_related,
+                       delete_related, add_related)
 
-            if not self._should_edit_relation(entity, rschema, role):
-                self.w(value)
-                return
-            # this is for attribute-like composites (1 target type, 1 related entity at most)
-            add_related = self._may_add_related(related_rset, entity, rschema, role, ttypes)
-            edit_related = self._may_edit_related_entity(related_rset, entity, rschema, role, ttypes)
-            delete_related = edit_related and self._may_delete_related(related_rset, entity, rschema, role)
-            # compute formid
-            if len(ttypes) > 1: # redundant safety belt
-                formid = 'base'
-            else:
-                afs = uicfg.autoform_section.etype_get(entity.e_schema, rschema, role, ttypes[0])
-                # is there an afs spec that says we should edit
-                # the rschema as an attribute ?
-                if afs and 'main_attributes' in afs:
-                    formid = 'base'
-
-            form, renderer = self._build_form(entity, rtype, role, divid, formid, default_value,
-                                              reload, dict(vid=rvid),
-                                              edit_related, add_related and ttypes[0])
-            if formid == 'base':
-                field = form.field_by_name(rtype, role, entity.e_schema)
-                form.append_field(field)
-            self.view_form(divid, value, form, renderer, edit_related,
-                           delete_related, add_related)
 
     def _compute_best_vid(self, eschema, rschema, role):
         if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
@@ -354,6 +362,6 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
                   extradata=None, edit_related=False, add_related=False, **formargs):
         event_args = self._build_args(entity, rtype, role, 'base', default_value,
                                       reload, extradata)
-        form = DummyForm()
+        form = _DummyForm()
         form.event_args = event_args
         return form, None
