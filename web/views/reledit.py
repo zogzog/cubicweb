@@ -42,7 +42,7 @@ class DummyForm(object):
     def field_by_name(self, rtype, role, eschema=None):
         return None
 
-class ClickAndEditFormView(FormViewMixIn, EntityView):
+class ClickAndEditFormView(EntityView):
     __regid__ = 'doreledit'
     __select__ = non_final_entity() & match_kwargs('rtype')
 
@@ -169,11 +169,15 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         if self._is_composite(entity.e_schema, rschema, role):
             if len(ttypes) > 1: # wrong cardinality: do not handle
                 return False
-            ttype = ttypes[0]
-            card = rschema.rdef(entity.e_schema, ttype).role_cardinality(role)
+            rdef = rschema.role_rdef(entity.e_schema, ttypes[0], role)
+            card = rdef.role_cardinality(role)
             if related_rset and card in '?1':
                 return False
-            if rschema.has_perm(self._cw, 'add', toetype=ttype):
+            if role == 'subject':
+                kwargs = {'fromeid': entity.eid}
+            else:
+                kwargs = {'toeid': entity.eid}
+            if rdef.has_perm(self._cw, 'add', **kwargs):
                 return True
         return False
 
