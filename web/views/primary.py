@@ -154,7 +154,7 @@ class PrimaryView(EntityView):
 
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
-            if rschema.final:
+            if rschema.final or dispctrl.get('rtypevid'):
                 self.w(u'<div class="section">')
                 label = self._rel_label(entity, rschema, role, dispctrl)
                 if label:
