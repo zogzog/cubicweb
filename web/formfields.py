@@ -854,12 +854,23 @@ class BooleanField(Field):
     """
     widget = fw.Radio
 
+    def __init__(self, allow_none=False, **kwargs):
+        super(BooleanField, self).__init__(**kwargs)
+        self.allow_none = allow_none
+
     def vocabulary(self, form):
         if self.choices:
             return super(BooleanField, self).vocabulary(form)
+        if self.allow_none:
+            return [('', ''), (form._cw._('yes'), '1'), (form._cw._('no'), '0')]
+        # XXX empty string for 'no' in that case for bw compat
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
     def _ensure_correctly_typed(self, form, value):
+        if self.allow_none:
+            if value:
+                return bool(int(value))
+            return None
         return bool(value)
 
 
