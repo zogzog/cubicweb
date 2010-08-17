@@ -845,7 +845,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_entity_type(self, oldname, newname, commit=True):
+    def cmd_rename_entity_type(self, oldname, newname, attrs=None, commit=True):
         """rename an existing entity type in the persistent schema
 
         `oldname` is a string giving the name of the existing entity type
@@ -854,11 +854,17 @@ class ServerMigrationHelper(MigrationHelper):
         schema = self.repo.schema
         if newname in schema:
             assert oldname in ETYPE_NAME_MAP, \
-                   '%s should be mappend to %s in ETYPE_NAME_MAP' % (oldname, newname)
-            attrs = ','.join([SQL_PREFIX + rschema.type
-                              for rschema in schema[newname].subject_relations()
-                              if (rschema.final or rschema.inlined)
-                              and not rschema in PURE_VIRTUAL_RTYPES])
+                   '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname,
+                                                                    newname)
+            if attrs is None:
+                attrs = ','.join(SQL_PREFIX + rschema.type
+                                 for rschema in schema[newname].subject_relations()
+                                 if (rschema.final or rschema.inlined)
+                                 and rschema in schema[oldname].subjrels
+                                 and not rschema in PURE_VIRTUAL_RTYPES)
+            else:
+                attrs += ('eid', 'creation_date', 'modification_date', 'cwuri')
+                attrs = ','.join(SQL_PREFIX + attr for attr in attrs)
             self.sqlexec('INSERT INTO %s%s(%s) SELECT %s FROM %s%s' % (
                 SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname),
                          ask_confirm=False)
