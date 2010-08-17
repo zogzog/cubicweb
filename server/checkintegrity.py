@@ -99,8 +99,6 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
         print 'no text index table'
         dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
-    if withpb:
-        pb = ProgressBar(len(etypes) + 1)
     if etypes is None:
         print 'Reindexing entities'
         etypes = set()
@@ -123,6 +121,7 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
                                dbhelper.fti_table, dbhelper.fti_uid_attr,
                                ','.join("'%s'" % etype for etype in etypes)))
     if withpb:
+        pb = ProgressBar(len(etypes) + 1)
         pb.update()
     # reindex entities by generating rql queries which set all indexable
     # attribute to their current value
