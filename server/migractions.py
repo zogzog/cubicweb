@@ -891,13 +891,16 @@ class ServerMigrationHelper(MigrationHelper):
             # since integrity hooks may think some required relation is
             # missing...
             pending = self.session.transaction_data.setdefault('pendingeids', set())
-            for eid, in self.sqlexec('SELECT cw_eid FROM cw_CWRelation '
-                                     'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
-                                     {'eid': oldeid}, ask_confirm=False):
-                pending.add(eid)
-            self.sqlexec('DELETE FROM cw_CWRelation '
-                         'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
-                         {'eid': oldeid}, ask_confirm=False)
+            for rdeftype in ('CWRelation', 'CWAttribute'):
+                for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
+                                         'WHERE cw_from_entity=%%(eid)s OR '
+                                         ' cw_to_entity=%%(eid)s' % rdeftype,
+                                         {'eid': oldeid}, ask_confirm=False):
+                    pending.add(eid)
+                self.sqlexec('DELETE FROM cw_%s '
+                             'WHERE cw_from_entity=%%(eid)s OR '
+                             'cw_to_entity=%%(eid)s' % rdeftype,
+                             {'eid': oldeid}, ask_confirm=False)
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
