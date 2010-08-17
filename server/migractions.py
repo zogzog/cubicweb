@@ -870,8 +870,8 @@ class ServerMigrationHelper(MigrationHelper):
                          ask_confirm=False)
             # old entity type has not been added to the schema, can't gather it
             new = schema.eschema(newname)
-            oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s', {'on': oldname},
-                                  ask_confirm=False)[0][0]
+            oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s',
+                                  {'on': oldname}, ask_confirm=False)[0][0]
             # backport old type relations to new type
             # XXX workflows, other relations?
             for r1, rr1 in [('from_entity', 'to_entity'),
