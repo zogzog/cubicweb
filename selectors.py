@@ -188,8 +188,6 @@ manager to help with that, *if you're running your instance in debug mode*.
 
 .. autoclass:: cubicweb.appobject.traced_selection
 
-
-.. |cubicweb| replace:: *CubicWeb*
 """
 
 __docformat__ = "restructuredtext en"

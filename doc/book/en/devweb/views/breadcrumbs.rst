@@ -45,8 +45,8 @@ provided. This implementation expoits the ITreeAdapter.
 
 Here is the API of the ``IBreadCrumbsAdapter`` class:
 
-.. automethod:: cubicweb.web.views.ibreadcrumbs.IBreadCrumbs.parent_entity
-.. automethod:: cubicweb.web.views.ibreadcrumbs.IBreadCrumbs.breadcrumbs
+.. automethod:: cubicweb.web.views.ibreadcrumbs.IBreadCrumbsAdapter.parent_entity
+.. automethod:: cubicweb.web.views.ibreadcrumbs.IBreadCrumbsAdapter.breadcrumbs
 
 If the breadcrumbs method return a list of entities, the
 ``cubicweb.web.views.ibreadcrumbs.BreadCrumbView`` is used to display

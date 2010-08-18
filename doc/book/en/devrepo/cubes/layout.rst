@@ -108,8 +108,24 @@ The :file:`__init__.py` and :file:`site_cubicweb.py` files
 The :file:`__pkginfo__.py` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It contains metadata describing your cube, mostly useful for
-packaging.
+It contains metadata describing your cube, mostly useful for packaging.
+
+Two important attributes of this module are __depends__ and __recommends__
+dictionaries that indicates what should be installed (and each version if
+necessary) for the cube to work.
+
+Dependency on other cubes are expected to be of the form 'cubicweb-<cubename>'.
+
+When an instance is created, dependencies are automatically installed, while
+recommends are not.
+
+Recommends may be seen as a kind of 'weak dependency'. Eg, the most important
+effect of recommending a cube is that, if cube A recommends cube B, the cube B
+will be loaded before the cube A (same thing happend when A depends on B).
+
+Having this behaviour is sometime desired: on schema creation, you may rely on
+something defined in the other's schema; on database creation, on something
+created by the other's postcreate, and so on.
 
 
 :file:`migration/precreate.py` and :file:`migration/postcreate.py`

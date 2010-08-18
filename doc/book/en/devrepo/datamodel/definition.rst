@@ -412,6 +412,46 @@ The principles are the same but with the following restrictions:
 * special relations "has_<ACTION>_permission" can not be used
 
 
+Important notes about write permissions checking
+````````````````````````````````````````````````
+
+Write permissions (e.g. 'add', 'update', 'delete') are checked in core hooks.
+
+When a permission is checked slightly vary according to if it's an entity or
+relation, and if the relation is an attribute relation or not). It's important to
+understand that since according to when a permission is checked, values returned
+by rql expressions may changes, hence the permission being granted or not.
+
+Here are the current rules:
+
+1. permission to add/update entity and its attributes are checked:
+
+   - on commit if the entity has been added
+
+   - in an 'after_update_entity' hook if the entity has been updated. If it fails
+     at this time, it will be retried on commit (hence you get the permission if
+     you have it just after the modification or *at* commit time)
+
+2. permission to delete an entity is checked in 'before_delete_entity' hook
+
+3. permission to add a relation is checked either:
+
+   - in 'before_add_relation' hook if the relation type is in the
+     `BEFORE_ADD_RELATIONS` set
+
+   - else at commit time if the relation type is in the `ON_COMMIT_ADD_RELATIONS`
+     set
+
+   - else in 'after_add_relation' hook (the default)
+
+4. permission to delete a relation is checked in 'before_delete_relation' hook
+
+Last but not least, remember queries issued from hooks and operation are by
+default 'unsafe', eg there are no read or write security checks.
+
+See :mod:`cubicweb.hooks.security` for more details.
+
+
 .. _yams_example:
 
 Defining your schema using yams

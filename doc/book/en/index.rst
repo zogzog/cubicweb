@@ -62,5 +62,3 @@ See also:
 
 * the :ref:`genindex`,
 * the :ref:`modindex`,
-
-.. |cubicweb| replace:: *CubicWeb*
