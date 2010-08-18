@@ -145,7 +145,8 @@ def _add_rtype_relation(rqlst, mainvar, rtype, role):
         rqlst.add_relation(mainvar, rtype, newvar)
     return newvar
 
-def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
+def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                              select_target_entity=True):
     """prepare a syntax tree to generate a filter vocabulary rql using the given
     relation:
     * create a variable to filter on this relation
@@ -154,9 +155,10 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     * add the new variable to the selection
     """
     newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)
-    if rqlst.groupby:
-        rqlst.add_group_var(newvar)
-    rqlst.add_selected(newvar)
+    if select_target_entity:
+        if rqlst.groupby:
+            rqlst.add_group_var(newvar)
+        rqlst.add_selected(newvar)
     # add is restriction if necessary
     if mainvar.stinfo['typerel'] is None:
         etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
@@ -191,7 +193,8 @@ def _set_orderby(rqlst, newvar, sortasc, sortfuncname):
         rqlst.add_sort_term(term)
 
 def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
-                                sortfuncname=None, sortasc=True):
+                                sortfuncname=None, sortasc=True,
+                                select_target_entity=True):
     """modify a syntax tree to :
     * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
     * retrieve only the newly inserted variable and its `attrname`
@@ -202,7 +205,8 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
     * no sort if `sortasc` is None
     """
     _cleanup_rqlst(rqlst, mainvar)
-    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role)
+    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                                    select_target_entity)
     # not found, create one
     attrvar = rqlst.make_variable()
     rqlst.add_relation(var, attrname, attrvar)
@@ -354,12 +358,39 @@ class VocabularyFacet(AbstractFacet):
 
 
 class RelationFacet(VocabularyFacet):
+    """Base facet to filter some entities according to other entities to which
+    they are related. Create concret facet by inheriting from this class an then
+    configuring it by setting class attribute described below.
+
+    The relation is defined by the `rtype` and `role` attributes.
+
+    The values displayed for related entities will be:
+
+    * result of calling their `label_vid` view if specified
+    * else their `target_attr` attribute value if specified
+    * else their eid (you usually want something nicer...)
+
+    When no `label_vid` is set, you will get translated value if `i18nable` is
+    set.
+
+    You can filter out target entity types by specifying `target_type`
+
+    By default, vocabulary will be displayed sorted on `target_attr` value in an
+    ascending way. You can control sorting with:
+
+    * `sortfunc`: set this to a stored procedure name if you want to sort on the
+      result of this function's result instead of direct value
+
+    * `sortasc`: boolean flag to control ascendant/descendant sorting
+    """
     __select__ = partial_relation_possible() & match_context_prop()
     # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
     target_attr = 'eid'
     target_type = None
+    # should value be internationalized (XXX could be guessed from the schema)
+    i18nable = True
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -368,24 +399,34 @@ class RelationFacet(VocabularyFacet):
     # if you want to call a view on the entity instead of using `target_attr`
     label_vid = None
 
+    # internal purpose
+    _select_target_entity = True
+
     @property
     def title(self):
         return display_name(self._cw, self.rtype, form=self.role)
 
+    def rql_sort(self):
+        """return true if we can handle sorting in the rql query. E.g.  if
+        sortfunc is set or if we have not to transform the returned value (eg no
+        label_vid and not i18nable)
+        """
+        return self.sortfunc is not None or (self.label_vid is None
+                                             and not self.i18nable)
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
         rqlst = self.rqlst
         rqlst.save_state()
-        if self.label_vid is not None and self.sortfunc is None:
-            sort = None # will be sorted on label
-        else:
+        if self.rql_sort:
             sort = self.sortasc
+        else:
+            sort = None # will be sorted on label
         try:
             mainvar = self.filtered_variable
             var = insert_attr_select_relation(
                 rqlst, mainvar, self.rtype, self.role, self.target_attr,
-                self.sortfunc, sort)
+                self.sortfunc, sort, self._select_target_entity)
             if self.target_type is not None:
                 rqlst.add_type_restriction(var, self.target_type)
             try:
@@ -408,20 +449,37 @@ class RelationFacet(VocabularyFacet):
         rqlst.save_state()
         try:
             _cleanup_rqlst(rqlst, self.filtered_variable)
-            _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            if self._select_target_entity:
+                _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype,
+                                          self.role, select_target_entity=True)
+            else:
+                insert_attr_select_relation(
+                    rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
+                    select_target_entity=False)
             return [str(x) for x, in self.rqlexec(rqlst.as_string())]
+        except:
+            import traceback
+            traceback.print_exc()
         finally:
             rqlst.recover()
 
     def rset_vocabulary(self, rset):
-        if self.label_vid is None:
+        if self.i18nable:
             _ = self._cw._
+        else:
+            _ = unicode
+        if self.rql_sort:
             return [(_(label), eid) for eid, label in rset]
-        if self.sortfunc is None:
-            return sorted((entity.view(self.label_vid), entity.eid)
-                          for entity in rset.entities())
-        return [(entity.view(self.label_vid), entity.eid)
-                for entity in rset.entities()]
+        if self.label_vid is None:
+            assert self.i18nable
+            values = [(_(label), eid) for eid, label in rset]
+        else:
+            values = [(entity.view(self.label_vid), entity.eid)
+                      for entity in rset.entities()]
+        values = sorted(values)
+        if self.sortasc:
+            return values
+        return reversed(values)
 
     @cached
     def support_and(self):
@@ -450,10 +508,10 @@ class RelationFacet(VocabularyFacet):
             # only one value selected
             self.rqlst.add_eid_restriction(restrvar, value)
         elif self.operator == 'OR':
-            #  multiple values with OR operator
             # set_distinct only if rtype cardinality is > 1
             if self.support_and():
                 self.rqlst.set_distinct(True)
+            # multiple ORed values: using IN is fine
             self.rqlst.add_eid_restriction(restrvar, value)
         else:
             # multiple values with AND operator
@@ -463,12 +521,66 @@ class RelationFacet(VocabularyFacet):
                 self.rqlst.add_eid_restriction(restrvar, value.pop())
 
 
-class AttributeFacet(RelationFacet):
+class RelationAttributeFacet(RelationFacet):
+    """Base facet to filter some entities according to an attribute of other
+    entities to which they are related. Most things work similarly as
+    :class:`RelationFacet`, except that:
+
+    * `label_vid` doesn't make sense here
+
+    * you should specify the attribute type using `attrtype` if it's not a
+      String
+
+    * you can specify a comparison operator using `comparator`
+    """
+    _select_target_entity = False
     # attribute type
     attrtype = 'String'
     # type of comparison: default is an exact match on the attribute value
     comparator = '=' # could be '<', '<=', '>', '>='
-    i18nable = True
+
+    def rset_vocabulary(self, rset):
+        if self.i18nable:
+            _ = self._cw._
+        else:
+            _ = unicode
+        if self.rql_sort:
+            return [(_(value), value) for value, in rset]
+        values = [(_(value), value) for value, in rset]
+        if self.sortasc:
+            return sorted(values)
+        return reversed(sorted(values))
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        value = self._cw.form.get(self.__regid__)
+        if not value:
+            return
+        mainvar = self.filtered_variable
+        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
+        self.rqlst.set_distinct(True)
+        if isinstance(value, basestring) or self.operator == 'OR':
+            # only one value selected or multiple ORed values: using IN is fine
+            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value,
+                                                self.attrtype, self.comparator)
+        else:
+            # multiple values with AND operator
+            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
+                                                self.attrtype, self.comparator)
+            while value:
+                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
+                self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
+                                                    self.attrtype, self.comparator)
+
+
+class AttributeFacet(RelationAttributeFacet):
+    """Base facet to filter some entities according one of their attribute.
+    Configuration is mostly similarly as :class:`RelationAttributeFacet`, except that:
+
+    * `target_attr` doesn't make sense here (you specify the attribute using `rtype`
+    * `role` neither, it's systematically 'subject'
+    """
+    _select_target_entity = True
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -491,13 +603,6 @@ class AttributeFacet(RelationFacet):
         # don't call rset_vocabulary on empty result set, it may be an empty
         # *list* (see rqlexec implementation)
         return rset and self.rset_vocabulary(rset)
-
-    def rset_vocabulary(self, rset):
-        if self.i18nable:
-            _ = self._cw._
-        else:
-            _ = unicode
-        return [(_(value), value) for value, in rset]
 
     def support_and(self):
         return False
