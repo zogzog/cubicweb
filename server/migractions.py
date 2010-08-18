@@ -860,7 +860,6 @@ class ServerMigrationHelper(MigrationHelper):
                 attrs = ','.join(SQL_PREFIX + rschema.type
                                  for rschema in schema[newname].subject_relations()
                                  if (rschema.final or rschema.inlined)
-                                 and rschema in schema[oldname].subjrels
                                  and not rschema in PURE_VIRTUAL_RTYPES)
             else:
                 attrs += ('eid', 'creation_date', 'modification_date', 'cwuri')
