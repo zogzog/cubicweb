@@ -336,7 +336,7 @@ function loadRemote(url, form, reqtype, sync) {
             // it should depends on request content-type
             result = cw.evalJSON(result.responseText);
         }
-        return result
+        return result;
     }
 }
 
