@@ -135,7 +135,8 @@ class Repository(object):
                 continue
             source = self.get_source(uri, source_config)
             self.sources_by_uri[uri] = source
-            self.sources.append(source)
+            if config.source_enabled(uri):
+                self.sources.append(source)
         self.system_source = self.sources_by_uri['system']
         # ensure system source is the first one
         self.sources.remove(self.system_source)
@@ -234,7 +235,9 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        for source in self.sources:
+        # don't use self.sources, we may want to give schema even to disabled
+        # sources
+        for source in self.sources_by_uri.values():
             source.set_schema(schema)
         self.schema = schema
 

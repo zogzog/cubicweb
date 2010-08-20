@@ -227,11 +227,7 @@ and if not set, it will be choosen randomly',
 
     # list of enables sources when sources restriction is necessary
     # (eg repository initialization at least)
-    _enabled_sources = None
-    @wproperty
-    def enabled_sources(self, sourceuris=None):
-        self._enabled_sources = sourceuris
-        clear_cache(self, 'sources')
+    enabled_sources = None
 
     def bootstrap_cubes(self):
         from logilab.common.textutils import splitstrip
@@ -266,11 +262,10 @@ and if not set, it will be choosen randomly',
         """return a dictionnaries containing sources definitions indexed by
         sources'uri
         """
-        allsources = self.read_sources_file()
-        if self._enabled_sources is None:
-            return allsources
-        return dict((uri, config) for uri, config in allsources.items()
-                    if uri in self._enabled_sources or uri == 'admin')
+        return self.read_sources_file()
+
+    def source_enabled(self, uri):
+        return not self.enabled_sources or uri in self.enabled_sources
 
     def write_sources_file(self, sourcescfg):
         sourcesfile = self.sources_file()
@@ -325,8 +320,7 @@ and if not set, it will be choosen randomly',
             for uri in sources:
                 assert uri in known_sources, uri
             enabled_sources = sources
-        self._enabled_sources = enabled_sources
-        clear_cache(self, 'sources')
+        self.enabled_sources = enabled_sources
 
     def migration_handler(self, schema=None, interactive=True,
                           cnx=None, repo=None, connect=True, verbosity=None):
