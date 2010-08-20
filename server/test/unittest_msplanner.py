@@ -1541,20 +1541,11 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_crossed_relation_eid_2_needattr(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
-                   [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
-                     [self.cards, self.system], None,
-                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
-                    ('UnionStep', None, None,
-                     [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
-                                         [{'T': 'String', 'Y': 'Note'}])],
-                       None, None, [self.cards], None,
-                       []),
-                      ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
-                                         [{'T': 'String', 'Y': 'Note'}])],
-                       None, None, [self.system],
-                       {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'},
-                       [])]
-                     )],
+                   [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                       [{'T': 'String', 'Y': 'Note'}])],
+                     None, None, [self.cards, self.system], {},
+                     []),
+                    ],
                    {'x': 999999,})
 
     def test_crossed_relation_eid_not_1(self):
@@ -1789,39 +1780,22 @@ class MSPlannerTC(BaseMSPlannerTC):
         self.cards.cross_relations.add('see_also')
         try:
             self._test('Any X,AA ORDERBY AA WHERE E eid %(x)s, E see_also X, X modification_date AA',
-                       [('FetchStep', [('Any X,AA WHERE X modification_date AA, X is Note',
-                                        [{'AA': 'Datetime', 'X': 'Note'}])],
-                         [self.cards, self.system], None,
-                         {'AA': 'table0.C1', 'X': 'table0.C0',
-                          'X.modification_date': 'table0.C1'},
-                         []),
-                        ('AggrStep', 'SELECT table1.C0, table1.C1 FROM table1 ORDER BY table1.C1',
+                       [('AggrStep',
+                         'SELECT table0.C0, table0.C1 FROM table0 ORDER BY table0.C1',
                          None,
-                         [('FetchStep', [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Bookmark)',
-                                          [{'AA': 'Datetime', 'X': 'Bookmark'}])],
-                           [self.cards, self.system],
-                           {},
-                           {'AA': 'table1.C1',
-                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
+                         [('FetchStep',
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is Note',
+                             [{'AA': 'Datetime', 'X': 'Note'}])], [self.cards, self.system], {},
+                           {'AA': 'table0.C1', 'X': 'table0.C0',
+                            'X.modification_date': 'table0.C1'},
                            []),
                           ('FetchStep',
-                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Note)',
-                             [{'AA': 'Datetime', 'X': 'Note'}])],
-                           [self.cards],
-                           None,
-                           {'AA': 'table1.C1',
-                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
-                           []),
-                          ('FetchStep',
-                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Note)',
-                             [{'AA': 'Datetime', 'X': 'Note'}])],
-                           [self.system],
-                           {'AA': 'table0.C1',
-                            'X': 'table0.C0', 'X.modification_date': 'table0.C1'},
-                           {'AA': 'table1.C1',
-                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
-                           [])]
-                         )],
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is Bookmark',
+                             [{'AA': 'Datetime', 'X': 'Bookmark'}])],
+                           [self.system], {},
+                           {'AA': 'table0.C1', 'X': 'table0.C0',
+                            'X.modification_date': 'table0.C1'},
+                           [])])],
                          {'x': 999999})
         finally:
             del self.cards.support_relations['see_also']
@@ -1943,11 +1917,16 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_nonregr8(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any X,Z WHERE X eid %(x)s, X multisource_rel Y, Z concerne X',
-                   [('FetchStep', [('Any  WHERE 999999 multisource_rel Y, Y is Note', [{'Y': 'Note'}])],
-                     [self.cards], None, {}, []),
+                   [('FetchStep', [('Any 999999 WHERE 999999 multisource_rel Y, Y is Note',
+                                    [{'Y': 'Note'}])],
+                     [self.cards],
+                     None, {u'%(x)s': 'table0.C0'},
+                     []),
                     ('OneFetchStep', [('Any 999999,Z WHERE Z concerne 999999, Z is Affaire',
                                        [{'Z': 'Affaire'}])],
-                     None, None, [self.system], {}, [])],
+                     None, None, [self.system],
+                     {u'%(x)s': 'table0.C0'}, []),
+                    ],
                    {'x': 999999})
 
     def test_nonregr9(self):
