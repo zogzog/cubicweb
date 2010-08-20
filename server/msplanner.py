@@ -439,7 +439,9 @@ class PartPlanInformation(object):
                 #
                 # XXX code below don't deal if some source allow relation
                 #     crossing but not another one
-                relsources = repo.rel_type_sources(rel.r_type)
+                relsources = [s for s in repo.rel_type_sources(rel.r_type)
+                               if s is self.system_source
+                               or s in self._sourcesterms]
                 if len(relsources) < 2:
                     # filter out sources being there because they have this
                     # relation in their dont_cross_relations attribute
@@ -1213,11 +1215,16 @@ class MSPlanner(SSPlanner):
                     sources, terms, scope, solindices, needsel, final)
                 if final:
                     solsinputmaps = ppi.merge_input_maps(solindices)
+                    if len(solsinputmaps) > 1:
+                        refrqlst = minrqlst
                     for solindices, inputmap in solsinputmaps:
                         if inputmap is None:
                             inputmap = subinputmap
                         else:
                             inputmap.update(subinputmap)
+                        if len(solsinputmaps) > 1:
+                            minrqlst = refrqlst.copy()
+                            sources = sources[:]
                         if inputmap and len(sources) > 1:
                             sources.remove(ppi.system_source)
                             steps.append(ppi.build_final_part(minrqlst, solindices, None,

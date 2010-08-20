@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
+from logilab.common.decorators import clear_cache
+
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
@@ -45,7 +48,7 @@ class FakeCardSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
-                         'multisource_crossed_rel': True}
+                         'multisource_crossed_rel': True,}
     dont_cross_relations = set(('fiche', 'state_of'))
     cross_relations = set(('multisource_crossed_rel',))
 
@@ -364,6 +367,8 @@ class MSPlannerTC(BaseMSPlannerTC):
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
         self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
+        for cached in ('rel_type_sources', 'can_cross_relation', 'is_multi_sources_relation'):
+            clear_cache(self.repo, cached)
 
     _test = test_plan
 
@@ -1026,7 +1031,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [self.cards, self.system], None, {'X': 'table1.C0', 'X.title': 'table1.C1', 'XT': 'table1.C1'}, []),
                     ('OneFetchStep',
                      [('Any X,XT,U WHERE X owned_by U?, X title XT, X is Card',
-                       [{'X': 'Card', 'XT': 'String'}])],
+                       [{'X': 'Card', 'U': 'CWUser', 'XT': 'String'}])],
                      None, None, [self.system], {'L': 'table0.C1',
                                                  'U': 'table0.C0',
                                                  'X': 'table1.C0',
@@ -1436,7 +1441,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',
                      [('Any B,C WHERE B login C, B is CWUser', [{'B': 'CWUser', 'C': 'String'}])],
                      [self.ldap, self.system], None, {'B': 'table1.C0', 'B.login': 'table1.C1', 'C': 'table1.C1'}, []),
-                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser',
+                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser, A is IN(Bookmark, Tag)',
                                        [{'A': 'Bookmark', 'B': 'CWUser', 'C': 'String'},
                                         {'A': 'Tag', 'B': 'CWUser', 'C': 'String'}])],
                      None, None, [self.system],
@@ -1470,7 +1475,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',
                      [('Any B,C WHERE B login C, B is CWUser', [{'B': 'CWUser', 'C': 'String'}])],
                      [self.ldap, self.system], None, {'B': 'table1.C0', 'B.login': 'table1.C1', 'C': 'table1.C1'}, []),
-                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser',
+                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser, A is IN(Card, Tag)',
                                        [{'A': 'Card', 'B': 'CWUser', 'C': 'String'},
                                         {'A': 'Tag', 'B': 'CWUser', 'C': 'String'}])],
                      None, None, [self.system],
@@ -1756,6 +1761,71 @@ class MSPlannerTC(BaseMSPlannerTC):
 #                         None, None, [self.system], {}, []),
 #                        ]),
 #                     ])
+
+    def test_ldap_user_related_to_invariant_and_dont_cross_rel(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.dont_cross_relations.add('created_by')
+        try:
+            self._test('Any X,XL WHERE E eid %(x)s, E created_by X, X login XL',
+                   [('FetchStep', [('Any X,XL WHERE X login XL, X is CWUser',
+                                    [{'X': 'CWUser', 'XL': 'String'}])],
+                     [self.ldap, self.system], None,
+                     {'X': 'table0.C0', 'X.login': 'table0.C1', 'XL': 'table0.C1'},
+                     []),
+                    ('OneFetchStep',
+                     [('Any X,XL WHERE 999999 created_by X, X login XL, X is CWUser',
+                       [{'X': 'CWUser', 'XL': 'String'}])],
+                     None, None,
+                     [self.system],
+                     {'X': 'table0.C0', 'X.login': 'table0.C1', 'XL': 'table0.C1'},
+                     [])],
+                       {'x': 999999})
+        finally:
+            self.cards.dont_cross_relations.remove('created_by')
+
+    def test_ambigous_cross_relation(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.support_relations['see_also'] = True
+        self.cards.cross_relations.add('see_also')
+        try:
+            self._test('Any X,AA ORDERBY AA WHERE E eid %(x)s, E see_also X, X modification_date AA',
+                       [('FetchStep', [('Any X,AA WHERE X modification_date AA, X is Note',
+                                        [{'AA': 'Datetime', 'X': 'Note'}])],
+                         [self.cards, self.system], None,
+                         {'AA': 'table0.C1', 'X': 'table0.C0',
+                          'X.modification_date': 'table0.C1'},
+                         []),
+                        ('AggrStep', 'SELECT table1.C0, table1.C1 FROM table1 ORDER BY table1.C1',
+                         None,
+                         [('FetchStep', [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Bookmark)',
+                                          [{'AA': 'Datetime', 'X': 'Bookmark'}])],
+                           [self.cards, self.system],
+                           {},
+                           {'AA': 'table1.C1',
+                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
+                           []),
+                          ('FetchStep',
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Note)',
+                             [{'AA': 'Datetime', 'X': 'Note'}])],
+                           [self.cards],
+                           None,
+                           {'AA': 'table1.C1',
+                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
+                           []),
+                          ('FetchStep',
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is IN(Note)',
+                             [{'AA': 'Datetime', 'X': 'Note'}])],
+                           [self.system],
+                           {'AA': 'table0.C1',
+                            'X': 'table0.C0', 'X.modification_date': 'table0.C1'},
+                           {'AA': 'table1.C1',
+                            'X': 'table1.C0', 'X.modification_date': 'table1.C1'},
+                           [])]
+                         )],
+                         {'x': 999999})
+        finally:
+            del self.cards.support_relations['see_also']
+            self.cards.cross_relations.remove('see_also')
 
     # non regression tests ####################################################
 

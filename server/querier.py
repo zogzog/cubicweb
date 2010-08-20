@@ -435,6 +435,7 @@ class ExecutionPlan(object):
             for sol in solutions:
                 sol[newvarname] = nvartype
         select.clean_solutions(solutions)
+        add_types_restriction(self.schema, select)
         self.rqlhelper.annotate(rqlst)
         self.preprocess(rqlst, security=False)
         return rqlst
