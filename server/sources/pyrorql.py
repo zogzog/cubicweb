@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Source to query another RQL repository using pyro
+"""Source to query another RQL repository using pyro"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import threading
@@ -58,8 +57,6 @@ class PyroRQLSource(AbstractSource):
     # boolean telling if the repository should connect to this source during
     # migration
     connect_for_migration = False
-
-    support_entities = None
 
     options = (
         # XXX pyro-ns host/port

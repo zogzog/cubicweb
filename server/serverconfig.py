@@ -23,7 +23,7 @@ from os.path import join, exists
 
 from logilab.common.configuration import REQUIRED, Method, Configuration, \
      ini_format_section
-from logilab.common.decorators import wproperty, cached, clear_cache
+from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
@@ -156,7 +156,7 @@ kept (hence undoable).',
         ('multi-sources-etypes',
          {'type' : 'csv', 'default': (),
           'help': 'defines which entity types from this repository are used \
-by some other instances. You should set this properly so those instances to \
+by some other instances. You should set this properly for these instances to \
 detect updates / deletions.',
           'group': 'main', 'level': 3,
           }),

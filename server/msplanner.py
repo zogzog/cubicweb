@@ -100,9 +100,9 @@ from rql.nodes import (VariableRef, Comparison, Relation, Constant, Variable,
 
 from cubicweb import server
 from cubicweb.utils import make_uid
+from cubicweb.rqlrewrite import add_types_restriction
 from cubicweb.server.utils import cleanup_solutions
-from cubicweb.server.ssplanner import (SSPlanner, OneFetchStep,
-                                       add_types_restriction)
+from cubicweb.server.ssplanner import SSPlanner, OneFetchStep
 from cubicweb.server.mssteps import *
 
 Variable._ms_table_key = lambda x: x.name

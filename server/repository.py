@@ -201,8 +201,8 @@ class Repository(object):
             for source in self.sources:
                 source.init()
         else:
-            # call init_creating so for instance native source can configurate
-            # tsearch according to postgres version
+            # call init_creating so that for instance native source can
+            # configurate tsearch according to postgres version
             for source in self.sources:
                 source.init_creating()
         # close initialization pool and reopen fresh ones for proper
@@ -1237,15 +1237,15 @@ class Repository(object):
 
     @cached
     def rel_type_sources(self, rtype):
-        return [source for source in self.sources
-                if source.support_relation(rtype)
-                or rtype in source.dont_cross_relations]
+        return tuple([source for source in self.sources
+                      if source.support_relation(rtype)
+                      or rtype in source.dont_cross_relations])
 
     @cached
     def can_cross_relation(self, rtype):
-        return [source for source in self.sources
-                if source.support_relation(rtype)
-                and rtype in source.cross_relations]
+        return tuple([source for source in self.sources
+                      if source.support_relation(rtype)
+                      and rtype in source.cross_relations])
 
     @cached
     def is_multi_sources_relation(self, rtype):

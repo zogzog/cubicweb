@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Some utilities for the CubicWeb server.
-
-"""
+"""Some utilities for the CubicWeb server."""
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -62,7 +60,7 @@ def cartesian_product(seqin):
         """recursive looping function"""
         if seqin:                   # any more sequences to process?
             for item in seqin[0]:
-                newcomb = comb + [item]     # add next item to current combination
+                newcomb = comb + [item] # add next item to current combination
                 # call rloop w/ remaining seqs, newcomb
                 for item in rloop(seqin[1:], newcomb):
                     yield item          # seqs and newcomb

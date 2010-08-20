@@ -422,7 +422,9 @@ class ExecutionPlan(object):
         # raise Unautorized exception if the user can't access to any solution
         if not newsolutions:
             raise Unauthorized('\n'.join(msgs))
-        rqlst.set_possible_types(newsolutions)
+        if msgs:
+            # (else solutions have not been modified)
+            rqlst.set_possible_types(newsolutions)
         return localchecks, restricted_vars
 
     def finalize(self, select, solutions, insertedvars):
