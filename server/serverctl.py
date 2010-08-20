@@ -891,7 +891,7 @@ class CheckMappingCommand(Command):
         config.quick_start = True
         mih = config.migration_handler(connect=False, verbosity=1)
         repo = mih.repo_connect() # necessary to get cubes
-        checkintegrity(config.load_schema(), load_mapping_file(mappingfile))
+        check_mapping(config.load_schema(), load_mapping_file(mappingfile))
 
 register_commands( (CreateInstanceDBCommand,
                     InitInstanceCommand,

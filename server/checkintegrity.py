@@ -408,9 +408,13 @@ def check_mapping(schema, mapping, warning=warning, error=error):
                     elif not somethingprinted and rschema not in seen:
                         print 'you may want to specify something for %s' % rschema
                         seen.add(rschema)
-            elif not ttypes:
-                warning('relation %s with %s as %s is supported but no target '
-                        'type supported', rschema, role, eschema)
+            else:
+                if not ttypes:
+                    warning('relation %s with %s as %s is supported but no target '
+                            'type supported', rschema, role, eschema)
+                if rschema in mapping['cross_relations'] and rschema.inlined:
+                    error('you should unline relation %s which is supported and '
+                          'may be crossed ', rschema)
     for rschema in mapping['support_relations'].values():
         if rschema in META_RTYPES:
             continue
