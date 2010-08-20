@@ -865,6 +865,34 @@ class SynchronizeInstanceSchemaCommand(Command):
         mih.cmd_synchronize_schema()
 
 
+class CheckMappingCommand(Command):
+    """Check content of the mapping file of an external source.
+
+    The mapping is checked against the instance's schema, searching for
+    inconsistencies or stuff you may have forgotten. It's higly recommanded to
+    run it when you setup a multi-sources instance.
+
+    <instance>
+      the identifier of the instance.
+
+    <mapping file>
+      the mapping file to check.
+    """
+    name = 'check-mapping'
+    arguments = '<instance> <mapping file>'
+    min_args = max_args = 2
+
+    def run(self, args):
+        from cubicweb.server.checkintegrity import check_mapping
+        from cubicweb.server.sources.pyrorql import load_mapping_file
+        appid = pop_arg(args, 1, msg='No instance specified !')
+        mappingfile = pop_arg(args, msg='No mapping file specified !')
+        config = ServerConfiguration.config_for(appid)
+        config.quick_start = True
+        mih = config.migration_handler(connect=False, verbosity=1)
+        repo = mih.repo_connect() # necessary to get cubes
+        checkintegrity(config.load_schema(), load_mapping_file(mappingfile))
+
 register_commands( (CreateInstanceDBCommand,
                     InitInstanceCommand,
                     GrantUserOnInstanceCommand,
@@ -876,4 +904,5 @@ register_commands( (CreateInstanceDBCommand,
                     CheckRepositoryCommand,
                     RebuildFTICommand,
                     SynchronizeInstanceSchemaCommand,
+                    CheckMappingCommand,
                     ) )
