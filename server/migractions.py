@@ -1405,9 +1405,7 @@ class ForRqlIterator:
     def __iter__(self):
         return self
 
-    def next(self):
-        if self._rsetit is not None:
-            return self._rsetit.next()
+    def _get_rset(self):
         rql, kwargs = self.rql, self.kwargs
         if kwargs:
             msg = '%s (%s)' % (rql, kwargs)
@@ -1417,11 +1415,23 @@ class ForRqlIterator:
             if not self._h.confirm('Execute rql: %s ?' % msg):
                 raise StopIteration
         try:
-            rset = self._h._cw.execute(rql, kwargs)
+            return self._h._cw.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:
                 raise StopIteration
+
+    def next(self):
+        if self._rsetit is not None:
+            return self._rsetit.next()
+        rset = self._get_rset()
         self._rsetit = iter(rset)
         return self._rsetit.next()
+
+    def entities(self):
+        try:
+            rset = self._get_rset()
+        except StopIteration:
+            return []
+        return rset.entities()
