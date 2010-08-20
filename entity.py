@@ -712,7 +712,9 @@ class Entity(AppObject):
             selected.append((attr, var))
         # +1 since this doen't include the main variable
         lastattr = len(selected) + 1
-        if attributes is None:
+        # don't fetch extra relation if attributes specified or of the entity is
+        # coming from an external source (may lead to error)
+        if attributes is None and self.cw_metainformation()['source']['uri'] == 'system':
             # fetch additional relations (restricted to 0..1 relations)
             for rschema, role in self._cw_to_complete_relations():
                 rtype = rschema.type
