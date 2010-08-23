@@ -34,7 +34,7 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
            ]
 
   def gen_users(ctl):
-      for row in ctl.get_data('utilisateurs'):
+      for row in ctl.iter_and_commit('utilisateurs'):
           entity = mk_entity(row, USERS)
           entity['upassword'] = u'motdepasse'
           ctl.check('login', entity['login'], None)
