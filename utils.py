@@ -334,7 +334,7 @@ except ImportError:
     json_dumps = None
 
 else:
-
+    from logilab.common.date import ustrftime
     class CubicWebJsonEncoder(json.JSONEncoder):
         """define a json encoder to be able to encode yams std types"""
 
@@ -344,9 +344,9 @@ else:
                 d['eid'] = obj.eid
                 return d
             if isinstance(obj, datetime.datetime):
-                return obj.strftime('%Y/%m/%d %H:%M:%S')
+                return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
-                return obj.strftime('%Y/%m/%d')
+                return ustrftime(obj, '%Y/%m/%d')
             elif isinstance(obj, datetime.time):
                 return obj.strftime('%H:%M:%S')
             elif isinstance(obj, datetime.timedelta):
