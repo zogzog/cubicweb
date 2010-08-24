@@ -124,13 +124,15 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
     for row in it:
         yield [item.decode(encoding) for item in row]
 
-def commit_every(nbit, store, it):
-    for i, x in enumerate(it):
-        yield x
-        if nbit is not None and i % nbit:
-            store.commit()
-    if nbit is not None:
-        store.commit()
+def callfunc_every(func, number, iterable):
+    """yield items of `iterable` one by one and call function `func`
+    every `number` iterations. Always call function `func` at the end.
+    """
+    for idx, item in enumerate(iterable):
+        yield item
+        if idx % number:
+            func()
+    func()
 
 def lazytable(reader):
     """The first row is taken to be the header of the table and
@@ -229,7 +231,7 @@ def optional(value):
     return None
 
 def required(value):
-    """raise ValueError is value is empty
+    """raise ValueError if value is empty
 
     This check should be often found in last position in the chain.
     """
@@ -570,7 +572,10 @@ class CWImportController(object):
 
     def iter_and_commit(self, datakey):
         """iter rows, triggering commit every self.commitevery iterations"""
-        return commit_every(self.commitevery, self.store, self.get_data(datakey))
+        if self.commitevery is None:
+            return self.get_data(datakey)
+        else:
+            return callfunc_every(self.commitevery, self.store.commit, self.get_data(datakey))
 
 
 
