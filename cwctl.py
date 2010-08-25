@@ -37,12 +37,15 @@ except ImportError:
 
 from os.path import exists, join, isfile, isdir, dirname, abspath
 
-from logilab.common.clcommands import register_commands, pop_arg
+from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
-from cubicweb.toolsutils import Command, main_run, rm, create_dir, underline_title
+from cubicweb.toolsutils import Command, rm, create_dir, underline_title
+from cubicweb.__pkginfo__ import version
+
+CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.', version=version)
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -301,6 +304,7 @@ class CreateInstanceCommand(Command):
     """
     name = 'create'
     arguments = '<cube> <instance>'
+    min_args = max_args = 2
     options = (
         ("config-level",
          {'short': 'l', 'type' : 'int', 'metavar': '<level>',
@@ -325,8 +329,8 @@ repository and the web server.',
         """run the command with its specific arguments"""
         from logilab.common.textutils import splitstrip
         configname = self.config.config
-        cubes = splitstrip(pop_arg(args, 1))
-        appid = pop_arg(args)
+        appid, cubes = args
+        cubes = splitstrip(cubes)
         # get the configuration and helper
         config = cwcfg.config_for(appid, configname)
         config.set_language = False
@@ -415,12 +419,12 @@ class DeleteInstanceCommand(Command):
     """
     name = 'delete'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = ()
 
     def run(self, args):
         """run the command with its specific arguments"""
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = args[0]
         configs = [cwcfg.config_for(appid, configname)
                    for configname in cwcfg.possible_configurations(appid)]
         if not configs:
@@ -796,6 +800,7 @@ class ShellCommand(Command):
     """
     name = 'shell'
     arguments = '<instance> [batch command file(s)] [-- <script arguments>]'
+    min_args = 1
     options = (
         ('system-only',
          {'short': 'S', 'action' : 'store_true',
@@ -834,7 +839,7 @@ sources for migration will be automatically selected.",
         )
 
     def run(self, args):
-        appid = pop_arg(args, None, msg="No instance specified !")
+        appid = args.pop(0)
         if self.config.pyro:
             from cubicweb import AuthenticationError
             from cubicweb.dbapi import connect
@@ -930,30 +935,29 @@ class ListCubesCommand(Command):
         for cube in cwcfg.available_cubes():
             print cube
 
-register_commands((ListCommand,
-                   CreateInstanceCommand,
-                   DeleteInstanceCommand,
-                   StartInstanceCommand,
-                   StopInstanceCommand,
-                   RestartInstanceCommand,
-                   ReloadConfigurationCommand,
-                   StatusCommand,
-                   UpgradeInstanceCommand,
-                   ShellCommand,
-                   RecompileInstanceCatalogsCommand,
-                   ListInstancesCommand, ListCubesCommand,
-                   ))
+for cmdcls in (ListCommand,
+               CreateInstanceCommand, DeleteInstanceCommand,
+               StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
+               ReloadConfigurationCommand, StatusCommand,
+               UpgradeInstanceCommand,
+               ShellCommand,
+               RecompileInstanceCatalogsCommand,
+               ListInstancesCommand, ListCubesCommand,
+               ):
+    CWCTL.register(cmdcls)
 
 
 def run(args):
     """command line tool"""
     cwcfg.load_cwctl_plugins()
-    main_run(args, """%%prog %s [options] %s
-
-The CubicWeb swiss-knife.
-
-%s"""
-)
+    try:
+        CWCTL.run(args)
+    except ConfigurationError, err:
+        print 'ERROR: ', err
+        sys.exit(1)
+    except ExecutionError, err:
+        print err
+        sys.exit(2)
 
 if __name__ == '__main__':
     run(sys.argv[1:])

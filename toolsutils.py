@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""some utilities for cubicweb tools
+"""some utilities for cubicweb command line tools"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 # XXX move most of this in logilab.common (shellutils ?)
@@ -33,8 +32,7 @@ except ImportError:
     def symlink(*args):
         raise NotImplementedError
 
-from logilab.common.clcommands import Command as BaseCommand, \
-     main_run as base_main_run
+from logilab.common.clcommands import Command as BaseCommand
 from logilab.common.compat import any
 from logilab.common.shellutils import ASK
 
@@ -259,17 +257,6 @@ class Command(BaseCommand):
         print "command failed:", reason
         sys.exit(1)
 
-
-def main_run(args, doc):
-    """command line tool"""
-    try:
-        base_main_run(args, doc, copyright=None)
-    except ConfigurationError, err:
-        print 'ERROR: ', err
-        sys.exit(1)
-    except ExecutionError, err:
-        print err
-        sys.exit(2)
 
 CONNECT_OPTIONS = (
     ("user",
