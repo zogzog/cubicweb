@@ -194,42 +194,45 @@ class PrimaryView(EntityView):
                 try:
                     label, rset, vid, dispctrl  = box
                 except ValueError:
-                    warn('[3.5] box views should now be defined as a 4-uple (label, rset, vid, dispctrl), '
-                         'please update %s' % self.__class__.__name__,
-                         DeprecationWarning)
                     label, rset, vid = box
                     dispctrl = {}
+                warn('[3.10] box views should now be a RsetBox instance, '
+                     'please update %s' % self.__class__.__name__,
+                     DeprecationWarning)
                 self.w(u'<div class="sideBox">')
                 self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
                 self.w(u'</div>')
             else:
-                try:
-                    box.render(w=self.w, row=self.cw_row)
-                except NotImplementedError:
-                    # much probably a context insensitive box, which only implements
-                    # .call() and not cell_call()
+                 try:
+                     box.render(w=self.w, row=self.cw_row)
+                 except NotImplementedError:
+                    # much probably a context insensitive box, which only
+                    # implements .call() and not cell_call()
+                    # XXX shouldn't occurs with the new box system
                     box.render(w=self.w)
 
     def _prepare_side_boxes(self, entity):
         sideboxes = []
+        boxesreg = self._cw.vreg['boxes']
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'sideboxes'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
                 continue
             label = self._rel_label(entity, rschema, role, dispctrl)
-            vid = dispctrl.get('vid', 'sidebox')
-            sideboxes.append( (label, rset, vid, dispctrl) )
-        sideboxes += self._cw.vreg['boxes'].poss_visible_objects(
-            self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
-            context='incontext')
+            vid = dispctrl.get('vid', 'autolimited')
+            box = boxesreg.select('rsetbox', self._cw, rset=rset,
+                                  vid=vid, title=label, dispctrl=dispctrl,
+                                  context='incontext')
+            sideboxes.append(box)
+        sideboxes += boxesreg.poss_visible_objects(
+             self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
+             context='incontext')
         # XXX since we've two sorted list, it may be worth using bisect
         def get_order(x):
-            if isinstance(x, tuple):
-                # x is a view box (label, rset, vid, dispctrl)
-                # default to 1000 so view boxes occurs after component boxes
-                return x[-1].get('order', 1000)
-            # x is a component box
-            return x.cw_propval('order')
+            if 'order' in x.cw_property_defs:
+                return x.cw_propval('order')
+            # default to 9999 so view boxes occurs after component boxes
+            return x.cw_extra_kwargs.get('dispctrl', {}).get('order', 9999)
         return sorted(sideboxes, key=get_order)
 
     def _section_def(self, entity, where):

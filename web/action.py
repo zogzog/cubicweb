@@ -45,35 +45,31 @@ class Action(AppObject):
         for action in self.actual_actions():
             menu.append(box.box_action(action))
 
+    def html_class(self):
+        if self._cw.selected(self.url()):
+            return 'selected'
+
+    def build_action(self, title, url, **kwargs):
+        return UnregisteredAction(self._cw, title, url, **kwargs)
+
     def url(self):
         """return the url associated with this action"""
         raise NotImplementedError
 
-    def html_class(self):
-        if self._cw.selected(self.url()):
-            return 'selected'
-        if self.category:
-            return 'box' + self.category.capitalize()
-
-    def build_action(self, title, path, **kwargs):
-        return UnregisteredAction(self._cw, self.cw_rset, title, path, **kwargs)
-
 
 class UnregisteredAction(Action):
-    """non registered action used to build boxes. Unless you set them
-    explicitly, .vreg and .schema attributes at least are None.
-    """
+    """non registered action, used to build boxes"""
     category = None
     id = None
 
-    def __init__(self, req, rset, title, path, **kwargs):
-        Action.__init__(self, req, rset=rset)
+    def __init__(self, req, title, url, **kwargs):
+        Action.__init__(self, req)
         self.title = req._(title)
-        self._path = path
+        self._url = url
         self.__dict__.update(kwargs)
 
     def url(self):
-        return self._path
+        return self._url
 
 
 class LinkToEntityAction(Action):

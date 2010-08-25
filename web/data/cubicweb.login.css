@@ -30,7 +30,7 @@ div#loginBox {
   margin-left: -14em;
   width: 28em;
   background: #fff;
-  border: 2px solid %(actionBoxTitleBgColor)s;
+  border: 2px solid %(incontextBoxBodyBgColor)s;
   padding-bottom: 0.5em;
   text-align: center;
 }
@@ -80,7 +80,7 @@ div#loginBox div#loginContent form {
 
 .loginButton {
   border: 1px solid #edecd2;
-  border-color: #edecd2 %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s  #edecd2;
+  border-color: #edecd2 %(incontextBoxBodyBgColor)s %(incontextBoxBodyBgColor)s  #edecd2;
   margin: 2px 0px 0px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
 }

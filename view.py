@@ -504,8 +504,13 @@ class ReloadableMixIn(object):
 
     build_js = build_update_js_call # expect updatable component by default
 
+    @property
+    def domid(self):
+        return domid(self.__regid__)
+
+    @deprecated('[3.10] use .domid property')
     def div_id(self):
-        return ''
+        return self.domid
 
 
 class Component(ReloadableMixIn, View):
@@ -513,14 +518,20 @@ class Component(ReloadableMixIn, View):
     __registry__ = 'components'
     __select__ = yes()
 
-    # XXX huummm, much probably useless
+    # XXX huummm, much probably useless (should be...)
     htmlclass = 'mainRelated'
-    def div_class(self):
-        return '%s %s' % (self.htmlclass, self.__regid__)
+    @property
+    def cssclass(self):
+        return '%s %s' % (self.htmlclass, domid(self.__regid__))
 
-    # XXX a generic '%s%s' % (self.__regid__, self.__registry__.capitalize()) would probably be nicer
-    def div_id(self):
-        return '%sComponent' % self.__regid__
+    # XXX should rely on ReloadableMixIn.domid
+    @property
+    def domid(self):
+        return '%sComponent' % domid(self.__regid__)
+
+    @deprecated('[3.10] use .cssclass property')
+    def div_class(self):
+        return self.cssclass
 
 
 class Adapter(AppObject):

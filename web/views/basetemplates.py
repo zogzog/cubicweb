@@ -127,7 +127,7 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self._cw.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % xml_escape(vtitle))
+            w(u'<div class="vtitle">%s</div>\n' % xml_escape(vtitle))
         # display entity type restriction component
         etypefilter = self._cw.vreg['components'].select_or_none(
             'etypenavigation', self._cw, rset=self.cw_rset)
@@ -191,6 +191,7 @@ class TheMainTemplate(MainTemplate):
         boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
+            getlayout = self._cw.vreg['components'].select
             self.w(u'<td id="navColumn%s"><div class="navboxes">\n' % context.capitalize())
             for box in boxes:
                 box.render(w=self.w, view=view)
@@ -269,7 +270,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self._cw.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>' % xml_escape(vtitle))
+            w(u'<div class="vtitle">%s</div>' % xml_escape(vtitle))
 
     def topleft_header(self):
         logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
@@ -392,10 +393,8 @@ class HTMLPageFooter(View):
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
-            self.w(u'<a href="%s"' % action.url())
-            if getattr(action, 'html_class'):
-                self.w(u' class="%s"' % action.html_class())
-            self.w(u'>%s</a>' % self._cw._(action.title))
+            self.w(u'<a href="%s">%s</a>' % (action.url(),
+                                             self._cw._(action.title)))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
         self.w(u'</div>')

@@ -197,7 +197,7 @@ class RelatedObjectsVComponent(EntityVComponent):
             rset = self._cw.execute(self.rql(), {'x': eid})
         if not rset.rowcount:
             return
-        self.w(u'<div class="%s">' % self.div_class())
+        self.w(u'<div class="%s">' % self.cssclass)
         self.w(u'<h4>%s</h4>\n' % self._cw._(self.title).capitalize())
         self.wview(self.vid, rset)
         self.w(u'</div>')

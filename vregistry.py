@@ -467,7 +467,7 @@ class VRegistry(dict):
         self.load_module(module)
 
     def load_module(self, module):
-        self.info('loading %s', module)
+        self.info('loading %s from %s', module.__name__, module.__file__)
         if hasattr(module, 'registration_callback'):
             module.registration_callback(self)
         else:

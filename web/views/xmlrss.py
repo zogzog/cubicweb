@@ -148,25 +148,25 @@ class RSSEntityFeedURL(Component):
         return entity.cw_adapt_to('IFeed').rss_feed_url()
 
 
-class RSSIconBox(box.BoxTemplate):
+class RSSIconBox(box.Box):
     """just display the RSS icon on uniform result set"""
     __regid__ = 'rss'
-    __select__ = (box.BoxTemplate.__select__
+    __select__ = (box.Box.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
 
     visible = False
     order = 999
 
-    def call(self, **kwargs):
+    def render(self, w, **kwargs):
         try:
             rss = self._cw.uiprops['RSS_LOGO']
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return
         urlgetter = self._cw.vreg['components'].select('rss_feed_url', self._cw,
-                                                   rset=self.cw_rset)
+                                                       rset=self.cw_rset)
         url = urlgetter.feed_url()
-        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
+        w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
 
 class RSSView(XMLView):

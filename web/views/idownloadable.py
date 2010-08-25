@@ -42,22 +42,25 @@ def download_box(w, entity, title=None, label=None, footer=u''):
     w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
       % (xml_escape(entity.cw_adapt_to('IDownloadable').download_url()),
          req.uiprops['DOWNLOAD_ICON'],
-         _('download icon'), xml_escape(label or entity.dc_title())))
+         req._('download icon'), xml_escape(label or entity.dc_title())))
     w(u'%s</div>' % footer)
     w(u'</div></div>\n')
 
 
-class DownloadBox(box.EntityBoxTemplate):
+class DownloadBox(box.EntityBox):
     __regid__ = 'download_box'
     # no download box for images
-    # XXX primary_view selector ?
-    __select__ = (one_line_rset() & match_context_prop()
-                  & adaptable('IDownloadable') & ~has_mimetype('image/'))
-    order = 10
+    __select__ = (box.EntityBox.__select__ &
+                  adaptable('IDownloadable') & ~has_mimetype('image/'))
 
-    def cell_call(self, row, col, title=None, label=None, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        download_box(self.w, entity, title, label)
+    order = 10
+    title = _('download')
+
+    def render_body(self, w):
+        w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
+          % (xml_escape(self.entity.cw_adapt_to('IDownloadable').download_url()),
+             self._cw.uiprops['DOWNLOAD_ICON'],
+             self._cw._('download icon'), xml_escape(self.entity.dc_title())))
 
 
 class DownloadView(EntityView):

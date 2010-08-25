@@ -25,7 +25,7 @@ from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
-from cubicweb.web.box import BoxTemplate
+from cubicweb.web import box
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
                                 _prepare_vocabulary_rqlst)
@@ -38,13 +38,13 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
     return 0
 
 
-class FilterBox(BoxTemplate):
+class FilterBox(box.Box):
     """filter results of a query"""
     __regid__ = 'filter_box'
     __select__ = (((non_final_entity() & multi_lines_rset())
                    | contextview_selector()
                    ) & match_context_prop())
-    context = 'left'
+    context = 'left' # XXX doesn't support 'incontext', only 'left' or 'right'
     title = _('boxes_filter_box')
     visible = True # functionality provided by the search box by default
     order = 1
@@ -61,7 +61,8 @@ class FilterBox(BoxTemplate):
         """
         return {}
 
-    def _get_context(self, view):
+    def _get_context(self):
+        view = self.cw_extra_kwargs.get('view')
         context = getattr(view, 'filter_box_context_info', lambda: None)()
         if context:
             rset, vid, divid, paginate = context
@@ -71,14 +72,15 @@ class FilterBox(BoxTemplate):
             paginate = view and view.paginable
         return rset, vid, divid, paginate
 
-    def call(self, view=None):
+    def render(self, w, **kwargs):
         req = self._cw
         req.add_js( self.needs_js )
         req.add_css( self.needs_css)
         if self.roundcorners:
             req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
-        rset, vid, divid, paginate = self._get_context(view)
-        if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
+        rset, vid, divid, paginate = self._get_context()
+        # XXX done by selectors, though maybe necessary when rset has been hijacked
+        if rset.rowcount < 2:
             return
         rqlst = rset.syntax_tree()
         # union not yet supported
@@ -97,7 +99,6 @@ class FilterBox(BoxTemplate):
             return
         if vid is None:
             vid = req.form.get('vid')
-        w = self.w
         if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
             w(self.bookmark_link(rset))
         w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
@@ -110,7 +111,7 @@ class FilterBox(BoxTemplate):
                 hiddens[param] = req.form[param]
         filter_hiddens(w, **hiddens)
         for wdg in widgets:
-            wdg.render(w=self.w)
+            wdg.render(w=w)
         w(u'</fieldset>\n</form>\n')
 
     def bookmark_link(self, rset):

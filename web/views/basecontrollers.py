@@ -26,7 +26,7 @@ from logilab.common.date import strptime
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
-from cubicweb.utils import json, json_dumps
+from cubicweb.utils import UStringIO, json, json_dumps
 from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
 from cubicweb.mail import format_mail
 from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse
@@ -345,14 +345,19 @@ class JSonController(Controller):
     def _call_view(self, view, paginate=False, **kwargs):
         divid = self._cw.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
-        stream = view.set_stream()
+        try:
+            stream = view.set_stream()
+        except AttributeError:
+            stream = UStringIO()
+            kwargs['w'] = stream.write
+            assert not paginate
         if paginate:
             if divid == 'pageContent':
                 # mimick main template behaviour
                 stream.write(u'<div id="pageContent">')
                 vtitle = self._cw.form.get('vtitle')
                 if vtitle:
-                    stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+                    stream.write(u'<div class="vtitle">%s</div>\n' % vtitle)
             view.paginate()
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')

@@ -182,7 +182,10 @@ class BoxMenu(RawBoxItem):
             toggle_action(ident), self.link_class, self.label))
         self._begin_menu(ident)
         for item in self.items:
-            item.render(self.w)
+            if hasattr(item, 'render'):
+                item.render(self.w)
+            else:
+                self.w(u'<li>%s</li>' % item)
         self._end_menu()
         if self.isitem:
             self.w(u'</li>')

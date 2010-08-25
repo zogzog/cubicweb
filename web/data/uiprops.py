@@ -103,18 +103,36 @@ pageContentBgColor = '#fff'
 pageContentPadding = '1em'
 pageMinHeight = '800px'
 
-# boxes
-boxTitleBg = lazystr('%(headerBgColor)s url("boxHeader.png") repeat-x 50%% 50%%')
-boxBodyBgColor = '#efefde'
+# boxes ########################################################################
 
-# action, search, sideBoxes
-actionBoxTitleBgColor = '#cfceb7'
-actionBoxTitleBg = lazystr('%(actionBoxTitleBgColor)s url("actionBoxHeader.png") repeat-x 50%% 50%%')
-sideBoxBodyBgColor = '#f8f8ee'
-sideBoxBodyBg = lazystr('%(sideBoxBodyBgColor)s')
-sideBoxBodyColor = '#555544'
+# title of contextFree / contextual boxes
+contextFreeBoxTitleBgColor = '#CFCEB7'
+contextFreeBoxTitleBg = lazystr('%(contextFreeBoxTitleBgColor)s url("contextFreeBoxHeader.png") repeat-x 50%% 50%%')
+contextFreeBoxTitleColor = '#000'
 
-# table listing & co
+contextualBoxTitleBgColor = '#FF9900'
+contextualBoxTitleBg = lazystr('%(contextualBoxTitleBgColor)s url("contextualBoxHeader.png") repeat-x 50%% 50%%')
+contextualBoxTitleColor = '#FFF'
+
+# title of 'incontext' boxes (eg displayed insinde the primary view)
+incontextBoxTitleBgColor = lazystr('%(contextFreeBoxTitleBgColor)s')
+incontextBoxTitleBg = lazystr('%(incontextBoxTitleBgColor)s url("incontextBoxHeader.png") repeat-x 50%% 50%%')
+incontextBoxTitleColor = '#000'
+
+# body of boxes in the left or right column (whatever contextFree / contextual)
+leftrightBoxBodyBgColor = '#FFF'
+leftrightBoxBodyBg = lazystr('%(leftrightBoxBodyBgColor)s')
+leftrightBoxBodyColor = '#black'
+leftrightBoxBodyHoverBgColor = '#EEEDD9'
+
+# body of 'incontext' boxes (eg displayed insinde the primary view)
+incontextBoxBodyBgColor = '#f8f8ee'
+incontextBoxBodyBg = lazystr('%(incontextBoxBodyBgColor)s')
+incontextBoxBodyColor = '#555544'
+incontextBoxBodyHoverBgColor = lazystr('%(incontextBoxBodyBgColor)s')
+
+
+# table listing & co ###########################################################
 listingBorderColor = '#ccc'
 listingHeaderBgColor = '#efefef'
 listingHihligthedBgColor = '#fbfbfb'

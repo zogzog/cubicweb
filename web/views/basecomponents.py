@@ -148,8 +148,7 @@ class ApplicationMessage(component.Component):
         self.w(u'<div id="appMsg" onclick="%s" class="%s">\n' %
                (toggle_action('appMsg'), (msgs and ' ' or 'hidden')))
         for msg in msgs:
-            self.w(u'<div class="message" id="%s">%s</div>' % (
-                self.div_id(), msg))
+            self.w(u'<div class="message" id="%s">%s</div>' % (self.domid, msg))
         self.w(u'</div>')
 
 

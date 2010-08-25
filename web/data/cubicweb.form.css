@@ -229,6 +229,6 @@ div.notice {
   margin: 1em 1em 0px 0px;
   border-width: 1px;
   border-style: solid;
-  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
+  border-color: %(buttonBorderColor)s %(incontextBoxBodyBgColor)s %(incontextBoxBodyBgColor)s %(buttonBorderColor)s;
   background: %(buttonBgColor)s %(buttonBgImg)s;
 }

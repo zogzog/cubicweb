@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Primary view for bookmarks + user's bookmarks box
+"""Primary view for bookmarks + user's bookmarks box"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -70,59 +69,55 @@ class BookmarkPrimaryView(primary.PrimaryView):
         self.w(u'</div>')
 
 
-class BookmarksBox(box.UserRQLBoxTemplate):
+class BookmarksBox(box.Box):
     """display a box containing all user's bookmarks"""
     __regid__ = 'bookmarks_box'
-    order = 40
+
     title = _('bookmarks')
+    order = 40
     rql = ('Any B,T,P ORDERBY lower(T) '
            'WHERE B is Bookmark,B title T, B path P, B bookmarked_by U, '
            'U eid %(x)s')
-    etype = 'Bookmark'
-    rtype = 'bookmarked_by'
 
+    def init_rendering(self):
+        ueid = self._cw.user.eid
+        self.bookmarks_rset = self._cw.execute(self.rql, {'x': ueid})
+        rschema = self._cw.vreg.schema.rschema('bookmarked_by')
+        eschema = self._cw.vreg.schema.eschema('Bookmark')
+        self.can_delete = rschema.has_perm(self._cw, 'delete', toeid=ueid)
+        self.can_edit = (eschema.has_perm(self._cw, 'add') and
+                         rschema.has_perm(self._cw, 'add', toeid=ueid))
+        if not self.bookmarks_rset and not self.can_edit:
+            raise box.EmptyComponent()
+        self.items = []
 
-    def call(self, **kwargs):
+    def render_body(self, w):
+        ueid = self._cw.user.eid
         req = self._cw
-        ueid = req.user.eid
-        try:
-            rset = req.execute(self.rql, {'x': ueid})
-        except Unauthorized:
-            # can't access to something in the query, forget this box
-            return
-        box = BoxWidget(req._(self.title), self.__regid__)
-        box.listing_class = 'sideBox'
-        rschema = self._cw.vreg.schema.rschema(self.rtype)
-        eschema = self._cw.vreg.schema.eschema(self.etype)
-        candelete = rschema.has_perm(req, 'delete', toeid=ueid)
-        if candelete:
+        if self.can_delete:
             req.add_js('cubicweb.ajax.js')
-        else:
-            dlink = None
-        for bookmark in rset.entities():
-            label = '<a href="%s">%s</a>' % (xml_escape(bookmark.action_url()),
-                                             xml_escape(bookmark.title))
-            if candelete:
+        for bookmark in self.bookmarks_rset.entities():
+            label = self.build_link(bookmark.title, bookmark.action_url())
+            if self.can_delete:
                 dlink = u'[<a href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
                     bookmark.eid, _('delete this bookmark'))
-                label = '%s %s' % (dlink, label)
-            box.append(RawBoxItem(label))
-        if eschema.has_perm(req, 'add') and rschema.has_perm(req, 'add', toeid=ueid):
-            boxmenu = BoxMenu(req._('manage bookmarks'))
+                label = '<div>%s %s</div>' % (dlink, label)
+            self.append(label)
+        if self.can_edit:
+            menu = BoxMenu(req._('manage bookmarks'))
             linkto = 'bookmarked_by:%s:subject' % ueid
             # use a relative path so that we can move the instance without
             # loosing bookmarks
             path = req.relative_path()
-            # XXX if vtitle specified in params, extract it and use it as default value
-            # for bookmark's title
+            # XXX if vtitle specified in params, extract it and use it as
+            # default value for bookmark's title
             url = req.vreg['etypes'].etype_class('Bookmark').cw_create_url(
                 req, __linkto=linkto, path=path)
-            boxmenu.append(self.mk_action(req._('bookmark this page'), url,
-                                          category='manage', id='bookmark'))
-            if rset:
+            menu.append(self.build_link(req._('bookmark this page'), url))
+            if self.bookmarks_rset:
                 if req.user.is_in_group('managers'):
                     bookmarksrql = 'Bookmark B WHERE B bookmarked_by U, U eid %s' % ueid
-                    erset = rset
+                    erset = self.bookmarks_rset
                 else:
                     # we can't edit shared bookmarks we don't own
                     bookmarksrql = 'Bookmark B WHERE B bookmarked_by U, B owned_by U, U eid %(x)s'
@@ -130,11 +125,10 @@ class BookmarksBox(box.UserRQLBoxTemplate):
                                         build_descr=False)
                     bookmarksrql %= {'x': ueid}
                 if erset:
-                    url = self._cw.build_url(vid='muledit', rql=bookmarksrql)
-                    boxmenu.append(self.mk_action(self._cw._('edit bookmarks'), url, category='manage'))
+                    url = req.build_url(vid='muledit', rql=bookmarksrql)
+                    menu.append(self.build_link(req._('edit bookmarks'), url))
             url = req.user.absolute_url(vid='xaddrelation', rtype='bookmarked_by',
                                         target='subject')
-            boxmenu.append(self.mk_action(self._cw._('pick existing bookmarks'), url, category='manage'))
-            box.append(boxmenu)
-        if not box.is_empty():
-            box.render(self.w)
+            menu.append(self.build_link(req._('pick existing bookmarks'), url))
+            self.append(menu)
+        self.render_items(w)

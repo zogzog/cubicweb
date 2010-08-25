@@ -31,19 +31,22 @@ h1, h2, h3 { margin-top:0; margin-bottom:0; }
 /* h3 { font-size:1.30769em; } */
 
 /* scale traditional */
-h1 { font-size: %(h1FontSize)s; }
+h1,
+.vtitle { font-size: %(h1FontSize)s; }
 h2 { font-size: %(h2FontSize)s; }
 h3 { font-size: %(h3FontSize)s; }
 
 /* paddings */
-h1 {
+h1,
+.vtitle {
   border-bottom: %(h1BorderBottomStyle)s;
   padding: %(h1Padding)s;
   margin: %(h1Margin)s;
   color: %(h1Color)s;
 }
 
-h1.plain {
+h1.plain,
+.vtitle {
  border-bottom: none;
 }
 
@@ -100,7 +103,7 @@ ol {
 }
 
 ol ol,
-ul ul{
+ul ul {
   margin-left: 8px;
   margin-bottom : 0px;
 }
@@ -113,7 +116,7 @@ li {
   margin-left: 1.5em;
 }
 
-img{
+img {
   border: none;
 }
 
@@ -139,7 +142,7 @@ input:focus {
   border: 1px inset %(headerBgColor)s;
 }
 
-hr{
+hr {
   border: none;
   border-bottom: 1px solid %(defaultColor)s;
   height: 1px;
@@ -234,16 +237,11 @@ table#header td#headtext {
 /* Popup on login box and userActionBox */
 div.popupWrapper {
   position: relative;
-  z-index: 100;
 }
 
 div.popup {
   position: absolute;
   background: #fff;
-  /* background-color: #f0eff0; */
-  /* background-image: url(popup.png); */
-  /* background-repeat: repeat-x; */
-  /* background-positon: top left; */
   border: 1px solid %(listingBorderColor)s;
   border-top: none;
   text-align: left;
@@ -261,12 +259,13 @@ div#page {
   margin: %(defaultLayoutMargin)s;
 }
 
-table#mainLayout #navColumnLeft {
+table#mainLayout td#navColumnLeft {
   width: 16em;
   padding-right: %(defaultLayoutMargin)s;
+
 }
 
-table#mainLayout #navColumnRight {
+table#mainLayout td#navColumnRight {
   width: 16em;
   padding-left: %(defaultLayoutMargin)s;
 }
@@ -301,28 +300,15 @@ div#contentmain{
   color: %(defaultColor)s;
 }
 
-/* rql bar */
-
-div#rqlinput {
-  margin-bottom: %(defaultLayoutMargin)s;
-}
-
-input#rql{
-  padding: 0.25em 0.3em;
-  width: 99%;
-}
-
-/* boxes */
+/* XXX old boxes, deprecated */
 
 div.boxFrame {
   width: 100%;
 }
 
 div.boxTitle {
-  overflow: hidden;
-  font-weight: bold;
   color: #fff;
-  background: %(boxTitleBg)s;
+  background: %(contextualBoxTitleBgColor)s;
 }
 
 div.boxTitle span,
@@ -331,14 +317,7 @@ div.sideBoxTitle span {
   white-space: nowrap;
 }
 
-div.searchBoxFrame div.boxTitle,
-div.greyBoxFrame div.boxTitle {
-  background: %(actionBoxTitleBg)s;
-}
-
-div.sideBoxTitle span,
-div.searchBoxFrame div.boxTitle span,
-div.greyBoxFrame div.boxTitle span {
+div.sideBoxTitle span {
   color: %(defaultColor)s;
 }
 
@@ -352,34 +331,13 @@ div.boxContent {
   border-top: none;
 }
 
-a.boxMenu {
-  display: block;
-  padding: 1px 9px 1px 3px;
-  background: transparent %(bulletDownImg)s;
-}
-
-a.boxMenu:hover {
-  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
-  cursor: pointer;
-}
-
-a.popupMenu {
-  background: transparent url("puce_down_black.png") 2% 6px no-repeat;
-  padding-left: 2em;
-}
-
-div.searchBoxFrame div.boxContent {
-  padding: 4px 4px 3px;
-  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
-}
-
 div.shadow{
   height: 14px;
   background: url("shadow.gif") no-repeat top right;
 }
 
 div.sideBoxTitle {
-  background: %(actionBoxTitleBg)s;
+  background: %(incontextBoxBodyBg)s;
   display: block;
   font-weight: bold;
 }
@@ -400,11 +358,11 @@ ul.sideBox li{
 
 div.sideBoxBody {
   padding: 0.2em 5px;
-  background: %(sideBoxBodyBg)s;
+  background: %(incontextBoxBodyBg)s;
 }
 
 div.sideBoxBody a {
-  color: %(sideBoxBodyColor)s;
+  color: %(incontextBoxBodyColor)s;
 }
 
 div.sideBoxBody a:hover {
@@ -413,6 +371,174 @@ div.sideBoxBody a:hover {
 
 div.sideBox table td {
   padding-right: 1em;
+}
+
+/* boxes */
+
+div.boxTitle {
+  overflow: hidden;
+  font-weight: bold;
+}
+
+div.boxTitle span {
+  padding: 0px 0.5em;
+  white-space: nowrap;
+}
+
+div.boxBody {
+  padding: 5px;
+  border-top: none;
+  background-color: %(leftrightBoxBodyBgColor)s;
+}
+
+div.boxBody a {
+  color: %(leftrightBoxBodyColor)s;
+}
+
+div.boxBody a:hover {
+  text-decoration: none;
+  cursor: pointer;
+  background-color: %(leftrightBoxBodyHoverBgColor)s;
+}
+
+/* boxes contextual customization */
+
+.contextFreeBox div.boxTitle {
+  background: %(contextFreeBoxTitleBg)s;
+  color: %(contextFreeBoxTitleColor)s;
+}
+
+.contextualBox div.boxTitle {
+  background: %(contextualBoxTitleBg)s;
+  color: %(contextualBoxTitleColor)s;
+}
+
+.primaryRight div.boxTitle {
+  background: %(incontextBoxTitleBg)s;
+  color: %(incontextBoxTitleColor)s;
+}
+
+.primaryRight div.boxBody {
+  padding: 0.2em 5px;
+  background: %(incontextBoxBodyBgColor)s;
+}
+
+.primaryRight div.boxBody a {
+  color: %(incontextBoxBodyColor)s;
+}
+
+.primaryRight div.boxBody a:hover {
+  background-color: %(incontextBoxBodyHoverBgColor)s;
+}
+
+.primaryRight div.boxFooter {
+  margin-bottom: 1em;
+}
+
+#navColumnLeft div.boxFooter, #navColumnRight div.boxFooter{
+  height: 14px;
+  background: url("shadow.gif") no-repeat top right;
+}
+
+/* boxes lists and menus */
+
+ul.boxListing {
+  margin: 0;
+  padding: 0;
+}
+
+ul.boxListing ul {
+  padding: 1px 3px;
+}
+
+ul.boxListing a {
+  color: %(defaultColor)s;
+  display: block;
+  padding: 1px 9px 1px 3px;
+}
+
+ul.boxListing li {
+  margin: 0px;
+  padding: 0px;
+  background-image: none;
+}
+
+ul.boxListing ul li {
+  margin: 0px;
+  padding-left: 8px;
+}
+
+ul.boxListing ul li a {
+  padding-left: 10px;
+  background-image: url("bullet_orange.png");
+  background-repeat: no-repeat;
+  background-position: 0 6px;
+}
+
+ul.boxListing .selected {
+  color: %(aColor)s;
+  font-weight: bold;
+}
+
+ul.boxListing a.boxMenu:hover {
+  border-top: medium none;
+  background: %(leftrightBoxBodyHoverBgColor)s;
+}
+
+a.boxMenu,
+ul.boxListing a.boxMenu{
+  display: block;
+  padding: 1px 3px;
+  background: transparent %(bulletDownImg)s;
+}
+
+ul.boxListing a.boxMenu:hover {
+  border-top: medium none;
+  background: %(leftrightBoxBodyHoverBgColor)s %(bulletDownImg)s;
+}
+
+a.boxMenu:hover {
+  cursor: pointer;
+}
+
+a.popupMenu {
+  background: transparent url("puce_down_black.png") 2% 6px no-repeat;
+  padding-left: 2em;
+}
+
+/* custom boxes */
+
+.search_box div.boxBody {
+  padding: 4px 4px 3px;
+  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
+}
+
+.bookmarks_box ul.boxListing div a{
+  background: #fff;
+  display: inline;
+  padding: 0;
+}
+.bookmarks_box ul.boxListing div a:hover{
+  border-bottom: 1px solid #000;
+}
+
+.download_box div.boxTitle {
+  background : #8fbc8f !important;
+}
+
+.download_box div.boxBody {
+  background : #eefed9;
+}
+
+/* search box and rql bar */
+
+div#rqlinput {
+  margin-bottom: %(defaultLayoutMargin)s;
+}
+
+input#rql{
+  padding: 0.25em 0.3em;
+  width: 99%;
 }
 
 input.rqlsubmit{
@@ -424,7 +550,7 @@ input.rqlsubmit{
 }
 
 input#norql{
-  width:13em;
+  width:155px;
   margin-right: 2px;
 }
 
@@ -435,7 +561,7 @@ a.logout, a.logout:visited, a.logout:hover{
 }
 
 div#userActionsBox {
-  width: 14em;
+  width: 15em;
   text-align: right;
 }
 
@@ -443,20 +569,6 @@ div#userActionsBox a.popupMenu {
   color: #000;
   text-decoration: underline;
   padding-right: 2em;
-}
-
-/* download box XXX move to its own file? */
-div.downloadBoxTitle{
- background : #8fbc8f;
- font-weight: bold;
-}
-
-div.downloadBox{
- font-weight: bold;
-}
-
-div.downloadBox div.sideBoxBody{
- background : #eefed9;
 }
 
 /**************/
@@ -565,7 +677,7 @@ div.toolbarButton {
 
 div#appMsg {
   margin-bottom: %(defaultLayoutMargin)s;
-  border: 1px solid %(actionBoxTitleBgColor)s;
+  border: 1px solid %(incontextBoxTitleBgColor)s;
 }
 
 .message {
@@ -578,7 +690,7 @@ div#appMsg {
   padding-left: 25px;
   background: %(msgBgColor)s url("critical.png") 2px center no-repeat;
   color: %(errorMsgColor)s;
-  border: 1px solid %(actionBoxTitleBgColor)s;
+  border: 1px solid %(incontextBoxTitleBgColor)s;
 }
 
 /* search-associate message */
@@ -733,7 +845,7 @@ div#newvalue{
 input.button{
   margin: 1em 1em 0px 0px;
   border: 1px solid %(buttonBorderColor)s;
-  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
+  border-color: %(buttonBorderColor)s %(incontextBoxTitleBgColor)s %(incontextBoxTitleBgColor)s %(buttonBorderColor)s;
 }
 
 /* FileItemInnerView  jquery.treeview.css */
@@ -753,66 +865,12 @@ ul.startup {
 
 ul.startup li,
 ul.section li {
-  margin-left:0px
-}
-
-ul.boxListing {
-  margin: 0px;
-  padding: 0px 3px;
-}
-
-ul.boxListing li,
-ul.boxListing ul li {
-  margin: 0px;
-  padding: 0px;
-  background-image: none;
-}
-
-ul.boxListing ul {
-  padding: 1px 3px;
-}
-
-ul.boxListing a {
-  color: %(defaultColor)s;
-  display:block;
-  padding: 1px 9px 1px 3px;
-}
-
-ul.boxListing .selected {
-  color: %(aColor)s;
-  font-weight: bold;
-}
-
-ul.boxListing a.boxMenu:hover {
-  border-top: medium none;
-  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
-}
-
-ul.boxListing a.boxBookmark {
-  padding-left: 3px;
-  background-image: none;
-  background:#fff;
+  margin-left: 0px
 }
 
 ul.simple li,
-ul.boxListing ul li ,
 .popupWrapper ul li {
   background: transparent url("bullet_orange.png") no-repeat 0% 6px;
-}
-
-ul.boxListing a.boxBookmark:hover,
-ul.boxListing a:hover,
-ul.boxListing ul li a:hover {
-  text-decoration: none;
-  background: %(sideBoxBodyBg)s;
-}
-
-ul.boxListing ul li a:hover{
-  background-color: transparent;
-}
-
-ul.boxListing ul li a {
-  padding: 1px 3px 0px 10px;
 }
 
 ul.simple li {
@@ -820,7 +878,7 @@ ul.simple li {
 }
 
 .popupWrapper ul {
-  padding:0.2em 0.3em;
+  padding: 0.2em 0.3em;
   margin-bottom: 0px;
 }
 
@@ -853,20 +911,12 @@ div#footer a {
 .validateButton {
   margin: 1em 1em 0px 0px;
   border: 1px solid %(buttonBorderColor)s;
-  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
+  border-color: %(buttonBorderColor)s %(incontextBoxTitleBgColor)s %(incontextBoxTitleBgColor)s %(buttonBorderColor)s;
   background: %(buttonBgColor)s url("button.png") bottom left repeat-x;
 }
 
 /********************************/
-/* placement of alt. view icons */
-/********************************/
-
-.otherView {
-  float: right;
-}
-
-/********************************/
-/* rest releted classes         */
+/* rest related classes         */
 /********************************/
 
 img.align-right {
