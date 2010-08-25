@@ -649,6 +649,7 @@ div.ctxtoolbar {
   float: right;
   padding-left: 24px;
   position: relative;
+  z-index: 10;
 }
 div.toolbarButton {
   display: inline;

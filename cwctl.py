@@ -329,7 +329,7 @@ repository and the web server.',
         """run the command with its specific arguments"""
         from logilab.common.textutils import splitstrip
         configname = self.config.config
-        appid, cubes = args
+        cubes, appid = args
         cubes = splitstrip(cubes)
         # get the configuration and helper
         config = cwcfg.config_for(appid, configname)
@@ -573,7 +573,7 @@ class RestartInstanceCommand(StartInstanceCommand):
                 print '*'*72
                 if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
-            StopInstanceCommand().stop_instance(appid)
+            StopInstanceCommand(self.logger).stop_instance(appid)
         forkcmd = [w for w in sys.argv if not w in args]
         forkcmd[1] = 'start'
         forkcmd = ' '.join(forkcmd)
@@ -583,7 +583,7 @@ class RestartInstanceCommand(StartInstanceCommand):
                 sys.exit(status)
 
     def restart_instance(self, appid):
-        StopInstanceCommand().stop_instance(appid)
+        StopInstanceCommand(self.logger).stop_instance(appid)
         self.start_instance(appid)
 
 
@@ -742,7 +742,7 @@ given, appropriate sources for migration will be automatically selected \
             print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (CWDEV or self.config.nostartstop):
-            StopInstanceCommand().stop_instance(appid)
+            StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
         # rewrite main configuration file

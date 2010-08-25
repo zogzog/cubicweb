@@ -998,7 +998,7 @@ the repository',
         """check given directory path exists, belongs to the user running the
         server process and is writeable.
 
-        If not, try to fix this, leting exception propagate when not possible.
+        If not, try to fix this, letting exception propagate when not possible.
         """
         if not exists(path):
             os.makedirs(path)
@@ -1009,7 +1009,10 @@ the repository',
                 from pwd import getpwnam
                 uid = getpwnam(self['uid']).pw_uid
         else:
-            uid = os.getuid()
+            try:
+                uid = os.getuid()
+            except AttributeError: # we are on windows
+                return
         fstat = os.stat(path)
         if fstat.st_uid != uid:
             os.chown(path, uid, os.getgid())
