@@ -20,6 +20,7 @@
 * the rql input form
 * the logged user link
 """
+from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -27,9 +28,11 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from rql import parse
 
-from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
+from cubicweb.selectors import (yes, multi_etypes_rset,
+                                match_form_params, match_context,
                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
+from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
 from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
@@ -166,18 +169,6 @@ class ApplicationName(component.Component):
                 self._cw.base_url(), xml_escape(title)))
 
 
-class SeeAlsoVComponent(component.RelatedObjectsVComponent):
-    """display any entity's see also"""
-    __regid__ = 'seealso'
-    context = 'navcontentbottom'
-    rtype = 'see_also'
-    role = 'subject'
-    order = 40
-    # register msg not generated since no entity use see_also in cubicweb itself
-    title = _('contentnavigation_seealso')
-    help = _('contentnavigation_seealso_description')
-
-
 class EtypeRestrictionComponent(component.Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
@@ -229,17 +220,46 @@ class EtypeRestrictionComponent(component.Component):
         self.w(u'&#160;|&#160;'.join(html))
         self.w(u'</div>')
 
+# contextual components ########################################################
 
-class MetaDataComponent(component.EntityVComponent):
+# class SeeAlsoVComponent(component.RelatedObjectsVComponent):
+#     """display any entity's see also"""
+#     __regid__ = 'seealso'
+#     context = 'navcontentbottom'
+#     rtype = 'see_also'
+#     role = 'subject'
+#     order = 40
+#     # register msg not generated since no entity use see_also in cubicweb itself
+#     title = _('ctxcomponents_seealso')
+#     help = _('ctxcomponents_seealso_description')
+
+
+class MetaDataComponent(component.EntityCtxComponent):
     __regid__ = 'metadata'
     context = 'navbottom'
     order = 1
 
-    def cell_call(self, row, col, view=None):
-        self.wview('metadata', self.cw_rset, row=row, col=col)
+    def render_body(self, w):
+        self.entity.view('metadata', w=w)
 
 
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
-    if 'see_also' in vreg.schema:
-        vreg.register(SeeAlsoVComponent)
+class SectionLayout(component.Layout):
+    __select__ = match_context('navtop', 'navbottom',
+                               'navcontenttop', 'navcontentbottom')
+    cssclass = 'section'
+
+    def render(self, w):
+        if self.init_rendering():
+            view = self.cw_extra_kwargs['view']
+            w(u'<div class="%s %s" id="%s">' % (self.cssclass, view.cssclass,
+                                                view.domid))
+            with wrap_on_write(w, '<h4>') as wow:
+                view.render_title(wow)
+            view.render_body(w)
+            w(u'</div>\n')
+
+
+# def registration_callback(vreg):
+#     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
+#     if 'see_also' in vreg.schema:
+#         vreg.register(SeeAlsoVComponent)

@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb import role
 from cubicweb.view import View
 from cubicweb.selectors import match_form_params, match_kwargs
-from cubicweb.web.box import EditRelationMixIn, EditRelationBoxTemplate
+from cubicweb.web.component import EditRelationMixIn
 
 class AddRelationView(EditRelationMixIn, View):
     """base class for view which let add entities linked by a given relation

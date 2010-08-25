@@ -1119,52 +1119,52 @@ msgstr ""
 msgid "boxes"
 msgstr ""
 
-msgid "boxes_bookmarks_box"
+msgid "ctxcomponents_bookmarks_box"
 msgstr "bookmarks box"
 
-msgid "boxes_bookmarks_box_description"
+msgid "ctxcomponents_bookmarks_box_description"
 msgstr "box listing the user's bookmarks"
 
-msgid "boxes_download_box"
+msgid "ctxcomponents_download_box"
 msgstr "download box"
 
-msgid "boxes_download_box_description"
+msgid "ctxcomponents_download_box_description"
 msgstr ""
 
-msgid "boxes_edit_box"
+msgid "ctxcomponents_edit_box"
 msgstr "actions box"
 
-msgid "boxes_edit_box_description"
+msgid "ctxcomponents_edit_box_description"
 msgstr "box listing the applicable actions on the displayed data"
 
-msgid "boxes_filter_box"
+msgid "ctxcomponents_filter_box"
 msgstr "filter"
 
-msgid "boxes_filter_box_description"
+msgid "ctxcomponents_filter_box_description"
 msgstr "box providing filter within current search results functionality"
 
-msgid "boxes_possible_views_box"
+msgid "ctxcomponents_possible_views_box"
 msgstr "possible views box"
 
-msgid "boxes_possible_views_box_description"
+msgid "ctxcomponents_possible_views_box_description"
 msgstr "box listing the possible views for the displayed data"
 
-msgid "boxes_rss"
+msgid "ctxcomponents_rss"
 msgstr "rss box"
 
-msgid "boxes_rss_description"
+msgid "ctxcomponents_rss_description"
 msgstr "RSS icon to get displayed data as a RSS thread"
 
-msgid "boxes_search_box"
+msgid "ctxcomponents_search_box"
 msgstr "search box"
 
-msgid "boxes_search_box_description"
+msgid "ctxcomponents_search_box_description"
 msgstr "search box"
 
-msgid "boxes_startup_views_box"
+msgid "ctxcomponents_startup_views_box"
 msgstr "startup views box"
 
-msgid "boxes_startup_views_box_description"
+msgid "ctxcomponents_startup_views_box_description"
 msgstr "box listing the possible start pages"
 
 msgid "bug report sent"
@@ -1440,41 +1440,41 @@ msgstr ""
 msgid "content type"
 msgstr ""
 
-msgid "contentnavigation"
+msgid "ctxcomponents"
 msgstr "contextual components"
 
-msgid "contentnavigation_breadcrumbs"
+msgid "ctxcomponents_breadcrumbs"
 msgstr "breadcrumb"
 
-msgid "contentnavigation_breadcrumbs_description"
+msgid "ctxcomponents_breadcrumbs_description"
 msgstr "breadcrumbs bar that display a path locating the page in the site"
 
-msgid "contentnavigation_metadata"
+msgid "ctxcomponents_metadata"
 msgstr "entity's metadata"
 
-msgid "contentnavigation_metadata_description"
+msgid "ctxcomponents_metadata_description"
 msgstr ""
 
-msgid "contentnavigation_prevnext"
+msgid "ctxcomponents_prevnext"
 msgstr "previous / next entity"
 
-msgid "contentnavigation_prevnext_description"
+msgid "ctxcomponents_prevnext_description"
 msgstr ""
 "display link to go from one entity to another on entities implementing the "
 "\"previous/next\" interface."
 
-msgid "contentnavigation_seealso"
+msgid "ctxcomponents_seealso"
 msgstr "see also"
 
-msgid "contentnavigation_seealso_description"
+msgid "ctxcomponents_seealso_description"
 msgstr ""
 "section containing entities related by the \"see also\" relation on entities "
 "supporting it."
 
-msgid "contentnavigation_wfhistory"
+msgid "ctxcomponents_wfhistory"
 msgstr "workflow history"
 
-msgid "contentnavigation_wfhistory_description"
+msgid "ctxcomponents_wfhistory_description"
 msgstr "show the workflow's history."
 
 msgid "context"

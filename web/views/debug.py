@@ -150,6 +150,8 @@ class RegistryView(StartupView):
         self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
                                            % (url, key, key) for key in keys))
         for key in keys:
+            if key in ('boxes', 'contentnavigation'): # those are bw compat registries
+                continue
             self.w(u'<h2 id="%s">%s</h2>' % (key, key))
             if self._cw.vreg[key]:
                 values = sorted(self._cw.vreg[key].iteritems())

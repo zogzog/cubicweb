@@ -24,7 +24,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import is_instance, one_line_rset
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web import action, box, uicfg, formwidgets as fw
+from cubicweb.web import action, component, uicfg, formwidgets as fw
 from cubicweb.web.views import primary
 
 _abaa = uicfg.actionbox_appearsin_addmenu
@@ -69,7 +69,7 @@ class BookmarkPrimaryView(primary.PrimaryView):
         self.w(u'</div>')
 
 
-class BookmarksBox(box.Box):
+class BookmarksBox(component.CtxComponent):
     """display a box containing all user's bookmarks"""
     __regid__ = 'bookmarks_box'
 
@@ -88,7 +88,7 @@ class BookmarksBox(box.Box):
         self.can_edit = (eschema.has_perm(self._cw, 'add') and
                          rschema.has_perm(self._cw, 'add', toeid=ueid))
         if not self.bookmarks_rset and not self.can_edit:
-            raise box.EmptyComponent()
+            raise component.EmptyComponent()
         self.items = []
 
     def render_body(self, w):

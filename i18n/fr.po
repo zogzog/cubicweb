@@ -1164,53 +1164,53 @@ msgstr ""
 msgid "boxes"
 msgstr "boîtes"
 
-msgid "boxes_bookmarks_box"
+msgid "ctxcomponents_bookmarks_box"
 msgstr "boîte signets"
 
-msgid "boxes_bookmarks_box_description"
+msgid "ctxcomponents_bookmarks_box_description"
 msgstr "boîte contenant les signets de l'utilisateur"
 
-msgid "boxes_download_box"
+msgid "ctxcomponents_download_box"
 msgstr "boîte de téléchargement"
 
-msgid "boxes_download_box_description"
+msgid "ctxcomponents_download_box_description"
 msgstr "boîte contenant un lien permettant de télécharger la ressource"
 
-msgid "boxes_edit_box"
+msgid "ctxcomponents_edit_box"
 msgstr "boîte d'actions"
 
-msgid "boxes_edit_box_description"
+msgid "ctxcomponents_edit_box_description"
 msgstr ""
 "boîte affichant les différentes actions possibles sur les données affichées"
 
-msgid "boxes_filter_box"
+msgid "ctxcomponents_filter_box"
 msgstr "filtrer"
 
-msgid "boxes_filter_box_description"
+msgid "ctxcomponents_filter_box_description"
 msgstr "boîte permettant de filtrer parmi les résultats d'une recherche"
 
-msgid "boxes_possible_views_box"
+msgid "ctxcomponents_possible_views_box"
 msgstr "boîte des vues possibles"
 
-msgid "boxes_possible_views_box_description"
+msgid "ctxcomponents_possible_views_box_description"
 msgstr "boîte affichant les vues possibles pour les données courantes"
 
-msgid "boxes_rss"
+msgid "ctxcomponents_rss"
 msgstr "icône RSS"
 
-msgid "boxes_rss_description"
+msgid "ctxcomponents_rss_description"
 msgstr "l'icône RSS permettant de récupérer la vue RSS des données affichées"
 
-msgid "boxes_search_box"
+msgid "ctxcomponents_search_box"
 msgstr "boîte de recherche"
 
-msgid "boxes_search_box_description"
+msgid "ctxcomponents_search_box_description"
 msgstr "boîte avec un champ de recherche simple"
 
-msgid "boxes_startup_views_box"
+msgid "ctxcomponents_startup_views_box"
 msgstr "boîte des vues de départs"
 
-msgid "boxes_startup_views_box_description"
+msgid "ctxcomponents_startup_views_box_description"
 msgstr "boîte affichant les vues de départs de l'application"
 
 msgid "bug report sent"
@@ -1491,42 +1491,42 @@ msgstr "contraintes s'appliquant à cette relation"
 msgid "content type"
 msgstr "type MIME"
 
-msgid "contentnavigation"
+msgid "ctxcomponents"
 msgstr "composants contextuels"
 
-msgid "contentnavigation_breadcrumbs"
+msgid "ctxcomponents_breadcrumbs"
 msgstr "fil d'ariane"
 
-msgid "contentnavigation_breadcrumbs_description"
+msgid "ctxcomponents_breadcrumbs_description"
 msgstr ""
 "affiche un chemin permettant de localiser la page courante dans le site"
 
-msgid "contentnavigation_metadata"
+msgid "ctxcomponents_metadata"
 msgstr "méta-données de l'entité"
 
-msgid "contentnavigation_metadata_description"
+msgid "ctxcomponents_metadata_description"
 msgstr ""
 
-msgid "contentnavigation_prevnext"
+msgid "ctxcomponents_prevnext"
 msgstr "élément précedent / suivant"
 
-msgid "contentnavigation_prevnext_description"
+msgid "ctxcomponents_prevnext_description"
 msgstr ""
 "affiche des liens permettant de passer d'une entité à une autre sur les "
 "entités implémentant l'interface \"précédent/suivant\"."
 
-msgid "contentnavigation_seealso"
+msgid "ctxcomponents_seealso"
 msgstr "voir aussi"
 
-msgid "contentnavigation_seealso_description"
+msgid "ctxcomponents_seealso_description"
 msgstr ""
 "section affichant les entités liées par la relation \"voir aussi\" si "
 "l'entité supporte cette relation."
 
-msgid "contentnavigation_wfhistory"
+msgid "ctxcomponents_wfhistory"
 msgstr "historique du workflow."
 
-msgid "contentnavigation_wfhistory_description"
+msgid "ctxcomponents_wfhistory_description"
 msgstr ""
 "section affichant l'historique du workflow pour les entités ayant un "
 "workflow."

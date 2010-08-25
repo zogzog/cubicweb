@@ -75,6 +75,31 @@ def support_args(callable, *argnames):
             return False
     return True
 
+
+class wrap_on_write(object):
+    def __init__(self, w, tag, closetag=None):
+        self.written = False
+        self.tag = unicode(tag)
+        self.closetag = closetag
+        self.w = w
+
+    def __enter__(self):
+        return self
+
+    def __call__(self, data):
+        if self.written is False:
+            self.w(self.tag)
+            self.written = True
+        self.w(data)
+
+    def __exit__(self, exctype, value, traceback):
+        if self.written is True:
+            if self.closetag:
+                self.w(unicode(self.closetag))
+            else:
+                self.w(self.tag.replace('<', '</', 1))
+
+
 # use networkX instead ?
 # http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
 def transitive_closure_of(entity, relname, _seen=None):

@@ -27,7 +27,7 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, is_instance, match_context_prop,
                                 adaptable, has_mimetype)
 from cubicweb.mttransforms import ENGINE
-from cubicweb.web import box, httpcache
+from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
@@ -47,10 +47,10 @@ def download_box(w, entity, title=None, label=None, footer=u''):
     w(u'</div></div>\n')
 
 
-class DownloadBox(box.EntityBox):
+class DownloadBox(component.EntityCtxComponent):
     __regid__ = 'download_box'
     # no download box for images
-    __select__ = (box.EntityBox.__select__ &
+    __select__ = (component.EntityCtxComponent.__select__ &
                   adaptable('IDownloadable') & ~has_mimetype('image/'))
 
     order = 10

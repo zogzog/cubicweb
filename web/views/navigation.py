@@ -29,7 +29,7 @@ from cubicweb.selectors import (paginated_rset, sorted_rset,
                                 adaptable, implements)
 from cubicweb.uilib import cut
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.web.component import EntityVComponent, NavigationComponent
+from cubicweb.web.component import EmptyComponent, EntityCtxComponent, NavigationComponent
 
 
 class PageNavigation(NavigationComponent):
@@ -201,59 +201,55 @@ class IPrevNextAdapter(EntityAdapter):
         raise NotImplementedError
 
 
-class NextPrevNavigationComponent(EntityVComponent):
+class NextPrevNavigationComponent(EntityCtxComponent):
     __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
-    title = _('contentnavigation_prevnext')
-    help = _('contentnavigation_prevnext_description')
-    __select__ = EntityVComponent.__select__ & adaptable('IPrevNext')
+    help = _('ctxcomponents_prevnext_description')
+    __select__ = EntityCtxComponent.__select__ & adaptable('IPrevNext')
     context = 'navbottom'
     order = 10
 
-    def call(self, view=None):
-        self.cell_call(0, 0, view=view)
+    def init_rendering(self):
+        adapter = self.entity.cw_adapt_to('IPrevNext')
+        self.previous = adapter.previous_entity()
+        self.next = adapter.next_entity()
+        if not (self.previous or self.next):
+            raise EmptyComponent()
 
-    def cell_call(self, row, col, view=None):
-        entity = self.cw_rset.get_entity(row, col)
-        adapter = entity.cw_adapt_to('IPrevNext')
-        previous = adapter.previous_entity()
-        next = adapter.next_entity()
-        if previous or next:
-            textsize = self._cw.property_value('navigation.short-line-size')
-            self.w(u'<div class="prevnext">')
-            if previous:
-                self.previous_div(previous, textsize)
-            if next:
-                self.next_div(next, textsize)
-            self.w(u'</div>')
-            self.w(u'<div class="clear"></div>')
+    def render_body(self, w):
+        w(u'<div class="prevnext">')
+        self.prevnext(w)
+        w(u'</div>')
+        w(u'<div class="clear"></div>')
 
-    def previous_div(self, previous, textsize):
-        self.w(u'<div class="previousEntity left">')
-        self.w(self.previous_link(previous, textsize))
-        self.w(u'</div>')
-        self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
-                                      % xml_escape(previous.absolute_url()))
+    def prevnext(self, w):
+        if self.previous:
+            self.prevnext_entity(w, self.previous, 'prev')
+        if self.next:
+            self.prevnext_entity(w, self.next, 'next')
 
-    def previous_link(self, previous, textsize):
-        return u'<a href="%s" title="%s">&lt;&lt; %s</a>' % (
-            xml_escape(previous.absolute_url()),
-            self._cw._('i18nprevnext_previous'),
-            xml_escape(cut(previous.dc_title(), textsize)))
+    def prevnext_entity(self, w, entity, type):
+        textsize = self._cw.property_value('navigation.short-line-size')
+        if type == 'prev':
+            title = self._cw._('i18nprevnext_previous')
+            icon = u'&lt;&lt; '
+            cssclass = u'previousEntity left'
+        else:
+            title = self._cw._('i18nprevnext_next')
+            icon = u'&gt;&gt; '
+            cssclass = u'nextEntity right'
+        self.prevnext_div(w, type, cssclass, entity.absolute_url(),
+                          title, icon + xml_escape(cut(entity.dc_title(), textsize)))
 
-    def next_div(self, next, textsize):
-        self.w(u'<div class="nextEntity right">')
-        self.w(self.next_link(next, textsize))
-        self.w(u'</div>')
-        self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
-                                      % xml_escape(next.absolute_url()))
-
-    def next_link(self, next, textsize):
-        return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
-            xml_escape(next.absolute_url()),
-            self._cw._('i18nprevnext_next'),
-            xml_escape(cut(next.dc_title(), textsize)))
+    def prevnext_div(self, w, type, cssclass, url, title, content):
+        w(u'<div class="%s">' % cssclass)
+        w(u'<a href="%s" title="%s">%s</a>' % (xml_escape(url),
+                                               xml_escape(title),
+                                               content))
+        w(u'</div>')
+        self._cw.html_headers.add_raw('<link rel="%s" href="%s" />' % (
+              type, xml_escape(url)))
 
 
 def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):

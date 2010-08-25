@@ -1203,6 +1203,7 @@ class match_user_groups(ExpectedValueSelector):
 
 # Web request selectors ########################################################
 
+# XXX deprecate
 @objectify_selector
 @lltrace
 def primary_view(cls, req, view=None, **kwargs):
@@ -1252,6 +1253,7 @@ class match_context(ExpectedValueSelector):
         return 1
 
 
+# XXX deprecate
 @objectify_selector
 @lltrace
 def match_context_prop(cls, req, context=None, **kwargs):
@@ -1272,8 +1274,6 @@ def match_context_prop(cls, req, context=None, **kwargs):
         return 1
     propval = req.property_value('%s.%s.context' % (cls.__registry__,
                                                     cls.__regid__))
-    if not propval:
-        propval = cls.context
     if propval and context != propval:
         return 0
     return 1

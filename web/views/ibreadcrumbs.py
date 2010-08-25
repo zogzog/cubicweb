@@ -98,8 +98,8 @@ class BreadCrumbEntityVComponent(Component):
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         }
-    title = _('contentnavigation_breadcrumbs')
-    help = _('contentnavigation_breadcrumbs_description')
+    # title = _('ctxcomponents_breadcrumbs')
+    # help = _('ctxcomponents_breadcrumbs_description')
     separator = u'&#160;&gt;&#160;'
     link_template = u'<a href="%s">%s</a>'
 

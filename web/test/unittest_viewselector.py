@@ -468,18 +468,18 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_properties(self):
         self.assertEquals(sorted(k for k in self.vreg['propertydefs'].keys()
-                                 if k.startswith('boxes.edit_box')),
-                          ['boxes.edit_box.context',
-                           'boxes.edit_box.order',
-                           'boxes.edit_box.visible'])
+                                 if k.startswith('ctxcomponents.edit_box')),
+                          ['ctxcomponents.edit_box.context',
+                           'ctxcomponents.edit_box.order',
+                           'ctxcomponents.edit_box.visible'])
         self.assertEquals([k for k in self.vreg['propertyvalues'].keys()
                            if not k.startswith('system.version')],
                           [])
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.visible'), True)
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.order'), 2)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
-        self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
+        self.assertEquals(self.vreg.property_value('ctxcomponents.edit_box.visible'), True)
+        self.assertEquals(self.vreg.property_value('ctxcomponents.edit_box.order'), 2)
+        self.assertEquals(self.vreg.property_value('ctxcomponents.possible_views_box.visible'), False)
+        self.assertEquals(self.vreg.property_value('ctxcomponents.possible_views_box.order'), 10)
+        self.assertRaises(UnknownProperty, self.vreg.property_value, 'ctxcomponents.actions_box')
 
 
 

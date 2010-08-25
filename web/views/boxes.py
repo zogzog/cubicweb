@@ -25,6 +25,7 @@ Additional boxes (disabled by default):
 * possible views box
 * startup views box
 """
+from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -35,23 +36,25 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import (match_user_groups, match_context, match_kwargs,
-                                non_final_entity, nonempty_rset)
+from cubicweb.selectors import (match_user_groups, match_kwargs,
+                                non_final_entity, nonempty_rset,
+                                match_context, contextual)
+from cubicweb.utils import wrap_on_write
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
-from cubicweb.web import box, htmlwidgets
+from cubicweb.web import component, box, htmlwidgets
 
 # XXX bw compat, some cubes import this class from here
 BoxTemplate = box.BoxTemplate
 BoxHtml = htmlwidgets.BoxHtml
 
-class EditBox(box.Box): # XXX rename to ActionsBox
+class EditBox(component.CtxComponent): # XXX rename to ActionsBox
     """
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
     __regid__ = 'edit_box'
-    __select__ = box.Box.__select__ & non_final_entity()
+    __select__ = component.CtxComponent.__select__ & non_final_entity()
 
     title = _('actions')
     order = 2
@@ -89,7 +92,7 @@ class EditBox(box.Box): # XXX rename to ActionsBox
             for submenu in self._menus_in_order:
                 self.add_submenu(self, submenu)
         if not self.items:
-            raise box.EmptyComponent()
+            raise component.EmptyComponent()
 
     def render_title(self, w):
         title = self._cw._(self.title)
@@ -132,7 +135,7 @@ class EditBox(box.Box): # XXX rename to ActionsBox
             box.append(xml_escape(submenu.label))
 
 
-class SearchBox(box.Box):
+class SearchBox(component.CtxComponent):
     """display a box with a simple search form"""
     __regid__ = 'search_box'
 
@@ -163,7 +166,7 @@ class SearchBox(box.Box):
 
 # boxes disabled by default ###################################################
 
-class PossibleViewsBox(box.Box):
+class PossibleViewsBox(component.CtxComponent):
     """display a box containing links to all possible views"""
     __regid__ = 'possible_views_box'
 
@@ -176,7 +179,7 @@ class PossibleViewsBox(box.Box):
                                                                        rset=self.cw_rset)
                       if v.category != 'startupview']
         if not self.views:
-            raise box.EmptyComponent()
+            raise component.EmptyComponent()
         self.items = []
 
     def render_body(self, w):
@@ -200,11 +203,11 @@ class StartupViewsBox(PossibleViewsBox):
         self.views = [v for v in self._cw.vreg['views'].possible_views(self._cw)
                       if v.category == 'startupview']
         if not self.views:
-            raise box.EmptyComponent()
+            raise component.EmptyComponent()
         self.items = []
 
 
-class RsetBox(box.Box):
+class RsetBox(component.CtxComponent):
     """helper view class to display an rset in a sidebox"""
     __select__ = nonempty_rset() & match_kwargs('title', 'vid')
     __regid__ = 'rsetbox'
@@ -214,6 +217,7 @@ class RsetBox(box.Box):
     @property
     def domid(self):
         return super(RsetBox, self).domid + unicode(abs(id(self)))
+
     def render_title(self, w):
         w(self.cw_extra_kwargs['title'])
 
@@ -225,43 +229,38 @@ class RsetBox(box.Box):
 class SideBoxView(EntityView):
     """helper view class to display some entities in a sidebox"""
     __metaclass__ = class_deprecated
-    __deprecation_warning__ = 'SideBoxView is deprecated, use RsetBox instead'
+    __deprecation_warning__ = '[3.10] SideBoxView is deprecated, use RsetBox instead (%(cls)s)'
 
     __regid__ = 'sidebox'
 
     def call(self, **kwargs):
         """display a list of entities by calling their <item_vid> view"""
-        box = self._cw.vreg['boxes'].select('rsetbox', self._cw, rset=self.cw_rset,
-                                            vid='autolimited', title=title,
-                                            **self.cw_extra_kwargs)
+        box = self._cw.vreg['ctxcomponents'].select(
+            'rsetbox', self._cw, rset=self.cw_rset, vid='autolimited',
+            title=title, **self.cw_extra_kwargs)
         box.render(self.w)
 
 
-class ContextualBoxLayout(box.Layout):
-    __select__ = match_context('incontext', 'left', 'right') & box.contextual()
+class ContextualBoxLayout(component.Layout):
+    __select__ = match_context('incontext', 'left', 'right') & contextual()
     # predefined class in cubicweb.css: contextualBox | contextFreeBox
     # XXX: navigationBox | actionBox
     cssclass = 'contextualBox'
 
     def render(self, w):
-        view = self.cw_extra_kwargs['view']
-        try:
-            view.init_rendering()
-        except Unauthorized, ex:
-            self.warning("can't render %s: %s", view, ex)
-            return
-        except box.EmptyComponent:
-            return
-        w(u'<div class="%s %s" id="%s">' % (self.cssclass, view.cssclass,
-                                            view.domid))
-        w(u'<div class="boxTitle"><span>')
-        view.render_title(w)
-        w(u'</span></div>\n<div class="boxBody">')
-        view.render_body(w)
-        # boxFooter div is a CSS place holder (for shadow for example)
-        w(u'</div><div class="boxFooter"></div></div>\n')
+        if self.init_rendering():
+            view = self.cw_extra_kwargs['view']
+            w(u'<div class="%s %s" id="%s">' % (self.cssclass, view.cssclass,
+                                                view.domid))
+            with wrap_on_write(w, u'<div class="boxTitle"><span>',
+                               u'</span></div>') as wow:
+                view.render_title(wow)
+            w(u'<div class="boxBody">')
+            view.render_body(w)
+            # boxFooter div is a CSS place holder (for shadow for example)
+            w(u'</div><div class="boxFooter"></div></div>\n')
 
 
 class ContextFreeBoxLayout(ContextualBoxLayout):
-    __select__ = match_context('incontext', 'left', 'right') & ~box.contextual()
+    __select__ = match_context('incontext', 'left', 'right') & ~contextual()
     cssclass = 'contextFreeBox'

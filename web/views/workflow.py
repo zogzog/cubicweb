@@ -25,6 +25,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import os
+from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
@@ -160,15 +161,21 @@ class WFHistoryView(EntityView):
                        displaycols=displaycols, headers=headers)
 
 
-class WFHistoryVComponent(component.EntityVComponent):
+class WFHistoryVComponent(component.CtxComponent):
     """display the workflow history for entities supporting it"""
     __regid__ = 'wfhistory'
     __select__ = WFHistoryView.__select__ & component.EntityVComponent.__select__
     context = 'navcontentbottom'
     title = _('Workflow history')
 
-    def cell_call(self, row, col, view=None):
-        self.wview('wfhistory', self.cw_rset, row=row, col=col, view=view)
+    def render_body(self, w):
+        if hasattr(self, 'cell_call'):
+            warn('[3.10] %s should now implement render_body instead of cell_call',
+                 DeprecationWarning, self.__class__)
+            self.w = w
+            self.cell_call(self.entity.cw_row, self.entity.cw_col)
+        else:
+            self.entity.view('wfhistory', w=w)
 
 
 # workflow actions #############################################################

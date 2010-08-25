@@ -1161,53 +1161,53 @@ msgstr "los Favoritos son ligas directas a espacios guardados por el usuario"
 msgid "boxes"
 msgstr "Cajas"
 
-msgid "boxes_bookmarks_box"
+msgid "ctxcomponents_bookmarks_box"
 msgstr "Caja de Favoritos"
 
-msgid "boxes_bookmarks_box_description"
+msgid "ctxcomponents_bookmarks_box_description"
 msgstr "Muestra y permite administrar los favoritos del usuario"
 
-msgid "boxes_download_box"
+msgid "ctxcomponents_download_box"
 msgstr "Configuración de caja de descargas"
 
-msgid "boxes_download_box_description"
+msgid "ctxcomponents_download_box_description"
 msgstr "Caja que contiene los elementos descargados"
 
-msgid "boxes_edit_box"
+msgid "ctxcomponents_edit_box"
 msgstr "Caja de Acciones"
 
-msgid "boxes_edit_box_description"
+msgid "ctxcomponents_edit_box_description"
 msgstr ""
 "Muestra las acciones posibles a ejecutar para los datos seleccionados"
 
-msgid "boxes_filter_box"
+msgid "ctxcomponents_filter_box"
 msgstr "Filtros"
 
-msgid "boxes_filter_box_description"
+msgid "ctxcomponents_filter_box_description"
 msgstr "Muestra los filtros aplicables a una búsqueda realizada"
 
-msgid "boxes_possible_views_box"
+msgid "ctxcomponents_possible_views_box"
 msgstr "Caja de Vistas Posibles"
 
-msgid "boxes_possible_views_box_description"
+msgid "ctxcomponents_possible_views_box_description"
 msgstr "Muestra las vistas posibles a aplicar a los datos seleccionados"
 
-msgid "boxes_rss"
+msgid "ctxcomponents_rss"
 msgstr "Ícono RSS"
 
-msgid "boxes_rss_description"
+msgid "ctxcomponents_rss_description"
 msgstr "Muestra el ícono RSS para vistas RSS"
 
-msgid "boxes_search_box"
+msgid "ctxcomponents_search_box"
 msgstr "Caja de búsqueda"
 
-msgid "boxes_search_box_description"
+msgid "ctxcomponents_search_box_description"
 msgstr "Permite realizar una búsqueda simple para cualquier tipo de dato en la aplicación"
 
-msgid "boxes_startup_views_box"
+msgid "ctxcomponents_startup_views_box"
 msgstr "Caja Vistas de inicio"
 
-msgid "boxes_startup_views_box_description"
+msgid "ctxcomponents_startup_views_box_description"
 msgstr "Muestra las vistas de inicio de la aplicación"
 
 msgid "bug report sent"
@@ -1490,38 +1490,38 @@ msgstr "tipo MIME"
 msgid "contentnavigation"
 msgstr "Componentes contextuales"
 
-msgid "contentnavigation_breadcrumbs"
+msgid "ctxcomponents_breadcrumbs"
 msgstr "Ruta de Navegación"
 
-msgid "contentnavigation_breadcrumbs_description"
+msgid "ctxcomponents_breadcrumbs_description"
 msgstr "Muestra la ruta que permite localizar la página actual en el Sistema"
 
-msgid "contentnavigation_metadata"
+msgid "ctxcomponents_metadata"
 msgstr "Metadatos de la Entidad"
 
-msgid "contentnavigation_metadata_description"
+msgid "ctxcomponents_metadata_description"
 msgstr ""
 
-msgid "contentnavigation_prevnext"
+msgid "ctxcomponents_prevnext"
 msgstr "Elemento anterior / siguiente"
 
-msgid "contentnavigation_prevnext_description"
+msgid "ctxcomponents_prevnext_description"
 msgstr ""
 "Muestra las ligas que permiten pasar de una entidad a otra en las entidades "
 "que implementan la interface \"anterior/siguiente\"."
 
-msgid "contentnavigation_seealso"
+msgid "ctxcomponents_seealso"
 msgstr "Vea también"
 
-msgid "contentnavigation_seealso_description"
+msgid "ctxcomponents_seealso_description"
 msgstr ""
 "sección que muestra las entidades relacionadas por la relación \"vea también\" , "
 "si la entidad soporta esta relación."
 
-msgid "contentnavigation_wfhistory"
+msgid "ctxcomponents_wfhistory"
 msgstr "Histórico del workflow."
 
-msgid "contentnavigation_wfhistory_description"
+msgid "ctxcomponents_wfhistory_description"
 msgstr ""
 "Sección que muestra el reporte histórico de las transiciones del workflow."
 " Aplica solo en entidades con workflow."

@@ -25,7 +25,7 @@ from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
-from cubicweb.web import box
+from cubicweb.web import component
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
                                 _prepare_vocabulary_rqlst)
@@ -38,12 +38,11 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
     return 0
 
 
-class FilterBox(box.Box):
+class FilterBox(component.CtxComponent):
     """filter results of a query"""
     __regid__ = 'filter_box'
-    __select__ = (((non_final_entity() & multi_lines_rset())
-                   | contextview_selector()
-                   ) & match_context_prop())
+    __select__ = ((non_final_entity() & multi_lines_rset())
+                  | contextview_selector())
     context = 'left' # XXX doesn't support 'incontext', only 'left' or 'right'
     title = _('boxes_filter_box')
     visible = True # functionality provided by the search box by default

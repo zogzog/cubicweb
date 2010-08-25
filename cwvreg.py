@@ -421,6 +421,44 @@ class ActionsRegistry(CWRegistry):
 VRegistry.REGISTRY_FACTORY['actions'] = ActionsRegistry
 
 
+class CtxComponentsRegistry(CWRegistry):
+    def poss_visible_objects(self, *args, **kwargs):
+        """return an ordered list of possible components"""
+        context = kwargs.pop('context')
+        if kwargs.get('rset') is None:
+            cache = args[0]
+        else:
+            cache = kwargs['rset']
+        try:
+            cached = cache.__components_cache
+        except AttributeError:
+            ctxcomps = super(CtxComponentsRegistry, self).poss_visible_objects(
+                *args, **kwargs)
+            cached = cache.__components_cache = {}
+            for component in ctxcomps:
+                cached.setdefault(component.cw_propval('context'), []).append(component)
+        thisctxcomps = cached.get(context, ())
+        # XXX set context for bw compat (should now be taken by comp.render())
+        for component in thisctxcomps:
+            component.cw_extra_kwargs['context'] = context
+        return thisctxcomps
+
+VRegistry.REGISTRY_FACTORY['ctxcomponents'] = CtxComponentsRegistry
+
+
+class BwCompatCWRegistry(object):
+    def __init__(self, vreg, oldreg, redirecttoreg):
+        self.vreg = vreg
+        self.oldreg = oldreg
+        self.redirecto = redirecttoreg
+
+    def __getattr__(self, attr):
+        warn('[3.10] you should now use the %s registry instead of the %s registry'
+             % (self.redirecto, self.oldreg), DeprecationWarning, stacklevel=2)
+        return getattr(self.vreg[self.redirecto], attr)
+
+    def clear(self): pass
+    def initialization_completed(self): pass
 
 class CubicWebVRegistry(VRegistry):
     """Central registry for the cubicweb instance, extending the generic
@@ -433,15 +471,23 @@ class CubicWebVRegistry(VRegistry):
     stored objects. Currently we have the following registries of objects known
     by the web instance (library may use some others additional registries):
 
-    * etypes
-    * views
-    * components
-    * actions
-    * forms
-    * formrenderers
-    * controllers, which are directly plugged into the application
-      object to handle request publishing XXX to merge with views
-    * contentnavigation XXX to merge with components? to kill?
+    * 'etypes', entity type classes
+
+    * 'views', views and templates (e.g. layout views)
+
+    * 'components', non contextual components, like magic search, url evaluators
+
+    * 'ctxcomponents', contextual components like boxes and dynamic section
+
+    * 'actions', contextual actions, eg links to display in predefined places in
+      the ui
+
+    * 'forms', describing logic of HTML form
+
+    * 'formrenderers', rendering forms to html
+
+    * 'controllers', primary objects to handle request publishing, directly
+      plugged into the application
     """
 
     def __init__(self, config, initlog=True):
@@ -456,6 +502,8 @@ class CubicWebVRegistry(VRegistry):
             # don't clear rtags during test, this may cause breakage with
             # manually imported appobject modules
             CW_EVENT_MANAGER.bind('before-registry-reload', clear_rtag_objects)
+        self['boxes'] = BwCompatCWRegistry(self, 'boxes', 'ctxcomponents')
+        self['contentnavigation'] = BwCompatCWRegistry(self, 'contentnavigation', 'ctxcomponents')
 
     def setdefault(self, regid):
         try:
@@ -751,7 +799,7 @@ class CubicWebVRegistry(VRegistry):
     def possible_actions(self, req, rset=None, **kwargs):
         return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
-    @deprecated('[3.4] use vreg["boxes"].select_object(...)')
+    @deprecated('[3.4] use vreg["ctxcomponents"].select_object(...)')
     def select_box(self, oid, *args, **kwargs):
         return self['boxes'].select_object(oid, *args, **kwargs)
 

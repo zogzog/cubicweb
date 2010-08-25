@@ -90,7 +90,7 @@ class PrimaryView(EntityView):
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
-        for comp in self._cw.vreg['contentnavigation'].poss_visible_objects(
+        for comp in self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, row=self.cw_row, view=self, context=context):
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
@@ -213,7 +213,7 @@ class PrimaryView(EntityView):
 
     def _prepare_side_boxes(self, entity):
         sideboxes = []
-        boxesreg = self._cw.vreg['boxes']
+        boxesreg = self._cw.vreg['ctxcomponents']
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'sideboxes'):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
@@ -344,6 +344,6 @@ class URLAttributeView(EntityView):
 _pvs = uicfg.primaryview_section
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
               'is', 'is_instance_of', 'identity', 'owned_by', 'created_by',
-              'require_permission', 'see_also'):
+              'require_permission'):
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
