@@ -31,10 +31,10 @@ from os.path import join, exists, abspath, basename, normpath, split, isdir
 from warnings import warn
 
 from logilab.common import STD_BLACKLIST
-from logilab.common.clcommands import register_commands, pop_arg
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
+from cubicweb.cwctl import CWCTL
 from cubicweb.toolsutils import (SKEL_EXCLUDE, Command,
                                  copy_skeleton, underline_title)
 from cubicweb.web.webconfig import WebConfiguration
@@ -684,6 +684,7 @@ class GenerateSchema(Command):
     """Generate schema image for the given cube"""
     name = "schema"
     arguments = '<cube>'
+    min_args = max_args = 1
     options = [('output-file', {'type':'file', 'default': None,
                  'metavar': '<file>', 'short':'o', 'help':'output image file',
                  'input':False}),
@@ -720,7 +721,7 @@ class GenerateSchema(Command):
         from yams import schema2dot, BASE_TYPES
         from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                                      WORKFLOW_TYPES, INTERNAL_TYPES)
-        cubes = splitstrip(pop_arg(args, 1))
+        cubes = splitstrip(args[0])
         dev_conf = DevConfiguration(*cubes)
         schema = dev_conf.load_schema()
         out, viewer = self['output-file'], self['viewer']
@@ -751,11 +752,12 @@ class GenerateQUnitHTML(Command):
         from cubicweb.devtools.qunit import make_qunit_html
         print make_qunit_html(args[0], args[1:])
 
-register_commands((UpdateCubicWebCatalogCommand,
-                   UpdateTemplateCatalogCommand,
-                   #LiveServerCommand,
-                   NewCubeCommand,
-                   ExamineLogCommand,
-                   GenerateSchema,
-                   GenerateQUnitHTML,
-                   ))
+for cmdcls in (UpdateCubicWebCatalogCommand,
+               UpdateTemplateCatalogCommand,
+               #LiveServerCommand,
+               NewCubeCommand,
+               ExamineLogCommand,
+               GenerateSchema,
+               GenerateQUnitHTML,
+               ):
+    CWCTL.register(cmdcls)
