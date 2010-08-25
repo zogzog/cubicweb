@@ -329,7 +329,7 @@ repository and the web server.',
         """run the command with its specific arguments"""
         from logilab.common.textutils import splitstrip
         configname = self.config.config
-        appid, cubes = args
+        cubes, appid = args
         cubes = splitstrip(cubes)
         # get the configuration and helper
         config = cwcfg.config_for(appid, configname)
