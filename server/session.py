@@ -64,6 +64,14 @@ class hooks_control(object):
 
     If mode is session.`HOOKS_ALLOW_ALL`, given hooks categories will
     be disabled.
+
+    .. sourcecode:: python
+
+       with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
+           # ... do stuff with all but 'integrity' hooks activated
+
+       with hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
+           # ... do stuff with none but 'integrity' hooks activated
     """
     def __init__(self, session, mode, *categories):
         self.session = session

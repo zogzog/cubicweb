@@ -15,37 +15,228 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Hooks management
+"""
+Generalities
+------------
 
-This module defined the `Hook` class and registry and a set of abstract classes
-for operations.
+Paraphrasing the `emacs`_ documentation, let us say that hooks are an important
+mechanism for customizing an application. A hook is basically a list of
+functions to be called on some well-defined occasion (this is called `running
+the hook`).
+
+.. _`emacs`: http://www.gnu.org/software/emacs/manual/html_node/emacs/Hooks.html
+
+Hooks
+~~~~~
+
+In |cubicweb|, hooks are subclasses of the :class:`~cubicweb.server.hook.Hook`
+class. They are selected over a set of pre-defined `events` (and possibly more
+conditions, hooks being selectable appobjects like views and components).  They
+should implement a :meth:`~cubicweb.server.hook.Hook.__call__` method that will
+be called when the hook is triggered.
+
+There are two families of events: data events (before / after any individual
+update of an entity / or a relation in the repository) and server events (such
+as server startup or shutdown).  In a typical application, most of the hooks are
+defined over data events.
+
+Also, some :class:`~cubicweb.server.hook.Operation` may be registered by hooks,
+which will be fired when the transaction is commited or rollbacked.
+
+The purpose of data event hooks is usually to complement the data model as
+defined in the schema, which is static by nature and only provide a restricted
+builtin set of dynamic constraints, with dynamic or value driven behaviours.
+For instance they can serve the following purposes:
+
+* enforcing constraints that the static schema cannot express (spanning several
+  entities/relations, exotic value ranges and cardinalities, etc.)
+
+* implement computed attributes
+
+It is functionally equivalent to a `database trigger`_, except that database
+triggers definition languages are not standardized, hence not portable (for
+instance, PL/SQL works with Oracle and PostgreSQL but not SqlServer nor Sqlite).
+
+.. _`database trigger`: http://en.wikipedia.org/wiki/Database_trigger
 
 
-Hooks are called before / after any individual update of entities / relations
-in the repository and on special events such as server startup or shutdown.
+Operations
+~~~~~~~~~~
+
+Operations are subclasses of the :class:`~cubicweb.server.hook.Operation` class
+that may be created by hooks and scheduled to happen just before (or after) the
+`precommit`, `postcommit` or `rollback` event. Hooks are being fired immediately
+on data operations, and it is sometime necessary to delay the actual work down
+to a time where all other hooks have run. Also while the order of execution of
+hooks is data dependant (and thus hard to predict), it is possible to force an
+order on operations.
+
+Operations may be used to:
+
+* implements a validation check which needs that all relations be already set on
+  an entity
+
+* process various side effects associated with a transaction such as filesystem
+  udpates, mail notifications, etc.
 
 
-Operations may be registered by hooks during a transaction, which will  be
-fired when the pool is commited or rollbacked.
+Events
+------
+
+Hooks are mostly defined and used to handle `dataflow`_ operations. It
+means as data gets in (entities added, updated, relations set or
+unset), specific events are issued and the Hooks matching these events
+are called.
+
+You can get the event that triggered a hook by accessing its :attr:event
+attribute.
+
+.. _`dataflow`: http://en.wikipedia.org/wiki/Dataflow
 
 
-Entity hooks (eg before_add_entity, after_add_entity, before_update_entity,
-after_update_entity, before_delete_entity, after_delete_entity) all have an
-`entity` attribute
+Entity modification related events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Relation (eg before_add_relation, after_add_relation, before_delete_relation,
-after_delete_relation) all have `eidfrom`, `rtype`, `eidto` attributes.
+When called for one of these events, hook will have an `entity` attribute
+containing the entity instance.
 
-Server start/maintenance/stop hooks (eg server_startup, server_maintenance,
-server_shutdown) have a `repo` attribute, but *their `_cw` attribute is None*.
-The `server_startup` is called on regular startup, while `server_maintenance`
-is called on cubicweb-ctl upgrade or shell commands. `server_shutdown` is
-called anyway.
+* 'before_add_entity', 'before_update_entity':
 
-Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
-`timestamp` attributes, but *their `_cw` attribute is None*.
+  - on those events, you can check what attributes of the entity are modified in
+    `entity.cw_edited` (by definition the database is not yet updated in a before
+    event)
 
-Session hooks (eg session_open, session_close) have no special attribute.
+  - you are allowed to further modify the entity before database operations,
+    using the dictionary notation. By doing this, you'll avoid the need for a
+    whole new rql query processing, the only difference is that the underlying
+    backend query (eg usually sql) will contains the additional data. For
+    example:
+
+    .. sourcecode:: python
+
+       self.entity.set_attributes(age=42)
+
+    will set the `age` attribute of the entity to 42. But to do so, it will
+    generate a rql query that will have to be processed, then trigger some
+    hooks, and so one (potentially leading to infinite hook loops or such
+    awkward situations..) You can avoid this by doing the modification that way:
+
+    .. sourcecode:: python
+
+       self.entity.cw_edited['age'] = 42
+
+    Here the attribute will simply be edited in the same query that the
+    one that triggered the hook.
+
+    Similarly, removing an attribute from `cw_edited` will cancel its
+    modification.
+
+  - on 'before_update_entity' event, you can access to old and new values in
+    this hook, by using `entity.cw_edited.oldnewvalue(attr)`
+
+
+* 'after_add_entity', 'after_update_entity'
+
+  - on those events, you can still check what attributes of the entity are
+    modified in `entity.cw_edited` but you can't get anymore the old value, nor
+    modify it.
+
+* 'before_delete_entity', 'after_delete_entity'
+
+  - on those events, the entity has no `cw_edited` set.
+
+
+Relation modification related events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When called for one of these events, hook will have `eidfrom`, `rtype`, `eidto`
+attributes containing respectivly the eid of the subject entity, the relation
+type and the eid of the object entity.
+
+* 'before_add_relation', 'before_delete_relation'
+
+  - on those events, you can still get original relation by issuing a rql query
+
+* 'after_add_relation', 'after_delete_relation'
+
+This is an occasion to remind us that relations support the add / delete
+operation, but no update.
+
+
+Non data events
+~~~~~~~~~~~~~~~
+
+Hooks called on server start/maintenance/stop event (eg 'server_startup',
+'server_maintenance', 'server_shutdown') have a `repo` attribute, but *their
+`_cw` attribute is None*.  The `server_startup` is called on regular startup,
+while `server_maintenance` is called on cubicweb-ctl upgrade or shell
+commands. `server_shutdown` is called anyway.
+
+Hooks called on backup/restore event (eg 'server_backup', 'server_restore') have
+a `repo` and a `timestamp` attributes, but *their `_cw` attribute is None*.
+
+Hooks called on session event (eg 'session_open', 'session_close') have no
+special attribute.
+
+
+API
+---
+
+Hooks control
+~~~~~~~~~~~~~
+
+It is sometimes convenient to explicitly enable or disable some hooks. For
+instance if you want to disable some integrity checking hook.  This can be
+controlled more finely through the `category` class attribute, which is a string
+giving a category name.  One can then uses the
+:class:`~cubicweb.server.session.hooks_control` context manager to explicitly
+enable or disable some categories.
+
+.. autoclass:: cubicweb.server.session.hooks_control
+
+
+The existing categories are:
+
+* ``security``, security checking hooks
+
+* ``worfklow``, workflow handling hooks
+
+* ``metadata``, hooks setting meta-data on newly created entities
+
+* ``notification``, email notification hooks
+
+* ``integrity``, data integrity checking hooks
+
+* ``activeintegrity``, data integrity consistency hooks, that you should *never*
+  want to disable
+
+* ``syncsession``, hooks synchronizing existing sessions
+
+* ``syncschema``, hooks synchronizing instance schema (including the physical database)
+
+* ``email``, email address handling hooks
+
+* ``bookmark``, bookmark entities handling hooks
+
+
+Nothing precludes one to invent new categories and use the
+:class:`~cubicweb.server.session.hooks_control` context manager to filter them
+in or out.
+
+
+Hooks specific selector
+~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: cubicweb.server.hook.match_rtype
+.. autoclass:: cubicweb.server.hook.match_rtype_sets
+
+
+Hooks and operations classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: cubicweb.server.hook.Hook
+.. autoclass:: cubicweb.server.hook.Operation
+.. autoclass:: cubicweb.server.hook.LateOperation
+.. autofunction:: cubicweb.server.hook.set_operation
+
 """
 
 from __future__ import with_statement
@@ -192,6 +383,29 @@ class match_rtype_sets(ExpectedValueSelector):
 # base class for hook ##########################################################
 
 class Hook(AppObject):
+    """Base class for hook.
+
+    Hooks being appobjects like views, they have a `__regid__` and a `__select__`
+    class attribute. Like all appobjects, hooks have the `self._cw` attribute which
+    represents the current session. In entity hooks, a `self.entity` attribute is
+    also present.
+
+    The `events` tuple is used by the base class selector to dispatch the hook
+    on the right events. It is possible to dispatch on multiple events at once
+    if needed (though take care as hook attribute may vary as described above).
+
+    .. Note::
+
+      Do not forget to extend the base class selectors as in ::
+
+      .. sourcecode:: python
+
+          class MyHook(Hook):
+            __regid__ = 'whatever'
+            __select__ = Hook.__select__ & implements('Person')
+
+      else your hooks will be called madly, whatever the event.
+    """
     __select__ = enabled_category()
     # set this in derivated classes
     events = None
@@ -353,40 +567,53 @@ class PropagateSubjectRelationDelHook(Hook):
 # abstract classes for operation ###############################################
 
 class Operation(object):
-    """an operation is triggered on connections pool events related to
+    """Base class for operations.
+
+    Operation may be instantiated in the hooks' `__call__` method. It always
+    takes a session object as first argument (accessible as `.session` from the
+    operation instance), and optionally all keyword arguments needed by the
+    operation. These keyword arguments will be accessible as attributes from the
+    operation instance.
+
+    An operation is triggered on connections pool events related to
     commit / rollback transations. Possible events are:
 
-    precommit:
-      the pool is preparing to commit. You shouldn't do anything which
-      has to be reverted if the commit fails at this point, but you can freely
-      do any heavy computation or raise an exception if the commit can't go.
-      You can add some new operations during this phase but their precommit
-      event won't be triggered
+    * 'precommit':
 
-    commit:
-      the pool is preparing to commit. You should avoid to do to expensive
-      stuff or something that may cause an exception in this event
+      the transaction is being prepared for commit. You can freely do any heavy
+      computation, raise an exception if the commit can't go. or even add some
+      new operations during this phase. If you do anything which has to be
+      reverted if the commit fails afterwards (eg altering the file system for
+      instance), you'll have to support the 'revertprecommit' event to revert
+      things by yourself
 
-    revertcommit:
-      if an operation failed while commited, this event is triggered for
-      all operations which had their commit event already to let them
-      revert things (including the operation which made fail the commit)
+    * 'revertprecommit':
 
-    rollback:
+      if an operation failed while being pre-commited, this event is triggered
+      for all operations which had their 'precommit' event already fired to let
+      them revert things (including the operation which made the commit fail)
+
+    * 'rollback':
+
       the transaction has been either rollbacked either:
+
        * intentionaly
-       * a precommit event failed, all operations are rollbacked
-       * a commit event failed, all operations which are not been triggered for
-         commit are rollbacked
+       * a 'precommit' event failed, in which case all operations are rollbacked
+         once 'revertprecommit'' has been called
 
-    postcommit:
-      The transaction is over. All the ORM entities are
-      invalid. If you need to work on the database, you need to stard
-      a new transaction, for instance using a new internal_session,
-      which you will need to commit (and close!).
+    * 'postcommit':
 
-    order of operations may be important, and is controlled according to
-    the insert_index's method output
+      the transaction is over. All the ORM entities accessed by the earlier
+      transaction are invalid. If you need to work on the database, you need to
+      start a new transaction, for instance using a new internal session, which
+      you will need to commit (and close!).
+
+    For an operation to support an event, one has to implement the `<event
+    name>_event` method with no arguments.
+
+    Notice order of operations may be important, and is controlled according to
+    the insert_index's method output (whose implementation vary according to the
+    base hook class used).
     """
 
     def __init__(self, session, **kwargs):
@@ -468,20 +695,55 @@ def _container_add(container, value):
     {set: set.add, list: list.append}[container.__class__](container, value)
 
 def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
-    """Search for session.transaction_data[`datakey`] (expected to be a set):
-
-    * if found, simply append `value`
-
-    * else, initialize it to containercls([`value`]) and instantiate the given
-      `opcls` operation class with additional keyword arguments. `containercls`
-      is a set by default. Give `list` if you want to keep arrival ordering.
-
-    You should use this instead of creating on operation for each `value`,
+    """Function to ease applying a single operation on a set of data, avoiding
+    to create as many as operation as they are individual modification. You
+    should try to use this instead of creating on operation for each `value`,
     since handling operations becomes coslty on massive data import.
+
+    Arguments are:
+
+    * the `session` object
+
+    * `datakey`, a specially forged key that will be used as key in
+      session.transaction_data
+
+    * `value` that is the actual payload of an individual operation
+
+    * `opcls`, the class of the operation. An instance is created on the first
+      call for the given key, and then subsequent calls will simply add the
+      payload to the container (hence `opkwargs` is only used on that first
+      call)
+
+    * `containercls`, the container class that should be instantiated to hold
+      payloads.  An instance is created on the first call for the given key, and
+      then subsequent calls will add the data to the existing container. Default
+      to a set. Give `list` if you want to keep arrival ordering.
+
+    * more optional parameters to give to the operation (here the rtype which do not
+      vary accross operations).
+
+    The body of the operation must then iterate over the values that have been mapped
+    in the transaction_data dictionary to the forged key, e.g.:
+
+    .. sourcecode:: python
+
+           for value in self._cw.transaction_data.pop(datakey):
+               ...
+
+    .. Note::
+       **poping** the key from `transaction_data` is not an option, else you may
+       get unexpected data loss in some case of nested hooks.
     """
+
+
+
     try:
+        # Search for session.transaction_data[`datakey`] (expected to be a set):
+        # if found, simply append `value`
         _container_add(session.transaction_data[datakey], value)
     except KeyError:
+        # else, initialize it to containercls([`value`]) and instantiate the given
+        # `opcls` operation class with additional keyword arguments
         opcls(session, **opkwargs)
         session.transaction_data[datakey] = containercls()
         _container_add(session.transaction_data[datakey], value)
