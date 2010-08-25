@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""some hooks and views to handle supervising of any data changes
+"""some hooks and views to handle supervising of any data changes"""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownEid
@@ -185,6 +183,6 @@ class SupervisionMailOp(SendMailOp):
         msg = format_mail(uinfo, recipients, content, view.subject(), config=config)
         self.to_send = [(msg, recipients)]
 
-    def commit_event(self):
+    def postcommit_event(self):
         self._prepare_email()
-        SendMailOp.commit_event(self)
+        SendMailOp.postcommit_event(self)

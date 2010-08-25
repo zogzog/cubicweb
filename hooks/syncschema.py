@@ -128,14 +128,12 @@ def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
 def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
-    for attr in entity.edited_attributes:
+    for attr in entity.cw_edited:
         if attr in ro_attrs:
-            newval = entity.pop(attr)
-            origval = getattr(entity, attr)
+            origval, newval = entity.cw_edited.oldnewvalue(attr)
             if newval != origval:
                 errors[attr] = session._("can't change the %s attribute") % \
                                display_name(session, attr)
-            entity[attr] = newval
     if errors:
         raise ValidationError(entity.eid, errors)
 
@@ -862,7 +860,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
 
     def __call__(self):
         entity = self.entity
-        if entity.get('final'):
+        if entity.cw_edited.get('final'):
             return
         CWETypeAddOp(self._cw, entity=entity)
 
@@ -876,8 +874,8 @@ class BeforeUpdateCWETypeHook(DelCWETypeHook):
         entity = self.entity
         check_valid_changes(self._cw, entity, ro_attrs=('final',))
         # don't use getattr(entity, attr), we would get the modified value if any
-        if 'name' in entity.edited_attributes:
-            oldname, newname = hook.entity_oldnewvalue(entity, 'name')
+        if 'name' in entity.cw_edited:
+            oldname, newname = entity.cw_edited.oldnewvalue('name')
             if newname.lower() != oldname.lower():
                 CWETypeRenameOp(self._cw, oldname=oldname, newname=newname)
 
@@ -920,8 +918,8 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
         entity = self.entity
         rtypedef = ybo.RelationType(name=entity.name,
                                     description=entity.description,
-                                    inlined=entity.get('inlined', False),
-                                    symmetric=entity.get('symmetric', False),
+                                    inlined=entity.cw_edited.get('inlined', False),
+                                    symmetric=entity.cw_edited.get('symmetric', False),
                                     eid=entity.eid)
         MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
 
@@ -936,10 +934,10 @@ class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
         check_valid_changes(self._cw, entity)
         newvalues = {}
         for prop in ('symmetric', 'inlined', 'fulltext_container'):
-            if prop in entity.edited_attributes:
-                old, new = hook.entity_oldnewvalue(entity, prop)
+            if prop in entity.cw_edited:
+                old, new = entity.cw_edited.oldnewvalue(prop)
                 if old != new:
-                    newvalues[prop] = entity[prop]
+                    newvalues[prop] = new
         if newvalues:
             rschema = self._cw.vreg.schema.rschema(entity.name)
             CWRTypeUpdateOp(self._cw, rschema=rschema, entity=entity,
@@ -1024,8 +1022,8 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
                 attr = 'ordernum'
             else:
                 attr = prop
-            if attr in entity.edited_attributes:
-                old, new = hook.entity_oldnewvalue(entity, attr)
+            if attr in entity.cw_edited:
+                old, new = entity.cw_edited.oldnewvalue(attr)
                 if old != new:
                     newvalues[prop] = new
         if newvalues:

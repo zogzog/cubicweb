@@ -41,11 +41,12 @@ class InitMetaAttrsHook(MetaDataHook):
 
     def __call__(self):
         timestamp = datetime.now()
-        self.entity.setdefault('creation_date', timestamp)
-        self.entity.setdefault('modification_date', timestamp)
+        edited = self.entity.cw_edited
+        edited.setdefault('creation_date', timestamp)
+        edited.setdefault('modification_date', timestamp)
         if not self._cw.get_shared_data('do-not-insert-cwuri'):
             cwuri = u'%seid/%s' % (self._cw.base_url(), self.entity.eid)
-            self.entity.setdefault('cwuri', cwuri)
+            edited.setdefault('cwuri', cwuri)
 
 
 class UpdateMetaAttrsHook(MetaDataHook):
@@ -60,7 +61,7 @@ class UpdateMetaAttrsHook(MetaDataHook):
         # XXX to be really clean, we should turn off modification_date update
         # explicitly on each command where we do not want that behaviour.
         if not self._cw.vreg.config.repairing:
-            self.entity.setdefault('modification_date', datetime.now())
+            self.entity.cw_edited.setdefault('modification_date', datetime.now())
 
 
 class _SetCreatorOp(hook.Operation):

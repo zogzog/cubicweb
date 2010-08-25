@@ -19,7 +19,6 @@
 
 __docformat__ = "restructuredtext en"
 
-from copy import copy
 from warnings import warn
 
 from logilab.common import interface
@@ -312,6 +311,9 @@ class Entity(AppObject):
         return '<Entity %s %s %s at %s>' % (
             self.e_schema, self.eid, self.cw_attr_cache.keys(), id(self))
 
+    def __cmp__(self, other):
+        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
         which is not part of dict structure itself
@@ -319,107 +321,6 @@ class Entity(AppObject):
         dumpable = dict(self)
         dumpable['eid'] = self.eid
         return dumpable
-
-    def __nonzero__(self):
-        return True
-
-    def __hash__(self):
-        return id(self)
-
-    def __cmp__(self, other):
-        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
-
-    def __contains__(self, key):
-        return key in self.cw_attr_cache
-
-    def __iter__(self):
-        return iter(self.cw_attr_cache)
-
-    def __getitem__(self, key):
-        if key == 'eid':
-            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
-                 DeprecationWarning, stacklevel=2)
-            return self.eid
-        return self.cw_attr_cache[key]
-
-    def __setitem__(self, attr, value):
-        """override __setitem__ to update self.edited_attributes.
-
-        Typically, a before_[update|add]_hook could do::
-
-            entity['generated_attr'] = generated_value
-
-        and this way, edited_attributes will be updated accordingly. Also, add
-        the attribute to skip_security since we don't want to check security
-        for such attributes set by hooks.
-        """
-        if attr == 'eid':
-            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
-                 DeprecationWarning, stacklevel=2)
-            self.eid = value
-        else:
-            self.cw_attr_cache[attr] = value
-            # don't add attribute into skip_security if already in edited
-            # attributes, else we may accidentaly skip a desired security check
-            if hasattr(self, 'edited_attributes') and \
-                   attr not in self.edited_attributes:
-                self.edited_attributes.add(attr)
-                self._cw_skip_security_attributes.add(attr)
-
-    def __delitem__(self, attr):
-        """override __delitem__ to update self.edited_attributes on cleanup of
-        undesired changes introduced in the entity's dict. For example, see the
-        code snippet below from the `forge` cube:
-
-        .. sourcecode:: python
-
-            edited = self.entity.edited_attributes
-            has_load_left = 'load_left' in edited
-            if 'load' in edited and self.entity.load_left is None:
-                self.entity.load_left = self.entity['load']
-            elif not has_load_left and edited:
-                # cleanup, this may cause undesired changes
-                del self.entity['load_left']
-
-        """
-        del self.cw_attr_cache[attr]
-        if hasattr(self, 'edited_attributes'):
-            self.edited_attributes.remove(attr)
-
-    def clear(self):
-        self.cw_attr_cache.clear()
-
-    def get(self, key, default=None):
-        return self.cw_attr_cache.get(key, default)
-
-    def setdefault(self, attr, default):
-        """override setdefault to update self.edited_attributes"""
-        value = self.cw_attr_cache.setdefault(attr, default)
-        # don't add attribute into skip_security if already in edited
-        # attributes, else we may accidentaly skip a desired security check
-        if hasattr(self, 'edited_attributes') and \
-               attr not in self.edited_attributes:
-            self.edited_attributes.add(attr)
-            self._cw_skip_security_attributes.add(attr)
-        return value
-
-    def pop(self, attr, default=_marker):
-        """override pop to update self.edited_attributes on cleanup of
-        undesired changes introduced in the entity's dict. See `__delitem__`
-        """
-        if default is _marker:
-            value = self.cw_attr_cache.pop(attr)
-        else:
-            value = self.cw_attr_cache.pop(attr, default)
-        if hasattr(self, 'edited_attributes') and attr in self.edited_attributes:
-            self.edited_attributes.remove(attr)
-        return value
-
-    def update(self, values):
-        """override update to update self.edited_attributes. See `__setitem__`
-        """
-        for attr, value in values.items():
-            self[attr] = value # use self.__setitem__ implementation
 
     def cw_adapt_to(self, interface):
         """return an adapter the entity to the given interface name.
@@ -590,12 +491,6 @@ class Entity(AppObject):
 
     # entity cloning ##########################################################
 
-    def cw_copy(self):
-        thecopy = copy(self)
-        thecopy.cw_attr_cache = copy(self.cw_attr_cache)
-        thecopy._cw_related_cache = {}
-        return thecopy
-
     def copy_relations(self, ceid): # XXX cw_copy_relations
         """copy relations of the object with the given eid on this
         object (this method is called on the newly created copy, and
@@ -680,7 +575,7 @@ class Entity(AppObject):
             rdef = rschema.rdef(self.e_schema, attrschema)
             if not self._cw.user.matching_groups(rdef.get_groups('read')) \
                    or (attrschema.type == 'Password' and skip_pwd):
-                self[attr] = None
+                self.cw_attr_cache[attr] = None
                 continue
             yield attr
 
@@ -739,7 +634,7 @@ class Entity(AppObject):
             rset = self._cw.execute(rql, {'x': self.eid}, build_descr=False)[0]
             # handle attributes
             for i in xrange(1, lastattr):
-                self[str(selected[i-1][0])] = rset[i]
+                self.cw_attr_cache[str(selected[i-1][0])] = rset[i]
             # handle relations
             for i in xrange(lastattr, len(rset)):
                 rtype, role = selected[i-1][0]
@@ -759,7 +654,7 @@ class Entity(AppObject):
         :param name: name of the attribute to get
         """
         try:
-            value = self.cw_attr_cache[name]
+            return self.cw_attr_cache[name]
         except KeyError:
             if not self.cw_is_saved():
                 return None
@@ -767,21 +662,20 @@ class Entity(AppObject):
             try:
                 rset = self._cw.execute(rql, {'x': self.eid})
             except Unauthorized:
-                self[name] = value = None
+                self.cw_attr_cache[name] = value = None
             else:
                 assert rset.rowcount <= 1, (self, rql, rset.rowcount)
                 try:
-                    self[name] = value = rset.rows[0][0]
+                    self.cw_attr_cache[name] = value = rset.rows[0][0]
                 except IndexError:
                     # probably a multisource error
                     self.critical("can't get value for attribute %s of entity with eid %s",
                                   name, self.eid)
                     if self.e_schema.destination(name) == 'String':
-                        # XXX (syt) imo emtpy string is better
-                        self[name] = value = self._cw._('unaccessible')
+                        self.cw_attr_cache[name] = value = self._cw._('unaccessible')
                     else:
-                        self[name] = value = None
-        return value
+                        self.cw_attr_cache[name] = value = None
+            return value
 
     def related(self, rtype, role='subject', limit=None, entities=False): # XXX .cw_related
         """returns a resultset of related entities
@@ -985,7 +879,6 @@ class Entity(AppObject):
         you should override this method to clear them as well.
         """
         # clear attributes cache
-        haseid = 'eid' in self
         self._cw_completed = False
         self.cw_attr_cache.clear()
         # clear relations cache
@@ -1012,9 +905,9 @@ class Entity(AppObject):
                          kwargs)
         kwargs.pop('x')
         # update current local object _after_ the rql query to avoid
-        # interferences between the query execution itself and the
-        # edited_attributes / skip_security_attributes machinery
-        self.update(kwargs)
+        # interferences between the query execution itself and the cw_edited /
+        # skip_security machinery
+        self.cw_attr_cache.update(kwargs)
 
     def set_relations(self, **kwargs): # XXX cw_set_relations
         """add relations to the given object. To set a relation where this entity
@@ -1045,58 +938,13 @@ class Entity(AppObject):
         self._cw.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
                          {'x': self.eid}, **kwargs)
 
-    # server side utilities ###################################################
-
-    def _cw_rql_set_value(self, attr, value):
-        """call by rql execution plan when some attribute is modified
-
-        don't use dict api in such case since we don't want attribute to be
-        added to skip_security_attributes.
-
-        This method is for internal use, you should not use it.
-        """
-        self.cw_attr_cache[attr] = value
+    # server side utilities ####################################################
 
     def _cw_clear_local_perm_cache(self, action):
         for rqlexpr in self.e_schema.get_rqlexprs(action):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
-    @property
-    def _cw_skip_security_attributes(self):
-        try:
-            return self.__cw_skip_security_attributes
-        except:
-            self.__cw_skip_security_attributes = set()
-            return self.__cw_skip_security_attributes
-
-    def _cw_set_defaults(self):
-        """set default values according to the schema"""
-        for attr, value in self.e_schema.defaults():
-            if not self.cw_attr_cache.has_key(attr):
-                self[str(attr)] = value
-
-    def _cw_check(self, creation=False):
-        """check this entity against its schema. Only final relation
-        are checked here, constraint on actual relations are checked in hooks
-        """
-        # necessary since eid is handled specifically and yams require it to be
-        # in the dictionary
-        if self._cw is None:
-            _ = unicode
-        else:
-            _ = self._cw._
-        if creation:
-            # on creations, we want to check all relations, especially
-            # required attributes
-            relations = [rschema for rschema in self.e_schema.subject_relations()
-                         if rschema.final and rschema.type != 'eid']
-        elif hasattr(self, 'edited_attributes'):
-            relations = [self._cw.vreg.schema.rschema(rtype)
-                         for rtype in self.edited_attributes]
-        else:
-            relations = None
-        self.e_schema.check(self, creation=creation, _=_,
-                            relations=relations)
+    # deprecated stuff #########################################################
 
     @deprecated('[3.9] use entity.cw_attr_value(attr)')
     def get_value(self, name):
@@ -1126,6 +974,109 @@ class Entity(AppObject):
     def related_rql(self, rtype, role='subject', targettypes=None):
         return self.cw_related_rql(rtype, role, targettypes)
 
+    @property
+    @deprecated('[3.10] use entity.cw_edited')
+    def edited_attributes(self):
+        return self.cw_edited
+
+    @property
+    @deprecated('[3.10] use entity.cw_edited.skip_security')
+    def skip_security_attributes(self):
+        return self.cw_edited.skip_security
+
+    @property
+    @deprecated('[3.10] use entity.cw_edited.skip_security')
+    def _cw_skip_security_attributes(self):
+        return self.cw_edited.skip_security
+
+    @property
+    @deprecated('[3.10] use entity.cw_edited.skip_security')
+    def querier_pending_relations(self):
+        return self.cw_edited.querier_pending_relations
+
+    @deprecated('[3.10] use key in entity.cw_attr_cache')
+    def __contains__(self, key):
+        return key in self.cw_attr_cache
+
+    @deprecated('[3.10] iter on entity.cw_attr_cache')
+    def __iter__(self):
+        return iter(self.cw_attr_cache)
+
+    @deprecated('[3.10] use entity.cw_attr_cache[attr]')
+    def __getitem__(self, key):
+        if key == 'eid':
+            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
+                 DeprecationWarning, stacklevel=2)
+            return self.eid
+        return self.cw_attr_cache[key]
+
+    @deprecated('[3.10] use entity.cw_attr_cache.get(attr[, default])')
+    def get(self, key, default=None):
+        return self.cw_attr_cache.get(key, default)
+
+    @deprecated('[3.10] use entity.cw_attr_cache.clear()')
+    def clear(self):
+        self.cw_attr_cache.clear()
+        # XXX clear cw_edited ?
+
+    @deprecated('[3.10] use entity.cw_edited[attr] = value or entity.cw_attr_cache[attr] = value')
+    def __setitem__(self, attr, value):
+        """override __setitem__ to update self.cw_edited.
+
+        Typically, a before_[update|add]_hook could do::
+
+            entity['generated_attr'] = generated_value
+
+        and this way, cw_edited will be updated accordingly. Also, add
+        the attribute to skip_security since we don't want to check security
+        for such attributes set by hooks.
+        """
+        if attr == 'eid':
+            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
+                 DeprecationWarning, stacklevel=2)
+            self.eid = value
+        else:
+            try:
+                self.cw_edited[attr] = value
+            except AttributeError:
+                self.cw_attr_cache[attr] = value
+
+    @deprecated('[3.10] use del entity.cw_edited[attr]')
+    def __delitem__(self, attr):
+        """override __delitem__ to update self.cw_edited on cleanup of
+        undesired changes introduced in the entity's dict. For example, see the
+        code snippet below from the `forge` cube:
+
+        .. sourcecode:: python
+
+            edited = self.entity.cw_edited
+            has_load_left = 'load_left' in edited
+            if 'load' in edited and self.entity.load_left is None:
+                self.entity.load_left = self.entity['load']
+            elif not has_load_left and edited:
+                # cleanup, this may cause undesired changes
+                del self.entity['load_left']
+        """
+        del self.cw_edited[attr]
+
+    @deprecated('[3.10] use entity.cw_edited.setdefault(attr, default)')
+    def setdefault(self, attr, default):
+        """override setdefault to update self.cw_edited"""
+        return self.cw_edited.setdefault(attr, default)
+
+    @deprecated('[3.10] use entity.cw_edited.pop(attr[, default])')
+    def pop(self, attr, *args):
+        """override pop to update self.cw_edited on cleanup of
+        undesired changes introduced in the entity's dict. See `__delitem__`
+        """
+        return self.cw_edited.pop(attr, *args)
+
+    @deprecated('[3.10] use entity.cw_edited.update(values)')
+    def update(self, values):
+        """override update to update self.cw_edited. See `__setitem__`
+        """
+        self.cw_edited.update(values)
+
 
 # attribute and relation descriptors ##########################################
 
@@ -1141,8 +1092,9 @@ class Attribute(object):
             return self
         return eobj.cw_attr_value(self._attrname)
 
+    @deprecated('[3.10] use entity.cw_attr_cache[attr] = value')
     def __set__(self, eobj, value):
-        eobj[self._attrname] = value
+        eobj.cw_attr_cache[self._attrname] = value
 
 
 class Relation(object):

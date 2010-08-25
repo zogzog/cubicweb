@@ -333,7 +333,7 @@ class Field(object):
         if self.eidparam and self.role is not None:
             entity = form.edited_entity
             if form._cw.vreg.schema.rschema(self.name).final:
-                if entity.has_eid() or self.name in entity:
+                if entity.has_eid() or self.name in entity.cw_attr_cache:
                     value = getattr(entity, self.name)
                     if value is not None or not self.fallback_on_none_attribute:
                         return value
@@ -428,7 +428,7 @@ class Field(object):
         if self.eidparam and self.role == 'subject':
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'format') and (
-                entity.has_eid() or '%s_format' % self.name in entity):
+                entity.has_eid() or '%s_format' % self.name in entity.cw_attr_cache):
                 return form.edited_entity.cw_attr_metadata(self.name, 'format')
         return form._cw.property_value('ui.default-text-format')
 

@@ -68,7 +68,7 @@ class XMLItemView(EntityView):
                 value = entity.eid
             else:
                 try:
-                    value = entity[attr]
+                    value = entity.cw_attr_cache[attr]
                 except KeyError:
                     # Bytes
                     continue

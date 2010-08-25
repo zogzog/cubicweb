@@ -118,7 +118,7 @@ class DatastorePutOp(SingleOperation):
             Put(gaeentity)
         modified.clear()
 
-    def commit_event(self):
+    def postcommit_event(self):
         self._put_entities()
 
     def precommit_event(self):

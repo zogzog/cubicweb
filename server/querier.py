@@ -450,7 +450,7 @@ class InsertPlan(ExecutionPlan):
         # save originaly selected variable, we may modify this
         # dictionary for substitution (query parameters)
         self.selected = rqlst.selection
-        # list of new or updated entities definition (utils.Entity)
+        # list of rows of entities definition (ssplanner.EditedEntity)
         self.e_defs = [[]]
         # list of new relation definition (3-uple (from_eid, r_type, to_eid)
         self.r_defs = set()
@@ -461,7 +461,6 @@ class InsertPlan(ExecutionPlan):
 
     def add_entity_def(self, edef):
         """add an entity definition to build"""
-        edef.querier_pending_relations = {}
         self.e_defs[-1].append(edef)
 
     def add_relation_def(self, rdef):
@@ -493,8 +492,9 @@ class InsertPlan(ExecutionPlan):
             self.e_defs[i][colidx] = edefs[0]
             samplerow = self.e_defs[i]
             for edef_ in edefs[1:]:
-                row = samplerow[:]
-                row[colidx] = edef_
+                row = [ed.clone() for i, ed in enumerate(samplerow)
+                       if i != colidx]
+                row.insert(colidx, edef_)
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
@@ -560,15 +560,16 @@ class InsertPlan(ExecutionPlan):
             if isinstance(subj, basestring):
                 subj = typed_eid(subj)
             elif not isinstance(subj, (int, long)):
-                subj = subj.eid
+                subj = subj.entity.eid
             if isinstance(obj, basestring):
                 obj = typed_eid(obj)
             elif not isinstance(obj, (int, long)):
-                obj = obj.eid
+                obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
                 entity = session.entity_from_eid(subj)
-                entity[rtype] = obj
-                repo.glob_update_entity(session, entity, set((rtype,)))
+                edited = EditedEntity(entity)
+                edited.edited_attribute(rtype, obj)
+                repo.glob_update_entity(session, edited)
             else:
                 repo.glob_add_relation(session, subj, rtype, obj)
 

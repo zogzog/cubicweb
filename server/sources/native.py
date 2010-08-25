@@ -54,6 +54,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.session import hooks_control, security_enabled
+from cubicweb.server.ssplanner import EditedEntity
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -546,21 +547,20 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         etype = entity.__regid__
         for attr, storage in self._storages.get(etype, {}).items():
             try:
-                edited = entity.edited_attributes
+                edited = entity.cw_edited
             except AttributeError:
                 assert event == 'deleted'
                 getattr(storage, 'entity_deleted')(entity, attr)
             else:
                 if attr in edited:
                     handler = getattr(storage, 'entity_%s' % event)
-                    real_value = handler(entity, attr)
-                    restore_values[attr] = real_value
+                    restore_values[attr] = handler(entity, attr)
         try:
             yield # 2/ execute the source's instructions
         finally:
             # 3/ restore original values
             for attr, value in restore_values.items():
-                entity[attr] = value
+                entity.cw_edited.edited_attribute(attr, value)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
@@ -1108,6 +1108,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             err("can't restore entity %s of type %s, type no more supported"
                 % (eid, etype))
             return errors
+        entity.cw_edited = edited = EditedEntity(entity)
         # check for schema changes, entities linked through inlined relation
         # still exists, rewrap binary values
         eschema = entity.e_schema
@@ -1124,15 +1125,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 assert value is None
             elif eschema.destination(rtype) in ('Bytes', 'Password'):
                 action.changes[column] = self._binary(value)
-                entity[rtype] = Binary(value)
+                edited[rtype] = Binary(value)
             elif isinstance(value, str):
-                entity[rtype] = unicode(value, session.encoding, 'replace')
+                edited[rtype] = unicode(value, session.encoding, 'replace')
             else:
-                entity[rtype] = value
+                edited[rtype] = value
         entity.eid = eid
         session.repo.init_entity_caches(session, entity, self)
-        entity.edited_attributes = set(entity)
-        entity._cw_check()
+        edited.check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
         # restore the entity
         action.changes['cw_eid'] = eid

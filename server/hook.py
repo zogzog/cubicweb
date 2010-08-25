@@ -61,6 +61,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import RegistryNotFound
+from cubicweb.vregistry import classid
 from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
                                 is_instance)
@@ -83,7 +84,7 @@ class HooksRegistry(CWRegistry):
         for appobjects in self.values():
             for cls in appobjects:
                 if not cls.enabled:
-                    warn('[3.6] %s: enabled is deprecated' % cls)
+                    warn('[3.6] %s: enabled is deprecated' % classid(cls))
                     self.unregister(cls)
 
     def register(self, obj, **kwargs):
@@ -119,21 +120,9 @@ class HooksManager(object):
 for event in ALL_HOOKS:
     VRegistry.REGISTRY_FACTORY['%s_hooks' % event] = HooksRegistry
 
-_MARKER = object()
+@deprecated('[3.10] use entity.cw_edited.oldnewvalue(attr)')
 def entity_oldnewvalue(entity, attr):
-    """returns the couple (old attr value, new attr value)
-
-    NOTE: will only work in a before_update_entity hook
-    """
-    # get new value and remove from local dict to force a db query to
-    # fetch old value
-    newvalue = entity.pop(attr, _MARKER)
-    oldvalue = getattr(entity, attr)
-    if newvalue is not _MARKER:
-        entity[attr] = newvalue
-    else:
-        newvalue = oldvalue
-    return oldvalue, newvalue
+    return entity.cw_edited.oldnewvalue(attr)
 
 
 # some hook specific selectors #################################################
@@ -231,16 +220,16 @@ class Hook(AppObject):
 
     @classproperty
     def __regid__(cls):
-        warn('[3.6] %s.%s: please specify an id for your hook'
-             % (cls.__module__, cls.__name__), DeprecationWarning)
+        warn('[3.6] %s: please specify an id for your hook' % classid(cls),
+             DeprecationWarning)
         return str(id(cls))
 
     @classmethod
     def __registered__(cls, reg):
         super(Hook, cls).__registered__(reg)
         if getattr(cls, 'accepts', None):
-            warn('[3.6] %s.%s: accepts is deprecated, define proper __select__'
-                 % (cls.__module__, cls.__name__), DeprecationWarning)
+            warn('[3.6] %s: accepts is deprecated, define proper __select__'
+                 % classid(cls), DeprecationWarning)
             rtypes = []
             for ertype in cls.accepts:
                 if ertype.islower():
@@ -261,9 +250,8 @@ class Hook(AppObject):
 
     def __call__(self):
         if hasattr(self, 'call'):
-            cls = self.__class__
-            warn('[3.6] %s.%s: call is deprecated, implement __call__'
-                 % (cls.__module__, cls.__name__), DeprecationWarning)
+            warn('[3.6] %s: call is deprecated, implement __call__'
+                 % classid(self.__class__), DeprecationWarning)
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:
@@ -428,6 +416,10 @@ class Operation(object):
 
     def handle_event(self, event):
         """delegate event handling to the opertaion"""
+        if event == 'postcommit_event' and hasattr(self, 'commit_event'):
+            warn('[3.10] %s: commit_event method has been replaced by postcommit_event'
+                 % classid(self.__class__), DeprecationWarning)
+            self.commit_event()
         getattr(self, event)()
 
     def precommit_event(self):
@@ -437,16 +429,6 @@ class Operation(object):
         """an error went when pre-commiting this operation or a later one
 
         should revert pre-commit's changes but take care, they may have not
-        been all considered if it's this operation which failed
-        """
-
-    def commit_event(self):
-        """the observed connections pool is commiting"""
-
-    def revertcommit_event(self):
-        """an error went when commiting this operation or a later one
-
-        should revert commit's changes but take care, they may have not
         been all considered if it's this operation which failed
         """
 
@@ -524,8 +506,12 @@ class LateOperation(Operation):
         return -(i + 1)
 
 
-class SingleOperation(Operation):
-    """special operation which should be called once"""
+
+class SingleLastOperation(Operation):
+    """special operation which should be called once and after all other
+    operations
+    """
+
     def register(self, session):
         """override register to handle cases where this operation has already
         been added
@@ -546,11 +532,6 @@ class SingleOperation(Operation):
                 return -(i+1)
         return None
 
-
-class SingleLastOperation(SingleOperation):
-    """special operation which should be called once and after all other
-    operations
-    """
     def insert_index(self):
         return None
 
@@ -572,7 +553,7 @@ class SendMailOp(SingleLastOperation):
         if previous:
             self.to_send = previous.to_send + self.to_send
 
-    def commit_event(self):
+    def postcommit_event(self):
         self.session.repo.threaded_task(self.sendmails)
 
     def sendmails(self):
@@ -612,7 +593,7 @@ class CleanupDeletedEidsCacheOp(SingleLastOperation):
     type/source cache eids of entities deleted in that transaction.
     """
 
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
         """

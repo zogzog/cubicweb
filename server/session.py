@@ -739,51 +739,50 @@ class Session(RequestSessionBase):
         try:
             # by default, operations are executed with security turned off
             with security_enabled(self, False, False):
-                for trstate in ('precommit', 'commit'):
-                    processed = []
-                    self.commit_state = trstate
-                    try:
-                        while self.pending_operations:
-                            operation = self.pending_operations.pop(0)
-                            operation.processed = trstate
-                            processed.append(operation)
-                            operation.handle_event('%s_event' % trstate)
-                        self.pending_operations[:] = processed
-                        self.debug('%s session %s done', trstate, self.id)
-                    except:
-                        # if error on [pre]commit:
-                        #
-                        # * set .failed = True on the operation causing the failure
-                        # * call revert<event>_event on processed operations
-                        # * call rollback_event on *all* operations
-                        #
-                        # that seems more natural than not calling rollback_event
-                        # for processed operations, and allow generic rollback
-                        # instead of having to implements rollback, revertprecommit
-                        # and revertcommit, that will be enough in mont case.
-                        operation.failed = True
-                        for operation in reversed(processed):
-                            try:
-                                operation.handle_event('revert%s_event' % trstate)
-                            except:
-                                self.critical('error while reverting %sing', trstate,
-                                              exc_info=True)
-                        # XXX use slice notation since self.pending_operations is a
-                        # read-only property.
-                        self.pending_operations[:] = processed + self.pending_operations
-                        self.rollback(reset_pool)
-                        raise
+                processed = []
+                self.commit_state = 'precommit'
+                try:
+                    while self.pending_operations:
+                        operation = self.pending_operations.pop(0)
+                        operation.processed = 'precommit'
+                        processed.append(operation)
+                        operation.handle_event('precommit_event')
+                    self.pending_operations[:] = processed
+                    self.debug('precommit session %s done', self.id)
+                except:
+                    # if error on [pre]commit:
+                    #
+                    # * set .failed = True on the operation causing the failure
+                    # * call revert<event>_event on processed operations
+                    # * call rollback_event on *all* operations
+                    #
+                    # that seems more natural than not calling rollback_event
+                    # for processed operations, and allow generic rollback
+                    # instead of having to implements rollback, revertprecommit
+                    # and revertcommit, that will be enough in mont case.
+                    operation.failed = True
+                    for operation in reversed(processed):
+                        try:
+                            operation.handle_event('revertprecommit_event')
+                        except:
+                            self.critical('error while reverting precommit',
+                                          exc_info=True)
+                    # XXX use slice notation since self.pending_operations is a
+                    # read-only property.
+                    self.pending_operations[:] = processed + self.pending_operations
+                    self.rollback(reset_pool)
+                    raise
                 self.pool.commit()
-                self.commit_state = trstate = 'postcommit'
+                self.commit_state = 'postcommit'
                 while self.pending_operations:
                     operation = self.pending_operations.pop(0)
-                    operation.processed = trstate
+                    operation.processed = 'postcommit'
                     try:
-                        operation.handle_event('%s_event' % trstate)
+                        operation.handle_event('postcommit_event')
                     except:
-                        self.critical('error while %sing', trstate,
+                        self.critical('error while postcommit',
                                       exc_info=sys.exc_info())
-                self.debug('%s session %s done', trstate, self.id)
+                self.debug('postcommit session %s done', self.id)
                 return self.transaction_uuid(set=False)
         finally:
             self._touch()

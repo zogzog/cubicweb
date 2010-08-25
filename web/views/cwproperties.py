@@ -200,8 +200,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         else:
             entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
             entity.eid = self._cw.varmaker.next()
-            entity['pkey'] = key
-            entity['value'] = self._cw.vreg.property_value(key)
+            entity.cw_attr_cache['pkey'] = key
+            entity.cw_attr_cache['value'] = self._cw.vreg.property_value(key)
         return entity
 
     def form(self, formid, keys, splitlabel=False):
@@ -329,7 +329,7 @@ class PropertyValueField(StringField):
 
     def form_init(self, form):
         entity = form.edited_entity
-        if not (entity.has_eid() or 'pkey' in entity):
+        if not (entity.has_eid() or 'pkey' in entity.cw_attr_cache):
             # no key set yet, just include an empty div which will be filled
             # on key selection
             return

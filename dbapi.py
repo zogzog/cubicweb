@@ -631,7 +631,7 @@ class Connection(object):
         else:
             from cubicweb.entity import Entity
             user = Entity(req, rset, row=0)
-        user['login'] = login # cache login
+        user.cw_attr_cache['login'] = login # cache login
         return user
 
     def __del__(self):

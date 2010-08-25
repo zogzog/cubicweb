@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: check for data integrity according to the instance'schema
 validity
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from threading import Lock
@@ -64,8 +64,6 @@ def _release_unique_cstr_lock(session):
         _UNIQUE_CONSTRAINTS_LOCK.release()
 
 class _ReleaseUniqueConstraintsOperation(hook.Operation):
-    def commit_event(self):
-        pass
     def postcommit_event(self):
         _release_unique_cstr_lock(self.session)
     def rollback_event(self):
@@ -185,9 +183,6 @@ class _CheckConstraintsOp(hook.LateOperation):
                     self.critical('can\'t check constraint %s, not supported',
                                   constraint)
 
-    def commit_event(self):
-        pass
-
 
 class CheckConstraintHook(IntegrityHook):
     """check the relation satisfy its constraints
@@ -219,7 +214,7 @@ class CheckAttributeConstraintHook(IntegrityHook):
 
     def __call__(self):
         eschema = self.entity.e_schema
-        for attr in self.entity.edited_attributes:
+        for attr in self.entity.cw_edited:
             if eschema.subjrels[attr].final:
                 constraints = [c for c in eschema.rdef(attr).constraints
                                if isinstance(c, (RQLUniqueConstraint, RQLConstraint))]
@@ -236,9 +231,8 @@ class CheckUniqueHook(IntegrityHook):
     def __call__(self):
         entity = self.entity
         eschema = entity.e_schema
-        for attr in entity.edited_attributes:
+        for attr, val in entity.cw_edited.iteritems():
             if eschema.subjrels[attr].final and eschema.has_unique_values(attr):
-                val = entity[attr]
                 if val is None:
                     continue
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
@@ -257,18 +251,17 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     events = ('before_delete_entity', 'before_update_entity')
 
     def __call__(self):
-        if self.event == 'before_delete_entity' and self.entity.name == 'owners':
+        entity = self.entity
+        if self.event == 'before_delete_entity' and entity.name == 'owners':
             msg = self._cw._('can\'t be deleted')
-            raise ValidationError(self.entity.eid, {None: msg})
-        elif self.event == 'before_update_entity' and \
-                 'name' in self.entity.edited_attributes:
-            newname = self.entity.pop('name')
-            oldname = self.entity.name
+            raise ValidationError(entity.eid, {None: msg})
+        elif self.event == 'before_update_entity' \
+                 and 'name' in entity.cw_edited:
+            oldname, newname = entity.cw_edited.oldnewvalue('name')
             if oldname == 'owners' and newname != oldname:
                 qname = role_name('name', 'subject')
                 msg = self._cw._('can\'t be changed')
-                raise ValidationError(self.entity.eid, {qname: msg})
-            self.entity['name'] = newname
+                raise ValidationError(entity.eid, {qname: msg})
 
 
 class TidyHtmlFields(IntegrityHook):
@@ -279,15 +272,16 @@ class TidyHtmlFields(IntegrityHook):
     def __call__(self):
         entity = self.entity
         metaattrs = entity.e_schema.meta_attributes()
+        edited = entity.cw_edited
         for metaattr, (metadata, attr) in metaattrs.iteritems():
-            if metadata == 'format' and attr in entity.edited_attributes:
+            if metadata == 'format' and attr in edited:
                 try:
-                    value = entity[attr]
+                    value = edited[attr]
                 except KeyError:
                     continue # no text to tidy
                 if isinstance(value, unicode): # filter out None and Binary
                     if getattr(entity, str(metaattr)) == 'text/html':
-                        entity[attr] = soup2xhtml(value, self._cw.encoding)
+                        edited[attr] = soup2xhtml(value, self._cw.encoding)
 
 
 class StripCWUserLoginHook(IntegrityHook):
@@ -297,9 +291,9 @@ class StripCWUserLoginHook(IntegrityHook):
     events = ('before_add_entity', 'before_update_entity',)
 
     def __call__(self):
-        user = self.entity
-        if 'login' in user.edited_attributes and user.login:
-            user.login = user.login.strip()
+        login = self.entity.cw_edited.get('login')
+        if login:
+            self.entity.cw_edited['login'] = login.strip()
 
 
 # 'active' integrity hooks: you usually don't want to deactivate them, they are

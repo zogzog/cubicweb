@@ -135,7 +135,7 @@ class _SubWorkflowExitOp(hook.Operation):
             qname = role_name('to_state', 'subject')
             msg = session._("state doesn't belong to entity's current workflow")
             raise ValidationError(self.trinfo.eid, {'to_state': msg})
-        tostate = wftr.get_exit_point(forentity, trinfo['to_state'])
+        tostate = wftr.get_exit_point(forentity, trinfo.cw_attr_cache['to_state'])
         if tostate is not None:
             # reached an exit point
             msg = session._('exiting from subworkflow %s')
@@ -185,7 +185,7 @@ class FireTransitionHook(WorkflowHook):
         entity = self.entity
         # first retreive entity to which the state change apply
         try:
-            foreid = entity['wf_info_for']
+            foreid = entity.cw_attr_cache['wf_info_for']
         except KeyError:
             qname = role_name('wf_info_for', 'subject')
             msg = session._('mandatory relation')
@@ -213,7 +213,7 @@ class FireTransitionHook(WorkflowHook):
                      or not session.write_security)
         # no investigate the requested state change...
         try:
-            treid = entity['by_transition']
+            treid = entity.cw_attr_cache['by_transition']
         except KeyError:
             # no transition set, check user is a manager and destination state
             # is specified (and valid)
@@ -221,7 +221,7 @@ class FireTransitionHook(WorkflowHook):
                 qname = role_name('by_transition', 'subject')
                 msg = session._('mandatory relation')
                 raise ValidationError(entity.eid, {qname: msg})
-            deststateeid = entity.get('to_state')
+            deststateeid = entity.cw_attr_cache.get('to_state')
             if not deststateeid:
                 qname = role_name('by_transition', 'subject')
                 msg = session._('mandatory relation')
@@ -247,8 +247,8 @@ class FireTransitionHook(WorkflowHook):
                 if not tr.may_be_fired(foreid):
                     msg = session._("transition may not be fired")
                     raise ValidationError(entity.eid, {qname: msg})
-            if entity.get('to_state'):
-                deststateeid = entity['to_state']
+            deststateeid = entity.cw_attr_cache.get('to_state')
+            if deststateeid is not None:
                 if not cowpowers and deststateeid != tr.destination(forentity).eid:
                     qname = role_name('by_transition', 'subject')
                     msg = session._("transition isn't allowed")
@@ -262,8 +262,8 @@ class FireTransitionHook(WorkflowHook):
             else:
                 deststateeid = tr.destination(forentity).eid
         # everything is ok, add missing information on the trinfo entity
-        entity['from_state'] = fromstate.eid
-        entity['to_state'] = deststateeid
+        entity.cw_edited['from_state'] = fromstate.eid
+        entity.cw_edited['to_state'] = deststateeid
         nocheck = session.transaction_data.setdefault('skip-security', set())
         nocheck.add((entity.eid, 'from_state', fromstate.eid))
         nocheck.add((entity.eid, 'to_state', deststateeid))
@@ -278,11 +278,12 @@ class FiredTransitionHook(WorkflowHook):
 
     def __call__(self):
         trinfo = self.entity
-        _change_state(self._cw, trinfo['wf_info_for'],
-                      trinfo['from_state'], trinfo['to_state'])
-        forentity = self._cw.entity_from_eid(trinfo['wf_info_for'])
+        rcache = trinfo.cw_attr_cache
+        _change_state(self._cw, rcache['wf_info_for'], rcache['from_state'],
+                      rcache['to_state'])
+        forentity = self._cw.entity_from_eid(rcache['wf_info_for'])
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
-        assert iworkflowable.current_state.eid == trinfo['to_state']
+        assert iworkflowable.current_state.eid == rcache['to_state']
         if iworkflowable.main_workflow.eid != iworkflowable.current_workflow.eid:
             _SubWorkflowExitOp(self._cw, forentity=forentity, trinfo=trinfo)
 

@@ -23,12 +23,15 @@ from yams.schema import role_name
 
 from cubicweb import Binary, ValidationError
 from cubicweb.server import hook
+from cubicweb.server.ssplanner import EditedEntity
+
 
 def set_attribute_storage(repo, etype, attr, storage):
     repo.system_source.set_storage(etype, attr, storage)
 
 def unset_attribute_storage(repo, etype, attr):
     repo.system_source.unset_storage(etype, attr)
+
 
 class Storage(object):
     """abstract storage
@@ -114,12 +117,12 @@ class BytesFileSystemStorage(Storage):
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
         if entity._cw.transaction_data.get('fs_importing'):
-            binary = Binary(file(entity[attr].getvalue(), 'rb').read())
+            binary = Binary(file(entity.cw_edited[attr].getvalue(), 'rb').read())
         else:
-            binary = entity.pop(attr)
+            binary = entity.cw_edited.pop(attr)
             fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
-            entity[attr] = Binary(fpath)
+            entity.cw_edited.edited_attribute(attr, Binary(fpath))
             file(fpath, 'wb').write(binary.getvalue())
             hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         return binary
@@ -132,7 +135,7 @@ class BytesFileSystemStorage(Storage):
             # If we are importing from the filesystem, the file already exists.
             # We do not need to create it but we need to fetch the content of
             # the file as the actual content of the attribute
-            fpath = entity[attr].getvalue()
+            fpath = entity.cw_edited[attr].getvalue()
             binary = Binary(file(fpath, 'rb').read())
         else:
             # We must store the content of the attributes
@@ -144,7 +147,7 @@ class BytesFileSystemStorage(Storage):
             # went ok.
             #
             # fetch the current attribute value in memory
-            binary = entity.pop(attr)
+            binary = entity.cw_edited.pop(attr)
             # Get filename for it
             fpath = self.new_fs_path(entity, attr)
             assert not osp.exists(fpath)
@@ -155,7 +158,7 @@ class BytesFileSystemStorage(Storage):
             hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
         if oldpath != fpath:
             # register the new location for the file.
-            entity[attr] = Binary(fpath)
+            entity.cw_edited.edited_attribute(attr, Binary(fpath))
             # Mark the old file as useless so the file will be removed at
             # commit.
             hook.set_operation(entity._cw, 'bfss_deleted', oldpath,
@@ -197,7 +200,7 @@ class BytesFileSystemStorage(Storage):
 
     def migrate_entity(self, entity, attribute):
         """migrate an entity attribute to the storage"""
-        entity.edited_attributes = set()
+        entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
         self.entity_added(entity, attribute)
         session = entity._cw
         source = session.repo.system_source
@@ -205,6 +208,7 @@ class BytesFileSystemStorage(Storage):
         sql = source.sqlgen.update('cw_' + entity.__regid__, attrs,
                                    ['cw_eid'])
         source.doexec(session, sql, attrs)
+        entity.cw_edited = None
 
 
 class AddFileOp(hook.Operation):
@@ -216,7 +220,7 @@ class AddFileOp(hook.Operation):
                 self.error('cant remove %s: %s' % (filepath, ex))
 
 class DeleteFileOp(hook.Operation):
-    def commit_event(self):
+    def postcommit_event(self):
         for filepath in self.session.transaction_data.pop('bfss_deleted'):
             try:
                 unlink(filepath)

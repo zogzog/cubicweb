@@ -26,6 +26,7 @@ from logging import getLogger
 from cubicweb import set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.ssplanner import EditedEntity
 
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
@@ -343,6 +344,7 @@ class AbstractSource(object):
         """
         entity = self.repo.vreg['etypes'].etype_class(etype)(session)
         entity.eid = eid
+        entity.cw_edited = EditedEntity(entity)
         return entity
 
     def after_entity_insertion(self, session, lid, entity):

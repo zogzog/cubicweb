@@ -143,7 +143,7 @@ class CoreHooksTC(CubicWebTC):
         entity.set_attributes(name=u'wf2')
         self.assertEquals(entity.description, u'yo')
         entity.set_attributes(description=u'R&D<p>yo')
-        entity.pop('description')
+        entity.cw_attr_cache.pop('description')
         self.assertEquals(entity.description, u'R&amp;D<p>yo</p>')
 
 

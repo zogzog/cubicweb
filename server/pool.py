@@ -144,11 +144,9 @@ class ConnectionsPool(object):
         self._cursors.pop(source.uri, None)
 
 
-from cubicweb.server.hook import (Operation, LateOperation, SingleOperation,
-                                  SingleLastOperation)
+from cubicweb.server.hook import Operation, LateOperation, SingleLastOperation
 from logilab.common.deprecation import class_moved, class_renamed
 Operation = class_moved(Operation)
 PreCommitOperation = class_renamed('PreCommitOperation', Operation)
 LateOperation = class_moved(LateOperation)
-SingleOperation = class_moved(SingleOperation)
 SingleLastOperation = class_moved(SingleLastOperation)

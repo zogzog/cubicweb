@@ -125,7 +125,7 @@ class EntityUpdateHook(NotificationHook):
         if session.added_in_transaction(self.entity.eid):
             return # entity is being created
         # then compute changes
-        attrs = [k for k in self.entity.edited_attributes
+        attrs = [k for k in self.entity.cw_edited
                  if not k in self.skip_attrs]
         if not attrs:
             return
@@ -168,8 +168,9 @@ class SomethingChangedHook(NotificationHook):
             if self._cw.added_in_transaction(self.entity.eid):
                 return False
             if self.entity.e_schema == 'CWUser':
-                if not (self.entity.edited_attributes - frozenset(('eid', 'modification_date',
-                                                                   'last_login_time'))):
+                if not (frozenset(self.entity.cw_edited)
+                        - frozenset(('eid', 'modification_date',
+                                     'last_login_time'))):
                     # don't record last_login_time update which are done
                     # automatically at login time
                     return False

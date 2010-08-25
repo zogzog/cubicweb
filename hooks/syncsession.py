@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Core hooks: synchronize living session on persistent data changes
+"""Core hooks: synchronize living session on persistent data changes"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from yams.schema import role_name
@@ -56,26 +55,25 @@ class _GroupOperation(hook.Operation):
 
 class _DeleteGroupOp(_GroupOperation):
     """synchronize user when a in_group relation has been deleted"""
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         groups = self.cnxuser.groups
         try:
             groups.remove(self.group)
         except KeyError:
             self.error('user %s not in group %s',  self.cnxuser, self.group)
-            return
 
 
 class _AddGroupOp(_GroupOperation):
     """synchronize user when a in_group relation has been added"""
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         groups = self.cnxuser.groups
         if self.group in groups:
             self.warning('user %s already in group %s', self.cnxuser,
                          self.group)
-            return
-        groups.add(self.group)
+        else:
+            groups.add(self.group)
 
 
 class SyncInGroupHook(SyncSessionHook):
@@ -98,7 +96,7 @@ class _DelUserOp(hook.Operation):
         self.cnxid = cnxid
         hook.Operation.__init__(self, session)
 
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         try:
             self.session.repo.close(self.cnxid)
@@ -123,7 +121,7 @@ class CloseDeletedUserSessionsHook(SyncSessionHook):
 class _DelCWPropertyOp(hook.Operation):
     """a user's custom properties has been deleted"""
 
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         try:
             del self.cwpropdict[self.key]
@@ -134,7 +132,7 @@ class _DelCWPropertyOp(hook.Operation):
 class _ChangeCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         self.cwpropdict[self.key] = self.value
 
@@ -142,7 +140,7 @@ class _ChangeCWPropertyOp(hook.Operation):
 class _AddCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
-    def commit_event(self):
+    def postcommit_event(self):
         """the observed connections pool has been commited"""
         cwprop = self.cwprop
         if not cwprop.for_user:
@@ -180,8 +178,8 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
 
     def __call__(self):
         entity = self.entity
-        if not ('pkey' in entity.edited_attributes or
-                'value' in entity.edited_attributes):
+        if not ('pkey' in entity.cw_edited or
+                'value' in entity.cw_edited):
             return
         key, value = entity.pkey, entity.value
         session = self._cw

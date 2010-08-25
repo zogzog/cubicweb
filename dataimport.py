@@ -81,6 +81,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
 from cubicweb.server.utils import eschema_eid
+from cubicweb.server.ssplanner import EditedEntity
 
 def count_lines(stream_or_filename):
     if isinstance(stream_or_filename, basestring):
@@ -605,8 +606,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity = copy(entity)
         entity.cw_clear_relation_cache()
         self.metagen.init_entity(entity)
-        entity.update(kwargs)
-        entity.edited_attributes = set(entity)
+        entity.cw_edited.update(kwargs, skipsec=False)
         session = self.session
         self.source.add_entity(session, entity)
         self.source.add_info(session, entity, self.source, None, complete=False)
@@ -679,8 +679,9 @@ class MetaGenerator(object):
         entity = self.session.vreg['etypes'].etype_class(etype)(self.session)
         # entity are "surface" copied, avoid shared dict between copies
         del entity.cw_extra_kwargs
+        entity.cw_edited = EditedEntity(entity)
         for attr in self.etype_attrs:
-            entity[attr] = self.generate(entity, attr)
+            entity.cw_edited.attribute_edited(attr, self.generate(entity, attr))
         rels = {}
         for rel in self.etype_rels:
             rels[rel] = self.generate(entity, rel)
@@ -689,7 +690,7 @@ class MetaGenerator(object):
     def init_entity(self, entity):
         entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
-            entity[attr] = self.generate(entity, attr)
+            entity.cw_edited.attribute_edited(attr, self.generate(entity, attr))
 
     def generate(self, entity, rtype):
         return getattr(self, 'gen_%s' % rtype)(entity)

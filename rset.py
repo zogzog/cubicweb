@@ -484,7 +484,7 @@ class ResultSet(object):
                         if attr == 'eid':
                             entity.eid = rowvalues[outerselidx]
                         else:
-                            entity[attr] = rowvalues[outerselidx]
+                            entity.cw_attr_cache[attr] = rowvalues[outerselidx]
                         continue
                 else:
                     rschema = eschema.objrels[attr]
