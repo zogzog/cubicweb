@@ -342,7 +342,7 @@ class RQLCtxComponent(CtxComponent):
 class EditRelationMixIn(ReloadableMixIn):
     def box_item(self, entity, etarget, rql, label):
         """builds HTML link to edit relation between `entity` and `etarget`"""
-        role, target = get_role(self), get_target(self)
+        role, target = role(self), get_target(self)
         args = {role[0] : entity.eid, target[0] : etarget.eid}
         url = self._cw.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
@@ -355,7 +355,7 @@ class EditRelationMixIn(ReloadableMixIn):
                 for etarget in self.related_entities(entity)]
 
     def related_entities(self, entity):
-        return entity.related(self.rtype, get_role(self), entities=True)
+        return entity.related(self.rtype, role(self), entities=True)
 
     def unrelated_boxitems(self, entity):
         rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
@@ -366,7 +366,7 @@ class EditRelationMixIn(ReloadableMixIn):
         """returns the list of unrelated entities, using the entity's
         appropriate vocabulary function
         """
-        skip = set(unicode(e.eid) for e in entity.related(self.rtype, get_role(self),
+        skip = set(unicode(e.eid) for e in entity.related(self.rtype, role(self),
                                                           entities=True))
         skip.add(None)
         skip.add(INTERNAL_FIELD_VALUE)
@@ -375,7 +375,7 @@ class EditRelationMixIn(ReloadableMixIn):
         form = self._cw.vreg['forms'].select('edition', self._cw,
                                              rset=self.cw_rset,
                                              row=self.cw_row or 0)
-        field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
+        field = form.field_by_name(self.rtype, role(self), entity.e_schema)
         for _, eid in field.vocabulary(form):
             if eid not in skip:
                 entity = self._cw.entity_from_eid(eid)
@@ -391,7 +391,7 @@ class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
     subclasses should define at least id, rtype and target class attributes.
     """
     def render_title(self, w):
-        return display_name(self._cw, self.rtype, get_role(self),
+        return display_name(self._cw, self.rtype, role(self),
                             context=self.entity.__regid__)
 
     def render_body(self, w):
