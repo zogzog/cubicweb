@@ -15,15 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb on appengine plugins for cubicweb-ctl
+"""cubicweb on appengine plugins for cubicweb-ctl"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from os.path import exists, join, split, basename, normpath, abspath
-from logilab.common.clcommands import register_commands
 
 from cubicweb import CW_SOFTWARE_ROOT, BadCommandUsage
+from cubicweb.cwctl import CWCTL
 from cubicweb.toolsutils import (Command, copy_skeleton, create_symlink,
                                  create_dir)
 from cubicweb.cwconfig import CubicWebConfiguration
@@ -250,5 +249,4 @@ class NewGoogleAppCommand(Command):
             config.save()
 
 
-register_commands((NewGoogleAppCommand,
-                   ))
+CWCTL.register(NewGoogleAppCommand)
