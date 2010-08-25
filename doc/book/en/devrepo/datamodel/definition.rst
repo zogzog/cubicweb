@@ -297,35 +297,37 @@ The main principles are:
 For *CubicWeb* in particular:
 
 * we associate rights at the entities/relations schema level
-* for each entity, we distinguish four kinds of permissions: `read`,
-  `add`, `update` and `delete`
-* for each relation, we distinguish three kinds of permissions: `read`,
-  `add` and `delete` (it is not possible to `modify` a relation)
-* the default groups are: `administrators`, `users` and `guests`
-* by default, users belong to the `users` group
-* there is a virtual group called `owners` to which we
-  can associate only `delete` and `update` permissions
 
-  * we can not add users to the `Owners` group, they are
-    implicitly added to it according to the context of the objects
-    they own
-  * the permissions of this group are only checked on `update`/`delete`
-    actions if all the other groups the user belongs to do not provide
-    those permissions
+* the default groups are: `administrators`, `users` and `guests`
+
+* users belong to the `users` group
+
+* there is a virtual group called `owners` to which we can associate only
+  `delete` and `update` permissions
+
+  * we can not add users to the `owners` group, they are implicitly added to it
+    according to the context of the objects they own
+
+  * the permissions of this group are only checked on `update`/`delete` actions
+    if all the other groups the user belongs to do not provide those permissions
 
 Setting permissions is done with the attribute `__permissions__` of entities and
-relation types. The value of this attribute is a dictionary where the keys are the access types
-(action), and the values are the authorized groups or expressions.
+relation definition. The value of this attribute is a dictionary where the keys
+are the access types (action), and the values are the authorized groups or
+expressions.
 
 For an entity type, the possible actions are `read`, `add`, `update` and
 `delete`.
 
-For a relation type, the possible actions are `read`, `add`, and `delete`.
+For a relation, the possible actions are `read`, `add`, and `delete`.
+
+For an attribute, the possible actions are `read`, and `update`.
 
 For each access type, a tuple indicates the name of the authorized groups and/or
 one or multiple RQL expressions to satisfy to grant access. The access is
 provided if the user is in one of the listed groups or if one of the RQL condition
 is satisfied.
+
 
 The standard user groups
 ````````````````````````
@@ -340,66 +342,77 @@ The standard user groups
   This can only be used for the actions `update` and `delete` of an entity
   type.
 
-It is also possible to use specific groups if they are defined in the
-precreate script of the cube (``migration/precreate.py``). Defining groups in
-postcreate script or later makes them unavailable for security
-purposes (in this case, an `sync_schema_props_perms` command has to
-be issued in a CubicWeb shell).
+It is also possible to use specific groups if they are defined in the precreate
+script of the cube (``migration/precreate.py``). Defining groups in postcreate
+script or later makes them unavailable for security purposes (in this case, an
+`sync_schema_props_perms` command has to be issued in a CubicWeb shell).
 
 
 Use of RQL expression for write permissions
 ```````````````````````````````````````````
-It is possible to define RQL expression to provide update permission
-(`add`, `delete` and `update`) on relation and entity types.
 
-RQL expression for entity type permission:
+It is possible to define RQL expression to provide update permission (`add`,
+`delete` and `update`) on entity type / relation definitions. An rql expression
+is a piece of query (corresponds to the WHERE statement of an RQL query), and the
+expression will be considered as satisfied if it returns some results. They can
+not be used in `read` permission.
 
-* you have to use the class `ERQLExpression`
+To use RQL expression in entity type permission:
 
-* the used expression corresponds to the WHERE statement of an RQL query
+* you have to use the class :class:`~cubicweb.schema.ERQLExpression`
 
 * in this expression, the variables `X` and `U` are pre-defined references
-  respectively on the current entity (on which the action is verified) and
-  on the user who send the request
+  respectively on the current entity (on which the action is verified) and on the
+  user who send the request
 
-* it is possible to use, in this expression, a special relation
-  "has_<ACTION>_permission" where the subject is the user and the
-  object is any variable, meaning that the user needs to have
-  permission to execute the action <ACTION> on the entities related
-  to this variable
+For RQL expressions on a relation type, the principles are the same except for
+the following:
 
-For RQL expressions on a relation type, the principles are the same except
-for the following:
+* you have to use the class :class:`~cubicweb.schema.RRQLExpression` instead of
+  :class:`~cubicweb.schema.ERQLExpression`
 
-* you have to use the class `RRQLExpression` in the case of a non-final relation
+* in the expression, the variables `S`, `O` and `U` are pre-defined references to
+  respectively the subject and the object of the current relation (on which the
+  action is being verified) and the user who executed the query
 
-* in the expression, the variables `S`, `O` and `U` are pre-defined references
-  to respectively the subject and the object of the current relation (on
-  which the action is being verified) and the user who executed the query
+To define security for attributes of an entity (non-final relation), you have to
+use the class :class:`~cubicweb.schema.ERQLExpression` in which `X` represents
+the entity the attribute belongs to.
 
-* we can also define rights over attributes of an entity (non-final relation),
-  knowing that:
+It is possible to use in those expression a special relation
+`has_<ACTION>_permission` where the subject is the user (eg 'U') and the object
+is any variable representing an entity (usually 'X' in
+:class:`~cubicweb.schema.ERQLExpression`, 'S' or 'O' in
+:class:`~cubicweb.schema.RRQLExpression`), meaning that the user needs to have
+permission to execute the action <ACTION> on the entities represented by this
+variable. It's recommanded to use this feature whenever possible since it
+simplify greatly complex security definition and upgrade.
 
-  - to define RQL expression, we have to use the class `ERQLExpression`
-    in which `X` represents the entity the attribute belongs to
 
-  - the permissions `add` and `delete` are equivalent. Only `add`/`read`
-    are actually taken in consideration.
+.. sourcecode:: python
+
+  class my_relation(RelationDefinition):
+    __permissions__ = {'read': ('managers', 'users'),
+                       'add': ('managers', RRQLExpression('U has_update_permission S')),
+                       'delete': ('managers', RRQLExpression('U has_update_permission S'))
+		       }
+
+In the above example, user will be allowed to add/delete `my_relation` if he has
+the `update` permission on the subject of the relation.
 
 .. note::
 
-  Potentially, the `use of an RQL expression to add an entity or a
-  relation` can cause problems for the user interface, because if the
-  expression uses the entity or the relation to create, then we are
-  not able to verify the permissions before we actually add the entity
-  (please note that this is not a problem for the RQL server at all,
-  because the permissions checks are done after the creation). In such
-  case, the permission check methods (CubicWebEntitySchema.check_perm
-  and has_perm) can indicate that the user is not allowed to create
-  this entity but can obtain the permission.  To compensate this
-  problem, it is usually necessary, for such case, to use an action
-  that reflects the schema permissions but which enables to check
-  properly the permissions so that it would show up if necessary.
+  Potentially, the `use of an RQL expression to add an entity or a relation` can
+  cause problems for the user interface, because if the expression uses the
+  entity or the relation to create, we are not able to verify the permissions
+  before we actually added the entity (please note that this is not a problem for
+  the RQL server at all, because the permissions checks are done after the
+  creation). In such case, the permission check methods
+  (CubicWebEntitySchema.check_perm and has_perm) can indicate that the user is
+  not allowed to create this entity while it would obtain the permission.  To
+  compensate this problem, it is usually necessary in such case to use an action
+  that reflects the schema permissions but which check properly the permissions
+  so that it would show up only if possible.
 
 
 Use of RQL expression for reading rights
@@ -407,9 +420,11 @@ Use of RQL expression for reading rights
 
 The principles are the same but with the following restrictions:
 
-* we can not use `RRQLExpression` on relation types for reading
+* you can not use rql expression for the `read` permission of relations and
+  attributes,
 
-* special relations "has_<ACTION>_permission" can not be used
+* you can not use special `has_<ACTION>_permission` relation in the rql
+  expression.
 
 
 Important notes about write permissions checking
