@@ -845,7 +845,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_entity_type(self, oldname, newname, commit=True):
+    def cmd_rename_entity_type(self, oldname, newname, attrs=None, commit=True):
         """rename an existing entity type in the persistent schema
 
         `oldname` is a string giving the name of the existing entity type
@@ -854,18 +854,23 @@ class ServerMigrationHelper(MigrationHelper):
         schema = self.repo.schema
         if newname in schema:
             assert oldname in ETYPE_NAME_MAP, \
-                   '%s should be mappend to %s in ETYPE_NAME_MAP' % (oldname, newname)
-            attrs = ','.join([SQL_PREFIX + rschema.type
-                              for rschema in schema[newname].subject_relations()
-                              if (rschema.final or rschema.inlined)
-                              and not rschema in PURE_VIRTUAL_RTYPES])
+                   '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname,
+                                                                    newname)
+            if attrs is None:
+                attrs = ','.join(SQL_PREFIX + rschema.type
+                                 for rschema in schema[newname].subject_relations()
+                                 if (rschema.final or rschema.inlined)
+                                 and not rschema in PURE_VIRTUAL_RTYPES)
+            else:
+                attrs += ('eid', 'creation_date', 'modification_date', 'cwuri')
+                attrs = ','.join(SQL_PREFIX + attr for attr in attrs)
             self.sqlexec('INSERT INTO %s%s(%s) SELECT %s FROM %s%s' % (
                 SQL_PREFIX, newname, attrs, attrs, SQL_PREFIX, oldname),
                          ask_confirm=False)
             # old entity type has not been added to the schema, can't gather it
             new = schema.eschema(newname)
-            oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s', {'on': oldname},
-                                  ask_confirm=False)[0][0]
+            oldeid = self.rqlexec('CWEType ET WHERE ET name %(on)s',
+                                  {'on': oldname}, ask_confirm=False)[0][0]
             # backport old type relations to new type
             # XXX workflows, other relations?
             for r1, rr1 in [('from_entity', 'to_entity'),
@@ -885,13 +890,16 @@ class ServerMigrationHelper(MigrationHelper):
             # since integrity hooks may think some required relation is
             # missing...
             pending = self.session.transaction_data.setdefault('pendingeids', set())
-            for eid, in self.sqlexec('SELECT cw_eid FROM cw_CWRelation '
-                                     'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
-                                     {'eid': oldeid}, ask_confirm=False):
-                pending.add(eid)
-            self.sqlexec('DELETE FROM cw_CWRelation '
-                         'WHERE cw_from_entity=%(eid)s OR cw_to_entity=%(eid)s',
-                         {'eid': oldeid}, ask_confirm=False)
+            for rdeftype in ('CWRelation', 'CWAttribute'):
+                for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
+                                         'WHERE cw_from_entity=%%(eid)s OR '
+                                         ' cw_to_entity=%%(eid)s' % rdeftype,
+                                         {'eid': oldeid}, ask_confirm=False):
+                    pending.add(eid)
+                self.sqlexec('DELETE FROM cw_%s '
+                             'WHERE cw_from_entity=%%(eid)s OR '
+                             'cw_to_entity=%%(eid)s' % rdeftype,
+                             {'eid': oldeid}, ask_confirm=False)
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
@@ -1397,9 +1405,7 @@ class ForRqlIterator:
     def __iter__(self):
         return self
 
-    def next(self):
-        if self._rsetit is not None:
-            return self._rsetit.next()
+    def _get_rset(self):
         rql, kwargs = self.rql, self.kwargs
         if kwargs:
             msg = '%s (%s)' % (rql, kwargs)
@@ -1409,11 +1415,23 @@ class ForRqlIterator:
             if not self._h.confirm('Execute rql: %s ?' % msg):
                 raise StopIteration
         try:
-            rset = self._h._cw.execute(rql, kwargs)
+            return self._h._cw.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:
                 raise StopIteration
+
+    def next(self):
+        if self._rsetit is not None:
+            return self._rsetit.next()
+        rset = self._get_rset()
         self._rsetit = iter(rset)
         return self._rsetit.next()
+
+    def entities(self):
+        try:
+            rset = self._get_rset()
+        except StopIteration:
+            return []
+        return rset.entities()

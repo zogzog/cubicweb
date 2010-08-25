@@ -267,6 +267,8 @@ class TableView(AnyRsetView):
         if val is None:
             return u''
         etype = self.cw_rset.description[row][col]
+        if etype is None:
+            return u''
         if self._cw.vreg.schema.eschema(etype).final:
             entity, rtype = self.cw_rset.related_entity(row, col)
             if entity is None:
@@ -292,7 +294,7 @@ class CellView(EntityView):
         :param cellvid: cell view (defaults to 'outofcontext')
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
-        if val is not None and not self._cw.vreg.schema.eschema(etype).final:
+        if val is not None and etype is not None and not self._cw.vreg.schema.eschema(etype).final:
             self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
         elif val is None:
             # This is usually caused by a left outer join and in that case,

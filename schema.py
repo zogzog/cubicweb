@@ -704,7 +704,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         """
         if not self.match_condition(session, eidfrom, eidto):
             # XXX at this point if both or neither of S and O are in mainvar we
-            # dunno if the validation error `occured` on eidfrom or eidto (from
+            # dunno if the validation error `occurred` on eidfrom or eidto (from
             # user interface point of view)
             #
             # possible enhancement: check entity being created, it's probably

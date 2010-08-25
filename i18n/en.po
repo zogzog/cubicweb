@@ -1035,13 +1035,13 @@ msgstr ""
 msgid "an electronic mail address associated to a short alias"
 msgstr ""
 
-msgid "an error occured"
+msgid "an error occurred"
 msgstr ""
 
-msgid "an error occured while processing your request"
+msgid "an error occurred while processing your request"
 msgstr ""
 
-msgid "an error occured, the request cannot be fulfilled"
+msgid "an error occurred, the request cannot be fulfilled"
 msgstr ""
 
 msgid "an integer is expected"
@@ -3073,7 +3073,7 @@ msgid "read_permission_object"
 msgstr "can be read by"
 
 msgid "read_permission_object"
-msgstr "has permission to delete"
+msgstr "has permission to read"
 
 msgid "registry"
 msgstr ""
@@ -3188,7 +3188,7 @@ msgid "rss"
 msgstr ""
 
 msgid "same_as"
-msgstr ""
+msgstr "same as"
 
 msgid "sample format"
 msgstr ""
@@ -3317,7 +3317,7 @@ msgstr ""
 msgid "site-wide property can't be set for user"
 msgstr ""
 
-msgid "some errors occured:"
+msgid "some errors occurred:"
 msgstr ""
 
 msgid "some later transaction(s) touch entity, undo them first"

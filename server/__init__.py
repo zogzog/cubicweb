@@ -131,11 +131,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config.creating = True
     config.consider_user_state = False
     config.set_language = False
-    # only enable the system source at initialization time + admin which is not
-    # an actual source but contains initial manager account information
-    config.enabled_sources = ('system', 'admin')
+    # only enable the system source at initialization time
+    config.enabled_sources = ('system',)
     repo = Repository(config, vreg=vreg)
-    assert len(repo.sources) == 1, repo.sources
     schema = repo.schema
     sourcescfg = config.sources()
     _title = '-> creating tables '

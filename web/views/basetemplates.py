@@ -205,7 +205,7 @@ class TheMainTemplate(MainTemplate):
 
 
 class ErrorTemplate(TheMainTemplate):
-    """fallback template if an internal error occured during displaying the main
+    """fallback template if an internal error occurred during displaying the main
     template. This template may be called for authentication error, which means
     that req.cnx and req.user may not be set.
     """
@@ -216,7 +216,7 @@ class ErrorTemplate(TheMainTemplate):
         self.set_request_content_type()
         self._cw.reset_headers()
         view = self._cw.vreg['views'].select('error', self._cw, rset=self.cw_rset)
-        self.template_header(self.content_type, view, self._cw._('an error occured'),
+        self.template_header(self.content_type, view, self._cw._('an error occurred'),
                              [NOINDEX, NOFOLLOW])
         view.render(w=self.w)
         self.template_footer(view)

@@ -229,7 +229,7 @@ def rest_publish(context, data):
 
     :rtype: unicode
     :return:
-      the data formatted as HTML or the original data if an error occured
+      the data formatted as HTML or the original data if an error occurred
     """
     req = context._cw
     if isinstance(data, unicode):

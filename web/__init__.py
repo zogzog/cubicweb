@@ -28,6 +28,7 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb.web._exceptions import *
 from cubicweb.utils import json_dumps
+from cubicweb.uilib import eid_param
 
 dumps = deprecated('[3.9] use cubicweb.utils.json_dumps instead of dumps')(json_dumps)
 
@@ -42,13 +43,6 @@ class stdmsgs(object):
     BUTTON_DELETE = (_('button_delete'), 'TRASH_ICON')
     YES = (_('yes'), None)
     NO  = (_('no'), None)
-
-
-def eid_param(name, eid):
-    assert eid is not None
-    if eid is None:
-        eid = ''
-    return '%s:%s' % (name, eid)
 
 
 from logging import getLogger

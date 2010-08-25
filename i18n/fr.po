@@ -548,7 +548,7 @@ msgid "No result matching query"
 msgstr "Aucun résultat ne correspond à la requête"
 
 msgid "Non exhaustive list of views that may apply to entities of this type"
-msgstr "Liste non exhausite des vues s'appliquant à ce type d'entité"
+msgstr "Liste non exhaustive des vues s'appliquant à ce type d'entité"
 
 msgid "OR"
 msgstr "OU"
@@ -731,7 +731,7 @@ msgid "This WorkflowTransition"
 msgstr "Cette transition workflow"
 
 msgid "This entity type permissions:"
-msgstr "Permissions pour ce type d'endité"
+msgstr "Permissions pour ce type d'entité"
 
 msgid "Time"
 msgstr "Heure"
@@ -755,7 +755,7 @@ msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
 
 msgid "Unreachable objects"
-msgstr "Objets inacessible"
+msgstr "Objets inaccessibles"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
@@ -1077,13 +1077,13 @@ msgstr "calendrier am/pm (année)"
 msgid "an electronic mail address associated to a short alias"
 msgstr "une adresse électronique associée à un alias"
 
-msgid "an error occured"
+msgid "an error occurred"
 msgstr "une erreur est survenue"
 
-msgid "an error occured while processing your request"
+msgid "an error occurred while processing your request"
 msgstr "une erreur est survenue pendant le traitement de votre requête"
 
-msgid "an error occured, the request cannot be fulfilled"
+msgid "an error occurred, the request cannot be fulfilled"
 msgstr "une erreur est survenue, la requête ne peut être complétée"
 
 msgid "an integer is expected"
@@ -1152,7 +1152,7 @@ msgid "bookmarked_by_object"
 msgstr "utilise le(s) signet(s)"
 
 msgid "bookmarked_by_object"
-msgstr "a pour signets"
+msgstr "utilise le(s) signet(s)"
 
 msgid "bookmarks"
 msgstr "signets"
@@ -1716,7 +1716,7 @@ msgid "creation_date"
 msgstr "date de création"
 
 msgid "cstrtype"
-msgstr "type de constrainte"
+msgstr "type de contrainte"
 
 msgctxt "CWConstraint"
 msgid "cstrtype"
@@ -1835,7 +1835,7 @@ msgid ""
 "define a final relation: link a final relation type from a non final entity "
 "to a final entity type. used to build the instance schema"
 msgstr ""
-"définit une relation non finale: lie un type de relation non finaledepuis "
+"définit une relation non finale: lie un type de relation non finale depuis "
 "une entité vers un type d'entité non final. Utilisé pour construire le "
 "schéma de l'instance"
 
@@ -2174,7 +2174,7 @@ msgstr ""
 msgid "eta_date"
 msgstr "date de fin"
 
-msgid "exit state must a subworkflow state"
+msgid "exit state must be a subworkflow state"
 msgstr "l'état de sortie doit être un état du sous-workflow"
 
 msgid "exit_point"
@@ -2403,7 +2403,7 @@ msgid ""
 "model"
 msgstr ""
 "réprésentation graphique du modèle de données pour le type de relation %"
-"(etype)s de %(appid)s"
+"(rtype)s de %(appid)s"
 
 #, python-format
 msgid "graphical workflow for %s"
@@ -2901,7 +2901,7 @@ msgid ""
 "name of the main variables which should be used in the selection if "
 "necessary (comma separated)"
 msgstr ""
-"nom des variables principaes qui devrait être utilisées dans la sélection si "
+"nom des variables principales qui devrait être utilisées dans la sélection si "
 "nécessaire (les séparer par des virgules)"
 
 msgid "name or identifier of the permission"
@@ -3167,7 +3167,7 @@ msgstr "permission de lire"
 
 msgctxt "CWEType"
 msgid "read_permission"
-msgstr "permission d'ajouter"
+msgstr "permission de lire"
 
 msgctxt "CWAttribute"
 msgid "read_permission"
@@ -3258,7 +3258,7 @@ msgstr "restreinte au groupe"
 
 msgctxt "CWGroup"
 msgid "require_group_object"
-msgstr "de"
+msgstr "a les droits"
 
 msgid "require_group_object"
 msgstr "a les droits"
@@ -3288,9 +3288,9 @@ msgid ""
 "current relation'subject, object and to the request user. "
 msgstr ""
 "partie restriction de la requête rql. Pour une expression s'appliquant à une "
-"entité, X et U sont respectivement préféfinis à l'entité et à l'utilisateur "
+"entité, X et U sont respectivement prédéfinis à l'entité et à l'utilisateur "
 "courant. Pour une expression s'appliquant à une relation, S, O et U sont "
-"respectivement préféfinis au sujet/objet de la relation et à l'utilisateur "
+"respectivement prédéfinis au sujet/objet de la relation et à l'utilisateur "
 "courant."
 
 msgid "revert changes"
@@ -3306,7 +3306,7 @@ msgid "rss"
 msgstr "RSS"
 
 msgid "same_as"
-msgstr "identique à l'entité externe"
+msgstr "identique à"
 
 msgid "sample format"
 msgstr "exemple"
@@ -3438,7 +3438,7 @@ msgstr "titre du site"
 msgid "site-wide property can't be set for user"
 msgstr "une propriété spécifique au site ne peut être propre à un utilisateur"
 
-msgid "some errors occured:"
+msgid "some errors occurred:"
 msgstr "des erreurs sont survenues"
 
 msgid "some later transaction(s) touch entity, undo them first"
@@ -3693,10 +3693,10 @@ msgstr "pour l'entité"
 
 msgctxt "CWEType"
 msgid "to_entity_object"
-msgstr "relation objet"
+msgstr "objet de la relation"
 
 msgid "to_entity_object"
-msgstr "relation objet"
+msgstr "objet de la relation"
 
 msgid "to_interval_end"
 msgstr "à"

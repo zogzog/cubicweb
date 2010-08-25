@@ -51,10 +51,15 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
   GENERATORS.append( (gen_users, CHK) )
 
   # create controller
-  ctl = CWImportController(RQLObjectStore(cnx))
+  if 'cnx' in globals():
+      ctl = CWImportController(RQLObjectStore(cnx))
+  else:
+      print 'debug mode (not connected)'
+      print 'run through cubicweb-ctl shell to access an instance'
+      ctl = CWImportController(ObjectStore())
   ctl.askerror = 1
   ctl.generators = GENERATORS
-  ctl.data['utilisateurs'] = lazytable(utf8csvreader(open('users.csv')))
+  ctl.data['utilisateurs'] = lazytable(ucsvreader(open('users.csv')))
   # run
   ctl.run()
 
@@ -77,17 +82,32 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb.server.utils import eschema_eid
 
-def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
+def count_lines(stream_or_filename):
+    if isinstance(stream_or_filename, basestring):
+        f = open(filename)
+    else:
+        f = stream_or_filename
+        f.seek(0)
+    for i, line in enumerate(f):
+        pass
+    f.seek(0)
+    return i+1
+
+def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
     """same as ucsvreader but a progress bar is displayed as we iter on rows"""
-    if not osp.exists(filepath):
-        raise Exception("file doesn't exists: %s" % filepath)
-    rowcount = int(shellutils.Execute('wc -l "%s"' % filepath).out.strip().split()[0])
+    if isinstance(stream_or_path, basestring):
+        if not osp.exists(filepath):
+            raise Exception("file doesn't exists: %s" % filepath)
+        stream = open(stream_or_path)
+    else:
+        stream = stream_or_path
+    rowcount = count_lines(stream)
     if skipfirst:
         rowcount -= 1
     if withpb:
         pb = shellutils.ProgressBar(rowcount, 50)
-    for urow in ucsvreader(file(filepath), encoding, separator, quote, skipfirst):
+    for urow in ucsvreader(stream, encoding, separator, quote, skipfirst):
         yield urow
         if withpb:
             pb.update()
@@ -116,7 +136,7 @@ def lazytable(reader):
     """The first row is taken to be the header of the table and
     used to output a dict for each row of data.
 
-    >>> data = lazytable(utf8csvreader(open(filename)))
+    >>> data = lazytable(ucsvreader(open(filename)))
     """
     header = reader.next()
     for row in reader:
@@ -396,20 +416,19 @@ class RQLObjectStore(ObjectStore):
 
     def __init__(self, session=None, commit=None):
         ObjectStore.__init__(self)
-        if session is not None:
-            if not hasattr(session, 'set_pool'):
-                # connection
-                cnx = session
-                session = session.request()
-                session.set_pool = lambda : None
-                commit = commit or cnx.commit
-            else:
-                session.set_pool()
-            self.session = session
-            self._commit = commit or session.commit
-        elif commit is not None:
-            self._commit = commit
-            # XXX .session
+        if session is None:
+            sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
+            session = cnx
+        if not hasattr(session, 'set_pool'):
+            # connection
+            cnx = session
+            session = session.request()
+            session.set_pool = lambda : None
+            commit = commit or cnx.commit
+        else:
+            session.set_pool()
+        self.session = session
+        self._commit = commit or session.commit
 
     @deprecated("[3.7] checkpoint() deprecated. use commit() instead")
     def checkpoint(self):

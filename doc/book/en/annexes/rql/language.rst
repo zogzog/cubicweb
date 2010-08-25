@@ -146,27 +146,27 @@ Sorting and groups
 - For grouped queries (e.g. with a GROUPBY clause), all
   selected variables should be grouped at the right of the keyword.
 
-- To group and/or sort by attributes, we can do::
-
-  X,L user U, U login L GROUPBY L, X ORDERBY L
-
 - If the sorting method (SORT_METHOD) is not specified, then the sorting is
   ascendant (`ASC`).
 
-- Aggregate Functions: COUNT, MIN, MAX, AVG, SUM
+- Aggregate Functions: COUNT, MIN, MAX, AVG, SUM, GROUP_CONCAT
 
 Having
 ``````
 
-The HAVING clause, as in SQL, has been originally introduced to restrict a query according to value returned by an aggregate function, e.g.::
+The HAVING clause, as in SQL, has been originally introduced to restrict a query
+according to value returned by an aggregate function, e.g.::
 
     Any X GROUPBY X WHERE X relation Y HAVING COUNT(Y) > 10
 
 It may however be used for something else...
 
-In the WHERE clause, we are limited to 3-expression_, such thing can't be expressed directly as in the SQL's way. But this can be expressed using HAVING comparison expression.
+In the WHERE clause, we are limited to 3-expression, such thing can't be
+expressed directly as in the SQL's way. But this can be expressed using HAVING
+comparison expression.
 
-For instance, let's say you want to get people whose uppercased first name equals to another person uppercased first name::
+For instance, let's say you want to get people whose uppercased first name equals
+to another person uppercased first name::
 
     Person X WHERE X firstname XFN, Y firstname YFN HAVING X > Y, UPPER(XFN) = UPPER(YFN)
 
@@ -174,18 +174,23 @@ This open some new possibilities. Another example::
 
     Person X WHERE X birthday XB HAVING YEAR(XB) = 2000
 
-That lets you use transformation functions not only in selection but for restriction as well and to by-pass limitation of the WHERE clause, which was the major flaw in the RQL language.
+That lets you use transformation functions not only in selection but for
+restriction as well and to by-pass limitation of the WHERE clause, which was the
+major flaw in the RQL language.
 
-Notice that while we would like this to work without the HAVING clause, this can't be currently be done because it introduces an ambiguity in RQL's grammar that can't be handled by Yapps_, the parser's generator we're using.
+Notice that while we would like this to work without the HAVING clause, this
+can't be currently be done because it introduces an ambiguity in RQL's grammar
+that can't be handled by Yapps_, the parser's generator we're using.
 
 Negation
 ````````
 
-* A query such as `Document X WHERE NOT X owned_by U` means "the
-  documents have no relation `owned_by`".
-* But the query `Document X WHERE NOT X owned_by U, U login "syt"`
-  means "the documents have no relation `owned_by` with the user
-  syt". They may have a relation "owned_by" with another user.
+* A query such as `Document X WHERE NOT X owned_by U` means "the documents have
+  no relation `owned_by`".
+
+* But the query `Document X WHERE NOT X owned_by U, U login "syt"` means "the
+  documents have no relation `owned_by` with the user syt". They may have a
+  relation "owned_by" with another user.
 
 Identity
 ````````

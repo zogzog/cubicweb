@@ -1,6 +1,6 @@
 """execute this script if you've migration to file >= 1.9.0 with cubicweb <= 3.9.2
 
-FYI, this migration occured :
+FYI, this migration occurred :
 * on our intranet on July 07 2010
 * on our extranet on July 16 2010
 """

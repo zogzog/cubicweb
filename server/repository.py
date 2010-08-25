@@ -135,7 +135,8 @@ class Repository(object):
                 continue
             source = self.get_source(uri, source_config)
             self.sources_by_uri[uri] = source
-            self.sources.append(source)
+            if config.source_enabled(uri):
+                self.sources.append(source)
         self.system_source = self.sources_by_uri['system']
         # ensure system source is the first one
         self.sources.remove(self.system_source)
@@ -200,8 +201,8 @@ class Repository(object):
             for source in self.sources:
                 source.init()
         else:
-            # call init_creating so for instance native source can configurate
-            # tsearch according to postgres version
+            # call init_creating so that for instance native source can
+            # configurate tsearch according to postgres version
             for source in self.sources:
                 source.init_creating()
         # close initialization pool and reopen fresh ones for proper
@@ -234,7 +235,9 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        for source in self.sources:
+        # don't use self.sources, we may want to give schema even to disabled
+        # sources
+        for source in self.sources_by_uri.values():
             source.set_schema(schema)
         self.schema = schema
 
@@ -1245,15 +1248,15 @@ class Repository(object):
 
     @cached
     def rel_type_sources(self, rtype):
-        return [source for source in self.sources
-                if source.support_relation(rtype)
-                or rtype in source.dont_cross_relations]
+        return tuple([source for source in self.sources
+                      if source.support_relation(rtype)
+                      or rtype in source.dont_cross_relations])
 
     @cached
     def can_cross_relation(self, rtype):
-        return [source for source in self.sources
-                if source.support_relation(rtype)
-                and rtype in source.cross_relations]
+        return tuple([source for source in self.sources
+                      if source.support_relation(rtype)
+                      and rtype in source.cross_relations])
 
     @cached
     def is_multi_sources_relation(self, rtype):

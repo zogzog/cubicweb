@@ -1,8 +1,8 @@
 Javascript docstrings
 =====================
 
-Whereas in Python source code we only need to include a module docstrings 
-using the directive `.. automodule:: mypythonmodule`, we will have to 
+Whereas in Python source code we only need to include a module docstrings
+using the directive `.. automodule:: mypythonmodule`, we will have to
 explicitely define Javascript modules and functions in the doctrings since
 there is no native directive to include Javascript files.
 
@@ -32,7 +32,7 @@ Docstring structure
 Basically we document javascript with RestructuredText docstring
 following the same convention as documenting Python code.
 
-The doctring in Javascript files must be contained in standard 
+The doctring in Javascript files must be contained in standard
 Javascript comment signs, starting with `/**` and ending with `*/`,
 such as::
 
@@ -44,7 +44,7 @@ such as::
   * All the follwing line will be prefixed with a `*` followed by a space.
   * ...
   * ...
-  */ 
+  */
 
 
 Comments line prefixed by `//` will be ignored. They are reserved for source
@@ -61,12 +61,12 @@ By default, the `function` directive describes a module-level function.
 
 Its purpose is to define the function prototype such as::
 
-    .. function:: loadxhtml(url, data, reqtype, mode) 
+    .. function:: loadxhtml(url, data, reqtype, mode)
 
-If any namespace is used, we should add it in the prototype for now, 
-until we define an appropriate directive.
-::
-    .. function:: jQuery.fn.loadxhtml(url, data, reqtype, mode) 
+If any namespace is used, we should add it in the prototype for now,
+until we define an appropriate directive::
+
+    .. function:: jQuery.fn.loadxhtml(url, data, reqtype, mode)
 
 Function parameters
 ~~~~~~~~~~~~~~~~~~~
@@ -76,7 +76,7 @@ parameter name will be backquoted and followed by its description.
 
 Example of a javascript function docstring::
 
-    .. function:: loadxhtml(url, data, reqtype, mode) 
+    .. function:: loadxhtml(url, data, reqtype, mode)
 
     cubicweb loadxhtml plugin to make jquery handle xhtml response
 

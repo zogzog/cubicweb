@@ -40,7 +40,7 @@ classifiers = [
 ]
 
 __depends__ = {
-    'logilab-common': '>= 0.50.2',
+    'logilab-common': '>= 0.51.0',
     'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.26.2',
     'yams': '>= 0.29.1',

@@ -1154,9 +1154,13 @@ class SQLGenerator(object):
         if constant.type == 'Boolean':
             value = self.dbhelper.boolean_value(value)
         if constant.type == 'Substitute':
-            _id = constant.value
-            if isinstance(_id, unicode):
-                _id = _id.encode()
+            try:
+                # we may found constant from simplified var in varmap
+                return self._mapped_term(constant, '%%(%s)s' % value)[0]
+            except KeyError:
+                _id = constant.value
+                if isinstance(_id, unicode):
+                    _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value
@@ -1262,12 +1266,19 @@ class SQLGenerator(object):
                     break
         return scope
 
+    def _mapped_term(self, term, key):
+        """return sql and table alias to the `term`, mapped as `key` or raise
+        KeyError when the key is not found in the varmap
+        """
+        sql = self._varmap[key]
+        tablealias = sql.split('.', 1)[0]
+        scope = self._temp_table_scope(term.stmt, tablealias)
+        self.add_table(tablealias, scope=scope)
+        return sql, tablealias
+
     def _var_info(self, var):
         try:
-            sql = self._varmap[var.name]
-            tablealias = sql.split('.', 1)[0]
-            scope = self._temp_table_scope(var.stmt, tablealias)
-            self.add_table(tablealias, scope=scope)
+            return self._mapped_term(var, var.name)
         except KeyError:
             scope = self._state.scopes[var.scope]
             etype = self._state.solution[var.name]

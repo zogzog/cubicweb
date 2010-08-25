@@ -505,7 +505,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
         if server.DEBUG & server.DBG_RQL:
-            print '  manual insertion of', results, 'into', table
+            print '  manual insertion of', len(results), 'results into', table
         if not results:
             return
         query_args = ['%%(%s)s' % i for i in xrange(len(results[0]))]

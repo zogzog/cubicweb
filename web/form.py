@@ -224,7 +224,7 @@ class Form(AppObject):
         if forminfo:
             self._form_previous_values = forminfo['values']
             self._form_valerror = forminfo['error']
-            # if some validation error occured on entity creation, we have to
+            # if some validation error occurred on entity creation, we have to
             # get the original variable name from its attributed eid
             foreid = self.form_valerror.entity
             for var, eid in forminfo['eidmap'].items():

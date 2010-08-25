@@ -23,7 +23,7 @@ from os.path import join, exists
 
 from logilab.common.configuration import REQUIRED, Method, Configuration, \
      ini_format_section
-from logilab.common.decorators import wproperty, cached, clear_cache
+from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
@@ -162,7 +162,7 @@ kept (hence undoable).',
         ('multi-sources-etypes',
          {'type' : 'csv', 'default': (),
           'help': 'defines which entity types from this repository are used \
-by some other instances. You should set this properly so those instances to \
+by some other instances. You should set this properly for these instances to \
 detect updates / deletions.',
           'group': 'main', 'level': 3,
           }),
@@ -233,11 +233,7 @@ and if not set, it will be choosen randomly',
 
     # list of enables sources when sources restriction is necessary
     # (eg repository initialization at least)
-    _enabled_sources = None
-    @wproperty
-    def enabled_sources(self, sourceuris=None):
-        self._enabled_sources = sourceuris
-        clear_cache(self, 'sources')
+    enabled_sources = None
 
     def bootstrap_cubes(self):
         from logilab.common.textutils import splitstrip
@@ -272,11 +268,10 @@ and if not set, it will be choosen randomly',
         """return a dictionnaries containing sources definitions indexed by
         sources'uri
         """
-        allsources = self.read_sources_file()
-        if self._enabled_sources is None:
-            return allsources
-        return dict((uri, config) for uri, config in allsources.items()
-                    if uri in self._enabled_sources or uri == 'admin')
+        return self.read_sources_file()
+
+    def source_enabled(self, uri):
+        return not self.enabled_sources or uri in self.enabled_sources
 
     def write_sources_file(self, sourcescfg):
         sourcesfile = self.sources_file()
@@ -331,8 +326,7 @@ and if not set, it will be choosen randomly',
             for uri in sources:
                 assert uri in known_sources, uri
             enabled_sources = sources
-        self._enabled_sources = enabled_sources
-        clear_cache(self, 'sources')
+        self.enabled_sources = enabled_sources
 
     def migration_handler(self, schema=None, interactive=True,
                           cnx=None, repo=None, connect=True, verbosity=None):

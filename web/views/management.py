@@ -166,14 +166,14 @@ class ErrorView(AnyRsetView):
         """returns a title according to the result set - used for the
         title in the HTML header
         """
-        return self._cw._('an error occured')
+        return self._cw._('an error occurred')
 
     def call(self):
         req = self._cw.reset_headers()
         w = self.w
         ex = req.data.get('ex')#_("unable to find exception information"))
         excinfo = req.data.get('excinfo')
-        title = self._cw._('an error occured')
+        title = self._cw._('an error occurred')
         w(u'<h2>%s</h2>' % title)
         if 'errmsg' in req.data:
             ex = req.data['errmsg']
