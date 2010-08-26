@@ -42,6 +42,16 @@ itself (found in :mod:`cubicweb.entities.adapters`):
 The adapter object has ``self.entity`` attribute which represents the
 entity being adapted.
 
+.. Note::
+
+   Adapters came with the notion of service identified by the registry identifier
+   of an adapters, hence dropping the need for explicit interface and the
+   :class:`cubicweb.selectors.implements` selector. You should instead use
+   :class:`cubicweb.selectors.is_instance` when you want to select on an entity
+   type, or :class:`cubicweb.selectors.adaptable` when you want to select on a
+   service.
+
+
 Specializing and binding an adapter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -60,12 +70,6 @@ to help implement correct behaviour.
 Here we provide a specific implementation which will be bound for
 ``MyEntity`` entity type (the `adaptee`).
 
-
-Selecting on an adapter
-~~~~~~~~~~~~~~~~~~~~~~~
-
-There is an ``adaptable`` selector which can be used instead of
-``implements``.
 
 .. _interfaces_to_adapters:
 
@@ -94,11 +98,11 @@ After:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import adaptable, implements
+    from cubicweb.selectors import adaptable, is_instance
     from cubicweb.entities.adapters import ITreeAdapter
 
     class MyEntityITreeAdapter(ITreeAdapter):
-        __select__ = implements('MyEntity')
+        __select__ = is_instance('MyEntity')
 
     class ITreeView(EntityView):
         __select__ = adaptable('ITree')
