@@ -215,11 +215,11 @@ override the method ``cell_call()`` of the view ``primary`` in
 
 .. sourcecode:: python
 
-   from cubicweb.selectors import implements
+   from cubicweb.selectors import is_instance
    from cubicweb.web.views.primary import Primaryview
 
    class BlogEntryPrimaryView(PrimaryView):
-     __select__ = PrimaryView.__select__ & implements('BlogEntry')
+     __select__ = PrimaryView.__select__ & is_instance('BlogEntry')
 
        def render_entity_attributes(self, entity):
            self.w(u'<p>published on %s</p>' %
@@ -245,12 +245,12 @@ Let us now improve the primary view of a blog
 .. sourcecode:: python
 
  from logilab.mtconverter import xml_escape
- from cubicweb.selectors import implements, one_line_rset
+ from cubicweb.selectors import is_instance, one_line_rset
  from cubicweb.web.views.primary import Primaryview
 
  class BlogPrimaryView(PrimaryView):
      __regid__ = 'primary'
-     __select__ = PrimaryView.__select__ & implements('Blog')
+     __select__ = PrimaryView.__select__ & is_instance('Blog')
      rql = 'Any BE ORDERBY D DESC WHERE BE entry_of B, BE publish_date D, B eid %(b)s'
 
      def render_entity_relations(self, entity):
@@ -260,7 +260,7 @@ Let us now improve the primary view of a blog
 
  class BlogEntryInBlogView(EntityView):
      __regid__ = 'inblogcontext'
-     __select__ = implements('BlogEntry')
+     __select__ = is_instance('BlogEntry')
 
      def cell_call(self, row, col):
          entity = self.cw_rset.get_entity(row, col)

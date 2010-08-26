@@ -583,12 +583,7 @@ type. Allowed values for these attributes are:
 
 * a string corresponding to an entity type
 * a tuple of string corresponding to multiple entity types
-* special string such as follows:
-
-  - "**": all types of entities
-  - "*": all types of non-meta entities
-  - "@": all types of meta entities but not system entities (e.g. used for
-    the basic schema description)
+* the '*' special string, meaning all types of entities
 
 When a relation is not inlined and not symmetrical, and it does not require
 specific permissions, it can be defined using a `SubjectRelation`

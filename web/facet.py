@@ -482,7 +482,7 @@ class RelationFacet(VocabularyFacet):
       class AgencyFacet(RelationFacet):
           __regid__ = 'agency'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationFacet.__select__ & implements('Office')
+          __select__ = RelationFacet.__select__ & is_instance('Office')
           # this facet is a filter on the 'Agency' entities linked to the office
           # through the 'proposed_by' relation, where the office is the subject
           # of the relation
@@ -659,7 +659,7 @@ class RelationAttributeFacet(RelationFacet):
       class PostalCodeFacet(RelationAttributeFacet):
           __regid__ = 'postalcode'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationAttributeFacet.__select__ & implements('Office')
+          __select__ = RelationAttributeFacet.__select__ & is_instance('Office')
           # this facet is a filter on the PostalAddress entities linked to the
           # office through the 'has_address' relation, where the office is the
           # subject of the relation
@@ -722,7 +722,7 @@ class AttributeFacet(RelationAttributeFacet):
 
       class SurfaceFacet(AttributeFacet):
           __regid__ = 'surface'
-          __select__ = AttributeFacet.__select__ & implements('Office')
+          __select__ = AttributeFacet.__select__ & is_instance('Office')
           # this facet is a filter on the office'surface
           rtype = 'surface'
           # override the default value of operator since we want to filter
@@ -794,7 +794,7 @@ class RangeFacet(AttributeFacet):
 
       class SurfaceFacet(RangeFacet):
           __regid__ = 'surface'
-          __select__ = RangeFacet.__select__ & implements('Office')
+          __select__ = RangeFacet.__select__ & is_instance('Office')
           # this facet is a filter on the office'surface
           rtype = 'surface'
 
@@ -880,7 +880,7 @@ class HasRelationFacet(AbstractFacet):
 
       class HasImageFacet(HasRelationFacet):
           __regid__ = 'hasimage'
-          __select__ = HasRelationFacet.__select__ & implements('Book')
+          __select__ = HasRelationFacet.__select__ & is_instance('Book')
           rtype = 'has_image'
           role = 'subject'
     """

@@ -25,22 +25,22 @@ into `mycube/hooks.py`. If this file were to grow too much, we can easily have a
 .. sourcecode:: python
 
    from cubicweb import ValidationError
-   from cubicweb.selectors import implements
+   from cubicweb.selectors import is_instance
    from cubicweb.server.hook import Hook
 
    class PersonAgeRange(Hook):
         __regid__ = 'person_age_range'
         events = ('before_add_entity', 'before_update_entity')
-        __select__ = Hook.__select__ & implements('Person')
+        __select__ = Hook.__select__ & is_instance('Person')
 
         def __call__(self):
 	    if 'age' in self.entity.cw_edited:
-		if 0 >= self.entity.age <= 120:
-		   return
+                if 0 <= self.entity.age <= 120:
+                   return
 		msg = self._cw._('age must be between 0 and 120')
 		raise ValidationError(self.entity.eid, {'age': msg})
 
-In our example the base `__select__` is augmented with an `implements` selector
+In our example the base `__select__` is augmented with an `is_instance` selector
 matching the desired entity type.
 
 The `events` tuple is used specify that our hook should be called before the

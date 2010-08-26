@@ -182,8 +182,29 @@ class IDownloadableAdapter(EntityAdapter):
 
 class ITreeAdapter(EntityAdapter):
     """This adapter has to be overriden to be configured using the
-    tree_relation, child_role and parent_role class attributes to
-    benefit from this default implementation
+    tree_relation, child_role and parent_role class attributes to benefit from
+    this default implementation.
+
+    This adapter provides a tree interface. It has to be overriden to be
+    configured using the tree_relation, child_role and parent_role class
+    attributes to benefit from this default implementation.
+
+    This class provides the following methods:
+
+    .. automethod: iterparents
+    .. automethod: iterchildren
+    .. automethod: prefixiter
+
+    .. automethod: is_leaf
+    .. automethod: is_root
+
+    .. automethod: root
+    .. automethod: parent
+    .. automethod: children
+    .. automethod: different_type_children
+    .. automethod: same_type_children
+    .. automethod: children_rql
+    .. automethod: path
     """
     __regid__ = 'ITree'
     __select__ = implements(ITree, warn=False) # XXX for bw compat, else should be abstract
@@ -198,20 +219,18 @@ class ITreeAdapter(EntityAdapter):
              DeprecationWarning)
         return self.entity.tree_attribute
 
+    # XXX should be removed from the public interface
     @implements_adapter_compat('ITree')
     def children_rql(self):
-        """returns RQL to get children
-
-        XXX should be removed from the public interface
-        """
+        """Returns RQL to get the children of the entity."""
         return self.entity.cw_related_rql(self.tree_relation, self.parent_role)
 
     @implements_adapter_compat('ITree')
     def different_type_children(self, entities=True):
-        """return children entities of different type as this entity.
+        """Return children entities of different type as this entity.
 
-        according to the `entities` parameter, return entity objects or the
-        equivalent result set
+        According to the `entities` parameter, return entity objects or the
+        equivalent result set.
         """
         res = self.entity.related(self.tree_relation, self.parent_role,
                                   entities=entities)
@@ -222,10 +241,10 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def same_type_children(self, entities=True):
-        """return children entities of the same type as this entity.
+        """Return children entities of the same type as this entity.
 
-        according to the `entities` parameter, return entity objects or the
-        equivalent result set
+        According to the `entities` parameter, return entity objects or the
+        equivalent result set.
         """
         res = self.entity.related(self.tree_relation, self.parent_role,
                                   entities=entities)
@@ -236,23 +255,24 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def is_leaf(self):
-        """returns true if this node as no child"""
+        """Returns True if the entity does not have any children."""
         return len(self.children()) == 0
 
     @implements_adapter_compat('ITree')
     def is_root(self):
-        """returns true if this node has no parent"""
+        """Returns true if the entity is root of the tree (e.g. has no parent).
+        """
         return self.parent() is None
 
     @implements_adapter_compat('ITree')
     def root(self):
-        """return the root object"""
+        """Return the root entity of the tree."""
         return self._cw.entity_from_eid(self.path()[0])
 
     @implements_adapter_compat('ITree')
     def parent(self):
-        """return the parent entity if any, else None (e.g. if we are on the
-        root)
+        """Returns the parent entity if any, else None (e.g. if we are on the
+        root).
         """
         try:
             return self.entity.related(self.tree_relation, self.child_role,
@@ -262,10 +282,10 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def children(self, entities=True, sametype=False):
-        """return children entities
+        """Return children entities.
 
-        according to the `entities` parameter, return entity objects or the
-        equivalent result set
+        According to the `entities` parameter, return entity objects or the
+        equivalent result set.
         """
         if sametype:
             return self.same_type_children(entities)
@@ -275,6 +295,7 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def iterparents(self, strict=True):
+        """Return an iterator on the parents of the entity."""
         def _uptoroot(self):
             curr = self
             while True:
@@ -289,7 +310,7 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def iterchildren(self, _done=None):
-        """iterates over the item's children"""
+        """Return an iterator over the item's children."""
         if _done is None:
             _done = set()
         for child in self.children():
@@ -301,6 +322,7 @@ class ITreeAdapter(EntityAdapter):
 
     @implements_adapter_compat('ITree')
     def prefixiter(self, _done=None):
+        """Return an iterator over the item's descendants in a prefixed order."""
         if _done is None:
             _done = set()
         if self.entity.eid in _done:
@@ -314,7 +336,7 @@ class ITreeAdapter(EntityAdapter):
     @cached
     @implements_adapter_compat('ITree')
     def path(self):
-        """returns the list of eids from the root object to this object"""
+        """Returns the list of eids from the root object to this object."""
         path = []
         adapter = self
         entity = adapter.entity

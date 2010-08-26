@@ -121,7 +121,7 @@ Examples of views class
         """
         __regid__ = 'search-associate'
         title = _('search for association')
-        __select__ = one_line_rset() & match_search_state('linksearch') & implements('Any')
+        __select__ = one_line_rset() & match_search_state('linksearch') & is_instance('Any')
 
 
 XML views, binaries views...
