@@ -16,14 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unittests for cubicweb.uilib
-
-"""
+"""unittests for cubicweb.uilib"""
 
 __docformat__ = "restructuredtext en"
 
 from logilab.common.testlib import TestCase, unittest_main
-from logilab.common.tree import Node
 
 from cubicweb import uilib
 
