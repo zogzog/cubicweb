@@ -19,11 +19,10 @@
 
 those are in cubicweb since we need to know available widgets at schema
 serialization time
-
 """
 
-from math import floor
 import random
+from math import floor
 
 from logilab.mtconverter import xml_escape
 
