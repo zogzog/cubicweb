@@ -157,13 +157,13 @@ containing hooks in various modules.
 .. sourcecode:: python
 
    from cubicweb import ValidationError
-   from cubicweb.selectors import implements
+   from cubicweb.selectors import is_instance
    from cubicweb.server.hook import Hook
 
    class PersonAgeRange(Hook):
         __regid__ = 'person_age_range'
         events = ('before_add_entity', 'before_update_entity')
-        __select__ = Hook.__select__ & implements('Person')
+        __select__ = Hook.__select__ & is_instance('Person')
 
         def __call__(self):
             if 0 >= self.entity.age <= 120:
@@ -173,7 +173,7 @@ containing hooks in various modules.
 
 Hooks being AppObjects like views, they have a __regid__ and a
 __select__ class attribute. The base __select__ is augmented with an
-`implements` selector matching the desired entity type. The `events`
+`is_instance` selector matching the desired entity type. The `events`
 tuple is used by the Hook.__select__ base selector to dispatch the
 hook on the right events. In an entity hook, it is possible to
 dispatch on any entity event (e.g. 'before_add_entity',

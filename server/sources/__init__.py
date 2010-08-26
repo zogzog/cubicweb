@@ -306,7 +306,7 @@ class AbstractSource(object):
         pass
 
     def authenticate(self, session, login, **kwargs):
-        """if the source support CWUser entity type, it should implements
+        """if the source support CWUser entity type, it should implement
         this method which should return CWUser eid for the given login/password
         if this account is defined in this source and valid login / password is
         given. Else raise `AuthenticationError`

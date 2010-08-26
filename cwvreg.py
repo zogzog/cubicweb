@@ -161,14 +161,14 @@ For instance, if you are selecting the primary (`__regid__ =
 'primary'`) view (`__registry__ = 'views'`) for a result set
 containing a `Card` entity, two objects will probably be selectable:
 
-* the default primary view (`__select__ = implements('Any')`), meaning
+* the default primary view (`__select__ = is_instance('Any')`), meaning
   that the object is selectable for any kind of entity type
 
-* the specific `Card` primary view (`__select__ = implements('Card')`,
+* the specific `Card` primary view (`__select__ = is_instance('Card')`,
   meaning that the object is selectable for Card entities
 
 Other primary views specific to other entity types won't be selectable in this
-case. Among selectable objects, the `implements('Card')` selector will return a higher
+case. Among selectable objects, the `is_instance('Card')` selector will return a higher
 score since it's more specific, so the correct view will be selected as expected.
 
 .. _SelectionAPI:

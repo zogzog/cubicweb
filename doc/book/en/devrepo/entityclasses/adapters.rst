@@ -13,7 +13,7 @@ applications.
 
 In |cubicweb| adapters provide logical functionalities
 to entity types. They are introduced in version `3.9`. Before that one
-had to implements Interfaces in entity classes to achieve a similar goal. However,
+had to implement Interfaces in entity classes to achieve a similar goal. However,
 hte problem with this approch is that is clutters the entity class's namespace, exposing
 name collision risks with schema attributes/relations or even methods names
 (different interfaces may define the same method with not necessarily the same

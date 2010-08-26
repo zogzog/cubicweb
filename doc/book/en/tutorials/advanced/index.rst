@@ -335,7 +335,7 @@ Here is the code in cube's *hooks.py*:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import implements
+    from cubicweb.selectors import is_instance
     from cubicweb.server import hook
 
     class SetVisibilityOp(hook.Operation):
@@ -347,7 +347,7 @@ Here is the code in cube's *hooks.py*:
 
     class SetVisibilityHook(hook.Hook):
 	__regid__ = 'sytweb.setvisibility'
-	__select__ = hook.Hook.__select__ & implements('Folder', 'File', 'Image', 'Comment')
+	__select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Image', 'Comment')
 	events = ('after_add_entity',)
 	def __call__(self):
 	    hook.set_operation(self._cw, 'pending_visibility', self.entity.eid,

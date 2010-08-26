@@ -62,7 +62,7 @@ cube. Let us begin to study the entities/project.py content.
     from cubicweb.entities.adapters import ITreeAdapter
 
     class ProjectAdapter(ITreeAdapter):
-        __select__ = implements('Project')
+        __select__ = is_instance('Project')
         tree_relation = 'subproject_of'
 
     class Project(AnyEntity):
