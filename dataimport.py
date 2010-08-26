@@ -575,7 +575,9 @@ class CWImportController(object):
         if self.commitevery is None:
             return self.get_data(datakey)
         else:
-            return callfunc_every(self.commitevery, self.store.commit, self.get_data(datakey))
+            return callfunc_every(self.store.commit,
+                                  self.commitevery,
+                                  self.get_data(datakey))
 
 
 
