@@ -357,7 +357,6 @@ You can redefine each entity to provide additional functions to help you write y
     class BlogEntry(AnyEntity):
         """customized class for BlogEntry entities"""
     	__regid__ = 'BlogEntry'
-    	__implements__ = AnyEntity.__implements__
 
         def display_cw_logo(self):
             if 'CW' in self.title:
