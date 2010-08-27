@@ -551,6 +551,30 @@ class CubicWebTC(TestCase):
             raise
         return result
 
+    def req_from_url(self, url):
+        """parses `url` and builds the corresponding CW-web request
+
+        req.form will be setup using the url's query string
+        """
+        req = self.request()
+        if isinstance(url, unicode):
+            url = url.encode(req.encoding) # req.setup_params() expects encoded strings
+        querystring = urlparse.urlparse(url)[-2]
+        params = urlparse.parse_qs(querystring)
+        req.setup_params(params)
+        return req
+
+    def url_publish(self, url):
+        """takes `url`, uses application's app_resolver to find the
+        appropriate controller, and publishes the result.
+
+        This should pretty much correspond to what occurs in a real CW server
+        except the apache-rewriter component is not called.
+        """
+        req = self.req_from_url(url)
+        ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
+        return self.ctrl_publish(req, ctrlid)
+
     def expect_redirect(self, callback, req):
         """call the given callback with req as argument, expecting to get a
         Redirect exception
