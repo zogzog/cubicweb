@@ -521,10 +521,16 @@ class CWRelationAddOp(CWAttributeAddOp):
             insert_rdef_on_subclasses(session, eschema, rschema, rdefdef,
                                       {'composite': entity.composite})
         else:
+            if rschema.symmetric:
+                # for symmetric relations, rdefs will store relation definitions
+                # in both ways (i.e. (subj -> obj) and (obj -> subj))
+                relation_already_defined = len(rschema.rdefs) > 2
+            else:
+                relation_already_defined = len(rschema.rdefs) > 1
             # need to create the relation if no relation definition in the
             # schema and if it has not been added during other event of the same
             # transaction
-            if not (len(rschema.rdefs) > 1 or
+            if not (relation_already_defined or
                     rtype in session.transaction_data.get('createdtables', ())):
                 rschema = schema.rschema(rtype)
                 # create the necessary table
