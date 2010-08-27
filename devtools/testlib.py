@@ -25,6 +25,7 @@ import os
 import sys
 import re
 from urllib import unquote
+import urlparse
 from math import log
 from contextlib import contextmanager
 from warnings import warn
