@@ -142,6 +142,29 @@ class MockSMTP:
 
 cwconfig.SMTP = MockSMTP
 
+class TestCaseConnectionProxy(object):
+    """thin wrapper around `cubicweb.dbapi.Connection` context-manager
+    used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
+
+    It just proxies to the default connection context manager but
+    restores the original connection on exit.
+    """
+    def __init__(self, testcase, cnx):
+        self.testcase = testcase
+        self.cnx = cnx
+
+    def __getattr__(self, attrname):
+        return getattr(self.cnx, attrname)
+
+    def __enter__(self):
+        return self.cnx.__enter__()
+
+    def __exit__(self, exctype, exc, tb):
+        try:
+            return self.cnx.__exit__(exctype, exc, tb)
+        finally:
+            self.cnx.close()
+            self.testcase.restore_connection()
 
 # base class for cubicweb tests requiring a full cw environments ###############
 
@@ -331,7 +354,7 @@ class CubicWebTC(TestCase):
             self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
-        return self.cnx
+        return TestCaseConnectionProxy(self, self.cnx)
 
     def restore_connection(self):
         if not self.cnx is self._orig_cnx[0]:
