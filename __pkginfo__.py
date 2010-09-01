@@ -43,7 +43,7 @@ __depends__ = {
     'logilab-common': '>= 0.51.0',
     'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.26.2',
-    'yams': '>= 0.29.1',
+    'yams': '>= 0.30.0',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
@@ -52,7 +52,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.1.0',
+    'logilab-database': '>= 1.2.0',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 
