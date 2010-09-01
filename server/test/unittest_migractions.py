@@ -545,5 +545,15 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(self.schema['Note'].specializes(), None)
         self.assertEquals(self.schema['Text'].specializes(), None)
 
+
+    def test_add_symmetric_relation_type(self):
+        same_as_sql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
+                                      "and name='same_as_relation'")
+        self.failIf(same_as_sql)
+        self.mh.cmd_add_relation_type('same_as')
+        same_as_sql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
+                                      "and name='same_as_relation'")
+        self.failUnless(same_as_sql)
+
 if __name__ == '__main__':
     unittest_main()

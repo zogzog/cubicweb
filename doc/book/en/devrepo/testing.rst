@@ -212,6 +212,37 @@ mechanism. These are:
   auto_populate cannot guess by itself; these must yield resultsets
   against which views may be selected.
 
+Testing on a real-life database
+-------------------------------
+
+The ``CubicWebTC`` class uses the `cubicweb.devtools.ApptestConfiguration`
+configuration class to setup its testing environment (database driver,
+user password, application home, and so on). The `cubicweb.devtools`
+module also provides a `RealDatabaseConfiguration`
+class that will read a regular cubicweb sources file to fetch all
+this information but will also prevent the database to be initalized
+and reset between tests.
+
+For a test class to use a specific configuration, you have to set
+the `_config` class attribute on the class as in:
+
+.. sourcecode:: python
+
+    from cubicweb.devtools import RealDatabaseConfiguration
+    from cubicweb.devtools.testlib import CubicWebTC
+
+    class BlogRealDatabaseTC(CubicWebTC):
+        _config = RealDatabaseConfiguration('blog',
+                                            sourcefile='/path/to/realdb_sources')
+
+        def test_blog_rss(self):
+	    req = self.request()
+	    rset = req.execute('Any B ORDERBY D DESC WHERE B is BlogEntry, '
+	                       'B created_by U, U login "logilab", B creation_date D')
+            self.view('rss', rset)
+
+
+
 Testing with other cubes
 ------------------------
 

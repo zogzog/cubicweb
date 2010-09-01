@@ -329,7 +329,7 @@ class EntityTC(CubicWebTC):
         e['content'] = 'du *texte*'
         e['content_format'] = 'text/plain'
         self.assertEquals(e.printable_value('content'),
-                          '<p>\ndu *texte*\n</p>')
+                          '<p>\ndu *texte*<br/>\n</p>')
         e['title'] = 'zou'
         e['content'] = '''\
 a title
