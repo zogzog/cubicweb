@@ -38,7 +38,7 @@ from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
+from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction, EditedEntity
 from cubicweb.server.session import security_enabled
 
 def empty_rset(rql, args, rqlst=None):
