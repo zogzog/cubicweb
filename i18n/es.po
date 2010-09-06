@@ -1210,6 +1210,7 @@ msgid "ctxcomponents_search_box"
 msgstr "Caja de búsqueda"
 
 msgid "ctxcomponents_search_box_description"
+msgstr ""
 "Permite realizar una búsqueda simple para cualquier tipo de dato en la "
 "aplicación"
 
