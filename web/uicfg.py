@@ -407,7 +407,7 @@ class _ReleditTags(RelationTagsDict):
 
     def tag_relation(self, key, tag):
         for tagkey in tag.iterkeys():
-            assert tagkey in self._keys
+            assert tagkey in self._keys, 'tag %r not in accepted tags: %r' % (tag, self._keys)
         return super(_ReleditTags, self).tag_relation(key, tag)
 
 reledit_ctrl = _ReleditTags('reledit')

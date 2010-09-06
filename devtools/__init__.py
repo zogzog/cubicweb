@@ -96,6 +96,7 @@ class TestServerConfiguration(ServerConfiguration):
     set_language = False
     read_instance_schema = False
     init_repository = True
+    db_require_setup = True
     options = cwconfig.merge_options(ServerConfiguration.options + (
         ('anonymous-user',
          {'type' : 'string',
@@ -195,6 +196,27 @@ class ApptestConfiguration(BaseApptestConfiguration):
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
 
+class RealDatabaseConfiguration(ApptestConfiguration):
+    """configuration class for tests to run on a real database.
+
+    The intialization is done by specifying a source file path.
+
+    Important note: init_test_database / reset_test_database steps are
+    skipped. It's thus up to the test developer to implement setUp/tearDown
+    accordingly.
+
+    Example usage::
+
+      class MyTests(CubicWebTC):
+          _config = RealDatabseConfiguration('myapp',
+                                             sourcefile='/path/to/sources')
+          def test_something(self):
+              rset = self.execute('Any X WHERE X is CWUser')
+              self.view('foaf', rset)
+
+    """
+    db_require_setup = False    # skip init_db / reset_db steps
+    read_instance_schema = True # read schema from database
 
 # test database handling #######################################################
 
@@ -204,12 +226,13 @@ def init_test_database(config=None, configdir='data'):
     config = config or TestServerConfiguration(configdir)
     sources = config.sources()
     driver = sources['system']['db-driver']
-    if driver == 'sqlite':
-        init_test_database_sqlite(config)
-    elif driver == 'postgres':
-        init_test_database_postgres(config)
-    else:
-        raise ValueError('no initialization function for driver %r' % driver)
+    if config.db_require_setup:
+        if driver == 'sqlite':
+            init_test_database_sqlite(config)
+        elif driver == 'postgres':
+            init_test_database_postgres(config)
+        else:
+            raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
                               password=sources['admin']['password'] or 'xxx')
@@ -220,6 +243,8 @@ def init_test_database(config=None, configdir='data'):
 
 def reset_test_database(config):
     """init a test database for a specific driver"""
+    if not config.db_require_setup:
+        return
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)

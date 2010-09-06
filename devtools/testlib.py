@@ -25,6 +25,7 @@ import os
 import sys
 import re
 from urllib import unquote
+import urlparse
 from math import log
 from contextlib import contextmanager
 from warnings import warn
@@ -142,6 +143,29 @@ class MockSMTP:
 
 cwconfig.SMTP = MockSMTP
 
+class TestCaseConnectionProxy(object):
+    """thin wrapper around `cubicweb.dbapi.Connection` context-manager
+    used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
+
+    It just proxies to the default connection context manager but
+    restores the original connection on exit.
+    """
+    def __init__(self, testcase, cnx):
+        self.testcase = testcase
+        self.cnx = cnx
+
+    def __getattr__(self, attrname):
+        return getattr(self.cnx, attrname)
+
+    def __enter__(self):
+        return self.cnx.__enter__()
+
+    def __exit__(self, exctype, exc, tb):
+        try:
+            return self.cnx.__exit__(exctype, exc, tb)
+        finally:
+            self.cnx.close()
+            self.testcase.restore_connection()
 
 # base class for cubicweb tests requiring a full cw environments ###############
 
@@ -331,7 +355,7 @@ class CubicWebTC(TestCase):
             self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
-        return self.cnx
+        return TestCaseConnectionProxy(self, self.cnx)
 
     def restore_connection(self):
         if not self.cnx is self._orig_cnx[0]:
@@ -527,6 +551,30 @@ class CubicWebTC(TestCase):
             req.cnx.commit()
             raise
         return result
+
+    def req_from_url(self, url):
+        """parses `url` and builds the corresponding CW-web request
+
+        req.form will be setup using the url's query string
+        """
+        req = self.request()
+        if isinstance(url, unicode):
+            url = url.encode(req.encoding) # req.setup_params() expects encoded strings
+        querystring = urlparse.urlparse(url)[-2]
+        params = urlparse.parse_qs(querystring)
+        req.setup_params(params)
+        return req
+
+    def url_publish(self, url):
+        """takes `url`, uses application's app_resolver to find the
+        appropriate controller, and publishes the result.
+
+        This should pretty much correspond to what occurs in a real CW server
+        except the apache-rewriter component is not called.
+        """
+        req = self.req_from_url(url)
+        ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
+        return self.ctrl_publish(req, ctrlid)
 
     def expect_redirect(self, callback, req):
         """call the given callback with req as argument, expecting to get a

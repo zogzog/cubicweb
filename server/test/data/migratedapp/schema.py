@@ -138,6 +138,9 @@ class Societe(WorkflowableEntityType):
     cp   = String(maxsize=12)
     ville= String(maxsize=32)
 
+class same_as(RelationDefinition):
+    subject = ('Societe',)
+    object = 'ExternalUri'
 
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')

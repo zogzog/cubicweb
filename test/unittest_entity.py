@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for cubicweb.web.views.entities module
-
-"""
+"""unit tests for cubicweb.web.views.entities module"""
 
 from datetime import datetime
 
@@ -329,7 +327,7 @@ class EntityTC(CubicWebTC):
         e.cw_attr_cache['content'] = 'du *texte*'
         e.cw_attr_cache['content_format'] = 'text/plain'
         self.assertEquals(e.printable_value('content'),
-                          '<p>\ndu *texte*\n</p>')
+                          '<p>\ndu *texte*<br/>\n</p>')
         e.cw_attr_cache['title'] = 'zou'
         e.cw_attr_cache['content'] = '''\
 a title
