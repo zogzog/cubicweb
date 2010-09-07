@@ -1327,7 +1327,7 @@ class ServerMigrationHelper(MigrationHelper):
                 cu = self.session.system_sql(sql, args)
             except:
                 ex = sys.exc_info()[1]
-                if self.confirm('Error: %s\nabort?' % ex):
+                if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                     raise
                 return
             try:
@@ -1355,7 +1355,7 @@ class ServerMigrationHelper(MigrationHelper):
                 try:
                     res = execute(rql, kwargs, build_descr=build_descr)
                 except Exception, ex:
-                    if self.confirm('Error: %s\nabort?' % ex):
+                    if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                         raise
         return res
 
