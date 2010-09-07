@@ -56,6 +56,7 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server.session import hooks_control
+from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
     from cubicweb.server.utils import manager_userpasswd, ask_source_config
@@ -880,21 +881,49 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec('UPDATE %s_relation SET eid_to=%s WHERE eid_to=%s'
                              % (rtype, new.eid, oldeid), ask_confirm=False)
             # delete relations using SQL to avoid relations content removal
-            # triggered by schema synchronization hooks. Should add deleted eids
-            # into pending eids else we may get some validation error on commit
-            # since integrity hooks may think some required relation is
-            # missing...
-            pending = self.session.transaction_data.setdefault('pendingeids', set())
+            # triggered by schema synchronization hooks.
+            session = self.session
             for rdeftype in ('CWRelation', 'CWAttribute'):
+                thispending = set()
                 for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
                                          'WHERE cw_from_entity=%%(eid)s OR '
                                          ' cw_to_entity=%%(eid)s' % rdeftype,
                                          {'eid': oldeid}, ask_confirm=False):
-                    pending.add(eid)
+                    # we should add deleted eids into pending eids else we may
+                    # get some validation error on commit since integrity hooks
+                    # may think some required relation is missing... This also ensure
+                    # repository caches are properly cleanup
+                    hook.set_operation(session, 'pendingeids', eid,
+                                       hook.CleanupDeletedEidsCacheOp)
+                    # and don't forget to remove record from system tables
+                    self.repo.system_source.delete_info(
+                        session, session.entity_from_eid(eid, rdeftype),
+                        'system', None)
+                    thispending.add(eid)
                 self.sqlexec('DELETE FROM cw_%s '
                              'WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)
+                # now we have to manually cleanup relations pointing to deleted
+                # entities
+                thiseids = ','.join(str(eid) for eid in thispending)
+                for rschema, ttypes, role in schema[rdeftype].relation_definitions():
+                    if rschema.type in VIRTUAL_RTYPES:
+                        continue
+                    sqls = []
+                    if role == 'object':
+                        if rschema.inlined:
+                            for eschema in ttypes:
+                                sqls.append('DELETE FROM cw_%s WHERE cw_%s IN(%%s)'
+                                            % (eschema, rschema))
+                        else:
+                            sqls.append('DELETE FROM %s_relation WHERE eid_to IN(%%s)'
+                                        % rschema)
+                    elif not rschema.inlined:
+                        sqls.append('DELETE FROM %s_relation WHERE eid_from IN(%%s)'
+                                    % rschema)
+                    for sql in sqls:
+                        self.sqlexec(sql % thiseids, ask_confirm=False)
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
