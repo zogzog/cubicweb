@@ -240,7 +240,12 @@ def check_relations(schema, session, eids, fix=1):
                                 table, column, column, eid)
                             session.system_sql(sql)
             continue
-        cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
+        try:
+            cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
+        except Exception, ex:
+            # usually because table doesn't exist
+            print 'ERROR', ex
+            continue
         for row in cursor.fetchall():
             eid = row[0]
             if not has_eid(session, cursor, eid, eids):
