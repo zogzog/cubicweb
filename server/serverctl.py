@@ -814,6 +814,7 @@ option is set to "y" or "yes" (may be long for large database).'}
         )
 
     def run(self, args):
+        from cubicweb.server.checkintegrity import check
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
