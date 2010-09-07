@@ -385,6 +385,13 @@ class RepositoryTC(CubicWebTC):
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.rows[0][0], p2.eid)
 
+    def test_delete_if_object_inlined_singlecard(self):
+        req = self.request()
+        c = req.create_entity('Card', title=u'Carte')
+        req.create_entity('Personne', nom=u'Vincent', fiche=c)
+        req.create_entity('Personne', nom=u'Florent', fiche=c)
+        self.commit()
+        self.assertEquals(len(c.reverse_fiche), 1)
 
     def test_set_attributes_in_before_update(self):
         # local hook

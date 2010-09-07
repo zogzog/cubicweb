@@ -1083,6 +1083,7 @@ class Repository(object):
         # set inline relation cache before call to after_add_entity
         for attr, value in relations:
             session.update_rel_cache_add(entity.eid, attr, value)
+            del_existing_rel_if_needed(session, entity.eid, attr, value)
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', session, entity=entity)
