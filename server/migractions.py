@@ -272,7 +272,7 @@ class ServerMigrationHelper(MigrationHelper):
         if self.session:
             self.session.set_pool()
 
-    def rqlexecall(self, rqliter, ask_confirm=True):
+    def rqlexecall(self, rqliter, ask_confirm=False):
         for rql, kwargs in rqliter:
             self.rqlexec(rql, kwargs, ask_confirm=ask_confirm)
 
@@ -1337,7 +1337,7 @@ class ServerMigrationHelper(MigrationHelper):
                 return
 
     def rqlexec(self, rql, kwargs=None, cachekey=None, build_descr=True,
-                ask_confirm=True):
+                ask_confirm=False):
         """rql action"""
         if cachekey is not None:
             warn('[3.8] cachekey is deprecated, you can safely remove this argument',
