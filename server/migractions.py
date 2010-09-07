@@ -710,13 +710,8 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        assert not etype in instschema
-        #     # XXX (syt) plz explain: if we're adding an entity type, it should
-        #     # not be there...
-        #     eschema = instschema[etype]
-        #     if eschema.final:
-        #         instschema.del_entity_type(etype)
-        # else:
+        assert not etype in instschema, \
+               '%s already defined in the instance schema' % etype
         eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()

@@ -190,8 +190,8 @@ def deserialize_schema(schema, session):
         rdefeid, seid, reid, teid, card, ord, desc, c = values
         rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
                                       constraints=cstrsdict.get(rdefeid, ()),
-                                      cardinality=card, order=ord, description=desc,
-                                      composite=c,  eid=rdefeid)
+                                      cardinality=card, composite=c,
+                                      description=desc, order=ord, eid=rdefeid)
         rdefs = schema.add_relation_def(rdef)
         # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
         if rdefs is not None:

@@ -81,14 +81,14 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # not expected for this).  So: don't do it, we pretend to ensure repository
     # consistency.
     #
-    # XXX we don't want read permissions to be applied but we want delete
-    # permission to be checked
-    rschema = session.repo.schema.rschema(rtype)
-    if card[0] in '1?':
-        if not rschema.inlined: # inlined relations will be implicitly deleted
-            with security_enabled(session, read=False):
-                session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
-                                'NOT Y eid %%(y)s' % rtype,
+    # notes:
+    # * inlined relations will be implicitly deleted for the subject entity
+    # * we don't want read permissions to be applied but we want delete
+    #   permission to be checked
+    if card[0] in '1?' and not session.repo.schema.rschema(rtype).inlined:
+        with security_enabled(session, read=False):
+            session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                            'NOT Y eid %%(y)s' % rtype,
                                 {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
         with security_enabled(session, read=False):
@@ -1080,7 +1080,7 @@ class Repository(object):
             if rtype in schema.VIRTUAL_RTYPES:
                 continue
             entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
-        # set inline relation cache before call to after_add_entity
+        # set inlined relation cache before call to after_add_entity
         for attr, value in relations:
             session.update_rel_cache_add(entity.eid, attr, value)
             del_existing_rel_if_needed(session, entity.eid, attr, value)
