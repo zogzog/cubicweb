@@ -1117,6 +1117,34 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
+    def cmd_add_unique_together_attrs(self, etype, attrlist, commit=True):
+        """
+        Add a (sql) UNIQUE index on all the underlying columns for the
+        attributes listed in attrlist. That list can also contain
+        inlined relations.
+        """
+        prefix = SQL_PREFIX
+        dbhelper = self.repo.system_source.dbhelper
+        cols  = ['%s%s' % (prefix, col) for col in attrlist]
+        table = '%s%s' % (prefix, etype)
+        sql = dbhelper.sql_create_multicol_unique_index(table, cols)
+        self.sqlexec(sql, ask_confirm=False)
+        if commit:
+            self.commit()
+
+    def cmd_drop_unique_together_attrs(self, etype, attrlist, commit=True):
+        """
+        remove a UNIQUE index created with add_unique_together_attrs
+        """
+        prefix = SQL_PREFIX
+        dbhelper = self.repo.system_source.dbhelper
+        cols  = ['%s%s' % (prefix, col) for col in attrlist]
+        table = '%s%s' % (prefix, etype)
+        sql = dbhelper.sql_drop_multicol_unique_index(table, cols)
+        self.sqlexec(sql, ask_confirm=False)
+        if commit:
+            self.commit()
+
     @deprecated('[3.2] use sync_schema_props_perms(ertype, syncprops=False)')
     def cmd_synchronize_permissions(self, ertype, commit=True):
         self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
