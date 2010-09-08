@@ -24,7 +24,7 @@ from itertools import chain
 
 from logilab.common.shellutils import ProgressBar
 
-from yams import schema as schemamod, buildobjs as ybo
+from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
 from cubicweb import CW_SOFTWARE_ROOT, typed_eid
 from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
@@ -87,7 +87,7 @@ def deserialize_schema(schema, session):
     """
     repo = session.repo
     dbhelper = repo.system_source.dbhelper
-    # 3.6 migration
+    # XXX bw compat (3.6 migration)
     sqlcu = session.pool['system']
     sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
     if sqlcu.fetchall():
@@ -95,8 +95,9 @@ def deserialize_schema(schema, session):
                                       dbhelper.TYPE_MAPPING['Boolean'], True)
         sqlcu.execute(sql)
         sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
-    sidx = {}
-    permsdict = deserialize_ertype_permissions(session)
+    ertidx = {}
+    copiedeids = set()
+    permsidx = deserialize_ertype_permissions(session)
     schema.reading_from_database = True
     for eid, etype, desc in session.execute(
         'Any X, N, D WHERE X is CWEType, X name N, X description D',
@@ -106,7 +107,7 @@ def deserialize_schema(schema, session):
             # just set the eid
             eschema = schema.eschema(etype)
             eschema.eid = eid
-            sidx[eid] = eschema
+            ertidx[eid] = etype
             continue
         if etype in ETYPE_NAME_MAP:
             needcopy = False
@@ -115,7 +116,8 @@ def deserialize_schema(schema, session):
             sqlexec = session.system_sql
             if sqlexec('SELECT 1 FROM %(p)sCWEType WHERE %(p)sname=%%(n)s'
                        % {'p': sqlutils.SQL_PREFIX}, {'n': netype}).fetchone():
-                # the new type already exists, we should merge
+                # the new type already exists, we should copy (eg make existing
+                # instances of the old type instances of the new type)
                 assert etype.lower() != netype.lower()
                 needcopy = True
             else:
@@ -139,16 +141,16 @@ def deserialize_schema(schema, session):
             repo.clear_caches(tocleanup)
             session.commit(False)
             if needcopy:
-                from logilab.common.testlib import mock_object
-                sidx[eid] = mock_object(type=netype)
+                ertidx[eid] = netype
+                copiedeids.add(eid)
                 # copy / CWEType entity removal expected to be done through
                 # rename_entity_type in a migration script
                 continue
             etype = netype
-        etype = ybo.EntityType(name=etype, description=desc, eid=eid)
-        eschema = schema.add_entity_type(etype)
-        sidx[eid] = eschema
-        set_perms(eschema, permsdict)
+        ertidx[eid] = etype
+        eschema = schema.add_entity_type(
+            ybo.EntityType(name=etype, description=desc, eid=eid))
+        set_perms(eschema, permsidx)
     for etype, stype in session.execute(
         'Any XN, ETN WHERE X is CWEType, X name XN, X specializes ET, ET name ETN',
         build_descr=False):
@@ -159,43 +161,66 @@ def deserialize_schema(schema, session):
     for eid, rtype, desc, sym, il, ftc in session.execute(
         'Any X,N,D,S,I,FTC WHERE X is CWRType, X name N, X description D, '
         'X symmetric S, X inlined I, X fulltext_container FTC', build_descr=False):
-        rtype = ybo.RelationType(name=rtype, description=desc,
-                                 symmetric=bool(sym), inlined=bool(il),
-                                 fulltext_container=ftc, eid=eid)
-        rschema = schema.add_relation_type(rtype)
-        sidx[eid] = rschema
-    cstrsdict = deserialize_rdef_constraints(session)
+        ertidx[eid] = rtype
+        rschema = schema.add_relation_type(
+            ybo.RelationType(name=rtype, description=desc,
+                             symmetric=bool(sym), inlined=bool(il),
+                             fulltext_container=ftc, eid=eid))
+    cstrsidx = deserialize_rdef_constraints(session)
+    pendingrdefs = []
+    # closure to factorize common code of attribute/relation rdef addition
+    def _add_rdef(rdefeid, seid, reid, oeid, **kwargs):
+        rdef = ybo.RelationDefinition(ertidx[seid], ertidx[reid], ertidx[oeid],
+                                      constraints=cstrsidx.get(rdefeid, ()),
+                                      eid=rdefeid, **kwargs)
+        if seid in copiedeids or oeid in copiedeids:
+            # delay addition of this rdef. We'll insert them later if needed. We
+            # have to do this because:
+            #
+            # * on etype renaming, we want relation of the old entity type being
+            #   redirected to the new type during migration
+            #
+            # * in the case of a copy, we've to take care that rdef already
+            #   existing in the schema are not overwritten by a redirected one,
+            #   since we want correct eid on them (redirected rdef will be
+            #   removed in rename_entity_type)
+            pendingrdefs.append(rdef)
+        else:
+            # add_relation_def return a RelationDefinitionSchema if it has been
+            # actually added (can be None on duplicated relation definitions,
+            # e.g. if the relation type is marked as beeing symmetric)
+            rdefs = schema.add_relation_def(rdef)
+            if rdefs is not None:
+                set_perms(rdefs, permsidx)
+
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
         'X relation_type RT, X cardinality CARD, X ordernum ORD, X indexed IDX,'
         'X description DESC, X internationalizable I18N, X defaultval DFLT,'
         'X fulltextindexed FTIDX, X from_entity SE, X to_entity OE',
         build_descr=False):
-        rdefeid, seid, reid, teid, card, ord, desc, idx, ftidx, i18n, default = values
-        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
-                                      cardinality=card,
-                                      constraints=cstrsdict.get(rdefeid, ()),
-                                      order=ord, description=desc,
-                                      indexed=idx, fulltextindexed=ftidx,
-                                      internationalizable=i18n,
-                                      default=default, eid=rdefeid)
-        rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
-        if rdefs is not None:
-            set_perms(rdefs, permsdict)
+        rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
+        _add_rdef(rdefeid, seid, reid, oeid,
+                  cardinality=card, description=desc, order=ord,
+                  indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
+                  default=default)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
         'X from_entity SE, X to_entity OE, X composite C', build_descr=False):
-        rdefeid, seid, reid, teid, card, ord, desc, c = values
-        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
-                                      constraints=cstrsdict.get(rdefeid, ()),
-                                      cardinality=card, composite=c,
-                                      description=desc, order=ord, eid=rdefeid)
-        rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
+        rdefeid, seid, reid, oeid, card, ord, desc, comp = values
+        _add_rdef(rdefeid, seid, reid, oeid,
+                  cardinality=card, description=desc, order=ord,
+                  composite=comp)
+    for rdef in pendingrdefs:
+        try:
+            rdefs = schema.add_relation_def(rdef)
+        except BadSchemaDefinition:
+            continue
+        if rdef.subject == 'TestConfig' or rdef.object == 'TestConfig':
+            print 'EXTRA', rdefs
         if rdefs is not None:
-            set_perms(rdefs, permsdict)
+            set_perms(rdefs, permsidx)
     schema.infer_specialization_rules()
     session.commit()
     schema.reading_from_database = False
@@ -232,7 +257,7 @@ def deserialize_rdef_constraints(session):
         res.setdefault(rdefeid, []).append(cstr)
     return res
 
-def set_perms(erschema, permsdict):
+def set_perms(erschema, permsidx):
     """set permissions on the given erschema according to the permission
     definition dictionary as built by deserialize_ertype_permissions for a
     given erschema's eid
@@ -240,7 +265,7 @@ def set_perms(erschema, permsdict):
     # reset erschema permissions here to avoid getting yams default anyway
     erschema.permissions = dict((action, ()) for action in erschema.ACTIONS)
     try:
-        thispermsdict = permsdict[erschema.eid]
+        thispermsdict = permsidx[erschema.eid]
     except KeyError:
         return
     for action, somethings in thispermsdict.iteritems():
