@@ -51,7 +51,7 @@ directories that are affected according to mode:
         CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
         CW_RUNTIME_DIR = /var/run/cubicweb/
 
- * 'user': ::
+* 'user': ::
 
         CW_INSTANCES_DIR = ~/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
