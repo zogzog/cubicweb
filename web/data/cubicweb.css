@@ -43,7 +43,7 @@ h1 {
   color: %(h1Color)s;
 }
 
-h1.plain {
+div.tabbedprimary + h1, h1.plain {
  border-bottom: none;
 }
 
