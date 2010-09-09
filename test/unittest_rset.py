@@ -368,6 +368,14 @@ class ResultSetTC(CubicWebTC):
                             'WITH B,T BEING (Any B,T WHERE B is Bookmark, B title T)')
         rset.related_entity(0, 2)
 
+    def test_related_entity_subquery_outerjoin(self):
+        rset = self.execute('Any X,S,L WHERE X in_state S '
+                            'WITH X, L BEING (Any X,MAX(L) GROUPBY X '
+                            'WHERE X is CWUser, T? wf_info_for X, T creation_date L)')
+        self.assertEquals(len(rset), 2)
+        rset.related_entity(0, 1)
+        rset.related_entity(0, 2)
+
     def test_entities(self):
         rset = self.execute('Any U,G WHERE U in_group G')
         # make sure we have at least one element

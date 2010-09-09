@@ -588,11 +588,20 @@ class ResultSet(object):
 
     @cached
     def related_entity(self, row, col):
-        """try to get the related entity to extract format information if any"""
+        """given an cell of the result set, try to return a (entity, relation
+        name) tuple to which this cell is linked.
+
+        This is especially useful when the cell is an attribute of an entity,
+        to get the entity to which this attribute belongs to.
+        """
         rqlst = self.syntax_tree()
+        # UNION query, we've first to find a 'pivot' column to use to get the
+        # actual query from which the row is coming
         etype, locate_query_col = self._locate_query_params(rqlst, row, col)
-        # UNION query, find the subquery from which this entity has been found
+        # now find the query from which this entity has been found. Returned
+        # select node may be a subquery with different column indexes.
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
+        # then get the index of root query's col in the subquery
         col = rqlst.subquery_selection_index(select, col)
         if col is None:
             # XXX unexpected, should fix subquery_selection_index ?
