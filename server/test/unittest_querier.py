@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for modules cubicweb.server.querier and cubicweb.server.querier_steps
+"""unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
 from datetime import date, datetime
 
@@ -683,12 +683,10 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_ordered_distinct_2(self):
         self.execute("INSERT Affaire X: X sujet 'minor'")
-        self.execute("INSERT Affaire X: X sujet 'important'")
-        self.execute("INSERT Affaire X: X sujet 'normal'")
         self.execute("INSERT Affaire X: X sujet 'zou'")
         self.execute("INSERT Affaire X: X sujet 'abcd'")
         rset = self.execute('DISTINCT Any S ORDERBY S WHERE A is Affaire, A sujet S')
-        self.assertEqual(rset.rows, [['abcd'], ['important'], ['minor'], ['normal'], ['zou']])
+        self.assertEqual(rset.rows, [['abcd'], ['minor'], ['zou']])
 
     def test_select_ordered_distinct_3(self):
         rset = self.execute('DISTINCT Any N ORDERBY GROUP_SORT_VALUE(N) WHERE X is CWGroup, X name N')

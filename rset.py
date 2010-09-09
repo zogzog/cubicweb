@@ -569,7 +569,8 @@ class ResultSet(object):
                     if i == col:
                         continue
                     coletype = self.description[row][i]
-                    # None description possible on column resulting from an outer join
+                    # None description possible on column resulting from an
+                    # outer join
                     if coletype is None or eschema(coletype).final:
                         continue
                     try:
