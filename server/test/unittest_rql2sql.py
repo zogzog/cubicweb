@@ -429,11 +429,6 @@ FROM cw_File AS _X
 GROUP BY _X.cw_data_name,_X.cw_data_format
 ORDER BY 1,2,_X.cw_data_format'''),
 
-    ('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R',
-     '''SELECT T1.C0 FROM (SELECT DISTINCT _A.cw_sujet AS C0, _A.cw_ref AS C1
-FROM cw_Affaire AS _A
-ORDER BY 2) AS T1'''),
-
     ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
      '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
 FROM cw_File AS _X

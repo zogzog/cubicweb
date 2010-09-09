@@ -678,10 +678,8 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_select_ordered_distinct_1(self):
-        self.execute("INSERT Affaire X: X sujet 'cool', X ref '1'")
-        self.execute("INSERT Affaire X: X sujet 'cool', X ref '2'")
-        rset = self.execute('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R')
-        self.assertEqual(rset.rows, [['cool']])
+        self.assertRaises(BadRQLQuery,
+                          self.execute, 'DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R')
 
     def test_select_ordered_distinct_2(self):
         self.execute("INSERT Affaire X: X sujet 'minor'")
