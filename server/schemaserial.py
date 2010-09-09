@@ -217,8 +217,6 @@ def deserialize_schema(schema, session):
             rdefs = schema.add_relation_def(rdef)
         except BadSchemaDefinition:
             continue
-        if rdef.subject == 'TestConfig' or rdef.object == 'TestConfig':
-            print 'EXTRA', rdefs
         if rdefs is not None:
             set_perms(rdefs, permsidx)
     schema.infer_specialization_rules()
