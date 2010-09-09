@@ -50,9 +50,11 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ExecutionError
+from cubicweb.selectors import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
+from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server.session import hooks_control
@@ -64,6 +66,13 @@ try:
 except ImportError: # LAX
     pass
 
+class ClearGroupMap(hook.Hook):
+    __regid__ = 'cw.migration.clear_group_mapping'
+    __select__ = hook.Hook.__select__ & is_instance('CWGroup')
+    events = ('after_add_entity', 'after_update_entity',)
+    def __call__(self):
+        clear_cache(self.mih, 'group_mapping')
+        self.mih._synchronized.clear()
 
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side  migration scripts,
@@ -85,6 +94,14 @@ class ServerMigrationHelper(MigrationHelper):
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             self.session.data['rebuild-infered'] = False
+            # register a hook to clear our group_mapping cache and the
+            # self._synchronized set when some group is added or updated
+            ClearGroupMap.mih = self
+            self.repo.vreg.register(ClearGroupMap)
+            CW_EVENT_MANAGER.bind('after-registry-reload',
+                                  self.repo.vreg.register, ClearGroupMap)
+            # notify we're starting maintenance (called instead of server_start
+            # which is called on regular start
             self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
         if not schema and not getattr(config, 'quick_start', False):
             schema = config.load_schema(expand_cubes=True)
