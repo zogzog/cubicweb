@@ -39,7 +39,7 @@ class CubicWebCtlTC(TestCase):
 
     def test_list(self):
         from cubicweb.cwctl import ListCommand
-        ListCommand().run([])
+        ListCommand(None).run([])
 
 
 class CubicWebShellTC(CubicWebTC):
