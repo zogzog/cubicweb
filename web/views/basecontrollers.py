@@ -428,7 +428,7 @@ class JSonController(Controller):
     def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
         if eid is not None:
             rset = self._cw.eid_rset(eid)
-        elif 'rql' in self._cw.form:
+        elif self._cw.form.get('rql'):
             rset = self._cw.execute(self._cw.form['rql'])
         else:
             rset = None
