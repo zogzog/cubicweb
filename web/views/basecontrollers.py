@@ -291,7 +291,8 @@ class JSonController(Controller):
         try:
             args = [json.loads(arg) for arg in args]
         except ValueError, exc:
-            self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
+            self.exception('error while decoding json arguments for js_%s: %s',
+                           fname, args, exc)
             raise RemoteCallFailed(repr(exc))
         try:
             result = func(*args)
