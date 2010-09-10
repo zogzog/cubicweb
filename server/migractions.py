@@ -74,6 +74,13 @@ class ClearGroupMap(hook.Hook):
         clear_cache(self.mih, 'group_mapping')
         self.mih._synchronized.clear()
 
+    @classmethod
+    def mih_register(cls, repo):
+        # may be already registered in tests (e.g. unittest_migractions at
+        # least)
+        if not cls.__regid__ in repo.vreg['after_add_entity_hooks']:
+            repo.vreg.register(ClearGroupMap)
+
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side  migration scripts,
     providind actions related to schema/data migration
@@ -98,11 +105,9 @@ class ServerMigrationHelper(MigrationHelper):
             # register a hook to clear our group_mapping cache and the
             # self._synchronized set when some group is added or updated
             ClearGroupMap.mih = self
-            # may be already registered in tests (e.g. unittest_migractions)
-            if not ClearGroupMap.__regid__ in repo.vreg['after_add_entity_hooks']:
-                repo.vreg.register(ClearGroupMap)
-                CW_EVENT_MANAGER.bind('after-registry-reload',
-                                      repo.vreg.register, ClearGroupMap)
+            ClearGroupMap.mih_register(repo)
+            CW_EVENT_MANAGER.bind('after-registry-reload',
+                                  ClearGroupMap.mih_register, repo)
             # notify we're starting maintenance (called instead of server_start
             # which is called on regular start
             repo.hm.call_hooks('server_maintenance', repo=repo)
