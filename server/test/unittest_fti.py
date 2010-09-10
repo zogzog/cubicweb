@@ -1,5 +1,7 @@
 from __future__ import with_statement
 
+import socket
+
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.selectors import is_instance
@@ -7,6 +9,11 @@ from cubicweb.entities.adapters import IFTIndexableAdapter
 
 class PostgresFTITC(CubicWebTC):
     config = ApptestConfiguration('data', sourcefile='sources_fti')
+
+    def setUp(self):
+        if not socket.gethostname().endswith('.logilab.fr'):
+            self.skip('XXX require logilab configuration')
+        super(PostgresFTITC, self).setUp()
 
     def test_occurence_count(self):
         req = self.request()
