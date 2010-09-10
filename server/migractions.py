@@ -93,16 +93,19 @@ class ServerMigrationHelper(MigrationHelper):
             self.repo_connect()
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
+            repo = self.repo
             self.session.data['rebuild-infered'] = False
             # register a hook to clear our group_mapping cache and the
             # self._synchronized set when some group is added or updated
             ClearGroupMap.mih = self
-            self.repo.vreg.register(ClearGroupMap)
-            CW_EVENT_MANAGER.bind('after-registry-reload',
-                                  self.repo.vreg.register, ClearGroupMap)
+            # may be already registered in tests (e.g. unittest_migractions)
+            if not ClearGroupMap.__regid__ in repo.vreg['after_add_entity_hooks']:
+                repo.vreg.register(ClearGroupMap)
+                CW_EVENT_MANAGER.bind('after-registry-reload',
+                                      repo.vreg.register, ClearGroupMap)
             # notify we're starting maintenance (called instead of server_start
             # which is called on regular start
-            self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
+            repo.hm.call_hooks('server_maintenance', repo=repo)
         if not schema and not getattr(config, 'quick_start', False):
             schema = config.load_schema(expand_cubes=True)
         self.fs_schema = schema
