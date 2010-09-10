@@ -158,7 +158,7 @@ class CWUniqueTogetherConstraint(EntityType):
     """defines a sql-level multicolumn unique index"""
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     constraint_of = SubjectRelation('CWEType', cardinality='1*', composite='object',
-		   	            inlined=True)
+                                    inlined=True)
     relations = SubjectRelation(('CWAttribute', 'CWRelation'), cardinality='+*',
                                  constraints=[RQLConstraint(
            'O from_entity X, S constraint_of X, O relation_type T, '
