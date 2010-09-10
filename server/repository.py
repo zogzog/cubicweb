@@ -50,12 +50,12 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      RepositoryError, typed_eid, onevent)
+                      RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
-
+_ = unicode
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
@@ -1062,7 +1062,14 @@ class Repository(object):
         entity._cw_set_defaults()
         if session.is_hook_category_activated('integrity'):
             entity._cw_check(creation=True)
-        source.add_entity(session, entity)
+        try:
+            source.add_entity(session, entity)
+        except UniqueTogetherError, exc:
+            etype, rtypes = exc.args
+            problems = {}
+            for col in rtypes:
+                problems[col] = _('violates unique_together constraints (%s)') % (','.join(rtypes))
+            raise ValidationError(entity.eid, problems)
         self.add_info(session, entity, source, extid, complete=False)
         entity._cw_is_saved = True # entity has an eid and is saved
         # prefill entity relation caches
@@ -1133,14 +1140,22 @@ class Repository(object):
                     relations.append((attr, entity[attr], previous_value))
             if source.should_call_hooks:
                 # call hooks for inlined relations
-                for attr, value, _ in relations:
+                for attr, value, _t in relations:
                     hm.call_hooks('before_add_relation', session,
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
                 if not only_inline_rels:
                     hm.call_hooks('before_update_entity', session, entity=entity)
             if session.is_hook_category_activated('integrity'):
                 entity._cw_check()
-            source.update_entity(session, entity)
+            try:
+                source.update_entity(session, entity)
+            except UniqueTogetherError, exc:
+                etype, rtypes = exc.args
+                problems = {}
+                for col in rtypes:
+                    problems[col] = _('violates unique_together constraints (%s)') % (','.join(rtypes))
+                raise ValidationError(entity.eid, problems)
+
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
                 if not only_inline_rels:
