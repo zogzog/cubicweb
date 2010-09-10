@@ -101,6 +101,7 @@ class filed_under2(RelationDefinition):
 
 
 class Personne(EntityType):
+    __unique_together__ = [('nom', 'prenom', 'datenaiss')]
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
     civility   = String(maxsize=1, default='M', fulltextindexed=True)
@@ -126,7 +127,6 @@ class Societe(WorkflowableEntityType):
         'delete': ('managers', 'owners'),
         'add': ('managers', 'users',)
         }
-
     nom  = String(maxsize=64, fulltextindexed=True)
     web  = String(maxsize=128)
     tel  = Int()

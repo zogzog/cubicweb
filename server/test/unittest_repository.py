@@ -74,8 +74,26 @@ class RepositoryTC(CubicWebTC):
                                               (u'Int',),
                                               (u'Interval',), (u'Password',),
                                               (u'String',), (u'Time',)])
+            sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
+                   "FROM cw_CWUniqueTogetherConstraint as cstr, "
+                   "     relations_relation as rel, "
+                   "     cw_CWEType as etype "
+                   "WHERE cstr.cw_eid = rel.eid_from "
+                   "  AND cstr.cw_constraint_of = etype.cw_eid "
+                   "  AND etype.cw_name = 'Personne' "
+                   ";")
+            cu = self.session.system_sql(sql)
+            rows = cu.fetchall()
+            self.assertEquals(len(rows), 3)
+            self.test_unique_together()
         finally:
             self.repo.set_schema(origshema)
+
+    def test_unique_together(self):
+        person = self.repo.schema.eschema('Personne')
+        self.assertEquals(len(person._unique_together), 1)
+        self.assertUnorderedIterableEquals(person._unique_together[0],
+                                           ('nom', 'prenom', 'inline2'))
 
     def test_schema_has_owner(self):
         repo = self.repo

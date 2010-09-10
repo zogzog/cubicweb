@@ -191,6 +191,7 @@ def deserialize_schema(schema, session):
             # e.g. if the relation type is marked as beeing symmetric)
             rdefs = schema.add_relation_def(rdef)
             if rdefs is not None:
+                ertidx[rdefeid] = rdefs
                 set_perms(rdefs, permsidx)
 
     for values in session.execute(
@@ -219,6 +220,24 @@ def deserialize_schema(schema, session):
             continue
         if rdefs is not None:
             set_perms(rdefs, permsidx)
+    unique_togethers = {}
+    try:
+        rset = session.execute(
+        'Any X,E,R WHERE '
+        'X is CWUniqueTogetherConstraint, '
+        'X constraint_of E, X relations R', build_descr=False)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        session.rollback() # first migration introducing CWUniqueTogetherConstraint
+    else:
+        for values in rset:
+            uniquecstreid, eeid, releid = values
+            eschema = schema.schema_by_eid(eeid)
+            relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
+            relations[1].append(ertidx[releid].rtype.type)
+        for eschema, unique_together in unique_togethers.itervalues():
+            eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     session.commit()
     schema.reading_from_database = False
@@ -332,6 +351,10 @@ def serialize_schema(cursor, schema):
                           rdef2rql(rdef, cstrtypemap, groupmap))
         if pb is not None:
             pb.update()
+    # serialize unique_together constraints
+    for eschema in eschemas:
+        for unique_together in eschema._unique_together:
+            execschemarql(execute, eschema, [uniquetogether2rql(eschema, unique_together)])
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
         if pb is not None:
@@ -388,6 +411,31 @@ def eschemaspecialize2rql(eschema):
     if specialized_type:
         values = {'x': eschema.eid, 'et': specialized_type.eid}
         yield 'SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s', values
+
+def uniquetogether2rql(eschema, unique_together):
+    relations = []
+    restrictions = []
+    substs = {}
+    for i, name in enumerate(unique_together):
+        rschema = eschema.rdef(name)
+        var = 'R%d' % i
+        rtype = 'T%d' % i
+        substs[rtype] = rschema.rtype.type
+        relations.append('C relations %s' % var)
+        restrictions.append('%(var)s from_entity X, '
+                            '%(var)s relation_type %(rtype)s, '
+                            '%(rtype)s name %%(%(rtype)s)s' \
+                            % {'var': var,
+                               'rtype':rtype})
+    relations = ', '.join(relations)
+    restrictions = ', '.join(restrictions)
+    rql = ('INSERT CWUniqueTogetherConstraint C: '
+           '    C constraint_of X, %s  '
+           'WHERE '
+           '    X eid %%(x)s, %s' )
+
+    return rql % (relations, restrictions), substs
+
 
 def _ervalues(erschema):
     try:

@@ -97,6 +97,7 @@ class Note(WorkflowableEntityType):
     todo_by = SubjectRelation('CWUser')
 
 class Personne(EntityType):
+    __unique_together__ = [('nom', 'prenom', 'inline2')]
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
     sexe   = String(maxsize=1, default='M', fulltextindexed=True)

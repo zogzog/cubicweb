@@ -309,6 +309,7 @@ class MigrationCommandsTC(CubicWebTC):
         migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
         delete_concerne_rqlexpr = self._rrqlexpr_rset('delete', 'concerne')
         add_concerne_rqlexpr = self._rrqlexpr_rset('add', 'concerne')
+        
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -380,8 +381,15 @@ class MigrationCommandsTC(CubicWebTC):
         # finally
         self.assertEquals(cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
                           nbrqlexpr_start + 1 + 2 + 2)
-
-        self.mh.rollback()
+        self.mh.commit()
+        # unique_together test
+        self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)
+        self.assertUnorderedIterableEquals(self.schema.eschema('Personne')._unique_together[0],
+                                           ('nom', 'prenom', 'datenaiss'))
+        rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint')
+        self.assertEquals(len(rset), 1)
+        relations = [r.rtype.name for r in rset.get_entity(0,0).relations]
+        self.assertUnorderedIterableEquals(relations, ('nom', 'prenom', 'datenaiss'))
 
     def _erqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action

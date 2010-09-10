@@ -705,6 +705,45 @@ class CWConstraintAddOp(CWConstraintDelOp):
             syssource.update_rdef_unique(session, rdef)
             self.unique_changed = True
 
+class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
+    entity = None # make pylint happy
+    def precommit_event(self):
+        session = self.session
+        prefix = SQL_PREFIX
+        table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
+        cols = ['%s%s' % (prefix, r.rtype.name)
+                for r in self.entity.relations]
+        dbhelper= session.pool.source('system').dbhelper
+        sql = dbhelper.sql_create_multicol_unique_index(table, cols)
+        session.system_sql(sql)
+
+    # XXX revertprecommit_event
+
+    def postcommit_event(self):
+        eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
+        attrs = [r.rtype.name for r in self.entity.relations]
+        eschema._unique_together.append(attrs)
+
+class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
+    entity = oldcstr = None # for pylint
+    cols = [] # for pylint
+    def precommit_event(self):
+        session = self.session
+        prefix = SQL_PREFIX
+        table = '%s%s' % (prefix, self.entity.type)
+        dbhelper= session.pool.source('system').dbhelper
+        cols = ['%s%s' % (prefix, c) for c in self.cols]
+        sql = dbhelper.sql_drop_multicol_unique_index(table, cols)
+        session.system_sql(sql)
+
+    # XXX revertprecommit_event
+
+    def postcommit_event(self):
+        eschema = self.session.vreg.schema.schema_by_eid(self.entity.eid)
+        cols = set(self.cols)
+        unique_together = [ut for ut in eschema._unique_together
+                           if set(ut) != cols]
+        eschema._unique_together = unique_together
 
 # operations for in-memory schema synchronization  #############################
 
@@ -1051,17 +1090,19 @@ class AfterAddCWConstraintHook(SyncSchemaHook):
 
 
 class AfterAddConstrainedByHook(SyncSchemaHook):
-    __regid__ = 'syncdelconstrainedby'
+    __regid__ = 'syncaddconstrainedby'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrained_by')
     events = ('after_add_relation',)
 
     def __call__(self):
         if self._cw.added_in_transaction(self.eidfrom):
+            # used by get_constraints() which is called in CWAttributeAddOp
             self._cw.transaction_data.setdefault(self.eidfrom, []).append(self.eidto)
 
 
-class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
+class BeforeDeleteConstrainedByHook(SyncSchemaHook):
     __regid__ = 'syncdelconstrainedby'
+    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrained_by')
     events = ('before_delete_relation',)
 
     def __call__(self):
@@ -1076,6 +1117,32 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
             self._cw.critical('constraint type no more accessible')
         else:
             CWConstraintDelOp(self._cw, rdef=rdef, oldcstr=cstr)
+
+# unique_together constraints
+# XXX: use setoperations and before_add_relation here (on constraint_of and relations)
+class AfterAddCWUniqueTogetherConstraintHook(SyncSchemaHook):
+    __regid__ = 'syncadd_cwuniquetogether_constraint'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWUniqueTogetherConstraint')
+    events = ('after_add_entity', 'after_update_entity')
+
+    def __call__(self):
+        CWUniqueTogetherConstraintAddOp(self._cw, entity=self.entity)
+
+
+class BeforeDeleteConstraintOfHook(SyncSchemaHook):
+    __regid__ = 'syncdelconstraintof'
+    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constraint_of')
+    events = ('before_delete_relation',)
+
+    def __call__(self):
+        if self._cw.deleted_in_transaction(self.eidto):
+            return
+        schema = self._cw.vreg.schema
+        cstr = self._cw.entity_from_eid(self.eidfrom)
+        entity = schema.schema_by_eid(self.eidto)
+        cols = [r.rtype.name
+                for r in cstr.relations]
+        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity, oldcstr=cstr, cols=cols)
 
 
 # permissions synchronization hooks ############################################

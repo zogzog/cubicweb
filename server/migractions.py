@@ -477,6 +477,7 @@ class ServerMigrationHelper(MigrationHelper):
         * description
         * internationalizable, fulltextindexed, indexed, meta
         * relations from/to this entity
+        * __unique_together__
         * permissions if `syncperms`
         """
         etype = str(etype)
@@ -524,6 +525,44 @@ class ServerMigrationHelper(MigrationHelper):
                             continue
                         self._synchronize_rdef_schema(subj, rschema, obj,
                                                       syncprops=syncprops, syncperms=syncperms)
+        if syncprops: # need to process __unique_together__ after rdefs were processed
+            repo_unique_together = set([frozenset(ut)
+                                        for ut in repoeschema._unique_together])
+            unique_together = set([frozenset(ut)
+                                   for ut in eschema._unique_together])
+            for ut in repo_unique_together - unique_together:
+                restrictions  = ', '.join(['C relations R%(i)d, '
+                                           'R%(i)d relation_type T%(i)d, '
+                                           'R%(i)d from_entity X, '
+                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
+                                                                        'col':col}
+                                           for (i, col) in enumerate(ut)])
+                substs = {'etype': etype}
+                for i, col in enumerate(ut):
+                    substs['T%d'%i] = col
+                self.rqlexec('DELETE CWUniqueTogetherConstraint C '
+                             'WHERE C constraint_of E, '
+                             '      E name %%(etype)s,'
+                             '      %s' % restrictions,
+                             substs)
+            for ut in unique_together - repo_unique_together:
+                relations = ', '.join(['C relations R%d' % i
+                                       for (i, col) in enumerate(ut)])
+                restrictions  = ', '.join(['R%(i)d relation_type T%(i)d, '
+                                           'R%(i)d from_entity E, '
+                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
+                                                                        'col':col}
+                                           for (i, col) in enumerate(ut)])
+                substs = {'etype': etype}
+                for i, col in enumerate(ut):
+                    substs['T%d'%i] = col
+                self.rqlexec('INSERT CWUniqueTogetherConstraint C:'
+                             '       C constraint_of E, '
+                             '       %s '
+                             'WHERE '
+                             '      E name %%(etype)s,'
+                             '      %s' % (relations, restrictions),
+                             substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
@@ -1163,34 +1202,6 @@ class ServerMigrationHelper(MigrationHelper):
                              ask_confirm=self.verbosity>=2)
                 # cleanup unused constraints
                 self.rqlexec('DELETE CWConstraint C WHERE NOT X constrained_by C')
-        if commit:
-            self.commit()
-
-    def cmd_add_unique_together_attrs(self, etype, attrlist, commit=True):
-        """
-        Add a (sql) UNIQUE index on all the underlying columns for the
-        attributes listed in attrlist. That list can also contain
-        inlined relations.
-        """
-        prefix = SQL_PREFIX
-        dbhelper = self.repo.system_source.dbhelper
-        cols  = ['%s%s' % (prefix, col) for col in attrlist]
-        table = '%s%s' % (prefix, etype)
-        sql = dbhelper.sql_create_multicol_unique_index(table, cols)
-        self.sqlexec(sql, ask_confirm=False)
-        if commit:
-            self.commit()
-
-    def cmd_drop_unique_together_attrs(self, etype, attrlist, commit=True):
-        """
-        remove a UNIQUE index created with add_unique_together_attrs
-        """
-        prefix = SQL_PREFIX
-        dbhelper = self.repo.system_source.dbhelper
-        cols  = ['%s%s' % (prefix, col) for col in attrlist]
-        table = '%s%s' % (prefix, etype)
-        sql = dbhelper.sql_drop_multicol_unique_index(table, cols)
-        self.sqlexec(sql, ask_confirm=False)
         if commit:
             self.commit()
 
