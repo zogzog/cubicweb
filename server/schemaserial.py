@@ -227,9 +227,7 @@ def deserialize_schema(schema, session):
         'X is CWUniqueTogetherConstraint, '
         'X constraint_of E, X relations R', build_descr=False)
     except Exception:
-        import traceback
-        traceback.print_exc()
-        session.rollback() # first migration introducing CWUniqueTogetherConstraint
+        session.rollback() # first migration introducing CWUniqueTogetherConstraint cw 3.9.6
     else:
         for values in rset:
             uniquecstreid, eeid, releid = values
