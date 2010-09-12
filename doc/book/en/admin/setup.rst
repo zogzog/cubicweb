@@ -83,8 +83,7 @@ You can download the archive containing the sources from our `ftp site`_ at::
 
 .. _`ftp site`: http://ftp.logilab.org/pub/cubicweb/
 
-Make sure you have installed the dependencies (see appendixes for the list).
-
+Make sure you also have all the :ref:`InstallDependencies`.
 
 .. _MercurialInstallation:
 
@@ -105,7 +104,7 @@ if you do not intend to develop the framework itself.
 
 Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
 
-Make sure you have installed the dependencies (see appendixes for the list).
+Make sure you also have all the :ref:`InstallDependencies`.
 
 
 .. _WindowsInstallation:
@@ -187,6 +186,9 @@ standard library for Python >= 2.6. It will be provided within the forest, but a
 win32 compiled version will run much faster::
 
   http://www.osuch.org/python-simplejson%3Awin32
+
+Make sure you also have all the :ref:`InstallDependencies` that are not specific
+to Windows.
 
 Tools
 ~~~~~
