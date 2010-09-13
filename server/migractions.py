@@ -657,7 +657,8 @@ class ServerMigrationHelper(MigrationHelper):
         newcubes_schema = self.config.load_schema(construction_mode='non-strict')
         # XXX we have to replace fs_schema, used in cmd_add_relation_type
         # etc. and fsschema of migration script contexts
-        self.fs_schema = self._create_context()['fsschema'] = newcubes_schema
+        self.fs_schema = newcubes_schema
+        self.update_context('fsschema', self.fs_schema)
         new = set()
         # execute pre-create files
         driver = self.repo.system_source.dbdriver

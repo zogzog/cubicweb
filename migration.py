@@ -122,6 +122,7 @@ class MigrationHelper(object):
                           'config': self.config,
                           'interactive_mode': interactive,
                           }
+        self._context_stack = []
 
     def __getattribute__(self, name):
         try:
@@ -284,6 +285,11 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     context[attr[4:]] = getattr(self, attr)
         return context
 
+    def update_context(self, key, value):
+        for context in self._context_stack:
+            context[key] = value
+        self.__context[key] = value
+
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script in interactive mode
 
@@ -327,6 +333,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if not self.execscript_confirm(migrscript):
             return
         scriptlocals = self._create_context().copy()
+        self._context_stack.append(scriptlocals)
         if script_mode == 'python':
             if funcname is None:
                 pyname = '__main__'
@@ -352,6 +359,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             import doctest
             doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
+        del self._context_stack[-1]
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""
