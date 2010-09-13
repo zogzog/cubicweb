@@ -95,6 +95,7 @@ def deserialize_schema(schema, session):
                                       dbhelper.TYPE_MAPPING['Boolean'], True)
         sqlcu.execute(sql)
         sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
+        session.commit(False)
     ertidx = {}
     copiedeids = set()
     permsidx = deserialize_ertype_permissions(session)
