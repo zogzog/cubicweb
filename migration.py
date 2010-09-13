@@ -390,10 +390,8 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             cubes = (cubes,)
         origcubes = self.config.cubes()
         newcubes = [p for p in self.config.expand_cubes(cubes)
-                       if not p in origcubes]
+                    if not p in origcubes]
         if newcubes:
-            for cube in cubes:
-                assert cube in newcubes
             self.config.add_cubes(newcubes)
         return newcubes
 
