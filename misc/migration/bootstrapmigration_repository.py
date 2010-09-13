@@ -35,9 +35,6 @@ def _add_relation_definition_no_perms(subjtype, rtype, objtype):
     ss.execschemarql(rql, rdef, ss.rdef2rql(rdef, CSTRMAP, groupmap=None))
     commit(ask_confirm=False)
 
-if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6):
-    add_entity_type('CWUniqueTogetherConstraint')
-
 if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
                        ask_confirm=False))
@@ -95,6 +92,10 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
         for action in ('read', 'add', 'delete'):
             drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
             drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
+    sync_schema_props_perms('read_permission', syncperms=False) # fix read_permission cardinality
+
+if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6):
+    add_entity_type('CWUniqueTogetherConstraint')
 
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 
