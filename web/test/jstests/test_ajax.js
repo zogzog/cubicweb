@@ -3,7 +3,12 @@ $(document).ready(function() {
     module("ajax", {
         setup: function() {
           this.scriptsLength = $('head script[src]').length-1;
-	  this.cssLength = $('head link[rel=stylesheet]').length-1;
+          this.cssLength = $('head link[rel=stylesheet]').length-1;
+          // re-initialize cw loaded cache so that each tests run in a
+          // clean environment, have a lookt at _loadAjaxHtmlHead implementation
+          // in cubicweb.ajax.js for more information.
+          cw.loaded_src = [];
+          cw.loaded_href = [];
         },
         teardown: function() {
           $('head script[src]:gt(' + this.scriptsLength + ')').remove();
