@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for modules cubicweb.server.querier and cubicweb.server.querier_steps
+"""unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
 from datetime import date, datetime
 
@@ -130,7 +130,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEquals(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -143,15 +143,16 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'CWEType', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWAttribute', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWGroup', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailAddress', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailPart', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailThread', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWRelation', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWPermission', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWProperty', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWRType', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'CWUniqueTogetherConstraint', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'EmailAddress', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'EmailPart', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'EmailThread', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
@@ -493,14 +494,14 @@ class QuerierTC(BaseQuerierTC):
                               [[u'description_format', 12],
                                [u'description', 13],
                                [u'name', 14],
-                               [u'created_by', 37],
-                               [u'creation_date', 37],
-                               [u'cwuri', 37],
-                               [u'in_basket', 37],
-                               [u'is', 37],
-                               [u'is_instance_of', 37],
-                               [u'modification_date', 37],
-                               [u'owned_by', 37]])
+                               [u'created_by', 38],
+                               [u'creation_date', 38],
+                               [u'cwuri', 38],
+                               [u'in_basket', 38],
+                               [u'is', 38],
+                               [u'is_instance_of', 38],
+                               [u'modification_date', 38],
+                               [u'owned_by', 38]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
@@ -691,19 +692,15 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_select_ordered_distinct_1(self):
-        self.execute("INSERT Affaire X: X sujet 'cool', X ref '1'")
-        self.execute("INSERT Affaire X: X sujet 'cool', X ref '2'")
-        rset = self.execute('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R')
-        self.assertEqual(rset.rows, [['cool']])
+        self.assertRaises(BadRQLQuery,
+                          self.execute, 'DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R')
 
     def test_select_ordered_distinct_2(self):
         self.execute("INSERT Affaire X: X sujet 'minor'")
-        self.execute("INSERT Affaire X: X sujet 'important'")
-        self.execute("INSERT Affaire X: X sujet 'normal'")
         self.execute("INSERT Affaire X: X sujet 'zou'")
         self.execute("INSERT Affaire X: X sujet 'abcd'")
         rset = self.execute('DISTINCT Any S ORDERBY S WHERE A is Affaire, A sujet S')
-        self.assertEqual(rset.rows, [['abcd'], ['important'], ['minor'], ['normal'], ['zou']])
+        self.assertEqual(rset.rows, [['abcd'], ['minor'], ['zou']])
 
     def test_select_ordered_distinct_3(self):
         rset = self.execute('DISTINCT Any N ORDERBY GROUP_SORT_VALUE(N) WHERE X is CWGroup, X name N')
@@ -1085,14 +1082,14 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.commit()
         # fill the cache
         self.execute("Any X WHERE X eid %(x)s", {'x': eid})
-        self.execute("Any X WHERE X eid %s" %eid)
+        self.execute("Any X WHERE X eid %s" % eid)
         self.execute("Folder X WHERE X eid %(x)s", {'x': eid})
-        self.execute("Folder X WHERE X eid %s" %eid)
-        self.execute("DELETE Folder T WHERE T eid %s"%eid)
+        self.execute("Folder X WHERE X eid %s" % eid)
+        self.execute("DELETE Folder T WHERE T eid %s" % eid)
         self.commit()
         rset = self.execute("Any X WHERE X eid %(x)s", {'x': eid})
         self.assertEquals(rset.rows, [])
-        rset = self.execute("Any X WHERE X eid %s" %eid)
+        rset = self.execute("Any X WHERE X eid %s" % eid)
         self.assertEquals(rset.rows, [])
         rset = self.execute("Folder X WHERE X eid %(x)s", {'x': eid})
         self.assertEquals(rset.rows, [])

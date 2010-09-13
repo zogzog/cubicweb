@@ -2016,9 +2016,6 @@ msgstr ""
 msgid "editable-table"
 msgstr ""
 
-msgid "edition"
-msgstr ""
-
 msgid "eid"
 msgstr ""
 
@@ -2717,6 +2714,9 @@ msgstr ""
 msgid "missing parameters for entity %s"
 msgstr ""
 
+msgid "modification"
+msgstr ""
+
 msgid "modification_date"
 msgstr "modification date"
 
@@ -2967,9 +2967,6 @@ msgstr ""
 msgid "permissions for this entity"
 msgstr ""
 
-msgid "personnal informations"
-msgstr ""
-
 msgid "pick existing bookmarks"
 msgstr ""
 
@@ -3028,6 +3025,9 @@ msgstr "primary email of"
 msgctxt "EmailAddress"
 msgid "primary_email_object"
 msgstr "primary email of"
+
+msgid "profile"
+msgstr ""
 
 msgid "progress"
 msgstr ""

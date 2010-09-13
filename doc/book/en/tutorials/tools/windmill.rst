@@ -29,7 +29,7 @@ environment, take a look to the `virtualenv
 However, the Windmill project doesn't release frequently. Our recommandation is
 to used the last snapshot of the Git repository:
 
-.. sourcecode:: shell
+.. sourcecode:: bash
 
     git clone git://github.com/windmill/windmill.git HEAD
     cd windmill

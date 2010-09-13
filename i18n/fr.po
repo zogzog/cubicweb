@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2010-05-16 18:59+0200\n"
+"PO-Revision-Date: 2010-09-06 21:44+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -380,7 +380,7 @@ msgstr ""
 
 #, python-format
 msgid "Data connection graph for %s"
-msgstr ""
+msgstr "Graphique de connection des données pour %s"
 
 msgid "Date"
 msgstr "Date"
@@ -447,7 +447,7 @@ msgid "Garbage collection information"
 msgstr "Information sur le ramasse-miette"
 
 msgid "Got rhythm?"
-msgstr ""
+msgstr "T'as le rythme ?"
 
 msgid "Help"
 msgstr "Aide"
@@ -1546,7 +1546,7 @@ msgid "context where this component should be displayed"
 msgstr "contexte où ce composant doit être affiché"
 
 msgid "context where this facet should be displayed, leave empty for both"
-msgstr ""
+msgstr "contexte où cette facette doit être affichée. Laissez ce champ vide pour l'avoir dans les deux."
 
 msgid "control subject entity's relations order"
 msgstr "contrôle l'ordre des relations de l'entité sujet"
@@ -2095,9 +2095,6 @@ msgstr "éditer la page d'accueil"
 
 msgid "editable-table"
 msgstr "table éditable"
-
-msgid "edition"
-msgstr "édition"
 
 msgid "eid"
 msgstr "eid"
@@ -2827,6 +2824,9 @@ msgstr "jalon"
 msgid "missing parameters for entity %s"
 msgstr "paramètres manquants pour l'entité %s"
 
+msgid "modification"
+msgstr "modification"
+
 msgid "modification_date"
 msgstr "date de modification"
 
@@ -3080,9 +3080,6 @@ msgstr "permissions"
 msgid "permissions for this entity"
 msgstr "permissions pour cette entité"
 
-msgid "personnal informations"
-msgstr "informations personnelles"
-
 msgid "pick existing bookmarks"
 msgstr "récupérer des signets existants"
 
@@ -3141,6 +3138,9 @@ msgstr "adresse email principale (object)"
 msgctxt "EmailAddress"
 msgid "primary_email_object"
 msgstr "adresse principale de"
+
+msgid "profile"
+msgstr "profil"
 
 msgid "progress"
 msgstr "avancement"
@@ -4134,5 +4134,14 @@ msgstr "vous avez été déconnecté"
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
 
+#~ msgid "edition"
+#~ msgstr "édition"
+
 #~ msgid "graphical workflow for %s"
 #~ msgstr "graphique du workflow pour %s"
+
+#~ msgid "personnal informations"
+#~ msgstr "informations personnelles"
+
+#~ msgid "yams type, rdf type or mime type of the object"
+#~ msgstr "type yams, vocabulaire rdf ou type mime de l'objet"

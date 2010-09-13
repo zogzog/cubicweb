@@ -274,7 +274,7 @@ function togglePendingDelete(nodeId, eid) {
 
 function selectForAssociation(tripletIdsString, originalEid) {
     var tripletlist = $.map(tripletIdsString.split('-'),
-			    function(x) { return [x.split(':')] ;});
+                            function(x) { return [x.split(':')] ;});
     var d = loadRemote('json', ajaxFuncArgs('add_pending_inserts', null, tripletlist));
     d.addCallback(function() {
         var args = {

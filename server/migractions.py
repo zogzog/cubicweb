@@ -50,12 +50,15 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ExecutionError
+from cubicweb.selectors import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
+from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server.session import hooks_control
+from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
     from cubicweb.server.utils import manager_userpasswd, ask_source_config
@@ -63,6 +66,20 @@ try:
 except ImportError: # LAX
     pass
 
+class ClearGroupMap(hook.Hook):
+    __regid__ = 'cw.migration.clear_group_mapping'
+    __select__ = hook.Hook.__select__ & is_instance('CWGroup')
+    events = ('after_add_entity', 'after_update_entity',)
+    def __call__(self):
+        clear_cache(self.mih, 'group_mapping')
+        self.mih._synchronized.clear()
+
+    @classmethod
+    def mih_register(cls, repo):
+        # may be already registered in tests (e.g. unittest_migractions at
+        # least)
+        if not cls.__regid__ in repo.vreg['after_add_entity_hooks']:
+            repo.vreg.register(ClearGroupMap)
 
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side  migration scripts,
@@ -83,8 +100,17 @@ class ServerMigrationHelper(MigrationHelper):
             self.repo_connect()
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
+            repo = self.repo
             self.session.data['rebuild-infered'] = False
-            self.repo.hm.call_hooks('server_maintenance', repo=self.repo)
+            # register a hook to clear our group_mapping cache and the
+            # self._synchronized set when some group is added or updated
+            ClearGroupMap.mih = self
+            ClearGroupMap.mih_register(repo)
+            CW_EVENT_MANAGER.bind('after-registry-reload',
+                                  ClearGroupMap.mih_register, repo)
+            # notify we're starting maintenance (called instead of server_start
+            # which is called on regular start
+            repo.hm.call_hooks('server_maintenance', repo=repo)
         if not schema and not getattr(config, 'quick_start', False):
             schema = config.load_schema(expand_cubes=True)
         self.fs_schema = schema
@@ -272,7 +298,7 @@ class ServerMigrationHelper(MigrationHelper):
         if self.session:
             self.session.set_pool()
 
-    def rqlexecall(self, rqliter, ask_confirm=True):
+    def rqlexecall(self, rqliter, ask_confirm=False):
         for rql, kwargs in rqliter:
             self.rqlexec(rql, kwargs, ask_confirm=ask_confirm)
 
@@ -451,6 +477,7 @@ class ServerMigrationHelper(MigrationHelper):
         * description
         * internationalizable, fulltextindexed, indexed, meta
         * relations from/to this entity
+        * __unique_together__
         * permissions if `syncperms`
         """
         etype = str(etype)
@@ -498,6 +525,44 @@ class ServerMigrationHelper(MigrationHelper):
                             continue
                         self._synchronize_rdef_schema(subj, rschema, obj,
                                                       syncprops=syncprops, syncperms=syncperms)
+        if syncprops: # need to process __unique_together__ after rdefs were processed
+            repo_unique_together = set([frozenset(ut)
+                                        for ut in repoeschema._unique_together])
+            unique_together = set([frozenset(ut)
+                                   for ut in eschema._unique_together])
+            for ut in repo_unique_together - unique_together:
+                restrictions  = ', '.join(['C relations R%(i)d, '
+                                           'R%(i)d relation_type T%(i)d, '
+                                           'R%(i)d from_entity X, '
+                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
+                                                                        'col':col}
+                                           for (i, col) in enumerate(ut)])
+                substs = {'etype': etype}
+                for i, col in enumerate(ut):
+                    substs['T%d'%i] = col
+                self.rqlexec('DELETE CWUniqueTogetherConstraint C '
+                             'WHERE C constraint_of E, '
+                             '      E name %%(etype)s,'
+                             '      %s' % restrictions,
+                             substs)
+            for ut in unique_together - repo_unique_together:
+                relations = ', '.join(['C relations R%d' % i
+                                       for (i, col) in enumerate(ut)])
+                restrictions  = ', '.join(['R%(i)d relation_type T%(i)d, '
+                                           'R%(i)d from_entity E, '
+                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
+                                                                        'col':col}
+                                           for (i, col) in enumerate(ut)])
+                substs = {'etype': etype}
+                for i, col in enumerate(ut):
+                    substs['T%d'%i] = col
+                self.rqlexec('INSERT CWUniqueTogetherConstraint C:'
+                             '       C constraint_of E, '
+                             '       %s '
+                             'WHERE '
+                             '      E name %%(etype)s,'
+                             '      %s' % (relations, restrictions),
+                             substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
@@ -592,7 +657,8 @@ class ServerMigrationHelper(MigrationHelper):
         newcubes_schema = self.config.load_schema(construction_mode='non-strict')
         # XXX we have to replace fs_schema, used in cmd_add_relation_type
         # etc. and fsschema of migration script contexts
-        self.fs_schema = self._create_context()['fsschema'] = newcubes_schema
+        self.fs_schema = newcubes_schema
+        self.update_context('fsschema', self.fs_schema)
         new = set()
         # execute pre-create files
         driver = self.repo.system_source.dbdriver
@@ -710,13 +776,8 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        assert not etype in instschema
-        #     # XXX (syt) plz explain: if we're adding an entity type, it should
-        #     # not be there...
-        #     eschema = instschema[etype]
-        #     if eschema.final:
-        #         instschema.del_entity_type(etype)
-        # else:
+        assert not etype in instschema, \
+               '%s already defined in the instance schema' % etype
         eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
@@ -885,21 +946,49 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec('UPDATE %s_relation SET eid_to=%s WHERE eid_to=%s'
                              % (rtype, new.eid, oldeid), ask_confirm=False)
             # delete relations using SQL to avoid relations content removal
-            # triggered by schema synchronization hooks. Should add deleted eids
-            # into pending eids else we may get some validation error on commit
-            # since integrity hooks may think some required relation is
-            # missing...
-            pending = self.session.transaction_data.setdefault('pendingeids', set())
+            # triggered by schema synchronization hooks.
+            session = self.session
             for rdeftype in ('CWRelation', 'CWAttribute'):
+                thispending = set()
                 for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
                                          'WHERE cw_from_entity=%%(eid)s OR '
                                          ' cw_to_entity=%%(eid)s' % rdeftype,
                                          {'eid': oldeid}, ask_confirm=False):
-                    pending.add(eid)
+                    # we should add deleted eids into pending eids else we may
+                    # get some validation error on commit since integrity hooks
+                    # may think some required relation is missing... This also ensure
+                    # repository caches are properly cleanup
+                    hook.set_operation(session, 'pendingeids', eid,
+                                       hook.CleanupDeletedEidsCacheOp)
+                    # and don't forget to remove record from system tables
+                    self.repo.system_source.delete_info(
+                        session, session.entity_from_eid(eid, rdeftype),
+                        'system', None)
+                    thispending.add(eid)
                 self.sqlexec('DELETE FROM cw_%s '
                              'WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)
+                # now we have to manually cleanup relations pointing to deleted
+                # entities
+                thiseids = ','.join(str(eid) for eid in thispending)
+                for rschema, ttypes, role in schema[rdeftype].relation_definitions():
+                    if rschema.type in VIRTUAL_RTYPES:
+                        continue
+                    sqls = []
+                    if role == 'object':
+                        if rschema.inlined:
+                            for eschema in ttypes:
+                                sqls.append('DELETE FROM cw_%s WHERE cw_%s IN(%%s)'
+                                            % (eschema, rschema))
+                        else:
+                            sqls.append('DELETE FROM %s_relation WHERE eid_to IN(%%s)'
+                                        % rschema)
+                    elif not rschema.inlined:
+                        sqls.append('DELETE FROM %s_relation WHERE eid_from IN(%%s)'
+                                    % rschema)
+                    for sql in sqls:
+                        self.sqlexec(sql % thiseids, ask_confirm=False)
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
@@ -1299,7 +1388,7 @@ class ServerMigrationHelper(MigrationHelper):
                 cu = self.session.system_sql(sql, args)
             except:
                 ex = sys.exc_info()[1]
-                if self.confirm('Error: %s\nabort?' % ex):
+                if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                     raise
                 return
             try:
@@ -1309,7 +1398,7 @@ class ServerMigrationHelper(MigrationHelper):
                 return
 
     def rqlexec(self, rql, kwargs=None, cachekey=None, build_descr=True,
-                ask_confirm=True):
+                ask_confirm=False):
         """rql action"""
         if cachekey is not None:
             warn('[3.8] cachekey is deprecated, you can safely remove this argument',
@@ -1327,7 +1416,7 @@ class ServerMigrationHelper(MigrationHelper):
                 try:
                     res = execute(rql, kwargs, build_descr=build_descr)
                 except Exception, ex:
-                    if self.confirm('Error: %s\nabort?' % ex):
+                    if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                         raise
         return res
 

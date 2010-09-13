@@ -100,7 +100,7 @@ class EditionFormView(FormViewMixIn, EntityView):
     # though not baseforms based customized view
     __select__ = one_line_rset() & non_final_entity() & yes()
 
-    title = _('edition')
+    title = _('modification')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.complete_entity(row, col)

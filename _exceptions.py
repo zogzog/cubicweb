@@ -80,6 +80,8 @@ class ETypeNotSupportedBySources(RepositoryError, InternalError):
 class MultiSourcesError(RepositoryError, InternalError):
     """usually due to bad multisources configuration or rql query"""
 
+class UniqueTogetherError(RepositoryError):
+    """raised when a unique_together constraint caused an IntegrityError"""
 
 # security exceptions #########################################################
 

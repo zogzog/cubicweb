@@ -24,7 +24,7 @@ from cubicweb.appobject import AppObject
 
 
 def rgx(pattern, flags=0):
-    """this is just a convenient shortcout to add the $ sign"""
+    """this is just a convenient shortcut to add the $ sign"""
     return re.compile(pattern+'$', flags)
 
 class metarewriter(type):

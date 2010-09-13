@@ -120,6 +120,7 @@ class URLPathEvaluator(component.Component):
         self.urlpublisher = urlpublisher
         self.vreg = urlpublisher.vreg
 
+
 class RawPathEvaluator(URLPathEvaluator):
     """handle path of the form::
 

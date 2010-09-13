@@ -122,6 +122,7 @@ class MigrationHelper(object):
                           'config': self.config,
                           'interactive_mode': interactive,
                           }
+        self._context_stack = []
 
     def __getattribute__(self, name):
         try:
@@ -199,7 +200,8 @@ class MigrationHelper(object):
         if not ask_confirm or self.confirm(msg):
             return meth(*args, **kwargs)
 
-    def confirm(self, question, shell=True, abort=True, retry=False, default='y'):
+    def confirm(self, question, shell=True, abort=True, retry=False, pdb=False,
+                default='y'):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2
@@ -207,6 +209,8 @@ class MigrationHelper(object):
         possibleanswers = ['y', 'n']
         if abort:
             possibleanswers.append('abort')
+        if pdb:
+            possibleanswers.append('pdb')
         if shell:
             possibleanswers.append('shell')
         if retry:
@@ -221,9 +225,13 @@ class MigrationHelper(object):
             return 2
         if answer == 'abort':
             raise SystemExit(1)
-        if shell and answer == 'shell':
+        if answer == 'shell':
             self.interactive_shell()
-            return self.confirm(question)
+            return self.confirm(question, shell, abort, retry, pdb, default)
+        if answer == 'pdb':
+            import pdb
+            pdb.set_trace()
+            return self.confirm(question, shell, abort, retry, pdb, default)
         return True
 
     def interactive_shell(self):
@@ -277,6 +285,11 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     context[attr[4:]] = getattr(self, attr)
         return context
 
+    def update_context(self, key, value):
+        for context in self._context_stack:
+            context[key] = value
+        self.__context[key] = value
+
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script in interactive mode
 
@@ -320,6 +333,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if not self.execscript_confirm(migrscript):
             return
         scriptlocals = self._create_context().copy()
+        self._context_stack.append(scriptlocals)
         if script_mode == 'python':
             if funcname is None:
                 pyname = '__main__'
@@ -345,6 +359,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             import doctest
             doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
+        del self._context_stack[-1]
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""

@@ -356,7 +356,7 @@ class UserInfoAction(action.Action):
     __regid__ = 'myinfos'
     __select__ = authenticated_user()
 
-    title = _('personnal informations')
+    title = _('profile')
     category = 'useractions'
     order = 20
 

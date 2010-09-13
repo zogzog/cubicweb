@@ -94,28 +94,28 @@ var JSON_BASE_URL = baseuri() + 'json?';
 function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
     var jqtagfilter = tag + '[' + srcattr + ']';
     if (cw['loaded_'+srcattr] === undefined) {
-	cw['loaded_'+srcattr] = [];
-	var loaded = cw['loaded_'+srcattr];
-	jQuery('head ' + jqtagfilter).each(function(i) {
-		loaded.push(this.getAttribute(srcattr));
-	    });
+        cw['loaded_'+srcattr] = [];
+        var loaded = cw['loaded_'+srcattr];
+        jQuery('head ' + jqtagfilter).each(function(i) {
+                   loaded.push(this.getAttribute(srcattr));
+               });
     } else {
-	var loaded = cw['loaded_'+srcattr];
+        var loaded = cw['loaded_'+srcattr];
     }
     $node.find(tag).each(function(i) {
-	 var url = this.getAttribute(srcattr);
+        var url = this.getAttribute(srcattr);
         if (url) {
             if (jQuery.inArray(url, loaded) == -1) {
-		// take care to <script> tags: jQuery append method script nodes
-		// don't appears in the DOM (See comments on
-		// http://api.jquery.com/append/), which cause undesired
-		// duplicated load in our case. After trying to use bare DOM api
-		// to avoid this, we switched to handle a list of already loaded
-		// stuff ourselves, since bare DOM api gives bug with the
-		// server-response event, since we loose control on when the
-		// script is loaded (jQuery load it immediatly).
-		loaded.push(url);
-		jQuery(this).appendTo($head);
+                // take care to <script> tags: jQuery append method script nodes
+                // don't appears in the DOM (See comments on
+                // http://api.jquery.com/append/), which cause undesired
+                // duplicated load in our case. After trying to use bare DOM api
+                // to avoid this, we switched to handle a list of already loaded
+                // stuff ourselves, since bare DOM api gives bug with the
+                // server-response event, since we loose control on when the
+                // script is loaded (jQuery load it immediatly).
+                loaded.push(url);
+                jQuery(this).appendTo($head);
             }
         } else {
             jQuery(this).appendTo($head);
@@ -441,7 +441,7 @@ function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
     var d = userCallback(cbname);
     d.addCallback(function() {
         $('#' + nodeid).loadxhtml('json', ajaxFuncArgs('render', {'rql': rql},
-						       registry, compid));
+                                                       registry, compid));
         if (msg) {
             updateMessage(msg);
         }
@@ -560,9 +560,9 @@ function getDomFromResponse(response) {
     }
     // several children => wrap them in a single node and return the wrap
     return DIV({'cubicweb:type': "cwResponseWrapper"},
-	       $.map(children, function(node) {
-		       return jQuery(node).clone().context;})
-	       );
+               $.map(children, function(node) {
+                       return jQuery(node).clone().context;})
+               );
 }
 
 /* DEPRECATED *****************************************************************/

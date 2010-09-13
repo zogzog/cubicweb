@@ -12,6 +12,5 @@
  * overrides rql_for_eid function from htmlhelpers.hs
  */
 function rql_for_eid(eid) {
-	return 'Any X WHERE X eid "' + eid + '"';
+        return 'Any X WHERE X eid "' + eid + '"';
 }
-

@@ -3,7 +3,12 @@ $(document).ready(function() {
     module("ajax", {
         setup: function() {
           this.scriptsLength = $('head script[src]').length-1;
-	  this.cssLength = $('head link[rel=stylesheet]').length-1;
+          this.cssLength = $('head link[rel=stylesheet]').length-1;
+          // re-initialize cw loaded cache so that each tests run in a
+          // clean environment, have a lookt at _loadAjaxHtmlHead implementation
+          // in cubicweb.ajax.js for more information.
+          cw.loaded_src = [];
+          cw.loaded_href = [];
         },
         teardown: function() {
           $('head script[src]:gt(' + this.scriptsLength + ')').remove();
@@ -118,7 +123,7 @@ $(document).ready(function() {
         'Hello', 'world');
     });
 
-    test('test addErrback', function() {
+  test('test addErrback', function() {
         expect(1);
         stop();
         var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
@@ -160,10 +165,11 @@ $(document).ready(function() {
         });
     });
 
-    test('test already included resources are ignored (ajax_url2.html)', function() {
+    test('test already included resources are ignored (ajax_url1.html)', function() {
         expect(10);
         var scriptsIncluded = jsSources();
-        equals(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
+        // NOTE:
+        equals(jQuery.inArray('http://foo.js', scriptsIncluded), -1);
         equals(jQuery('head link').length, 1);
         /* use endswith because in pytest context we have an absolute path */
         ok(jQuery('head link').attr('href').endswith('/qunit.css'));
@@ -172,7 +178,7 @@ $(document).ready(function() {
             callback: function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
-		try {
+                try {
                     // check that foo.js has been inserted in <head>
                     equals(scriptsIncluded.length, origLength + 1);
                     equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
@@ -186,7 +192,7 @@ $(document).ready(function() {
                     ok(jQuery('head link').attr('href').endswith('/qunit.css'));
                 } finally {
                     start();
-		}
+                }
             }
         });
     });

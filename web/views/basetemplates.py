@@ -136,11 +136,11 @@ class TheMainTemplate(MainTemplate):
         nav_html = UStringIO()
         if view:
             view.paginate(w=nav_html.write)
-        w(_(nav_html.getvalue()))
+        w(nav_html.getvalue())
         w(u'<div id="contentmain">\n')
         view.render(w=w)
         w(u'</div>\n') # close id=contentmain
-        w(_(nav_html.getvalue()))
+        w(nav_html.getvalue())
         w(u'</div>\n') # closes id=pageContent
         self.template_footer(view)
 

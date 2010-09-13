@@ -2100,9 +2100,6 @@ msgstr "Modificar la página de inicio"
 msgid "editable-table"
 msgstr "Tabla modificable"
 
-msgid "edition"
-msgstr "Edición"
-
 msgid "eid"
 msgstr "eid"
 
@@ -2831,6 +2828,9 @@ msgstr "Milestone"
 msgid "missing parameters for entity %s"
 msgstr "Parámetros faltantes a la entidad %s"
 
+msgid "modification"
+msgstr ""
+
 msgid "modification_date"
 msgstr "Fecha de modificación"
 
@@ -3082,9 +3082,6 @@ msgstr "Permisos"
 msgid "permissions for this entity"
 msgstr "Permisos para esta entidad"
 
-msgid "personnal informations"
-msgstr "Información personal"
-
 msgid "pick existing bookmarks"
 msgstr "Seleccionar favoritos existentes"
 
@@ -3143,6 +3140,9 @@ msgstr "Dirección de email principal (objeto)"
 msgctxt "EmailAddress"
 msgid "primary_email_object"
 msgstr "Dirección principal de correo electrónico de"
+
+msgid "profile"
+msgstr ""
 
 msgid "progress"
 msgstr "Progreso"
@@ -4136,5 +4136,11 @@ msgstr "Ha terminado la sesión"
 msgid "you should probably delete that property"
 msgstr "Debería probablamente suprimir esta propriedad"
 
+#~ msgid "edition"
+#~ msgstr "Edición"
+
 #~ msgid "graphical workflow for %s"
 #~ msgstr "Gráfica del workflow por %s"
+
+#~ msgid "personnal informations"
+#~ msgstr "Información personal"

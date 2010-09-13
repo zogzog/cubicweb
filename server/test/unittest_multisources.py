@@ -151,7 +151,7 @@ class TwoSourcesTC(CubicWebTC):
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
         rset = cu.execute('Any X ORDERBY FTIRANK(X) WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
-        Connection_close(cnx)
+        Connection_close(cnx.cnx) # cnx is a TestCaseConnectionProxy
 
     def test_synchronization(self):
         cu = cnx2.cursor()

@@ -34,6 +34,7 @@ from datetime import datetime
 from base64 import b64decode, b64encode
 from contextlib import contextmanager
 from os.path import abspath
+import re
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -44,7 +45,7 @@ from logilab.database import get_db_helper
 
 from yams import schema2sql as y2sql
 
-from cubicweb import UnknownEid, AuthenticationError, ValidationError, Binary
+from cubicweb import UnknownEid, AuthenticationError, ValidationError, Binary, UniqueTogetherError
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
@@ -211,7 +212,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           'default': 'postgres',
           # XXX use choice type
           'help': 'database driver (postgres, mysql, sqlite, sqlserver2005)',
-          'group': 'native-source', 'level': 1,
+          'group': 'native-source', 'level': 0,
           }),
         ('db-host',
          {'type' : 'string',
@@ -666,6 +667,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         self.critical('transaction has been rollbacked')
                 except:
                     pass
+            if ex.__class__.__name__ == 'IntegrityError':
+                # need string comparison because of various backends
+                for arg in ex.args:
+                    mo = re.search('unique_cw_[^ ]+_idx', arg)
+                    if mo is not None:
+                        index_name = mo.group(0)
+                        elements = index_name.rstrip('_idx').split('_cw_')[1:]
+                        etype = elements[0]
+                        rtypes = elements[1:]                        
+                        raise UniqueTogetherError(etype, rtypes)
             raise
         return cursor
 

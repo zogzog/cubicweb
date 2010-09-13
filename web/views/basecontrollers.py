@@ -291,7 +291,8 @@ class JSonController(Controller):
         try:
             args = [json.loads(arg) for arg in args]
         except ValueError, exc:
-            self.exception('error while decoding json arguments for js_%s: %s', fname, args, exc)
+            self.exception('error while decoding json arguments for js_%s: %s',
+                           fname, args, exc)
             raise RemoteCallFailed(repr(exc))
         try:
             result = func(*args)
@@ -433,7 +434,7 @@ class JSonController(Controller):
     def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
         if eid is not None:
             rset = self._cw.eid_rset(eid)
-        elif 'rql' in self._cw.form:
+        elif self._cw.form.get('rql'):
             rset = self._cw.execute(self._cw.form['rql'])
         else:
             rset = None

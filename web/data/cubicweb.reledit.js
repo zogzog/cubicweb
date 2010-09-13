@@ -65,9 +65,9 @@ jQuery.extend(cw.reledit, {
     loadInlineEditionForm: function(formid, eid, rtype, role, divid, reload, vid, default_value) {
         var args = {fname: 'reledit_form', rtype: rtype, role: role,
                     pageid: pageid,
-    	            eid: eid, divid: divid, formid: formid,
-    		    reload: reload, vid: vid, default_value: default_value,
-    		    callback: function () {cw.reledit.showInlineEditionForm(divid);}};
+                    eid: eid, divid: divid, formid: formid,
+                    reload: reload, vid: vid, default_value: default_value,
+                    callback: function () {cw.reledit.showInlineEditionForm(divid);}};
        jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
     }
 });

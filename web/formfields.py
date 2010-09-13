@@ -416,11 +416,16 @@ class Field(object):
         if self.sort:
             vocab = vocab_sort(vocab)
         # XXX pre 3.9 bw compat
-        for i, (label, value) in enumerate(vocab):
+        for i, option in enumerate(vocab):
+            # option may be a 2 or 3-uple (see Select widget _render method for
+            # explanation)
+            value = option[1]
             if value is not None and not isinstance(value, basestring):
                 warn('[3.9] %s: vocabulary value should be an unicode string'
                      % self, DeprecationWarning)
-                vocab[i] = (label, unicode(value))
+                option = list(option)
+                option[1] = unicode(value)
+                vocab[i] = option
         return vocab
 
     def format(self, form):

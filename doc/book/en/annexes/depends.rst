@@ -1,9 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-.. _dependencies:
+.. _InstallDependencies:
 
-Dependencies
-============
+Installation dependencies
+=========================
 
 When you run CubicWeb from source, either by downloading the tarball or
 cloning the mercurial forest, here is the list of tools and libraries you need
@@ -55,9 +55,7 @@ If you're using a Postgres database (recommended):
 * plpythonu extension
 * tsearch2 extension (for postgres < 8.3, in postgres-contrib)
 
-Other optional packages :
-
-:
+Other optional packages:
 
 * fyzz - http://www.logilab.org/project/fyzz -
   http://pypi.python.org/pypi/fyzz - included in the forest, *to activate Sparql querying*

@@ -26,9 +26,9 @@ class AjaxReplaceUrlTC(TestCase):
         arurl = req.ajax_replace_url
         # NOTE: for the simplest use cases, we could use doctest
         self.assertEquals(arurl('foo', rql='Person P', vid='list'),
-                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?rql=Person%20P&fname=view&vid=list", null, 'get', 'replace'); noop()""")
+                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?rql=Person%20P&fname=view&vid=list",null,"get","replace"); noop()""")
         self.assertEquals(arurl('foo', rql='Person P', vid='oneline', name='bar', age=12),
-                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?name=bar&age=12&rql=Person%20P&fname=view&vid=oneline", null, 'get', 'replace'); noop()""")
+                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?name=bar&age=12&rql=Person%20P&fname=view&vid=oneline",null,"get","replace"); noop()""")
 
 
 if __name__ == '__main__':
