@@ -88,7 +88,7 @@ function firstSelected(selectNode) {
  * toggle visibility of an element by its id
  */
 function toggleVisibility(elemId) {
-    $('#' + elemId).toggleClass('hidden');
+    cw.jqNode(elemId).toggleClass('hidden');
 }
 
 /**

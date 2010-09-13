@@ -359,7 +359,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             import doctest
             doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
-        del self._context_stack[-1]
+        self._context_stack.pop()
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""
@@ -390,10 +390,8 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             cubes = (cubes,)
         origcubes = self.config.cubes()
         newcubes = [p for p in self.config.expand_cubes(cubes)
-                       if not p in origcubes]
+                    if not p in origcubes]
         if newcubes:
-            for cube in cubes:
-                assert cube in newcubes
             self.config.add_cubes(newcubes)
         return newcubes
 
