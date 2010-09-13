@@ -359,7 +359,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             import doctest
             doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
-        del self._context_stack[-1]
+        self._context_stack.pop()
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""
