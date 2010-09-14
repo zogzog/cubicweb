@@ -352,6 +352,8 @@ class JSonController(Controller):
         stream = view.set_stream()
         if paginate:
             if divid == 'pageContent':
+                # ensure divid isn't reused by the view (e.g. table view)
+                self._cw.form.pop('divid', None)
                 # mimick main template behaviour
                 stream.write(u'<div id="pageContent">')
                 vtitle = self._cw.form.get('vtitle')
