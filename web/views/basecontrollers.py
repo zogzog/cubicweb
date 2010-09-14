@@ -334,6 +334,9 @@ class JSonController(Controller):
 
     def _exec(self, rql, args=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
+        rql = rql.strip()
+        if rql.startswith('rql:'):
+            rql = rql[4:]
         if rocheck:
             self._cw.ensure_ro_rql(rql)
         try:
