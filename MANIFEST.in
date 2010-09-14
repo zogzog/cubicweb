@@ -30,7 +30,7 @@ recursive-include web/test/windmill *.py
 
 recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
 
-prune doc/book/en/.static/
-prune doc/book/fr/.static/
+prune doc/book/en/.static
+prune doc/book/fr/.static
 prune misc/cwfs
 prune goa
