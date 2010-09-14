@@ -34,8 +34,6 @@ Three primitives are defined:
    * ``tag_subject_of`` tag a relation in the subject's context
    * ``tag_object_of`` tag a relation in the object's context
    * ``tag_attribute`` shortcut for tag_subject_of
-
-
 """
 __docformat__ = "restructuredtext en"
 

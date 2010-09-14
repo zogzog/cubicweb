@@ -260,9 +260,8 @@ class FormValidatorController(Controller):
 def optional_kwargs(extraargs):
     if extraargs is None:
         return {}
-    else: # we receive unicode keys which is not supported by the **syntax
-        return dict((str(key), value)
-                    for key, value in extraargs.items())
+    # we receive unicode keys which is not supported by the **syntax
+    return dict((str(key), value) for key, value in extraargs.iteritems())
 
 class JSonController(Controller):
     __regid__ = 'json'
@@ -428,15 +427,16 @@ class JSonController(Controller):
         return self._call_view(comp, **extraargs)
 
     @xhtmlize
-    def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
+    def js_render(self, registry, oid, eid=None,
+                  selectargs=None, renderargs=None):
         if eid is not None:
             rset = self._cw.eid_rset(eid)
         elif self._cw.form.get('rql'):
             rset = self._cw.execute(self._cw.form['rql'])
         else:
             rset = None
-        selectargs = optional_kwargs(selectargs)
-        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset, **selectargs)
+        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset,
+                                              **optional_kwargs(selectargs))
         return self._call_view(view, **optional_kwargs(renderargs))
 
     @check_pageid

@@ -324,7 +324,8 @@ class InitialTableView(TableView):
     title = None
 
     def call(self, title=None, subvid=None, headers=None, divid=None,
-             paginate=False, displaycols=None, displayactions=None, mainindex=None):
+             paginate=False, displaycols=None, displayactions=None,
+             mainindex=None):
         """Dumps a table displaying a composite query"""
         try:
             actrql = self._cw.form['actualrql']
@@ -347,7 +348,8 @@ class InitialTableView(TableView):
             mainindex = self.main_var_index()
         if mainindex is not None:
             actions = self.form_filter(divid, displaycols, displayactions,
-                                       displayfilter=True, paginate=paginate, hidden=True)
+                                       displayfilter=True, paginate=paginate,
+                                       hidden=True)
         else:
             actions = ()
         if not subvid and 'subvid' in self._cw.form:
