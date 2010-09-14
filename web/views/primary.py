@@ -24,7 +24,7 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.schema import VIRTUAL_RTYPES, display_name
@@ -155,13 +155,19 @@ class PrimaryView(EntityView):
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             if rschema.final or dispctrl.get('rtypevid'):
+                vid = dispctrl.get('vid', 'reledit')
+                try:
+                    rview = self._cw.vreg['views'].select(
+                        vid, self._cw, rset=entity.cw_rset, row=entity.cw_row,
+                        col=entity.cw_col, dispctrl=dispctrl)
+                except NoSelectableObject:
+                    continue
                 self.w(u'<div class="section">')
                 label = self._rel_label(entity, rschema, role, dispctrl)
                 if label:
                     self.w(u'<h4>%s</h4>' % label)
-                vid = dispctrl.get('vid', 'reledit')
-                entity.view(vid, rtype=rschema.type, role=role, w=self.w,
-                            initargs={'dispctrl': dispctrl})
+                rview.render(row=entity.cw_row, col=entity.cw_col, w=self.w,
+                             rtype=rschema.type, role=role)
                 self.w(u'</div>')
                 continue
             rset = self._relation_rset(entity, rschema, role, dispctrl)
