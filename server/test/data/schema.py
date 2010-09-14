@@ -19,7 +19,8 @@
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, RichString, String, Int, Boolean, Datetime)
 from yams.constraints import SizeConstraint
-from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
+from cubicweb.schema import (WorkflowableEntityType,
+                             RQLConstraint, RQLUniqueConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(WorkflowableEntityType):
@@ -93,7 +94,10 @@ class Note(WorkflowableEntityType):
 
     migrated_from = SubjectRelation('Note')
     attachment = SubjectRelation('File')
-    inline1 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
+    inline1 = SubjectRelation('Affaire', inlined=True, cardinality='?*',
+                              constraints=[RQLUniqueConstraint('S type T, S inline1 A1, A1 todo_by C, '
+                                                              'Y type T, Y inline1 A2, A2 todo_by C',
+                                                               'S,Y')])
     todo_by = SubjectRelation('CWUser')
 
 class Personne(EntityType):
