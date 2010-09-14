@@ -57,9 +57,11 @@ SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state',
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
-    'CWConstraint', 'CWConstraintType', 'RQLExpression',
+    'CWConstraint', 'CWConstraintType', 'CWUniqueTogetherConstraint',
+    'RQLExpression',
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
+    'constraint_of', 'relations',
     ))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
