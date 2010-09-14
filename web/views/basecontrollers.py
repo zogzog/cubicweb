@@ -388,7 +388,7 @@ class JSonController(Controller):
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
-        return self._call_view(view, paginate=req.form.get('paginate'))
+        return self._call_view(view, paginate=req.form.pop('paginate', True))
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
@@ -409,11 +409,8 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        if extraargs is None:
-            extraargs = {}
-        else: # we receive unicode keys which is not supported by the **syntax
-            extraargs = dict((str(key), value)
-                             for key, value in extraargs.items())
+        extraargs = optional_kwargs(extraargs)
+        extraargs.setdefault('paginate', False)
         # XXX while it sounds good, addition of the try/except below cause pb:
         # when filtering using facets return an empty rset, the edition box
         # isn't anymore selectable, as expected. The pb is that with the
