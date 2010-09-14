@@ -750,13 +750,14 @@ class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
 
 class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """the unique rql constraint check that the result of the query isn't
-    greater than one
-    """
-    distinct_query = True
+    greater than one.
 
-    # XXX turns mainvars into a required argument in __init__, since we've no
-    #     way to guess it correctly (eg if using S,O or U the constraint will
-    #     always be satisfied since we've to use a DISTINCT query)
+    You *must* specify mainvars when instantiating the constraint since there is
+    no way to guess it correctly (e.g. if using S,O or U the constraint will
+    always be satisfied because we've to use a DISTINCT query).
+    """
+    # XXX turns mainvars into a required argument in __init__
+    distinct_query = True
 
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1
