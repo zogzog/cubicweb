@@ -234,10 +234,7 @@ class PrimaryView(EntityView):
                 if section == where:
                     matchtschemas.append(tschema)
             if matchtschemas:
-                # XXX pick the latest dispctrl
-                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role,
-                                                       matchtschemas[-1])
-
+                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role, '*')
                 rdefs.append( (rschema, matchtschemas, role, dispctrl) )
         return sorted(rdefs, key=lambda x: x[-1]['order'])
 
