@@ -867,7 +867,7 @@ div#footer a {
 }
 
 /********************************/
-/* rest releted classes         */
+/* rest related classes         */
 /********************************/
 
 img.align-right {
@@ -876,6 +876,18 @@ img.align-right {
 
 img.align-left {
   margin-right: 1.5em;
+}
+
+/******************************/
+/* reledit                    */
+/******************************/
+
+.releditField {
+    display: inline;
+}
+
+.releditForm {
+ display:none;
 }
 
 /********************************/
@@ -905,4 +917,3 @@ img.ui-datepicker-trigger {
   margin-left: 0.5em;
   vertical-align: bottom;
 }
-

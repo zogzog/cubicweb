@@ -210,4 +210,27 @@ class RelationTagsBool(RelationTags):
     _allowed_values = frozenset((True, False))
 
 
+class NoTargetRelationTagsDict(RelationTagsDict):
+
+    @property
+    def name(self):
+        return self.__class__.name
+
+    def tag_subject_of(self, key, tag):
+        subj, rtype, obj = key
+        if obj != '*':
+            self.warning('using explict target type in %s.tag_subject_of() '
+                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
+                         self.name, subj, rtype, subj, rtype, obj)
+        super(NoTargetRelationTagsDict, self).tag_subject_of((subj, rtype, '*'), tag)
+
+    def tag_object_of(self, key, tag):
+        subj, rtype, obj = key
+        if subj != '*':
+            self.warning('using explict subject type in %s.tag_object_of() '
+                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
+                         self.name, rtype, obj, subj, rtype, obj)
+        super(NoTargetRelationTagsDict, self).tag_object_of(('*', rtype, obj), tag)
+
+
 set_log_methods(RelationTags, logging.getLogger('cubicweb.rtags'))

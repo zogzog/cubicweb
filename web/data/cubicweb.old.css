@@ -860,3 +860,16 @@ div#footer a {
 .otherView {
   float: right;
 }
+
+
+/******************************/
+/* reledit                    */
+/******************************/
+
+.releditField {
+    display: inline;
+}
+
+.releditForm {
+ display:none;
+}

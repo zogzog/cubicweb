@@ -53,7 +53,8 @@ from logilab.common.compat import any
 
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
-                            RelationTagsDict, register_rtag, _ensure_str_key)
+                            RelationTagsDict, NoTargetRelationTagsDict,
+                            register_rtag, _ensure_str_key)
 from cubicweb.schema import META_RTYPES
 
 
@@ -83,26 +84,10 @@ primaryview_section = RelationTags('primaryview_section',
                                               'sideboxes', 'hidden')))
 
 
-class DisplayCtrlRelationTags(RelationTagsDict):
+class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
         self.counter = 0
-
-    def tag_subject_of(self, key, tag):
-        subj, rtype, obj = key
-        if obj != '*':
-            self.warning('using explict target type in display_ctrl.tag_subject_of() '
-                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
-                         subj, rtype, subj, rtype, obj)
-        super(DisplayCtrlRelationTags, self).tag_subject_of((subj, rtype, '*'), tag)
-
-    def tag_object_of(self, key, tag):
-        subj, rtype, obj = key
-        if subj != '*':
-            self.warning('using explict subject type in display_ctrl.tag_object_of() '
-                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
-                         rtype, obj, subj, rtype, obj)
-        super(DisplayCtrlRelationTags, self).tag_object_of(('*', rtype, obj), tag)
 
 def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     if role == 'subject':
@@ -381,7 +366,7 @@ autoform_section = AutoformSectionRelationTags('autoform_section')
 autoform_field = RelationTags('autoform_field')
 
 # relations'field explicit kwargs (given to field's __init__)
-autoform_field_kwargs = RelationTagsDict()
+autoform_field_kwargs = RelationTagsDict('autoform_field_kwargs')
 
 
 # set of tags of the form <action>_on_new on relations. <action> is a
@@ -389,31 +374,49 @@ autoform_field_kwargs = RelationTagsDict()
 # permissions checking is by-passed and supposed to be ok
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
 
-class _ReleditTags(RelationTagsDict):
-    _keys = frozenset('reload default_value noedit'.split())
-
-    def tag_subject_of(self, key, *args, **kwargs):
-        subj, rtype, obj = key
-        if obj != '*':
-            self.warning('using explict target type in display_ctrl.tag_subject_of() '
-                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
-                         subj, rtype, subj, rtype, obj)
-        super(_ReleditTags, self).tag_subject_of(key, *args, **kwargs)
-
-    def tag_object_of(self, key, *args, **kwargs):
-        subj, rtype, obj = key
-        if subj != '*':
-            self.warning('using explict subject type in display_ctrl.tag_object_of() '
-                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
-                         rtype, obj, subj, rtype, obj)
-        super(_ReleditTags, self).tag_object_of(key, *args, **kwargs)
+class ReleditTags(NoTargetRelationTagsDict):
+    """
+    default_value: alternative default value
+      The default value is what is shown when there is no value.
+    reload: boolean, eid (to reload to) or function taking subject and returning bool/eid
+      This is useful when editing a relation (or attribute) that impacts the url
+      or another parts of the current displayed page. Defaults to False.
+    rvid: alternative view id (as str) for relation or composite edition
+      Default is 'incontext' or 'csv' depending on the cardinality. They can also be
+      statically changed by subclassing ClickAndEditFormView and redefining _one_rvid
+      (resp. _many_rvid).
+    edit_target: 'rtype' (to edit the relation) or 'related' (to edit the related entity)
+      This controls whether to edit the relation or the target entity of the relation.
+      Currently only one-to-one relations support target entity edition. By default,
+      the 'related' option is taken whenever the relation is composite and one-to-one.
+    """
+    _keys = frozenset('default_value reload rvid edit_target'.split())
 
     def tag_relation(self, key, tag):
         for tagkey in tag.iterkeys():
             assert tagkey in self._keys, 'tag %r not in accepted tags: %r' % (tag, self._keys)
-        return super(_ReleditTags, self).tag_relation(key, tag)
+        return super(ReleditTags, self).tag_relation(key, tag)
 
-reledit_ctrl = _ReleditTags('reledit')
+def init_reledit_ctrl(rtag, sschema, rschema, oschema, role):
+    if rschema.final:
+        return
+    composite = rschema.rdef(sschema, oschema).composite == role
+    if role == 'subject':
+        oschema = '*'
+    else:
+        sschema = '*'
+    values = rtag.get(sschema, rschema, oschema, role)
+    edittarget = values.get('edit_target')
+    if edittarget not in (None, 'rtype', 'related'):
+        rtag.warning('reledit: wrong value for edit_target on relation %s: %s',
+                     rschema, edittarget)
+        edittarget = None
+    if not edittarget:
+        edittarget = 'related' if composite else 'rtype'
+        rtag.tag_relation((sschema, rschema, oschema, role),
+                          {'edit_target': edittarget})
+
+reledit_ctrl = ReleditTags('reledit', init_reledit_ctrl)
 
 # boxes.EditBox configuration #################################################
 
