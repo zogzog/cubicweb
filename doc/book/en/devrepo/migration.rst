@@ -91,6 +91,24 @@ In the `repository` scripts, the following identifiers are also defined:
 * `session`, repository session object
 
 
+New cube dependencies
+---------------------
+
+If your code depends on some new cubes, you have to add them in a migration
+script by using:
+
+* `add_cube(cube, update_database=True)`, add a cube.
+* `add_cubes(cubes, update_database=True)`, add a list of cubes.
+
+The `update_database` parameter is telling if the database schema
+should be updated or if only the relevant persistent property should be
+inserted (for the case where a new cube has been extracted from an
+existing one, so the new cube schema is actually already in there).
+
+If some of the added cubes are already used by an instance, they'll simply be
+silently skipped.
+
+
 Schema migration
 ----------------
 The following functions for schema migration are available in `repository`
