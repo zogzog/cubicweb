@@ -57,7 +57,7 @@ __depends__ = {
     }
 
 __recommends__ = {
-    'Pyro': '>= 3.9.1',
+    'Pyro': '>= 3.9.1, < 4.0.0',
     'PIL': '',                  # for captcha
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
