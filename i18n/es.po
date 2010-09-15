@@ -326,6 +326,12 @@ msgstr "Relación"
 msgid "CWRelation_plural"
 msgstr "Relaciones"
 
+msgid "CWUniqueTogetherConstraint"
+msgstr ""
+
+msgid "CWUniqueTogetherConstraint_plural"
+msgstr ""
+
 msgid "CWUser"
 msgstr "Usuario"
 
@@ -517,6 +523,9 @@ msgstr "Agregar tipo de relación"
 msgid "New CWRelation"
 msgstr "Nueva definición de relación final"
 
+msgid "New CWUniqueTogetherConstraint"
+msgstr ""
+
 msgid "New CWUser"
 msgstr "Agregar usuario"
 
@@ -706,6 +715,9 @@ msgstr "Este tipo de relación"
 
 msgid "This CWRelation"
 msgstr "Esta definición de relación no final"
+
+msgid "This CWUniqueTogetherConstraint"
+msgstr ""
 
 msgid "This CWUser"
 msgstr "Este usuario"
@@ -921,6 +933,9 @@ msgstr "Expresión RQL de lectura"
 
 msgid "add CWRelation relation_type CWRType object"
 msgstr "Definición de relación"
+
+msgid "add CWUniqueTogetherConstraint constraint_of CWEType object"
+msgstr ""
 
 msgid "add CWUser in_group CWGroup object"
 msgstr "Usuario"
@@ -1487,6 +1502,20 @@ msgstr "Restricción de"
 msgid "constraint factory"
 msgstr "Fábrica de restricciones"
 
+msgid "constraint_of"
+msgstr ""
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "constraint_of"
+msgstr ""
+
+msgid "constraint_of_object"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "constraint_of_object"
+msgstr ""
+
 msgid "constraints"
 msgstr "Restricciones"
 
@@ -1618,6 +1647,11 @@ msgstr "Creación de una propiedad por el usuario %(linkto)s"
 
 msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "Creación de la relación %(linkto)s"
+
+msgid ""
+"creating CWUniqueTogetherConstraint (CWUniqueTogetherConstraint "
+"constraint_of CWEType %(linkto)s)"
+msgstr ""
 
 msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "Creación de un usuario para agregar al grupo %(linkto)s"
@@ -1872,6 +1906,9 @@ msgstr ""
 
 msgid "define how we get out from a sub-workflow"
 msgstr "Define como salir de un sub-Workflow"
+
+msgid "defines a sql-level multicolumn unique index"
+msgstr ""
 
 msgid ""
 "defines what's the property is applied for. You must select this first to be "
@@ -3231,8 +3268,26 @@ msgctxt "CWRType"
 msgid "relation_type_object"
 msgstr "Definición de Relaciones"
 
+msgid "relations"
+msgstr ""
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
 msgstr "Relaciones Eliminadas"
+
+msgid "relations_object"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "relations_object"
+msgstr ""
+
+msgctxt "CWRelation"
+msgid "relations_object"
+msgstr ""
 
 msgid "relative url of the bookmarked page"
 msgstr "Url relativa de la página"
@@ -4034,6 +4089,10 @@ msgstr "Ver Workflow"
 
 msgid "view_index"
 msgstr "Inicio"
+
+#, python-format
+msgid "violates unique_together constraints (%s)"
+msgstr ""
 
 msgid "visible"
 msgstr "Visible"

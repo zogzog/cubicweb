@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2010-09-06 21:44+0200\n"
+"PO-Revision-Date: 2010-09-15 15:12+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -37,7 +37,7 @@ msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  de l'état %(fromstate)s vers l'état %(tostate)s\n"
 
 msgid " :"
-msgstr ""
+msgstr " :"
 
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
@@ -324,6 +324,12 @@ msgstr "Relation"
 msgid "CWRelation_plural"
 msgstr "Relations"
 
+msgid "CWUniqueTogetherConstraint"
+msgstr "Contrainte unique_together"
+
+msgid "CWUniqueTogetherConstraint_plural"
+msgstr "Contraintes unique_together"
+
 msgid "CWUser"
 msgstr "Utilisateur"
 
@@ -515,6 +521,9 @@ msgstr "Nouveau type de relation"
 msgid "New CWRelation"
 msgstr "Nouvelle définition de relation non finale"
 
+msgid "New CWUniqueTogetherConstraint"
+msgstr "Nouvelle contrainte unique_together"
+
 msgid "New CWUser"
 msgstr "Nouvel utilisateur"
 
@@ -704,6 +713,9 @@ msgstr "Ce type de relation"
 
 msgid "This CWRelation"
 msgstr "Cette définition de relation"
+
+msgid "This CWUniqueTogetherConstraint"
+msgstr "Cette contrainte unique_together"
 
 msgid "This CWUser"
 msgstr "Cet utilisateur"
@@ -919,6 +931,9 @@ msgstr "expression rql de lecture"
 
 msgid "add CWRelation relation_type CWRType object"
 msgstr "définition de relation"
+
+msgid "add CWUniqueTogetherConstraint constraint_of CWEType object"
+msgstr "contrainte unique_together"
 
 msgid "add CWUser in_group CWGroup object"
 msgstr "utilisateur"
@@ -1487,6 +1502,20 @@ msgstr "contrainte de"
 msgid "constraint factory"
 msgstr "fabrique de contraintes"
 
+msgid "constraint_of"
+msgstr "contrainte de"
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "constraint_of"
+msgstr "contrainte de"
+
+msgid "constraint_of_object"
+msgstr "contraint par"
+
+msgctxt "CWEType"
+msgid "constraint_of_object"
+msgstr "contraint par"
+
 msgid "constraints"
 msgstr "contraintes"
 
@@ -1546,7 +1575,9 @@ msgid "context where this component should be displayed"
 msgstr "contexte où ce composant doit être affiché"
 
 msgid "context where this facet should be displayed, leave empty for both"
-msgstr "contexte où cette facette doit être affichée. Laissez ce champ vide pour l'avoir dans les deux."
+msgstr ""
+"contexte où cette facette doit être affichée. Laissez ce champ vide pour "
+"l'avoir dans les deux."
 
 msgid "control subject entity's relations order"
 msgstr "contrôle l'ordre des relations de l'entité sujet"
@@ -1618,6 +1649,11 @@ msgstr "création d'une propriété pour l'utilisateur %(linkto)s"
 
 msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "création relation %(linkto)s"
+
+msgid ""
+"creating CWUniqueTogetherConstraint (CWUniqueTogetherConstraint "
+"constraint_of CWEType %(linkto)s)"
+msgstr "création d'une contrainte unique_together sur %(linkto)s"
 
 msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "création d'un utilisateur à rajouter au groupe %(linkto)s"
@@ -1868,6 +1904,9 @@ msgstr "définit un type d'entité"
 
 msgid "define how we get out from a sub-workflow"
 msgstr "définit comment sortir d'un sous-workflow"
+
+msgid "defines a sql-level multicolumn unique index"
+msgstr "définit un index SQL unique sur plusieurs colonnes"
 
 msgid ""
 "defines what's the property is applied for. You must select this first to be "
@@ -3229,8 +3268,26 @@ msgctxt "CWRType"
 msgid "relation_type_object"
 msgstr "définition"
 
+msgid "relations"
+msgstr "relations"
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "relations"
+msgstr "relations"
+
 msgid "relations deleted"
 msgstr "relations supprimées"
+
+msgid "relations_object"
+msgstr "relations de"
+
+msgctxt "CWAttribute"
+msgid "relations_object"
+msgstr "contraint par"
+
+msgctxt "CWRelation"
+msgid "relations_object"
+msgstr "contraint par"
 
 msgid "relative url of the bookmarked page"
 msgstr "url relative de la page"
@@ -4031,6 +4088,10 @@ msgstr "voir les états possibles"
 
 msgid "view_index"
 msgstr "accueil"
+
+#, python-format
+msgid "violates unique_together constraints (%s)"
+msgstr "violation de contrainte unique_together (%s)"
 
 msgid "visible"
 msgstr "visible"
