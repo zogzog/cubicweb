@@ -411,8 +411,6 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        extraargs = optional_kwargs(extraargs)
-        extraargs.setdefault('paginate', False)
         # XXX while it sounds good, addition of the try/except below cause pb:
         # when filtering using facets return an empty rset, the edition box
         # isn't anymore selectable, as expected. The pb is that with the
@@ -422,7 +420,7 @@ class JSonController(Controller):
         # error is expected and should'nt be reported.
         #try:
         comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset,
-                                              **extraargs)
+                                              **optional_kwargs(extraargs))
         #except NoSelectableObject:
         #    raise RemoteCallFailed('unselectable')
         return self._call_view(comp, **extraargs)
