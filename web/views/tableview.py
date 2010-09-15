@@ -187,14 +187,9 @@ class TableView(AnyRsetView):
 
     def page_navigation_url(self, navcomp, path, params):
         if hasattr(self, 'divid'):
-            divid = self.divid
-        else:
-            divid = params.get('divid', 'pageContent'),
-        rql = params.pop('rql', self.cw_rset.printable_rql())
-        # latest 'true' used for 'swap' mode
-        return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-            json_dumps(divid), json_dumps(rql), json_dumps(self.__regid__),
-            json_dumps(params))
+            params['divid'] = self.divid
+        params['vid'] = self.__regid__
+        return navcomp.ajax_page_url(**params)
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]

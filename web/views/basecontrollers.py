@@ -346,28 +346,29 @@ class JSonController(Controller):
         return None
 
     def _call_view(self, view, paginate=False, **kwargs):
-        divid = self._cw.form.get('divid', 'pageContent')
-        # we need to call pagination before with the stream set
+        # set stream first, in case we need to call pagination
         stream = view.set_stream()
+        divid = self._cw.form.get('divid')
+        if divid == 'pageContent':
+            # ensure divid isn't reused by the view (e.g. table view)
+            del self._cw.form['divid']
+            # mimick main template behaviour
+            stream.write(u'<div id="pageContent">')
+            vtitle = self._cw.form.get('vtitle')
+            if vtitle:
+                stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+            paginate = True
         if paginate:
-            if divid == 'pageContent':
-                # ensure divid isn't reused by the view (e.g. table view)
-                self._cw.form.pop('divid', None)
-                # mimick main template behaviour
-                stream.write(u'<div id="pageContent">')
-                vtitle = self._cw.form.get('vtitle')
-                if vtitle:
-                    stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             view.paginate()
-            if divid == 'pageContent':
-                stream.write(u'<div id="contentmain">')
+        if divid == 'pageContent':
+            stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
         extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
             stream.write(extresources)
             stream.write(u'</div>\n')
-        if paginate and divid == 'pageContent':
+        if divid == 'pageContent':
             stream.write(u'</div></div>')
         return stream.getvalue()
 
@@ -389,7 +390,7 @@ class JSonController(Controller):
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
-        return self._call_view(view, paginate=req.form.pop('paginate', True))
+        return self._call_view(view, paginate=req.form.pop('paginate', False))
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
