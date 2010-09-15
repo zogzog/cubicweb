@@ -189,10 +189,10 @@ Let us look at simple example from the ``blog`` cube.
 Automatic views testing
 -----------------------
 
-This is done automatically with the AutomaticWebTest class. At cube
-creation time, the mycube/test/test_mycube.py file contains such a
-test. The code here has to be uncommented to be usable, without
-further modification.
+This is done automatically with the :class:`cubicweb.devtools.testlib.AutomaticWebTest`
+class. At cube creation time, the mycube/test/test_mycube.py file
+contains such a test. The code here has to be uncommented to be
+usable, without further modification.
 
 The ``auto_populate`` method uses a smart algorithm to create
 pseudo-random data in the database, thus enabling the views to be
@@ -211,6 +211,11 @@ mechanism. These are:
 * `application_rql`, may contain a list of rql expressions that
   auto_populate cannot guess by itself; these must yield resultsets
   against which views may be selected.
+
+.. warning::
+
+  Take care to not let the imported `AutomaticWebTest` in your test module
+  namespace, else both your subclass *and* this parent class will be run.
 
 Testing on a real-life database
 -------------------------------
