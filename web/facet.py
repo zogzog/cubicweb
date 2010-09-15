@@ -515,6 +515,7 @@ class RelationFacet(VocabularyFacet):
     def title(self):
         return display_name(self._cw, self.rtype, form=self.role)
 
+    @property
     def rql_sort(self):
         """return true if we can handle sorting in the rql query. E.g.  if
         sortfunc is set or if we have not to transform the returned value (eg no
