@@ -57,7 +57,7 @@ from logging import getLogger
 from itertools import chain
 
 from logilab.common.decorators import classproperty
-from logilab.common.deprecation import deprecated
+from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import RegistryNotFound
@@ -278,15 +278,19 @@ class Hook(AppObject):
 set_log_methods(Hook, getLogger('cubicweb.hook'))
 
 
-# base classes for relation propagation ########################################
+# abtract hooks for relation propagation #######################################
+# See example usage in hooks of the nosylist cube
 
-class PropagateSubjectRelationHook(Hook):
+class PropagateRelationHook(Hook):
     """propagate some `main_rtype` relation on entities linked as object of
     `subject_relations` or as subject of `object_relations` (the watched
     relations).
 
     This hook ensure that when one of the watched relation is added, the
     `main_rtype` relation is added to the target entity of the relation.
+
+    You usually want to use the :class:`match_rtype_sets` selector on concret
+    classes.
     """
     events = ('after_add_relation',)
 
@@ -312,54 +316,75 @@ class PropagateSubjectRelationHook(Hook):
             {'x': meid, 'e': seid})
 
 
-class PropagateSubjectRelationAddHook(Hook):
-    """propagate to entities at the end of watched relations when a `main_rtype`
-    relation is added
+class PropagateRelationAddHook(Hook):
+    """Propagate to entities at the end of watched relations when a `main_rtype`
+    relation is added.
+
+    `subject_relations` and `object_relations` attributes should be specified on
+    subclasses and are usually shared references with attributes of the same
+    name on :class:`PropagateRelationHook`.
+
+    Because of those shared references, you can use `skip_subject_relations` and
+    `skip_object_relations` attributes when you don't want to propagate to
+    entities linked through some particular relations.
     """
     events = ('after_add_relation',)
 
-    # to set in concrete class
+    # to set in concrete class (mandatory)
     subject_relations = None
     object_relations = None
+    # to set in concrete class (optionaly)
+    skip_subject_relations = ()
+    skip_object_relations = ()
 
     def __call__(self):
         eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.execute
         for rel in self.subject_relations:
-            if rel in eschema.subjrels:
+            if rel in eschema.subjrels and not rel in self.skip_subject_relations:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R, NOT R %s P' % (self.rtype, rel, self.rtype),
                         {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
-            if rel in eschema.objrels:
+            if rel in eschema.objrels and not rel in self.skip_object_relations:
                 execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X, NOT R %s P' % (self.rtype, rel, self.rtype),
                         {'x': self.eidfrom, 'p': self.eidto})
 
 
-class PropagateSubjectRelationDelHook(Hook):
-    """propagate to entities at the end of watched relations when a `main_rtype`
-    relation is deleted
+class PropagateRelationDelHook(PropagateRelationAddHook):
+    """Propagate to entities at the end of watched relations when a `main_rtype`
+    relation is deleted.
+
+    This is the opposite of the :class:`PropagateRelationAddHook`, see its
+    documentation for how to use this class.
     """
     events = ('after_delete_relation',)
-
-    # to set in concrete class
-    subject_relations = None
-    object_relations = None
 
     def __call__(self):
         eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
         execute = self._cw.execute
         for rel in self.subject_relations:
-            if rel in eschema.subjrels:
+            if rel in eschema.subjrels and not rel in self.skip_subject_relations:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'X %s R' % (self.rtype, rel),
                         {'x': self.eidfrom, 'p': self.eidto})
         for rel in self.object_relations:
-            if rel in eschema.objrels:
+            if rel in eschema.objrels and not rel in self.skip_object_relations:
                 execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
                         'R %s X' % (self.rtype, rel),
                         {'x': self.eidfrom, 'p': self.eidto})
+
+
+PropagateSubjectRelationHook = class_renamed(
+    'PropagateSubjectRelationHook', PropagateRelationHook,
+    '[3.9] PropagateSubjectRelationHook has been renamed to PropagateRelationHook')
+PropagateSubjectRelationAddHook = class_renamed(
+    'PropagateSubjectRelationAddHook', PropagateRelationAddHook,
+    '[3.9] PropagateSubjectRelationAddHook has been renamed to PropagateRelationAddHook')
+PropagateSubjectRelationDelHook = class_renamed(
+    'PropagateSubjectRelationDelHook', PropagateRelationDelHook,
+    '[3.9] PropagateSubjectRelationDelHook has been renamed to PropagateRelationDelHook')
 
 
 # abstract classes for operation ###############################################
