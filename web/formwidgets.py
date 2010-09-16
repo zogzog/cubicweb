@@ -653,10 +653,16 @@ class JQueryDateTimePicker(FieldWidget):
         timestr = req.form.get(field.input_name(form, 'time')).strip() or None
         if datestr is None:
             return None
-        date = todatetime(req.parse_datetime(datestr, 'Date'))
+        try:
+            date = todatetime(req.parse_datetime(datestr, 'Date'))
+        except ValueError, exc:
+            raise ProcessFormError(unicode(exc))
         if timestr is None:
             return date
-        time = req.parse_datetime(timestr, 'Time')
+        try:
+            time = req.parse_datetime(timestr, 'Time')
+        except ValueError, exc:
+            raise ProcessFormError(unicode(exc))
         return date.replace(hour=time.hour, minute=time.minute, second=time.second)
 
 
