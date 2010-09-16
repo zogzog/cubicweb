@@ -223,9 +223,10 @@ class Entity(AppObject):
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
                                             user, ordermethod, visited=visited)
-            orderterm = getattr(cls, ordermethod)(attr, var)
-            if orderterm:
-                orderby.append(orderterm)
+            if ordermethod is not None:
+                orderterm = getattr(cls, ordermethod)(attr, var)
+                if orderterm:
+                    orderby.append(orderterm)
         return selection, orderby, restrictions
 
     @classmethod
