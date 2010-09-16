@@ -62,6 +62,8 @@ SCHEMA_TYPES = set((
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
     'constraint_of', 'relations',
+    'read_permission', 'add_permission',
+    'delete_permission', 'update_permission',
     ))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
