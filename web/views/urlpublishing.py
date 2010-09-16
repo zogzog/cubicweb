@@ -176,18 +176,18 @@ class RestPathEvaluator(URLPathEvaluator):
             else:
                 attrname = cls._rest_attr_info()[0]
             value = req.url_unquote(parts.pop(0))
-            rset = self.attr_rset(req, etype, attrname, value)
-        else:
-            rset = self.cls_rset(req, cls)
+            return self.handle_etype_attr(req, cls, attrname, value)
+        return self.handle_etype(req, cls)
+
+    def handle_etype(self, req, cls):
+        rset =  req.execute(cls.fetch_rql(req.user))
         if rset.rowcount == 0:
             raise NotFound()
         return None, rset
 
-    def cls_rset(self, req, cls):
-        return req.execute(cls.fetch_rql(req.user))
-
-    def attr_rset(self, req, etype, attrname, value):
-        rql = u'Any X WHERE X is %s, X %s %%(x)s' % (etype, attrname)
+    def handle_etype_attr(self, req, cls, attrname, value):
+        rql = cls.fetch_rql(req.user, ['X %s %%(x)s' % (attrname)],
+                            mainvar='X', ordermethod=None)
         if attrname == 'eid':
             try:
                 rset = req.execute(rql, {'x': typed_eid(value)})
@@ -196,7 +196,9 @@ class RestPathEvaluator(URLPathEvaluator):
                 raise PathDontMatch()
         else:
             rset = req.execute(rql, {'x': value})
-        return rset
+        if rset.rowcount == 0:
+            raise NotFound()
+        return None, rset
 
 
 class URLRewriteEvaluator(URLPathEvaluator):
