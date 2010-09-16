@@ -410,6 +410,11 @@ class Repository(object):
     # public (dbapi) interface ################################################
 
     def stats(self): # XXX restrict to managers session?
+        """Return a dictionary containing some statistics about the repository
+        resources usage.
+
+        This is a public method, not requiring a session id.
+        """
         results = {}
         querier = self.querier
         source = self.system_source
@@ -432,8 +437,9 @@ class Repository(object):
         return results
 
     def get_schema(self):
-        """return the instance schema. This is a public method, not
-        requiring a session id
+        """Return the instance schema.
+
+        This is a public method, not requiring a session id.
         """
         try:
             # necessary to support pickling used by pyro
@@ -443,8 +449,9 @@ class Repository(object):
             self.schema.__hashmode__ = None
 
     def get_cubes(self):
-        """return the list of cubes used by this instance. This is a
-        public method, not requiring a session id.
+        """Return the list of cubes used by this instance.
+
+        This is a public method, not requiring a session id.
         """
         versions = self.get_versions(not (self.config.creating
                                           or self.config.repairing
@@ -456,9 +463,10 @@ class Repository(object):
 
     @cached
     def get_versions(self, checkversions=False):
-        """return the a dictionary containing cubes used by this instance
-        as key with their version as value, including cubicweb version. This is a
-        public method, not requiring a session id.
+        """Return the a dictionary containing cubes used by this instance
+        as key with their version as value, including cubicweb version.
+
+        This is a public method, not requiring a session id.
         """
         from logilab.common.changelog import Version
         vcconf = {}
@@ -488,6 +496,11 @@ class Repository(object):
 
     @cached
     def source_defs(self):
+        """Return the a dictionary containing source uris as value and a
+        dictionary describing each source as value.
+
+        This is a public method, not requiring a session id.
+        """
         sources = self.config.sources().copy()
         # remove manager information
         sources.pop('admin', None)
@@ -499,7 +512,10 @@ class Repository(object):
         return sources
 
     def properties(self):
-        """return a result set containing system wide properties"""
+        """Return a result set containing system wide properties.
+
+        This is a public method, not requiring a session id.
+        """
         session = self.internal_session()
         try:
             # don't use session.execute, we don't want rset.req set
