@@ -461,6 +461,14 @@ class Repository(object):
         cubes.remove('cubicweb')
         return cubes
 
+    def get_option_value(self, option):
+        """Return the value for `option` in the configuration.
+
+        This is a public method, not requiring a session id.
+        """
+        # XXX we may want to check we don't give sensible information
+        return self.config[option]
+
     @cached
     def get_versions(self, checkversions=False):
         """Return the a dictionary containing cubes used by this instance

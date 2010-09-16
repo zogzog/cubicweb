@@ -639,6 +639,11 @@ class Connection(object):
         return self._repo.get_schema()
 
     @check_not_closed
+    def get_option_value(self, option):
+        """return the value for `option` in the repository configuration."""
+        return self._repo.get_option_value(option)
+
+    @check_not_closed
     def describe(self, eid):
         return self._repo.describe(self.sessionid, eid, **self._txid())
 
