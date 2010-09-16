@@ -159,7 +159,7 @@ class PrimaryView(EntityView):
                 try:
                     rview = self._cw.vreg['views'].select(
                         vid, self._cw, rset=entity.cw_rset, row=entity.cw_row,
-                        col=entity.cw_col, dispctrl=dispctrl)
+                        col=entity.cw_col, dispctrl=dispctrl, rtype=rschema, role=role)
                 except NoSelectableObject:
                     continue
                 self.w(u'<div class="section">')
