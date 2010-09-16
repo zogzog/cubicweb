@@ -62,6 +62,8 @@ SCHEMA_TYPES = set((
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
     'constraint_of', 'relations',
+    'read_permission', 'add_permission',
+    'delete_permission', 'update_permission',
     ))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
@@ -613,6 +615,7 @@ class CubicWebSchema(Schema):
 class BaseRQLConstraint(BaseConstraint):
     """base class for rql constraints
     """
+    distinct_query = None
 
     def __init__(self, restriction, mainvars=None):
         self.restriction = normalize_expression(restriction)
@@ -652,8 +655,12 @@ class BaseRQLConstraint(BaseConstraint):
         pass # this is a vocabulary constraint, not enforce XXX why?
 
     def __str__(self):
-        return '%s(Any %s WHERE %s)' % (self.__class__.__name__, self.mainvars,
-                                        self.restriction)
+        if self.distinct_query:
+            selop = 'Any'
+        else:
+            selop = 'DISTINCT Any'
+        return '%s(%s %s WHERE %s)' % (self.__class__.__name__, selop,
+                                       self.mainvars, self.restriction)
 
     def __repr__(self):
         return '<%s @%#x>' % (self.__str__(), id(self))
@@ -745,13 +752,14 @@ class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
 
 class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """the unique rql constraint check that the result of the query isn't
-    greater than one
-    """
-    distinct_query = True
+    greater than one.
 
-    # XXX turns mainvars into a required argument in __init__, since we've no
-    #     way to guess it correctly (eg if using S,O or U the constraint will
-    #     always be satisfied since we've to use a DISTINCT query)
+    You *must* specify mainvars when instantiating the constraint since there is
+    no way to guess it correctly (e.g. if using S,O or U the constraint will
+    always be satisfied because we've to use a DISTINCT query).
+    """
+    # XXX turns mainvars into a required argument in __init__
+    distinct_query = True
 
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1

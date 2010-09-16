@@ -24,7 +24,7 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.utils import support_args
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
@@ -161,13 +161,19 @@ class PrimaryView(EntityView):
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             if rschema.final or dispctrl.get('rtypevid'):
+                vid = dispctrl.get('vid', 'reledit')
+                try:
+                    rview = self._cw.vreg['views'].select(
+                        vid, self._cw, rset=entity.cw_rset, row=entity.cw_row,
+                        col=entity.cw_col, dispctrl=dispctrl, rtype=rschema, role=role)
+                except NoSelectableObject:
+                    continue
                 self.w(u'<div class="section">')
                 label = self._rel_label(entity, rschema, role, dispctrl)
                 if label:
                     self.w(u'<h4>%s</h4>' % label)
-                vid = dispctrl.get('vid', 'reledit')
-                entity.view(vid, rtype=rschema.type, role=role, w=self.w,
-                            initargs={'dispctrl': dispctrl})
+                rview.render(row=entity.cw_row, col=entity.cw_col, w=self.w,
+                             rtype=rschema.type, role=role)
                 self.w(u'</div>')
                 continue
             rset = self._relation_rset(entity, rschema, role, dispctrl)
@@ -248,10 +254,7 @@ class PrimaryView(EntityView):
                 if section == where:
                     matchtschemas.append(tschema)
             if matchtschemas:
-                # XXX pick the latest dispctrl
-                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role,
-                                                       matchtschemas[-1])
-
+                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role, '*')
                 rdefs.append( (rschema, matchtschemas, role, dispctrl) )
         return sorted(rdefs, key=lambda x: x[-1]['order'])
 
@@ -337,6 +340,28 @@ class URLAttributeView(EntityView):
         url = entity.printable_value(rtype)
         if url:
             self.w(u'<a href="%s">%s</a>' % (url, url))
+
+class AttributeView(EntityView):
+    """use this view on an entity as an alternative to more sophisticated
+    views such as reledit.
+
+    Ex. usage:
+
+    uicfg.primaryview_display_ctrl.tag_attribute(('Foo', 'bar'), {'vid': 'attribute'})
+    """
+    __regid__ = 'attribute'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def cell_call(self, row, col, rtype, **kwargs):
+        entity = self.cw_rset.get_entity(row, col)
+        if self._cw.vreg.schema.rschema(rtype).final:
+            self.w(entity.printable_value(rtype))
+        else:
+            dispctrl = uicfg.primaryview_display_ctrl.etype_get(
+                entity.e_schema, rtype, kwargs['role'], '*')
+            rset = entity.related(rtype, role)
+            if rset:
+                self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})
 
 
 ## default primary ui configuration ###########################################

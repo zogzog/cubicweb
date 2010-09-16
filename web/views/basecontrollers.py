@@ -260,9 +260,8 @@ class FormValidatorController(Controller):
 def optional_kwargs(extraargs):
     if extraargs is None:
         return {}
-    else: # we receive unicode keys which is not supported by the **syntax
-        return dict((str(key), value)
-                    for key, value in extraargs.items())
+    # we receive unicode keys which is not supported by the **syntax
+    return dict((str(key), value) for key, value in extraargs.iteritems())
 
 class JSonController(Controller):
     __regid__ = 'json'
@@ -334,6 +333,9 @@ class JSonController(Controller):
 
     def _exec(self, rql, args=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
+        rql = rql.strip()
+        if rql.startswith('rql:'):
+            rql = rql[4:]
         if rocheck:
             self._cw.ensure_ro_rql(rql)
         try:
@@ -344,7 +346,7 @@ class JSonController(Controller):
         return None
 
     def _call_view(self, view, paginate=False, **kwargs):
-        divid = self._cw.form.get('divid', 'pageContent')
+        divid = self._cw.form.get('divid')
         # we need to call pagination before with the stream set
         try:
             stream = view.set_stream()
@@ -352,23 +354,26 @@ class JSonController(Controller):
             stream = UStringIO()
             kwargs['w'] = stream.write
             assert not paginate
+        if divid == 'pageContent':
+            # ensure divid isn't reused by the view (e.g. table view)
+            del self._cw.form['divid']
+            # mimick main template behaviour
+            stream.write(u'<div id="pageContent">')
+            vtitle = self._cw.form.get('vtitle')
+            if vtitle:
+                stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+            paginate = True
         if paginate:
-            if divid == 'pageContent':
-                # mimick main template behaviour
-                stream.write(u'<div id="pageContent">')
-                vtitle = self._cw.form.get('vtitle')
-                if vtitle:
-                    stream.write(u'<div class="vtitle">%s</div>\n' % vtitle)
             view.paginate()
-            if divid == 'pageContent':
-                stream.write(u'<div id="contentmain">')
+        if divid == 'pageContent':
+            stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
         extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
             stream.write(extresources)
             stream.write(u'</div>\n')
-        if paginate and divid == 'pageContent':
+        if divid == 'pageContent':
             stream.write(u'</div></div>')
         return stream.getvalue()
 
@@ -390,7 +395,7 @@ class JSonController(Controller):
             vid = req.form.get('fallbackvid', 'noresult')
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
         self.validate_cache(view)
-        return self._call_view(view, paginate=req.form.get('paginate'))
+        return self._call_view(view, paginate=req.form.pop('paginate', False))
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
@@ -411,11 +416,6 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        if extraargs is None:
-            extraargs = {}
-        else: # we receive unicode keys which is not supported by the **syntax
-            extraargs = dict((str(key), value)
-                             for key, value in extraargs.items())
         # XXX while it sounds good, addition of the try/except below cause pb:
         # when filtering using facets return an empty rset, the edition box
         # isn't anymore selectable, as expected. The pb is that with the
@@ -425,21 +425,22 @@ class JSonController(Controller):
         # error is expected and should'nt be reported.
         #try:
         comp = self._cw.vreg[registry].select(compid, self._cw, rset=rset,
-                                              **extraargs)
+                                              **optional_kwargs(extraargs))
         #except NoSelectableObject:
         #    raise RemoteCallFailed('unselectable')
         return self._call_view(comp, **extraargs)
 
     @xhtmlize
-    def js_render(self, registry, oid, eid=None, selectargs=None, renderargs=None):
+    def js_render(self, registry, oid, eid=None,
+                  selectargs=None, renderargs=None):
         if eid is not None:
             rset = self._cw.eid_rset(eid)
         elif self._cw.form.get('rql'):
             rset = self._cw.execute(self._cw.form['rql'])
         else:
             rset = None
-        selectargs = optional_kwargs(selectargs)
-        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset, **selectargs)
+        view = self._cw.vreg[registry].select(oid, self._cw, rset=rset,
+                                              **optional_kwargs(selectargs))
         return self._call_view(view, **optional_kwargs(renderargs))
 
     @check_pageid

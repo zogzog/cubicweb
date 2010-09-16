@@ -677,6 +677,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         etype = elements[0]
                         rtypes = elements[1:]                        
                         raise UniqueTogetherError(etype, rtypes)
+                    mo = re.search('columns (.*) are not unique', arg)
+                    if mo is not None: # sqlite in use
+                        rtypes = [c.strip().lstrip('cw_') for c in mo.group(1).split(',')]
+                        etype = '???'
+                        raise UniqueTogetherError(etype, rtypes)
             raise
         return cursor
 

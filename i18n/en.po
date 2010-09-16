@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2010-05-16 18:58+0200\n"
+"PO-Revision-Date: 2010-09-15 14:55+0200\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "Language: en\n"
@@ -317,6 +317,12 @@ msgstr "Relation"
 msgid "CWRelation_plural"
 msgstr "Relations"
 
+msgid "CWUniqueTogetherConstraint"
+msgstr ""
+
+msgid "CWUniqueTogetherConstraint_plural"
+msgstr ""
+
 msgid "CWUser"
 msgstr "User"
 
@@ -495,6 +501,9 @@ msgstr "New relation type"
 
 msgid "New CWRelation"
 msgstr "New relation"
+
+msgid "New CWUniqueTogetherConstraint"
+msgstr ""
 
 msgid "New CWUser"
 msgstr "New user"
@@ -685,6 +694,9 @@ msgstr "This relation type"
 
 msgid "This CWRelation"
 msgstr "This relation"
+
+msgid "This CWUniqueTogetherConstraint"
+msgstr ""
 
 msgid "This CWUser"
 msgstr "This user"
@@ -879,6 +891,9 @@ msgstr "read rql expression"
 
 msgid "add CWRelation relation_type CWRType object"
 msgstr "relation definition"
+
+msgid "add CWUniqueTogetherConstraint constraint_of CWEType object"
+msgstr ""
 
 msgid "add CWUser in_group CWGroup object"
 msgstr "user"
@@ -1436,6 +1451,20 @@ msgstr "constraints"
 msgid "constraint factory"
 msgstr ""
 
+msgid "constraint_of"
+msgstr ""
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "constraint_of"
+msgstr ""
+
+msgid "constraint_of_object"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "constraint_of_object"
+msgstr ""
+
 msgid "constraints"
 msgstr ""
 
@@ -1558,6 +1587,11 @@ msgstr "creating property for user %(linkto)s"
 
 msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "creating relation %(linkto)s"
+
+msgid ""
+"creating CWUniqueTogetherConstraint (CWUniqueTogetherConstraint "
+"constraint_of CWEType %(linkto)s)"
+msgstr ""
 
 msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "creating a new user in group %(linkto)s"
@@ -1798,6 +1832,9 @@ msgid "define an entity type, used to build the instance schema"
 msgstr ""
 
 msgid "define how we get out from a sub-workflow"
+msgstr ""
+
+msgid "defines a sql-level multicolumn unique index"
 msgstr ""
 
 msgid ""
@@ -3116,7 +3153,25 @@ msgctxt "CWRType"
 msgid "relation_type_object"
 msgstr "relation definitions"
 
+msgid "relations"
+msgstr ""
+
+msgctxt "CWUniqueTogetherConstraint"
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
+msgstr ""
+
+msgid "relations_object"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "relations_object"
+msgstr ""
+
+msgctxt "CWRelation"
+msgid "relations_object"
 msgstr ""
 
 msgid "relative url of the bookmarked page"
@@ -3897,6 +3952,10 @@ msgstr ""
 
 msgid "view_index"
 msgstr "index"
+
+#, python-format
+msgid "violates unique_together constraints (%s)"
+msgstr "violates unique_together constraints (%s)"
 
 msgid "visible"
 msgstr ""

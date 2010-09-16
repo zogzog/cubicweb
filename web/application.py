@@ -420,11 +420,12 @@ class CubicWebPublisher(object):
                 self.validation_error_handler(req, ex)
             except (Unauthorized, BadRQLQuery, RequestError), ex:
                 self.error_handler(req, ex, tb=False)
-            except Exception, ex:
+            except BaseException, ex:
                 self.error_handler(req, ex, tb=True)
             except:
                 self.critical('Catch all triggered!!!')
                 self.exception('this is what happened')
+                result = 'oops'
         finally:
             if req.cnx and not commited:
                 try:

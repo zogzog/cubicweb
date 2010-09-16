@@ -140,11 +140,11 @@ class TableView(AnyRsetView):
         if mainindex is None:
             displayfilter, displayactions = False, False
         else:
-            if displayfilter is None and 'displayfilter' in req.form:
+            if displayfilter is None and req.form.get('displayfilter'):
                 displayfilter = True
                 if req.form['displayfilter'] == 'shown':
                     hidden = False
-            if displayactions is None and 'displayactions' in req.form:
+            if displayactions is None and req.form.get('displayactions'):
                 displayactions = True
         displaycols = self.displaycols(displaycols, headers)
         fromformfilter = 'fromformfilter' in req.form
@@ -187,14 +187,9 @@ class TableView(AnyRsetView):
 
     def page_navigation_url(self, navcomp, path, params):
         if hasattr(self, 'divid'):
-            divid = self.divid
-        else:
-            divid = params.get('divid', 'pageContent'),
-        rql = params.pop('rql', self.cw_rset.printable_rql())
-        # latest 'true' used for 'swap' mode
-        return 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-            json_dumps(divid), json_dumps(rql), json_dumps(self.__regid__),
-            json_dumps(params))
+            params['divid'] = self.divid
+        params['vid'] = self.__regid__
+        return navcomp.ajax_page_url(**params)
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
@@ -324,7 +319,8 @@ class InitialTableView(TableView):
     title = None
 
     def call(self, title=None, subvid=None, headers=None, divid=None,
-             paginate=False, displaycols=None, displayactions=None, mainindex=None):
+             paginate=False, displaycols=None, displayactions=None,
+             mainindex=None):
         """Dumps a table displaying a composite query"""
         try:
             actrql = self._cw.form['actualrql']
@@ -347,7 +343,8 @@ class InitialTableView(TableView):
             mainindex = self.main_var_index()
         if mainindex is not None:
             actions = self.form_filter(divid, displaycols, displayactions,
-                                       displayfilter=True, paginate=paginate, hidden=True)
+                                       displayfilter=True, paginate=paginate,
+                                       hidden=True)
         else:
             actions = ()
         if not subvid and 'subvid' in self._cw.form:

@@ -84,7 +84,7 @@ def vid_from_rset(req, rset, schema):
             return VID_BY_MIMETYPE[mimetype]
     nb_rows = len(rset)
     # empty resultset
-    if nb_rows == 0 :
+    if nb_rows == 0:
         return 'noresult'
     # entity result set
     if not schema.eschema(rset.description[0][0]).final:

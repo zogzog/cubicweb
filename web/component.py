@@ -27,6 +27,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, role, tags
 from cubicweb.uilib import js, domid
+from cubicweb.utils import json_dumps
 from cubicweb.view import ReloadableMixIn, Component
 from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
                                 non_final_entity, partial_relation_possible,
@@ -106,17 +107,23 @@ class NavigationComponent(Component):
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
         elif path == 'json':
-            rql = params.pop('rql', self.cw_rset.printable_rql())
-            # latest 'true' used for 'swap' mode
-            url = 'javascript: %s' % (js.replacePageChunk(
-                params.get('divid', 'pageContent'), rql,
-                params.pop('vid', None), params))
+            url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
         return url
 
+    def ajax_page_url(self, **params):
+        divid = params.setdefault('divid', 'pageContent')
+        params['rql'] = self.cw_rset.printable_rql()
+        return "javascript: $(%s).loadxhtml('json', %s, 'get', 'swap')" % (
+            json_dumps('#'+divid), js.ajaxFuncArgs('view', params))
+
     def page_link(self, path, params, start, stop, content):
         url = xml_escape(self.page_url(path, params, start, stop))
+        # XXX hack to avoid opening a new page containing the evaluation of the
+        # js expression on ajax call
+        if url.startswith('javascript:'):
+            url += '; noop();'
         if start == self.starting_from:
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)

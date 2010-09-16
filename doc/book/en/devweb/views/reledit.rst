@@ -70,12 +70,23 @@ The behaviour of reledited attributes/relations can be finely
 controlled using the reledit_ctrl rtag, defined in
 :mod:`cubicweb.web.uicfg`.
 
-This rtag provides three control variables:
+This rtag provides four control variables:
 
-* ``default_value``
-* ``reload``, to specificy if edition of the relation entails a full page
-  reload, which defaults to False
-* ``noedit``, to explicitly inhibit edition
+* ``default_value``: alternative default value
+   The default value is what is shown when there is no value.
+* ``reload``: boolean, eid (to reload to) or function taking subject
+   and returning bool/eid This is useful when editing a relation (or
+   attribute) that impacts the url or another parts of the current
+   displayed page. Defaults to false.
+* ``rvid``: alternative view id (as str) for relation or composite
+   edition Default is 'incontext' or 'csv' depending on the
+   cardinality. They can also be statically changed by subclassing
+   ClickAndEditFormView and redefining _one_rvid (resp. _many_rvid).
+* ``edit_target``: 'rtype' (to edit the relation) or 'related' (to
+   edit the related entity) This controls whether to edit the relation
+   or the target entity of the relation.  Currently only one-to-one
+   relations support target entity edition. By default, the 'related'
+   option is taken whenever the relation is composite and one-to-one.
 
 Let's see how to use these controls.
 
@@ -86,15 +97,13 @@ Let's see how to use these controls.
     reledit_ctrl.tag_attribute(('Company', 'name'),
                                {'reload': lambda x:x.eid,
                                 'default_value': xml_escape(u'<logilab tastes better>')})
-    reledit_ctrl.tag_object_of(('*', 'boss', 'Person'), {'noedit': True})
+    reledit_ctrl.tag_object_of(('*', 'boss', 'Person'), {'edit_target': 'related'})
 
 The `default_value` needs to be an xml escaped unicode string.
 
-The `noedit` attribute is convenient to programmatically disable some
-relation edition on views that apply it systematically (the prime
-example being the primary view). Here we use it to forbid changing the
-`boss` relation from a `Person` side (as it could have unwanted
-effects).
+The `edit_target` tag on the `boss` relation being set to `related` will
+ensure edition of the `Person` entity instead (using a standard
+automatic form) of the association of Company and Person.
 
 Finally, the `reload` key accepts either a boolean, an eid or an
 unicode string representing an url. If an eid is provided, it will be

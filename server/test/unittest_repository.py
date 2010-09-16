@@ -627,6 +627,18 @@ class InlineRelHooksTC(CubicWebTC):
             self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
                                        ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
+    def test_unique_contraint(self):
+        req = self.request()
+        toto = req.create_entity('Personne', nom=u'toto')
+        a01 = req.create_entity('Affaire', ref=u'A01', todo_by=toto)
+        req.cnx.commit()
+        req = self.request()
+        req.create_entity('Note', type=u'todo', inline1=a01)
+        req.cnx.commit()
+        req = self.request()
+        req.create_entity('Note', type=u'todo', inline1=a01)
+        ex = self.assertRaises(ValidationError, req.cnx.commit)
+        self.assertEquals(ex.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
 if __name__ == '__main__':
     unittest_main()

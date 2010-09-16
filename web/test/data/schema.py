@@ -75,3 +75,19 @@ class Societe(EntityType):
     cp   = String(maxsize=12)
     ville= String(maxsize=32)
 
+# enough relations to cover most reledit use cases
+class Project(EntityType):
+    title = String(maxsize=32, required=True, fulltextindexed=True)
+    long_desc = SubjectRelation('Blog', composite='subject', cardinality='?*')
+    manager = SubjectRelation('Personne', cardinality='?*')
+
+class composite_card11_2ttypes(RelationDefinition):
+    subject = 'Project'
+    object = ('File', 'Blog')
+    composite = 'subject'
+    cardinality = '?*'
+
+class Ticket(EntityType):
+    title = String(maxsize=32, required=True, fulltextindexed=True)
+    concerns = SubjectRelation('Project', composite='object')
+

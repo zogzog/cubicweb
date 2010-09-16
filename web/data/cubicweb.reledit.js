@@ -53,6 +53,7 @@ jQuery.extend(cw.reledit, {
             }
         }
         jQuery('#'+params.divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, params, 'post');
+        jQuery(cw).trigger('reledit-reloaded', params);
     },
 
     /* called by reledit forms to submit changes

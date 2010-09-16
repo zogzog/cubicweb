@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 9, 6)
+numversion = (3, 9, 7)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
@@ -57,7 +57,7 @@ __depends__ = {
     }
 
 __recommends__ = {
-    'Pyro': '>= 3.9.1',
+    'Pyro': '>= 3.9.1, < 4.0.0',
     'PIL': '',                  # for captcha
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
