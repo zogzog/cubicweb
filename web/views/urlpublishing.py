@@ -179,10 +179,19 @@ class RestPathEvaluator(URLPathEvaluator):
             return self.handle_etype_attr(req, cls, attrname, value)
         return self.handle_etype(req, cls)
 
-    def handle_etype(self, req, cls):
-        rset =  req.execute(cls.fetch_rql(req.user))
+    def set_vid_for_rset(self, req, cls, rset):# cls is there to ease overriding
         if rset.rowcount == 0:
             raise NotFound()
+        # we've to set a default vid here, since vid_from_rset may try to use a
+        # table view if fetch_rql include some non final relation
+        if rset.rowcount == 1:
+            req.form.setdefault('vid', 'primary')
+        else: # rset.rowcount >= 1
+            req.form.setdefault('vid', 'sameetypelist')
+
+    def handle_etype(self, req, cls):
+        rset = req.execute(cls.fetch_rql(req.user))
+        self.set_vid_for_rset(req, cls, rset)
         return None, rset
 
     def handle_etype_attr(self, req, cls, attrname, value):
@@ -196,8 +205,7 @@ class RestPathEvaluator(URLPathEvaluator):
                 raise PathDontMatch()
         else:
             rset = req.execute(rql, {'x': value})
-        if rset.rowcount == 0:
-            raise NotFound()
+        self.set_vid_for_rset(req, cls, rset)
         return None, rset
 
 
