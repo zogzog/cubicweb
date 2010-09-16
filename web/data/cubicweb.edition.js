@@ -317,7 +317,7 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
         form.insertBefore(insertBefore).slideDown('fast');
         updateInlinedEntitiesCounters(rtype, role);
         reorderTabindex(null, $(insertBefore).closest('form')[0]);
-        jQuery(CubicWeb).trigger('inlinedform-added', form);
+        jQuery(cw).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
         // the form enctype to multipart/form-data
         if (form.find('input:file').length) {

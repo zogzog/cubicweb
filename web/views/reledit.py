@@ -315,17 +315,16 @@ class ClickAndEditFormView(EntityView):
                                         _should_edit_attribute)
 
     def _should_edit_relation(self, entity, rschema, role):
-        # examine rtags
-        rtype = rschema.type
-        rdef = entity.e_schema.rdef(rschema, role)
-        perm_args = {'fromeid': entity.eid} if role == 'subject' else {'toeid': entity.eid}
+        eeid = entity.eid
+        perm_args = {'fromeid': eeid} if role == 'subject' else {'toeid': eeid}
         return rschema.has_perm(self._cw, 'add', **perm_args)
 
     should_edit_relations = deprecated('[3.9] should_edit_relations is deprecated,'
                                        ' use _should_edit_relation instead',
                                        _should_edit_relation)
 
-    def _open_form_wrapper(self, divid, value, form, renderer):
+    def _open_form_wrapper(self, divid, value, form, renderer,
+                           _edit_related, _add_related, _delete_related):
         w = self.w
         w(u'<div id="%(id)s-reledit" onmouseout="%(out)s" onmouseover="%(over)s" class="%(css)s">' %
           {'id': divid, 'css': 'releditField',
@@ -337,33 +336,45 @@ class ClickAndEditFormView(EntityView):
         w(form.render(renderer=renderer))
         w(u'<div id="%s" class="editableField hidden">' % divid)
 
+    def _edit_action(self, divid, args, edit_related, add_related, _delete_related):
+        if not add_related: # currently, excludes edition
+            w = self.w
+            args['formid'] = 'edition' if edit_related else 'base'
+            w(u'<div id="%s-update" class="editableField" onclick="%s" title="%s">' %
+              (divid, xml_escape(self._onclick % args), self._cw._(self._editzonemsg)))
+            w(self._build_edit_zone())
+            w(u'</div>')
+
+    def _add_action(self, divid, args, _edit_related, add_related, _delete_related):
+        if add_related:
+            w = self.w
+            args['formid'] = 'edition' if add_related else 'base'
+            w(u'<div id="%s-add" class="editableField" onclick="%s" title="%s">' %
+              (divid, xml_escape(self._onclick % args), self._cw._(self._addmsg)))
+            w(self._build_add_zone())
+            w(u'</div>')
+
+    def _del_action(self, divid, args, _edit_related, _add_related, delete_related):
+        if delete_related:
+            w = self.w
+            args['formid'] = 'deleteconf'
+            w(u'<div id="%s-delete" class="editableField" onclick="%s" title="%s">' %
+              (divid, xml_escape(self._onclick % args), self._cw._(self._deletemsg)))
+            w(self._build_delete_zone())
+            w(u'</div>')
+
     def _close_form_wrapper(self):
         self.w(u'</div>')
         self.w(u'</div>')
 
     def view_form(self, divid, value, form=None, renderer=None,
                   edit_related=False, add_related=False, delete_related=False):
-        self._open_form_wrapper(divid, value, form, renderer)
-        w = self.w
+        self._open_form_wrapper(divid, value, form, renderer,
+                                edit_related, add_related, delete_related)
         args = form.event_args.copy()
-        if not add_related: # currently, excludes edition
-            args['formid'] = 'edition' if edit_related else 'base'
-            w(u'<div id="%s-update" class="editableField" onclick="%s" title="%s">' %
-              (divid, xml_escape(self._onclick % args), self._cw._(self._editzonemsg)))
-            w(self._build_edit_zone())
-            w(u'</div>')
-        else:
-            args['formid'] = 'edition' if add_related else 'base'
-            w(u'<div id="%s-add" class="editableField" onclick="%s" title="%s">' %
-              (divid, xml_escape(self._onclick % args), self._cw._(self._addmsg)))
-            w(self._build_add_zone())
-            w(u'</div>')
-        if delete_related:
-            args['formid'] = 'deleteconf'
-            w(u'<div id="%s-delete" class="editableField" onclick="%s" title="%s">' %
-              (divid, xml_escape(self._onclick % args), self._cw._(self._deletemsg)))
-            w(self._build_delete_zone())
-            w(u'</div>')
+        self._edit_action(divid, args, edit_related, add_related, delete_related)
+        self._add_action(divid, args, edit_related, add_related, delete_related)
+        self._del_action(divid, args, edit_related, add_related, delete_related)
         self._close_form_wrapper()
 
 
