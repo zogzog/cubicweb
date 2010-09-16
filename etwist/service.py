@@ -72,7 +72,7 @@ class CWService(object, win32serviceutil.ServiceFramework):
             # create the site
             config = cwcfg.config_for(self.instance)
             config.init_log(force=True)
-            config.debug = False
+            config.debugmode = False
             logger.info('starting cubicweb instance %s ', self.instance)
             root_resource = CubicWebRootResource(config)
             website = server.Site(root_resource)
