@@ -434,6 +434,7 @@ class CubicWebPublisher(object):
             except:
                 self.critical('Catch all triggered!!!')
                 self.exception('this is what happened')
+                result = 'oops'
         finally:
             if req.cnx and not commited:
                 try:
