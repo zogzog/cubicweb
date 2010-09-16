@@ -140,11 +140,11 @@ class TableView(AnyRsetView):
         if mainindex is None:
             displayfilter, displayactions = False, False
         else:
-            if displayfilter is None and 'displayfilter' in req.form:
+            if displayfilter is None and req.form.get('displayfilter'):
                 displayfilter = True
                 if req.form['displayfilter'] == 'shown':
                     hidden = False
-            if displayactions is None and 'displayactions' in req.form:
+            if displayactions is None and req.form.get('displayactions'):
                 displayactions = True
         displaycols = self.displaycols(displaycols, headers)
         fromformfilter = 'fromformfilter' in req.form
