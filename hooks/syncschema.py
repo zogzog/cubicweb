@@ -34,8 +34,8 @@ from logilab.common.testlib import mock_object
 
 from cubicweb import ValidationError
 from cubicweb.selectors import is_instance
-from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES, CONSTRAINTS,
-                             ETYPE_NAME_MAP, display_name)
+from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
+                             CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
 
@@ -52,16 +52,9 @@ TYPE_CONVERTER = { # XXX
     }
 
 # core entity and relation types which can't be removed
-CORE_ETYPES = list(BASE_TYPES) + ['CWEType', 'CWRType', 'CWUser', 'CWGroup',
-                                  'CWConstraint', 'CWAttribute', 'CWRelation']
-CORE_RTYPES = ['eid', 'creation_date', 'modification_date', 'cwuri',
-               'login', 'upassword', 'name',
-               'is', 'instanceof', 'owned_by', 'created_by', 'in_group',
-               'relation_type', 'from_entity', 'to_entity',
-               'constrainted_by',
-               'read_permission', 'add_permission',
-               'delete_permission', 'updated_permission',
-               ]
+CORE_TYPES = BASE_TYPES | SCHEMA_TYPES | META_RTYPES | set(
+    ('CWUser', 'CWGroup','login', 'upassword', 'name', 'in_group'))
+
 
 def get_constraints(session, entity):
     constraints = []
@@ -875,7 +868,7 @@ class DelCWETypeHook(SyncSchemaHook):
     def __call__(self):
         # final entities can't be deleted, don't care about that
         name = self.entity.name
-        if name in CORE_ETYPES:
+        if name in CORE_TYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete every entities of this type
         if not name in ETYPE_NAME_MAP:
@@ -941,7 +934,7 @@ class DelCWRTypeHook(SyncSchemaHook):
 
     def __call__(self):
         name = self.entity.name
-        if name in CORE_RTYPES:
+        if name in CORE_TYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete relation definitions using this relation type
         self._cw.execute('DELETE CWAttribute X WHERE X relation_type Y, Y eid %(x)s',
