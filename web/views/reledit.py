@@ -177,8 +177,10 @@ class ClickAndEditFormView(EntityView):
         if ctrl_default:
             return ctrl_default
         if default_value is None:
-            return xml_escape(self._cw._('<%s not specified>') %
-                              display_name(self._cw, rschema.type, role))
+            if self._rules.get('default_showlabel'):
+                return xml_escape(self._cw._('<%s not specified>') %
+                                  display_name(self._cw, rschema.type, role))
+            return xml_escape(self._cw._('<not specified>'))
         return default_value
 
     def _is_composite(self):
@@ -247,11 +249,10 @@ class ClickAndEditFormView(EntityView):
         return display_label, related_entity
 
     def _prepare_composite_form(self, entity, rtype, role, edit_related, add_related):
+        display_label = True
         if edit_related and not add_related:
-            display_label = True
             related_entity = entity.related(rtype, role).get_entity(0, 0)
         elif add_related:
-            display_label = True
             _new_entity = self._cw.vreg['etypes'].etype_class(add_related)(self._cw)
             _new_entity.eid = self._cw.varmaker.next()
             related_entity = _new_entity
