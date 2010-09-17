@@ -153,18 +153,6 @@ class ClickAndEditFormView(EntityView):
     def _compute_best_vid(self, eschema, rschema, role):
         vid = self._rules.get('rvid', None)
         if vid is None:
-            try:
-                if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
-                    vid = self._many_rvid
-                    warn('[3.9] %s overriding _one_rvid is deprecated, use '
-                         'reledit_ctrl rtag to control this' % self, DeprecationWarning)
-                else:
-                    vid = self._one_rvid
-                    warn('[3.9] %s overriding _many_rvid is deprecated, use '
-                         'reledit_ctrl rtag to control this' % self, DeprecationWarning)
-            except AttributeError:
-                pass
-        if vid is None:
             vid = 'autolimited'
         return vid
 
