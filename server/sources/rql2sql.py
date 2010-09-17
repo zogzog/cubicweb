@@ -1141,11 +1141,11 @@ class SQLGenerator(object):
 
     def visit_constant(self, constant):
         """generate SQL name for a constant"""
-        value = constant.value
         if constant.type is None:
             return 'NULL'
+        value = constant.value
         if constant.type == 'Int' and  isinstance(constant.parent, SortTerm):
-            return constant.value
+            return value
         if constant.type in ('Date', 'Datetime'):
             rel = constant.relation()
             if rel is not None:
@@ -1158,7 +1158,7 @@ class SQLGenerator(object):
                 # we may found constant from simplified var in varmap
                 return self._mapped_term(constant, '%%(%s)s' % value)[0]
             except KeyError:
-                _id = constant.value
+                _id = value
                 if isinstance(_id, unicode):
                     _id = _id.encode()
         else:
