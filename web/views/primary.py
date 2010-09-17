@@ -301,14 +301,15 @@ class RelatedView(EntityView):
     def call(self, **kwargs):
         if 'dispctrl' in self.cw_extra_kwargs:
             limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            list_limit = self.cw_extra_kwargs['dispctrl'].get('use_list_limit', 5)
             subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
-            limit = None
+            limit = list_limit = None
             subvid = 'incontext'
         if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
                 self.wview(subvid, self.cw_rset, row=0)
-            elif 1 < self.cw_rset.rowcount <= 5:
+            elif list_limit is None or 1 < self.cw_rset.rowcount <= list_limit:
                 self.wview('csv', self.cw_rset, subvid=subvid)
             else:
                 self.w(u'<div>')
@@ -318,12 +319,18 @@ class RelatedView(EntityView):
         else:
             rql = self.cw_rset.printable_rql()
             self.cw_rset.limit(limit) # remove extra entity
-            self.w(u'<div>')
-            self.wview('simplelist', self.cw_rset, subvid=subvid)
-            self.w(u'[<a href="%s">%s</a>]' % (
-                xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
-                self._cw._('see them all')))
-            self.w(u'</div>')
+            if list_limit is None:
+                self.wview('csv', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+            else:
+                self.w(u'<div>')
+                self.wview('simplelist', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+                self.w(u'</div>')
 
 
 class URLAttributeView(EntityView):
