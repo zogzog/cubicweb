@@ -262,8 +262,7 @@ class SQLAdapterMixIn(object):
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
             value = entity[attr]
-            rschema = eschema.subjrels[attr]
-            if rschema.final:
+            if value is not None and eschema.subjrels[attr].final:
                 atype = str(entity.e_schema.destination(attr))
                 if atype == 'Boolean':
                     value = self.dbhelper.boolean_value(value)
