@@ -871,6 +871,15 @@ class BooleanField(Field):
         # XXX empty string for 'no' in that case for bw compat
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
+    def format_single_value(self, req, value):
+        """return value suitable for display"""
+        if self.allow_none:
+            if value is None:
+                return u''
+            if value is False:
+                return '0'
+        return super(BooleanField, self).format_single_value(req, value)
+
     def _ensure_correctly_typed(self, form, value):
         if self.allow_none:
             if value:
