@@ -458,7 +458,7 @@ class JSonController(Controller):
     def js_reledit_form(self):
         req = self._cw
         args = dict((x, req.form[x])
-                    for x in ('formid', 'rtype', 'role', 'reload', 'default_value'))
+                    for x in ('formid', 'rtype', 'role', 'reload'))
         rset = req.eid_rset(typed_eid(self._cw.form['eid']))
         try:
             args['reload'] = json.loads(args['reload'])

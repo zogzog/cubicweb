@@ -290,12 +290,15 @@ class PrimaryView(EntityView):
 
 
 class RelatedView(EntityView):
+    """Display a rset, usually containing entities linked to another entity
+    being displayed.
+
+    It will try to display nicely according to the number of items in the result
+    set.
+    """
     __regid__ = 'autolimited'
 
     def call(self, **kwargs):
-        # nb: rset is retreived using entity.related with limit + 1 if any.
-        # Because of that, we know that rset.printable_rql() will return rql
-        # with no limit set anyway (since it's handled manually)
         if 'dispctrl' in self.cw_extra_kwargs:
             limit = self.cw_extra_kwargs['dispctrl'].get('limit')
             subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')

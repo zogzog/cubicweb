@@ -19,6 +19,7 @@
 """
 
 import copy
+from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
@@ -49,7 +50,7 @@ class ClickAndEditFormView(EntityView):
 
     # ui side continuations
     _onclick = (u"cw.reledit.loadInlineEditionForm('%(formid)s', %(eid)s, '%(rtype)s', '%(role)s', "
-                "'%(divid)s', %(reload)s, '%(vid)s', '%(default_value)s');")
+                "'%(divid)s', %(reload)s, '%(vid)s');")
     _cancelclick = "cw.reledit.cleanupAfterCancel('%s')"
 
     # ui side actions/buttons
@@ -60,10 +61,6 @@ class ClickAndEditFormView(EntityView):
     _editzone = u'<img title="%(msg)s" src="data/pen_icon.png" alt="%(msg)s"/>'
     _editzonemsg = _('click to edit this field')
 
-    # default relation vids according to cardinality
-    # can be changed per rtype using reledit_ctrl rtag
-    _one_rvid = 'incontext'
-    _many_rvid = 'csv'
     # renderer
     _form_renderer_id = 'base'
 
@@ -83,53 +80,53 @@ class ClickAndEditFormView(EntityView):
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema[rtype]
         self._rules = rctrl.etype_get(entity.e_schema.type, rschema.type, role, '*')
+        if rvid is not None or default_value is not None:
+            warn('[3.9] specifying rvid/default_value on select is deprecated, '
+                 'reledit_ctrl rtag to control this' % self, DeprecationWarning)
         reload = self._compute_reload(entity, rschema, role, reload)
-        default_value = self._compute_default_value(entity, rschema, role, default_value)
         divid = self._build_divid(rtype, role, entity.eid)
         if rschema.final:
-            self._handle_attribute(entity, rschema, role, divid, reload, default_value)
+            self._handle_attribute(entity, rschema, role, divid, reload)
         else:
             if self._is_composite():
-                self._handle_composite(entity, rschema, role, divid, reload, default_value, formid)
+                self._handle_composite(entity, rschema, role, divid, reload, formid)
             else:
-                self._handle_relation(entity, rschema, role, divid, reload, default_value, formid)
+                self._handle_relation(entity, rschema, role, divid, reload, formid)
 
-    def _handle_attribute(self, entity, rschema, role, divid, reload, default_value):
+    def _handle_attribute(self, entity, rschema, role, divid, reload):
         rtype = rschema.type
         value = entity.printable_value(rtype)
         if not self._should_edit_attribute(entity, rschema):
             self.w(value)
             return
-
         display_label, related_entity = self._prepare_form(entity, rtype, role)
-        form, renderer = self._build_form(entity, rtype, role, divid, 'base', default_value,
+        form, renderer = self._build_form(entity, rtype, role, divid, 'base',
                                           reload, display_label, related_entity)
-        value = value or default_value
+        value = value or self._compute_default_value(rschema, role)
         self.view_form(divid, value, form, renderer)
 
-    def _compute_formid_value(self, entity, rschema, role, default_value, rvid, formid):
+    def _compute_formid_value(self, entity, rschema, role, rvid, formid):
         related_rset = entity.related(rschema.type, role)
         if related_rset:
             value = self._cw.view(rvid, related_rset)
         else:
-            value = default_value
+            value = self._compute_default_value(rschema, role)
         if not self._should_edit_relation(entity, rschema, role):
             return None, value
         return formid, value
 
-    def _handle_relation(self, entity, rschema, role, divid, reload, default_value, formid):
+    def _handle_relation(self, entity, rschema, role, divid, reload, formid):
         rvid = self._compute_best_vid(entity.e_schema, rschema, role)
-        formid, value = self._compute_formid_value(entity, rschema, role, default_value, rvid, formid)
+        formid, value = self._compute_formid_value(entity, rschema, role, rvid, formid)
         if formid is None:
             return self.w(value)
-
         rtype = rschema.type
         display_label, related_entity = self._prepare_form(entity, rtype, role)
-        form, renderer = self._build_form(entity, rtype, role, divid, formid, default_value, reload,
+        form, renderer = self._build_form(entity, rtype, role, divid, formid, reload,
                                           display_label, related_entity, dict(vid=rvid))
         self.view_form(divid, value, form, renderer)
 
-    def _handle_composite(self, entity, rschema, role, divid, reload, default_value, formid):
+    def _handle_composite(self, entity, rschema, role, divid, reload, formid):
         # this is for attribute-like composites (1 target type, 1 related entity at most, for now)
         ttypes = self._compute_ttypes(rschema, role)
         related_rset = entity.related(rschema.type, role)
@@ -138,7 +135,7 @@ class ClickAndEditFormView(EntityView):
         delete_related = edit_related and self._may_delete_related(related_rset, entity, rschema, role)
 
         rvid = self._compute_best_vid(entity.e_schema, rschema, role)
-        formid, value = self._compute_formid_value(entity, rschema, role, default_value, rvid, formid)
+        formid, value = self._compute_formid_value(entity, rschema, role, rvid, formid)
         if formid is None or not (edit_related or add_related):
             # till we learn to handle cases where not (edit_related or add_related)
             self.w(value)
@@ -148,16 +145,28 @@ class ClickAndEditFormView(EntityView):
         ttype = ttypes[0]
         _fdata = self._prepare_composite_form(entity, rtype, role, edit_related, add_related and ttype)
         display_label, related_entity = _fdata
-        form, renderer = self._build_form(entity, rtype, role, divid, formid, default_value, reload,
+        form, renderer = self._build_form(entity, rtype, role, divid, formid, reload,
                                           display_label, related_entity, dict(vid=rvid))
         self.view_form(divid, value, form, renderer,
                        edit_related, add_related, delete_related)
 
     def _compute_best_vid(self, eschema, rschema, role):
-        rvid = self._one_rvid
-        if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
-            rvid = self._many_rvid
-        return self._rules.get('rvid', rvid)
+        vid = self._rules.get('rvid', None)
+        if vid is None:
+            try:
+                if eschema.rdef(rschema, role).role_cardinality(role) in '+*':
+                    vid = self._many_rvid
+                    warn('[3.9] %s overriding _one_rvid is deprecated, use '
+                         'reledit_ctrl rtag to control this' % self, DeprecationWarning)
+                else:
+                    vid = self._one_rvid
+                    warn('[3.9] %s overriding _many_rvid is deprecated, use '
+                         'reledit_ctrl rtag to control this' % self, DeprecationWarning)
+            except AttributeError:
+                pass
+        if vid is None:
+            vid = 'autolimited'
+        return vid
 
     def _compute_ttypes(self, rschema, role):
         dual_role = neg_role(role)
@@ -171,17 +180,15 @@ class ClickAndEditFormView(EntityView):
             ctrl_reload = self._cw.build_url(ctrl_reload)
         return ctrl_reload
 
-    def _compute_default_value(self, entity, rschema, role, default_value):
-        etype = entity.e_schema.type
-        ctrl_default = self._rules.get('default_value', default_value)
-        if ctrl_default:
-            return ctrl_default
-        if default_value is None:
-            if self._rules.get('default_showlabel'):
-                return xml_escape(self._cw._('<%s not specified>') %
-                                  display_name(self._cw, rschema.type, role))
-            return xml_escape(self._cw._('<not specified>'))
-        return default_value
+    def _compute_default_value(self, rschema, role):
+        default = self._rules.get('novalue_label')
+        if default is None:
+            if self._rules.get('novalue_include_rtype'):
+                default = self._cw._('<%s not specified>') % display_name(
+                    self._cw, rschema.type, role)
+            else:
+                default = self._cw._('<not specified>')
+        return xml_escape(default)
 
     def _is_composite(self):
         return self._rules.get('edit_target') == 'related'
@@ -233,11 +240,11 @@ class ClickAndEditFormView(EntityView):
         """ builds an id for the root div of a reledit widget """
         return '%s-%s-%s' % (rtype, role, entity_eid)
 
-    def _build_args(self, entity, rtype, role, formid, default_value, reload,
+    def _build_args(self, entity, rtype, role, formid, reload,
                     extradata=None):
         divid = self._build_divid(rtype, role, entity.eid)
         event_args = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'formid': formid,
-                      'reload' : json_dumps(reload), 'default_value' : default_value,
+                      'reload' : json_dumps(reload),
                       'role' : role, 'vid' : u''}
         if extradata:
             event_args.update(extradata)
@@ -269,9 +276,9 @@ class ClickAndEditFormView(EntityView):
             display_help=False, button_bar_class='buttonbar',
             display_progress_div=False)
 
-    def _build_form(self, entity, rtype, role, divid, formid, default_value, reload,
+    def _build_form(self, entity, rtype, role, divid, formid, reload,
                     display_label, related_entity, extradata=None, **formargs):
-        event_args = self._build_args(entity, rtype, role, formid, default_value,
+        event_args = self._build_args(entity, rtype, role, formid,
                                       reload, extradata)
         cancelclick = self._cancelclick % divid
         form = self._cw.vreg['forms'].select(
@@ -382,9 +389,9 @@ class ClickAndEditFormView(EntityView):
 class AutoClickAndEditFormView(ClickAndEditFormView):
     __regid__ = 'reledit'
 
-    def _build_form(self, entity, rtype, role, divid, formid, default_value, reload,
+    def _build_form(self, entity, rtype, role, divid, formid, reload,
                     display_label, related_entity, extradata=None, **formargs):
-        event_args = self._build_args(entity, rtype, role, 'base', default_value,
+        event_args = self._build_args(entity, rtype, role, 'base',
                                       reload, extradata)
         form = _DummyForm()
         form.event_args = event_args

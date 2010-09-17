@@ -378,9 +378,9 @@ class ReleditTags(NoTargetRelationTagsDict):
 
     Possible keys and associated values are:
 
-    * `default_value`, alternative default value (shown when there is no value).
+    * `novalue_label`, alternative default value (shown when there is no value).
 
-    * `default_showlabel`, when `default_value` is not specified, this boolean
+    * `novalue_include_rtype`, when `novalue_label` is not specified, this boolean
       flag control wether the generated default value should contains the
       relation label or not. Will be the opposite of the `showlabel` value found
       in the `primaryview_display_ctrl` rtag by default.
@@ -391,17 +391,15 @@ class ReleditTags(NoTargetRelationTagsDict):
       page. Defaults to False.
 
     * `rvid`, alternative view id (as str) for relation or composite edition.
-      Default is 'incontext' or 'csv' depending on the cardinality. They can
-      also be statically changed by subclassing :class:`ClickAndEditFormView`
-      and redefining `_one_rvid` (resp. `_many_rvid`).
+      Default is 'autolimited'.
 
     * `edit_target`, may be either 'rtype' (to edit the relation) or 'related'
       (to edit the related entity).  This controls whether to edit the relation
       or the target entity of the relation.  Currently only one-to-one relations
       support target entity edition. By default, the 'related' option is taken
-      whenever the relation is composite and one-to-one.
+      whenever the relation is composite.
     """
-    _keys = frozenset('default_value default_showlabel reload rvid edit_target'.split())
+    _keys = frozenset('novalue_label novalue_include_rtype reload rvid edit_target'.split())
 
     def tag_relation(self, key, tag):
         for tagkey in tag.iterkeys():
@@ -426,11 +424,11 @@ def init_reledit_ctrl(rtag, sschema, rschema, oschema, role):
         edittarget = 'related' if composite else 'rtype'
         rtag.tag_relation((sschema, rschema, oschema, role),
                           {'edit_target': edittarget})
-    if not 'default_showlabel' in values:
+    if not 'novalue_include_rtype' in values:
         showlabel = primaryview_display_ctrl.get(
             sschema, rschema, oschema, role).get('showlabel', True)
         rtag.tag_relation((sschema, rschema, oschema, role),
-                          {'default_showlabel': not showlabel})
+                          {'novalue_include_rtype': not showlabel})
 
 reledit_ctrl = ReleditTags('reledit', init_reledit_ctrl)
 
