@@ -147,6 +147,10 @@ class NavigationComponent(Component):
             url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
+        # XXX hack to avoid opening a new page containing the evaluation of the
+        # js expression on ajax call
+        if url.startswith('javascript:'):
+            url += '; noop();'
         return url
 
     def ajax_page_url(self, **params):
@@ -157,10 +161,6 @@ class NavigationComponent(Component):
 
     def page_link(self, path, params, start, stop, content):
         url = xml_escape(self.page_url(path, params, start, stop))
-        # XXX hack to avoid opening a new page containing the evaluation of the
-        # js expression on ajax call
-        if url.startswith('javascript:'):
-            url += '; noop();'
         if start == self.starting_from:
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
