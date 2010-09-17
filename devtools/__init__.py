@@ -183,6 +183,9 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
 
+    def default_base_url(self):
+        return BASE_URL
+
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
         # threads

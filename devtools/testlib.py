@@ -226,7 +226,6 @@ class CubicWebTC(TestCase):
         config.global_set_option('sender-name', 'cubicweb-test')
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
         # web resources
-        config.global_set_option('base-url', devtools.BASE_URL)
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
         except: # not in server only configuration
