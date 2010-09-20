@@ -247,7 +247,10 @@ class PrimaryView(EntityView):
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
             dispctrl.setdefault('limit', self.maxrelated)
-            rset = entity.related(rschema.type, role, limit=dispctrl['limit']+1)
+            limit = dispctrl['limit']
+            if limit is not None:
+                limit += 1
+            rset = entity.related(rschema.type, role, limit=limit)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
