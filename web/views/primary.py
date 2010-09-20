@@ -53,7 +53,6 @@ class PrimaryView(EntityView):
     def cell_call(self, row, col):
         self.cw_row = row
         self.cw_col = col
-        self.maxrelated = self._cw.property_value('navigation.related-limit')
         entity = self.cw_rset.complete_entity(row, col)
         self.render_entity(entity)
 
@@ -246,11 +245,7 @@ class PrimaryView(EntityView):
 
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            dispctrl.setdefault('limit', self.maxrelated)
-            limit = dispctrl['limit']
-            if limit is not None:
-                limit += 1
-            rset = entity.related(rschema.type, role, limit=limit)
+            rset = entity.related(rschema.type, role)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
@@ -303,7 +298,10 @@ class RelatedView(EntityView):
 
     def call(self, **kwargs):
         if 'dispctrl' in self.cw_extra_kwargs:
-            limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            if 'limit' in self.cw_extra_kwargs['dispctrl']:
+                limit = self.cw_extra_kwargs['dispctrl']['limit']
+            else:
+                limit = self._cw.property_value('navigation.related-limit')
             list_limit = self.cw_extra_kwargs['dispctrl'].get('use_list_limit', 5)
             subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
