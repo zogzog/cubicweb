@@ -18,13 +18,17 @@
 """unit tests for module cubicweb.server.migractions
 """
 
+from __future__ import with_statement
+
 from copy import deepcopy
 from datetime import date
 from os.path import join
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb import ConfigurationError
+from yams.constraints import UniqueConstraint
+
+from cubicweb import ConfigurationError, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -128,6 +132,28 @@ class MigrationCommandsTC(CubicWebTC):
         d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2})[0][0]
         self.assertEquals(d1, date.today())
         self.assertEquals(d2, testdate)
+        self.mh.rollback()
+
+    def test_drop_chosen_constraints_ctxmanager(self):
+        with self.mh.cmd_dropped_constraints('Note', 'unique_id', UniqueConstraint):
+            self.mh.cmd_add_attribute('Note', 'unique_id')
+            # make sure the maxsize constraint is not dropped
+            self.assertRaises(ValidationError,
+                              self.mh.rqlexec,
+                              'INSERT Note N: N unique_id "xyz"')
+            # make sure the unique constraint is dropped
+            self.mh.rqlexec('INSERT Note N: N unique_id "x"')
+            self.mh.rqlexec('INSERT Note N: N unique_id "x"')
+            self.mh.rqlexec('DELETE Note N')
+        self.mh.rollback()
+
+    def test_drop_required_ctxmanager(self):
+        with self.mh.cmd_dropped_constraints('Note', 'unique_id', cstrtype=None,
+                                             droprequired=True):
+            self.mh.cmd_add_attribute('Note', 'unique_id')
+            self.mh.rqlexec('INSERT Note N')
+        # make sure the required=True was restored
+        self.assertRaises(ValidationError, self.mh.rqlexec, 'INSERT Note N')
         self.mh.rollback()
 
     def test_rename_attribute(self):
@@ -524,7 +550,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(self.schema['Text'].specializes().type, 'Para')
         # test columns have been actually added
         text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
-        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo"').get_entity(0, 0)
+        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo", X unique_id "x"').get_entity(0, 0)
         aff = self.execute('INSERT Affaire X').get_entity(0, 0)
         self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))

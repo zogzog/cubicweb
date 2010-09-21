@@ -66,6 +66,7 @@ class Note(Para):
     whatever = Int(default=2)  # keep it before `date` for unittest_migraction.test_add_attribute_int
     date = Datetime()
     type = String(maxsize=1)
+    unique_id = String(maxsize=1, required=True, unique=True)
     mydate = Date(default='TODAY')
     shortpara = String(maxsize=64)
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
