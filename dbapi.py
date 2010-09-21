@@ -599,7 +599,7 @@ class Connection(object):
         """raise `BadConnectionId` if the connection is no more valid, else
         return its latest activity timestamp.
         """
-        self._repo.check_session(self.sessionid)
+        return self._repo.check_session(self.sessionid)
 
     def _txid(self, cursor=None): # XXX could now handle various isolation level!
         # return a dict as bw compat trick
