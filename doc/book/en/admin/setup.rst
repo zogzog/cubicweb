@@ -274,7 +274,7 @@ This currently assumes that the instances configurations is located at
 C:\\etc\\cubicweb.d.
 
 For a cube 'my_instance', you will then find
-C:\\etc\\cubicweb.d\\my_instance\\win32svc.py that has to be used thusly::
+C:\\etc\\cubicweb.d\\my_instance\\win32svc.py that has to be used as follows::
 
   win32svc install
 
@@ -303,14 +303,17 @@ You can also install:
 Databases configuration
 -----------------------
 
-Whatever the backend used, database connection information are stored in the
-instance's :file:`sources` file. Currently cubicweb has been tested using
-Postgresql (recommended), MySQL, SQLServer and SQLite.
+Each instance can be configured with its own database connection information,
+that will be stored in the instance's :file:`sources` file. The database to use
+will be chosen when creating the instance. Currently cubicweb has been tested
+using Postgresql (recommended), MySQL, SQLServer and SQLite.
 
 Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
-but at least one relational database is required for CubicWeb to work. SQLite is
-not fit for production use, but it works for testing and ships with Python,
-which saves installation time when you want to get started quickly.
+but at least one relational database is required for CubicWeb to work. You do
+not need to install a backend that you do not intend to use for one of your
+instances. SQLite is not fit for production use, but it works well for testing
+and ships with Python, which saves installation time when you want to get
+started quickly.
 
 .. _PostgresqlConfiguration:
 
