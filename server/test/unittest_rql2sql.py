@@ -567,6 +567,11 @@ WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid) AS T1
 GROUP BY T1.C0,T1.C2
 ORDER BY T1.C2'''),
 
+    ('Any 1 WHERE X in_group G, X is CWUser',
+     '''SELECT 1
+FROM in_group_relation AS rel_in_group0'''),
+
+
     ]
 
 
@@ -1466,6 +1471,15 @@ FROM cw_Affaire AS _X''')
 FROM cw_CWUser AS _X
 WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
 
+    def test_not_no_where(self):
+        # XXX will check if some in_group relation exists, that's it.
+        # We  can't actually know if we want to check if there are some
+        # X without in_group relation, or some G without it.
+        self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
+                    '''SELECT 1
+WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
@@ -1684,6 +1698,13 @@ FROM cw_Personne AS _P''')
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
 WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+
+    def test_not_no_where(self):
+        self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
+                    '''SELECT 1
+FROM (SELECT 1) AS _T
+WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
 
 
 class removeUnsusedSolutionsTC(TestCase):

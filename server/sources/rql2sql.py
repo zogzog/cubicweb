@@ -761,6 +761,8 @@ class SQLGenerator(object):
             restrictions.append(restriction)
         restriction = ' AND '.join(restrictions)
         if not restriction:
+            if tables:
+                return 'SELECT 1 FROM %s' % ', '.join(tables)
             return ''
         if not tables:
             # XXX could leave surrounding EXISTS() in this case no?
