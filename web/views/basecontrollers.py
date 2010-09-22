@@ -160,7 +160,7 @@ class ViewController(Controller):
         return view, rset
 
     def add_to_breadcrumbs(self, view):
-        # update breadcrumps **before** validating cache, unless the view
+        # update breadcrumbs **before** validating cache, unless the view
         # specifies explicitly it should not be added to breadcrumb or the
         # view is a binary view
         if view.add_to_breadcrumbs and not view.binary:
