@@ -1,5 +1,5 @@
 include *.py
 include */*.py
-recursive-include data external_resources *.gif *.png *.css *.ico *.js
-recursive-include i18n *.pot *.po
+recursive-include data *.gif *.png *.ico *.css *.js
+recursive-include i18n *.po
 recursive-include wdoc *
