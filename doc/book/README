@@ -46,6 +46,20 @@ a [foot note]_
 .. [foot note] the foot note content
 
 
+Boxes
+=====
+
+- warning box: 
+    .. warning::
+
+       Warning content
+- note box:
+    .. note::
+
+       Note content
+
+
+
 Cross references
 ================
 

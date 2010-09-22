@@ -6,24 +6,24 @@ Tests
 Unit tests
 ----------
 
-The *CubicWeb* framework provides the `CubicWebTC` test base class in
-the module `cubicweb.devtools.testlib`.
+The *CubicWeb* framework provides the
+:class:`cubicweb.devtools.testlib.CubicWebTC` test base class .
 
 Tests shall be put into the mycube/test directory. Additional test
 data shall go into mycube/test/data.
 
-It is much advised to write tests concerning entities methods, hooks
-and operations, security. The CubicWebTC base class has convenience
-methods to help test all of this.
+It is much advised to write tests concerning entities methods,
+actions, hooks and operations, security. The
+:class:`~cubicweb.devtools.testlib.CubicWebTC` base class has
+convenience methods to help test all of this.
 
-.. note::
+In the realm of views, automatic tests check that views are valid
+XHTML. See :ref:`automatic_views_tests` for details. Since 3.9, bases
+for web functional testing using `windmill
+<http://www.getwindmill.com/>`_ are set. See test cases in
+cubicweb/web/test/windmill and python wrapper in
+cubicweb/web/test_windmill/ if you want to use this in your own cube.
 
-  In the realm of views, there is not much to do but check that the
-  views are valid XHTML.  See :ref:`automatic_views_tests` for
-  details. Integration of CubicWeb tests with UI testing tools such as
-  `selenium`_ are currently under invesitgation.
-
-.. _selenium: http://seleniumhq.org/projects/ide/
 
 Most unit tests need a live database to work against. This is achieved
 by CubicWeb using automatically sqlite (bundled with Python, see
@@ -77,12 +77,20 @@ from http://www.cubicweb.org/project/cubicweb-keyword).
             self.kw1.set_relations(subkeyword_of=kw3)
             self.assertRaises(ValidationError, self.commit)
 
-The test class defines a `setup_database` method which populates the
+The test class defines a :meth:`setup_database` method which populates the
 database with initial data. Each test of the class runs with this
-pre-populated database.
+pre-populated database. A commit is done automatically after the
+:meth:`setup_database` call. You don't have to call it explicitely.
 
 The test case itself checks that an Operation does it job of
 preventing cycles amongst Keyword entities.
+
+.. note::
+
+   :meth:`commit` method is not called automatically in test_XXX
+   methods. You have to call it explicitely if needed (notably to test
+   operations). It is a good practice to call :meth:`clear_all_caches`
+   on entities after a commit to avoid request cache effects.
 
 You can see an example of security tests in the
 :ref:`adv_tuto_security`.
@@ -149,7 +157,7 @@ Email notifications tests
 
 When running tests potentially generated e-mails are not really sent
 but is found in the list `MAILBOX` of module
-`cubicweb.devtools.testlib`.
+:mod:`cubicweb.devtools.testlib`.
 
 You can test your notifications by analyzing the contents of this list, which
 contains objects with two attributes:
