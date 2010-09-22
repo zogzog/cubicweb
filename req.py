@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Base class for request/session
+"""Base class for request/session"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
