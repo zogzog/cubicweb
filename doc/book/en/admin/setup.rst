@@ -74,6 +74,12 @@ for them on pypi_::
 
 .. _SourceInstallation:
 
+.. warning::
+
+  This method may still have hiccups. If it does not work for you,
+  please consider installing from version control system
+  (:ref:`MercurialInstallation`).
+
 Install from source
 ```````````````````
 
@@ -112,6 +118,15 @@ When cloning a repository, you might be set in a development branch
 (the 'default' branch). You should check that the branches of the
 repositories are set to 'stable' (using `hg up stable` for each one)
 if you do not intend to develop the framework itself.
+
+Even better, `hg tags` will display a list of tags in reverse
+chronological order. One reasonnable way to get to a working version
+is to pick the latest published version (as done by the `clone_deps`
+script). These look like `cubicweb-debian-version-3.9.7-1`. Typing::
+
+ hg update cubicweb-debian-version-3.9.7-1
+
+will update the repository files to this version.
 
 Make sure you also have all the :ref:`InstallDependencies`.
 
