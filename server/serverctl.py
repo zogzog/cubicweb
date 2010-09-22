@@ -174,7 +174,7 @@ class RepositoryCreateHandler(CommandHandler):
         sourcesfile = config.sources_file()
         # XXX hack to make Method('default_instance_id') usable in db option
         # defs (in native.py)
-        sconfig = SourceConfiguration(config.appid,
+        sconfig = SourceConfiguration(config,
                                       options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
@@ -234,6 +234,9 @@ class RepositoryDeleteHandler(CommandHandler):
         dbname = source['db-name']
         helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
+            if source['db-driver'] == 'sqlite':
+                os.unlink(source['db-name'])
+                return
             user = source['db-user'] or None
             cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
             cursor = cnx.cursor()

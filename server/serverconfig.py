@@ -45,15 +45,27 @@ USER_OPTIONS =  (
     )
 
 class SourceConfiguration(Configuration):
-    def __init__(self, appid, options):
-        self.appid = appid # has to be done before super call
+    def __init__(self, appconfig, options):
+        self.appconfig = appconfig # has to be done before super call
         super(SourceConfiguration, self).__init__(options=options)
 
     # make Method('default_instance_id') usable in db option defs (in native.py)
     def default_instance_id(self):
-        return self.appid
+        return self.appconfig.appid
 
-def generate_sources_file(appid, sourcesfile, sourcescfg, keys=None):
+    def input_option(self, option, optdict, inputlevel):
+        if self['db-driver'] == 'sqlite':
+            if option in ('db-user', 'db-password'):
+                return
+            if option == 'db-name':
+                optdict = optdict.copy()
+                optdict['help'] = 'path to the sqlite database'
+                optdict['default'] = join(self.appconfig.appdatahome,
+                                          self.appconfig.appid + '.sqlite')
+        super(SourceConfiguration, self).input_option(option, optdict, inputlevel)
+
+
+def generate_sources_file(appconfig, sourcesfile, sourcescfg, keys=None):
     """serialize repository'sources configuration into a INI like file
 
     the `keys` parameter may be used to sort sections
@@ -73,7 +85,7 @@ def generate_sources_file(appid, sourcesfile, sourcescfg, keys=None):
                 options = USER_OPTIONS
             else:
                 options = SOURCE_TYPES[sconfig['adapter']].options
-            _sconfig = SourceConfiguration(appid, options=options)
+            _sconfig = SourceConfiguration(appconfig, options=options)
             for attr, val in sconfig.items():
                 if attr == 'uri':
                     continue
@@ -272,7 +284,7 @@ and if not set, it will be choosen randomly',
         if exists(sourcesfile):
             import shutil
             shutil.copy(sourcesfile, sourcesfile + '.bak')
-        generate_sources_file(self.appid, sourcesfile, sourcescfg,
+        generate_sources_file(self, sourcesfile, sourcescfg,
                               ['admin', 'system'])
         restrict_perms_to_user(sourcesfile)
 
