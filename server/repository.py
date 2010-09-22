@@ -461,13 +461,24 @@ class Repository(object):
         cubes.remove('cubicweb')
         return cubes
 
-    def get_option_value(self, option):
-        """Return the value for `option` in the configuration.
+    def get_option_value(self, option, foreid=None):
+        """Return the value for `option` in the configuration. If `foreid` is
+        specified, the actual repository to which this entity belongs is
+        derefenced and the option value retrieved from it.
 
         This is a public method, not requiring a session id.
         """
         # XXX we may want to check we don't give sensible information
-        return self.config[option]
+        if foreid is None:
+            return self.config[option]
+        _, sourceuri, extid = self.type_and_source_from_eid(foreid)
+        if sourceuri == 'system':
+            return self.config[option]
+        pool = self._get_pool()
+        try:
+            return pool.connection(sourceuri).get_option_value(option, extid)
+        finally:
+            self._free_pool(pool)
 
     @cached
     def get_versions(self, checkversions=False):
