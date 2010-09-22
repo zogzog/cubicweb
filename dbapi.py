@@ -642,7 +642,7 @@ class Connection(object):
     def get_option_value(self, option, foreid=None):
         """Return the value for `option` in the configuration. If `foreid` is
         specified, the actual repository to which this entity belongs is
-        derefenced and the option value retrieved from it.
+        dereferenced and the option value retrieved from it.
         """
         return self._repo.get_option_value(option, foreid)
 
