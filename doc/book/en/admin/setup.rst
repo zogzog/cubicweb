@@ -90,19 +90,28 @@ Make sure you also have all the :ref:`InstallDependencies`.
 Install from version control system
 ```````````````````````````````````
 
-You can keep up to date with on-going development by using Mercurial and its
-forest extension::
+You can keep up to date with on-going development by using Mercurial::
 
-  hg fclone http://www.logilab.org/hg/forests/cubicweb
+  hg clone http://www.logilab.org/hg/forests/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
+
+A practical way to get many of CubicWeb's dependencies and a nice set
+of base cubes is to run the `clone_deps.py` script located in
+`cubicweb/bin/`::
+
+  python cubicweb/bin/clone_deps.py
+
+(Windows users should replace slashes with antislashes).
+
+This script will clone a set of mercurial repositories into in the
+directory containing the CubicWeb repository, and update them to the
+latest published version tag (if any).
 
 When cloning a repository, you might be set in a development branch
 (the 'default' branch). You should check that the branches of the
 repositories are set to 'stable' (using `hg up stable` for each one)
 if you do not intend to develop the framework itself.
-
-Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
 
 Make sure you also have all the :ref:`InstallDependencies`.
 
@@ -182,8 +191,7 @@ not mandatory). You should get an msi installer there::
   http://www.graphviz.org/Download_windows.php
 
 Simplejson is needed when installing with Python 2.5, but included in the
-standard library for Python >= 2.6. It will be provided within the forest, but a
-win32 compiled version will run much faster::
+standard library for Python >= 2.6. Get it from there::
 
   http://www.osuch.org/python-simplejson%3Awin32
 
@@ -211,33 +219,10 @@ it. Instructions are set there, in the `Download & Install` section::
 Getting the sources
 ~~~~~~~~~~~~~~~~~~~
 
-You can either download the latest release (see :ref:`SourceInstallation`) or
-get the development version using Mercurial (see
-:ref:`MercurialInstallation` and below).
-
-To enable the Mercurial forest extension on Windows, edit the file::
-
-  C:\Program Files\TortoiseHg\Mercurial.ini
-
-In the [extensions] section, add the following line::
-
-  forest=C:\Program Files\TortoiseHg\ext\forest\forest.py
-
-Now, you need to clone the cubicweb repository. We assume that you use
-Eclipse. From the IDE, choose File -> Import. In the box, select `Mercurial/Clone
-repository using MercurialEclipse`.
-
-In the import main panel you just have to:
-
-* fill the URL field with http://www.logilab.org/hg/forests/cubicwin32
-
-* check the 'Repository is a forest' box.
-
-Then, click on 'Finish'. It might take some time to get it all. Note that the
-`cubicwin32` forest contains additional python packages such as yapps, vobject,
-simplejson and twisted-web2 which are not provided with Python(x,y). This is
-provided for convenience, as we do not ensure the up-to-dateness of these
-packages, especially with respect to security fixes.
+You can either download the latest release (see
+:ref:`SourceInstallation`) or get the development version using
+Mercurial (see :ref:`MercurialInstallation` and below), which is more
+convenient.
 
 Environment variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -274,7 +259,7 @@ This currently assumes that the instances configurations is located at
 C:\\etc\\cubicweb.d.
 
 For a cube 'my_instance', you will then find
-C:\\etc\\cubicweb.d\\my_instance\\win32svc.py that has to be used as follows::
+C:\\etc\\cubicweb.d\\my_instance\\win32svc.py that has to be used thusly::
 
   win32svc install
 
@@ -303,17 +288,14 @@ You can also install:
 Databases configuration
 -----------------------
 
-Each instance can be configured with its own database connection information,
-that will be stored in the instance's :file:`sources` file. The database to use
-will be chosen when creating the instance. Currently cubicweb has been tested
-using Postgresql (recommended), MySQL, SQLServer and SQLite.
+Whatever the backend used, database connection information are stored in the
+instance's :file:`sources` file. Currently cubicweb has been tested using
+Postgresql (recommended), MySQL, SQLServer and SQLite.
 
 Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
-but at least one relational database is required for CubicWeb to work. You do
-not need to install a backend that you do not intend to use for one of your
-instances. SQLite is not fit for production use, but it works well for testing
-and ships with Python, which saves installation time when you want to get
-started quickly.
+but at least one relational database is required for CubicWeb to work. SQLite is
+not fit for production use, but it works for testing and ships with Python,
+which saves installation time when you want to get started quickly.
 
 .. _PostgresqlConfiguration:
 
