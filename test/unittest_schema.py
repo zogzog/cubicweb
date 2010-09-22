@@ -173,7 +173,8 @@ class SchemaReaderClassTest(TestCase):
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
-                             'CWPermission', 'CWProperty', 'CWRType', 'CWUser',
+                             'CWPermission', 'CWProperty', 'CWRType',
+                             'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
@@ -187,8 +188,10 @@ class SchemaReaderClassTest(TestCase):
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
-                              'composite', 'condition', 'connait', 'constrained_by', 'content',
-                              'content_format', 'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
+                              'composite', 'condition', 'connait',
+                              'constrained_by', 'constraint_of',
+                              'content', 'content_format',
+                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
@@ -212,7 +215,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
-                              'read_permission', 'relation_type', 'require_group',
+                              'read_permission', 'relation_type', 'relations', 'require_group',
 
                               'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
