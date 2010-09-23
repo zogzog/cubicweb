@@ -141,6 +141,7 @@ class CubicWebServerTC(CubicWebTC):
                                 (user, passwd))
         assert response.status == httplib.SEE_OTHER, response.status
         self._ident_cookie = response.getheader('Set-Cookie')
+        assert self._ident_cookie
         return True
 
     def web_logout(self, user='admin', pwd=None):

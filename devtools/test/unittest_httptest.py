@@ -38,11 +38,11 @@ class TwistedCWIdentTC(CubicWebServerTC):
         # login
         self.web_login(self.admlogin, self.admpassword)
         response = self.web_get()
-        self.assertEquals(response.status, httplib.OK)
+        self.assertEquals(response.status, httplib.OK, response.body)
         # logout
         self.web_logout()
         response = self.web_get()
-        self.assertEquals(response.status, httplib.FORBIDDEN)
+        self.assertEquals(response.status, httplib.FORBIDDEN, response.body)
 
 
 
