@@ -174,6 +174,8 @@ class RequestSessionBase(object):
         """return an absolute URL using params dictionary key/values as URL
         parameters. Values are automatically URL quoted, and the
         publishing method to use may be specified or will be guessed.
+
+        raises :exc:`ValueError` if None is found in arguments
         """
         # use *args since we don't want first argument to be "anonymous" to
         # avoid potential clash with kwargs
@@ -201,7 +203,6 @@ class RequestSessionBase(object):
             return u'%s%s' % (base_url, path)
         return u'%s%s?%s' % (base_url, path, self.build_url_params(**kwargs))
 
-
     def build_url_params(self, **kwargs):
         """return encoded params to incorporate them in an URL"""
         args = []
@@ -209,6 +210,8 @@ class RequestSessionBase(object):
             if not isinstance(values, (list, tuple)):
                 values = (values,)
             for value in values:
+                if value is None:
+                    raise ValueError(_('unauthorized value'))
                 args.append(u'%s=%s' % (param, self.url_quote(value)))
         return '&'.join(args)
 

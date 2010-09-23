@@ -17,9 +17,11 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.req import RequestSessionBase
+from cubicweb.devtools.testlib import CubicWebTC
+
 
 class RebuildURLTC(TestCase):
-    def test(self):
+    def test_rebuild_url(self):
         rebuild_url = RequestSessionBase(None).rebuild_url
         self.assertEquals(rebuild_url('http://logilab.fr?__message=pouet', __message='hop'),
                           'http://logilab.fr?__message=hop')
@@ -27,6 +29,18 @@ class RebuildURLTC(TestCase):
                           'http://logilab.fr?__message=hop')
         self.assertEquals(rebuild_url('http://logilab.fr?vid=index', __message='hop'),
                           'http://logilab.fr?__message=hop&vid=index')
+
+    def test_build_url(self):
+        req = RequestSessionBase(None)
+        req.from_controller = lambda : 'view'
+        req.relative_path = lambda includeparams=True: None
+        req.base_url = lambda : 'http://testing.fr/cubicweb/'
+        self.assertEqual(req.build_url(), u'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url(None), u'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('one'), u'http://testing.fr/cubicweb/one')
+        self.assertEqual(req.build_url(param='ok'), u'http://testing.fr/cubicweb/view?param=ok')
+        self.assertRaises(AssertionError, req.build_url, 'one', 'two not allowed')
+        self.assertRaises(ValueError, req.build_url, 'view', test=None)
 
 
 if __name__ == '__main__':
