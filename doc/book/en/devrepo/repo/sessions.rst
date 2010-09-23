@@ -33,7 +33,7 @@ to be used like this:
 
    session = self.repo.internal_session()
    try:
-       # do stuff
+       do_stuff_with(session)
    finally:
        session.close()
 
