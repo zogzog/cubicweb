@@ -31,6 +31,7 @@ import unittest
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main
 
+import windmill
 from windmill.dep import functest
 
 from cubicweb.devtools.httptest import CubicWebServerTC
@@ -46,7 +47,6 @@ functest.reports.register_reporter(unittestreporter)
 
 class WindmillUnitTestCase(unittest.TestCase):
     def setUp(self):
-        import windmill
         windmill.stdout, windmill.stdin = sys.stdout, sys.stdin
         from windmill.bin.admin_lib import configure_global_settings, setup
         configure_global_settings()
@@ -90,12 +90,11 @@ class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
     def testWindmill(self):
         if self.edit_test:
             # see windmill.bin.admin_options.Firebug
-            import windmill
             windmill.settings['INSTALL_FIREBUG'] = 'firebug'
-            windmill.settings['MOZILLA_PLUGINS'].append('/usr/share/mozilla-extensions/')
-            windmill.settings['MOZILLA_PLUGINS'].append('/usr/share/xul-ext/')
-
-        self.windmill_shell_objects['start_' + self.browser]()
+            windmill.settings.setdefault('MOZILLA_PLUGINS', []).extend(
+                '/usr/share/mozilla-extensions/',
+                '/usr/share/xul-ext/')
+        controller = self.windmill_shell_objects['start_' + self.browser]()
         self.windmill_shell_objects['do_test'](self.test_dir,
                                                load=self.edit_test,
                                                threaded=False)
@@ -104,6 +103,7 @@ class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
             import pdb; pdb.set_trace()
             return
 
+        # reporter
         for test in unittestreporter.test_list:
             msg = ""
             self._testMethodDoc = getattr(test, "__doc__", None)
