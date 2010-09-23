@@ -116,7 +116,7 @@ class ClickAndEditFormView(EntityView):
         return formid, value
 
     def _handle_relation(self, entity, rschema, role, divid, reload, formid):
-        rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+        rvid = self._rules.get('rvid', 'autolimited')
         formid, value = self._compute_formid_value(entity, rschema, role, rvid, formid)
         if formid is None:
             return self.w(value)
@@ -133,28 +133,21 @@ class ClickAndEditFormView(EntityView):
         add_related = self._may_add_related(related_rset, entity, rschema, role, ttypes)
         edit_related = self._may_edit_related_entity(related_rset, entity, rschema, role, ttypes)
         delete_related = edit_related and self._may_delete_related(related_rset, entity, rschema, role)
-
-        rvid = self._compute_best_vid(entity.e_schema, rschema, role)
+        rvid = self._rules.get('rvid', 'autolimited')
         formid, value = self._compute_formid_value(entity, rschema, role, rvid, formid)
         if formid is None or not (edit_related or add_related):
             # till we learn to handle cases where not (edit_related or add_related)
             self.w(value)
             return
-
         rtype = rschema.type
         ttype = ttypes[0]
-        _fdata = self._prepare_composite_form(entity, rtype, role, edit_related, add_related and ttype)
+        _fdata = self._prepare_composite_form(entity, rtype, role, edit_related,
+                                              add_related and ttype)
         display_label, related_entity = _fdata
         form, renderer = self._build_form(entity, rtype, role, divid, formid, reload,
                                           display_label, related_entity, dict(vid=rvid))
         self.view_form(divid, value, form, renderer,
                        edit_related, add_related, delete_related)
-
-    def _compute_best_vid(self, eschema, rschema, role):
-        vid = self._rules.get('rvid', None)
-        if vid is None:
-            vid = 'autolimited'
-        return vid
 
     def _compute_ttypes(self, rschema, role):
         dual_role = neg_role(role)
