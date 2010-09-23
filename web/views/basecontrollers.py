@@ -160,7 +160,7 @@ class ViewController(Controller):
         return view, rset
 
     def add_to_breadcrumbs(self, view):
-        # update breadcrumps **before** validating cache, unless the view
+        # update breadcrumbs **before** validating cache, unless the view
         # specifies explicitly it should not be added to breadcrumb or the
         # view is a binary view
         if view.add_to_breadcrumbs and not view.binary:
@@ -463,7 +463,7 @@ class JSonController(Controller):
     def js_reledit_form(self):
         req = self._cw
         args = dict((x, req.form[x])
-                    for x in ('formid', 'rtype', 'role', 'reload', 'default_value'))
+                    for x in ('formid', 'rtype', 'role', 'reload'))
         rset = req.eid_rset(typed_eid(self._cw.form['eid']))
         try:
             args['reload'] = json.loads(args['reload'])

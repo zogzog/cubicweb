@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Test tools for cubicweb
+"""Test tools for cubicweb"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
@@ -182,6 +181,9 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
 
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
+
+    def default_base_url(self):
+        return BASE_URL
 
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and

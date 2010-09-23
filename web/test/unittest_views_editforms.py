@@ -127,7 +127,8 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ])
         self.assertListEquals(rbc(e, 'main', 'relations'),
                               [('travaille', 'subject'),
-                               ('connait', 'object')
+                               ('manager', 'object'),
+                               ('connait', 'object'),
                                ])
         self.assertListEquals(rbc(e, 'main', 'hidden'),
                               [])

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+"""cubicweb.cwconfig unit tests"""
 
-"""
 import sys
 import os
 import tempfile
@@ -51,7 +50,9 @@ class CubicWebConfigurationTC(TestCase):
         ApptestConfiguration.CUBES_PATH = []
 
     def test_reorder_cubes(self):
-        # jpl depends on email and file and comment
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
+        # forge depends on email and file and comment
         # email depends on file
         self.assertEquals(self.config.reorder_cubes(['file', 'email', 'forge']),
                           ('forge', 'email', 'file'))
@@ -67,6 +68,8 @@ class CubicWebConfigurationTC(TestCase):
                           ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
         from cubes.comment import __pkginfo__ as comment_pkginfo
         comment_pkginfo.__recommends_cubes__ = {'file': None}
         try:
@@ -129,6 +132,7 @@ class CubicWebConfigurationTC(TestCase):
         del cubes.file
         from cubes import file
         self.assertEquals(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
+
 
 class FindPrefixTC(TestCase):
     def make_dirs(self, *args):

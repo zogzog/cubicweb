@@ -33,7 +33,7 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database (>= 1.2.0), cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database (>= 1.3.0), cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2
 Recommends: pyro, cubicweb-documentation (= ${source:Version})
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -97,7 +97,7 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.8.0), python-logilab-common (>= 0.51.0), python-yams (>= 0.30.0), python-rql (>= 0.26.3), python-lxml
+Depends: ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.8.0), python-logilab-common (>= 0.51.0), python-yams (>= 0.30.1), python-rql (>= 0.26.3), python-lxml
 Recommends: python-simpletal (>= 4.0), python-crypto
 Conflicts: cubicweb-core
 Replaces: cubicweb-core

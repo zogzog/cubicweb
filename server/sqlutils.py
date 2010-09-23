@@ -261,9 +261,8 @@ class SQLAdapterMixIn(object):
         attrs = {}
         eschema = entity.e_schema
         for attr, value in entity.cw_edited.iteritems():
-            rschema = eschema.subjrels[attr]
-            if rschema.final:
-                atype = str(eschema.destination(attr))
+            if value is not None and eschema.subjrels[attr].final:
+                atype = str(entity.e_schema.destination(attr))
                 if atype == 'Boolean':
                     value = self.dbhelper.boolean_value(value)
                 elif atype == 'Password':

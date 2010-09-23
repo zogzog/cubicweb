@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Unit tests for url publishing service
-
-"""
+"""Unit tests for url publishing service"""
 
 import re
 
@@ -69,29 +67,29 @@ class URLPublisherTC(CubicWebTC):
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X login "admin"')
+        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         ctrl, rset = self.process('cwuser/admin')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X login "admin"')
+        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         ctrl, rset = self.process('cwuser/eid/%s'%rset[0][0])
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X eid 5')
+        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid 5, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         # test non-ascii paths
         ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), u'Any X WHERE X is CWUser, X login "ÿsaÿe"')
+        self.assertEquals(rset.printable_rql(), u'Any X,AA,AB,AC,AD WHERE X login "\xffsa\xffe", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         # test quoted paths
         ctrl, rset = self.process('BlogEntry/title/hell%27o')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.description[0][0], 'BlogEntry')
-        self.assertEquals(rset.printable_rql(), u'Any X WHERE X is BlogEntry, X title "hell\'o"')
+        self.assertEquals(rset.printable_rql(), u'Any X,AA,AB,AC WHERE X title "hell\'o", X is BlogEntry, X creation_date AA, X title AB, X modification_date AC')
         # errors
         self.assertRaises(NotFound, self.process, 'CWUser/eid/30000')
         self.assertRaises(NotFound, self.process, 'Workcases')

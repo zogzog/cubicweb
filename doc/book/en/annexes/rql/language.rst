@@ -107,12 +107,13 @@ Comparison operators
 Operators priority
 ``````````````````
 
-1. '*', '/'
-2. '+', '-'
-3. 'NOT'
-4. 'AND'
-5. 'OR'
-6. ','
+#. "(", ")"
+#. '*', '/'
+#. '+', '-'
+#. 'NOT'
+#. 'AND'
+#. 'OR'
+#. ','
 
 
 Search Query

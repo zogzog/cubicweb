@@ -393,12 +393,13 @@ class Entity(AppObject):
         # in linksearch mode, we don't want external urls else selecting
         # the object for use in the relation is tricky
         # XXX search_state is web specific
-        if 'base-url' not in kwargs and \
+        use_ext_id = False
+        if 'base_url' not in kwargs and \
                getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            kwargs['base_url'] = self.cw_metainformation()['source'].get('base-url')
-            use_ext_id = bool(kwargs['base_url'])
-        else:
-            use_ext_id = False
+            baseurl = self.cw_metainformation()['source'].get('base-url')
+            if baseurl:
+                kwargs['base_url'] = baseurl
+                use_ext_id = True
         if method in (None, 'view'):
             try:
                 kwargs['_restpath'] = self.rest_path(use_ext_id)

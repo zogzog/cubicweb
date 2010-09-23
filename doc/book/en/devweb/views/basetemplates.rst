@@ -11,16 +11,32 @@ Templates are the entry point for the |cubicweb| view system. As seen
 in :ref:`views_base_class`, there are two kinds of views: the
 templatable and non-templatable.
 
-Non-templatable views are standalone. They are responsible for all the
-details such as setting a proper content type (or mime type), the
-proper document headers, namespaces, etc. Examples are pure xml views
-such as RSS or Semantic Web views (`SIOC`_, `DOAP`_, `FOAF`_, `Linked
-Data`_, etc.).
+
+Non-templatable views
+---------------------
+
+Non-templatable views are standalone. They are responsible for all the details
+such as setting a proper content type (or mime type), the proper document
+headers, namespaces, etc. Examples are pure xml views such as RSS or Semantic Web
+views (`SIOC`_, `DOAP`_, `FOAF`_, `Linked Data`_, etc.), and views which generate
+binary files (pdf, excel files, etc.)
 
 .. _`SIOC`: http://sioc-project.org/
 .. _`DOAP`: http://trac.usefulinc.com/doap
 .. _`FOAF`: http://www.foaf-project.org/
 .. _`Linked Data`: http://linkeddata.org/
+
+
+To notice that a view is not templatable, you just have to set the
+view's class attribute `templatable` to `False`. In this case, it
+should set the `content_type` class attribute to the correct MIME
+type. By default, it is text/xhtml. Additionally, if your view
+generate a binary file, you have to set the view's class attribute
+`binary` to `True` too.
+
+
+Templatable views
+-----------------
 
 Templatable views are not concerned with such pesky details. They
 leave it to the template. Conversely, the template's main job is to:
@@ -30,14 +46,14 @@ leave it to the template. Conversely, the template's main job is to:
 * invoke adequate views in the various sections of the document
 
 
-Look at :mod:`cubicweb.web.views.basetemplates` and you will find the
-base templates used to generate (X)HTML for your application. The most
-important template there is `TheMainTemplate`.
+Look at :mod:`cubicweb.web.views.basetemplates` and you will find the base
+templates used to generate (X)HTML for your application. The most important
+template there is :class:`~cubicweb.web.views.basetemplates.TheMainTemplate`.
 
 .. _the_main_template_layout:
 
 TheMainTemplate
----------------
+~~~~~~~~~~~~~~~
 
 .. _the_main_template_sections:
 
@@ -88,28 +104,60 @@ The sections dispatches specific views:
   How and why a view object is given to the main template is explained
   in the :ref:`publisher` chapter.
 
-Class attributes
-````````````````
+Configure the main template
+```````````````````````````
 
-We can also control certain aspects of the main template thanks to the following
-forms parameters:
+You can overload some methods of the
+:class:`~cubicweb.web.views.basetemplates.TheMainTemplate`, in order to fulfil
+your needs. There are also some attributes and methods which can be defined on a
+view to modify the base template behaviour:
+
+* `paginable`: if the result set is bigger than a configurable size, your result
+  page will be paginated by default. You can set this attribute to `False` to
+  avoid this.
+
+* `binary`: boolean flag telling if the view generates some text or a binary
+  stream.  Default to False. When view generates text argument given to `self.w`
+  **must be an unicode string**, encoded string otherwise.
+
+* `content_type`, view's content type, default to 'text/xhtml'
+
+* `templatable`, boolean flag telling if the view's content should be returned
+  directly (when `False`) or included in the main template layout (including
+  header, boxes and so on).
+
+* `page_title()`, method that should return a title that will be set as page
+  title in the html headers.
+
+* `html_headers()`, method that should return a list of HTML headers to be
+  included the html headers.
+
+
+You can also modify certain aspects of the main template of a page
+when building an url or setting these parameters in the req.form:
 
 * `__notemplate`, if present (whatever the value assigned), only the content view
   is returned
-* `__force_display`, if present and its value is not null, no navigation
-  whatever the number of entities to display
+
+* `__force_display`, if present and its value is not null, no pagination whatever
+  the number of entities to display (e.g. similar effect as view's `paginable`
+  attribute described above.
+
 * `__method`, if the result set to render contains only one entity and this
-  parameter is set, it refers to a method to call on the entity by passing it
-  the dictionary of the forms parameters, before going the classic way (through
-  step 1 and 2 described juste above)
+  parameter is set, it refers to a method to call on the entity by passing it the
+  dictionary of the forms parameters, before going the classic way (through step
+  1 and 2 described juste above)
+
+* `vtitle`, a title to be set as <h1> of the content
 
 Other templates
----------------
+~~~~~~~~~~~~~~~
 
-Other standard templates include:
+There are also the following other standard templates:
 
-* `login` and `logout`
-
-* `error-template` specializes TheMainTemplate to do proper end-user
-  output if an error occurs during the computation of TheMainTemplate
-  (it is a fallback view).
+* :class:`cubicweb.web.views.basetemplates.LogInTemplate`
+* :class:`cubicweb.web.views.basetemplates.LogOutTemplate`
+* :class:`cubicweb.web.views.basetemplates.ErrorTemplate` specializes
+  :class:`~cubicweb.web.views.basetemplates.TheMainTemplate` to do
+  proper end-user output if an error occurs during the computation of
+  TheMainTemplate (it is a fallback view).

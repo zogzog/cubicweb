@@ -19,6 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
+import hashlib
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
@@ -68,21 +70,22 @@ class FoafView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)
-        self.w(u'''<foaf:PersonalProfileDocument rdf:about="">
-                      <foaf:maker rdf:resource="%s"/>
-                      <foaf:primaryTopic rdf:resource="%s"/>
-                   </foaf:PersonalProfileDocument>''' % (entity.absolute_url(), entity.absolute_url()))
-        self.w(u'<foaf:Person rdf:ID="%s">\n' % entity.eid)
-        self.w(u'<foaf:name>%s</foaf:name>\n' % xml_escape(entity.dc_long_title()))
+        # account
+        self.w(u'<foaf:OnlineAccount rdf:about="%s">\n' % entity.absolute_url())
+        self.w(u'  <foaf:accountName>%s</foaf:accountName>\n' % entity.login)
+        self.w(u'</foaf:OnlineAccount>\n')
+        # person
+        self.w(u'<foaf:Person rdf:about="%s#user">\n' % entity.absolute_url())
+        self.w(u'  <foaf:account rdf:resource="%s" />\n' % entity.absolute_url())
         if entity.surname:
-            self.w(u'<foaf:family_name>%s</foaf:family_name>\n'
+            self.w(u'<foaf:familyName>%s</foaf:familyName>\n'
                    % xml_escape(entity.surname))
         if entity.firstname:
-            self.w(u'<foaf:givenname>%s</foaf:givenname>\n'
+            self.w(u'<foaf:givenName>%s</foaf:givenName>\n'
                    % xml_escape(entity.firstname))
         emailaddr = entity.cw_adapt_to('IEmailable').get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
+            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % hashlib.sha1(emailaddr).hexdigest())
         self.w(u'</foaf:Person>\n')
 
 

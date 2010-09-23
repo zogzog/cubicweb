@@ -16,11 +16,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-file packaging information"""
+"""cubicweb-forge packaging information"""
 
-distname = "cubicweb-file"
+distname = "cubicweb-forge"
 modname = distname.split('-', 1)[1]
 
 numversion = (1, 4, 3)
 version = '.'.join(str(num) for num in numversion)
 
+
+__depends__ = {'cubicweb': None,
+               'cubicweb-file': None,
+               'cubicweb-email': None,
+               'cubicweb-comment': None,
+               }

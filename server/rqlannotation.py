@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Functions to add additional annotations on a rql syntax tree to ease later
 code generation.
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import any

@@ -705,8 +705,9 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
         cols = ['%s%s' % (prefix, r.rtype.name)
                 for r in self.entity.relations]
         dbhelper= session.pool.source('system').dbhelper
-        sql = dbhelper.sql_create_multicol_unique_index(table, cols)
-        session.system_sql(sql)
+        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
+        for sql in sqls:
+            session.system_sql(sql)
 
     # XXX revertprecommit_event
 
@@ -724,8 +725,9 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         table = '%s%s' % (prefix, self.entity.type)
         dbhelper= session.pool.source('system').dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
-        sql = dbhelper.sql_drop_multicol_unique_index(table, cols)
-        session.system_sql(sql)
+        sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
+        for sql in sqls:
+            session.system_sql(sql)
 
     # XXX revertprecommit_event
 

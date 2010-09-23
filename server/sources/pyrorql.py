@@ -197,7 +197,8 @@ repository (default to 5 minutes).',
         """method called by the repository once ready to handle request"""
         interval = int(self.config.get('synchronization-interval', 5*60))
         self.repo.looping_task(interval, self.synchronize)
-        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired)
+        self.repo.looping_task(self._query_cache.ttl.seconds/10,
+                               self._query_cache.clear_expired)
 
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the

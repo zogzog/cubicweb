@@ -191,6 +191,9 @@ msgstr ""
 "pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
 "div>"
 
+msgid "<not specified>"
+msgstr ""
+
 msgid "?*"
 msgstr "0..1 0..n"
 

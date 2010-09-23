@@ -645,9 +645,12 @@ class Connection(object):
         return self._repo.get_schema()
 
     @check_not_closed
-    def get_option_value(self, option):
-        """return the value for `option` in the repository configuration."""
-        return self._repo.get_option_value(option)
+    def get_option_value(self, option, foreid=None):
+        """Return the value for `option` in the configuration. If `foreid` is
+        specified, the actual repository to which this entity belongs is
+        dereferenced and the option value retrieved from it.
+        """
+        return self._repo.get_option_value(option, foreid)
 
     @check_not_closed
     def describe(self, eid):

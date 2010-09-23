@@ -47,7 +47,7 @@ long_description = file('README').read()
 import __pkginfo__
 if USE_SETUPTOOLS:
     requires = {}
-    for entry in ("__depends__", "__recommends__"):
+    for entry in ("__depends__",): # "__recommends__"):
         requires.update(getattr(__pkginfo__, entry, {}))
     install_requires = [("%s %s" % (d, v and v or "")).strip()
                        for d, v in requires.iteritems()]

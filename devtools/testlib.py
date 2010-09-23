@@ -46,7 +46,7 @@ from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.session import security_enabled
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
-from cubicweb.devtools import fake, htmlparser
+from cubicweb.devtools import BASE_URL, fake, htmlparser
 from cubicweb.utils import json
 
 # low-level utilities ##########################################################
@@ -225,8 +225,8 @@ class CubicWebTC(TestCase):
         config.global_set_option('default-dest-addrs', send_to)
         config.global_set_option('sender-name', 'cubicweb-test')
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
+        config.global_set_option('base-url', BASE_URL)
         # web resources
-        config.global_set_option('base-url', devtools.BASE_URL)
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
         except: # not in server only configuration

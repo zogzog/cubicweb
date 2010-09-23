@@ -150,6 +150,25 @@ In the same location of the *test_windmill.py*, create a *windmill/* with your
 windmill recorded use cases.
 
 
+Caveats
+=======
+
+File Upload
+-----------
+
+Windmill can't do file uploads. This is a limitation of browser Javascript
+support / sandboxing, not of Windmill per se.  It would be nice if there were
+some command that would prime the Windmill HTTP proxy to add a particular file
+to the next HTTP request that comes through, so that uploads could at least be
+faked.
+
+.. http://groups.google.com/group/windmill-dev/browse_thread/thread/cf9dc969722bd6bb/01aa18fdd652f7ff?lnk=gst&q=input+type+file#01aa18fdd652f7ff
+
+.. http://davisagli.com/blog/in-browser-integration-testing-with-windmill
+
+.. http://groups.google.com/group/windmill-dev/browse_thread/thread/b7bebcc38ed30dc7
+
+
 Preferences
 ===========
 

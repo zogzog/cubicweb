@@ -63,12 +63,12 @@ jQuery.extend(cw.reledit, {
      * @param reload: boolean to reload page if true (when changing URL dependant data)
      * @param default_value : value if the field is empty
      */
-    loadInlineEditionForm: function(formid, eid, rtype, role, divid, reload, vid, default_value) {
+    loadInlineEditionForm: function(formid, eid, rtype, role, divid, reload, vid) {
         var args = {fname: 'reledit_form', rtype: rtype, role: role,
                     pageid: pageid,
                     eid: eid, divid: divid, formid: formid,
-                    reload: reload, vid: vid, default_value: default_value,
-                    callback: function () {cw.reledit.showInlineEditionForm(divid);}};
-       jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
+                    reload: reload, vid: vid};
+        var d = jQuery('#'+divid+'-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
+        d.addCallback(function () {cw.reledit.showInlineEditionForm(divid);});
     }
 });

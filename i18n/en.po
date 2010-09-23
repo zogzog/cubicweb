@@ -182,6 +182,9 @@ msgid ""
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 
+msgid "<not specified>"
+msgstr ""
+
 msgid "?*"
 msgstr "0..1 0..n"
 

@@ -36,15 +36,16 @@ display locations and styles), a much simpler way is to use uicfg.
 Attributes/relations display location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the primary view, there are 3 sections where attributes and
+In the primary view, there are three sections where attributes and
 relations can be displayed (represented in pink in the image above):
 
-* attributes
-* relations
-* sideboxes
+* 'attributes'
+* 'relations'
+* 'sideboxes'
 
 **Attributes** can only be displayed in the attributes section (default
-  behavior). They can also be hidden.
+  behavior). They can also be hidden. By default, attributes of type `Password`
+  and `Bytes` are hidden.
 
 For instance, to hide the ``title`` attribute of the ``Blog`` entity:
 
@@ -95,6 +96,10 @@ Common keys for attributes and relations are:
 * ``order``: int used to control order within a section. When not specified,
   automatically set according to order in which tags are added.
 
+* ``label``: label for the relations section or side box
+
+* ``showlabel``: boolean telling whether the label is displayed
+
 .. sourcecode:: python
 
    # let us remind the schema of a blog entry
@@ -110,15 +115,31 @@ Common keys for attributes and relations are:
    for index, attr in enumerate('title', 'content', 'publish_date'):
        view_ctrl.tag_attribute(('BlogEntry', attr), {'order': index})
 
-Keys for relations only:
+By default, relations displayed in the 'relations' section are being displayed by
+the 'autolimited' view. This view will use comma separated values, or list view
+and/or limit your rset if there is too much items in it (and generate the "view
+all" link in this case).
 
-* ``label``: label for the relations section or side box
+You can control this view by setting the following values in the
+`primaryview_display_ctrl` relation tag:
 
-* ``showlabel``: boolean telling whether the label is displayed
+* `limit`, maximum number of entities to display. The value of the
+  'navigation.related-limit'  cwproperty is used by default (which is 8 by default).
+  If None, no limit.
 
-* ``limit``: boolean telling if the results should be limited. If so, a link to all results is displayed
+* `use_list_limit`, number of entities until which they should be display as a list
+  (eg using the 'list' view). Below that limit, the 'csv' view is used. If None,
+  display using 'csv' anyway.
 
-* ``filter``: callback taking the related result set as argument and returning it filtered
+* `subvid`, the subview identifier (eg view that should be used of each item in the
+  list)
+
+Notice you can also use the `filter` key to set up a callback taking the related
+result set as argument and returning it filtered, to do some arbitrary filtering
+that can't be done using rql for instance.
+
+
+
 
 .. sourcecode:: python
 
@@ -153,22 +174,19 @@ The methods you may want to modify while customizing a ``PrimaryView``
 are:
 
 *render_entity_title(self, entity)*
-    Renders the entity title using the ``def dc_title(self)`` method.
-
-*render_entity_metadata(self, entity)*
-    Renders the entity metadata by calling the ``metadata`` view on the
-    entity. This generic view is in cubicweb.views.baseviews.
+    Renders the entity title, by default using entity's :meth:`dc_title()` method.
 
 *render_entity_attributes(self, entity)*
-    Renders all the attribute of an entity with the exception of
-    attribute of type `Password` and `Bytes`. The skip_none class
-    attribute controls the display of None valued attributes.
+    Renders all attributes and relations in the 'attributes' section . The
+    :attr:`skip_none` attribute controls the display of `None` valued attributes.
 
 *render_entity_relations(self, entity)*
-    Renders all the relations of the entity in the main section of the page.
+    Renders all relations in the 'relations' section.
 
 *render_side_boxes(self, entity, boxes)*
-    Renders relations of the entity in a side box.
+    Renders side boxes on the right side of the content. This will generate a box
+    for each relation in the 'sidebox' section, as well as explicit box
+    appobjects selectable in this context.
 
 The placement of relations in the relations section or in side boxes
 can be controlled through the :ref:`primary_view_configuration` mechanism.
@@ -184,23 +202,24 @@ Also, please note that by setting the following attributes in your
 subclass, you can already customize some of the rendering:
 
 *show_attr_label*
-    Renders the attribute label next to the attribute value if set to True.
+    Renders the attribute label next to the attribute value if set to `True`.
     Otherwise, does only display the attribute value.
 
 *show_rel_label*
-    Renders the relation label next to the relation value if set to True.
+    Renders the relation label next to the relation value if set to `True`.
     Otherwise, does only display the relation value.
 
 *skip_none*
-    Does not render an attribute value that is None if set to True.
+    Does not render an attribute value that is None if set to `True`.
 
 *main_related_section*
-    Renders the relations of the entity if set to True.
+    Renders the relations of the entity if set to `True`.
 
 A good practice is for you to identify the content of your entity type for which
 the default rendering does not answer your need so that you can focus on the specific
 method (from the list above) that needs to be modified. We do not advise you to
 overwrite ``render_entity`` unless you want a completely different layout.
+
 
 Example of customization and creation
 `````````````````````````````````````

@@ -675,7 +675,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         index_name = mo.group(0)
                         elements = index_name.rstrip('_idx').split('_cw_')[1:]
                         etype = elements[0]
-                        rtypes = elements[1:]                        
+                        rtypes = elements[1:]
                         raise UniqueTogetherError(etype, rtypes)
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
@@ -866,7 +866,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             cnx.commit()
             return eid
-
 
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""

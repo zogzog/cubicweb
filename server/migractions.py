@@ -207,7 +207,7 @@ class ServerMigrationHelper(MigrationHelper):
                          askconfirm=True):
         # check
         if not osp.exists(backupfile):
-            raise Exception("Backup file %s doesn't exist" % backupfile)
+            raise ExecutionError("Backup file %s doesn't exist" % backupfile)
         if askconfirm and not self.confirm('Restore %s database from %s ?'
                                            % (self.config.appid, backupfile)):
             return
@@ -221,7 +221,7 @@ class ServerMigrationHelper(MigrationHelper):
         else:
             for name in bkup.getnames():
                 if name[0] in '/.':
-                    raise Exception('Security check failed, path starts with "/" or "."')
+                    raise ExecutionError('Security check failed, path starts with "/" or "."')
             bkup.close() # XXX seek error if not close+open !?!
             bkup = tarfile.open(backupfile, 'r|gz')
             bkup.extractall(path=tmpdir)
@@ -793,8 +793,8 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 specialized.eid = instschema[specialized].eid
             except KeyError:
-                raise Exception('trying to add entity type but parent type is '
-                                'not yet in the database schema')
+                raise ExecutionError('trying to add entity type but parent type is '
+                                     'not yet in the database schema')
             self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
         # register entity's attributes
         for rschema, attrschema in eschema.attribute_definitions():

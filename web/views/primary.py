@@ -54,7 +54,6 @@ class PrimaryView(EntityView):
     def cell_call(self, row, col):
         self.cw_row = row
         self.cw_col = col
-        self.maxrelated = self._cw.property_value('navigation.related-limit')
         entity = self.cw_rset.complete_entity(row, col)
         self.render_entity(entity)
 
@@ -260,8 +259,7 @@ class PrimaryView(EntityView):
 
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            dispctrl.setdefault('limit', self.maxrelated)
-            rset = entity.related(rschema.type, role, limit=dispctrl['limit']+1)
+            rset = entity.related(rschema.type, role)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
@@ -295,22 +293,29 @@ class PrimaryView(EntityView):
 
 
 class RelatedView(EntityView):
+    """Display a rset, usually containing entities linked to another entity
+    being displayed.
+
+    It will try to display nicely according to the number of items in the result
+    set.
+    """
     __regid__ = 'autolimited'
 
     def call(self, **kwargs):
-        # nb: rset is retreived using entity.related with limit + 1 if any.
-        # Because of that, we know that rset.printable_rql() will return rql
-        # with no limit set anyway (since it's handled manually)
         if 'dispctrl' in self.cw_extra_kwargs:
-            limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            if 'limit' in self.cw_extra_kwargs['dispctrl']:
+                limit = self.cw_extra_kwargs['dispctrl']['limit']
+            else:
+                limit = self._cw.property_value('navigation.related-limit')
+            list_limit = self.cw_extra_kwargs['dispctrl'].get('use_list_limit', 5)
             subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
-            limit = None
+            limit = list_limit = None
             subvid = 'incontext'
         if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
                 self.wview(subvid, self.cw_rset, row=0)
-            elif 1 < self.cw_rset.rowcount <= 5:
+            elif list_limit is None or 1 < self.cw_rset.rowcount <= list_limit:
                 self.wview('csv', self.cw_rset, subvid=subvid)
             else:
                 self.w(u'<div>')
@@ -320,12 +325,18 @@ class RelatedView(EntityView):
         else:
             rql = self.cw_rset.printable_rql()
             self.cw_rset.limit(limit) # remove extra entity
-            self.w(u'<div>')
-            self.wview('simplelist', self.cw_rset, subvid=subvid)
-            self.w(u'[<a href="%s">%s</a>]' % (
-                xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
-                self._cw._('see them all')))
-            self.w(u'</div>')
+            if list_limit is None:
+                self.wview('csv', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+            else:
+                self.w(u'<div>')
+                self.wview('simplelist', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+                self.w(u'</div>')
 
 
 class URLAttributeView(EntityView):
