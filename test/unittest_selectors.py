@@ -41,55 +41,55 @@ def _2_(*args, **kwargs):
 class SelectorsTC(TestCase):
     def test_basic_and(self):
         selector = _1_() & _1_()
-        self.assertEquals(selector(None), 2)
+        self.assertEqual(selector(None), 2)
         selector = _1_() & _0_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
         selector = _0_() & _1_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
     def test_basic_or(self):
         selector = _1_() | _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _1_() | _0_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_() | _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_() | _0_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
     def test_selector_and_function(self):
         selector = _1_() & _2_
-        self.assertEquals(selector(None), 3)
+        self.assertEqual(selector(None), 3)
         selector = _2_ & _1_()
-        self.assertEquals(selector(None), 3)
+        self.assertEqual(selector(None), 3)
 
     def test_three_and(self):
         selector = _1_() & _1_() & _1_()
-        self.assertEquals(selector(None), 3)
+        self.assertEqual(selector(None), 3)
         selector = _1_() & _0_() & _1_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
         selector = _0_() & _1_() & _1_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
     def test_three_or(self):
         selector = _1_() | _1_() | _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _1_() | _0_() | _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_() | _1_() | _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_() | _0_() | _0_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
     def test_composition(self):
         selector = (_1_() & _1_()) & (_1_() & _1_())
         self.failUnless(isinstance(selector, AndSelector))
-        self.assertEquals(len(selector.selectors), 4)
-        self.assertEquals(selector(None), 4)
+        self.assertEqual(len(selector.selectors), 4)
+        self.assertEqual(selector(None), 4)
         selector = (_1_() & _0_()) | (_1_() & _1_())
         self.failUnless(isinstance(selector, OrSelector))
-        self.assertEquals(len(selector.selectors), 2)
-        self.assertEquals(selector(None), 2)
+        self.assertEqual(len(selector.selectors), 2)
+        self.assertEqual(selector(None), 2)
 
     def test_search_selectors(self):
         sel = is_instance('something')
@@ -103,37 +103,37 @@ class SelectorsTC(TestCase):
         selector = _1_()
         selector &= _1_()
         selector &= _1_()
-        self.assertEquals(selector(None), 3)
+        self.assertEqual(selector(None), 3)
         selector = _1_()
         selector &= _0_()
         selector &= _1_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
         selector = _0_()
         selector &= _1_()
         selector &= _1_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
         selector = _0_()
         selector &= _0_()
         selector &= _0_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
     def test_inplace_or(self):
         selector = _1_()
         selector |= _1_()
         selector |= _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _1_()
         selector |= _0_()
         selector |= _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_()
         selector |= _1_()
         selector |= _1_()
-        self.assertEquals(selector(None), 1)
+        self.assertEqual(selector(None), 1)
         selector = _0_()
         selector |= _0_()
         selector |= _0_()
-        self.assertEquals(selector(None), 0)
+        self.assertEqual(selector(None), 0)
 
 
 class ImplementsSelectorTC(CubicWebTC):
@@ -153,7 +153,7 @@ class ImplementsSelectorTC(CubicWebTC):
 
     def test_yams_inheritance(self):
         cls = self.vreg['etypes'].etype_class('Transition')
-        self.assertEquals(is_instance('BaseTransition').score_class(cls, self.request()),
+        self.assertEqual(is_instance('BaseTransition').score_class(cls, self.request()),
                           3)
 
 

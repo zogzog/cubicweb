@@ -49,7 +49,7 @@ class CoreHooksTC(CubicWebTC):
         self.commit()
 
     def test_delete_required_relations_object(self):
-        self.skip('no sample in the schema ! YAGNI ? Kermaat ?')
+        self.skipTest('no sample in the schema ! YAGNI ? Kermaat ?')
 
     def test_static_vocabulary_check(self):
         self.assertRaises(ValidationError,
@@ -63,14 +63,14 @@ class CoreHooksTC(CubicWebTC):
                           self.commit)
 
     def test_inlined(self):
-        self.assertEquals(self.repo.schema['sender'].inlined, True)
+        self.assertEqual(self.repo.schema['sender'].inlined, True)
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
         self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
         eeid = self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y, X parts P '
                             'WHERE Y is EmailAddress, P is EmailPart')[0][0]
         self.execute('SET X sender Y WHERE X is Email, Y is EmailAddress')
         rset = self.execute('Any S WHERE X sender S, X eid %s' % eeid)
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
 
     def test_composite_1(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
@@ -81,10 +81,10 @@ class CoreHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE Email X')
         rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEquals(len(rset), 0)
+        self.assertEqual(len(rset), 0)
 
     def test_composite_2(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
@@ -96,7 +96,7 @@ class CoreHooksTC(CubicWebTC):
         self.execute('DELETE EmailPart X')
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEquals(len(rset), 0)
+        self.assertEqual(len(rset), 0)
 
     def test_composite_redirection(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
@@ -110,74 +110,74 @@ class CoreHooksTC(CubicWebTC):
         self.execute('SET X parts Y WHERE X messageid "<2345>"')
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
 
     def test_unsatisfied_constraints(self):
         releid = self.execute('SET U in_group G WHERE G name "owners", U login "admin"')[0][0]
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors,
+        self.assertEqual(ex.errors,
                           {'in_group-object': u'RQLConstraint NOT O name "owners" failed'})
 
     def test_html_tidy_hook(self):
         req = self.request()
         entity = req.create_entity('Workflow', name=u'wf1', description_format=u'text/html',
                                  description=u'yo')
-        self.assertEquals(entity.description, u'yo')
+        self.assertEqual(entity.description, u'yo')
         entity = req.create_entity('Workflow', name=u'wf2', description_format=u'text/html',
                                  description=u'<b>yo')
-        self.assertEquals(entity.description, u'<b>yo</b>')
+        self.assertEqual(entity.description, u'<b>yo</b>')
         entity = req.create_entity('Workflow', name=u'wf3', description_format=u'text/html',
                                  description=u'<b>yo</b>')
-        self.assertEquals(entity.description, u'<b>yo</b>')
+        self.assertEqual(entity.description, u'<b>yo</b>')
         entity = req.create_entity('Workflow', name=u'wf4', description_format=u'text/html',
                                  description=u'<b>R&D</b>')
-        self.assertEquals(entity.description, u'<b>R&amp;D</b>')
+        self.assertEqual(entity.description, u'<b>R&amp;D</b>')
         entity = req.create_entity('Workflow', name=u'wf5', description_format=u'text/html',
                                  description=u"<div>c&apos;est <b>l'ét&eacute;")
-        self.assertEquals(entity.description, u"<div>c'est <b>l'été</b></div>")
+        self.assertEqual(entity.description, u"<div>c'est <b>l'été</b></div>")
 
     def test_nonregr_html_tidy_hook_no_update(self):
         entity = self.request().create_entity('Workflow', name=u'wf1', description_format=u'text/html',
                                  description=u'yo')
         entity.set_attributes(name=u'wf2')
-        self.assertEquals(entity.description, u'yo')
+        self.assertEqual(entity.description, u'yo')
         entity.set_attributes(description=u'R&D<p>yo')
         entity.pop('description')
-        self.assertEquals(entity.description, u'R&amp;D<p>yo</p>')
+        self.assertEqual(entity.description, u'R&amp;D<p>yo</p>')
 
 
     def test_metadata_cwuri(self):
         entity = self.request().create_entity('Workflow', name=u'wf1')
-        self.assertEquals(entity.cwuri, self.repo.config['base-url'] + 'eid/%s' % entity.eid)
+        self.assertEqual(entity.cwuri, self.repo.config['base-url'] + 'eid/%s' % entity.eid)
 
     def test_metadata_creation_modification_date(self):
         _now = datetime.now()
         entity = self.request().create_entity('Workflow', name=u'wf1')
-        self.assertEquals((entity.creation_date - _now).seconds, 0)
-        self.assertEquals((entity.modification_date - _now).seconds, 0)
+        self.assertEqual((entity.creation_date - _now).seconds, 0)
+        self.assertEqual((entity.modification_date - _now).seconds, 0)
 
     def test_metadata_created_by(self):
         entity = self.request().create_entity('Bookmark', title=u'wf1', path=u'/view')
         self.commit() # fire operations
-        self.assertEquals(len(entity.created_by), 1) # make sure we have only one creator
-        self.assertEquals(entity.created_by[0].eid, self.session.user.eid)
+        self.assertEqual(len(entity.created_by), 1) # make sure we have only one creator
+        self.assertEqual(entity.created_by[0].eid, self.session.user.eid)
 
     def test_metadata_owned_by(self):
         entity = self.request().create_entity('Bookmark', title=u'wf1', path=u'/view')
         self.commit() # fire operations
-        self.assertEquals(len(entity.owned_by), 1) # make sure we have only one owner
-        self.assertEquals(entity.owned_by[0].eid, self.session.user.eid)
+        self.assertEqual(len(entity.owned_by), 1) # make sure we have only one owner
+        self.assertEqual(entity.owned_by[0].eid, self.session.user.eid)
 
     def test_user_login_stripped(self):
         u = self.create_user('  joe  ')
         tname = self.execute('Any L WHERE E login L, E eid %(e)s',
                              {'e': u.eid})[0][0]
-        self.assertEquals(tname, 'joe')
+        self.assertEqual(tname, 'joe')
         self.execute('SET X login " jijoe " WHERE X eid %(x)s', {'x': u.eid})
         tname = self.execute('Any L WHERE E login L, E eid %(e)s',
                              {'e': u.eid})[0][0]
-        self.assertEquals(tname, 'jijoe')
+        self.assertEqual(tname, 'jijoe')
 
 
 
@@ -198,15 +198,15 @@ class UserGroupHooksTC(CubicWebTC):
 
     def test_user_group_synchronization(self):
         user = self.session.user
-        self.assertEquals(user.groups, set(('managers',)))
+        self.assertEqual(user.groups, set(('managers',)))
         self.execute('SET X in_group G WHERE X eid %s, G name "guests"' % user.eid)
-        self.assertEquals(user.groups, set(('managers',)))
+        self.assertEqual(user.groups, set(('managers',)))
         self.commit()
-        self.assertEquals(user.groups, set(('managers', 'guests')))
+        self.assertEqual(user.groups, set(('managers', 'guests')))
         self.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
-        self.assertEquals(user.groups, set(('managers', 'guests')))
+        self.assertEqual(user.groups, set(('managers', 'guests')))
         self.commit()
-        self.assertEquals(user.groups, set(('managers',)))
+        self.assertEqual(user.groups, set(('managers',)))
 
     def test_user_composite_owner(self):
         ueid = self.create_user('toto').eid
@@ -214,7 +214,7 @@ class UserGroupHooksTC(CubicWebTC):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", U use_email X '
                      'WHERE U login "toto"')
         self.commit()
-        self.assertEquals(self.execute('Any A WHERE X owned_by U, U use_email X,'
+        self.assertEqual(self.execute('Any A WHERE X owned_by U, U use_email X,'
                                        'U login "toto", X address A')[0][0],
                           'toto@logilab.fr')
 
@@ -230,23 +230,23 @@ class CWPropertyHooksTC(CubicWebTC):
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'pkey-subject': 'unknown property key'})
+        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key'})
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEquals(ex.errors, {'pkey-subject': 'unknown property key'})
+        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key'})
 
     def test_site_wide_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'for_user-subject': "site-wide property can't be set for user"})
+        self.assertEqual(ex.errors, {'for_user-subject': "site-wide property can't be set for user"})
 
     def test_bad_type_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
-        self.assertEquals(ex.errors, {'value-subject': u'unauthorized value'})
+        self.assertEqual(ex.errors, {'value-subject': u'unauthorized value'})
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop"')
-        self.assertEquals(ex.errors, {'value-subject': u'unauthorized value'})
+        self.assertEqual(ex.errors, {'value-subject': u'unauthorized value'})
 
 
 class SchemaHooksTC(CubicWebTC):
@@ -266,7 +266,7 @@ class SchemaHooksTC(CubicWebTC):
             self.execute('INSERT CWUser X: X login "admin"')
         except ValidationError, ex:
             self.assertIsInstance(ex.entity, int)
-            self.assertEquals(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+            self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
 
 if __name__ == '__main__':

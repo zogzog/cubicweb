@@ -50,19 +50,19 @@ class AutomaticEntityFormTC(CubicWebTC):
     def test_cwuser_relations_by_category(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         # see custom configuration in views.cwuser
-        self.assertEquals(rbc(e, 'main', 'attributes'),
+        self.assertEqual(rbc(e, 'main', 'attributes'),
                           [('login', 'subject'),
                            ('upassword', 'subject'),
                            ('firstname', 'subject'),
                            ('surname', 'subject'),
                            ('in_group', 'subject'),
                            ])
-        self.assertListEquals(rbc(e, 'muledit', 'attributes'),
+        self.assertListEqual(rbc(e, 'muledit', 'attributes'),
                               [('login', 'subject'),
                                ('upassword', 'subject'),
                                ('in_group', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'main', 'metadata'),
+        self.assertListEqual(rbc(e, 'main', 'metadata'),
                               [('last_login_time', 'subject'),
                                ('modification_date', 'subject'),
                                ('created_by', 'subject'),
@@ -74,18 +74,18 @@ class AutomaticEntityFormTC(CubicWebTC):
         # XXX skip 'tags' relation here and in the hidden category because
         # of some test interdependancy when pytest is launched on whole cw
         # (appears here while expected in hidden
-        self.assertListEquals([x for x in rbc(e, 'main', 'relations')
+        self.assertListEqual([x for x in rbc(e, 'main', 'relations')
                                if x != ('tags', 'object')],
                               [('primary_email', 'subject'),
                                ('custom_workflow', 'subject'),
                                ('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])
-        self.assertListEquals(rbc(e, 'main', 'inlined'),
+        self.assertListEqual(rbc(e, 'main', 'inlined'),
                               [('use_email', 'subject'),
                                ])
         # owned_by is defined both as subject and object relations on CWUser
-        self.assertListEquals(sorted(x for x in rbc(e, 'main', 'hidden')
+        self.assertListEqual(sorted(x for x in rbc(e, 'main', 'hidden')
                                      if x != ('tags', 'object')),
                               sorted([('for_user', 'object'),
                                       ('created_by', 'object'),
@@ -100,7 +100,7 @@ class AutomaticEntityFormTC(CubicWebTC):
 
     def test_personne_relations_by_category(self):
         e = self.vreg['etypes'].etype_class('Personne')(self.request())
-        self.assertListEquals(rbc(e, 'main', 'attributes'),
+        self.assertListEqual(rbc(e, 'main', 'attributes'),
                               [('nom', 'subject'),
                                ('prenom', 'subject'),
                                ('sexe', 'subject'),
@@ -115,22 +115,22 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ('description', 'subject'),
                                ('salary', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'muledit', 'attributes'),
+        self.assertListEqual(rbc(e, 'muledit', 'attributes'),
                               [('nom', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'main', 'metadata'),
+        self.assertListEqual(rbc(e, 'main', 'metadata'),
                               [('creation_date', 'subject'),
                                ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
                                ('created_by', 'subject'),
                                ('owned_by', 'subject'),
                                ])
-        self.assertListEquals(rbc(e, 'main', 'relations'),
+        self.assertListEqual(rbc(e, 'main', 'relations'),
                               [('travaille', 'subject'),
                                ('manager', 'object'),
                                ('connait', 'object'),
                                ])
-        self.assertListEquals(rbc(e, 'main', 'hidden'),
+        self.assertListEqual(rbc(e, 'main', 'hidden'),
                               [])
 
     def test_edition_form(self):

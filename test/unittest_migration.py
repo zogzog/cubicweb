@@ -52,26 +52,26 @@ class MigrationToolsTC(TestCase):
         self.config.__class__.cube_appobject_path = frozenset()
 
     def test_filter_scripts_base(self):
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,3,0), (2,4,0)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,3,0), (2,4,0)),
                               [])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,4,0), (2,5,0)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,4,0), (2,5,0)),
                               [((2, 5, 0), SMIGRDIR+'2.5.0_Any.sql')])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,6,0)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,6,0)),
                               [((2, 6, 0), SMIGRDIR+'2.6.0_Any.sql')])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,4,0), (2,6,0)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,4,0), (2,6,0)),
                               [((2, 5, 0), SMIGRDIR+'2.5.0_Any.sql'),
                                ((2, 6, 0), SMIGRDIR+'2.6.0_Any.sql')])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,5,1)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,5,1)),
                               [])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,10,2)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,5,0), (2,10,2)),
                               [((2, 6, 0), SMIGRDIR+'2.6.0_Any.sql'),
                                ((2, 10, 2), SMIGRDIR+'2.10.2_Any.sql')])
-        self.assertListEquals(filter_scripts(self.config, SMIGRDIR, (2,5,1), (2,6,0)),
+        self.assertListEqual(filter_scripts(self.config, SMIGRDIR, (2,5,1), (2,6,0)),
                               [((2, 6, 0), SMIGRDIR+'2.6.0_Any.sql')])
 
-        self.assertListEquals(filter_scripts(self.config, TMIGRDIR, (0,0,2), (0,0,3)),
+        self.assertListEqual(filter_scripts(self.config, TMIGRDIR, (0,0,2), (0,0,3)),
                               [((0, 0, 3), TMIGRDIR+'0.0.3_Any.py')])
-        self.assertListEquals(filter_scripts(self.config, TMIGRDIR, (0,0,2), (0,0,4)),
+        self.assertListEqual(filter_scripts(self.config, TMIGRDIR, (0,0,2), (0,0,4)),
                               [((0, 0, 3), TMIGRDIR+'0.0.3_Any.py'),
                                ((0, 0, 4), TMIGRDIR+'0.0.4_Any.py')])
 
@@ -82,16 +82,16 @@ class MigrationToolsTC(TestCase):
         self.assertIsInstance(config.migration_handler(), MigrationHelper)
         config = self.config
         config.__class__.name = 'twisted'
-        self.assertListEquals(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
+        self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
                               [((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_web.py')])
         config.__class__.name = 'repository'
-        self.assertListEquals(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
+        self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
                               [((0, 1 ,0), TMIGRDIR+'0.1.0_Any.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_repository.py')])
         config.__class__.name = 'all-in-one'
-        self.assertListEquals(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
+        self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
                               [((0, 1 ,0), TMIGRDIR+'0.1.0_Any.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_repository.py'),
@@ -107,7 +107,7 @@ class BaseCreationTC(TestCase):
         """make sure database can be created"""
         config = ApptestConfiguration('data')
         source = config.sources()['system']
-        self.assertEquals(source['db-driver'], 'sqlite')
+        self.assertEqual(source['db-driver'], 'sqlite')
         cleanup_sqlite(source['db-name'], removetemplate=True)
         init_test_database(config=config)
 

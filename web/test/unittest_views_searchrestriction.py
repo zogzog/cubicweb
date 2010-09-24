@@ -46,32 +46,32 @@ class InsertAttrRelationTC(CubicWebTC):
                           'B in_group P, P name "managers"')
 
     def test_1(self):
-        self.assertEquals(self._generate(self.select, 'in_state', 'subject', 'name'),
+        self.assertEqual(self._generate(self.select, 'in_state', 'subject', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "B in_state A, B is CWUser, A name C")
 
     def test_2(self):
-        self.assertEquals(self._generate(self.select, 'tags', 'object', 'name'),
+        self.assertEqual(self._generate(self.select, 'tags', 'object', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "A tags B, B is CWUser, A name C")
 
     def test_3(self):
-        self.assertEquals(self._generate(self.select, 'created_by', 'subject', 'login'),
+        self.assertEqual(self._generate(self.select, 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "B created_by A, B is CWUser, A login C")
 
     def test_4(self):
-        self.assertEquals(self._generate(self.parse('Any X WHERE X is CWUser'), 'created_by', 'subject', 'login'),
+        self.assertEqual(self._generate(self.parse('Any X WHERE X is CWUser'), 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE X is CWUser, X created_by A, A login B")
 
     def test_5(self):
-        self.assertEquals(self._generate(self.parse('Any X,L WHERE X is CWUser, X login L'), 'created_by', 'subject', 'login'),
+        self.assertEqual(self._generate(self.parse('Any X,L WHERE X is CWUser, X login L'), 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE X is CWUser, X created_by A, A login B")
 
     def test_nonregr1(self):
         select = self.parse('Any T,V WHERE T bookmarked_by V?, '
                             'V in_state VS, VS name "published", T created_by U')
-        self.assertEquals(self._generate(select, 'created_by', 'subject', 'login'),
+        self.assertEqual(self._generate(select, 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE T created_by U, "
                           "T created_by A, T is Bookmark, A login B")
 
@@ -83,7 +83,7 @@ class InsertAttrRelationTC(CubicWebTC):
         for rdefs in rschema.rdefs.values():
             rdefs.cardinality =  '++'
         try:
-            self.assertEquals(self._generate(select, 'in_state', 'subject', 'name'),
+            self.assertEqual(self._generate(select, 'in_state', 'subject', 'name'),
                               "DISTINCT Any A,B ORDERBY B WHERE V is CWUser, "
                               "NOT EXISTS(V in_state VS), VS name 'published', "
                               "V in_state A, A name B")
@@ -94,7 +94,7 @@ class InsertAttrRelationTC(CubicWebTC):
     def test_nonregr3(self):
         #'DISTINCT Any X,TMP,N WHERE P name TMP, X version_of P, P is Project, X is Version, not X in_state S,S name "published", X num N ORDERBY TMP,N'
         select = self.parse('DISTINCT Any X, MAX(Y) GROUPBY X WHERE X is CWUser, Y is Bookmark, X in_group A')
-        self.assertEquals(self._generate(select, 'in_group', 'subject', 'name'),
+        self.assertEqual(self._generate(select, 'in_group', 'subject', 'name'),
                           "DISTINCT Any B,C ORDERBY C WHERE X is CWUser, X in_group B, B name C")
 
 

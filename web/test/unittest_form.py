@@ -36,10 +36,10 @@ class FieldsFormTC(CubicWebTC):
 
     def test_form_field_format(self):
         form = FieldsForm(self.request(), None)
-        self.assertEquals(StringField().format(form), 'text/html')
+        self.assertEqual(StringField().format(form), 'text/html')
         self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
-        self.assertEquals(StringField().format(form), 'text/rest')
+        self.assertEqual(StringField().format(form), 'text/rest')
 
 
 class EntityFieldsFormTC(CubicWebTC):
@@ -70,7 +70,7 @@ class EntityFieldsFormTC(CubicWebTC):
         form = self.vreg['forms'].select('edition', self.req, entity=e)
         unrelated = [rview for rview, reid in form.field_by_name('in_group', 'subject').choices(form)]
         # should be default groups but owners, i.e. managers, users, guests
-        self.assertEquals(unrelated, [u'guests', u'managers', u'users'])
+        self.assertEqual(unrelated, [u'guests', u'managers', u'users'])
 
     def test_consider_req_form_params(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
@@ -79,7 +79,7 @@ class EntityFieldsFormTC(CubicWebTC):
         field = StringField(name='login', role='subject', eidparam=True)
         form.append_field(field)
         form.build_context({})
-        self.assertEquals(field.widget.values(form, field), (u'toto',))
+        self.assertEqual(field.widget.values(form, field), (u'toto',))
 
 
     def test_linkto_field_duplication(self):
@@ -144,7 +144,7 @@ class EntityFieldsFormTC(CubicWebTC):
         form = RTFForm(self.req, redirect_path='perdu.com', entity=state)
         # make it think it can use fck editor anyway
         form.field_by_name('description', 'subject').format = lambda x: 'text/html'
-        self.assertTextEquals(self._render_entity_field('description', form),
+        self.assertMultiLineEqual(self._render_entity_field('description', form),
                               expected % {'eid': state.eid})
 
 
@@ -174,7 +174,7 @@ class EntityFieldsFormTC(CubicWebTC):
         file = self.req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
-        self.assertTextEquals(self._render_entity_field('data', form),
+        self.assertMultiLineEqual(self._render_entity_field('data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data-subject:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data-subject:%(eid)s-advanced" class="hidden">
@@ -183,8 +183,7 @@ class EntityFieldsFormTC(CubicWebTC):
 </div>
 <br/>
 <input name="data-subject__detach:%(eid)s" type="checkbox" />
-detach attached file
-''' % {'eid': file.eid})
+detach attached file''' % {'eid': file.eid})
 
 
     def test_editablefilefield(self):
@@ -198,7 +197,7 @@ detach attached file
         file = self.req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
-        self.assertTextEquals(self._render_entity_field('data', form),
+        self.assertMultiLineEqual(self._render_entity_field('data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data-subject:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data-subject:%(eid)s-advanced" class="hidden">
@@ -216,7 +215,7 @@ detach attached file
         class PFForm(EntityFieldsForm):
             upassword = PasswordField(eidparam=True, role='subject')
         form = PFForm(self.req, redirect_path='perdu.com', entity=self.entity)
-        self.assertTextEquals(self._render_entity_field('upassword', form),
+        self.assertMultiLineEqual(self._render_entity_field('upassword', form),
                               '''<input id="upassword-subject:%(eid)s" name="upassword-subject:%(eid)s" tabindex="1" type="password" value="" />
 <br/>
 <input name="upassword-subject-confirm:%(eid)s" tabindex="1" type="password" value="" />
@@ -230,7 +229,7 @@ detach attached file
     #     form = DFForm(self.req, entity=self.entity)
     #     init, cur = (fromstring(self._render_entity_field(attr, form)).get('value')
     #                  for attr in ('edits-creation_date', 'creation_date'))
-    #     self.assertEquals(init, cur)
+    #     self.assertEqual(init, cur)
 
 if __name__ == '__main__':
     unittest_main()

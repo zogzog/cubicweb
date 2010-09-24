@@ -47,9 +47,9 @@ class WebTestTC(TestCase):
 
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))
-        self.assertEquals(result.testsRun, 2)
-        self.assertEquals(len(result.errors), 0)
-        self.assertEquals(len(result.failures), 1)
+        self.assertEqual(result.testsRun, 2)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 1)
         clean_repo_test_cls(MyWebTest)
 
 
@@ -104,7 +104,7 @@ class HTMLPageInfoTC(TestCase):
 
     def test_source1(self):
         """make sure source is stored correctly"""
-        self.assertEquals(self.page_info.source, HTML_PAGE2)
+        self.assertEqual(self.page_info.source, HTML_PAGE2)
 
     def test_source2(self):
         """make sure source is stored correctly - raise exception"""
@@ -114,47 +114,47 @@ class HTMLPageInfoTC(TestCase):
 
     def test_has_title_no_level(self):
         """tests h? tags information"""
-        self.assertEquals(self.page_info.has_title('Test'), True)
-        self.assertEquals(self.page_info.has_title('Test '), False)
-        self.assertEquals(self.page_info.has_title('Tes'), False)
-        self.assertEquals(self.page_info.has_title('Hello world !'), True)
+        self.assertEqual(self.page_info.has_title('Test'), True)
+        self.assertEqual(self.page_info.has_title('Test '), False)
+        self.assertEqual(self.page_info.has_title('Tes'), False)
+        self.assertEqual(self.page_info.has_title('Hello world !'), True)
 
     def test_has_title_level(self):
         """tests h? tags information"""
-        self.assertEquals(self.page_info.has_title('Test', level = 1), True)
-        self.assertEquals(self.page_info.has_title('Test', level = 2), False)
-        self.assertEquals(self.page_info.has_title('Test', level = 3), False)
-        self.assertEquals(self.page_info.has_title('Test', level = 4), False)
+        self.assertEqual(self.page_info.has_title('Test', level = 1), True)
+        self.assertEqual(self.page_info.has_title('Test', level = 2), False)
+        self.assertEqual(self.page_info.has_title('Test', level = 3), False)
+        self.assertEqual(self.page_info.has_title('Test', level = 4), False)
         self.assertRaises(IndexError, self.page_info.has_title, 'Test', level = 5)
 
     def test_has_title_regexp_no_level(self):
         """tests has_title_regexp() with no particular level specified"""
-        self.assertEquals(self.page_info.has_title_regexp('h[23] title'), True)
+        self.assertEqual(self.page_info.has_title_regexp('h[23] title'), True)
 
     def test_has_title_regexp_level(self):
         """tests has_title_regexp() with a particular level specified"""
-        self.assertEquals(self.page_info.has_title_regexp('h[23] title', 2), True)
-        self.assertEquals(self.page_info.has_title_regexp('h[23] title', 3), True)
-        self.assertEquals(self.page_info.has_title_regexp('h[23] title', 4), False)
+        self.assertEqual(self.page_info.has_title_regexp('h[23] title', 2), True)
+        self.assertEqual(self.page_info.has_title_regexp('h[23] title', 3), True)
+        self.assertEqual(self.page_info.has_title_regexp('h[23] title', 4), False)
 
     def test_appears(self):
         """tests PageInfo.appears()"""
-        self.assertEquals(self.page_info.appears('CW'), True)
-        self.assertEquals(self.page_info.appears('Logilab'), True)
-        self.assertEquals(self.page_info.appears('Logilab introduces'), True)
-        self.assertEquals(self.page_info.appears('H2 title'), False)
+        self.assertEqual(self.page_info.appears('CW'), True)
+        self.assertEqual(self.page_info.appears('Logilab'), True)
+        self.assertEqual(self.page_info.appears('Logilab introduces'), True)
+        self.assertEqual(self.page_info.appears('H2 title'), False)
 
     def test_has_link(self):
         """tests has_link()"""
-        self.assertEquals(self.page_info.has_link('Logilab'), True)
-        self.assertEquals(self.page_info.has_link('logilab'), False)
-        self.assertEquals(self.page_info.has_link('Logilab', 'http://www.logilab.org'), True)
-        self.assertEquals(self.page_info.has_link('Logilab', 'http://www.google.com'), False)
+        self.assertEqual(self.page_info.has_link('Logilab'), True)
+        self.assertEqual(self.page_info.has_link('logilab'), False)
+        self.assertEqual(self.page_info.has_link('Logilab', 'http://www.logilab.org'), True)
+        self.assertEqual(self.page_info.has_link('Logilab', 'http://www.google.com'), False)
 
     def test_has_link_regexp(self):
         """test has_link_regexp()"""
-        self.assertEquals(self.page_info.has_link_regexp('L[oi]gilab'), True)
-        self.assertEquals(self.page_info.has_link_regexp('L[ai]gilab'), False)
+        self.assertEqual(self.page_info.has_link_regexp('L[oi]gilab'), True)
+        self.assertEqual(self.page_info.has_link_regexp('L[ai]gilab'), False)
 
 
 if __name__ == '__main__':

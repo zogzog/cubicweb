@@ -15,7 +15,7 @@ class TwistedCWAnonTC(CubicWebServerTC):
 
     def test_response_anon(self):
         response = self.web_get()
-        self.assertEquals(response.status, httplib.OK)
+        self.assertEqual(response.status, httplib.OK)
 
 
     def test_base_url(self):
@@ -29,20 +29,20 @@ class TwistedCWIdentTC(CubicWebServerTC):
 
     def test_response_denied(self):
         response = self.web_get()
-        self.assertEquals(response.status, httplib.FORBIDDEN)
+        self.assertEqual(response.status, httplib.FORBIDDEN)
 
     def test_login(self):
         response = self.web_get()
         if response.status != httplib.FORBIDDEN:
-             self.skip('Already authenticated')
+             self.skipTest('Already authenticated')
         # login
         self.web_login(self.admlogin, self.admpassword)
         response = self.web_get()
-        self.assertEquals(response.status, httplib.OK, response.body)
+        self.assertEqual(response.status, httplib.OK, response.body)
         # logout
         self.web_logout()
         response = self.web_get()
-        self.assertEquals(response.status, httplib.FORBIDDEN, response.body)
+        self.assertEqual(response.status, httplib.FORBIDDEN, response.body)
 
 
 

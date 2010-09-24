@@ -48,7 +48,7 @@ class EditControllerTC(CubicWebTC):
         """check behaviour of this controller without any form parameter
         """
         ex = self.assertRaises(ValidationError, self.ctrl_publish, self.request())
-        self.assertEquals(ex.errors, {None: u'no selected entities'})
+        self.assertEqual(ex.errors, {None: u'no selected entities'})
 
     def test_validation_unique(self):
         """test creation of two linked entities
@@ -62,7 +62,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject-confirm:X': u'toto',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+        self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
         """checking that a manager user can edit itself
@@ -83,10 +83,10 @@ class EditControllerTC(CubicWebTC):
             }
         path, params = self.expect_redirect_publish(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
-        self.assertEquals(e.firstname, u'Sylvain')
-        self.assertEquals(e.surname, u'Th\xe9nault')
-        self.assertEquals(e.login, user.login)
-        self.assertEquals([g.eid for g in e.in_group], groupeids)
+        self.assertEqual(e.firstname, u'Sylvain')
+        self.assertEqual(e.surname, u'Th\xe9nault')
+        self.assertEqual(e.login, user.login)
+        self.assertEqual([g.eid for g in e.in_group], groupeids)
 
     def test_user_can_change_its_password(self):
         user = self.create_user('user')
@@ -102,7 +102,7 @@ class EditControllerTC(CubicWebTC):
             }
         path, params = self.expect_redirect_publish(req, 'edit')
         cnx.commit() # commit to check we don't get late validation error for instance
-        self.assertEquals(path, 'cwuser/user')
+        self.assertEqual(path, 'cwuser/user')
         self.failIf('vid' in params)
 
     def test_user_editing_itself_no_relation(self):
@@ -123,11 +123,11 @@ class EditControllerTC(CubicWebTC):
             }
         path, params = self.expect_redirect_publish(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
-        self.assertEquals(e.login, user.login)
-        self.assertEquals(e.firstname, u'Th\xe9nault')
-        self.assertEquals(e.surname, u'Sylvain')
-        self.assertEquals([g.eid for g in e.in_group], groupeids)
-        self.assertEquals(e.cw_adapt_to('IWorkflowable').state, 'activated')
+        self.assertEqual(e.login, user.login)
+        self.assertEqual(e.firstname, u'Th\xe9nault')
+        self.assertEqual(e.surname, u'Sylvain')
+        self.assertEqual([g.eid for g in e.in_group], groupeids)
+        self.assertEqual(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
 
     def test_create_multiple_linked(self):
@@ -149,11 +149,11 @@ class EditControllerTC(CubicWebTC):
                     }
         path, params = self.expect_redirect_publish(req, 'edit')
         # should be redirected on the created person
-        self.assertEquals(path, 'cwuser/adim')
+        self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Mascio"').get_entity(0, 0)
-        self.assertEquals(e.surname, 'Di Mascio')
+        self.assertEqual(e.surname, 'Di Mascio')
         email = e.use_email[0]
-        self.assertEquals(email.address, 'dima@logilab.fr')
+        self.assertEqual(email.address, 'dima@logilab.fr')
 
     def test_edit_multiple_linked(self):
         peid = u(self.create_user('adim').eid)
@@ -171,10 +171,10 @@ class EditControllerTC(CubicWebTC):
                     }
         path, params = self.expect_redirect_publish(req, 'edit')
         # should be redirected on the created person
-        self.assertEquals(path, 'cwuser/adim')
+        self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Masci"').get_entity(0, 0)
         email = e.use_email[0]
-        self.assertEquals(email.address, 'dima@logilab.fr')
+        self.assertEqual(email.address, 'dima@logilab.fr')
 
         emaileid = u(email.eid)
         req = self.request()
@@ -191,7 +191,7 @@ class EditControllerTC(CubicWebTC):
                     }
         path, params = self.expect_redirect_publish(req, 'edit')
         email.clear_all_caches()
-        self.assertEquals(email.address, 'adim@logilab.fr')
+        self.assertEqual(email.address, 'adim@logilab.fr')
 
 
     def test_password_confirm(self):
@@ -206,7 +206,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject:X': u'toto',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
+        self.assertEqual(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
         req = self.request()
         req.form = {'__cloned_eid:X': u(user.eid),
                     'eid': 'X', '__type:X': 'CWUser',
@@ -216,7 +216,7 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject-confirm:X': u'tutu',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
+        self.assertEqual(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
 
 
     def test_interval_bound_constraint_success(self):
@@ -230,7 +230,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value must be >= 0'})
+        self.assertEqual(ex.errors, {'amount-subject': 'value must be >= 0'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -239,7 +239,7 @@ class EditControllerTC(CubicWebTC):
                     'described_by_test-subject:X': u(feid),
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'amount-subject': 'value must be <= 100'})
+        self.assertEqual(ex.errors, {'amount-subject': 'value must be <= 100'})
         req = self.request()
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -251,7 +251,7 @@ class EditControllerTC(CubicWebTC):
         # should be redirected on the created
         #eid = params['rql'].split()[-1]
         e = self.execute('Salesterm X').get_entity(0, 0)
-        self.assertEquals(e.amount, 10)
+        self.assertEqual(e.amount, 10)
 
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
@@ -262,8 +262,8 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
-        self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
-        self.assertEquals(get_pending_inserts(req), [])
+        self.assertItemsEqual(usergroups, ['managers', 'test'])
+        self.assertEqual(get_pending_inserts(req), [])
 
 
     def test_req_pending_delete(self):
@@ -274,15 +274,15 @@ class EditControllerTC(CubicWebTC):
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         # just make sure everything was set correctly
-        self.assertUnorderedIterableEquals(usergroups, ['managers', 'test'])
+        self.assertItemsEqual(usergroups, ['managers', 'test'])
         # now try to delete the relation
         req = self.request(**req_form(user))
         req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
         path, params = self.expect_redirect_publish(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
-        self.assertUnorderedIterableEquals(usergroups, ['managers'])
-        self.assertEquals(get_pending_deletes(req), [])
+        self.assertItemsEqual(usergroups, ['managers'])
+        self.assertEqual(get_pending_deletes(req), [])
 
     # def test_custom_attribute_handler(self):
     #     def custom_login_edit(self, formparams, value, relations):
@@ -300,7 +300,7 @@ class EditControllerTC(CubicWebTC):
     #             }
     #         path, params = self.expect_redirect_publish(req, 'edit')
     #         rset = self.execute('Any L WHERE X eid %(x)s, X login L', {'x': user.eid}, 'x')
-    #         self.assertEquals(rset[0][0], 'FOO')
+    #         self.assertEqual(rset[0][0], 'FOO')
     #     finally:
     #         del CWUser.custom_login_edit
 
@@ -321,11 +321,11 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_publish(req, 'edit')
         self.failUnless(path.startswith('blogentry/'))
         eid = path.split('/')[1]
-        self.assertEquals(params['vid'], 'edition')
+        self.assertEqual(params['vid'], 'edition')
         self.assertNotEquals(int(eid), 4012)
-        self.assertEquals(params['__redirectrql'], redirectrql)
-        self.assertEquals(params['__redirectvid'], 'primary')
-        self.assertEquals(params['__redirectparams'], 'toto=tutu&tata=titi')
+        self.assertEqual(params['__redirectrql'], redirectrql)
+        self.assertEqual(params['__redirectvid'], 'primary')
+        self.assertEqual(params['__redirectparams'], 'toto=tutu&tata=titi')
 
     def test_redirect_ok_button(self):
         redirectrql = rql_for_eid(4012) # whatever
@@ -341,11 +341,11 @@ class EditControllerTC(CubicWebTC):
             '__form_id': 'edition',
             }
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.assertEquals(path, 'view')
-        self.assertEquals(params['rql'], redirectrql)
-        self.assertEquals(params['vid'], 'primary')
-        self.assertEquals(params['tata'], 'titi')
-        self.assertEquals(params['toto'], 'tutu')
+        self.assertEqual(path, 'view')
+        self.assertEqual(params['rql'], redirectrql)
+        self.assertEqual(params['vid'], 'primary')
+        self.assertEqual(params['tata'], 'titi')
+        self.assertEqual(params['toto'], 'tutu')
 
     def test_redirect_delete_button(self):
         req = self.request()
@@ -353,7 +353,7 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': u(eid), '__type:%s'%eid: 'BlogEntry',
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.assertEquals(path, 'blogentry')
+        self.assertEqual(path, 'blogentry')
         self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
         self.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
@@ -363,7 +363,7 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': u(eid), '__type:%s'%eid: 'EmailAddress',
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.assertEquals(path, 'cwuser/admin')
+        self.assertEqual(path, 'cwuser/admin')
         self.assertIn('_cwmsgid', params)
         eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         eid2 = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
@@ -373,7 +373,7 @@ class EditControllerTC(CubicWebTC):
                     '__type:%s'%eid2: 'EmailAddress',
                     '__action_delete': ''}
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.assertEquals(path, 'view')
+        self.assertEqual(path, 'view')
         self.assertIn('_cwmsgid', params)
 
     def test_nonregr_eetype_etype_editing(self):
@@ -397,8 +397,8 @@ class EditControllerTC(CubicWebTC):
         try:
             path, params = self.expect_redirect_publish(req, 'edit')
             e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}).get_entity(0, 0)
-            self.assertEquals(e.name, 'CWEType')
-            self.assertEquals(sorted(g.eid for g in e.read_permission), groupeids)
+            self.assertEqual(e.name, 'CWEType')
+            self.assertEqual(sorted(g.eid for g in e.read_permission), groupeids)
         finally:
             # restore
             self.execute('SET X read_permission Y WHERE X name "CWEType", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
@@ -419,8 +419,8 @@ class EditControllerTC(CubicWebTC):
         self.failUnless(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
-        self.assertEquals(e.title, '"13:03:40"')
-        self.assertEquals(e.content, '"13:03:43"')
+        self.assertEqual(e.title, '"13:03:40"')
+        self.assertEqual(e.content, '"13:03:43"')
 
 
     def test_nonregr_multiple_empty_email_addr(self):
@@ -441,7 +441,7 @@ class EditControllerTC(CubicWebTC):
                     'use_email-object:Y': 'X',
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEquals(ex.errors, {'address-subject': u'required field'})
+        self.assertEqual(ex.errors, {'address-subject': u'required field'})
 
     def test_nonregr_copy(self):
         user = self.user()
@@ -453,10 +453,10 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     }
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.assertEquals(path, 'cwuser/toto')
+        self.assertEqual(path, 'cwuser/toto')
         e = self.execute('Any X WHERE X is CWUser, X login "toto"').get_entity(0, 0)
-        self.assertEquals(e.login, 'toto')
-        self.assertEquals(e.in_group[0].name, 'managers')
+        self.assertEqual(e.login, 'toto')
+        self.assertEqual(e.in_group[0].name, 'managers')
 
 
     def test_nonregr_rollback_on_validation_error(self):
@@ -488,7 +488,7 @@ class EditControllerTC(CubicWebTC):
                 req.form['vid'] = 'copy'
                 self.app_publish(req, 'view')
             rset = self.execute('CWUser P WHERE P surname "Boom"')
-            self.assertEquals(len(rset), 0)
+            self.assertEqual(len(rset), 0)
         finally:
             p.__class__.skip_copy_for = old_skips
 
@@ -560,95 +560,95 @@ class JSONControllerTC(CubicWebTC):
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
 #         ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
-#         self.assertEquals(ctrl.publish(),
+#         self.assertEqual(ctrl.publish(),
 #                           json_dumps(self.execute(rql).rows))
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
-        self.assertUnorderedIterableEquals(
+        self.assertItemsEqual(
             [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
             ['python', 'cubicweb'])
-        self.assertEquals(
+        self.assertEqual(
             self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
             [['python']])
 
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
-        self.assertUnorderedIterableEquals(
+        self.assertItemsEqual(
             [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
             ['python', 'cubicweb', 'javascript'])
-        self.assertEquals(
+        self.assertEqual(
             self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
             [['javascript']])
 
     def test_pending_insertion(self):
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])
         deletes = get_pending_deletes(req)
-        self.assertEquals(deletes, [])
+        self.assertEqual(deletes, [])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, ['12:tags:13'])
+        self.assertEqual(inserts, ['12:tags:13'])
         res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
         deletes = get_pending_deletes(req)
-        self.assertEquals(deletes, [])
+        self.assertEqual(deletes, [])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
+        self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
         inserts = get_pending_inserts(req, 12)
-        self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
+        self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
         inserts = get_pending_inserts(req, 13)
-        self.assertEquals(inserts, ['12:tags:13'])
+        self.assertEqual(inserts, ['12:tags:13'])
         inserts = get_pending_inserts(req, 14)
-        self.assertEquals(inserts, ['12:tags:14'])
+        self.assertEqual(inserts, ['12:tags:14'])
         req.remove_pending_operations()
 
     def test_pending_deletion(self):
         res, req = self.remote_call('add_pending_delete', ['12', 'tags', '13'])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, [])
+        self.assertEqual(inserts, [])
         deletes = get_pending_deletes(req)
-        self.assertEquals(deletes, ['12:tags:13'])
+        self.assertEqual(deletes, ['12:tags:13'])
         res, req = self.remote_call('add_pending_delete', ['12', 'tags', '14'])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, [])
+        self.assertEqual(inserts, [])
         deletes = get_pending_deletes(req)
-        self.assertEquals(deletes, ['12:tags:13', '12:tags:14'])
+        self.assertEqual(deletes, ['12:tags:13', '12:tags:14'])
         deletes = get_pending_deletes(req, 12)
-        self.assertEquals(deletes, ['12:tags:13', '12:tags:14'])
+        self.assertEqual(deletes, ['12:tags:13', '12:tags:14'])
         deletes = get_pending_deletes(req, 13)
-        self.assertEquals(deletes, ['12:tags:13'])
+        self.assertEqual(deletes, ['12:tags:13'])
         deletes = get_pending_deletes(req, 14)
-        self.assertEquals(deletes, ['12:tags:14'])
+        self.assertEqual(deletes, ['12:tags:14'])
         req.remove_pending_operations()
 
     def test_remove_pending_operations(self):
         self.remote_call('add_pending_delete', ['12', 'tags', '13'])
         _, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, ['12:tags:14'])
+        self.assertEqual(inserts, ['12:tags:14'])
         deletes = get_pending_deletes(req)
-        self.assertEquals(deletes, ['12:tags:13'])
+        self.assertEqual(deletes, ['12:tags:13'])
         req.remove_pending_operations()
-        self.assertEquals(get_pending_deletes(req), [])
-        self.assertEquals(get_pending_inserts(req), [])
+        self.assertEqual(get_pending_deletes(req), [])
+        self.assertEqual(get_pending_inserts(req), [])
 
 
     def test_add_inserts(self):
         res, req = self.remote_call('add_pending_inserts',
                                     [('12', 'tags', '13'), ('12', 'tags', '14')])
         inserts = get_pending_inserts(req)
-        self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
+        self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
         req.remove_pending_operations()
 
 
     # silly tests
     def test_external_resource(self):
-        self.assertEquals(self.remote_call('external_resource', 'RSS_LOGO')[0],
+        self.assertEqual(self.remote_call('external_resource', 'RSS_LOGO')[0],
                           json_dumps(self.config.uiprops['RSS_LOGO']))
     def test_i18n(self):
-        self.assertEquals(self.remote_call('i18n', ['bimboom'])[0],
+        self.assertEqual(self.remote_call('i18n', ['bimboom'])[0],
                           json_dumps(['bimboom']))
 
     def test_format_date(self):
-        self.assertEquals(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
+        self.assertEqual(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
                           json_dumps('2007/01/01'))
 
 

@@ -98,7 +98,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.execute('Societe2 X WHERE X name "logilab"')
         self.execute('SET X concerne2 X WHERE X name "logilab"')
         rset = self.execute('Any X WHERE X concerne2 Y')
-        self.assertEquals(rset.rows, [[s2eid]])
+        self.assertEqual(rset.rows, [[s2eid]])
         # check that when a relation definition is deleted, existing relations are deleted
         rdefeid = self.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, '
                                '   X from_entity E, X to_entity E '
@@ -125,9 +125,9 @@ class SchemaModificationHooksTC(CubicWebTC):
     def test_is_instance_of_insertions(self):
         seid = self.execute('INSERT Transition T: T name "subdiv"')[0][0]
         is_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is ET, ET name ETN' % seid)]
-        self.assertEquals(is_etypes, ['Transition'])
+        self.assertEqual(is_etypes, ['Transition'])
         instanceof_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is_instance_of ET, ET name ETN' % seid)]
-        self.assertEquals(sorted(instanceof_etypes), ['BaseTransition', 'Transition'])
+        self.assertEqual(sorted(instanceof_etypes), ['BaseTransition', 'Transition'])
         snames = [name for name, in self.execute('Any N WHERE S is BaseTransition, S name N')]
         self.failIf('subdiv' in snames)
         snames = [name for name, in self.execute('Any N WHERE S is_instance_of BaseTransition, S name N')]
@@ -136,27 +136,27 @@ class SchemaModificationHooksTC(CubicWebTC):
 
     def test_perms_synchronization_1(self):
         schema = self.repo.schema
-        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
+        self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
         self.failUnless(self.execute('Any X, Y WHERE X is CWEType, X name "CWUser", Y is CWGroup, Y name "users"')[0])
         self.execute('DELETE X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
-        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
+        self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
         self.commit()
-        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers',)))
+        self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers',)))
         self.execute('SET X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
         self.commit()
-        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users',)))
+        self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users',)))
 
     def test_perms_synchronization_2(self):
         schema = self.repo.schema['in_group'].rdefs[('CWUser', 'CWGroup')]
-        self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
+        self.assertEqual(schema.get_groups('read'), set(('managers', 'users', 'guests')))
         self.execute('DELETE X read_permission Y WHERE X relation_type RT, RT name "in_group", Y name "guests"')
-        self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
+        self.assertEqual(schema.get_groups('read'), set(('managers', 'users', 'guests')))
         self.commit()
-        self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
+        self.assertEqual(schema.get_groups('read'), set(('managers', 'users')))
         self.execute('SET X read_permission Y WHERE X relation_type RT, RT name "in_group", Y name "guests"')
-        self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
+        self.assertEqual(schema.get_groups('read'), set(('managers', 'users')))
         self.commit()
-        self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
+        self.assertEqual(schema.get_groups('read'), set(('managers', 'users', 'guests')))
 
     def test_nonregr_user_edit_itself(self):
         ueid = self.session.user.eid
@@ -187,7 +187,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.failIf(self.schema['state_of'].inlined)
             self.failIf(self.index_exists('State', 'state_of'))
             rset = self.execute('Any X, Y WHERE X state_of Y')
-            self.assertEquals(len(rset), 2) # user states
+            self.assertEqual(len(rset), 2) # user states
         except:
             import traceback
             traceback.print_exc()
@@ -198,7 +198,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.failUnless(self.schema['state_of'].inlined)
             self.failUnless(self.index_exists('State', 'state_of'))
             rset = self.execute('Any X, Y WHERE X state_of Y')
-            self.assertEquals(len(rset), 2)
+            self.assertEqual(len(rset), 2)
 
     def test_indexed_change(self):
         self.session.set_pool()
@@ -317,7 +317,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         rdef = self.schema['Transition'].rdef('type')
         cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
         if not getattr(cstr, 'eid', None):
-            self.skip('start me alone') # bug in schema reloading, constraint's eid not restored
+            self.skipTest('start me alone') # bug in schema reloading, constraint's eid not restored
         self.execute('SET X value %(v)s WHERE X eid %(x)s',
                      {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"})
         self.execute('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
@@ -325,7 +325,7 @@ class SchemaModificationHooksTC(CubicWebTC):
                      {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid})
         self.commit()
         cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
-        self.assertEquals(cstr.values, (u'normal', u'auto', u'new'))
+        self.assertEqual(cstr.values, (u'normal', u'auto', u'new'))
         self.execute('INSERT Transition T: T name "hop", T type "new"')
 
 if __name__ == '__main__':

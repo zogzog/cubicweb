@@ -65,7 +65,7 @@ class VRegistryTC(ViewSelectorTC):
         except AttributeError:
             return
         if registry == 'hooks':
-            self.assertEquals(len(content), expected, content)
+            self.assertEqual(len(content), expected, content)
             return
         try:
             self.assertSetEqual(content.keys(), expected)
@@ -467,18 +467,18 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_properties(self):
-        self.assertEquals(sorted(k for k in self.vreg['propertydefs'].keys()
+        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].keys()
                                  if k.startswith('boxes.edit_box')),
                           ['boxes.edit_box.context',
                            'boxes.edit_box.order',
                            'boxes.edit_box.visible'])
-        self.assertEquals([k for k in self.vreg['propertyvalues'].keys()
+        self.assertEqual([k for k in self.vreg['propertyvalues'].keys()
                            if not k.startswith('system.version')],
                           [])
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.visible'), True)
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.order'), 2)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.visible'), True)
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.order'), 2)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.visible'), False)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.order'), 10)
         self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
 
 

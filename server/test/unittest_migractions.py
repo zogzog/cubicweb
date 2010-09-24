@@ -80,11 +80,11 @@ class MigrationCommandsTC(CubicWebTC):
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
         self.failUnless('whatever' in self.schema)
-        self.assertEquals(self.schema['whatever'].subjects(), ('Note',))
-        self.assertEquals(self.schema['whatever'].objects(), ('Int',))
-        self.assertEquals(self.schema['Note'].default('whatever'), 2)
+        self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
+        self.assertEqual(self.schema['whatever'].objects(), ('Int',))
+        self.assertEqual(self.schema['Note'].default('whatever'), 2)
         note = self.execute('Note X').get_entity(0, 0)
-        self.assertEquals(note.whatever, 2)
+        self.assertEqual(note.whatever, 2)
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
@@ -93,7 +93,7 @@ class MigrationCommandsTC(CubicWebTC):
                 orderdict[k] = v+1
         orderdict['whatever'] = whateverorder
         self.assertDictEquals(orderdict, orderdict2)
-        #self.assertEquals([r.type for r in self.schema['Note'].ordered_relations()],
+        #self.assertEqual([r.type for r in self.schema['Note'].ordered_relations()],
         #                  ['modification_date', 'creation_date', 'owned_by',
         #                   'eid', 'ecrit_par', 'inline1', 'date', 'type',
         #                   'whatever', 'date', 'in_basket'])
@@ -106,12 +106,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
         self.failUnless('shortpara' in self.schema)
-        self.assertEquals(self.schema['shortpara'].subjects(), ('Note', ))
-        self.assertEquals(self.schema['shortpara'].objects(), ('String', ))
+        self.assertEqual(self.schema['shortpara'].subjects(), ('Note', ))
+        self.assertEqual(self.schema['shortpara'].objects(), ('String', ))
         # test created column is actually a varchar(64)
         notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
-        self.assertEquals(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
+        self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
@@ -119,15 +119,15 @@ class MigrationCommandsTC(CubicWebTC):
         self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'mydate')
         self.failUnless('mydate' in self.schema)
-        self.assertEquals(self.schema['mydate'].subjects(), ('Note', ))
-        self.assertEquals(self.schema['mydate'].objects(), ('Date', ))
+        self.assertEqual(self.schema['mydate'].subjects(), ('Note', ))
+        self.assertEqual(self.schema['mydate'].objects(), ('Date', ))
         testdate = date(2005, 12, 13)
         eid1 = self.mh.rqlexec('INSERT Note N')[0][0]
         eid2 = self.mh.rqlexec('INSERT Note N: N mydate %(mydate)s', {'mydate' : testdate})[0][0]
         d1 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid1})[0][0]
         d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2})[0][0]
-        self.assertEquals(d1, date.today())
-        self.assertEquals(d2, testdate)
+        self.assertEqual(d1, date.today())
+        self.assertEqual(d2, testdate)
         self.mh.rollback()
 
     def test_rename_attribute(self):
@@ -149,10 +149,10 @@ class MigrationCommandsTC(CubicWebTC):
         for etype in ('Personne', 'Email'):
             s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
-            self.assertEquals(s1, "foo")
+            self.assertEqual(s1, "foo")
             s1 = self.mh.rqlexec('Any N WHERE ET default_workflow WF, ET name "%s", WF name N' %
                                  etype)[0][0]
-            self.assertEquals(s1, "foo")
+            self.assertEqual(s1, "foo")
 
     def test_add_entity_type(self):
         self.failIf('Folder2' in self.schema)
@@ -163,18 +163,18 @@ class MigrationCommandsTC(CubicWebTC):
         self.failUnless('filed_under2' in self.schema)
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.schema.rebuild_infered_relations()
-        self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
+        self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cwuri',
                            'description', 'description_format',
                            'eid',
                            'filed_under2', 'has_text',
                            'identity', 'in_basket', 'is', 'is_instance_of',
                            'modification_date', 'name', 'owned_by'])
-        self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
+        self.assertEqual([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
-        self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.final))
-        self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
+        self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.rdef('name').constraints:
             self.failUnless(hasattr(cstr, 'eid'))
@@ -201,22 +201,22 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.schema.rebuild_infered_relations()
         self.failUnless('filed_under2' in self.schema)
-        self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.final))
-        self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
+        self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         self.mh.cmd_drop_relation_type('filed_under2')
         self.failIf('filed_under2' in self.schema)
 
     def test_add_relation_definition_nortype(self):
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Affaire')
-        self.assertEquals(self.schema['concerne2'].subjects(),
+        self.assertEqual(self.schema['concerne2'].subjects(),
                           ('Personne',))
-        self.assertEquals(self.schema['concerne2'].objects(),
+        self.assertEqual(self.schema['concerne2'].objects(),
                           ('Affaire', ))
-        self.assertEquals(self.schema['concerne2'].rdef('Personne', 'Affaire').cardinality,
+        self.assertEqual(self.schema['concerne2'].rdef('Personne', 'Affaire').cardinality,
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
-        self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
+        self.assertEqual(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
         self.mh.create_entity('Personne', nom=u'tot')
         self.mh.create_entity('Affaire')
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
@@ -227,59 +227,59 @@ class MigrationCommandsTC(CubicWebTC):
         self.failIf('concerne2' in self.schema)
 
     def test_drop_relation_definition_existant_rtype(self):
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Personne', 'concerne', 'Affaire')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_add_relation_definition('Personne', 'concerne', 'Affaire')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
         self.maxeid = self.execute('Any MAX(X)')[0][0]
 
     def test_drop_relation_definition_with_specialization(self):
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Affaire', 'concerne', 'Societe')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'SubDivision'])
         self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note', 'Societe'])
         self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
         self.maxeid = self.execute('Any MAX(X)')[0][0]
 
     def test_rename_relation(self):
-        self.skip('implement me')
+        self.skipTest('implement me')
 
     def test_change_relation_props_non_final(self):
         rschema = self.schema['concerne']
         card = rschema.rdef('Affaire', 'Societe').cardinality
-        self.assertEquals(card, '**')
+        self.assertEqual(card, '**')
         try:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
                                               cardinality='?*')
             card = rschema.rdef('Affaire', 'Societe').cardinality
-            self.assertEquals(card, '?*')
+            self.assertEqual(card, '?*')
         finally:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
                                               cardinality='**')
@@ -287,12 +287,12 @@ class MigrationCommandsTC(CubicWebTC):
     def test_change_relation_props_final(self):
         rschema = self.schema['adel']
         card = rschema.rdef('Personne', 'String').fulltextindexed
-        self.assertEquals(card, False)
+        self.assertEqual(card, False)
         try:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=True)
             card = rschema.rdef('Personne', 'String').fulltextindexed
-            self.assertEquals(card, True)
+            self.assertEqual(card, True)
         finally:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
@@ -312,11 +312,11 @@ class MigrationCommandsTC(CubicWebTC):
         
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
-        self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
+        self.assertEqual(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
                           'blabla bla')
-        self.assertEquals(cursor.execute('Any D WHERE X name "titre", X description D')[0][0],
+        self.assertEqual(cursor.execute('Any D WHERE X name "titre", X description D')[0][0],
                           'usually a title')
-        self.assertEquals(cursor.execute('Any D WHERE X relation_type RT, RT name "titre",'
+        self.assertEqual(cursor.execute('Any D WHERE X relation_type RT, RT name "titre",'
                                          'X from_entity FE, FE name "Personne",'
                                          'X description D')[0][0],
                           'title for this person')
@@ -327,29 +327,29 @@ class MigrationCommandsTC(CubicWebTC):
         expected = [u'nom', u'prenom', u'sexe', u'promo', u'ass', u'adel', u'titre',
                     u'web', u'tel', u'fax', u'datenaiss', u'test', 'description', u'firstname',
                     u'creation_date', 'cwuri', u'modification_date']
-        self.assertEquals(rinorder, expected)
+        self.assertEqual(rinorder, expected)
 
         # test permissions synchronization ####################################
         # new rql expr to add note entity
         eexpr = self._erqlexpr_entity('add', 'Note')
-        self.assertEquals(eexpr.expression,
+        self.assertEqual(eexpr.expression,
                           'X ecrit_part PE, U in_group G, '
                           'PE require_permission P, P name "add_note", P require_group G')
-        self.assertEquals([et.name for et in eexpr.reverse_add_permission], ['Note'])
-        self.assertEquals(eexpr.reverse_read_permission, ())
-        self.assertEquals(eexpr.reverse_delete_permission, ())
-        self.assertEquals(eexpr.reverse_update_permission, ())
+        self.assertEqual([et.name for et in eexpr.reverse_add_permission], ['Note'])
+        self.assertEqual(eexpr.reverse_read_permission, ())
+        self.assertEqual(eexpr.reverse_delete_permission, ())
+        self.assertEqual(eexpr.reverse_update_permission, ())
         # no more rqlexpr to delete and add para attribute
         self.failIf(self._rrqlexpr_rset('add', 'para'))
         self.failIf(self._rrqlexpr_rset('delete', 'para'))
         # new rql expr to add ecrit_par relation
         rexpr = self._rrqlexpr_entity('add', 'ecrit_par')
-        self.assertEquals(rexpr.expression,
+        self.assertEqual(rexpr.expression,
                           'O require_permission P, P name "add_note", '
                           'U in_group G, P require_group G')
-        self.assertEquals([rdef.rtype.name for rdef in rexpr.reverse_add_permission], ['ecrit_par'])
-        self.assertEquals(rexpr.reverse_read_permission, ())
-        self.assertEquals(rexpr.reverse_delete_permission, ())
+        self.assertEqual([rdef.rtype.name for rdef in rexpr.reverse_add_permission], ['ecrit_par'])
+        self.assertEqual(rexpr.reverse_read_permission, ())
+        self.assertEqual(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
         self.failIf(self._rrqlexpr_rset('add', 'travaille'))
         self.failIf(self._rrqlexpr_rset('delete', 'travaille'))
@@ -360,13 +360,13 @@ class MigrationCommandsTC(CubicWebTC):
         self.failIf(self._erqlexpr_rset('read', 'Affaire'))
         # rqlexpr to update Affaire entity has been updated
         eexpr = self._erqlexpr_entity('update', 'Affaire')
-        self.assertEquals(eexpr.expression, 'X concerne S, S owned_by U')
+        self.assertEqual(eexpr.expression, 'X concerne S, S owned_by U')
         # no change for rqlexpr to add and delete Affaire entity
-        self.assertEquals(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
-        self.assertEquals(len(self._erqlexpr_rset('add', 'Affaire')), 1)
+        self.assertEqual(len(self._erqlexpr_rset('delete', 'Affaire')), 1)
+        self.assertEqual(len(self._erqlexpr_rset('add', 'Affaire')), 1)
         # no change for rqlexpr to add and delete concerne relation
-        self.assertEquals(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
-        self.assertEquals(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
+        self.assertEqual(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
+        self.assertEqual(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:
         #   * 7 rqlexprs deletion (2 in (Affaire read + Societe + travaille) + 1
         #     in para attribute)
@@ -374,36 +374,36 @@ class MigrationCommandsTC(CubicWebTC):
         #   * 2 new (Note add, ecrit_par add)
         #   * 2 implicit new for attributes update_permission (Note.para, Personne.test)
         # remaining orphan rql expr which should be deleted at commit (composite relation)
-        self.assertEquals(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, '
+        self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, '
                                          'NOT ET1 read_permission X, NOT ET2 add_permission X, '
                                          'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
                           7+1)
         # finally
-        self.assertEquals(cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
+        self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
                           nbrqlexpr_start + 1 + 2 + 2)
         self.mh.commit()
         # unique_together test
         self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)
-        self.assertUnorderedIterableEquals(self.schema.eschema('Personne')._unique_together[0],
+        self.assertItemsEqual(self.schema.eschema('Personne')._unique_together[0],
                                            ('nom', 'prenom', 'datenaiss'))
         rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint')
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
         relations = [r.rtype.name for r in rset.get_entity(0,0).relations]
-        self.assertUnorderedIterableEquals(relations, ('nom', 'prenom', 'datenaiss'))
+        self.assertItemsEqual(relations, ('nom', 'prenom', 'datenaiss'))
 
     def _erqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
         return self.mh.session.execute(rql, {'name': ertype})
     def _erqlexpr_entity(self, action, ertype):
         rset = self._erqlexpr_rset(action, ertype)
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE RT is CWRType, RDEF %s_permission X, RT name %%(name)s, RDEF relation_type RT' % action
         return self.mh.session.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
         return rset.get_entity(0, 0)
 
     def test_set_size_constraint(self):
@@ -421,7 +421,7 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
-        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.keys()),
+        self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.keys()),
                           sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                   ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))
@@ -436,16 +436,16 @@ class MigrationCommandsTC(CubicWebTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
-                self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
+                self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
                                           ('Bookmark', 'Note'),
                                           ('Note', 'Note'),
                                           ('Note', 'Bookmark')]))
-                self.assertEquals(sorted(schema['see_also'].subjects()), ['Bookmark', 'Folder', 'Note'])
-                self.assertEquals(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
-                self.assertEquals(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
-                self.assertEquals(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
+                self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'Folder', 'Note'])
+                self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
+                self.assertEqual(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
+                self.assertEqual(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
             except :
                 import traceback
                 traceback.print_exc()
@@ -459,19 +459,19 @@ class MigrationCommandsTC(CubicWebTC):
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
-            self.assertEquals(sorted(schema['see_also'].rdefs.keys()),
+            self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
                               sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                       ('Bookmark', 'Bookmark'),
                                       ('Bookmark', 'Note'),
                                       ('Note', 'Note'),
                                       ('Note', 'Bookmark')]))
-            self.assertEquals(sorted(schema['see_also'].subjects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
-            self.assertEquals(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
+            self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
+            self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
             from cubes.email.__pkginfo__ import version as email_version
             from cubes.file.__pkginfo__ import version as file_version
-            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
+            self.assertEqual(self.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
                               email_version)
-            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
+            self.assertEqual(self.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
                               file_version)
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
@@ -509,19 +509,19 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_remove_dep_cube(self):
         ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
-        self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
+        self.assertEqual(str(ex), "can't remove cube file, used as a dependency")
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')
         self.mh.repo.schema.rebuild_infered_relations()
-        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+        self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           ['Note'])
-        self.assertEquals(self.schema['Note'].specializes().type, 'Para')
+        self.assertEqual(self.schema['Note'].specializes().type, 'Para')
         self.mh.cmd_add_entity_type('Text')
         self.mh.repo.schema.rebuild_infered_relations()
-        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+        self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           ['Note', 'Text'])
-        self.assertEquals(self.schema['Text'].specializes().type, 'Para')
+        self.assertEqual(self.schema['Text'].specializes().type, 'Para')
         # test columns have been actually added
         text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
         note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo"').get_entity(0, 0)
@@ -548,10 +548,10 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
         finally:
             self.session.data['rebuild-infered'] = False
-        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+        self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           [])
-        self.assertEquals(self.schema['Note'].specializes(), None)
-        self.assertEquals(self.schema['Text'].specializes(), None)
+        self.assertEqual(self.schema['Note'].specializes(), None)
+        self.assertEqual(self.schema['Text'].specializes(), None)
 
 
     def test_add_symmetric_relation_type(self):

@@ -12,7 +12,7 @@ class PostgresFTITC(CubicWebTC):
 
     def setUp(self):
         if not socket.gethostname().endswith('.logilab.fr'):
-            self.skip('XXX require logilab configuration')
+            self.skipTest('XXX require logilab configuration')
         super(PostgresFTITC, self).setUp()
 
     def test_occurence_count(self):
@@ -24,7 +24,7 @@ class PostgresFTITC(CubicWebTC):
         c3 = req.create_entity('Card', title=u'c2',
                                content=u'cubicweb cubicweb')
         self.commit()
-        self.assertEquals(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
+        self.assertEqual(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                           [[c1.eid], [c3.eid], [c2.eid]])
 
 
@@ -41,7 +41,7 @@ class PostgresFTITC(CubicWebTC):
             c3 = req.create_entity('Card', title=u'cubicweb',
                                    content=u'autre chose')
             self.commit()
-            self.assertEquals(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
+            self.assertEqual(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c3.eid], [c1.eid], [c2.eid]])
 
 
@@ -55,5 +55,5 @@ class PostgresFTITC(CubicWebTC):
             c2 = req.create_entity('Comment', content=u'cubicweb cubicweb', comments=c1)
             c3 = req.create_entity('Comment', content=u'cubicweb cubicweb cubicweb', comments=c1)
             self.commit()
-            self.assertEquals(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
+            self.assertEqual(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c1.eid], [c3.eid], [c2.eid]])

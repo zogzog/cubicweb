@@ -68,7 +68,7 @@ class ValueGeneratorTC(TestCase):
     def test_string(self):
         """test string generation"""
         surname = self.person_valgen.generate_attribute_value({}, 'surname', 12)
-        self.assertEquals(surname, u'é&surname12')
+        self.assertEqual(surname, u'é&surname12')
 
     def test_domain_value(self):
         """test value generation from a given domain value"""
@@ -100,21 +100,21 @@ class ValueGeneratorTC(TestCase):
 
     def test_phone(self):
         """tests make_tel utility"""
-        self.assertEquals(make_tel(22030405), '22 03 04 05')
+        self.assertEqual(make_tel(22030405), '22 03 04 05')
 
     def test_customized_generation(self):
-        self.assertEquals(self.bug_valgen.generate_attribute_value({}, 'severity', 12),
+        self.assertEqual(self.bug_valgen.generate_attribute_value({}, 'severity', 12),
                           u'dangerous')
-        self.assertEquals(self.bug_valgen.generate_attribute_value({}, 'description', 12),
+        self.assertEqual(self.bug_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
-        self.assertEquals(self.person_valgen.generate_attribute_value({}, 'description', 12),
+        self.assertEqual(self.person_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
 
 
 class ConstraintInsertionTC(TestCase):
 
     def test_writeme(self):
-        self.skip('Test automatic insertion / Schema Constraints')
+        self.skipTest('Test automatic insertion / Schema Constraints')
 
 
 if __name__ == '__main__':

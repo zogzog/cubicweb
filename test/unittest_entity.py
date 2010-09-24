@@ -42,14 +42,14 @@ class EntityTC(CubicWebTC):
 
     def test_has_eid(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        self.assertEquals(e.eid, None)
-        self.assertEquals(e.has_eid(), False)
+        self.assertEqual(e.eid, None)
+        self.assertEqual(e.has_eid(), False)
         e.eid = 'X'
-        self.assertEquals(e.has_eid(), False)
+        self.assertEqual(e.has_eid(), False)
         e.eid = 0
-        self.assertEquals(e.has_eid(), True)
+        self.assertEqual(e.has_eid(), True)
         e.eid = 2
-        self.assertEquals(e.has_eid(), True)
+        self.assertEqual(e.has_eid(), True)
 
     def test_copy(self):
         req = self.request()
@@ -61,11 +61,11 @@ class EntityTC(CubicWebTC):
         self.execute('SET TAG tags X WHERE X eid %(x)s', {'x': oe.eid})
         e = req.create_entity('Note', type=u'z')
         e.copy_relations(oe.eid)
-        self.assertEquals(len(e.ecrit_par), 1)
-        self.assertEquals(e.ecrit_par[0].eid, p.eid)
-        self.assertEquals(len(e.reverse_tags), 1)
+        self.assertEqual(len(e.ecrit_par), 1)
+        self.assertEqual(e.ecrit_par[0].eid, p.eid)
+        self.assertEqual(len(e.reverse_tags), 1)
         # check meta-relations are not copied, set on commit
-        self.assertEquals(len(e.created_by), 0)
+        self.assertEqual(len(e.created_by), 0)
 
     def test_copy_with_nonmeta_composite_inlined(self):
         req = self.request()
@@ -83,8 +83,8 @@ class EntityTC(CubicWebTC):
         user = self.user()
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
-        self.assertEquals(e.use_email[0].address, "toto@logilab.org")
-        self.assertEquals(e.use_email[0].eid, adeleid)
+        self.assertEqual(e.use_email[0].address, "toto@logilab.org")
+        self.assertEqual(e.use_email[0].eid, adeleid)
         usereid = self.execute('INSERT CWUser X: X login "toto", X upassword "toto", X in_group G '
                                'WHERE G name "users"')[0][0]
         e = self.execute('Any X WHERE X eid %(x)s', {'x': usereid}).get_entity(0, 0)
@@ -104,18 +104,18 @@ class EntityTC(CubicWebTC):
         e.copy_relations(user.eid)
         self.commit()
         e.cw_clear_relation_cache('in_state', 'subject')
-        self.assertEquals(e.cw_adapt_to('IWorkflowable').state, 'activated')
+        self.assertEqual(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
     def test_related_cache_both(self):
         user = self.execute('Any X WHERE X eid %(x)s', {'x':self.user().eid}).get_entity(0, 0)
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
         self.commit()
-        self.assertEquals(user._cw_related_cache, {})
+        self.assertEqual(user._cw_related_cache, {})
         email = user.primary_email[0]
-        self.assertEquals(sorted(user._cw_related_cache), ['primary_email_subject'])
-        self.assertEquals(email._cw_related_cache.keys(), ['primary_email_object'])
+        self.assertEqual(sorted(user._cw_related_cache), ['primary_email_subject'])
+        self.assertEqual(email._cw_related_cache.keys(), ['primary_email_object'])
         groups = user.in_group
-        self.assertEquals(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
+        self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
             self.failIf('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
 
@@ -125,8 +125,8 @@ class EntityTC(CubicWebTC):
         for tag in u'abcd':
             req.create_entity('Tag', name=tag)
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
-        self.assertEquals(len(p.related('tags', 'object', limit=2)), 2)
-        self.assertEquals(len(p.related('tags', 'object')), 4)
+        self.assertEqual(len(p.related('tags', 'object', limit=2)), 2)
+        self.assertEqual(len(p.related('tags', 'object')), 4)
 
 
     def test_fetch_rql(self):
@@ -141,7 +141,7 @@ class EntityTC(CubicWebTC):
         peschema.subjrels['evaluee'].rdef(peschema, Note.e_schema).cardinality = '1*'
         seschema.subjrels['evaluee'].rdef(seschema, Note.e_schema).cardinality = '1*'
         # testing basic fetch_attrs attribute
-        self.assertEquals(Personne.fetch_rql(user),
+        self.assertEqual(Personne.fetch_rql(user),
                           'Any X,AA,AB,AC ORDERBY AA ASC '
                           'WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
         pfetch_attrs = Personne.fetch_attrs
@@ -149,39 +149,39 @@ class EntityTC(CubicWebTC):
         try:
             # testing unknown attributes
             Personne.fetch_attrs = ('bloug', 'beep')
-            self.assertEquals(Personne.fetch_rql(user), 'Any X WHERE X is Personne')
+            self.assertEqual(Personne.fetch_rql(user), 'Any X WHERE X is Personne')
             # testing one non final relation
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
-            self.assertEquals(Personne.fetch_rql(user),
+            self.assertEqual(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD ORDERBY AA ASC '
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing two non final relations
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille', 'evaluee')
-            self.assertEquals(Personne.fetch_rql(user),
+            self.assertEqual(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
                               'X evaluee AE?, AE modification_date AF')
             # testing one non final relation with recursion
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom', 'evaluee')
-            self.assertEquals(Personne.fetch_rql(user),
+            self.assertEqual(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
                               'AC evaluee AE?, AE modification_date AF'
                               )
             # testing symmetric relation
             Personne.fetch_attrs = ('nom', 'connait')
-            self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
+            self.assertEqual(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
                               'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
             peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '?*'
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom',)
-            self.assertEquals(Personne.fetch_rql(user),
+            self.assertEqual(Personne.fetch_rql(user),
                               'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing relation with cardinality > 1
             peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '**'
-            self.assertEquals(Personne.fetch_rql(user),
+            self.assertEqual(Personne.fetch_rql(user),
                               'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB')
             # XXX test unauthorized attribute
         finally:
@@ -197,20 +197,20 @@ class EntityTC(CubicWebTC):
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
         SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
         p = self.request().create_entity('Personne', nom=u'pouet')
-        self.assertEquals(p.cw_related_rql('evaluee'),
+        self.assertEqual(p.cw_related_rql('evaluee'),
                           'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
                           'X type AA, X modification_date AB')
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
-        self.assertEquals(p.cw_related_rql('evaluee'),
+        self.assertEqual(p.cw_related_rql('evaluee'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E evaluee X, X modification_date AA')
 
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
-        self.assertEquals(tag.cw_related_rql('tags', 'subject'),
+        self.assertEqual(tag.cw_related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
-        self.assertEquals(tag.cw_related_rql('tags', 'subject', ('Personne',)),
+        self.assertEqual(tag.cw_related_rql('tags', 'subject', ('Personne',)),
                           'Any X,AA,AB ORDERBY AA ASC '
                           'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
                           'X modification_date AB')
@@ -219,20 +219,20 @@ class EntityTC(CubicWebTC):
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
         for ttype in self.schema['tags'].objects():
             self.vreg['etypes'].etype_class(ttype).fetch_attrs = ('modification_date',)
-        self.assertEquals(tag.cw_related_rql('tags', 'subject'),
+        self.assertEqual(tag.cw_related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
 
     def test_unrelated_rql_security_1(self):
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
-        self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
                           'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         self.create_user('toto')
         self.login('toto')
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
-        self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
                           'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
         self.assertRaises(Unauthorized, user.cw_unrelated_rql, 'use_email', 'EmailAddress', 'subject')
@@ -243,24 +243,24 @@ class EntityTC(CubicWebTC):
     def test_unrelated_rql_security_2(self):
         email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
-        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA ASC '
+        self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA ASC '
                           'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD')
         #rql = email.cw_unrelated_rql('use_email', 'Person', 'object')[0]
-        #self.assertEquals(rql, '')
+        #self.assertEqual(rql, '')
         self.login('anon')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
-        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+        self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                           'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
         #rql = email.cw_unrelated_rql('use_email', 'Person', 'object')[0]
-        #self.assertEquals(rql, '')
+        #self.assertEqual(rql, '')
 
     def test_unrelated_rql_security_nonexistant(self):
         self.login('anon')
         email = self.vreg['etypes'].etype_class('EmailAddress')(self.request())
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
-        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+        self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                           'WHERE S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
@@ -282,53 +282,53 @@ class EntityTC(CubicWebTC):
         e = req.create_entity('Tag', name=u'x')
         req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         req.create_entity('Personne', nom=u'thenault', prenom=u'sylvain')
-        self.assertEquals(len(e.unrelated('tags', 'Personne', 'subject', limit=1)),
+        self.assertEqual(len(e.unrelated('tags', 'Personne', 'subject', limit=1)),
                           1)
 
     def test_unrelated_security(self):
         email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEquals([x.login for x in rset.entities()], [u'admin', u'anon'])
+        self.assertEqual([x.login for x in rset.entities()], [u'admin', u'anon'])
         user = self.request().user
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEquals([x.address for x in rset.entities()], [u'hop'])
+        self.assertEqual([x.address for x in rset.entities()], [u'hop'])
         self.create_user('toto')
         self.login('toto')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEquals([x.login for x in rset.entities()], ['toto'])
+        self.assertEqual([x.login for x in rset.entities()], ['toto'])
         user = self.request().user
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEquals([x.address for x in rset.entities()], ['hop'])
+        self.assertEqual([x.address for x in rset.entities()], ['hop'])
         user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEquals([x.address for x in rset.entities()], [])
+        self.assertEqual([x.address for x in rset.entities()], [])
         self.login('anon')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEquals([x.login for x in rset.entities()], [])
+        self.assertEqual([x.login for x in rset.entities()], [])
         user = self.request().user
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEquals([x.address for x in rset.entities()], [])
+        self.assertEqual([x.address for x in rset.entities()], [])
 
     def test_unrelated_new_entity(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         unrelated = [r[0] for r in e.unrelated('in_group', 'CWGroup', 'subject')]
         # should be default groups but owners, i.e. managers, users, guests
-        self.assertEquals(len(unrelated), 3)
+        self.assertEqual(len(unrelated), 3)
 
     def test_printable_value_string(self):
         e = self.request().create_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
                             content_format=u'text/rest')
-        self.assertEquals(e.printable_value('content'),
+        self.assertEqual(e.printable_value('content'),
                           '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/guests">*ReST*</a></p>\n')
         e['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e['content_format'] = 'text/html'
-        self.assertEquals(e.printable_value('content'),
+        self.assertEqual(e.printable_value('content'),
                           'du <em>html</em> <a href="http://testing.fr/cubicweb/view?rql=CWUser%20X">users</a>')
         e['content'] = 'du *texte*'
         e['content_format'] = 'text/plain'
-        self.assertEquals(e.printable_value('content'),
+        self.assertEqual(e.printable_value('content'),
                           '<p>\ndu *texte*<br/>\n</p>')
         e['title'] = 'zou'
         e['content'] = '''\
@@ -336,17 +336,17 @@ a title
 =======
 du :eid:`1:*ReST*`'''
         e['content_format'] = 'text/rest'
-        self.assertEquals(e.printable_value('content', format='text/plain'),
+        self.assertEqual(e.printable_value('content', format='text/plain'),
                           e['content'])
 
         e['content'] = u'<b>yo (zou éà ;)</b>'
         e['content_format'] = 'text/html'
-        self.assertEquals(e.printable_value('content', format='text/plain').strip(),
+        self.assertEqual(e.printable_value('content', format='text/plain').strip(),
                           u'**yo (zou éà ;)**')
         if HAS_TAL:
             e['content'] = '<h1 tal:content="self/title">titre</h1>'
             e['content_format'] = 'text/cubicweb-page-template'
-            self.assertEquals(e.printable_value('content'),
+            self.assertEqual(e.printable_value('content'),
                               '<h1>zou</h1>')
 
 
@@ -358,17 +358,17 @@ du :eid:`1:*ReST*`'''
         if mttransforms.HAS_PYGMENTS_TRANSFORMS:
             import pygments
             if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
-                self.assertEquals(e.printable_value('data'),
+                self.assertEqual(e.printable_value('data'),
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
 </pre></div>
 ''')
             else:
-                self.assertEquals(e.printable_value('data'),
+                self.assertEqual(e.printable_value('data'),
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
 </pre></div>
 ''')
         else:
-            self.assertEquals(e.printable_value('data'),
+            self.assertEqual(e.printable_value('data'),
                               '''<pre class="python">
 <span style="color: #C00000;">lambda</span> <span style="color: #000000;">x</span><span style="color: #0000C0;">:</span> <span style="color: #0080C0;">1</span>
 </pre>
@@ -376,7 +376,7 @@ du :eid:`1:*ReST*`'''
 
         e = req.create_entity('File', data=Binary('*héhéhé*'), data_format=u'text/rest',
                             data_encoding=u'utf-8', data_name=u'toto.txt')
-        self.assertEquals(e.printable_value('data'),
+        self.assertEqual(e.printable_value('data'),
                           u'<p><em>héhéhé</em></p>\n')
 
     def test_printable_value_bad_html(self):
@@ -385,42 +385,42 @@ du :eid:`1:*ReST*`'''
         e = req.create_entity('Card', title=u'bad html', content=u'<div>R&D<br>',
                             content_format=u'text/html')
         tidy = lambda x: x.replace('\n', '')
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           '<div>R&amp;D<br/></div>')
         e['content'] = u'yo !! R&D <div> pas fermé'
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u'yo !! R&amp;D <div> pas fermé</div>')
         e['content'] = u'R&D'
-        self.assertEquals(tidy(e.printable_value('content')), u'R&amp;D')
+        self.assertEqual(tidy(e.printable_value('content')), u'R&amp;D')
         e['content'] = u'R&D;'
-        self.assertEquals(tidy(e.printable_value('content')), u'R&amp;D;')
+        self.assertEqual(tidy(e.printable_value('content')), u'R&amp;D;')
         e['content'] = u'yo !! R&amp;D <div> pas fermé'
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u'yo !! R&amp;D <div> pas fermé</div>')
         e['content'] = u'été <div> été'
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u'été <div> été</div>')
         e['content'] = u'C&apos;est un exemple s&eacute;rieux'
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u"C'est un exemple sérieux")
         # make sure valid xhtml is left untouched
         e['content'] = u'<div>R&amp;D<br/></div>'
-        self.assertEquals(e.printable_value('content'), e['content'])
+        self.assertEqual(e.printable_value('content'), e['content'])
         e['content'] = u'<div>été</div>'
-        self.assertEquals(e.printable_value('content'), e['content'])
+        self.assertEqual(e.printable_value('content'), e['content'])
         e['content'] = u'été'
-        self.assertEquals(e.printable_value('content'), e['content'])
+        self.assertEqual(e.printable_value('content'), e['content'])
         e['content'] = u'hop\r\nhop\nhip\rmomo'
-        self.assertEquals(e.printable_value('content'), u'hop\nhop\nhip\nmomo')
+        self.assertEqual(e.printable_value('content'), u'hop\nhop\nhip\nmomo')
 
     def test_printable_value_bad_html_ms(self):
-        self.skip('fix soup2xhtml to handle this test')
+        self.skipTest('fix soup2xhtml to handle this test')
         req = self.request()
         e = req.create_entity('Card', title=u'bad html', content=u'<div>R&D<br>',
                             content_format=u'text/html')
         tidy = lambda x: x.replace('\n', '')
         e['content'] = u'<div x:foo="bar">ms orifice produces weird html</div>'
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u'<div>ms orifice produces weird html</div>')
         import tidy as tidymod # apt-get install python-tidy
         tidy = lambda x: str(tidymod.parseString(x.encode('utf-8'),
@@ -429,7 +429,7 @@ du :eid:`1:*ReST*`'''
                                                     'show_body_only' : True,
                                                     'quote-nbsp' : False,
                                                     'char_encoding' : 'utf8'})).decode('utf-8').strip()
-        self.assertEquals(tidy(e.printable_value('content')),
+        self.assertEqual(tidy(e.printable_value('content')),
                           u'<div>ms orifice produces weird html</div>')
 
 
@@ -442,7 +442,7 @@ du :eid:`1:*ReST*`'''
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
-        self.assertEquals(e.cw_adapt_to('IFTIndexable').get_words(),
+        self.assertEqual(e.cw_adapt_to('IFTIndexable').get_words(),
                           {'C': [u'du', u'html', 'an', 'html', 'file', u'some', u'data']})
 
 
@@ -451,7 +451,7 @@ du :eid:`1:*ReST*`'''
         p1 = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         p2 = req.create_entity('Personne', nom=u'toto')
         self.execute('SET X evaluee Y WHERE X nom "di mascio", Y nom "toto"')
-        self.assertEquals(p1.evaluee[0].nom, "toto")
+        self.assertEqual(p1.evaluee[0].nom, "toto")
         self.failUnless(not p1.reverse_evaluee)
 
     def test_complete_relation(self):
@@ -465,7 +465,7 @@ du :eid:`1:*ReST*`'''
         self.failUnless(trinfo.cw_relation_cached('from_state', 'subject'))
         self.failUnless(trinfo.cw_relation_cached('to_state', 'subject'))
         self.failUnless(trinfo.cw_relation_cached('wf_info_for', 'subject'))
-        self.assertEquals(trinfo.by_transition, ())
+        self.assertEqual(trinfo.by_transition, ())
 
     def test_request_cache(self):
         req = self.request()
@@ -477,55 +477,55 @@ du :eid:`1:*ReST*`'''
     def test_rest_path(self):
         req = self.request()
         note = req.create_entity('Note', type=u'z')
-        self.assertEquals(note.rest_path(), 'note/%s' % note.eid)
+        self.assertEqual(note.rest_path(), 'note/%s' % note.eid)
         # unique attr
         tag = req.create_entity('Tag', name=u'x')
-        self.assertEquals(tag.rest_path(), 'tag/x')
+        self.assertEqual(tag.rest_path(), 'tag/x')
         # test explicit rest_attr
         person = req.create_entity('Personne', prenom=u'john', nom=u'doe')
-        self.assertEquals(person.rest_path(), 'personne/doe')
+        self.assertEqual(person.rest_path(), 'personne/doe')
         # ambiguity test
         person2 = req.create_entity('Personne', prenom=u'remi', nom=u'doe')
         person.clear_all_caches()
-        self.assertEquals(person.rest_path(), 'personne/eid/%s' % person.eid)
-        self.assertEquals(person2.rest_path(), 'personne/eid/%s' % person2.eid)
+        self.assertEqual(person.rest_path(), 'personne/eid/%s' % person.eid)
+        self.assertEqual(person2.rest_path(), 'personne/eid/%s' % person2.eid)
         # unique attr with None value (wikiid in this case)
         card1 = req.create_entity('Card', title=u'hop')
-        self.assertEquals(card1.rest_path(), 'card/eid/%s' % card1.eid)
+        self.assertEqual(card1.rest_path(), 'card/eid/%s' % card1.eid)
         # don't use rest if we have /, ? or & in the path (breaks mod_proxy)
         card2 = req.create_entity('Card', title=u'pod', wikiid=u'zo/bi')
-        self.assertEquals(card2.rest_path(), 'card/eid/%d' % card2.eid)
+        self.assertEqual(card2.rest_path(), 'card/eid/%d' % card2.eid)
         card3 = req.create_entity('Card', title=u'pod', wikiid=u'zo&bi')
-        self.assertEquals(card3.rest_path(), 'card/eid/%d' % card3.eid)
+        self.assertEqual(card3.rest_path(), 'card/eid/%d' % card3.eid)
         card4 = req.create_entity('Card', title=u'pod', wikiid=u'zo?bi')
-        self.assertEquals(card4.rest_path(), 'card/eid/%d' % card4.eid)
+        self.assertEqual(card4.rest_path(), 'card/eid/%d' % card4.eid)
         
 
     def test_set_attributes(self):
         req = self.request()
         person = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
-        self.assertEquals(person.prenom, u'adrien')
-        self.assertEquals(person.nom, u'di mascio')
+        self.assertEqual(person.prenom, u'adrien')
+        self.assertEqual(person.nom, u'di mascio')
         person.set_attributes(prenom=u'sylvain', nom=u'thénault')
         person = self.execute('Personne P').get_entity(0, 0) # XXX retreival needed ?
-        self.assertEquals(person.prenom, u'sylvain')
-        self.assertEquals(person.nom, u'thénault')
+        self.assertEqual(person.prenom, u'sylvain')
+        self.assertEqual(person.nom, u'thénault')
 
     def test_metainformation_and_external_absolute_url(self):
         req = self.request()
         note = req.create_entity('Note', type=u'z')
         metainf = note.cw_metainformation()
-        self.assertEquals(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
-        self.assertEquals(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
+        self.assertEqual(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
+        self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'
         metainf['extid']  = 1234
-        self.assertEquals(note.absolute_url(), 'http://cubicweb2.com/note/1234')
+        self.assertEqual(note.absolute_url(), 'http://cubicweb2.com/note/1234')
 
     def test_absolute_url_empty_field(self):
         req = self.request()
         card = req.create_entity('Card', wikiid=u'', title=u'test')
-        self.assertEquals(card.absolute_url(),
+        self.assertEqual(card.absolute_url(),
                           'http://testing.fr/cubicweb/card/eid/%s' % card.eid)
 
     def test_create_entity(self):
@@ -537,10 +537,10 @@ du :eid:`1:*ReST*`'''
         p = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien',
                               connait=p1, evaluee=[p1, p2],
                               reverse_ecrit_par=note)
-        self.assertEquals(p.nom, 'di mascio')
-        self.assertEquals([c.nom for c in p.connait], ['fayolle'])
-        self.assertEquals(sorted([c.nom for c in p.evaluee]), ['campeas', 'fayolle'])
-        self.assertEquals([c.type for c in p.reverse_ecrit_par], ['z'])
+        self.assertEqual(p.nom, 'di mascio')
+        self.assertEqual([c.nom for c in p.connait], ['fayolle'])
+        self.assertEqual(sorted([c.nom for c in p.evaluee]), ['campeas', 'fayolle'])
+        self.assertEqual([c.type for c in p.reverse_ecrit_par], ['z'])
 
 
 

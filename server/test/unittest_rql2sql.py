@@ -1096,12 +1096,15 @@ class CWRQLTC(RQLGeneratorTC):
             for sol in delete.solutions:
                 s.add(sol.get(var))
             return s
-        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
-        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
-        self.assertEquals(var_sols('ISOBJECT'),
+        self.assertEqual(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
+        self.assertEqual(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
+        self.assertEqual(var_sols('ISOBJECT'),
                           set(x.type for x in self.schema.entities() if not x.final))
-        self.assertEquals(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
+        self.assertEqual(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
 
+
+def strip(text):
+    return '\n'.join(l.strip() for l in text.strip().splitlines())
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
     schema = schema
@@ -1118,7 +1121,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             r, nargs, cbs = self.o.generate(union, args,
                                             varmap=varmap)
             args.update(nargs)
-            self.assertLinesEquals((r % args).strip(), self._norm_sql(sql), striplines=True)
+            self.assertMultiLineEqual(strip(r % args), self._norm_sql(sql))
         except Exception, ex:
             if 'r' in locals():
                 try:
@@ -1200,7 +1203,7 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
     def test_is_null_transform(self):
         union = self._prepare('Any X WHERE X login %(login)s')
         r, args, cbs = self.o.generate(union, {'login': None})
-        self.assertLinesEquals((r % args).strip(),
+        self.assertMultiLineEqual((r % args).strip(),
                                '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
 WHERE _X.cw_login IS NULL''')
@@ -1454,8 +1457,8 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
         try:
             union = self._prepare('Any R WHERE X ref R')
             r, nargs, cbs = self.o.generate(union, args={})
-            self.assertLinesEquals(r.strip(), 'SELECT _X.cw_ref\nFROM cw_Affaire AS _X')
-            self.assertEquals(cbs, {0: [cb]})
+            self.assertMultiLineEqual(r.strip(), 'SELECT _X.cw_ref\nFROM cw_Affaire AS _X')
+            self.assertEqual(cbs, {0: [cb]})
         finally:
             self.o.attr_map.clear()
 
@@ -1712,7 +1715,7 @@ class removeUnsusedSolutionsTC(TestCase):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                             {'A': 'FootGroup', 'B': 'FootTeam'}],
@@ -1723,7 +1726,7 @@ class removeUnsusedSolutionsTC(TestCase):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
                           )

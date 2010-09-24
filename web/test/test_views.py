@@ -66,7 +66,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
         self.vreg.register(SomeView)
         rset = self.execute('CWUser X')
         source = self.view('someview', rset).source
-        self.assertEquals(source.count('spam.js'), 1)
+        self.assertEqual(source.count('spam.js'), 1)
 
 
 

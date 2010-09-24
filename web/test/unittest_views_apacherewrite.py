@@ -41,18 +41,18 @@ class ApacheURLRewriteTC(TestCase):
             urlrewriter.rewrite('logilab.fr', '/whatever', req)
             self.fail('redirect exception expected')
         except Redirect, ex:
-            self.assertEquals(ex.location, 'http://www.logilab.fr/whatever')
-        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/whatever', req),
+            self.assertEqual(ex.location, 'http://www.logilab.fr/whatever')
+        self.assertEqual(urlrewriter.rewrite('www.logilab.fr', '/whatever', req),
                           '/whatever')
-        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/json/bla', req),
+        self.assertEqual(urlrewriter.rewrite('www.logilab.fr', '/json/bla', req),
                           '/json/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/json/bla', req),
+        self.assertEqual(urlrewriter.rewrite('abcd.logilab.fr', '/json/bla', req),
                           '/json/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/data/bla', req),
+        self.assertEqual(urlrewriter.rewrite('abcd.logilab.fr', '/data/bla', req),
                           '/data/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/whatever', req),
+        self.assertEqual(urlrewriter.rewrite('abcd.logilab.fr', '/whatever', req),
                           '/m_abcd/whatever')
-        self.assertEquals(urlrewriter.rewrite('abcd.fr', '/whatever', req),
+        self.assertEqual(urlrewriter.rewrite('abcd.fr', '/whatever', req),
                           '/whatever')
 
 

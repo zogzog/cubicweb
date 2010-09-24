@@ -141,8 +141,8 @@ class PartPlanInformationTC(BaseMSPlannerTC):
             for var in sourcevars.keys():
                 solindices = sourcevars.pop(var)
                 sourcevars[var._ms_table_key()] = solindices
-        self.assertEquals(ppi._sourcesterms, sourcesterms)
-        self.assertEquals(ppi.needsplit, needsplit)
+        self.assertEqual(ppi._sourcesterms, sourcesterms)
+        self.assertEqual(ppi.needsplit, needsplit)
 
 
     def test_simple_system_only(self):
@@ -2032,7 +2032,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # identity relation. BUT I think it's better to leave it as is and to
         # explain constraint propagation rules, and so why this should be
         # wrapped in exists() if used in multi-source
-        self.skip('take a look at me if you wish')
+        self.skipTest('take a look at me if you wish')
         self._test('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
                    'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (U identity ME '
                    'OR (EXISTS(U in_group G, G name IN("managers", "staff")))) '

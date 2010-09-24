@@ -43,12 +43,12 @@ class WorkflowBuildingTC(CubicWebTC):
         wf = add_wf(self, 'Company')
         foo = wf.add_state(u'foo', initial=True)
         bar = wf.add_state(u'bar')
-        self.assertEquals(wf.state_by_name('bar').eid, bar.eid)
-        self.assertEquals(wf.state_by_name('barrr'), None)
+        self.assertEqual(wf.state_by_name('bar').eid, bar.eid)
+        self.assertEqual(wf.state_by_name('barrr'), None)
         baz = wf.add_transition(u'baz', (foo,), bar, ('managers',))
-        self.assertEquals(wf.transition_by_name('baz').eid, baz.eid)
-        self.assertEquals(len(baz.require_group), 1)
-        self.assertEquals(baz.require_group[0].name, 'managers')
+        self.assertEqual(wf.transition_by_name('baz').eid, baz.eid)
+        self.assertEqual(len(baz.require_group), 1)
+        self.assertEqual(baz.require_group[0].name, 'managers')
 
     def test_duplicated_state(self):
         wf = add_wf(self, 'Company')
@@ -56,7 +56,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
+        self.assertEqual(ex.errors, {'name-subject': 'workflow already have a state of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
@@ -66,7 +66,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         bar.set_attributes(name=u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a state of that name'})
+        self.assertEqual(ex.errors, {'name-subject': 'workflow already have a state of that name'})
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')
@@ -75,7 +75,7 @@ class WorkflowBuildingTC(CubicWebTC):
         wf.add_transition(u'baz', (foo,), bar, ('managers',))
         wf.add_transition(u'baz', (bar,), foo)
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
+        self.assertEqual(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf.add_state(u'foo', initial=True)
@@ -87,7 +87,7 @@ class WorkflowBuildingTC(CubicWebTC):
         self.commit()
         biz.set_attributes(name=u'baz')
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
+        self.assertEqual(ex.errors, {'name-subject': 'workflow already have a transition of that name'})
 
 
 class WorkflowTC(CubicWebTC):
@@ -95,13 +95,13 @@ class WorkflowTC(CubicWebTC):
     def setup_database(self):
         rschema = self.schema['in_state']
         for rdef in rschema.rdefs.values():
-            self.assertEquals(rdef.cardinality, '1*')
+            self.assertEqual(rdef.cardinality, '1*')
         self.member = self.create_user('member')
 
     def test_workflow_base(self):
         e = self.create_user('toto')
         iworkflowable = e.cw_adapt_to('IWorkflowable')
-        self.assertEquals(iworkflowable.state, 'activated')
+        self.assertEqual(iworkflowable.state, 'activated')
         iworkflowable.change_state('deactivated', u'deactivate 1')
         self.commit()
         iworkflowable.change_state('activated', u'activate 1')
@@ -109,33 +109,33 @@ class WorkflowTC(CubicWebTC):
         iworkflowable.change_state('deactivated', u'deactivate 2')
         self.commit()
         e.cw_clear_relation_cache('wf_info_for', 'object')
-        self.assertEquals([tr.comment for tr in e.reverse_wf_info_for],
+        self.assertEqual([tr.comment for tr in e.reverse_wf_info_for],
                           ['deactivate 1', 'activate 1', 'deactivate 2'])
-        self.assertEquals(iworkflowable.latest_trinfo().comment, 'deactivate 2')
+        self.assertEqual(iworkflowable.latest_trinfo().comment, 'deactivate 2')
 
     def test_possible_transitions(self):
         user = self.execute('CWUser X').get_entity(0, 0)
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         trs = list(iworkflowable.possible_transitions())
-        self.assertEquals(len(trs), 1)
-        self.assertEquals(trs[0].name, u'deactivate')
-        self.assertEquals(trs[0].destination(None).name, u'deactivated')
+        self.assertEqual(len(trs), 1)
+        self.assertEqual(trs[0].name, u'deactivate')
+        self.assertEqual(trs[0].destination(None).name, u'deactivated')
         # test a std user get no possible transition
         cnx = self.login('member')
         # fetch the entity using the new session
         trs = list(cnx.user().cw_adapt_to('IWorkflowable').possible_transitions())
-        self.assertEquals(len(trs), 0)
+        self.assertEqual(len(trs), 0)
 
     def _test_manager_deactivate(self, user):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         user.cw_clear_relation_cache('in_state', 'subject')
-        self.assertEquals(len(user.in_state), 1)
-        self.assertEquals(iworkflowable.state, 'deactivated')
+        self.assertEqual(len(user.in_state), 1)
+        self.assertEqual(iworkflowable.state, 'deactivated')
         trinfo = iworkflowable.latest_trinfo()
-        self.assertEquals(trinfo.previous_state.name, 'activated')
-        self.assertEquals(trinfo.new_state.name, 'deactivated')
-        self.assertEquals(trinfo.comment, 'deactivate user')
-        self.assertEquals(trinfo.comment_format, 'text/plain')
+        self.assertEqual(trinfo.previous_state.name, 'activated')
+        self.assertEqual(trinfo.new_state.name, 'deactivated')
+        self.assertEqual(trinfo.comment, 'deactivate user')
+        self.assertEqual(trinfo.comment_format, 'text/plain')
         return trinfo
 
     def test_change_state(self):
@@ -143,7 +143,7 @@ class WorkflowTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.change_state('deactivated', comment=u'deactivate user')
         trinfo = self._test_manager_deactivate(user)
-        self.assertEquals(trinfo.transition, None)
+        self.assertEqual(trinfo.transition, None)
 
     def test_set_in_state_bad_wf(self):
         wf = add_wf(self, 'CWUser')
@@ -153,7 +153,7 @@ class WorkflowTC(CubicWebTC):
             ex = self.assertRaises(ValidationError, self.session.execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                {'x': self.user().eid, 's': s.eid})
-            self.assertEquals(ex.errors, {'in_state-subject': "state doesn't belong to entity's workflow. "
+            self.assertEqual(ex.errors, {'in_state-subject': "state doesn't belong to entity's workflow. "
                                       "You may want to set a custom workflow for this entity first."})
 
     def test_fire_transition(self):
@@ -161,10 +161,10 @@ class WorkflowTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate', comment=u'deactivate user')
         user.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'deactivated')
+        self.assertEqual(iworkflowable.state, 'deactivated')
         self._test_manager_deactivate(user)
         trinfo = self._test_manager_deactivate(user)
-        self.assertEquals(trinfo.transition.name, 'deactivate')
+        self.assertEqual(trinfo.transition.name, 'deactivate')
 
     def test_goback_transition(self):
         wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
@@ -179,7 +179,7 @@ class WorkflowTC(CubicWebTC):
         self.commit()
         iworkflowable.fire_transition('wake up')
         self.commit()
-        self.assertEquals(iworkflowable.state, 'activated')
+        self.assertEqual(iworkflowable.state, 'activated')
         iworkflowable.fire_transition('deactivate')
         self.commit()
         iworkflowable.fire_transition('rest')
@@ -187,7 +187,7 @@ class WorkflowTC(CubicWebTC):
         iworkflowable.fire_transition('wake up')
         self.commit()
         user.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'deactivated')
+        self.assertEqual(iworkflowable.state, 'deactivated')
 
     # XXX test managers can change state without matching transition
 
@@ -199,7 +199,7 @@ class WorkflowTC(CubicWebTC):
         iworkflowable = req.entity_from_eid(self.member.eid).cw_adapt_to('IWorkflowable')
         ex = self.assertRaises(ValidationError,
                                iworkflowable.fire_transition, 'deactivate')
-        self.assertEquals(ex.errors, {'by_transition-subject': "transition may not be fired"})
+        self.assertEqual(ex.errors, {'by_transition-subject': "transition may not be fired"})
         cnx.close()
         cnx = self.login('member')
         req = self.request()
@@ -208,7 +208,7 @@ class WorkflowTC(CubicWebTC):
         cnx.commit()
         ex = self.assertRaises(ValidationError,
                                iworkflowable.fire_transition, 'activate')
-        self.assertEquals(ex.errors, {'by_transition-subject': "transition may not be fired"})
+        self.assertEqual(ex.errors, {'by_transition-subject': "transition may not be fired"})
 
     def test_fire_transition_owned_by(self):
         self.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
@@ -255,34 +255,34 @@ class WorkflowTC(CubicWebTC):
         state3 = mwf.add_state(u'state3')
         swftr1 = mwf.add_wftransition(u'swftr1', swf, state1,
                                       [(swfstate2, state2), (swfstate3, state3)])
-        self.assertEquals(swftr1.destination(None).eid, swfstate1.eid)
+        self.assertEqual(swftr1.destination(None).eid, swfstate1.eid)
         # workflows built, begin test
         group = self.request().create_entity('CWGroup', name=u'grp1')
         self.commit()
         iworkflowable = group.cw_adapt_to('IWorkflowable')
-        self.assertEquals(iworkflowable.current_state.eid, state1.eid)
-        self.assertEquals(iworkflowable.current_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.main_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.subworkflow_input_transition(), None)
+        self.assertEqual(iworkflowable.current_state.eid, state1.eid)
+        self.assertEqual(iworkflowable.current_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.subworkflow_input_transition(), None)
         iworkflowable.fire_transition('swftr1', u'go')
         self.commit()
         group.clear_all_caches()
-        self.assertEquals(iworkflowable.current_state.eid, swfstate1.eid)
-        self.assertEquals(iworkflowable.current_workflow.eid, swf.eid)
-        self.assertEquals(iworkflowable.main_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.subworkflow_input_transition().eid, swftr1.eid)
+        self.assertEqual(iworkflowable.current_state.eid, swfstate1.eid)
+        self.assertEqual(iworkflowable.current_workflow.eid, swf.eid)
+        self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.subworkflow_input_transition().eid, swftr1.eid)
         iworkflowable.fire_transition('tr1', u'go')
         self.commit()
         group.clear_all_caches()
-        self.assertEquals(iworkflowable.current_state.eid, state2.eid)
-        self.assertEquals(iworkflowable.current_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.main_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.subworkflow_input_transition(), None)
+        self.assertEqual(iworkflowable.current_state.eid, state2.eid)
+        self.assertEqual(iworkflowable.current_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.subworkflow_input_transition(), None)
         # force back to swfstate1 is impossible since we can't any more find
         # subworkflow input transition
         ex = self.assertRaises(ValidationError,
                                iworkflowable.change_state, swfstate1, u'gadget')
-        self.assertEquals(ex.errors, {'to_state-subject': "state doesn't belong to entity's workflow"})
+        self.assertEqual(ex.errors, {'to_state-subject': "state doesn't belong to entity's workflow"})
         self.rollback()
         # force back to state1
         iworkflowable.change_state('state1', u'gadget')
@@ -291,10 +291,10 @@ class WorkflowTC(CubicWebTC):
         iworkflowable.fire_transition('tr2', u'chapeau')
         self.commit()
         group.clear_all_caches()
-        self.assertEquals(iworkflowable.current_state.eid, state3.eid)
-        self.assertEquals(iworkflowable.current_workflow.eid, mwf.eid)
-        self.assertEquals(iworkflowable.main_workflow.eid, mwf.eid)
-        self.assertListEquals(parse_hist(iworkflowable.workflow_history),
+        self.assertEqual(iworkflowable.current_state.eid, state3.eid)
+        self.assertEqual(iworkflowable.current_workflow.eid, mwf.eid)
+        self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
+        self.assertListEqual(parse_hist(iworkflowable.workflow_history),
                               [('state1', 'swfstate1', 'swftr1', 'go'),
                                ('swfstate1', 'swfstate2', 'tr1', 'go'),
                                ('swfstate2', 'state2', 'swftr1', 'exiting from subworkflow subworkflow'),
@@ -318,7 +318,7 @@ class WorkflowTC(CubicWebTC):
         mwf.add_wftransition(u'swftr1', swf, state1,
                              [(swfstate2, state2), (swfstate2, state3)])
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'subworkflow_exit-subject': u"can't have multiple exits on the same state"})
+        self.assertEqual(ex.errors, {'subworkflow_exit-subject': u"can't have multiple exits on the same state"})
 
     def test_swf_fire_in_a_row(self):
         # sub-workflow
@@ -382,7 +382,7 @@ class WorkflowTC(CubicWebTC):
             iworkflowable.fire_transition(trans)
             self.commit()
             group.clear_all_caches()
-            self.assertEquals(iworkflowable.state, nextstate)
+            self.assertEqual(iworkflowable.state, nextstate)
 
 
 class CustomWorkflowTC(CubicWebTC):
@@ -400,12 +400,12 @@ class CustomWorkflowTC(CubicWebTC):
                      {'wf': wf.eid, 'x': self.member.eid})
         self.member.clear_all_caches()
         iworkflowable = self.member.cw_adapt_to('IWorkflowable')
-        self.assertEquals(iworkflowable.state, 'activated')# no change before commit
+        self.assertEqual(iworkflowable.state, 'activated')# no change before commit
         self.commit()
         self.member.clear_all_caches()
-        self.assertEquals(iworkflowable.current_workflow.eid, wf.eid)
-        self.assertEquals(iworkflowable.state, 'asleep')
-        self.assertEquals(iworkflowable.workflow_history, ())
+        self.assertEqual(iworkflowable.current_workflow.eid, wf.eid)
+        self.assertEqual(iworkflowable.state, 'asleep')
+        self.assertEqual(iworkflowable.workflow_history, ())
 
     def test_custom_wf_replace_state_keep_history(self):
         """member in inital state with some history, state is redirected and
@@ -420,9 +420,9 @@ class CustomWorkflowTC(CubicWebTC):
                      {'wf': wf.eid, 'x': self.member.eid})
         self.commit()
         self.member.clear_all_caches()
-        self.assertEquals(iworkflowable.current_workflow.eid, wf.eid)
-        self.assertEquals(iworkflowable.state, 'asleep')
-        self.assertEquals(parse_hist(iworkflowable.workflow_history),
+        self.assertEqual(iworkflowable.current_workflow.eid, wf.eid)
+        self.assertEqual(iworkflowable.state, 'asleep')
+        self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('activated', 'deactivated', 'deactivate', None),
                            ('deactivated', 'activated', 'activate', None),
                            ('activated', 'asleep', None, 'workflow changed to "CWUser"')])
@@ -436,7 +436,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow-subject': u'workflow has no initial state'})
+        self.assertEqual(ex.errors, {'custom_workflow-subject': u'workflow has no initial state'})
 
     def test_custom_wf_bad_etype(self):
         """try to set a custom workflow which doesn't apply to entity type"""
@@ -445,7 +445,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.errors, {'custom_workflow-subject': u"workflow isn't a workflow for this type"})
+        self.assertEqual(ex.errors, {'custom_workflow-subject': u"workflow isn't a workflow for this type"})
 
     def test_del_custom_wf(self):
         """member in some state shared by the new workflow, nothing has to be
@@ -461,12 +461,12 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('DELETE X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         self.member.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'asleep')# no change before commit
+        self.assertEqual(iworkflowable.state, 'asleep')# no change before commit
         self.commit()
         self.member.clear_all_caches()
-        self.assertEquals(iworkflowable.current_workflow.name, "default user workflow")
-        self.assertEquals(iworkflowable.state, 'activated')
-        self.assertEquals(parse_hist(iworkflowable.workflow_history),
+        self.assertEqual(iworkflowable.current_workflow.name, "default user workflow")
+        self.assertEqual(iworkflowable.state, 'activated')
+        self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('activated', 'deactivated', 'deactivate', None),
                            ('deactivated', 'asleep', None, 'workflow changed to "CWUser"'),
                            ('asleep', 'activated', None, 'workflow changed to "default user workflow"'),])
@@ -492,24 +492,24 @@ class AutoTransitionTC(CubicWebTC):
                      {'wf': wf.eid, 'x': user.eid})
         self.commit()
         user.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'asleep')
-        self.assertEquals([t.name for t in iworkflowable.possible_transitions()],
+        self.assertEqual(iworkflowable.state, 'asleep')
+        self.assertEqual([t.name for t in iworkflowable.possible_transitions()],
                           ['rest'])
         iworkflowable.fire_transition('rest')
         self.commit()
         user.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'asleep')
-        self.assertEquals([t.name for t in iworkflowable.possible_transitions()],
+        self.assertEqual(iworkflowable.state, 'asleep')
+        self.assertEqual([t.name for t in iworkflowable.possible_transitions()],
                           ['rest'])
-        self.assertEquals(parse_hist(iworkflowable.workflow_history),
+        self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('asleep', 'asleep', 'rest', None)])
         user.set_attributes(surname=u'toto') # fulfill condition
         self.commit()
         iworkflowable.fire_transition('rest')
         self.commit()
         user.clear_all_caches()
-        self.assertEquals(iworkflowable.state, 'dead')
-        self.assertEquals(parse_hist(iworkflowable.workflow_history),
+        self.assertEqual(iworkflowable.state, 'dead')
+        self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('asleep', 'asleep', 'rest', None),
                            ('asleep', 'asleep', 'rest', None),
                            ('asleep', 'dead', 'sick', None),])
@@ -521,7 +521,7 @@ class AutoTransitionTC(CubicWebTC):
                      {'wf': wf.eid, 'x': user.eid})
         self.commit()
         iworkflowable = user.cw_adapt_to('IWorkflowable')
-        self.assertEquals(iworkflowable.state, 'dead')
+        self.assertEqual(iworkflowable.state, 'dead')
 
     def test_auto_transition_initial_state_fired(self):
         wf = self.execute('Any WF WHERE ET default_workflow WF, '
@@ -534,7 +534,7 @@ class AutoTransitionTC(CubicWebTC):
         user = self.create_user('member', surname=u'toto')
         self.commit()
         iworkflowable = user.cw_adapt_to('IWorkflowable')
-        self.assertEquals(iworkflowable.state, 'dead')
+        self.assertEqual(iworkflowable.state, 'dead')
 
 
 class WorkflowHooksTC(CubicWebTC):
@@ -555,7 +555,7 @@ class WorkflowHooksTC(CubicWebTC):
         self.commit()
         initialstate = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                                     {'x' : ueid})[0][0]
-        self.assertEquals(initialstate, u'activated')
+        self.assertEqual(initialstate, u'activated')
         # give access to users group on the user's wf transitions
         # so we can test wf enforcing on euser (managers don't have anymore this
         # enforcement
@@ -592,7 +592,7 @@ class WorkflowHooksTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         ex = self.assertRaises(ValidationError,
                                iworkflowable.fire_transition, 'activate')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
+        self.assertEqual(self._cleanup_msg(ex.errors['by_transition-subject']),
                           u"transition isn't allowed from")
         cnx.close()
 
@@ -602,7 +602,7 @@ class WorkflowHooksTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         ex = self.assertRaises(ValidationError,
                                iworkflowable.fire_transition, 'dummy')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
+        self.assertEqual(self._cleanup_msg(ex.errors['by_transition-subject']),
                           u"transition isn't allowed from")
         cnx.close()
 
@@ -616,7 +616,7 @@ class WorkflowHooksTC(CubicWebTC):
         session.set_pool()
         ex = self.assertRaises(ValidationError,
                                iworkflowable.fire_transition, 'deactivate')
-        self.assertEquals(self._cleanup_msg(ex.errors['by_transition-subject']),
+        self.assertEqual(self._cleanup_msg(ex.errors['by_transition-subject']),
                                             u"transition isn't allowed from")
         # get back now
         iworkflowable.fire_transition('activate')

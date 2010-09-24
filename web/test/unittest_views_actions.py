@@ -28,7 +28,7 @@ class ActionsTC(CubicWebTC):
         rset = self.execute('CWUser X')
         actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
         vaction = [action for action in actions if action.__regid__ == 'view'][0]
-        self.assertEquals(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
+        self.assertEqual(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
 
     def test_sendmail_action(self):
         req = self.request()

@@ -48,9 +48,9 @@ class VRegistryTC(TestCase):
         self.vreg.load_file(join(BASE, 'entities', '__init__.py'), 'cubicweb.entities.__init__')
         self.vreg.load_file(join(WEBVIEWSDIR, 'idownloadable.py'), 'cubicweb.web.views.idownloadable')
         self.vreg.load_file(join(WEBVIEWSDIR, 'primary.py'), 'cubicweb.web.views.primary')
-        self.assertEquals(len(self.vreg['views']['primary']), 2)
+        self.assertEqual(len(self.vreg['views']['primary']), 2)
         self.vreg.initialization_completed()
-        self.assertEquals(len(self.vreg['views']['primary']), 1)
+        self.assertEqual(len(self.vreg['views']['primary']), 1)
 
 
     def test_load_subinterface_based_appobjects(self):
@@ -70,7 +70,7 @@ class VRegistryTC(TestCase):
         self.vreg.register(CardIProgressAdapter)
         self.vreg.initialization_completed()
         # check progressbar isn't kicked
-        self.assertEquals(len(self.vreg['views']['progressbar']), 1)
+        self.assertEqual(len(self.vreg['views']['progressbar']), 1)
 
     def test_properties(self):
         self.vreg.reset()
@@ -84,7 +84,7 @@ class CWVregTC(CubicWebTC):
     def test_property_default_overriding(self):
         # see data/views.py
         from cubicweb.web.views.xmlrss import RSSIconBox
-        self.assertEquals(self.vreg.property_info(RSSIconBox._cwpropkey('visible'))['default'], True)
+        self.assertEqual(self.vreg.property_info(RSSIconBox._cwpropkey('visible'))['default'], True)
 
 if __name__ == '__main__':
     unittest_main()
