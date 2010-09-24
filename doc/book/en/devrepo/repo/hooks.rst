@@ -58,6 +58,10 @@ Operations are subclasses of the Operation class in `server/hook.py`,
 implementing `precommit_event` and other standard methods (wholly
 described in :ref:`operations_api`).
 
+.. hint::
+
+   It is a good practice, to write unit tests for each hook. See an example in :ref:`hook_test`
+
 Events
 ------
 
@@ -241,6 +245,8 @@ are likely to be set at commit time.
 
 .. sourcecode:: python
 
+    from cubicweb.server.hook import Hook, Operation, match_rtype
+
     def check_cycle(self, session, eid, rtype, role='subject'):
         parents = set([eid])
         parent = session.entity_from_eid(eid)
@@ -300,7 +306,7 @@ using the `set_operation` function.
    class CheckSubsidiaryCycleOp(Operation):
 
        def precommit_event(self):
-           for eid in self._cw.transaction_data['subsidiary_cycle_detection']:
+           for eid in self.session.transaction_data['subsidiary_cycle_detection']:
                check_cycle(self.session, eid, self.rtype)
 
 Here, we call set_operation with a session object, a specially forged

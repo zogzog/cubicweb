@@ -42,6 +42,8 @@ be built automatically when the test suit starts.
   `sync_schema_props_perms()` fonction of the migration environment
   need not a database regeneration step.
 
+.. _hook_test:
+
 Unit test by example
 ````````````````````
 
@@ -84,6 +86,14 @@ pre-populated database. A commit is done automatically after the
 
 The test case itself checks that an Operation does it job of
 preventing cycles amongst Keyword entities.
+
+`create_entity` is a useful method, which easily allows to create an
+entity. You can link this entity to others entities, by specifying as
+argument, the relation name, and the entity to link, as value. In the
+above example, the `Classification` entity is linked to a `CWEtype`
+via the relation `classifies`. Conversely, if you are creating a
+`CWEtype` entity, you can link it to a `Classification` entity, by
+adding `reverse_classifies` as argument.
 
 .. note::
 
