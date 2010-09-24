@@ -49,7 +49,7 @@ class Note(EntityType):
 
 
 class require_permission(RelationDefinition):
-    subject = ('Card', 'Note', 'Person')
+    subject = ('Card', 'Note')
     object = 'CWPermission'
 
 
