@@ -207,6 +207,17 @@ li.invisible div{
   display: inline;
 }
 
+.caption {
+    font-weight: bold;
+}
+
+.legend{
+    font-style: italic;
+}
+
+.align-center{
+    text-align: center;
+}
 
 /***************************************/
 /*   LAYOUT                            */
