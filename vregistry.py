@@ -46,6 +46,7 @@ from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 from cubicweb.appobject import AppObject, class_regid
 
+
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
     (file, module name) to load
@@ -221,17 +222,14 @@ class Registry(dict):
             elif appobjectscore > 0 and appobjectscore == score:
                 winners.append(appobject)
         if winners is None:
-            raise NoSelectableObject('args: %s\nkwargs: %s %s'
-                                     % (args, kwargs.keys(),
-                                        [repr(v) for v in appobjects]))
+            raise NoSelectableObject(args, kwargs, appobjects)
         if len(winners) > 1:
             # log in production environement / test, error while debugging
+            msg = 'select ambiguity: %s\n(args: %s, kwargs: %s)'
             if self.config.debugmode or self.config.mode == 'test':
-                raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
-                                % (args, kwargs.keys(),
-                                   [repr(v) for v in winners]))
-            self.error('select ambiguity, args: %s\nkwargs: %s %s',
-                       args, kwargs.keys(), [repr(v) for v in winners])
+                # raise bare exception in debug mode
+                raise Exception(msg % (winners, self.args, self.kwargs.keys()))
+            self.error(msg, winners, self.args, self.kwargs.keys())
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
 
