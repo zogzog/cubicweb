@@ -85,7 +85,8 @@ class FoafView(EntityView):
                    % xml_escape(entity.firstname))
         emailaddr = entity.cw_adapt_to('IEmailable').get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % hashlib.sha1(emailaddr).hexdigest())
+            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n'
+                   % hashlib.sha1(emailaddr.encode('utf-8')).hexdigest())
         self.w(u'</foaf:Person>\n')
 
 
