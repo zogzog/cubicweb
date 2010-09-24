@@ -14,7 +14,7 @@ class BaseFacetTC(CubicWebTC):
         self.assertEquals(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
         return req, rset, rqlst, mainvar
 
-    def test_relation(self):
+    def test_relation_simple(self):
         req, rset, rqlst, mainvar = self.prepare_rqlst()
         f = facet.RelationFacet(req, rset=rset,
                                 rqlst=rqlst.children[0],
@@ -39,6 +39,39 @@ class BaseFacetTC(CubicWebTC):
         # is not in real life)
         self.assertEquals(f.rqlst.as_string(),
                           'DISTINCT Any  WHERE X is CWUser, X in_group D, D eid %s' % guests)
+
+    def test_relation_optional_rel(self):
+        req = self.request()
+        rset = self.execute('Any X,GROUP_CONCAT(GN) GROUPBY X '
+                            'WHERE X in_group G?, G name GN, NOT G name "users"')
+        rqlst = rset.syntax_tree().copy()
+        req.vreg.rqlhelper.annotate(rqlst)
+        mainvar, baserql = facet.prepare_facets_rqlst(rqlst, rset.args)
+
+        f = facet.RelationFacet(req, rset=rset,
+                                rqlst=rqlst.children[0],
+                                filtered_variable=mainvar)
+        f.rtype = 'in_group'
+        f.role = 'subject'
+        f.target_attr = 'name'
+        guests, managers = [eid for eid, in self.execute('CWGroup G ORDERBY GN '
+                                                         'WHERE G name GN, G name IN ("guests", "managers")')]
+        self.assertEquals(f.vocabulary(),
+                          [(u'guests', guests), (u'managers', managers)])
+        # ensure rqlst is left unmodified
+        self.assertEquals(rqlst.as_string(), 'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users"')
+        #rqlst = rset.syntax_tree()
+        self.assertEquals(sorted(f.possible_values()),
+                          [str(guests), str(managers)])
+        # ensure rqlst is left unmodified
+        self.assertEquals(rqlst.as_string(), 'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users"')
+        req.form[f.__regid__] = str(guests)
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEquals(f.rqlst.as_string(),
+                          'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users", X in_group D, D eid %s' % guests)
+
 
     def test_relationattribute(self):
         req, rset, rqlst, mainvar = self.prepare_rqlst()
