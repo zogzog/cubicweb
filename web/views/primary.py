@@ -145,11 +145,21 @@ class PrimaryView(EntityView):
                 try:
                     self._render_attribute(dispctrl, rschema, value,
                                            role=role, table=True)
+                    warn('[3.9] _render_attribute prototype has changed and '
+                         'renamed to render_attribute, please update %s'
+                         % self.__class___, DeprecationWarning)
                 except TypeError:
-                    warn('[3.6] _render_attribute prototype has changed, please'
-                         ' update %s' % self.__class___, DeprecationWarning)
                     self._render_attribute(rschema, value, role=role, table=True)
+                    warn('[3.6] _render_attribute prototype has changed and '
+                         'renamed to render_attribute, please update %s'
+                         % self.__class___, DeprecationWarning)
+                except AttributeError:
+                    label = self._rel_label(entity, rschema, role, dispctrl)
+                    self.render_attribute(label, value, table=True)
             self.w(u'</table>')
+
+    def render_attribute(self, label, value, table=False):
+        self.field(label, value, tr=False, table=table)
 
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
@@ -158,26 +168,45 @@ class PrimaryView(EntityView):
                 try:
                     rview = self._cw.vreg['views'].select(
                         vid, self._cw, rset=entity.cw_rset, row=entity.cw_row,
-                        col=entity.cw_col, dispctrl=dispctrl, rtype=rschema, role=role)
+                        col=entity.cw_col, dispctrl=dispctrl,
+                        rtype=rschema, role=role)
                 except NoSelectableObject:
                     continue
-                self.w(u'<div class="section">')
-                label = self._rel_label(entity, rschema, role, dispctrl)
-                if label:
-                    self.w(u'<h4>%s</h4>' % label)
-                rview.render(row=entity.cw_row, col=entity.cw_col, w=self.w,
-                             rtype=rschema.type, role=role)
-                self.w(u'</div>')
-                continue
-            rset = self._relation_rset(entity, rschema, role, dispctrl)
-            if rset:
+                value = rview.render(row=entity.cw_row, col=entity.cw_col,
+                                     rtype=rschema.type, role=role)
+            else:
+                rset = self._relation_rset(entity, rschema, role, dispctrl)
+                if not rset:
+                    continue
+                if hasattr(self, '_render_relation'):
+                    try:
+                        self._render_relation(dispctrl, rset, 'autolimited')
+                        warn('[3.9] _render_relation prototype has changed and has '
+                             'been renamed to render_relation, please update %s'
+                             % self.__class__, DeprecationWarning)
+                    except TypeError:
+                        self._render_relation(rset, dispctrl, 'autolimited',
+                                              self.show_rel_label)
+                        warn('[3.6] _render_relation prototype has changed and has '
+                             'been renamed to render_relation, please update %s'
+                             % self.__class__, DeprecationWarning)
+                    continue
+                vid = dispctrl.get('vid', 'autolimited')
                 try:
-                    self._render_relation(dispctrl, rset, 'autolimited')
-                except TypeError:
-                    warn('[3.6] _render_relation prototype has changed, '
-                         'please update %s' % self.__class__, DeprecationWarning)
-                    self._render_relation(rset, dispctrl, 'autolimited',
-                                          self.show_rel_label)
+                    rview = self._cw.vreg['views'].select(
+                        vid, self._cw, rset=rset, dispctrl=dispctrl)
+                except NoSelectableObject:
+                    continue
+                value = rview.render()
+            label = self._rel_label(entity, rschema, role, dispctrl)
+            self.render_relation(label, value)
+
+    def render_relation(self, label, value):
+        self.w(u'<div class="section">')
+        if label:
+            self.w(u'<h4>%s</h4>' % label)
+        self.w(value)
+        self.w(u'</div>')
 
     def render_side_boxes(self, boxes):
         """display side related relations:
@@ -251,26 +280,6 @@ class PrimaryView(EntityView):
         if 'filter' in dispctrl:
             rset = dispctrl['filter'](rset)
         return rset
-
-    def _render_relation(self, dispctrl, rset, defaultvid):
-        self.w(u'<div class="section">')
-        if dispctrl.get('showlabel', self.show_rel_label):
-            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
-        self.wview(dispctrl.get('vid', defaultvid), rset,
-                   initargs={'dispctrl': dispctrl})
-        self.w(u'</div>')
-
-    def _render_attribute(self, dispctrl, rschema, value,
-                          role='subject', table=False):
-        if rschema.final:
-            showlabel = dispctrl.get('showlabel', self.show_attr_label)
-        else:
-            showlabel = dispctrl.get('showlabel', self.show_rel_label)
-        if dispctrl.get('label'):
-            label = self._cw._(dispctrl.get('label'))
-        else:
-            label = display_name(self._cw, rschema.type, role)
-        self.field(label, value, show_label=showlabel, tr=False, table=table)
 
     def _rel_label(self, entity, rschema, role, dispctrl):
         if rschema.final:
