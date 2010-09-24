@@ -194,6 +194,7 @@ __docformat__ = "restructuredtext en"
 
 import logging
 from warnings import warn
+from operator import eq
 
 from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
@@ -530,17 +531,26 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
 
 
 class multi_lines_rset(Selector):
-    """If `nb` is specified, return 1 if the result set has exactly `nb` row of
-    result. Else (`nb` is None), return 1 if the result set contains *at least*
+    """Return 1 if the operator expression matches between `num` elements
+    in the result set and the `expected` value if defined.
+    
+    By default, multi_lines_rset(expected) matches equality expression:
+        `nb` row(s) in result set equals to expected value
+    But, you can perform richer comparisons by overriding default operator:
+        multi_lines_rset(expected, operator.gt)
+    
+    If `expected` is None, return 1 if the result set contains *at least*
     two rows.
+    If rset is None, return 0.
     """
-    def __init__(self, nb=None):
-        self.expected = nb
+    def __init__(self, expected=None, operator=eq):
+        self.expected = expected
+        self.operator = operator
 
     def match_expected(self, num):
         if self.expected is None:
             return num > 1
-        return num == self.expected
+        return self.operator(num, self.expected)
 
     @lltrace
     def __call__(self, cls, req, rset=None, **kwargs):
