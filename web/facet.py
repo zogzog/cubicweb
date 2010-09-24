@@ -64,6 +64,14 @@ from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
 from cubicweb.web.htmlwidgets import HTMLWidget
 
+
+def rtype_facet_title(facet):
+    ptypes = facet.cw_rset.column_types(0)
+    if len(ptypes) == 1:
+        return display_name(facet._cw, facet.rtype, form=facet.role,
+                            context=iter(ptypes).next())
+    return display_name(facet._cw, facet.rtype, form=facet.role)
+
 ## rqlst manipulation functions used by facets ################################
 
 def prepare_facets_rqlst(rqlst, args=None):
@@ -511,9 +519,7 @@ class RelationFacet(VocabularyFacet):
     # internal purpose
     _select_target_entity = True
 
-    @property
-    def title(self):
-        return display_name(self._cw, self.rtype, form=self.role)
+    title = property(rtype_facet_title)
 
     @property
     def rql_sort(self):
@@ -888,9 +894,7 @@ class HasRelationFacet(AbstractFacet):
     rtype = None # override me in subclass
     role = 'subject' # role of filtered entity in the relation
 
-    @property
-    def title(self):
-        return display_name(self._cw, self.rtype, self.role)
+    title = property(rtype_facet_title)
 
     def support_and(self):
         return False
