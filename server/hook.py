@@ -288,6 +288,8 @@ class PropagateRelationHook(Hook):
 
     This hook ensure that when one of the watched relation is added, the
     `main_rtype` relation is added to the target entity of the relation.
+    Notice there are no default behaviour defined when a watched relation is
+    deleted, you'll have to handle this by yourself.
 
     You usually want to use the :class:`match_rtype_sets` selector on concret
     classes.
