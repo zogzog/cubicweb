@@ -347,15 +347,19 @@ class CubicWebTC(TestCase):
         """return a connection for the given login/password"""
         if login == self.admlogin:
             self.restore_connection()
-        else:
-            if not kwargs:
-                kwargs['password'] = str(login)
-            self.cnx = repo_connect(self.repo, unicode(login), **kwargs)
-            self.websession = DBAPISession(self.cnx)
-            self._cnxs.append(self.cnx)
+            # definitly don't want autoclose when used as a context manager
+            return self.cnx
+        autoclose = kwargs.pop('autoclose', True)
+        if not kwargs:
+            kwargs['password'] = str(login)
+        self.cnx = repo_connect(self.repo, unicode(login), **kwargs)
+        self.websession = DBAPISession(self.cnx)
+        self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
-        return TestCaseConnectionProxy(self, self.cnx)
+        if autoclose:
+            return TestCaseConnectionProxy(self, self.cnx)
+        return self.cnx
 
     def restore_connection(self):
         if not self.cnx is self._orig_cnx[0]:
