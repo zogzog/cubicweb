@@ -96,13 +96,17 @@ class CubicWebConfigurationTC(TestCase):
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
 
     def test_expand_cubes(self):
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
         self.assertEqual(self.config.expand_cubes(('email', 'blog')),
                           ['email', 'blog', 'file'])
 
     def test_vregistry_path(self):
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
         self.assertEqual([unabsolutize(p) for p in self.config.vregistry_path()],
                           ['entities', 'web/views', 'sobjects', 'hooks',
-                           'file/entities.py', 'file/views', 'file/hooks.py',
+                           'file/entities', 'file/views.py', 'file/hooks',
                            'email/entities.py', 'email/views', 'email/hooks.py',
                            'test/data/entities.py', 'test/data/views.py'])
 
