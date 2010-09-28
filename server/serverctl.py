@@ -501,7 +501,7 @@ class ResetAdminPasswordCommand(Command):
                                        passwdmsg='new password for %s' % adminlogin)
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': crypt_password(passwd), 'l': adminlogin})
+                           {'p': buffer(crypt_password(passwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
