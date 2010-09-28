@@ -402,6 +402,12 @@ and paste it in the database::
     mydb=> update cw_cwuser set cw_upassword='qHO8282QN5Utg' where cw_login='joe';
     UPDATE 1
 
+if you're running over SQL Server, you need to use the CONVERT
+function to convert the string to varbinary(255). The SQL query is
+therefore::
+
+    update cw_cwuser set cw_upassword=CONVERT(varbinary(255), 'qHO8282QN5Utg') where cw_login='joe';
+
 You can prefer use a migration script similar to this shell invocation instead::
 
     $ cubicweb-ctl shell <instance>
