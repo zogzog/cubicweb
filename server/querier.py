@@ -32,8 +32,8 @@ from rql.stmts import Union, Select
 from rql.nodes import (Relation, VariableRef, Constant, SubQuery, Function,
                        Exists, Not)
 
-from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
-from cubicweb import server
+from cubicweb import ValidationError, Unauthorized, QueryError, UnknownEid
+from cubicweb import server, typed_eid
 from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
@@ -701,15 +701,9 @@ class QuerierHelper(object):
         # execute the plan
         try:
             results = plan.execute()
-        except Unauthorized:
-            # XXX this could be done in security's after_add_relation hooks
-            # since it's actually realy only needed there (other relations
-            # security is done *before* actual changes, and add/update entity
-            # security is done after changes but in an operation, and exception
-            # generated in operation's events properly generate a rollback on
-            # the session). Even though, this is done here for a better
-            # consistency: getting an Unauthorized exception means the
-            # transaction has been rollbacked
+        except (Unauthorized, ValidationError):
+            # getting an Unauthorized/ValidationError exception means the
+            # transaction must been rollbacked
             #
             # notes:
             # * we should not reset the pool here, since we don't want the

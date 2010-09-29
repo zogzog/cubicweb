@@ -32,7 +32,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
-                      UnknownEid, AuthenticationError)
+                      UnknownEid, AuthenticationError, Unauthorized)
 from cubicweb.selectors import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
@@ -136,14 +136,38 @@ class RepositoryTC(CubicWebTC):
         repo.close(cnxid)
         self.assert_(repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8')))
 
-    def test_invalid_entity_rollback(self):
+    def test_rollback_on_commit_error(self):
         cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
-        # no group
         self.repo.execute(cnxid,
                           'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                           {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, self.repo.commit, cnxid)
         self.failIf(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
+
+    def test_rollback_on_execute_validation_error(self):
+        class ValidationErrorAfterHook(Hook):
+            __regid__ = 'valerror-after-hook'
+            __select__ = Hook.__select__ & is_instance('CWGroup')
+            events = ('after_update_entity',)
+            def __call__(self):
+                raise ValidationError(self.entity.eid, {})
+        with self.temporary_appobjects(ValidationErrorAfterHook):
+            self.assertRaises(ValidationError,
+                              self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+            self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+
+    def test_rollback_on_execute_unauthorized(self):
+        class UnauthorizedAfterHook(Hook):
+            __regid__ = 'valerror-after-hook'
+            __select__ = Hook.__select__ & is_instance('CWGroup')
+            events = ('after_update_entity',)
+            def __call__(self):
+                raise Unauthorized()
+        with self.temporary_appobjects(UnauthorizedAfterHook):
+            self.assertRaises(Unauthorized,
+                              self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+            self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+
 
     def test_close(self):
         repo = self.repo
