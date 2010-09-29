@@ -37,7 +37,7 @@ class XYTC(TestCase):
 
     def _test(self, sparql, rql, args={}):
         qi = self.tr.translate(sparql)
-        self.assertEquals(qi.finalize(), (rql, args))
+        self.assertEqual(qi.finalize(), (rql, args))
 
     def XXX_test_base_01(self):
         self._test('SELECT * WHERE { }', 'Any X')

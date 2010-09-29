@@ -51,7 +51,7 @@ class EmailTC(CubicWebTC):
         mail = format_mail({'name': 'oim', 'email': 'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou', u'bïjour',
                            config=self.config)
-        self.assertLinesEquals(mail.as_string(), """\
+        self.assertMultiLineEqual(mail.as_string(), """\
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
@@ -64,17 +64,17 @@ To: test@logilab.fr
 dW4gcGV0aXQgY8O2dWNvdQ==
 """)
         msg = message_from_string(mail.as_string())
-        self.assertEquals(msg.get('subject'), u'bïjour')
-        self.assertEquals(msg.get('from'), u'oim <oim@logilab.fr>')
-        self.assertEquals(msg.get('to'), u'test@logilab.fr')
-        self.assertEquals(msg.get('reply-to'), u'oim <oim@logilab.fr>, BimBam <bim@boum.fr>')
-        self.assertEquals(msg.get_payload(decode=True), u'un petit cöucou')
+        self.assertEqual(msg.get('subject'), u'bïjour')
+        self.assertEqual(msg.get('from'), u'oim <oim@logilab.fr>')
+        self.assertEqual(msg.get('to'), u'test@logilab.fr')
+        self.assertEqual(msg.get('reply-to'), u'oim <oim@logilab.fr>, BimBam <bim@boum.fr>')
+        self.assertEqual(msg.get_payload(decode=True), u'un petit cöucou')
 
 
     def test_format_mail_euro(self):
         mail = format_mail({'name': u'oîm', 'email': u'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €')
-        self.assertLinesEquals(mail.as_string(), """\
+        self.assertMultiLineEqual(mail.as_string(), """\
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
@@ -86,11 +86,11 @@ To: test@logilab.fr
 dW4gcGV0aXQgY8O2dWNvdSDigqw=
 """)
         msg = message_from_string(mail.as_string())
-        self.assertEquals(msg.get('subject'), u'bïjour €')
-        self.assertEquals(msg.get('from'), u'oîm <oim@logilab.fr>')
-        self.assertEquals(msg.get('to'), u'test@logilab.fr')
-        self.assertEquals(msg.get('reply-to'), u'oîm <oim@logilab.fr>')
-        self.assertEquals(msg.get_payload(decode=True), u'un petit cöucou €')
+        self.assertEqual(msg.get('subject'), u'bïjour €')
+        self.assertEqual(msg.get('from'), u'oîm <oim@logilab.fr>')
+        self.assertEqual(msg.get('to'), u'test@logilab.fr')
+        self.assertEqual(msg.get('reply-to'), u'oîm <oim@logilab.fr>')
+        self.assertEqual(msg.get_payload(decode=True), u'un petit cöucou €')
 
 
     def test_format_mail_from_reply_to(self):
@@ -100,19 +100,19 @@ dW4gcGV0aXQgY8O2dWNvdSDigqw=
         msg = format_mail({'name': u'', 'email': u''},
                           ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
                           config=self.config)
-        self.assertEquals(msg.get('from'), u'')
-        self.assertEquals(msg.get('reply-to'), None)
+        self.assertEqual(msg.get('from'), u'')
+        self.assertEqual(msg.get('reply-to'), None)
         msg = format_mail({'name': u'tutu', 'email': u'tutu@logilab.fr'},
                           ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
                           config=self.config)
         msg = message_from_string(msg.as_string())
-        self.assertEquals(msg.get('from'), u'tutu <tutu@logilab.fr>')
-        self.assertEquals(msg.get('reply-to'), u'tutu <tutu@logilab.fr>')
+        self.assertEqual(msg.get('from'), u'tutu <tutu@logilab.fr>')
+        self.assertEqual(msg.get('reply-to'), u'tutu <tutu@logilab.fr>')
         msg = format_mail({'name': u'tutu', 'email': u'tutu@logilab.fr'},
                           ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €')
         msg = message_from_string(msg.as_string())
-        self.assertEquals(msg.get('from'), u'tutu <tutu@logilab.fr>')
-        self.assertEquals(msg.get('reply-to'), u'tutu <tutu@logilab.fr>')
+        self.assertEqual(msg.get('from'), u'tutu <tutu@logilab.fr>')
+        self.assertEqual(msg.get('reply-to'), u'tutu <tutu@logilab.fr>')
         # set sender name and address as expected
         self.set_option('sender-name', 'cubicweb-test')
         self.set_option('sender-addr', 'cubicweb-test@logilab.fr')
@@ -121,22 +121,22 @@ dW4gcGV0aXQgY8O2dWNvdSDigqw=
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
                            config=self.config)
         msg = message_from_string(msg.as_string())
-        self.assertEquals(msg.get('from'), u'cubicweb-test <cubicweb-test@logilab.fr>')
-        self.assertEquals(msg.get('reply-to'), u'cubicweb-test <cubicweb-test@logilab.fr>')
+        self.assertEqual(msg.get('from'), u'cubicweb-test <cubicweb-test@logilab.fr>')
+        self.assertEqual(msg.get('reply-to'), u'cubicweb-test <cubicweb-test@logilab.fr>')
         # anonymous notification: only email specified
         msg = format_mail({'email': u'tutu@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
                            config=self.config)
         msg = message_from_string(msg.as_string())
-        self.assertEquals(msg.get('from'), u'cubicweb-test <tutu@logilab.fr>')
-        self.assertEquals(msg.get('reply-to'), u'cubicweb-test <tutu@logilab.fr>, cubicweb-test <cubicweb-test@logilab.fr>')
+        self.assertEqual(msg.get('from'), u'cubicweb-test <tutu@logilab.fr>')
+        self.assertEqual(msg.get('reply-to'), u'cubicweb-test <tutu@logilab.fr>, cubicweb-test <cubicweb-test@logilab.fr>')
         # anonymous notification: only name specified
         msg = format_mail({'name': u'tutu'},
                           ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
                           config=self.config)
         msg = message_from_string(msg.as_string())
-        self.assertEquals(msg.get('from'), u'tutu <cubicweb-test@logilab.fr>')
-        self.assertEquals(msg.get('reply-to'), u'tutu <cubicweb-test@logilab.fr>')
+        self.assertEqual(msg.get('from'), u'tutu <cubicweb-test@logilab.fr>')
+        self.assertEqual(msg.get('reply-to'), u'tutu <cubicweb-test@logilab.fr>')
 
 
 

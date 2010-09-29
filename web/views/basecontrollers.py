@@ -154,7 +154,6 @@ class ViewController(Controller):
             else:
                 req.set_message(req._("You have no access to this view or it can not "
                                       "be used to display the current data."))
-            self.warning("the view %s can not be applied to this query", vid)
             vid = req.form.get('fallbackvid') or vid_from_rset(req, rset, req.vreg.schema)
             view = req.vreg['views'].select(vid, req, rset=rset)
         return view, rset

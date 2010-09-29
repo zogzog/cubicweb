@@ -82,10 +82,16 @@ An entity type is an instance of :class:`yams.schema.EntitySchema`. Each entity 
 a set of attributes and relations, and some permissions which define who can add, read,
 update or delete entities of this type.
 
-The following built-in types are available: ``String``, ``Int``,
-``Float``, ``Decimal``, ``Boolean``, ``Date``, ``Datetime``, ``Time``,
-``Interval``, ``Byte`` and ``Password``. They can only be used as
-attributes of an other entity type.
+The following built-in types are available: ``String``,
+``Int``, ``Float``, ``Decimal``, ``Boolean``,
+``Date``, ``Datetime``, ``Time``, ``Interval``, ``Byte`` and
+``Password``. They can only be used as attributes of an other entity
+type.
+
+There is also a `RichString` kindof type:
+
+ .. autoclass:: yams.buildobjs.RichString
+
 
 You can find more base entity types in
 :ref:`pre_defined_entity_types`.
@@ -517,6 +523,8 @@ The entity described above defines three attributes of type String,
 last_name, first_name and title, an attribute of type Date for the date of
 birth and a relation that connects a `Person` to another entity of type
 `Company` through the semantic `works_for`.
+
+
 
 :Naming convention:
 

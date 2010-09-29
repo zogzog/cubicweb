@@ -60,6 +60,11 @@ instance, PL/SQL works with Oracle and PostgreSQL but not SqlServer nor Sqlite).
 .. _`database trigger`: http://en.wikipedia.org/wiki/Database_trigger
 
 
+.. hint::
+
+   It is a good practice to write unit tests for each hook. See an example in
+   :ref:`hook_test`
+
 Operations
 ~~~~~~~~~~
 
@@ -402,7 +407,7 @@ class Hook(AppObject):
 
           class MyHook(Hook):
             __regid__ = 'whatever'
-            __select__ = Hook.__select__ & implements('Person')
+            __select__ = Hook.__select__ & is_instance('Person')
 
       else your hooks will be called madly, whatever the event.
     """
@@ -490,6 +495,8 @@ class PropagateRelationHook(Hook):
 
     This hook ensure that when one of the watched relation is added, the
     `main_rtype` relation is added to the target entity of the relation.
+    Notice there are no default behaviour defined when a watched relation is
+    deleted, you'll have to handle this by yourself.
 
     You usually want to use the :class:`match_rtype_sets` selector on concret
     classes.

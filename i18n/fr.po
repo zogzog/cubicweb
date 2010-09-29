@@ -996,9 +996,6 @@ msgstr "ajouter une adresse électronique"
 msgid "add a new permission"
 msgstr "ajouter une permission"
 
-msgid "add_perm"
-msgstr "ajout"
-
 # subject and object forms for each relation type
 # (no object form for final relation types)
 msgid "add_permission"
@@ -1929,9 +1926,6 @@ msgstr "supprimer cette permission"
 
 msgid "delete this relation"
 msgstr "supprimer cette relation"
-
-msgid "delete_perm"
-msgstr "suppression"
 
 msgid "delete_permission"
 msgstr "permission de supprimer"
@@ -3202,9 +3196,6 @@ msgstr "permissions"
 msgid "read"
 msgstr "lecture"
 
-msgid "read_perm"
-msgstr "lecture"
-
 msgid "read_permission"
 msgstr "permission de lire"
 
@@ -3914,9 +3905,6 @@ msgstr "mot de passe"
 msgid "update"
 msgstr "modification"
 
-msgid "update_perm"
-msgstr "modification"
-
 msgid "update_permission"
 msgstr "permission de modification"
 
@@ -4198,6 +4186,12 @@ msgstr "vous avez été déconnecté"
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
 
+#~ msgid "add_perm"
+#~ msgstr "ajout"
+
+#~ msgid "delete_perm"
+#~ msgstr "suppression"
+
 #~ msgid "edition"
 #~ msgstr "édition"
 
@@ -4206,6 +4200,12 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "personnal informations"
 #~ msgstr "informations personnelles"
+
+#~ msgid "read_perm"
+#~ msgstr "lecture"
+
+#~ msgid "update_perm"
+#~ msgstr "modification"
 
 #~ msgid "yams type, rdf type or mime type of the object"
 #~ msgstr "type yams, vocabulaire rdf ou type mime de l'objet"

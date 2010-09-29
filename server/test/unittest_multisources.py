@@ -101,34 +101,34 @@ class TwoSourcesTC(CubicWebTC):
 
     def test_eid_comp(self):
         rset = self.sexecute('Card X WHERE X eid > 1')
-        self.assertEquals(len(rset), 4)
+        self.assertEqual(len(rset), 4)
         rset = self.sexecute('Any X,T WHERE X title T, X eid > 1')
-        self.assertEquals(len(rset), 4)
+        self.assertEqual(len(rset), 4)
 
     def test_metainformation(self):
         rset = self.sexecute('Card X ORDERBY T WHERE X title T')
         # 2 added to the system source, 2 added to the external source
-        self.assertEquals(len(rset), 4)
+        self.assertEqual(len(rset), 4)
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
-        self.assertEquals(rset.get_entity(0, 0).cw_metainformation(),
+        self.assertEqual(rset.get_entity(0, 0).cw_metainformation(),
                           {'source': {'adapter': 'native', 'uri': 'system'},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.cw_metainformation()
-        self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
-        self.assertEquals(metainf['type'], 'Card')
+        self.assertEqual(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
+        self.assertEqual(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.sexecute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
                              {'x': externent.eid})[0][0]
-        self.assertEquals(etype, 'Card')
+        self.assertEqual(etype, 'Card')
 
     def test_order_limit_offset(self):
         rsetbase = self.sexecute('Any W,X ORDERBY W,X WHERE X wikiid W')
-        self.assertEquals(len(rsetbase), 4)
-        self.assertEquals(sorted(rsetbase.rows), rsetbase.rows)
+        self.assertEqual(len(rsetbase), 4)
+        self.assertEqual(sorted(rsetbase.rows), rsetbase.rows)
         rset = self.sexecute('Any W,X ORDERBY W,X LIMIT 2 OFFSET 2 WHERE X wikiid W')
-        self.assertEquals(rset.rows, rsetbase.rows[2:4])
+        self.assertEqual(rset.rows, rsetbase.rows[2:4])
 
     def test_has_text(self):
         self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
@@ -148,9 +148,9 @@ class TwoSourcesTC(CubicWebTC):
         cu = cnx.cursor()
         rset = cu.execute('Any X WHERE X has_text "card"')
         # 5: 4 card + 1 readable affaire
-        self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
+        self.assertEqual(len(rset), 5, zip(rset.rows, rset.description))
         rset = cu.execute('Any X ORDERBY FTIRANK(X) WHERE X has_text "card"')
-        self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
+        self.assertEqual(len(rset), 5, zip(rset.rows, rset.description))
         Connection_close(cnx.cnx) # cnx is a TestCaseConnectionProxy
 
     def test_synchronization(self):
@@ -178,14 +178,14 @@ class TwoSourcesTC(CubicWebTC):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB',
                             {'x': affeid})
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset[0][1], "pitetre")
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset[0][1], "pitetre")
 
     def test_simplifiable_var_2(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any E WHERE E eid %(x)s, E in_state S, NOT S name "moved"',
                             {'x': affeid, 'u': self.session.user.eid})
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
 
     def test_sort_func(self):
         self.sexecute('Affaire X ORDERBY DUMB_SORT(RF) WHERE X ref RF')
@@ -197,31 +197,31 @@ class TwoSourcesTC(CubicWebTC):
         iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], str(self.ec1),
                                    'Card', self.session)
         rset = self.sexecute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
-        self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))
+        self.assertEqual(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))
 
     def test_greater_eid(self):
         rset = self.sexecute('Any X WHERE X eid > %s' % (self.ic1 - 1))
-        self.assertEquals(len(rset.rows), 2) # self.ic1 and self.ic2
+        self.assertEqual(len(rset.rows), 2) # self.ic1 and self.ic2
         cu = cnx2.cursor()
         ec2 = cu.execute('INSERT Card X: X title "glup"')[0][0]
         cnx2.commit()
         # 'X eid > something' should not trigger discovery
         rset = self.sexecute('Any X WHERE X eid > %s' % (self.ic1 - 1))
-        self.assertEquals(len(rset.rows), 2)
+        self.assertEqual(len(rset.rows), 2)
         # trigger discovery using another query
         crset = self.sexecute('Card X WHERE X title "glup"')
-        self.assertEquals(len(crset.rows), 1)
+        self.assertEqual(len(crset.rows), 1)
         rset = self.sexecute('Any X WHERE X eid > %s' % (self.ic1 - 1))
-        self.assertEquals(len(rset.rows), 3)
+        self.assertEqual(len(rset.rows), 3)
         rset = self.sexecute('Any MAX(X)')
-        self.assertEquals(len(rset.rows), 1)
-        self.assertEquals(rset.rows[0][0], crset[0][0])
+        self.assertEqual(len(rset.rows), 1)
+        self.assertEqual(rset.rows[0][0], crset[0][0])
 
     def test_attr_unification_1(self):
         n1 = self.sexecute('INSERT Note X: X type "AFFREF"')[0][0]
         n2 = self.sexecute('INSERT Note X: X type "AFFREU"')[0][0]
         rset = self.sexecute('Any X,Y WHERE X is Note, Y is Affaire, X type T, Y ref T')
-        self.assertEquals(len(rset), 1, rset.rows)
+        self.assertEqual(len(rset), 1, rset.rows)
 
     def test_attr_unification_2(self):
         cu = cnx2.cursor()
@@ -230,7 +230,7 @@ class TwoSourcesTC(CubicWebTC):
         try:
             c1 = self.sexecute('INSERT Card C: C title "AFFREF"')[0][0]
             rset = self.sexecute('Any X,Y WHERE X is Card, Y is Affaire, X title T, Y ref T')
-            self.assertEquals(len(rset), 2, rset.rows)
+            self.assertEqual(len(rset), 2, rset.rows)
         finally:
             cu.execute('DELETE Card X WHERE X eid %(x)s', {'x': ec2})
             cnx2.commit()
@@ -247,26 +247,26 @@ class TwoSourcesTC(CubicWebTC):
         afeids = self.sexecute('Affaire X')
         ueids = self.sexecute('CWUser X')
         rset = self.sexecute('(Any X WHERE X is Affaire) UNION (Any X WHERE X is CWUser)')
-        self.assertEquals(sorted(r[0] for r in rset.rows),
+        self.assertEqual(sorted(r[0] for r in rset.rows),
                           sorted(r[0] for r in afeids + ueids))
 
     def test_subquery1(self):
         rsetbase = self.sexecute('Any W,X WITH W,X BEING (Any W,X ORDERBY W,X WHERE X wikiid W)')
-        self.assertEquals(len(rsetbase), 4)
-        self.assertEquals(sorted(rsetbase.rows), rsetbase.rows)
+        self.assertEqual(len(rsetbase), 4)
+        self.assertEqual(sorted(rsetbase.rows), rsetbase.rows)
         rset = self.sexecute('Any W,X LIMIT 2 OFFSET 2 WITH W,X BEING (Any W,X ORDERBY W,X WHERE X wikiid W)')
-        self.assertEquals(rset.rows, rsetbase.rows[2:4])
+        self.assertEqual(rset.rows, rsetbase.rows[2:4])
         rset = self.sexecute('Any W,X ORDERBY W,X LIMIT 2 OFFSET 2 WITH W,X BEING (Any W,X WHERE X wikiid W)')
-        self.assertEquals(rset.rows, rsetbase.rows[2:4])
+        self.assertEqual(rset.rows, rsetbase.rows[2:4])
         rset = self.sexecute('Any W,X WITH W,X BEING (Any W,X ORDERBY W,X LIMIT 2 OFFSET 2 WHERE X wikiid W)')
-        self.assertEquals(rset.rows, rsetbase.rows[2:4])
+        self.assertEqual(rset.rows, rsetbase.rows[2:4])
 
     def test_subquery2(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any X,AA,AB WITH X,AA,AB BEING (Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB)',
                             {'x': affeid})
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset[0][1], "pitetre")
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset[0][1], "pitetre")
 
     def test_not_relation(self):
         states = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN'))
@@ -275,22 +275,22 @@ class TwoSourcesTC(CubicWebTC):
         states.remove((userstate.eid, userstate.name))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
                                                        {'x': self.session.user.eid}))
-        self.assertSetEquals(notstates, states)
+        self.assertSetEqual(notstates, states)
         aff1 = self.sexecute('Any X WHERE X is Affaire, X ref "AFFREF"')[0][0]
         aff1stateeid, aff1statename = self.sexecute('Any S,SN WHERE X eid %(x)s, X in_state S, S name SN', {'x': aff1})[0]
-        self.assertEquals(aff1statename, 'pitetre')
+        self.assertEqual(aff1statename, 'pitetre')
         states.add((userstate.eid, userstate.name))
         states.remove((aff1stateeid, aff1statename))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
                                                        {'x': aff1}))
-        self.assertSetEquals(notstates, states)
+        self.assertSetEqual(notstates, states)
 
     def test_absolute_url_base_url(self):
         cu = cnx2.cursor()
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
         cnx2.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
-        self.assertEquals(lc.absolute_url(), 'http://extern.org/card/eid/%s' % ceid)
+        self.assertEqual(lc.absolute_url(), 'http://extern.org/card/eid/%s' % ceid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         cnx2.commit()
 
@@ -299,7 +299,7 @@ class TwoSourcesTC(CubicWebTC):
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
         cnx3.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
-        self.assertEquals(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
+        self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         cnx3.commit()
 
@@ -315,8 +315,8 @@ class TwoSourcesTC(CubicWebTC):
         treid = iworkflowable.latest_trinfo().eid
         rset = self.sexecute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                             {'x': treid})
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.rows[0], [self.session.user.eid])
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.rows[0], [self.session.user.eid])
 
     def test_nonregr3(self):
         self.sexecute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})

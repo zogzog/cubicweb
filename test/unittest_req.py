@@ -23,11 +23,11 @@ from cubicweb.devtools.testlib import CubicWebTC
 class RebuildURLTC(TestCase):
     def test_rebuild_url(self):
         rebuild_url = RequestSessionBase(None).rebuild_url
-        self.assertEquals(rebuild_url('http://logilab.fr?__message=pouet', __message='hop'),
+        self.assertEqual(rebuild_url('http://logilab.fr?__message=pouet', __message='hop'),
                           'http://logilab.fr?__message=hop')
-        self.assertEquals(rebuild_url('http://logilab.fr', __message='hop'),
+        self.assertEqual(rebuild_url('http://logilab.fr', __message='hop'),
                           'http://logilab.fr?__message=hop')
-        self.assertEquals(rebuild_url('http://logilab.fr?vid=index', __message='hop'),
+        self.assertEqual(rebuild_url('http://logilab.fr?vid=index', __message='hop'),
                           'http://logilab.fr?__message=hop&vid=index')
 
     def test_build_url(self):

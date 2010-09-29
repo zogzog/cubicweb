@@ -22,9 +22,12 @@ however useful in other contexts such as tests or custom controllers.
 
 .. note::
 
-  While executing update queries (SET, INSERT, DELETE), if a query generates
-  an error related to security, a rollback is automatically done on the current
-  transaction.
+  If a query generates an error related to security (:exc:`Unauthorized`) or to
+  integrity (:exc:`ValidationError`), a rollback is automatically done on the
+  current transaction.
+
+  Also, a rollback is done if an error occurs during commit.
+
 
 Executing RQL queries from a view or a hook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

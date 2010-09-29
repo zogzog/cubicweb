@@ -6,6 +6,7 @@ Hooks and Operations
 
 .. autodocstring:: cubicweb.server.hook
 
+
 Example using dataflow hooks
 ----------------------------
 
@@ -30,8 +31,8 @@ into `mycube/hooks.py`. If this file were to grow too much, we can easily have a
 
    class PersonAgeRange(Hook):
         __regid__ = 'person_age_range'
-        events = ('before_add_entity', 'before_update_entity')
         __select__ = Hook.__select__ & is_instance('Person')
+        events = ('before_add_entity', 'before_update_entity')
 
         def __call__(self):
 	    if 'age' in self.entity.cw_edited:
@@ -96,6 +97,8 @@ be set at commit time.
 
 .. sourcecode:: python
 
+    from cubicweb.server.hook import Hook, Operation, match_rtype
+
     def check_cycle(self, session, eid, rtype, role='subject'):
         parents = set([eid])
         parent = session.entity_from_eid(eid)
@@ -146,15 +149,15 @@ alternative method to schedule an operation from a hook, using the
    class CheckSubsidiaryCycleOp(Operation):
 
        def precommit_event(self):
-           for eid in self._cw.transaction_data.pop('subsidiary_cycle_detection'):
-               check_cycle(self.session, eid, 'subsidiary_of')
+           for eid in self.session.transaction_data['subsidiary_cycle_detection']:
+               check_cycle(self.session, eid, self.rtype)
 
 
 Here, we call :func:`set_operation` so that we will simply accumulate eids of
-entities to check at the end in a single CheckSubsidiaryCycleOp operation.  Value
-are stored in a set associated to the 'subsidiary_cycle_detection' transaction
-data key. The set initialization and operation creation are handled nicely by
-:func:set_operation.
+entities to check at the end in a single `CheckSubsidiaryCycleOp`
+operation. Value are stored in a set associated to the
+'subsidiary_cycle_detection' transaction data key. The set initialization and
+operation creation are handled nicely by :func:`set_operation`.
 
 A more realistic example can be found in the advanced tutorial chapter
 :ref:`adv_tuto_security_propagation`.

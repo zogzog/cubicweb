@@ -57,8 +57,7 @@ class has_editable_relation(EntitySelector):
                  'optional argument', DeprecationWarning)
             editableattrs = form.editable_attributes()
         for rschema, role in editableattrs:
-            if not rschema.final:
-                return 1
+            return 1
         return 0
 
 @objectify_selector
@@ -142,8 +141,8 @@ class ViewAction(action.Action):
 
 class ModifyAction(action.Action):
     __regid__ = 'edit'
-    __select__ = (action.Action.__select__ & one_line_rset() &
-                  (has_permission('update') | has_editable_relation('add')))
+    __select__ = (action.Action.__select__
+                  & one_line_rset() & has_editable_relation('add'))
 
     title = _('modify')
     category = 'mainactions'

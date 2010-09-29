@@ -54,17 +54,17 @@ class CubicWebConfigurationTC(TestCase):
         self.config.adjust_sys_path()
         # forge depends on email and file and comment
         # email depends on file
-        self.assertEquals(self.config.reorder_cubes(['file', 'email', 'forge']),
+        self.assertEqual(self.config.reorder_cubes(['file', 'email', 'forge']),
                           ('forge', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['email', 'file', 'forge']),
+        self.assertEqual(self.config.reorder_cubes(['email', 'file', 'forge']),
                           ('forge', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['email', 'forge', 'file']),
+        self.assertEqual(self.config.reorder_cubes(['email', 'forge', 'file']),
                           ('forge', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['file', 'forge', 'email']),
+        self.assertEqual(self.config.reorder_cubes(['file', 'forge', 'email']),
                           ('forge', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['forge', 'file', 'email']),
+        self.assertEqual(self.config.reorder_cubes(['forge', 'file', 'email']),
                           ('forge', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'file')),
+        self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file')),
                           ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
@@ -75,13 +75,13 @@ class CubicWebConfigurationTC(TestCase):
         try:
             # email recommends comment
             # comment recommends file
-            self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'file', 'comment')),
+            self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file', 'comment')),
                               ('forge', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'comment', 'file')),
+            self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'comment', 'file')),
                               ('forge', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('forge', 'comment', 'email', 'file')),
+            self.assertEqual(self.config.reorder_cubes(('forge', 'comment', 'email', 'file')),
                               ('forge', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
+            self.assertEqual(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
                               ('forge', 'email', 'comment', 'file'))
         finally:
             comment_pkginfo.__recommends_cubes__ = {}
@@ -90,19 +90,23 @@ class CubicWebConfigurationTC(TestCase):
 #     def test_vc_config(self):
 #         vcconf = self.config.vc_config()
 #         self.assertIsInstance(vcconf['EEMAIL'], Version)
-#         self.assertEquals(vcconf['EEMAIL'], (0, 3, 1))
-#         self.assertEquals(vcconf['CW'], (2, 31, 2))
+#         self.assertEqual(vcconf['EEMAIL'], (0, 3, 1))
+#         self.assertEqual(vcconf['CW'], (2, 31, 2))
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CW_VERSION')
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
 
     def test_expand_cubes(self):
-        self.assertEquals(self.config.expand_cubes(('email', 'blog')),
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
+        self.assertEqual(self.config.expand_cubes(('email', 'blog')),
                           ['email', 'blog', 'file'])
 
     def test_vregistry_path(self):
-        self.assertEquals([unabsolutize(p) for p in self.config.vregistry_path()],
+        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.adjust_sys_path()
+        self.assertEqual([unabsolutize(p) for p in self.config.vregistry_path()],
                           ['entities', 'web/views', 'sobjects', 'hooks',
-                           'file/entities.py', 'file/views', 'file/hooks.py',
+                           'file/entities', 'file/views.py', 'file/hooks',
                            'email/entities.py', 'email/views', 'email/hooks.py',
                            'test/data/entities.py', 'test/data/views.py'])
 
@@ -111,27 +115,27 @@ class CubicWebConfigurationTC(TestCase):
         import email
         self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
-        self.assertEquals(self.config.cubes_search_path(),
+        self.assertEqual(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR,
                                             self.config.CUBES_DIR, 'unexistant']
         # filter out unexistant and duplicates
-        self.assertEquals(self.config.cubes_search_path(),
+        self.assertEqual(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR,
                            self.config.CUBES_DIR])
         self.failUnless('mycube' in self.config.available_cubes())
         # test cubes python path
         self.config.adjust_sys_path()
         import cubes
-        self.assertEquals(cubes.__path__, self.config.cubes_search_path())
+        self.assertEqual(cubes.__path__, self.config.cubes_search_path())
         # this import should succeed once path is adjusted
         from cubes import mycube
-        self.assertEquals(mycube.__path__, [join(CUSTOM_CUBES_DIR, 'mycube')])
+        self.assertEqual(mycube.__path__, [join(CUSTOM_CUBES_DIR, 'mycube')])
         # file cube should be overriden by the one found in data/cubes
         sys.modules.pop('cubes.file', None)
         del cubes.file
         from cubes import file
-        self.assertEquals(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
+        self.assertEqual(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
 
 
 class FindPrefixTC(TestCase):
@@ -153,35 +157,35 @@ class FindPrefixTC(TestCase):
     def test_samedir(self):
         prefix = tempfile.tempdir
         self.make_dirs('share', 'cubicweb')
-        self.assertEquals(_find_prefix(prefix), prefix)
+        self.assertEqual(_find_prefix(prefix), prefix)
 
     @with_tempdir
     def test_samedir_filepath(self):
         prefix = tempfile.tempdir
         self.make_dirs('share', 'cubicweb')
         file_path = self.make_file('bob.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_dir_inside_prefix(self):
         prefix = tempfile.tempdir
         self.make_dirs('share', 'cubicweb')
         dir_path = self.make_dirs('bob')
-        self.assertEquals(_find_prefix(dir_path), prefix)
+        self.assertEqual(_find_prefix(dir_path), prefix)
 
     @with_tempdir
     def test_file_in_dir_inside_prefix(self):
         prefix = tempfile.tempdir
         self.make_dirs('share', 'cubicweb')
         file_path = self.make_file('bob', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_file_in_deeper_dir_inside_prefix(self):
         prefix = tempfile.tempdir
         self.make_dirs('share', 'cubicweb')
         file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_multiple_candidate_prefix(self):
@@ -189,7 +193,7 @@ class FindPrefixTC(TestCase):
         prefix = self.make_dirs('bob')
         self.make_dirs('bob', 'share', 'cubicweb')
         file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_sister_candidate_prefix(self):
@@ -197,7 +201,7 @@ class FindPrefixTC(TestCase):
         self.make_dirs('share', 'cubicweb')
         self.make_dirs('bob', 'share', 'cubicweb')
         file_path = self.make_file('bell', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_multiple_parent_candidate_prefix(self):
@@ -205,7 +209,7 @@ class FindPrefixTC(TestCase):
         prefix = self.make_dirs('share', 'cubicweb', 'bob')
         self.make_dirs('share', 'cubicweb', 'bob', 'share', 'cubicweb')
         file_path = self.make_file('share', 'cubicweb', 'bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_upper_candidate_prefix(self):
@@ -213,12 +217,12 @@ class FindPrefixTC(TestCase):
         self.make_dirs('share', 'cubicweb')
         self.make_dirs('bell','bob',  'share', 'cubicweb')
         file_path = self.make_file('bell', 'toto.py')
-        self.assertEquals(_find_prefix(file_path), prefix)
+        self.assertEqual(_find_prefix(file_path), prefix)
 
     @with_tempdir
     def test_no_prefix(self):
         prefix = tempfile.tempdir
-        self.assertEquals(_find_prefix(prefix), sys.prefix)
+        self.assertEqual(_find_prefix(prefix), sys.prefix)
 
 if __name__ == '__main__':
     unittest_main()

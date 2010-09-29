@@ -47,7 +47,7 @@ class OperationsTC(CubicWebTC):
         l1 = hook.LateOperation(session)
         l2 = hook.LateOperation(session)
         l3 = hook.Operation(session)
-        self.assertEquals(session.pending_operations, [l3, l1, l2])
+        self.assertEqual(session.pending_operations, [l3, l1, l2])
 
     @clean_session_ops
     def test_single_last_operation(self):
@@ -56,9 +56,9 @@ class OperationsTC(CubicWebTC):
         l1 = hook.LateOperation(session)
         l2 = hook.LateOperation(session)
         l3 = hook.Operation(session)
-        self.assertEquals(session.pending_operations, [l3, l1, l2, l0])
+        self.assertEqual(session.pending_operations, [l3, l1, l2, l0])
         l4 = hook.SingleLastOperation(session)
-        self.assertEquals(session.pending_operations, [l3, l1, l2, l4])
+        self.assertEqual(session.pending_operations, [l3, l1, l2, l4])
 
     @clean_session_ops
     def test_global_operation_order(self):
@@ -70,7 +70,7 @@ class OperationsTC(CubicWebTC):
         op3 = syncschema.MemSchemaNotifyChanges(session)
         op4 = integrity._DelayedDeleteOp(session)
         op5 = integrity._CheckORelationOp(session)
-        self.assertEquals(session.pending_operations, [op1, op2, op4, op5, op3])
+        self.assertEqual(session.pending_operations, [op1, op2, op4, op5, op3])
 
 
 class HookCalled(Exception): pass
@@ -102,19 +102,19 @@ class HooksRegistryTC(TestCase):
         class _Hook(hook.Hook):
             events = ('before_add_entiti',)
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event before_add_entiti on %s._Hook' % __name__)
+        self.assertEqual(str(ex), 'bad event before_add_entiti on %s._Hook' % __name__)
 
     def test_register_bad_hook2(self):
         class _Hook(hook.Hook):
             events = None
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad .events attribute None on %s._Hook' % __name__)
+        self.assertEqual(str(ex), 'bad .events attribute None on %s._Hook' % __name__)
 
     def test_register_bad_hook3(self):
         class _Hook(hook.Hook):
             events = 'before_add_entity'
         ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEquals(str(ex), 'bad event b on %s._Hook' % __name__)
+        self.assertEqual(str(ex), 'bad event b on %s._Hook' % __name__)
 
     def test_call_hook(self):
         self.o.register(AddAnyHook)
@@ -138,17 +138,17 @@ class SystemHooksTC(CubicWebTC):
 
     def test_startup_shutdown(self):
         import hooks # cubicweb/server/test/data/hooks.py
-        self.assertEquals(hooks.CALLED_EVENTS['server_startup'], True)
+        self.assertEqual(hooks.CALLED_EVENTS['server_startup'], True)
         # don't actually call repository.shutdown !
         self.repo.hm.call_hooks('server_shutdown', repo=self.repo)
-        self.assertEquals(hooks.CALLED_EVENTS['server_shutdown'], True)
+        self.assertEqual(hooks.CALLED_EVENTS['server_shutdown'], True)
 
     def test_session_open_close(self):
         import hooks # cubicweb/server/test/data/hooks.py
         cnx = self.login('anon')
-        self.assertEquals(hooks.CALLED_EVENTS['session_open'], 'anon')
+        self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
         cnx.close()
-        self.assertEquals(hooks.CALLED_EVENTS['session_close'], 'anon')
+        self.assertEqual(hooks.CALLED_EVENTS['session_close'], 'anon')
 
 
 # class RelationHookTC(TestCase):
@@ -162,30 +162,30 @@ class SystemHooksTC(CubicWebTC):
 #         """make sure before_xxx_relation hooks are called directly"""
 #         self.o.register(self._before_relation_hook,
 #                              'before_add_relation', 'concerne')
-#         self.assertEquals(self.called, [])
+#         self.assertEqual(self.called, [])
 #         self.o.call_hooks('before_add_relation', 'concerne', 'USER',
 #                           1, 'concerne', 2)
-#         self.assertEquals(self.called, [(1, 'concerne', 2)])
+#         self.assertEqual(self.called, [(1, 'concerne', 2)])
 
 #     def test_after_add_relation(self):
 #         """make sure after_xxx_relation hooks are deferred"""
 #         self.o.register(self._after_relation_hook,
 #                              'after_add_relation', 'concerne')
-#         self.assertEquals(self.called, [])
+#         self.assertEqual(self.called, [])
 #         self.o.call_hooks('after_add_relation', 'concerne', 'USER',
 #                           1, 'concerne', 2)
 #         self.o.call_hooks('after_add_relation', 'concerne', 'USER',
 #                           3, 'concerne', 4)
-#         self.assertEquals(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
+#         self.assertEqual(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
 
 #     def test_before_delete_relation(self):
 #         """make sure before_xxx_relation hooks are called directly"""
 #         self.o.register(self._before_relation_hook,
 #                              'before_delete_relation', 'concerne')
-#         self.assertEquals(self.called, [])
+#         self.assertEqual(self.called, [])
 #         self.o.call_hooks('before_delete_relation', 'concerne', 'USER',
 #                           1, 'concerne', 2)
-#         self.assertEquals(self.called, [(1, 'concerne', 2)])
+#         self.assertEqual(self.called, [(1, 'concerne', 2)])
 
 #     def test_after_delete_relation(self):
 #         """make sure after_xxx_relation hooks are deferred"""
@@ -195,7 +195,7 @@ class SystemHooksTC(CubicWebTC):
 #                           1, 'concerne', 2)
 #         self.o.call_hooks('after_delete_relation', 'concerne', 'USER',
 #                           3, 'concerne', 4)
-#         self.assertEquals(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
+#         self.assertEqual(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
 
 
 #     def _before_relation_hook(self, pool, subject, r_type, object):

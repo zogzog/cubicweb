@@ -19,21 +19,21 @@ class PropertySheetTC(TestCase):
         ps.load(join(DATADIR, 'sheet1.py'))
         ps.load(join(DATADIR, 'sheet2.py'))
         # defined by sheet1
-        self.assertEquals(ps['logo'], 'http://cwtest.com/logo.png')
+        self.assertEqual(ps['logo'], 'http://cwtest.com/logo.png')
         # defined by sheet1, overriden by sheet2
-        self.assertEquals(ps['bgcolor'], '#FFFFFF')
+        self.assertEqual(ps['bgcolor'], '#FFFFFF')
         # defined by sheet2
-        self.assertEquals(ps['fontcolor'], 'black')
+        self.assertEqual(ps['fontcolor'], 'black')
         # defined by sheet1, extended by sheet2
-        self.assertEquals(ps['stylesheets'], ['http://cwtest.com/cubicweb.css',
+        self.assertEqual(ps['stylesheets'], ['http://cwtest.com/cubicweb.css',
                                               'http://cwtest.com/mycube.css'])
         # lazy string defined by sheet1
         self.assertIsInstance(ps['lazy'], lazystr)
-        self.assertEquals(str(ps['lazy']), '#FFFFFF')
+        self.assertEqual(str(ps['lazy']), '#FFFFFF')
         # test compilation
-        self.assertEquals(ps.compile('a {bgcolor: %(bgcolor)s; size: 1%;}'),
+        self.assertEqual(ps.compile('a {bgcolor: %(bgcolor)s; size: 1%;}'),
                           'a {bgcolor: #FFFFFF; size: 1%;}')
-        self.assertEquals(ps.process_resource(DATADIR, 'pouet.css'),
+        self.assertEqual(ps.process_resource(DATADIR, 'pouet.css'),
                           CACHEDIR)
         self.failUnless('pouet.css' in ps._cache)
         self.failIf(ps.need_reload())

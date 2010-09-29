@@ -92,19 +92,19 @@ class LDAPUserSourceTC(CubicWebTC):
     def test_base(self):
         # check a known one
         e = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
-        self.assertEquals(e.login, SYT)
+        self.assertEqual(e.login, SYT)
         e.complete()
-        self.assertEquals(e.creation_date, None)
-        self.assertEquals(e.modification_date, None)
-        self.assertEquals(e.firstname, None)
-        self.assertEquals(e.surname, None)
-        self.assertEquals(e.in_group[0].name, 'users')
-        self.assertEquals(e.owned_by[0].login, SYT)
-        self.assertEquals(e.created_by, ())
-        self.assertEquals(e.primary_email[0].address, 'Sylvain Thenault')
+        self.assertEqual(e.creation_date, None)
+        self.assertEqual(e.modification_date, None)
+        self.assertEqual(e.firstname, None)
+        self.assertEqual(e.surname, None)
+        self.assertEqual(e.in_group[0].name, 'users')
+        self.assertEqual(e.owned_by[0].login, SYT)
+        self.assertEqual(e.created_by, ())
+        self.assertEqual(e.primary_email[0].address, 'Sylvain Thenault')
         # email content should be indexed on the user
         rset = self.sexecute('CWUser X WHERE X has_text "thenault"')
-        self.assertEquals(rset.rows, [[e.eid]])
+        self.assertEqual(rset.rows, [[e.eid]])
 
     def test_not(self):
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
@@ -117,16 +117,16 @@ class LDAPUserSourceTC(CubicWebTC):
         aeid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': ADIM})[0][0]
         rset = self.sexecute('CWUser X, Y WHERE X login %(syt)s, Y login %(adim)s',
                             {'syt': SYT, 'adim': ADIM})
-        self.assertEquals(rset.rows, [[seid, aeid]])
+        self.assertEqual(rset.rows, [[seid, aeid]])
         rset = self.sexecute('Any X,Y,L WHERE X login L, X login %(syt)s, Y login %(adim)s',
                             {'syt': SYT, 'adim': ADIM})
-        self.assertEquals(rset.rows, [[seid, aeid, SYT]])
+        self.assertEqual(rset.rows, [[seid, aeid, SYT]])
 
     def test_in(self):
         seid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         aeid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': ADIM})[0][0]
         rset = self.sexecute('Any X,L ORDERBY L WHERE X login IN("%s", "%s"), X login L' % (SYT, ADIM))
-        self.assertEquals(rset.rows, [[aeid, ADIM], [seid, SYT]])
+        self.assertEqual(rset.rows, [[aeid, ADIM], [seid, SYT]])
 
     def test_relations(self):
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
@@ -144,28 +144,28 @@ class LDAPUserSourceTC(CubicWebTC):
     def test_upper(self):
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.sexecute('Any UPPER(L) WHERE X eid %s, X login L' % eid)
-        self.assertEquals(rset[0][0], SYT.upper())
+        self.assertEqual(rset[0][0], SYT.upper())
 
     def test_unknown_attr(self):
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         rset = self.sexecute('Any L,C,M WHERE X eid %s, X login L, '
                             'X creation_date C, X modification_date M' % eid)
-        self.assertEquals(rset[0][0], SYT)
-        self.assertEquals(rset[0][1], None)
-        self.assertEquals(rset[0][2], None)
+        self.assertEqual(rset[0][0], SYT)
+        self.assertEqual(rset[0][1], None)
+        self.assertEqual(rset[0][2], None)
 
     def test_sort(self):
         logins = [l for l, in self.sexecute('Any L ORDERBY L WHERE X login L')]
-        self.assertEquals(logins, sorted(logins))
+        self.assertEqual(logins, sorted(logins))
 
     def test_lower_sort(self):
         logins = [l for l, in self.sexecute('Any L ORDERBY lower(L) WHERE X login L')]
-        self.assertEquals(logins, sorted(logins))
+        self.assertEqual(logins, sorted(logins))
 
     def test_or(self):
         rset = self.sexecute('DISTINCT Any X WHERE X login %(login)s OR (X in_group G, G name "managers")',
                             {'login': SYT})
-        self.assertEquals(len(rset), 2, rset.rows) # syt + admin
+        self.assertEqual(len(rset), 2, rset.rows) # syt + admin
 
     def test_nonregr_set_owned_by(self):
         # test that when a user coming from ldap is triggering a transition
@@ -173,7 +173,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.sexecute('SET X in_group G WHERE X login %(syt)s, G name "managers"', {'syt': SYT})
         self.commit()
         syt = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
-        self.assertEquals([g.name for g in syt.in_group], ['managers', 'users'])
+        self.assertEqual([g.name for g in syt.in_group], ['managers', 'users'])
         self.patch_authenticate()
         cnx = self.login(SYT, password='dummypassword')
         cu = cnx.cursor()
@@ -183,15 +183,15 @@ class LDAPUserSourceTC(CubicWebTC):
         try:
             cnx.commit()
             adim.clear_all_caches()
-            self.assertEquals(adim.in_state[0].name, 'deactivated')
+            self.assertEqual(adim.in_state[0].name, 'deactivated')
             trinfo = iworkflowable.latest_trinfo()
-            self.assertEquals(trinfo.owned_by[0].login, SYT)
+            self.assertEqual(trinfo.owned_by[0].login, SYT)
             # select from_state to skip the user's creation TrInfo
             rset = self.sexecute('Any U ORDERBY D DESC WHERE WF wf_info_for X,'
                                 'WF creation_date D, WF from_state FS,'
                                 'WF owned_by U?, X eid %(x)s',
                                 {'x': adim.eid})
-            self.assertEquals(rset.rows, [[syt.eid]])
+            self.assertEqual(rset.rows, [[syt.eid]])
         finally:
             # restore db state
             self.restore_connection()
@@ -213,14 +213,14 @@ class LDAPUserSourceTC(CubicWebTC):
         self.sexecute('SET U in_group G WHERE G name ~= "bougloup%", U login "admin"')
         self.sexecute('SET U in_group G WHERE G name = "bougloup1", U login %(syt)s', {'syt': SYT})
         rset = self.sexecute('Any L,SN ORDERBY L WHERE X in_state S, S name SN, X login L, EXISTS(X in_group G, G name ~= "bougloup%")')
-        self.assertEquals(rset.rows, [['admin', 'activated'], [SYT, 'activated']])
+        self.assertEqual(rset.rows, [['admin', 'activated'], [SYT, 'activated']])
 
     def test_exists2(self):
         self.create_user('comme')
         self.create_user('cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         rset = self.sexecute('Any GN ORDERBY GN WHERE X in_group G, G name GN, (G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon")))')
-        self.assertEquals(rset.rows, [['managers'], ['users']])
+        self.assertEqual(rset.rows, [['managers'], ['users']])
 
     def test_exists3(self):
         self.create_user('comme')
@@ -230,7 +230,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.sexecute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
         self.failUnless(self.sexecute('Any X, Y WHERE X copain Y, X login %(syt)s, Y login "cochon"', {'syt': SYT}))
         rset = self.sexecute('Any GN,L WHERE X in_group G, X login L, G name GN, G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon"))')
-        self.assertEquals(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
+        self.assertEqual(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
 
     def test_exists4(self):
         self.create_user('comme')
@@ -252,7 +252,7 @@ class LDAPUserSourceTC(CubicWebTC):
         all = self.sexecute('Any GN, L WHERE X in_group G, X login L, G name GN')
         all.rows.remove(['users', 'comme'])
         all.rows.remove(['users', SYT])
-        self.assertEquals(sorted(rset.rows), sorted(all.rows))
+        self.assertEqual(sorted(rset.rows), sorted(all.rows))
 
     def test_exists5(self):
         self.create_user('comme')
@@ -265,25 +265,25 @@ class LDAPUserSourceTC(CubicWebTC):
         rset= self.sexecute('Any L WHERE X login L, '
                            'EXISTS(X copain T, T login in ("comme", "cochon")) AND '
                            'NOT EXISTS(X copain T2, T2 login "billy")')
-        self.assertEquals(sorted(rset.rows), [['cochon'], [SYT]])
+        self.assertEqual(sorted(rset.rows), [['cochon'], [SYT]])
         rset= self.sexecute('Any GN,L WHERE X in_group G, X login L, G name GN, '
                            'EXISTS(X copain T, T login in ("comme", "cochon")) AND '
                            'NOT EXISTS(X copain T2, T2 login "billy")')
-        self.assertEquals(sorted(rset.rows), [['guests', 'cochon'],
+        self.assertEqual(sorted(rset.rows), [['guests', 'cochon'],
                                               ['users', 'cochon'],
                                               ['users', SYT]])
 
     def test_cd_restriction(self):
         rset = self.sexecute('CWUser X WHERE X creation_date > "2009-02-01"')
         # admin/anon but no ldap user since it doesn't support creation_date
-        self.assertEquals(sorted(e.login for e in rset.entities()),
+        self.assertEqual(sorted(e.login for e in rset.entities()),
                           ['admin', 'anon'])
 
     def test_union(self):
         afeids = self.sexecute('State X')
         ueids = self.sexecute('CWUser X')
         rset = self.sexecute('(Any X WHERE X is State) UNION (Any X WHERE X is CWUser)')
-        self.assertEquals(sorted(r[0] for r in rset.rows),
+        self.assertEqual(sorted(r[0] for r in rset.rows),
                           sorted(r[0] for r in afeids + ueids))
 
     def _init_security_test(self):
@@ -294,23 +294,23 @@ class LDAPUserSourceTC(CubicWebTC):
     def test_security1(self):
         cu = self._init_security_test()
         rset = cu.execute('CWUser X WHERE X login %(login)s', {'login': SYT})
-        self.assertEquals(rset.rows, [])
+        self.assertEqual(rset.rows, [])
         rset = cu.execute('Any X WHERE X login "iaminguestsgrouponly"')
-        self.assertEquals(len(rset.rows), 1)
+        self.assertEqual(len(rset.rows), 1)
 
     def test_security2(self):
         cu = self._init_security_test()
         rset = cu.execute('Any X WHERE X has_text %(syt)s', {'syt': SYT})
-        self.assertEquals(rset.rows, [])
+        self.assertEqual(rset.rows, [])
         rset = cu.execute('Any X WHERE X has_text "iaminguestsgrouponly"')
-        self.assertEquals(len(rset.rows), 1)
+        self.assertEqual(len(rset.rows), 1)
 
     def test_security3(self):
         cu = self._init_security_test()
         rset = cu.execute('Any F WHERE X has_text %(syt)s, X firstname F', {'syt': SYT})
-        self.assertEquals(rset.rows, [])
+        self.assertEqual(rset.rows, [])
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
-        self.assertEquals(rset.rows, [[None]])
+        self.assertEqual(rset.rows, [[None]])
 
     def test_nonregr1(self):
         self.sexecute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E owned_by X, '
@@ -351,34 +351,34 @@ class GlobTrFuncTC(TestCase):
     def test_count(self):
         trfunc = GlobTrFunc('count', 0)
         res = trfunc.apply([[1], [2], [3], [4]])
-        self.assertEquals(res, [[4]])
+        self.assertEqual(res, [[4]])
         trfunc = GlobTrFunc('count', 1)
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
-        self.assertEquals(res, [[1, 2], [2, 1], [3, 1]])
+        self.assertEqual(res, [[1, 2], [2, 1], [3, 1]])
 
     def test_sum(self):
         trfunc = GlobTrFunc('sum', 0)
         res = trfunc.apply([[1], [2], [3], [4]])
-        self.assertEquals(res, [[10]])
+        self.assertEqual(res, [[10]])
         trfunc = GlobTrFunc('sum', 1)
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
-        self.assertEquals(res, [[1, 7], [2, 4], [3, 6]])
+        self.assertEqual(res, [[1, 7], [2, 4], [3, 6]])
 
     def test_min(self):
         trfunc = GlobTrFunc('min', 0)
         res = trfunc.apply([[1], [2], [3], [4]])
-        self.assertEquals(res, [[1]])
+        self.assertEqual(res, [[1]])
         trfunc = GlobTrFunc('min', 1)
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
-        self.assertEquals(res, [[1, 2], [2, 4], [3, 6]])
+        self.assertEqual(res, [[1, 2], [2, 4], [3, 6]])
 
     def test_max(self):
         trfunc = GlobTrFunc('max', 0)
         res = trfunc.apply([[1], [2], [3], [4]])
-        self.assertEquals(res, [[4]])
+        self.assertEqual(res, [[4]])
         trfunc = GlobTrFunc('max', 1)
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
-        self.assertEquals(res, [[1, 5], [2, 4], [3, 6]])
+        self.assertEqual(res, [[1, 5], [2, 4], [3, 6]])
 
 # XXX
 LDAPUserSourceTC._init_repo()
@@ -405,13 +405,13 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
 
     def test_base(self):
         rqlst = self._prepare('CWUser X WHERE X login "toto"').children[0]
-        self.assertEquals(self.o.generate(rqlst, 'X')[1],
+        self.assertEqual(self.o.generate(rqlst, 'X')[1],
                           '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
 
     def test_kwargs(self):
         rqlst = self._prepare('CWUser X WHERE X login %(x)s').children[0]
         self.o._args = {'x': "toto"}
-        self.assertEquals(self.o.generate(rqlst, 'X')[1],
+        self.assertEqual(self.o.generate(rqlst, 'X')[1],
                           '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
 
     def test_get_attr(self):

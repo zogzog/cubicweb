@@ -26,10 +26,9 @@
 
 import os, os.path as osp
 import sys
-import unittest
 
 # imported by default to simplify further import statements
-from logilab.common.testlib import unittest_main
+from logilab.common.testlib import TestCase, unittest_main
 
 import windmill
 from windmill.dep import functest
@@ -45,7 +44,7 @@ class UnitTestReporter(functest.reports.FunctestReportInterface):
 unittestreporter = UnitTestReporter()
 functest.reports.register_reporter(unittestreporter)
 
-class WindmillUnitTestCase(unittest.TestCase):
+class WindmillUnitTestCase(TestCase):
     def setUp(self):
         windmill.stdout, windmill.stdin = sys.stdout, sys.stdin
         from windmill.bin.admin_lib import configure_global_settings, setup

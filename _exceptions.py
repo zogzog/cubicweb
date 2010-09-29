@@ -130,13 +130,19 @@ class ObjectNotFound(RegistryException):
     """
 
 class NoSelectableObject(RegistryException):
-    """some views with the given vid have been found but no
-    one is applicable to the result set
-    """
+    """raised when no appobject is selectable for a given context."""
+    def __init__(self, args, kwargs, appobjects):
+        self.args = args
+        self.kwargs = kwargs
+        self.appobjects = appobjects
+
+    def __str__(self):
+        return ('args: %s, kwargs: %s\ncandidates: %s'
+                % (self.args, self.kwargs.keys(), self.appobjects))
+
 
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
-
 
 # query exception #############################################################
 

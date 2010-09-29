@@ -531,7 +531,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """set output content type for this request. An optional filename
         may be given
         """
-        if content_type.startswith('text/'):
+        if content_type.startswith('text/') and ';charset=' not in content_type:
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:

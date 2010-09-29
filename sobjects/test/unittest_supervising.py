@@ -52,16 +52,16 @@ class SupervisingTC(CubicWebTC):
         session = self.session
         sentops = [op for op in session.pending_operations
                    if isinstance(op, SupervisionMailOp)]
-        self.assertEquals(len(sentops), 1)
+        self.assertEqual(len(sentops), 1)
         # check view content
         op = sentops[0]
         view = sentops[0]._get_view()
-        self.assertEquals(view.recipients(), ['test@logilab.fr'])
-        self.assertEquals(view.subject(), '[data supervision] changes summary')
+        self.assertEqual(view.recipients(), ['test@logilab.fr'])
+        self.assertEqual(view.subject(), '[data supervision] changes summary')
         data = view.render(changes=session.transaction_data.get('pendingchanges')).strip()
         data = re.sub('#\d+', '#EID', data)
         data = re.sub('/\d+', '/EID', data)
-        self.assertTextEquals('''user admin has made the following change(s):
+        self.assertMultiLineEqual('''user admin has made the following change(s):
 
 * added cwuser #EID (toto)
   http://testing.fr/cubicweb/cwuser/toto
@@ -79,22 +79,22 @@ class SupervisingTC(CubicWebTC):
                               data)
         # check prepared email
         op._prepare_email()
-        self.assertEquals(len(op.to_send), 1)
+        self.assertEqual(len(op.to_send), 1)
         self.assert_(op.to_send[0][0])
-        self.assertEquals(op.to_send[0][1], ['test@logilab.fr'])
+        self.assertEqual(op.to_send[0][1], ['test@logilab.fr'])
         self.commit()
         # some other changes #######
         user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         sentops = [op for op in session.pending_operations
                    if isinstance(op, SupervisionMailOp)]
-        self.assertEquals(len(sentops), 1)
+        self.assertEqual(len(sentops), 1)
         # check view content
         op = sentops[0]
         view = sentops[0]._get_view()
         data = view.render(changes=session.transaction_data.get('pendingchanges')).strip()
         data = re.sub('#\d+', '#EID', data)
         data = re.sub('/\d+', '/EID', data)
-        self.assertTextEquals('''user admin has made the following change(s):
+        self.assertMultiLineEqual('''user admin has made the following change(s):
 
 * changed state of cwuser #EID (toto)
   from state activated to state deactivated

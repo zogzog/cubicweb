@@ -43,7 +43,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
             if rschema not in reledit:
                 continue
             rtype = rschema.type
-            self.assertTextEquals(reledit[rtype] % {'eid': self.proj.eid}, self.proj.view('reledit', rtype=rtype, role=role), rtype)
+            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid}, self.proj.view('reledit', rtype=rtype, role=role), rtype)
 
     def test_default_forms(self):
         doreledit = {'title': """<div id="title-subject-%(eid)s-reledit" onmouseout="jQuery('#title-subject-%(eid)s').addClass('hidden')" onmouseover="jQuery('#title-subject-%(eid)s').removeClass('hidden')" class="releditField"><div id="title-subject-%(eid)s-value" class="editableFieldValue">cubicweb-world-domination</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="title-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;title-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
@@ -177,7 +177,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
             if rschema not in doreledit:
                 continue
             rtype = rschema.type
-            self.assertTextEquals(doreledit[rtype] % {'eid': self.proj.eid, 'toto': self.toto.eid},
+            self.assertMultiLineEqual(doreledit[rtype] % {'eid': self.proj.eid, 'toto': self.toto.eid},
                                   self.proj.view('doreledit', rtype=rtype, role=role,
                                                  formid='edition' if rtype == 'long_desc' else 'base'),
                                   rtype)
@@ -213,7 +213,7 @@ class ClickAndEditFormUICFGTC(ReleditMixinTC, CubicWebTC):
             if rschema not in reledit:
                 continue
             rtype = rschema.type
-            self.assertTextEquals(reledit[rtype] % {'eid': self.proj.eid, 'toto': self.toto.eid, 'tick': self.tick.eid},
+            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid, 'toto': self.toto.eid, 'tick': self.tick.eid},
                                   self.proj.view('reledit', rtype=rtype, role=role),
                                   rtype)
         reledit_ctrl.clear()

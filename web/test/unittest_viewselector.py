@@ -65,7 +65,7 @@ class VRegistryTC(ViewSelectorTC):
         except AttributeError:
             return
         if registry == 'hooks':
-            self.assertEquals(len(content), expected, content)
+            self.assertEqual(len(content), expected, content)
             return
         try:
             self.assertSetEqual(content.keys(), expected)
@@ -467,19 +467,36 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_properties(self):
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/test/unittest_viewselector.py
         self.assertEquals(sorted(k for k in self.vreg['propertydefs'].keys()
                                  if k.startswith('ctxcomponents.edit_box')),
                           ['ctxcomponents.edit_box.context',
                            'ctxcomponents.edit_box.order',
                            'ctxcomponents.edit_box.visible'])
         self.assertEquals([k for k in self.vreg['propertyvalues'].keys()
+=======
+        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].keys()
+                                 if k.startswith('boxes.edit_box')),
+                          ['boxes.edit_box.context',
+                           'boxes.edit_box.order',
+                           'boxes.edit_box.visible'])
+        self.assertEqual([k for k in self.vreg['propertyvalues'].keys()
+>>>>>>> /tmp/unittest_viewselector.py~other.F5zfDM
                            if not k.startswith('system.version')],
                           [])
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/test/unittest_viewselector.py
         self.assertEquals(self.vreg.property_value('ctxcomponents.edit_box.visible'), True)
         self.assertEquals(self.vreg.property_value('ctxcomponents.edit_box.order'), 2)
         self.assertEquals(self.vreg.property_value('ctxcomponents.possible_views_box.visible'), False)
         self.assertEquals(self.vreg.property_value('ctxcomponents.possible_views_box.order'), 10)
         self.assertRaises(UnknownProperty, self.vreg.property_value, 'ctxcomponents.actions_box')
+=======
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.visible'), True)
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.order'), 2)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.visible'), False)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.order'), 10)
+        self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
+>>>>>>> /tmp/unittest_viewselector.py~other.F5zfDM
 
 
 

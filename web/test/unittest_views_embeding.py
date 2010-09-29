@@ -46,7 +46,7 @@ class UILIBTC(TestCase):
         ]
         for orig_a, expected_a in zip(orig, expected):
             got = prefix_links(orig_a, 'PREFIX', 'http://embedded.com/page1.html')
-            self.assertEquals(got, expected_a)
+            self.assertEqual(got, expected_a)
 
 if __name__ == '__main__':
     unittest_main()

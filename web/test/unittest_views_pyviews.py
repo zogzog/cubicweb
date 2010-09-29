@@ -25,7 +25,7 @@ class PyViewsTC(CubicWebTC):
                                          pyvalue=[[1, 'a'], [2, 'b']])
         content = view.render(pyvalue=[[1, 'a'], [2, 'b']],
                               headers=['num', 'char'])
-        self.assertEquals(content.strip(), '''<table class="listing">
+        self.assertEqual(content.strip(), '''<table class="listing">
 <thead><tr><th>num</th><th>char</th></tr>
 </thead><tbody><tr><td>1</td><td>a</td></tr>
 <tr><td>2</td><td>b</td></tr>
@@ -35,7 +35,7 @@ class PyViewsTC(CubicWebTC):
         view = self.vreg['views'].select('pyvallist', self.request(),
                                          pyvalue=[1, 'a'])
         content = view.render(pyvalue=[1, 'a'])
-        self.assertEquals(content.strip(), '''<ul>
+        self.assertEqual(content.strip(), '''<ul>
 <li>1</li>
 <li>a</li>
 </ul>''')

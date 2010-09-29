@@ -45,51 +45,51 @@ class URLPublisherTC(CubicWebTC):
 
     def test_raw_path(self):
         """tests raw path resolution'"""
-        self.assertEquals(self.process('view'), ('view', None))
-        self.assertEquals(self.process('edit'), ('edit', None))
+        self.assertEqual(self.process('view'), ('view', None))
+        self.assertEqual(self.process('edit'), ('edit', None))
         self.assertRaises(NotFound, self.process, 'whatever')
 
     def test_eid_path(self):
         """tests eid path resolution"""
         self.assertIsInstance(self.process('123')[1], ResultSet)
-        self.assertEquals(len(self.process('123')[1]), 1)
+        self.assertEqual(len(self.process('123')[1]), 1)
         self.assertRaises(NotFound, self.process, '123/345')
         self.assertRaises(NotFound, self.process, 'not_eid')
 
     def test_rest_path(self):
         """tests the rest path resolution"""
         ctrl, rset = self.process('CWUser')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(),
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.printable_rql(),
                           "Any X,AA,AB,AC,AD ORDERBY AA WHERE X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD")
         ctrl, rset = self.process('CWUser/login/admin')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         ctrl, rset = self.process('cwuser/admin')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         ctrl, rset = self.process('cwuser/eid/%s'%rset[0][0])
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid 5, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid 5, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         # test non-ascii paths
         ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'CWUser')
-        self.assertEquals(rset.printable_rql(), u'Any X,AA,AB,AC,AD WHERE X login "\xffsa\xffe", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC,AD WHERE X login "\xffsa\xffe", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
         # test quoted paths
         ctrl, rset = self.process('BlogEntry/title/hell%27o')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'BlogEntry')
-        self.assertEquals(rset.printable_rql(), u'Any X,AA,AB,AC WHERE X title "hell\'o", X is BlogEntry, X creation_date AA, X title AB, X modification_date AC')
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset.description[0][0], 'BlogEntry')
+        self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC WHERE X title "hell\'o", X is BlogEntry, X creation_date AA, X title AB, X modification_date AC')
         # errors
         self.assertRaises(NotFound, self.process, 'CWUser/eid/30000')
         self.assertRaises(NotFound, self.process, 'Workcases')
@@ -108,9 +108,9 @@ class URLPublisherTC(CubicWebTC):
     def test_regexp_path(self):
         """tests the regexp path resolution"""
         ctrl, rset = self.process('add/Task')
-        self.assertEquals(ctrl, 'view')
-        self.assertEquals(rset, None)
-        self.assertEquals(self.req.form, {'etype' : "Task", 'vid' : "creation"})
+        self.assertEqual(ctrl, 'view')
+        self.assertEqual(rset, None)
+        self.assertEqual(self.req.form, {'etype' : "Task", 'vid' : "creation"})
         self.assertRaises(NotFound, self.process, 'add/foo/bar')
 
 
@@ -120,8 +120,8 @@ class URLPublisherTC(CubicWebTC):
         try:
             path = str(FakeRequest().url_quote(u'été'))
             ctrl, rset = self.process(path)
-            self.assertEquals(rset, None)
-            self.assertEquals(self.req.form, {'vid' : "foo"})
+            self.assertEqual(rset, None)
+            self.assertEqual(self.req.form, {'vid' : "foo"})
         finally:
             SimpleReqRewriter.rules = oldrules
 

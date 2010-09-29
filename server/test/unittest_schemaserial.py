@@ -47,7 +47,7 @@ cstrtypemap = {'RQLConstraint': 'RQLConstraint_eid',
 class Schema2RQLTC(TestCase):
 
     def test_eschema2rql1(self):
-        self.assertListEquals(list(eschema2rql(schema.eschema('CWAttribute'))),
+        self.assertListEqual(list(eschema2rql(schema.eschema('CWAttribute'))),
                               [
             ('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
              {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema',
@@ -55,13 +55,13 @@ class Schema2RQLTC(TestCase):
             ])
 
     def test_eschema2rql2(self):
-        self.assertListEquals(list(eschema2rql(schema.eschema('String'))), [
+        self.assertListEqual(list(eschema2rql(schema.eschema('String'))), [
                 ('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
                  {'description': u'', 'final': True, 'name': u'String'})])
 
     def test_eschema2rql_specialization(self):
         # x: None since eschema.eid are None
-        self.assertListEquals(sorted(specialize2rql(schema)),
+        self.assertListEqual(sorted(specialize2rql(schema)),
                               [('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                 {'et': None, 'x': None}),
                                ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
@@ -72,7 +72,7 @@ class Schema2RQLTC(TestCase):
                                 {'et': None, 'x': None})])
 
     def test_rschema2rql1(self):
-        self.assertListEquals(list(rschema2rql(schema.rschema('relation_type'), cstrtypemap)),
+        self.assertListEqual(list(rschema2rql(schema.rschema('relation_type'), cstrtypemap)),
                              [
             ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
              {'description': u'link a relation definition to its relation type', 'symmetric': False, 'name': u'relation_type', 'final' : False, 'fulltext_container': None, 'inlined': True}),
@@ -93,7 +93,7 @@ class Schema2RQLTC(TestCase):
             ])
 
     def test_rschema2rql2(self):
-        self.assertListEquals(list(rschema2rql(schema.rschema('add_permission'), cstrtypemap)),
+        self.assertListEqual(list(rschema2rql(schema.rschema('add_permission'), cstrtypemap)),
                               [
             ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s', {'description': u'', 'symmetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
 
@@ -113,7 +113,7 @@ class Schema2RQLTC(TestCase):
             ])
 
     def test_rschema2rql3(self):
-        self.assertListEquals(list(rschema2rql(schema.rschema('cardinality'), cstrtypemap)),
+        self.assertListEqual(list(rschema2rql(schema.rschema('cardinality'), cstrtypemap)),
                              [
             ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
              {'description': u'', 'symmetric': False, 'name': u'cardinality', 'final': True, 'fulltext_container': None, 'inlined': False}),
@@ -136,7 +136,7 @@ class Schema2RQLTC(TestCase):
             ])
 
     def test_rdef2rql(self):
-        self.assertListEquals(list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')], cstrtypemap)),
+        self.assertListEqual(list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')], cstrtypemap)),
                               [
             ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
@@ -148,19 +148,19 @@ class Schema2RQLTC(TestCase):
 
 
     def test_updateeschema2rql1(self):
-        self.assertListEquals(list(updateeschema2rql(schema.eschema('CWAttribute'), 1)),
+        self.assertListEqual(list(updateeschema2rql(schema.eschema('CWAttribute'), 1)),
                               [('SET X description %(description)s,X final %(final)s,X name %(name)s WHERE X eid %(x)s',
                                 {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema', 'x': 1, 'final': False, 'name': u'CWAttribute'}),
                                ])
 
     def test_updateeschema2rql2(self):
-        self.assertListEquals(list(updateeschema2rql(schema.eschema('String'), 1)),
+        self.assertListEqual(list(updateeschema2rql(schema.eschema('String'), 1)),
                               [('SET X description %(description)s,X final %(final)s,X name %(name)s WHERE X eid %(x)s',
                                 {'description': u'', 'x': 1, 'final': True, 'name': u'String'})
                                ])
 
     def test_updaterschema2rql1(self):
-        self.assertListEquals(list(updaterschema2rql(schema.rschema('relation_type'), 1)),
+        self.assertListEqual(list(updaterschema2rql(schema.rschema('relation_type'), 1)),
                              [
             ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X eid %(x)s',
              {'x': 1, 'symmetric': False,
@@ -176,7 +176,7 @@ class Schema2RQLTC(TestCase):
               'inlined': False, 'name': u'add_permission'})
             ]
         for i, (rql, args) in enumerate(updaterschema2rql(schema.rschema('add_permission'), 1)):
-            yield self.assertEquals, (rql, args), expected[i]
+            yield self.assertEqual, (rql, args), expected[i]
 
 class Perms2RQLTC(TestCase):
     GROUP_MAPPING = {
@@ -187,7 +187,7 @@ class Perms2RQLTC(TestCase):
         }
 
     def test_eperms2rql1(self):
-        self.assertListEquals([(rql, kwargs) for rql, kwargs in erperms2rql(schema.eschema('CWEType'), self.GROUP_MAPPING)],
+        self.assertListEqual([(rql, kwargs) for rql, kwargs in erperms2rql(schema.eschema('CWEType'), self.GROUP_MAPPING)],
                               [('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 1}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 2}),
@@ -197,7 +197,7 @@ class Perms2RQLTC(TestCase):
                                ])
 
     def test_rperms2rql2(self):
-        self.assertListEquals([(rql, kwargs) for rql, kwargs in erperms2rql(schema.rschema('read_permission').rdef('CWEType', 'CWGroup'), self.GROUP_MAPPING)],
+        self.assertListEqual([(rql, kwargs) for rql, kwargs in erperms2rql(schema.rschema('read_permission').rdef('CWEType', 'CWGroup'), self.GROUP_MAPPING)],
                               [('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 1}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 2}),
@@ -206,7 +206,7 @@ class Perms2RQLTC(TestCase):
                                ])
 
     def test_rperms2rql3(self):
-        self.assertListEquals([(rql, kwargs) for rql, kwargs in erperms2rql(schema.rschema('name').rdef('CWEType', 'String'), self.GROUP_MAPPING)],
+        self.assertListEqual([(rql, kwargs) for rql, kwargs in erperms2rql(schema.rschema('name').rdef('CWEType', 'String'), self.GROUP_MAPPING)],
                               [('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 1}),
                                ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 2}),
@@ -214,7 +214,7 @@ class Perms2RQLTC(TestCase):
                                ])
 
     #def test_perms2rql(self):
-    #    self.assertListEquals(perms2rql(schema, self.GROUP_MAPPING),
+    #    self.assertListEqual(perms2rql(schema, self.GROUP_MAPPING),
     #                         ['INSERT CWEType X: X name 'Societe', X final FALSE'])
 
 

@@ -20,7 +20,7 @@ class QUnitTestCaseTC(QUnitTestCase):
 
     def test_simple_failure(self):
         js_tests = list(self._test_qunit(js('test_simple_failure.js')))
-        self.assertEquals(len(js_tests), 3)
+        self.assertEqual(len(js_tests), 3)
         test_1, test_2, test_3 = js_tests
         self.assertRaises(self.failureException, test_1[0], *test_1[1:])
         self.assertRaises(self.failureException, test_2[0], *test_2[1:])

@@ -164,7 +164,7 @@ class WFHistoryView(EntityView):
 class WFHistoryVComponent(component.CtxComponent):
     """display the workflow history for entities supporting it"""
     __regid__ = 'wfhistory'
-    __select__ = WFHistoryView.__select__ & component.EntityVComponent.__select__
+    __select__ = component.EntityVComponent.__select__ & WFHistoryView.__select__
     context = 'navcontentbottom'
     title = _('Workflow history')
 

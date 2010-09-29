@@ -956,9 +956,6 @@ msgstr "add an email address"
 msgid "add a new permission"
 msgstr ""
 
-msgid "add_perm"
-msgstr "add permission"
-
 # subject and object forms for each relation type
 # (no object form for final relation types)
 msgid "add_permission"
@@ -1856,9 +1853,6 @@ msgstr ""
 
 msgid "delete this relation"
 msgstr ""
-
-msgid "delete_perm"
-msgstr "delete permission"
 
 msgid "delete_permission"
 msgstr "can be deleted by"
@@ -3087,9 +3081,6 @@ msgstr "permissions"
 msgid "read"
 msgstr ""
 
-msgid "read_perm"
-msgstr "read permission"
-
 msgid "read_permission"
 msgstr "can be read by"
 
@@ -3785,9 +3776,6 @@ msgstr "password"
 msgid "update"
 msgstr ""
 
-msgid "update_perm"
-msgstr "update permission"
-
 msgid "update_permission"
 msgstr "can be updated by"
 
@@ -4057,3 +4045,15 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
+
+#~ msgid "add_perm"
+#~ msgstr "add permission"
+
+#~ msgid "delete_perm"
+#~ msgstr "delete permission"
+
+#~ msgid "read_perm"
+#~ msgstr "read permission"
+
+#~ msgid "update_perm"
+#~ msgstr "update permission"
