@@ -335,8 +335,14 @@ class EntityCompositeFormRenderer(FormRenderer):
     def render_fields(self, w, form, values):
         if form.parent_form is None:
             w(u'<table class="listing">')
-            subfields = [field for field in form.forms[0].fields
-                         if field.is_visible()]
+            # get fields from the first subform with something to display (we
+            # may have subforms with nothing editable that will simply be
+            # skipped later)
+            for subform in form.forms:
+                subfields = [field for field in subform.fields
+                             if field.is_visible()]
+                if subfields:
+                    break
             if subfields:
                 # main form, display table headers
                 w(u'<tr class="header">')
