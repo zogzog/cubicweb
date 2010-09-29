@@ -57,8 +57,7 @@ class has_editable_relation(EntitySelector):
                  'optional argument', DeprecationWarning)
             editableattrs = form.editable_attributes()
         for rschema, role in editableattrs:
-            if not rschema.final:
-                return 1
+            return 1
         return 0
 
 @objectify_selector
