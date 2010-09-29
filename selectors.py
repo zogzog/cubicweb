@@ -1073,7 +1073,9 @@ class has_permission(EntitySelector):
                 for i, row in enumerate(rset):
                     if not rset.description[i][col] in need_local_check:
                         continue
-                    if not self.score(req, rset, i, col):
+                    # micro-optimisation instead of calling self.score(req,
+                    # rset, i, col): rset may be large
+                    if not rset.get_entity(i, col).cw_has_perm(action):
                         return 0
                 score += 1
             return score

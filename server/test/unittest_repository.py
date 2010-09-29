@@ -158,7 +158,7 @@ class RepositoryTC(CubicWebTC):
 
     def test_rollback_on_execute_unauthorized(self):
         class UnauthorizedAfterHook(Hook):
-            __regid__ = 'valerror-after-hook'
+            __regid__ = 'unauthorized-after-hook'
             __select__ = Hook.__select__ & is_instance('CWGroup')
             events = ('after_update_entity',)
             def __call__(self):
