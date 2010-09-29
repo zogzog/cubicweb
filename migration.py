@@ -129,7 +129,8 @@ class MigrationHelper(object):
             return object.__getattribute__(self, name)
         except AttributeError:
             cmd = 'cmd_%s' % name
-            if hasattr(self, cmd):
+            # search self.__class__ to avoid infinite recursion
+            if hasattr(self.__class__, cmd):
                 meth = getattr(self, cmd)
                 return lambda *args, **kwargs: self.interact(args, kwargs,
                                                              meth=meth)
