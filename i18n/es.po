@@ -998,9 +998,6 @@ msgstr "Agregar correo electrónico"
 msgid "add a new permission"
 msgstr "Agregar una autorización"
 
-msgid "add_perm"
-msgstr "Agregado"
-
 # subject and object forms for each relation type
 # (no object form for final relation types)
 msgid "add_permission"
@@ -1931,9 +1928,6 @@ msgstr "Eliminar esta autorización"
 
 msgid "delete this relation"
 msgstr "Eliminar esta relación"
-
-msgid "delete_perm"
-msgstr "Eliminar"
 
 msgid "delete_permission"
 msgstr "Permiso de eliminar"
@@ -3202,9 +3196,6 @@ msgstr "Permisos"
 msgid "read"
 msgstr "Lectura"
 
-msgid "read_perm"
-msgstr "Lectura"
-
 msgid "read_permission"
 msgstr "Permiso de lectura"
 
@@ -3913,9 +3904,6 @@ msgstr "Contraseña"
 msgid "update"
 msgstr "Modificación"
 
-msgid "update_perm"
-msgstr "Permiso de Modificar"
-
 msgid "update_permission"
 msgstr "Puede ser modificado por"
 
@@ -4198,6 +4186,12 @@ msgstr "Ha terminado la sesión"
 msgid "you should probably delete that property"
 msgstr "Debería probablamente suprimir esta propriedad"
 
+#~ msgid "add_perm"
+#~ msgstr "Agregado"
+
+#~ msgid "delete_perm"
+#~ msgstr "Eliminar"
+
 #~ msgid "edition"
 #~ msgstr "Edición"
 
@@ -4206,3 +4200,9 @@ msgstr "Debería probablamente suprimir esta propriedad"
 
 #~ msgid "personnal informations"
 #~ msgstr "Información personal"
+
+#~ msgid "read_perm"
+#~ msgstr "Lectura"
+
+#~ msgid "update_perm"
+#~ msgstr "Permiso de Modificar"
