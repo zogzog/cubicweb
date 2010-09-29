@@ -141,7 +141,11 @@ def rdef_physical_info(dbhelper, rdef):
     """return backend type and a boolean flag if NULL values should be allowed
     for a given relation definition
     """
-    coltype = y2sql.type_from_constraints(dbhelper, rdef.object,
+    if rdef.object.final:
+        ttype = rdef.object
+    else:
+        ttype = 'Int' # eid type
+    coltype = y2sql.type_from_constraints(dbhelper, ttype,
                                           rdef.constraints, creating=False)
     allownull = rdef.cardinality[0] != '1'
     return coltype, allownull
