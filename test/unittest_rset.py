@@ -155,27 +155,15 @@ class ResultSetTC(CubicWebTC):
         rs.req = self.request()
         rs.vreg = self.vreg
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
         rs2 = rs.sorted_rset(lambda e:e.cw_attr_cache['login'])
-        self.assertEquals(len(rs2), 3)
-        self.assertEquals([login for _, login in rs2], ['adim', 'nico', 'syt'])
-=======
-        rs2 = rs.sorted_rset(lambda e:e['login'])
         self.assertEqual(len(rs2), 3)
         self.assertEqual([login for _, login in rs2], ['adim', 'nico', 'syt'])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         # make sure rs is unchanged
         self.assertEqual([login for _, login in rs], ['adim', 'syt', 'nico'])
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
         rs2 = rs.sorted_rset(lambda e:e.cw_attr_cache['login'], reverse=True)
-        self.assertEquals(len(rs2), 3)
-        self.assertEquals([login for _, login in rs2], ['syt', 'nico', 'adim'])
-=======
-        rs2 = rs.sorted_rset(lambda e:e['login'], reverse=True)
         self.assertEqual(len(rs2), 3)
         self.assertEqual([login for _, login in rs2], ['syt', 'nico', 'adim'])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         # make sure rs is unchanged
         self.assertEqual([login for _, login in rs], ['adim', 'syt', 'nico'])
 
@@ -196,36 +184,19 @@ class ResultSetTC(CubicWebTC):
                        description=[['CWUser', 'String', 'String']] * 5)
         rs.req = self.request()
         rs.vreg = self.vreg
-
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
         rsets = rs.split_rset(lambda e:e.cw_attr_cache['login'])
-        self.assertEquals(len(rsets), 3)
-        self.assertEquals([login for _, login,_ in rsets[0]], ['adim', 'adim'])
-        self.assertEquals([login for _, login,_ in rsets[1]], ['syt'])
-        self.assertEquals([login for _, login,_ in rsets[2]], ['nico', 'nico'])
-=======
-        rsets = rs.split_rset(lambda e:e['login'])
         self.assertEqual(len(rsets), 3)
         self.assertEqual([login for _, login,_ in rsets[0]], ['adim', 'adim'])
         self.assertEqual([login for _, login,_ in rsets[1]], ['syt'])
         self.assertEqual([login for _, login,_ in rsets[2]], ['nico', 'nico'])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         # make sure rs is unchanged
         self.assertEqual([login for _, login,_ in rs], ['adim', 'adim', 'syt', 'nico', 'nico'])
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
         rsets = rs.split_rset(lambda e:e.cw_attr_cache['login'], return_dict=True)
-        self.assertEquals(len(rsets), 3)
-        self.assertEquals([login for _, login,_ in rsets['nico']], ['nico', 'nico'])
-        self.assertEquals([login for _, login,_ in rsets['adim']], ['adim', 'adim'])
-        self.assertEquals([login for _, login,_ in rsets['syt']], ['syt'])
-=======
-        rsets = rs.split_rset(lambda e:e['login'], return_dict=True)
         self.assertEqual(len(rsets), 3)
         self.assertEqual([login for _, login,_ in rsets['nico']], ['nico', 'nico'])
         self.assertEqual([login for _, login,_ in rsets['adim']], ['adim', 'adim'])
         self.assertEqual([login for _, login,_ in rsets['syt']], ['syt'])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         # make sure rs is unchanged
         self.assertEqual([login for _, login,_ in rs], ['adim', 'adim', 'syt', 'nico', 'nico'])
 
@@ -256,25 +227,13 @@ class ResultSetTC(CubicWebTC):
         self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                                      surname=u'di mascio', firstname=u'adrien')
         e = self.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_attr_cache['surname'], 'di mascio')
+        self.assertEqual(e.cw_attr_cache['surname'], 'di mascio')
         self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
         self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'creation_date')
-        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
-=======
-        self.assertEqual(e['surname'], 'di mascio')
-        self.assertRaises(KeyError, e.__getitem__, 'firstname')
-        self.assertRaises(KeyError, e.__getitem__, 'creation_date')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         e.complete()
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_attr_cache['firstname'], 'adrien')
-        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
-=======
-        self.assertEqual(e['firstname'], 'adrien')
+        self.assertEqual(e.cw_attr_cache['firstname'], 'adrien')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
 
     def test_get_entity_advanced(self):
         self.request().create_entity('Bookmark', title=u'zou', path=u'/view')
@@ -282,47 +241,24 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
         e = rset.get_entity(0, 0)
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_row, 0)
-        self.assertEquals(e.cw_col, 0)
-        self.assertEquals(e.cw_attr_cache['title'], 'zou')
-        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'path')
-        self.assertEquals(e.view('text'), 'zou')
-        self.assertEquals(pprelcachedict(e._cw_related_cache), [])
-=======
         self.assertEqual(e.cw_row, 0)
         self.assertEqual(e.cw_col, 0)
-        self.assertEqual(e['title'], 'zou')
-        self.assertRaises(KeyError, e.__getitem__, 'path')
+        self.assertEqual(e.cw_attr_cache['title'], 'zou')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'path')
         self.assertEqual(e.view('text'), 'zou')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
 
         e = rset.get_entity(0, 1)
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_row, 0)
-        self.assertEquals(e.cw_col, 1)
-        self.assertEquals(e.cw_attr_cache['login'], 'anon')
-        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
-        self.assertEquals(pprelcachedict(e._cw_related_cache),
-=======
         self.assertEqual(e.cw_row, 0)
         self.assertEqual(e.cw_col, 1)
-        self.assertEqual(e['login'], 'anon')
-        self.assertRaises(KeyError, e.__getitem__, 'firstname')
+        self.assertEqual(e.cw_attr_cache['login'], 'anon')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
                           [])
         e.complete()
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_attr_cache['firstname'], None)
-        self.assertEquals(e.view('text'), 'anon')
-        self.assertEquals(pprelcachedict(e._cw_related_cache),
-=======
-        self.assertEqual(e['firstname'], None)
+        self.assertEqual(e.cw_attr_cache['firstname'], None)
         self.assertEqual(e.view('text'), 'anon')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
                           [])
 
         self.assertRaises(NotAnEntity, rset.get_entity, 0, 2)
@@ -343,32 +279,17 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('Any X,U,S,XT,UL,SN WHERE X created_by U, U in_state S, '
                             'X title XT, S name SN, U login UL, X eid %s' % e.eid)
         e = rset.get_entity(0, 0)
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(e.cw_attr_cache['title'], 'zou')
-        self.assertEquals(pprelcachedict(e._cw_related_cache),
-=======
-        self.assertEqual(e['title'], 'zou')
+        self.assertEqual(e.cw_attr_cache['title'], 'zou')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
                           [('created_by_subject', [5])])
         # first level of recursion
         u = e.created_by[0]
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(u.cw_attr_cache['login'], 'admin')
+        self.assertEqual(u.cw_attr_cache['login'], 'admin')
         self.assertRaises(KeyError, u.cw_attr_cache.__getitem__, 'firstname')
-=======
-        self.assertEqual(u['login'], 'admin')
-        self.assertRaises(KeyError, u.__getitem__, 'firstname')
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
         # second level of recursion
         s = u.in_state[0]
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-        self.assertEquals(s.cw_attr_cache['name'], 'activated')
+        self.assertEqual(s.cw_attr_cache['name'], 'activated')
         self.assertRaises(KeyError, s.cw_attr_cache.__getitem__, 'description')
-=======
-        self.assertEqual(s['name'], 'activated')
-        self.assertRaises(KeyError, s.__getitem__, 'description')
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
 
 
     def test_get_entity_cache_with_left_outer_join(self):
@@ -398,11 +319,7 @@ class ResultSetTC(CubicWebTC):
             etype, n = expected[entity.cw_row]
             self.assertEqual(entity.__regid__, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/test/unittest_rset.py
-            self.assertEquals(entity.cw_attr_cache[attr], n)
-=======
-            self.assertEqual(entity[attr], n)
->>>>>>> /tmp/unittest_rset.py~other.4ZXPmp
+            self.assertEqual(entity.cw_attr_cache[attr], n)
 
     def test_related_entity_optional(self):
         e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')

@@ -24,16 +24,8 @@ class SessionTC(CubicWebTC):
             # fake an incoming http query with sessionid in session cookie
             # don't use self.request() which try to call req.set_session
             req = self.requestcls(self.vreg)
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/web/test/unittest_session.py
             self.assertRaises(InvalidSession, sm.get_session, req, sessionid)
-            self.assertEquals(len(sm._sessions), 0)
-=======
-            websession = sm.get_session(req, sessionid)
-            self.assertEqual(len(sm._sessions), 1)
-            self.assertIs(websession, self.websession)
-            self.assertEqual(websession.sessionid, sessionid)
-            self.assertNotEquals(websession.sessionid, websession.cnx.sessionid)
->>>>>>> /tmp/unittest_session.py~other.sGNH8u
+            self.assertEqual(len(sm._sessions), 0)
         finally:
             # avoid error in tearDown by telling this connection is closed...
             self.cnx._closed = True
