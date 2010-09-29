@@ -1163,7 +1163,6 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertRaises(QueryError, self.execute, "SET X nom 'toto', X has_text 'tutu' WHERE X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
 
-
     # upassword encryption tests #################################################
 
     def test_insert_upassword(self):

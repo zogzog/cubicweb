@@ -1049,12 +1049,12 @@ class has_permission(EntitySelector):
             return self.score_entity(kwargs['entity'])
         if rset is None:
             return 0
-        user = req.user
-        action = self.action
         if row is None:
             score = 0
             need_local_check = []
             geteschema = req.vreg.schema.eschema
+            user = req.user
+            action = self.action
             for etype in rset.column_types(0):
                 if etype in BASE_TYPES:
                     return 0
@@ -1071,7 +1071,7 @@ class has_permission(EntitySelector):
             if need_local_check:
                 # check local role for entities of necessary types
                 for i, row in enumerate(rset):
-                    if not rset.description[i][0] in need_local_check:
+                    if not rset.description[i][col] in need_local_check:
                         continue
                     if not self.score(req, rset, i, col):
                         return 0
