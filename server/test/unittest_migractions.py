@@ -96,7 +96,7 @@ class MigrationCommandsTC(CubicWebTC):
             if v >= whateverorder:
                 orderdict[k] = v+1
         orderdict['whatever'] = whateverorder
-        self.assertDictEquals(orderdict, orderdict2)
+        self.assertDictEqual(orderdict, orderdict2)
         #self.assertEqual([r.type for r in self.schema['Note'].ordered_relations()],
         #                  ['modification_date', 'creation_date', 'owned_by',
         #                   'eid', 'ecrit_par', 'inline1', 'date', 'type',

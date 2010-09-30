@@ -110,5 +110,5 @@ class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
             # try to display a better message in case of failure
             if hasattr(test, "tb"):
                 msg = '\n'.join(test.tb)
-            self.assertEquals(test.result, True, msg=msg)
+            self.assertEqual(test.result, True, msg=msg)
 
