@@ -143,7 +143,7 @@ class PrimaryView(EntityView):
         if display_attributes:
             self.w(u'<table>')
             for rschema, role, dispctrl, value in display_attributes:
-                if support_args(self._render_attribute, 'label'):
+                if not hasattr(self, '_render_attribute'):
                     label = self._rel_label(entity, rschema, role, dispctrl)
                     self.render_attribute(label, value, table=True)
                 elif support_args(self._render_attribute, 'dispctrl'):
