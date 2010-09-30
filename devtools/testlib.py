@@ -294,7 +294,7 @@ class CubicWebTC(TestCase):
         pause_tracing()
         previous_failure = self.__class__.__dict__.get('_repo_init_failed')
         if previous_failure is not None:
-            self.skip('repository is not initialised: %r' % previous_failure)
+            self.skipTest('repository is not initialised: %r' % previous_failure)
         try:
             self._init_repo()
         except Exception, ex:
@@ -626,18 +626,18 @@ class CubicWebTC(TestCase):
         sh = self.app.session_handler
         path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
         session = req.session
-        self.assertEquals(len(self.open_sessions), nbsessions, self.open_sessions)
-        self.assertEquals(session.login, origsession.login)
-        self.assertEquals(session.anonymous_session, False)
-        self.assertEquals(path, 'view')
-        self.assertEquals(params, {'__message': 'welcome %s !' % req.user.login})
+        self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
+        self.assertEqual(session.login, origsession.login)
+        self.assertEqual(session.anonymous_session, False)
+        self.assertEqual(path, 'view')
+        self.assertEqual(params, {'__message': 'welcome %s !' % req.user.login})
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
         self.assertIsInstance(req.session, DBAPISession)
-        self.assertEquals(req.session.cnx, None)
-        self.assertEquals(req.cnx, None)
-        self.assertEquals(len(self.open_sessions), nbsessions)
+        self.assertEqual(req.session.cnx, None)
+        self.assertEqual(req.cnx, None)
+        self.assertEqual(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')
 
     # content validation #######################################################

@@ -41,7 +41,7 @@ def test_plan(self, rql, expected, kwargs=None):
     plan = self._prepare_plan(rql, kwargs)
     self.planner.build_plan(plan)
     try:
-        self.assertEquals(len(plan.steps), len(expected),
+        self.assertEqual(len(plan.steps), len(expected),
                           'expected %s steps, got %s' % (len(expected), len(plan.steps)))
         # step order is important
         for i, step in enumerate(plan.steps):
@@ -52,20 +52,20 @@ def test_plan(self, rql, expected, kwargs=None):
 
 def compare_steps(self, step, expected):
     try:
-        self.assertEquals(step[0], expected[0], 'expected step type %s, got %s' % (expected[0], step[0]))
+        self.assertEqual(step[0], expected[0], 'expected step type %s, got %s' % (expected[0], step[0]))
         if len(step) > 2 and isinstance(step[1], list) and isinstance(expected[1], list):
             queries, equeries = step[1], expected[1]
-            self.assertEquals(len(queries), len(equeries),
+            self.assertEqual(len(queries), len(equeries),
                               'expected %s queries, got %s' % (len(equeries), len(queries)))
             for i, (rql, sol) in enumerate(queries):
-                self.assertEquals(rql, equeries[i][0])
-                self.assertEquals(sorted(sol), sorted(equeries[i][1]))
+                self.assertEqual(rql, equeries[i][0])
+                self.assertEqual(sorted(sol), sorted(equeries[i][1]))
             idx = 2
         else:
             idx = 1
-        self.assertEquals(step[idx:-1], expected[idx:-1],
+        self.assertEqual(step[idx:-1], expected[idx:-1],
                           'expected step characteristic \n%s\n, got\n%s' % (expected[1:-1], step[1:-1]))
-        self.assertEquals(len(step[-1]), len(expected[-1]),
+        self.assertEqual(len(step[-1]), len(expected[-1]),
                           'got %s child steps, expected %s' % (len(step[-1]), len(expected[-1])))
     except AssertionError:
         print 'error on step ',
