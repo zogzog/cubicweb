@@ -1113,7 +1113,7 @@ class Repository(object):
                 problems[col] = session._('violates unique_together constraints (%s)') % (','.join(rtypes))
             raise ValidationError(entity.eid, problems)
         self.add_info(session, entity, source, extid, complete=False)
-        edited.saved = True
+        edited.saved = entity._cw_is_saved = True
         # prefill entity relation caches
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
