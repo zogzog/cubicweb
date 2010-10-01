@@ -130,16 +130,6 @@ class ViewController(Controller):
                 rset = self.process_rql()
             else:
                 rset = None
-        if rset and rset.rowcount == 1 and '__method' in req.form:
-            entity = rset.get_entity(0, 0)
-            try:
-                method = getattr(entity, req.form.pop('__method'))
-                method()
-            except Redirect: # propagate redirect that might occur in method()
-                raise
-            except Exception, ex:
-                self.exception('while handling __method')
-                req.set_message(req._("error while handling __method: %s") % req._(ex))
         vid = req.form.get('vid') or vid_from_rset(req, rset, self._cw.vreg.schema)
         try:
             view = self._cw.vreg['views'].select(vid, req, rset=rset)
