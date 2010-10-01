@@ -263,6 +263,35 @@ class StorageTC(CubicWebTC):
         self.assertEqual(self.fspath(f1), new_fspath)
         self.failIf(osp.isfile(old_fspath))
 
+    @tag('fsimport')
+    def test_clean(self):
+        fsimport = storages.fsimport
+        td = self.session.transaction_data
+        self.assertNotIn('fs_importing', td)
+        with fsimport(self.session):
+            self.assertIn('fs_importing', td)
+            self.assertTrue(td['fs_importing'])
+        self.assertNotIn('fs_importing', td)
+
+    @tag('fsimport')
+    def test_true(self):
+        fsimport = storages.fsimport
+        td = self.session.transaction_data
+        td['fs_importing'] = True
+        with fsimport(self.session):
+            self.assertIn('fs_importing', td)
+            self.assertTrue(td['fs_importing'])
+        self.assertTrue(td['fs_importing'])
+
+    @tag('fsimport')
+    def test_False(self):
+        fsimport = storages.fsimport
+        td = self.session.transaction_data
+        td['fs_importing'] = False
+        with fsimport(self.session):
+            self.assertIn('fs_importing', td)
+            self.assertTrue(td['fs_importing'])
+        self.assertFalse(td['fs_importing'])
 
 if __name__ == '__main__':
     unittest_main()

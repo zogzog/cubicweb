@@ -18,6 +18,7 @@
 """custom storages for the system source"""
 
 from os import unlink, path as osp
+from contextlib import contextmanager
 
 from yams.schema import role_name
 
@@ -92,6 +93,17 @@ def uniquify_path(dirpath, basename):
         if not osp.isfile(path):
             return path
     return None
+
+@contextmanager
+def fsimport(session):
+    present = 'fs_importing' in session.transaction_data
+    old_value = session.transaction_data.get('fs_importing')
+    session.transaction_data['fs_importing'] = True
+    yield
+    if present:
+        session.transaction_data['fs_importing'] = old_value
+    else:
+        del session.transaction_data['fs_importing']
 
 
 class BytesFileSystemStorage(Storage):
