@@ -20,8 +20,9 @@ Widgets = {};
 function buildWidget(wdgnode) {
     var wdgclass = Widgets[wdgnode.getAttribute('cubicweb:wdgtype')];
     if (wdgclass) {
-        var wdg = new wdgclass(wdgnode);
+        return new wdgclass(wdgnode);
     }
+    return null;
 }
 
 /**
@@ -312,7 +313,7 @@ Widgets.TimelineWidget = defclass("TimelineWidget", null, {
             intervalPixels: 100
         };
         var bandInfos = [Timeline.createBandInfo(bandData)];
-        var tl = Timeline.create(tldiv, bandInfos);
+        this.tl = Timeline.create(tldiv, bandInfos);
         var loadurl = wdgnode.getAttribute('cubicweb:loadurl');
         Timeline.loadJSON(loadurl, function(json, url) {
             eventSource.loadJSON(json, url);

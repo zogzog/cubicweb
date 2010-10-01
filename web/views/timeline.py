@@ -23,6 +23,7 @@ cf. http://code.google.com/p/simile-widgets/
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import ustrftime
 
 from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView, StartupView
@@ -80,7 +81,7 @@ class TimelineJsonView(EntityView):
         start = start or stop
         if start is None and stop is None:
             return None
-        event_data = {'start': start.strftime(self.date_fmt),
+        event_data = {'start': ustrftime(start, self.date_fmt),
                       'title': xml_escape(entity.dc_title()),
                       'description': entity.dc_description(format='text/html'),
                       'link': entity.absolute_url(),
@@ -89,7 +90,7 @@ class TimelineJsonView(EntityView):
         if onclick:
             event_data['onclick'] = onclick
         if stop:
-            event_data['end'] = stop.strftime(self.date_fmt)
+            event_data['end'] = ustrftime(stop, self.date_fmt)
         return event_data
 
 
