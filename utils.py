@@ -131,6 +131,9 @@ class RepeatList(object):
         return repeat(self._item, self._size)
     def __getitem__(self, index):
         return self._item
+    def __delitem__(self, idc):
+        assert self._size > 0
+        self._size -= 1
     def __getslice__(self, i, j):
         # XXX could be more efficient, but do we bother?
         return ([self._item] * self._size)[i:j]
