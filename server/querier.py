@@ -711,7 +711,7 @@ class QuerierHelper(object):
             # * don't rollback if we're in the commit process, will be handled
             #   by the session
             if session.commit_state is None:
-                session.rollback(reset_pool=False)
+                session.commit_state = 'uncommitable'
             raise
         # build a description for the results if necessary
         descr = ()

@@ -32,7 +32,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
-                      UnknownEid, AuthenticationError, Unauthorized)
+                      UnknownEid, AuthenticationError, Unauthorized, QueryError)
 from cubicweb.selectors import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
@@ -154,6 +154,10 @@ class RepositoryTC(CubicWebTC):
         with self.temporary_appobjects(ValidationErrorAfterHook):
             self.assertRaises(ValidationError,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+            self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            ex = self.assertRaises(QueryError, self.commit)
+            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
     def test_rollback_on_execute_unauthorized(self):
@@ -166,6 +170,10 @@ class RepositoryTC(CubicWebTC):
         with self.temporary_appobjects(UnauthorizedAfterHook):
             self.assertRaises(Unauthorized,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+            self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            ex = self.assertRaises(QueryError, self.commit)
+            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
 

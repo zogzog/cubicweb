@@ -31,7 +31,7 @@ from logilab.common.deprecation import deprecated
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid, schema
+from cubicweb import Binary, UnknownEid, QueryError, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
@@ -726,7 +726,10 @@ class Session(RequestSessionBase):
             self._touch()
             self.debug('commit session %s done (no db activity)', self.id)
             return
-        if self.commit_state:
+        cstate = self.commit_state
+        if cstate == 'uncommitable':
+            raise QueryError('transaction must be rollbacked')
+        if cstate is not None:
             return
         # on rollback, an operation should have the following state
         # information:
