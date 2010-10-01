@@ -35,30 +35,19 @@ cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 
 # db auto-population configuration #############################################
 
-SYSTEM_ENTITIES = schema.SCHEMA_TYPES | set((
-    'CWGroup', 'CWUser', 'CWProperty',
-    'Workflow', 'State', 'BaseTransition', 'Transition', 'WorkflowTransition',
-    'TrInfo', 'SubWorkflowExitPoint',
-    ))
-
-SYSTEM_RELATIONS = schema.META_RTYPES | set((
-    # workflow related
-    'workflow_of', 'state_of', 'transition_of', 'initial_state', 'default_workflow',
-    'allowed_transition', 'destination_state', 'from_state', 'to_state',
-    'condition', 'subworkflow', 'subworkflow_state', 'subworkflow_exit',
-    'custom_workflow', 'in_state', 'wf_info_for',
-    # cwproperty
-    'for_user',
-    # schema definition
-    'specializes',
-    'relation_type', 'from_entity', 'to_entity',
-    'constrained_by', 'cstrtype', 'widget',
-    'read_permission', 'update_permission', 'delete_permission', 'add_permission',
-    # permission
-    'in_group', 'require_group', 'require_permission',
-    # deducted from other relations
-    'primary_email',
-    ))
+SYSTEM_ENTITIES = (schema.SCHEMA_TYPES
+                   | schema.INTERNAL_TYPES
+                   | schema.WORKFLOW_TYPES
+                   | set(('CWGroup', 'CWUser',))
+                   )
+SYSTEM_RELATIONS = (schema.META_RTYPES
+                    | schema.WORKFLOW_RTYPES
+                    | schema.WORKFLOW_DEF_RTYPES
+                    | schema.SYSTEM_RTYPES
+                    | schema.SCHEMA_TYPES
+                    | set(('primary_email', # deducted from other relations
+                           ))
+                    )
 
 # content validation configuration #############################################
 

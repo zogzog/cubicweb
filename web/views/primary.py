@@ -28,7 +28,7 @@ from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.utils import support_args
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
-from cubicweb.schema import VIRTUAL_RTYPES, display_name
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg
 
 
@@ -386,8 +386,8 @@ class AttributeView(EntityView):
 ## default primary ui configuration ###########################################
 
 _pvs = uicfg.primaryview_section
-for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
-              'is', 'is_instance_of', 'identity', 'owned_by', 'created_by',
-              'require_permission'):
+for rtype in META_RTYPES:
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+_pvs.tag_subject_of(('*', 'require_permission', '*'), 'hidden')
+_pvs.tag_object_of(('*', 'require_permission', '*'), 'hidden')

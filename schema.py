@@ -52,13 +52,23 @@ META_RTYPES = set((
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
 WORKFLOW_RTYPES = set(('custom_workflow', 'in_state', 'wf_info_for'))
-SYSTEM_RTYPES = set(('require_permission',)) | WORKFLOW_RTYPES
+WORKFLOW_DEF_RTYPES = set(('workflow_of', 'state_of', 'transition_of',
+                           'initial_state', 'default_workflow',
+                           'allowed_transition', 'destination_state',
+                           'from_state', 'to_state', 'condition',
+                           'subworkflow', 'subworkflow_state', 'subworkflow_exit',
+                           ))
+SYSTEM_RTYPES = set(('in_group', 'require_group', 'require_permission',
+                     # cwproperty
+                     'for_user',
+                     )) | WORKFLOW_RTYPES
 
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'CWUniqueTogetherConstraint',
     'RQLExpression',
+    'specializes',
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
     'constraint_of', 'relations',
@@ -70,7 +80,9 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'WorkflowTransition', 'BaseTransition',
                       'SubWorkflowExitPoint'))
 
-INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri'))
+INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri',
+                      'CWSource', 'CWSourceAlias',
+))
 
 
 _LOGGER = getLogger('cubicweb.schemaloader')

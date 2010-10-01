@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Views, forms, actions... for the CubicWeb web client
+"""Views, forms, actions... for the CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
