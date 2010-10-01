@@ -19,7 +19,7 @@
 
 from __future__ import with_statement
 
-from logilab.common.testlib import unittest_main, tag
+from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
 import os.path as osp
@@ -51,6 +51,8 @@ class DummyAfterHook(Hook):
         assert oldvalue == self.entity.data.getvalue()
 
 class StorageTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags('Storage', 'BFSS')
 
     def setup_database(self):
         self.tempdir = tempfile.mkdtemp()
@@ -184,7 +186,7 @@ class StorageTC(CubicWebTC):
         self.assertEqual(f1.data.getvalue(), file(filepath).read(),
                           'files content differ')
 
-    @tag('Storage', 'BFSS', 'update')
+    @tag('update')
     def test_bfss_update_with_existing_data(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
@@ -198,7 +200,7 @@ class StorageTC(CubicWebTC):
         f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         self.assertEqual(f2.data.getvalue(), 'some other data')
 
-    @tag('Storage', 'BFSS', 'update', 'extension', 'commit')
+    @tag('update', 'extension', 'commit')
     def test_bfss_update_with_different_extension_commited(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
@@ -220,7 +222,7 @@ class StorageTC(CubicWebTC):
         self.failUnless(osp.isfile(new_path))
         self.assertEqual(osp.splitext(new_path)[1], '.jpg')
 
-    @tag('Storage', 'BFSS', 'update', 'extension', 'rollback')
+    @tag('update', 'extension', 'rollback')
     def test_bfss_update_with_different_extension_rollbacked(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
@@ -245,6 +247,7 @@ class StorageTC(CubicWebTC):
         self.assertEqual(old_path, new_path)
         self.assertEqual(old_data, new_data)
 
+    @tag('fs_importing', 'update')
     def test_bfss_update_with_fs_importing(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
