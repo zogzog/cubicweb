@@ -117,6 +117,14 @@ def ask_source_config(sourcetype, inputlevel=0):
     sconfig.input_config(inputlevel=inputlevel)
     return sconfig
 
+_MARKER=object()
+def func_name(func):
+    name = getattr(func, '__name__', _MARKER)
+    if name is _MARKER:
+        name = getattr(func, 'func_name', _MARKER)
+    if name is _MARKER:
+        name = repr(func)
+    return name
 
 class LoopTask(object):
     """threaded task restarting itself once executed"""
@@ -124,7 +132,7 @@ class LoopTask(object):
         if interval <= 0:
             raise ValueError('Loop task interval must be > 0 '
                              '(current value: %f for %s)' % \
-                             (interval, func.__name__))
+                             (interval, func_name(func)))
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             try:
@@ -132,7 +140,7 @@ class LoopTask(object):
             finally:
                 self.start()
         self.func = auto_restart_func
-        self.name = func.__name__
+        self.name = func_name(func)
 
     def __str__(self):
         return '%s (%s seconds)' % (self.name, self.interval)
@@ -162,7 +170,7 @@ class RepoThread(Thread):
                 self.running_threads.remove(self)
         Thread.__init__(self, target=auto_remove_func)
         self.running_threads = running_threads
-        self._name = target.__name__
+        self._name = func_name(target)
 
     def start(self):
         self.running_threads.append(self)
