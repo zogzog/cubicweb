@@ -55,7 +55,7 @@ from logilab.common.decorators import cached
 from logilab.common.date import datetime2ticks
 from logilab.common.compat import all
 
-from rql import parse, nodes
+from rql import parse, nodes, utils
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
@@ -165,18 +165,27 @@ def _may_be_removed(rel, schema, mainvar):
         return ovar
     return None
 
+def _make_relation(rqlst, mainvar, rtype, role):
+    newvar = rqlst.make_variable()
+    if role == 'object':
+        rel = nodes.make_relation(newvar, rtype, (mainvar,), nodes.VariableRef)
+    else:
+        rel = nodes.make_relation(mainvar, rtype, (newvar,), nodes.VariableRef)
+    return newvar, rel
+
 def _add_rtype_relation(rqlst, mainvar, rtype, role):
     """add a relation relying `mainvar` to entities linked by the `rtype`
     relation (where `mainvar` has `role`)
 
     return the inserted variable for linked entities.
     """
-    newvar = rqlst.make_variable()
-    if role == 'object':
-        rqlst.add_relation(newvar, rtype, mainvar)
-    else:
-        rqlst.add_relation(mainvar, rtype, newvar)
-    return newvar
+    newvar, newrel = _make_relation(rqlst, mainvar, rtype, role)
+    rqlst.add_restriction(newrel)
+    return newvar, newrel
+
+def _add_eid_restr(rel, restrvar, value):
+    rrel = nodes.make_constant_restriction(restrvar, 'eid', value, 'Int')
+    rel.parent.replace(rel, nodes.And(rel, rrel))
 
 def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
                               select_target_entity=True):
@@ -187,7 +196,7 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
     * add the new variable to GROUPBY clause if necessary
     * add the new variable to the selection
     """
-    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)
+    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)[0]
     if select_target_entity:
         if rqlst.groupby:
             rqlst.add_group_var(newvar)
@@ -240,7 +249,6 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
     _cleanup_rqlst(rqlst, mainvar)
     var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
                                     select_target_entity)
-    # not found, create one
     attrvar = rqlst.make_variable()
     rqlst.add_relation(var, attrname, attrvar)
     # if query is grouped, we have to add the attribute variable
@@ -449,6 +457,10 @@ class RelationFacet(VocabularyFacet):
 
     The relation is defined by the `rtype` and `role` attributes.
 
+    The `no_relation` boolean flag tells if a special 'no relation' value should be
+    added (allowing to filter on entities which *do not* have the relation set).
+    Default is computed according the relation's cardinality.
+
     The values displayed for related entities will be:
 
     * result of calling their `label_vid` view if specified
@@ -456,7 +468,8 @@ class RelationFacet(VocabularyFacet):
     * else their eid (you usually want something nicer...)
 
     When no `label_vid` is set, you will get translated value if `i18nable` is
-    set.
+    set. By default, `i18nable` will be set according to the schema, but you can
+    force its value by setting it has a class attribute.
 
     You can filter out target entity types by specifying `target_type`
 
@@ -506,8 +519,6 @@ class RelationFacet(VocabularyFacet):
     role = 'subject'
     target_attr = 'eid'
     target_type = None
-    # should value be internationalized (XXX could be guessed from the schema)
-    i18nable = True
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -520,6 +531,23 @@ class RelationFacet(VocabularyFacet):
     _select_target_entity = True
 
     title = property(rtype_facet_title)
+    no_relation_label = '<no relation>'
+
+    @property
+    def i18nable(self):
+        """should label be internationalized"""
+        if self.target_type:
+            eschema = self._cw.vreg.schema.eschema(self.target_type)
+        elif self.role == 'subject':
+            eschema = self._cw.vreg.schema.rschema(self.rtype).objects()[0]
+        else:
+            eschema = self._cw.vreg.schema.rschema(self.rtype).subjects()[0]
+        return eschema.rdef(self.target_attr).internationalizable
+
+    @property
+    def no_relation(self):
+        return (not self._cw.vreg.schema.rschema(self.rtype).final
+                and self._search_card('?*'))
 
     @property
     def rql_sort(self):
@@ -529,6 +557,7 @@ class RelationFacet(VocabularyFacet):
         """
         return self.sortfunc is not None or (self.label_vid is None
                                              and not self.i18nable)
+
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
@@ -555,7 +584,10 @@ class RelationFacet(VocabularyFacet):
             rqlst.recover()
         # don't call rset_vocabulary on empty result set, it may be an empty
         # *list* (see rqlexec implementation)
-        return rset and self.rset_vocabulary(rset)
+        values = rset and self.rset_vocabulary(rset) or []
+        if self._include_no_relation():
+            values.insert(0, (self._cw._(self.no_relation_label), ''))
+        return values
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
@@ -572,12 +604,14 @@ class RelationFacet(VocabularyFacet):
                 insert_attr_select_relation(
                     rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
                     select_target_entity=False)
-            return [str(x) for x, in self.rqlexec(rqlst.as_string())]
+            values = [str(x) for x, in self.rqlexec(rqlst.as_string())]
         except:
-            import traceback
-            traceback.print_exc()
+            self.exception('while computing values for %s', self)
         finally:
             rqlst.recover()
+        if self._include_no_relation():
+            values.append('')
+        return values
 
     def rset_vocabulary(self, rset):
         if self.i18nable:
@@ -585,56 +619,103 @@ class RelationFacet(VocabularyFacet):
         else:
             _ = unicode
         if self.rql_sort:
-            return [(_(label), eid) for eid, label in rset]
-        if self.label_vid is None:
-            assert self.i18nable
             values = [(_(label), eid) for eid, label in rset]
         else:
-            values = [(entity.view(self.label_vid), entity.eid)
-                      for entity in rset.entities()]
-        values = sorted(values)
-        if self.sortasc:
-            return values
-        return reversed(values)
+            if self.label_vid is None:
+                values = [(_(label), eid) for eid, label in rset]
+            else:
+                values = [(entity.view(self.label_vid), entity.eid)
+                          for entity in rset.entities()]
+            values = sorted(values)
+            if not self.sortasc:
+                values = list(reversed(values))
+        return values
+
+    def support_and(self):
+        return self._search_card('+*')
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        value = self._cw.form.get(self.__regid__)
+        if value is None:
+            return
+        mainvar = self.filtered_variable
+        restrvar, rel = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
+                                            self.role)
+        if isinstance(value, basestring):
+            # only one value selected
+            if value:
+                self.rqlst.add_eid_restriction(restrvar, value)
+            else:
+                rel.parent.replace(rel, nodes.Not(rel))
+        elif self.operator == 'OR':
+            # set_distinct only if rtype cardinality is > 1
+            if self.support_and():
+                self.rqlst.set_distinct(True)
+            # multiple ORed values: using IN is fine
+            if '' in value:
+                value.remove('')
+                self._add_not_rel_restr(rel)
+            _add_eid_restr(rel, restrvar, value)
+        else:
+            # multiple values with AND operator
+            if '' in value:
+                value.remove('')
+                self._add_not_rel_restr(rel)
+            _add_eid_restr(rel, restrvar, value.pop())
+            while value:
+                restrvar, rtrel = _make_relation(self.rqlst, mainvar,
+                                                 self.rtype, self.role)
+                _add_eid_restr(rel, restrvar, value.pop())
 
     @cached
-    def support_and(self):
+    def _search_card(self, cards):
+        for rdef in self._iter_rdefs():
+            if rdef.role_cardinality(self.role) in cards:
+                return True
+        return False
+
+    def _iter_rdefs(self):
         rschema = self._cw.vreg.schema.rschema(self.rtype)
         # XXX when called via ajax, no rset to compute possible types
         possibletypes = self.cw_rset and self.cw_rset.column_types(0)
         for rdef in rschema.rdefs.itervalues():
             if possibletypes is not None:
                 if self.role == 'subject':
-                    if not rdef.subject in possibletypes:
+                    if rdef.subject not in possibletypes:
                         continue
-                elif not rdef.object in possibletypes:
+                elif rdef.object not in possibletypes:
                     continue
-            if rdef.role_cardinality(self.role) in '+*':
-                return True
-        return False
+            if self.target_type is not None:
+                if self.role == 'subject':
+                    if rdef.object != self.target_type:
+                        continue
+                elif rdef.subject != self.target_type:
+                    continue
+            yield rdef
 
-    def add_rql_restrictions(self):
-        """add restriction for this facet into the rql syntax tree"""
-        value = self._cw.form.get(self.__regid__)
-        if not value:
-            return
-        mainvar = self.filtered_variable
-        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
-        if isinstance(value, basestring):
-            # only one value selected
-            self.rqlst.add_eid_restriction(restrvar, value)
-        elif self.operator == 'OR':
-            # set_distinct only if rtype cardinality is > 1
-            if self.support_and():
-                self.rqlst.set_distinct(True)
-            # multiple ORed values: using IN is fine
-            self.rqlst.add_eid_restriction(restrvar, value)
+    def _include_no_relation(self):
+        if not self.no_relation:
+            return False
+        if self._cw.vreg.schema.rschema(self.rtype).final:
+            return False
+        if self.role == 'object':
+            subj = utils.rqlvar_maker(defined=self.rqlst.defined_vars,
+                                      aliases=self.rqlst.aliases).next()
+            obj = self.filtered_variable.name
         else:
-            # multiple values with AND operator
-            self.rqlst.add_eid_restriction(restrvar, value.pop())
-            while value:
-                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
-                self.rqlst.add_eid_restriction(restrvar, value.pop())
+            subj = self.filtered_variable.name
+            obj = utils.rqlvar_maker(defined=self.rqlst.defined_vars,
+                                     aliases=self.rqlst.aliases).next()
+        rql = 'Any %s LIMIT 1 WHERE NOT %s %s %s, %s' % (
+            self.filtered_variable.name, subj, self.rtype, obj,
+            self.rqlst.where.as_string())
+        return bool(self.rqlexec(rql, self.cw_rset and self.cw_rset.args))
+
+    def _add_not_rel_restr(self, rel):
+        nrrel = nodes.Not(_make_relation(self.rqlst, self.filtered_variable,
+                                         self.rtype, self.role)[1])
+        rel.parent.replace(rel, nodes.Or(nrrel, rel))
 
 
 class RelationAttributeFacet(RelationFacet):
@@ -699,20 +780,25 @@ class RelationAttributeFacet(RelationFacet):
         if not value:
             return
         mainvar = self.filtered_variable
-        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
+        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
+                                       self.role)[0]
         self.rqlst.set_distinct(True)
         if isinstance(value, basestring) or self.operator == 'OR':
             # only one value selected or multiple ORed values: using IN is fine
-            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value,
-                                                self.attrtype, self.comparator)
+            self.rqlst.add_constant_restriction(
+                restrvar, self.target_attr, value,
+                self.attrtype, self.comparator)
         else:
             # multiple values with AND operator
-            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
-                                                self.attrtype, self.comparator)
+            self.rqlst.add_constant_restriction(
+                restrvar, self.target_attr, value.pop(),
+                self.attrtype, self.comparator)
             while value:
-                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
-                self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
-                                                    self.attrtype, self.comparator)
+                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
+                                               self.role)[0]
+                self.rqlst.add_constant_restriction(
+                    restrvar, self.target_attr, value.pop(),
+                    self.attrtype, self.comparator)
 
 
 class AttributeFacet(RelationAttributeFacet):
@@ -748,6 +834,16 @@ class AttributeFacet(RelationAttributeFacet):
     """
 
     _select_target_entity = True
+
+    @property
+    def i18nable(self):
+        """should label be internationalized"""
+        for rdef in self._iter_rdefs():
+            # no 'internationalizable' property for rdef whose object is not a
+            # String
+            if not getattr(rdef, 'internationalizable', False):
+                return False
+        return True
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)

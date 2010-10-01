@@ -42,7 +42,7 @@ classifiers = [
 __depends__ = {
     'logilab-common': '>= 0.51.0',
     'logilab-mtconverter': '>= 0.8.0',
-    'rql': '>= 0.26.2',
+    'rql': '>= 0.27.0',
     'yams': '>= 0.30.1',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
