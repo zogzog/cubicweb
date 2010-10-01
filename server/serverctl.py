@@ -486,6 +486,9 @@ class ResetAdminPasswordCommand(Command):
             print '-> Error: could not get cubicweb administrator login.'
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
+        driver = sourcescfg['system']['db-driver']
+        from logilab.database import get_db_helper
+        dbhelper = get_db_helper(driver)
         cursor = cnx.cursor()
         # check admin exists
         cursor.execute("SELECT * FROM cw_CWUser WHERE cw_login=%(l)s",
@@ -501,7 +504,7 @@ class ResetAdminPasswordCommand(Command):
                                        passwdmsg='new password for %s' % adminlogin)
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': buffer(crypt_password(passwd)), 'l': adminlogin})
+                           {'p': dbhelper.binary_value(crypt_password(passwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
