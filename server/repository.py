@@ -34,6 +34,7 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 import Queue
+from itertools import chain
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
@@ -45,6 +46,7 @@ from logilab.common import flatten
 from yams import BadSchemaDefinition
 from yams.schema import role_name
 from rql import RQLSyntaxError
+from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
@@ -587,6 +589,39 @@ class Repository(object):
         finally:
             session.close()
         return True
+
+    def find_users(self, fetch_attrs, **query_attrs):
+        """yield user attributes for cwusers matching the given query_attrs
+        (the result set cannot survive this method call)
+
+        This can be used by low-privileges account (anonymous comes to
+        mind).
+
+        `fetch_attrs`: tuple of attributes to be fetched
+        `query_attrs`: dict of attr/values to restrict the query
+        """
+        assert query_attrs
+        if not hasattr(self, '_cwuser_attrs'):
+            cwuser = self.schema['CWUser']
+            self._cwuser_attrs = set(str(rschema)
+                                     for rschema, _eschema in cwuser.attribute_definitions()
+                                     if not rschema.meta)
+        cwuserattrs = self._cwuser_attrs
+        for k in chain(fetch_attrs, query_attrs.iterkeys()):
+            if k not in cwuserattrs:
+                raise Exception('bad input for find_user')
+        session = self.internal_session()
+        try:
+            varmaker = rqlvar_maker()
+            vars = [(attr, varmaker.next()) for attr in fetch_attrs]
+            rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
+            rql += ','.join('X %s %s' % (var[0], var[1]) for var in vars) + ','
+            rset = session.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)
+                                                  for attr in query_attrs.iterkeys()),
+                                   query_attrs)
+            return rset.rows
+        finally:
+            session.close()
 
     def connect(self, login, **kwargs):
         """open a connection for a given user
