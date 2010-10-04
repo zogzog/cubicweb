@@ -6,6 +6,8 @@ function Namespace(name) {
 cw = new Namespace('cw');
 
 jQuery.extend(cw, {
+    cubes: new Namespace('cubes'),
+
     log: function () {
         var args = [];
         for (var i = 0; i < arguments.length; i++) {
