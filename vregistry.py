@@ -228,8 +228,8 @@ class Registry(dict):
             msg = 'select ambiguity: %s\n(args: %s, kwargs: %s)'
             if self.config.debugmode or self.config.mode == 'test':
                 # raise bare exception in debug mode
-                raise Exception(msg % (winners, self.args, self.kwargs.keys()))
-            self.error(msg, winners, self.args, self.kwargs.keys())
+                raise Exception(msg % (winners, args, kwargs.keys()))
+            self.error(msg, winners, args, kwargs.keys())
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
 
