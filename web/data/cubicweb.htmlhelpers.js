@@ -1,3 +1,14 @@
+/* in CW 3.10, we should move these functions in this namespace */
+cw.htmlhelpers = new Namespace('cw.htmlhelpers');
+
+jQuery.extend(cw.htmlhelpers, {
+    popupLoginBox: function(loginboxid, focusid) {
+        $('#'+loginboxid).toggleClass('hidden');
+        jQuery('#' + focusid +':visible').focus();
+    }
+});
+
+
 /**
  * .. function:: baseuri()
  *
@@ -97,10 +108,11 @@ function toggleVisibility(elemId) {
  * toggles visibility of login popup div
  */
 // XXX used exactly ONCE in basecomponents
-function popupLoginBox() {
-    $('#popupLoginBox').toggleClass('hidden');
-    jQuery('#__login:visible').focus();
-}
+popupLoginBox = cw.utils.deprecatedFunction(
+    function() {
+        $('#popupLoginBox').toggleClass('hidden');
+        jQuery('#__login:visible').focus();
+});
 
 /**
  * .. function getElementsMatching(tagName, properties, \/* optional \*\/ parent)

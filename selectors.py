@@ -1182,7 +1182,6 @@ def anonymous_user():
     """
     return ~ authenticated_user()
 
-
 class match_user_groups(ExpectedValueSelector):
     """Return a non-zero score if request's user is in at least one of the
     groups given as initializer argument. Returned score is the number of groups
@@ -1212,6 +1211,24 @@ class match_user_groups(ExpectedValueSelector):
                 score = all(user.owns(r[col]) for r in rset)
         return score
 
+
+class configuration_values(Selector):
+    """Return 1 if the instance is configured according to
+    the given value(s)"""
+
+    def __init__(self, key, values):
+        self._key = key
+        if isinstance(values, basestring):
+            values = (values,)
+        self._values = frozenset(values)
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        try:
+            return self._score
+        except AttributeError:
+            self._score = req.vreg.config[self._key] in self._values
+        return self._score
 
 # Web request selectors ########################################################
 

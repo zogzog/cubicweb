@@ -37,6 +37,7 @@ class NoAuthInfo(Exception): pass
 class WebAuthInfoRetreiver(Component):
     __registry__ = 'webauth'
     order = None
+    __abstract__ = True
 
     def authentication_information(self, req):
         """retreive authentication information from the given request, raise
@@ -51,6 +52,18 @@ class WebAuthInfoRetreiver(Component):
         """
         pass
 
+    def request_has_auth_info(self, req):
+        """tells from the request if it has enough information
+        to proceed to authentication, would the current session
+        be invalidated
+        """
+        raise NotImplementedError()
+
+    def revalidate_login(self, req):
+        """returns a login string or None, for repository session
+        validation purposes
+        """
+        return None
 
 class LoginPasswordRetreiver(WebAuthInfoRetreiver):
     __regid__ = 'loginpwdauth'
@@ -65,6 +78,11 @@ class LoginPasswordRetreiver(WebAuthInfoRetreiver):
             raise NoAuthInfo()
         return login, {'password': password}
 
+    def request_has_auth_info(self, req):
+        return '__login' in req.form
+
+    def revalidate_login(self, req):
+        return req.get_authorization()[0]
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
@@ -73,7 +91,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         super(RepositoryAuthenticationManager, self).__init__(vreg)
         self.repo = vreg.config.repository(vreg)
         self.log_queries = vreg.config['query-log-file']
-        self.authinforetreivers = sorted(vreg['webauth'].possible_objects(vreg),
+        self.authinforetrievers = sorted(vreg['webauth'].possible_objects(vreg),
                                          key=lambda x: x.order)
         # 2-uple login / password, login is None when no anonymous access
         # configured
@@ -88,10 +106,19 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
         raise :exc:`InvalidSession` if session is corrupted for a reason or
         another and should be closed
+
+        also invoked while going from anonymous to logged in
         """
         # with this authentication manager, session is actually a dbapi
         # connection
-        login = req.get_authorization()[0]
+        for retriever in self.authinforetrievers:
+            if retriever.request_has_auth_info(req):
+                login = retriever.revalidate_login(req)
+                return self._validate_session(req, session, login)
+        # let's try with the current session
+        return self._validate_session(req, session, None)
+
+    def _validate_session(self, req, session, login):
         # check session.login and not user.login, since in case of login by
         # email, login and cnx.login are the email while user.login is the
         # actual user login
@@ -114,18 +141,19 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
-        for retreiver in self.authinforetreivers:
+        for retriever in self.authinforetrievers:
             try:
-                login, authinfo = retreiver.authentication_information(req)
+                login, authinfo = retriever.authentication_information(req)
             except NoAuthInfo:
                 continue
             try:
                 cnx = self._authenticate(login, authinfo)
             except AuthenticationError:
                 continue # the next one may succeed
-            for retreiver_ in self.authinforetreivers:
-                retreiver_.authenticated(retreiver, req, cnx, login, authinfo)
+            for retriever_ in self.authinforetrievers:
+                retriever_.authenticated(retriever, req, cnx, login, authinfo)
             return cnx, login, authinfo
+
         # false if no authentication info found, eg this is not an
         # authentication failure
         if 'login' in locals():

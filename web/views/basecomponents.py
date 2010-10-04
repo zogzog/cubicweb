@@ -28,8 +28,8 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from rql import parse
 
-from cubicweb.selectors import (yes, multi_etypes_rset,
-                                match_form_params, match_context,
+from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
+                                match_context, configuration_values,
                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
@@ -97,24 +97,36 @@ class _UserLink(component.Component):
     """if the user is the anonymous user, build a link to login else display a menu
     with user'action (preference, logout, etc...)
     """
+    __abstract__ = True
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
     __regid__ = 'loggeduserlink'
 
 
-class AnonUserLink(_UserLink):
-    __select__ = _UserLink.__select__ & anonymous_user()
-    def call(self):
-        if self._cw.vreg.config['auth-mode'] == 'cookie':
-            self.w(self._cw._('anonymous'))
-            self.w(u'''&#160;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
-                   % (self._cw._('i18n_login_popup')))
-        else:
-            self.w(self._cw._('anonymous'))
-            self.w(u'&#160;[<a class="logout" href="%s">%s</a>]'
-                   % (self._cw.build_url('login'), self._cw._('login')))
+class CookieAnonUserLink(_UserLink):
+    __select__ = _UserLink.__select__ & configuration_values('auth-mode', 'cookie') & anonymous_user()
+    loginboxid = 'popupLoginBox'
 
+    def call(self):
+        w = self.w
+        w(self._cw._('anonymous'))
+        w(u"""[<a class="logout" href="javascript: cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
+          % (self.loginboxid, self._cw._('i18n_login_popup')))
+        self.wview('logform', rset=self.cw_rset, id=self.loginboxid,
+                   klass='hidden', title=False, showmessage=False)
+
+class HTTPAnonUserLink(_UserLink):
+    __select__ = _UserLink.__select__ & configuration_values('auth-mode', 'http') & anonymous_user()
+    loginboxid = 'popupLoginBox'
+
+    def call(self):
+        w = self.w
+        w(self._cw._('anonymous'))
+        # this redirects to the 'login' controller which in turn
+        # will raise a 401/Unauthorized
+        w(u'&#160;[<a class="logout" href="%s">%s</a>]'
+          % (self._cw.build_url('login'), self._cw._('login')))
 
 class UserLink(_UserLink):
     __select__ = _UserLink.__select__ & authenticated_user()
