@@ -63,7 +63,7 @@ class WebAuthInfoRetreiver(Component):
         """returns a login string or None, for repository session
         validation purposes
         """
-        return None
+        raise NotImplementedError()
 
 class LoginPasswordRetreiver(WebAuthInfoRetreiver):
     __regid__ = 'loginpwdauth'
