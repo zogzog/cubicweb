@@ -38,6 +38,7 @@ Those selectors are somewhat dumb, which doesn't mean they're not (very) useful.
 .. autoclass:: cubicweb.selectors.match_kwargs
 .. autoclass:: cubicweb.selectors.appobject_selectable
 .. autoclass:: cubicweb.selectors.adaptable
+.. autoclass:: cubicweb.selectors.configuration_values
 
 
 Result set selectors
@@ -77,6 +78,7 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.selectors.has_permission
 .. autoclass:: cubicweb.selectors.has_add_permission
 .. autoclass:: cubicweb.selectors.has_mimetype
+.. autoclass:: cubicweb.selectors.is_in_state
 .. autoclass:: cubicweb.selectors.implements
 
 
@@ -100,11 +102,13 @@ used on the data repository side.
 .. autoclass:: cubicweb.selectors.match_view
 .. autoclass:: cubicweb.selectors.primary_view
 .. autoclass:: cubicweb.selectors.specified_etype_implements
+.. autoclass:: cubicweb.selectors.attribute_edited
 
 
 Other selectors
 ~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.selectors.match_transition
+.. autoclass:: cubicweb.selectors.debug_mode
 
 You'll also find some other (very) specific selectors hidden in other modules
 than :mod:`cubicweb.selectors`.

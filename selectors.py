@@ -478,6 +478,26 @@ class adaptable(appobject_selectable):
             return score + 0.5
         return score
 
+
+class configuration_values(Selector):
+    """Return 1 if the instance has an option set to a given value(s) in its
+    configuration file.
+    """
+    # XXX this selector could be evaluated on startup
+    def __init__(self, key, values):
+        self._key = key
+        if isinstance(values, basestring):
+            values = (values,)
+        self._values = frozenset(values)
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        try:
+            return self._score
+        except AttributeError:
+            self._score = req.vreg.config[self._key] in self._values
+        return self._score
+
 # rset selectors ##############################################################
 
 @objectify_selector
@@ -533,12 +553,12 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
 class multi_lines_rset(Selector):
     """Return 1 if the operator expression matches between `num` elements
     in the result set and the `expected` value if defined.
-    
+
     By default, multi_lines_rset(expected) matches equality expression:
         `nb` row(s) in result set equals to expected value
     But, you can perform richer comparisons by overriding default operator:
         multi_lines_rset(expected, operator.gt)
-    
+
     If `expected` is None, return 1 if the result set contains *at least*
     two rows.
     If rset is None, return 0.
@@ -801,21 +821,6 @@ class score_entity(EntitySelector):
             return 1
         self.score_entity = intscore
 
-class attribute_edited(EntitySelector):
-    """Scores if the specified attribute has been edited
-    This is useful for selection of forms by the edit controller.
-    The initial use case is on a form, in conjunction with match_transition,
-    which will not score at edit time::
-
-     is_instance('Version') & (match_transition('ready') |
-                               attribute_edited('publication_date'))
-    """
-    def __init__(self, attribute, once_is_enough=False):
-        super(attribute_edited, self).__init__(once_is_enough)
-        self._attribute = attribute
-
-    def score_entity(self, entity):
-        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
 
 class has_mimetype(EntitySelector):
     """Return 1 if the entity adapt to IDownloadable and has the given MIME type.
@@ -1148,6 +1153,27 @@ class rql_condition(EntitySelector):
         except Unauthorized:
             return 0
 
+
+class is_in_state(score_entity):
+    """return 1 if entity is in one of the states given as argument list
+
+    you should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info, not entity.in_state for repository side
+      checking of the current state
+    """
+    def __init__(self, *states):
+        def score(entity, states=set(states)):
+            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
+            try:
+                return trinfo.new_state.name in states
+            except AttributeError:
+                return None
+        super(is_in_state, self).__init__(score)
+
+
 # logged user selectors ########################################################
 
 @objectify_selector
@@ -1210,25 +1236,6 @@ class match_user_groups(ExpectedValueSelector):
             else:
                 score = all(user.owns(r[col]) for r in rset)
         return score
-
-
-class configuration_values(Selector):
-    """Return 1 if the instance is configured according to
-    the given value(s)"""
-
-    def __init__(self, key, values):
-        self._key = key
-        if isinstance(values, basestring):
-            values = (values,)
-        self._values = frozenset(values)
-
-    @lltrace
-    def __call__(self, cls, req, **kwargs):
-        try:
-            return self._score
-        except AttributeError:
-            self._score = req.vreg.config[self._key] in self._values
-        return self._score
 
 # Web request selectors ########################################################
 
@@ -1384,13 +1391,31 @@ class specified_etype_implements(is_instance):
         return 0
 
 
+class attribute_edited(EntitySelector):
+    """Scores if the specified attribute has been edited This is useful for
+    selection of forms by the edit controller.
+
+    The initial use case is on a form, in conjunction with match_transition,
+    which will not score at edit time::
+
+     is_instance('Version') & (match_transition('ready') |
+                               attribute_edited('publication_date'))
+    """
+    def __init__(self, attribute, once_is_enough=False):
+        super(attribute_edited, self).__init__(once_is_enough)
+        self._attribute = attribute
+
+    def score_entity(self, entity):
+        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
+
+
 # Other selectors ##############################################################
 
 
 class match_transition(ExpectedValueSelector):
-    """Return 1 if `transition` argument is found in the input context
-      which has a `.name` attribute matching one of the expected names
-      given to the initializer
+    """Return 1 if `transition` argument is found in the input context which has
+    a `.name` attribute matching one of the expected names given to the
+    initializer.
     """
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
@@ -1399,28 +1424,10 @@ class match_transition(ExpectedValueSelector):
             return 1
         return 0
 
-class is_in_state(score_entity):
-    """return 1 if entity is in one of the states given as argument list
-
-    you should use this instead of your own :class:`score_entity` selector to
-    avoid some gotchas:
-
-    * possible views gives a fake entity with no state
-    * you must use the latest tr info, not entity.in_state for repository side
-      checking of the current state
-    """
-    def __init__(self, *states):
-        def score(entity, states=set(states)):
-            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
-            try:
-                return trinfo.new_state.name in states
-            except AttributeError:
-                return None
-        super(is_in_state, self).__init__(score)
 
 @objectify_selector
 def debug_mode(cls, req, rset=None, **kwargs):
-    """Return 1 if running in debug mode"""
+    """Return 1 if running in debug mode."""
     return req.vreg.config.debugmode and 1 or 0
 
 ## deprecated stuff ############################################################
