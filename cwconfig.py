@@ -26,12 +26,7 @@ A resource *mode* is a predifined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
 framework. There are two running modes with *CubicWeb*:
 
-* 'user', resources are searched / created in the user home directory:
-
-  - instances are stored in :file:`~/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/tmp`
-
-* 'system', resources are searched / created in the system directories (eg
+* **system**: resources are searched / created in the system directories (eg
   usually requiring root access):
 
   - instances are stored in :file:`<INSTALL_PREFIX>/etc/cubicweb.d`
@@ -40,28 +35,34 @@ framework. There are two running modes with *CubicWeb*:
   where `<INSTALL_PREFIX>` is the detected installation prefix ('/usr/local' for
   instance).
 
+* **user**: resources are searched / created in the user home directory:
+
+  - instances are stored in :file:`~/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/tmp`
+
+
 
 Notice that each resource path may be explicitly set using an environment
 variable if the default doesn't suit your needs. Here are the default resource
 directories that are affected according to mode:
 
-* 'system': ::
+* **system**: ::
 
         CW_INSTANCES_DIR = <INSTALL_PREFIX>/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
         CW_RUNTIME_DIR = /var/run/cubicweb/
 
-* 'user': ::
+* **user**: ::
 
         CW_INSTANCES_DIR = ~/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
         CW_RUNTIME_DIR = /tmp
 
-Cubes search path is also affected, see the :ref:Cube section.
+Cubes search path is also affected, see the :ref:`Cube` section.
 
-By default, the mode automatically set to 'user' if a :file:`.hg` directory is found
-in the cubicweb package, else it's set to 'system'. You can force this by setting
-the :envvar:`CW_MODE` environment variable to either 'user' or 'system' so you can
+By default, the mode automatically set to `user` if a :file:`.hg` directory is found
+in the cubicweb package, else it's set to `system`. You can force this by setting
+the :envvar:`CW_MODE` environment variable to either `user` or `system` so you can
 easily:
 
 * use system wide installation but user specific instances and all, without root

@@ -624,7 +624,7 @@ class paginated_rset(Selector):
 @lltrace
 def sorted_rset(cls, req, rset=None, **kwargs):
     """Return 1 for sorted result set (e.g. from an RQL query containing an
-    :ref:ORDERBY clause), with exception that it will return 0 if the rset is
+    ORDERBY clause), with exception that it will return 0 if the rset is
     'ORDERBY FTIRANK(VAR)' (eg sorted by rank value of the has_text index).
     """
     if rset is None:

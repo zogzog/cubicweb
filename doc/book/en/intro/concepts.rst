@@ -32,7 +32,7 @@ your system.
 
 On a Unix system, the available cubes are usually stored in the directory
 :file:`/usr/share/cubicweb/cubes`. If you're using the cubicweb forest
-(:ref:SourceInstallation), the cubes are searched in the directory
+(:ref:`SourceInstallation`), the cubes are searched in the directory
 :file:`/path/to/cubicweb_forest/cubes`. The environment variable
 :envvar:`CW_CUBES_PATH` gives additionnal locations where to search for cubes.
 
