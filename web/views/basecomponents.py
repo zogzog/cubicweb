@@ -26,6 +26,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_renamed
 from rql import parse
 
 from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
@@ -98,14 +99,15 @@ class _UserLink(component.Component):
     with user'action (preference, logout, etc...)
     """
     __abstract__ = True
+    __regid__ = 'loggeduserlink'
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    __regid__ = 'loggeduserlink'
 
 
 class CookieAnonUserLink(_UserLink):
-    __select__ = _UserLink.__select__ & configuration_values('auth-mode', 'cookie') & anonymous_user()
+    __select__ = (_UserLink.__select__ & anonymous_user()
+                  & configuration_values('auth-mode', 'cookie'))
     loginboxid = 'popupLoginBox'
 
     def call(self):
@@ -116,9 +118,11 @@ class CookieAnonUserLink(_UserLink):
         self.wview('logform', rset=self.cw_rset, id=self.loginboxid,
                    klass='hidden', title=False, showmessage=False)
 
+AnonUserLink = class_renamed('AnonUserLink', CookieAnonUserLink)
+
 class HTTPAnonUserLink(_UserLink):
-    __select__ = _UserLink.__select__ & configuration_values('auth-mode', 'http') & anonymous_user()
-    loginboxid = 'popupLoginBox'
+    __select__ = (_UserLink.__select__ & anonymous_user()
+                  & configuration_values('auth-mode', 'http'))
 
     def call(self):
         w = self.w
