@@ -119,6 +119,16 @@ class EditController(basecontrollers.ViewController):
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         self._pending_fields = req.data['pendingfields'] = set()
+        try:
+            for eid in req.edited_eids():
+                # __type and eid
+                formparams = req.extract_entity_params(eid, minparams=2)
+                eid = self.edit_entity(formparams)
+        except (RequestError, NothingToEdit), ex:
+            if '__linkto' in req.form and 'eid' in req.form:
+                self.execute_linkto()
+            elif not ('__delete' in req.form or '__insert' in req.form):
+                raise ValidationError(None, {None: unicode(ex)})
         # handle relations in newly created entities
         if self._pending_fields:
             for form, field in self._pending_fields:
