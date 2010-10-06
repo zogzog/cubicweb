@@ -23,10 +23,11 @@ however useful in other contexts such as tests or custom controllers.
 .. note::
 
   If a query generates an error related to security (:exc:`Unauthorized`) or to
-  integrity (:exc:`ValidationError`), a rollback is automatically done on the
-  current transaction.
+  integrity (:exc:`ValidationError`), the transaction can still continue but you
+  won't be able to commit it, a rollback will be necessary to start a new
+  transaction.
 
-  Also, a rollback is done if an error occurs during commit.
+  Also, a rollback is automatically done if an error occurs during commit.
 
 
 Executing RQL queries from a view or a hook
