@@ -486,7 +486,7 @@ class configuration_values(Selector):
     # XXX this selector could be evaluated on startup
     def __init__(self, key, values):
         self._key = key
-        if isinstance(values, basestring):
+        if not isinstance(values, (tuple, list)):
             values = (values,)
         self._values = frozenset(values)
 
@@ -497,6 +497,7 @@ class configuration_values(Selector):
         except AttributeError:
             self._score = req.vreg.config[self._key] in self._values
         return self._score
+
 
 # rset selectors ##############################################################
 
