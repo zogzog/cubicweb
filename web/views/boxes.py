@@ -198,6 +198,9 @@ class SideBoxView(EntityView):
         """display a list of entities by calling their <item_vid> view"""
         if title:
             self.w(u'<div class="sideBoxTitle"><span>%s</span></div>' % title)
+        if 'dispctrl' in self.cw_extra_kwargs:
+            # XXX do not modify dispctrl!
+            self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
         self.w(u'<div class="%s"><div class="sideBoxBody">' % boxclass)
         self.wview('autolimited', self.cw_rset, **self.cw_extra_kwargs)
         self.w(u'</div>\n</div>\n')
