@@ -235,6 +235,9 @@ class SideBoxView(EntityView):
 
     def call(self, **kwargs):
         """display a list of entities by calling their <item_vid> view"""
+        if 'dispctrl' in self.cw_extra_kwargs:
+            # XXX do not modify dispctrl!
+            self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
         box = self._cw.vreg['ctxcomponents'].select(
             'rsetbox', self._cw, rset=self.cw_rset, vid='autolimited',
             title=title, **self.cw_extra_kwargs)

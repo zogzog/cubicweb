@@ -31,14 +31,15 @@ from cubicweb.utils import make_uid
 
 class DotGraphView(EntityView):
     __abstract__ = True
-
+    backend_class = DotBackend
+    backend_kwargs = {'ratio': 'compress', 'size': '30,10'}
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         visitor = self.build_visitor(entity)
         prophdlr = self.build_dotpropshandler()
         graphname = 'dotgraph%s' % str(entity.eid)
-        generator = GraphGenerator(DotBackend(graphname, None,
-                                              ratio='compress', size='30,10'))
+        generator = GraphGenerator(self.backend_class(graphname, None,
+                                                      **self.backend_kwargs))
         # map file
         pmap, mapfile = tempfile.mkstemp(".map", graphname)
         os.close(pmap)
@@ -50,7 +51,7 @@ class DotGraphView(EntityView):
         self._cw.session.data[filekeyid] = tmpfile
         self.w(u'<img src="%s" alt="%s" usemap="#%s" />' % (
             xml_escape(entity.absolute_url(vid='tmppng', tmpfile=filekeyid)),
-            xml_escape(self._cw._('Data connection graph for %s') % entity.name),
+            xml_escape(self._cw._('Data connection graph for %s') % entity.dc_title()),
             graphname))
         stream = open(mapfile, 'r').read()
         stream = stream.decode(self._cw.encoding)
@@ -61,7 +62,7 @@ class DotGraphView(EntityView):
         raise NotImplementedError
 
     def build_dotpropshandler(self):
-        return DotGraphPropsHandler(self._cw)
+        return DotPropsHandler(self._cw)
 
 
 class DotPropsHandler(object):
