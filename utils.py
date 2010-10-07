@@ -183,6 +183,11 @@ class HTMLHead(UStringIO):
     javascripts and stylesheets
     """
     js_unload_code = u'jQuery(window).unload(unloadPageData);'
+    # Making <script> tag content work properly with all possible
+    # content-types (xml/html) and all possible browsers is very
+    # tricky, see http://www.hixie.ch/advocacy/xhtml for an in-depth discussion
+    xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
+    xhtml_safe_script_closing = u'\n//--><!]]></script>'
 
     def __init__(self):
         super(HTMLHead, self).__init__()
@@ -256,14 +261,14 @@ class HTMLHead(UStringIO):
         w = self.write
         # 1/ variable declaration if any
         if self.jsvars:
-            w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
+            w(self.xhtml_safe_script_opening)
             for var, value, override in self.jsvars:
                 vardecl = u'%s = %s;' % (var, json.dumps(value))
                 if not override:
                     vardecl = (u'if (typeof %s == "undefined") {%s}' %
                                (var, vardecl))
                 w(vardecl + u'\n')
-            w(u'//--><!]]></script>\n')
+            w(self.xhtml_safe_script_closing)
         # 2/ css files
         for cssfile, media in self.cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
@@ -281,9 +286,9 @@ class HTMLHead(UStringIO):
               xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)
         if self.post_inlined_scripts:
-            w(u'<script type="text/javascript">\n')
+            w(self.xhtml_safe_script_opening)
             w(u'\n\n'.join(self.post_inlined_scripts))
-            w(u'\n</script>\n')
+            w(self.xhtml_safe_script_closing)
         header = super(HTMLHead, self).getvalue()
         if skiphead:
             return header
