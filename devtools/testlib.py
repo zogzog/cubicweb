@@ -293,8 +293,8 @@ class CubicWebTC(TestCase):
 
     def setUp(self):
         # monkey patch send mail operation so emails are sent synchronously
-        self._old_mail_postcommit_event = SendMailOp.postcommit_event
-        SendMailOp.postcommit_event = SendMailOp.sendmails
+        self._old_mail_commit_event = SendMailOp.commit_event
+        SendMailOp.commit_event = SendMailOp.sendmails
         pause_tracing()
         previous_failure = self.__class__.__dict__.get('_repo_init_failed')
         if previous_failure is not None:
@@ -316,7 +316,7 @@ class CubicWebTC(TestCase):
         for cnx in self._cnxs:
             if not cnx._closed:
                 cnx.close()
-        SendMailOp.postcommit_event = self._old_mail_postcommit_event
+        SendMailOp.commit_event = self._old_mail_commit_event
 
     def setup_database(self):
         """add your database setup code by overriding this method"""
