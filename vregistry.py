@@ -195,18 +195,6 @@ class Registry(dict):
     select_object = deprecated('[3.6] use select_or_none instead of select_object'
                                )(select_or_none)
 
-    def selectable(self, oid, *args, **kwargs):
-        """return all appobjects having the given oid that are
-        selectable against the given context, in score order
-        """
-        objects = []
-        for appobject in self[oid]:
-            score = appobject.__select__(appobject, *args, **kwargs)
-            if score > 0:
-                objects.append((score, appobject))
-        return [obj(*args, **kwargs)
-                for _score, obj in sorted(objects)]
-
     def possible_objects(self, *args, **kwargs):
         """return an iterator on possible objects in this registry for the given
         context

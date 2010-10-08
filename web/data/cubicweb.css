@@ -222,6 +222,7 @@ li.invisible div{
 table#header {
   background: %(headerBgColor)s url("banner.png") repeat-x top left;
   text-align: left;
+  width: 100%;
 }
 
 table#header td {
@@ -232,6 +233,15 @@ table#header a {
   color: %(defaultColor)s;
 }
 
+table#header td#headtext {
+  float: left;
+}
+
+table#header td#header-right {
+  padding-top: 1em;
+  float: right;
+}
+
 table#header img#logo{
   vertical-align: middle;
 }
@@ -240,10 +250,6 @@ span#appliName {
   font-weight: bold;
   color: %(defaultColor)s;
   white-space: nowrap;
-}
-
-table#header td#headtext {
-  width: 100%;
 }
 
 /* Popup on login box and userActionBox */

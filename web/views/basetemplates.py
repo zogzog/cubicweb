@@ -338,27 +338,16 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         w = self.w
         w(u'<table id="header"><tr>\n')
-        w(u'<td id="firstcolumn">')
-        logo = self._cw.vreg['components'].select_or_none(
-            'logo', self._cw, rset=self.cw_rset)
-        if logo and logo.cw_propval('visible'):
-            logo.render(w=w)
-        w(u'</td>\n')
-        # appliname and breadcrumbs
-        w(u'<td id="headtext">')
-        for cid in self.main_cell_components:
-            comp = self._cw.vreg['components'].select_or_none(
-                cid, self._cw, rset=self.cw_rset)
-            if comp and comp.cw_propval('visible'):
-                comp.render(w=self.w)
-        w(u'</td>')
-        # logged user and help
-        login_components = self._cw.vreg['components'].selectable(
-            'loggeduserlink', self._cw, rset=self.cw_rset)
-        for comp in login_components:
-            w(u'<td>\n')
-            if comp.cw_propval('visible'):
+        for colid, context in (('firstcolumn', 'header-left'),
+                               ('headtext', 'header-center'),
+                               ('header-right', 'header-right'),
+                               ):
+            w(u'<td id="%s">' % colid)
+            components = self._cw.vreg['ctxcomponents'].poss_visible_objects(
+                self._cw, rset=self.cw_rset, view=view, context=context)
+            for comp in components:
                 comp.render(w=w)
+                w(u'&nbsp;')
             w(u'</td>')
         w(u'</tr></table>\n')
 

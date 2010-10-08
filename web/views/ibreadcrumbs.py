@@ -25,12 +25,13 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 
 #from cubicweb.interfaces import IBreadCrumbs
+from cubicweb import tags, uilib
+from cubicweb.entity import Entity
 from cubicweb.selectors import (is_instance, one_line_rset, adaptable,
                                 one_etype_rset, multi_lines_rset, any_rset)
-from cubicweb.view import EntityView, Component, EntityAdapter
+from cubicweb.view import EntityView, EntityAdapter
+from cubicweb.web.views import basecomponents
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
-from cubicweb.entity import Entity
-from cubicweb import tags, uilib
 
 
 # ease bw compat
@@ -90,84 +91,82 @@ class IBreadCrumbsAdapter(EntityAdapter):
         return path
 
 
-class BreadCrumbEntityVComponent(Component):
+class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
     __regid__ = 'breadcrumbs'
-    __select__ = one_line_rset() & adaptable('IBreadCrumbs')
-
-    cw_property_defs = {
-        _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the component or not')),
-        }
-    # title = _('ctxcomponents_breadcrumbs')
-    # help = _('ctxcomponents_breadcrumbs_description')
+    __select__ = (basecomponents.HeaderComponent.__select__
+                  & one_line_rset() & adaptable('IBreadCrumbs'))
+    order = basecomponents.ApplicationName.order + 1
     separator = u'&#160;&gt;&#160;'
     link_template = u'<a href="%s">%s</a>'
+    first_separator = True
 
-    def call(self, view=None, first_separator=True):
+    def render(self, w):
         entity = self.cw_rset.get_entity(0, 0)
         adapter = ibreadcrumb_adapter(entity)
+        view = self.cw_extra_kwargs.get('view')
         path = adapter.breadcrumbs(view)
         if path:
-            self.open_breadcrumbs()
-            if first_separator:
-                self.w(self.separator)
-            self.render_breadcrumbs(entity, path)
-            self.close_breadcrumbs()
+            self.open_breadcrumbs(w)
+            if self.first_separator:
+                w(self.separator)
+            self.render_breadcrumbs(w, entity, path)
+            self.close_breadcrumbs(w)
 
-    def open_breadcrumbs(self):
-        self.w(u'<span id="breadcrumbs" class="pathbar">')
+    def open_breadcrumbs(self, w):
+        w(u'<span id="breadcrumbs" class="pathbar">')
 
-    def close_breadcrumbs(self):
-        self.w(u'</span>')
+    def close_breadcrumbs(self, w):
+        w(u'</span>')
 
-    def render_breadcrumbs(self, contextentity, path):
+    def render_breadcrumbs(self, w, contextentity, path):
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(self.link_template % (self._cw.build_url(root.__regid__),
+            w(self.link_template % (self._cw.build_url(root.__regid__),
                                          root.dc_type('plural')))
-            self.w(self.separator)
-        self.wpath_part(root, contextentity, not path)
+            w(self.separator)
+        self.wpath_part(w, root, contextentity, not path)
         for i, parent in enumerate(path):
-            self.w(self.separator)
-            self.w(u"\n")
-            self.wpath_part(parent, contextentity, i == len(path) - 1)
+            w(self.separator)
+            w(u"\n")
+            self.wpath_part(w, parent, contextentity, i == len(path) - 1)
 
-    def wpath_part(self, part, contextentity, last=False): # XXX deprecates last argument?
+    def wpath_part(self, w, part, contextentity, last=False): # XXX deprecates last argument?
         if isinstance(part, Entity):
-            self.w(part.view('breadcrumbs'))
+            w(part.view('breadcrumbs'))
         elif isinstance(part, tuple):
             url, title = part
             textsize = self._cw.property_value('navigation.short-line-size')
-            self.w(self.link_template % (
+            w(self.link_template % (
                 xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
             textsize = self._cw.property_value('navigation.short-line-size')
-            self.w(uilib.cut(unicode(part), textsize))
+            w(uilib.cut(unicode(part), textsize))
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
-    __select__ = multi_lines_rset() & one_etype_rset() & \
-                 adaptable('IBreadCrumbs')
+    __select__ = (basecomponents.HeaderComponent.__select__
+                  & multi_lines_rset() & one_etype_rset()
+                  & adaptable('IBreadCrumbs'))
 
-    def render_breadcrumbs(self, contextentity, path):
+    def render_breadcrumbs(self, w, contextentity, path):
         # XXX hack: only display etype name or first non entity path part
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.__regid__),
-                                             root.dc_type('plural')))
+            w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.__regid__),
+                                        root.dc_type('plural')))
         else:
-            self.wpath_part(root, contextentity, not path)
+            self.wpath_part(w, root, contextentity, not path)
 
 
 class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
-    __select__ = any_rset()
+    __select__ = basecomponents.HeaderComponent.__select__ & any_rset()
 
-    def call(self, view=None, first_separator=True):
-        self.w(u'<span id="breadcrumbs" class="pathbar">')
-        if first_separator:
-            self.w(self.separator)
-        self.w(self._cw._('search'))
-        self.w(u'</span>')
+    def render(self, w):
+        w(u'<span id="breadcrumbs" class="pathbar">')
+        if self.first_separator:
+            w(self.separator)
+        w(self._cw._('search'))
+        w(u'</span>')
 
 
 class BreadCrumbView(EntityView):

@@ -72,70 +72,95 @@ class RQLInputForm(component.Component):
         self.w(u'</form></div>')
 
 
-class ApplLogo(component.Component):
-    """build the instance logo, usually displayed in the header"""
-    __regid__ = 'logo'
-    cw_property_defs = VISIBLE_PROP_DEF
-    # don't want user to hide this component using an cwproperty
-    site_wide = True
 
-    def call(self):
-        self.w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
-               % (self._cw.base_url(), self._cw.uiprops['LOGO']))
-
-
-class ApplHelp(component.Component):
-    """build the help button, usually displayed in the header"""
-    __regid__ = 'help'
-    cw_property_defs = VISIBLE_PROP_DEF
-    def call(self):
-        self.w(u'<a href="%s" class="help" title="%s">&#160;</a>'
-               % (self._cw.build_url(_restpath='doc/main'),
-                  self._cw._(u'help'),))
-
-
-class _UserLink(component.Component):
+class HeaderComponent(component.CtxComponent): # XXX rename properly along with related context
     """if the user is the anonymous user, build a link to login else display a menu
     with user'action (preference, logout, etc...)
     """
     __abstract__ = True
-    __regid__ = 'loggeduserlink'
-    cw_property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = component.override_ctx(
+        component.CtxComponent,
+        vocabulary=['header-left', 'header-center', 'header-right'])
     # don't want user to hide this component using an cwproperty
     site_wide = True
+    context = _('header-center')
 
 
-class CookieAnonUserLink(_UserLink):
-    __select__ = (_UserLink.__select__ & anonymous_user()
+class ApplLogo(HeaderComponent):
+    """build the instance logo, usually displayed in the header"""
+    __regid__ = 'logo'
+    order = -1
+
+    def render(self, w):
+        w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
+          % (self._cw.base_url(), self._cw.uiprops['LOGO']))
+
+
+class ApplicationName(HeaderComponent):
+    """display the instance name"""
+    __regid__ = 'appliname'
+    context = _('header-center')
+
+    def render(self, w):
+        title = self._cw.property_value('ui.site-title')
+        if title:
+            w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
+                self._cw.base_url(), xml_escape(title)))
+
+
+class CookieLoginComponent(HeaderComponent):
+    __regid__ = 'anonuserlink'
+    __select__ = (HeaderComponent.__select__ & anonymous_user()
                   & configuration_values('auth-mode', 'cookie'))
+    context = 'header-right'
     loginboxid = 'popupLoginBox'
+    _html = u"""[<a class="logout" title="%s" href="javascript:
+cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
+
+    def render(self, w):
+        # XXX bw compat, though should warn about subclasses redefining call
+        self.w = w
+        self.call()
 
     def call(self):
-        w = self.w
-        w(self._cw._('anonymous'))
-        w(u"""[<a class="logout" href="javascript: cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
-          % (self.loginboxid, self._cw._('i18n_login_popup')))
+        self.w(self._html % (self._cw._('login / password'),
+                             self.loginboxid, self._cw._('i18n_login_popup')))
         self.wview('logform', rset=self.cw_rset, id=self.loginboxid,
                    klass='hidden', title=False, showmessage=False)
 
-AnonUserLink = class_renamed('AnonUserLink', CookieAnonUserLink)
 
-class HTTPAnonUserLink(_UserLink):
-    __select__ = (_UserLink.__select__ & anonymous_user()
+class HTTPLoginComponent(CookieLoginComponent):
+    __select__ = (HeaderComponent.__select__ & anonymous_user()
                   & configuration_values('auth-mode', 'http'))
 
-    def call(self):
-        w = self.w
-        w(self._cw._('anonymous'))
+    def render(self, w):
         # this redirects to the 'login' controller which in turn
         # will raise a 401/Unauthorized
-        w(u'&#160;[<a class="logout" href="%s">%s</a>]'
-          % (self._cw.build_url('login'), self._cw._('login')))
+        req = self._cw
+        w(u'[<a class="logout" title="%s" href="%s">%s</a>]'
+          % (req._('login / password'), req.build_url('login'), req._('login')))
 
-class UserLink(_UserLink):
-    __select__ = _UserLink.__select__ & authenticated_user()
 
-    def call(self):
+_UserLink = class_renamed('_UserLink', HeaderComponent)
+AnonUserLink = class_renamed('AnonUserLink', CookieLoginComponent)
+AnonUserLink.__abstract__ = True
+AnonUserLink.__select__ &= yes(1)
+
+
+class AnonUserStatusLink(HeaderComponent):
+    __regid__ = 'userstatus'
+    __select__ = HeaderComponent.__select__ & anonymous_user()
+    context = _('header-right')
+    order = HeaderComponent.order - 10
+
+    def render(self, w):
+        w(u'<span class="caption">%s</span>' % self._cw._('anonymous'))
+
+
+class AuthenticatedUserStatus(AnonUserStatusLink):
+    __select__ = HeaderComponent.__select__ & authenticated_user()
+
+    def render(self, w):
         # display useractions and siteactions
         actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
         box = MenuWidget('', 'userActionsBox', _class='', islist=False)
@@ -149,7 +174,7 @@ class UserLink(_UserLink):
         for action in actions.get('siteactions', ()):
             menu.append(BoxLink(action.url(), self._cw._(action.title),
                                 action.html_class()))
-        box.render(w=self.w)
+        box.render(w=w)
 
 
 class ApplicationMessage(component.Component):
@@ -169,20 +194,6 @@ class ApplicationMessage(component.Component):
         for msg in msgs:
             self.w(u'<div class="message" id="%s">%s</div>' % (self.domid, msg))
         self.w(u'</div>')
-
-
-class ApplicationName(component.Component):
-    """display the instance name"""
-    __regid__ = 'appliname'
-    cw_property_defs = VISIBLE_PROP_DEF
-    # don't want user to hide this component using an cwproperty
-    site_wide = True
-
-    def call(self):
-        title = self._cw.property_value('ui.site-title')
-        if title:
-            self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
-                self._cw.base_url(), xml_escape(title)))
 
 
 class EtypeRestrictionComponent(component.Component):

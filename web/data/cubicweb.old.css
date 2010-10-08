@@ -229,6 +229,7 @@ li.invisible div{
 table#header {
   background: #ff7700 url("banner.png") left top repeat-x;
   text-align: left;
+  width: 100%;
 }
 
 table#header td {
@@ -236,17 +237,22 @@ table#header td {
 }
 
 table#header a {
-color: #000;
-}
-
-span#appliName {
- font-weight: bold;
- color: #000;
- white-space: nowrap;
+  color: #000;
 }
 
 table#header td#headtext {
-  width: 100%;
+  float: left;
+}
+
+table#header td#header-right {
+  padding-top: 1em;
+  float: right;
+}
+
+span#appliName {
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap;
 }
 
 /* FIXME appear with 4px width in IE6 */

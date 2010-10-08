@@ -78,6 +78,9 @@ div.loginBox div.loginContent form {
   width: 12em;
 }
 
+/* This is seriously debatable
+   These buttons render much more clearly as standard/default buttons
+ */
 .loginButton {
   border: 1px solid #edecd2;
   border-color: #edecd2 %(incontextBoxBodyBgColor)s %(incontextBoxBodyBgColor)s  #edecd2;

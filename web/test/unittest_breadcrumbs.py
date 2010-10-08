@@ -31,8 +31,10 @@ class BreadCrumbsTC(CubicWebTC):
         self.assertEqual(f2.view('breadcrumbs'),
                           '<a href="http://testing.fr/cubicweb/folder/%s" title="">chi&amp;ld</a>' % f2.eid)
         childrset = f2.as_rset()
-        ibc = self.vreg['components'].select('breadcrumbs', self.request(), rset=childrset)
-        self.assertEqual(ibc.render(),
+        ibc = self.vreg['ctxcomponents'].select('breadcrumbs', self.request(), rset=childrset)
+        l = []
+        ibc.render(l.append)
+        self.assertEqual(''.join(l),
                           """<span id="breadcrumbs" class="pathbar">&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/Folder">folder_plural</a>&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/folder/%s" title="">par&amp;ent</a>&#160;&gt;&#160;
 <a href="http://testing.fr/cubicweb/folder/%s" title="">chi&amp;ld</a></span>""" % (f1.eid, f2.eid))
 
