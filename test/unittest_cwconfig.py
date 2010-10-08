@@ -113,7 +113,7 @@ class CubicWebConfigurationTC(TestCase):
     def test_cubes_path(self):
         # make sure we don't import the email cube, but the stdlib email package
         import email
-        self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
+        self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.assertEqual(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])

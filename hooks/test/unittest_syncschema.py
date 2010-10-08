@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""cubicweb.server.hooks.syncschema unit and functional tests"""
+
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ValidationError
