@@ -87,9 +87,9 @@ class BaseFacetTC(CubicWebTC):
                           [str(guests), str(managers)])
         f._cw.create_entity('CWUser', login=u'hop', upassword='toto')
         self.assertEqual(f.vocabulary(),
-                          [(u'no relation', ''), (u'guests', guests), (u'managers', managers)])
+                          [(u'<no relation>', ''), (u'guests', guests), (u'managers', managers)])
         self.assertEqual(f.possible_values(),
-                          [str(guests), str(managers)])
+                          [str(guests), str(managers), ''])
         f._cw.form[f.__regid__] = ''
         f.add_rql_restrictions()
         self.assertEqual(f.rqlst.as_string(),

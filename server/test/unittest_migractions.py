@@ -141,6 +141,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.assertRaises(ValidationError,
                               self.mh.rqlexec,
                               'INSERT Note N: N unique_id "xyz"')
+            self.mh.rollback()
             # make sure the unique constraint is dropped
             self.mh.rqlexec('INSERT Note N: N unique_id "x"')
             self.mh.rqlexec('INSERT Note N: N unique_id "x"')
