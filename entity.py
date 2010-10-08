@@ -1108,7 +1108,7 @@ class Relation(object):
 
     def __get__(self, eobj, eclass):
         if eobj is None:
-            raise AttributeError('%s cannot be only be accessed from instances'
+            raise AttributeError('%s can only be accessed from instances'
                                  % self._rtype)
         return eobj.related(self._rtype, self._role, entities=True)
 

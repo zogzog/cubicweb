@@ -1,8 +1,7 @@
-from logilab.common.testlib import TestCase, unittest_main, tag
-from cubicweb.devtools.httptest import CubicWebServerTC
-
 import httplib
-from os import path as osp
+
+from cubicweb.devtools.httptest import CubicWebServerTC
+from cubicweb.devtools.httptest import CubicWebServerConfig
 
 
 class TwistedCWAnonTC(CubicWebServerTC):
@@ -17,15 +16,16 @@ class TwistedCWAnonTC(CubicWebServerTC):
         response = self.web_get()
         self.assertEqual(response.status, httplib.OK)
 
-
     def test_base_url(self):
-        if self.test_url not in self.web_get().read():
+        if self.config['base-url'] not in self.web_get().read():
             self.fail('no mention of base url in retrieved page')
 
 
 class TwistedCWIdentTC(CubicWebServerTC):
 
-    anonymous_logged = False
+    def setUp(self):
+        CubicWebServerConfig.anonymous_logged = False
+        CubicWebServerTC.setUp(self)
 
     def test_response_denied(self):
         response = self.web_get()
@@ -48,4 +48,5 @@ class TwistedCWIdentTC(CubicWebServerTC):
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()

@@ -25,11 +25,13 @@ __docformat__ = "restructuredtext en"
 import threading
 import socket
 import httplib
+from urlparse import urlparse
 
 from twisted.internet import reactor, error
 
 from cubicweb.etwist.server import run
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools import ApptestConfiguration
 
 
 def get_available_port(ports_scan):
@@ -43,6 +45,8 @@ def get_available_port(ports_scan):
     :type ports_range: list
     :param ports_range: range of ports to test
     :rtype: int
+
+    .. see:: :func:`test.test_support.bind_port`
     """
     for port in ports_scan:
         try:
@@ -56,40 +60,52 @@ def get_available_port(ports_scan):
     raise RuntimeError('get_available_port([ports_range]) cannot find an available port')
 
 
-class CubicWebServerTC(CubicWebTC):
-    """basic class for running test server
+class CubicWebServerConfig(ApptestConfiguration):
+    """basic configuration class for configuring test server
 
     :param ports_range: range of http ports to test (range(7000, 8000) by default)
     :type ports_range: iterable
     :param anonymous_logged: is anonymous user logged by default ? (True by default)
     :type anonymous_logged: bool
-    :param test_url: base url used by server
-    :param test_host: server host
-    :param test_port: server port
+    :param port: server port (optional, used to force value)
+    :type port: int
 
     The first port found as available in `ports_range` will be used to launch
     the test server
     """
-    ports_range = range(7000, 8000)
     # anonymous is logged by default in cubicweb test cases
     anonymous_logged = True
-    test_host='127.0.0.1'
+    ports_range = range(7000, 8000)
+
+    def default_base_url(self):
+        port = self['port'] or get_available_port(self.ports_range)
+        self.global_set_option('port', port) # force rewrite here
+        return 'http://127.0.0.1:%d/' % self['port']
+
+    def pyro_enabled(self):
+        return False
+
+    def load_configuration(self):
+        super(CubicWebServerConfig, self).load_configuration()
+        self.global_set_option('base-url', self.default_base_url())
+        if not self.anonymous_logged:
+            self.global_set_option('anonymous-user', None)
+        else:
+            self.global_set_option('anonymous-user', 'anon')
+            self.global_set_option('anonymous-password', 'anon')
+        self.global_set_option('force-html-content-type', True)
+        # no undo support in tests
+        self.global_set_option('undo-support', '')
 
 
+class CubicWebServerTC(CubicWebTC):
+    """class for running test server
 
-    @property
-    def test_url(self):
-        return 'http://%s:%d/' % (self.test_host, self.test_port)
-
-    def init_server(self):
-        self.test_port = get_available_port(self.ports_range)
-        self.config['port'] = self.test_port
-        self.config['base-url'] = self.test_url
-        self.config['force-html-content-type'] = True
-        self.config['pyro-server'] = False
+    :cvar: :ref:`CubicWebServerConfig` class
+    """
+    configcls = CubicWebServerConfig
 
     def start_server(self):
-        self.config.pyro_enabled = lambda : False
         # use a semaphore to avoid starting test while the http server isn't
         # fully initilialized
         semaphore = threading.Semaphore(0)
@@ -103,15 +119,16 @@ class CubicWebServerTC(CubicWebTC):
         t = threading.Thread(target=safe_run, name='cubicweb_test_web_server',
                              args=(self.config, self.vreg, True))
         self.web_thread = t
-        if not self.anonymous_logged:
-                self.config.global_set_option('anonymous-user', None)
         t.start()
         semaphore.acquire()
         if not self.web_thread.isAlive():
             # XXX race condition with actual thread death
             raise RuntimeError('Could not start the web server')
         #pre init utils connection
-        self._web_test_cnx = httplib.HTTPConnection(self.test_host, self.test_port)
+        parseurl = urlparse(self.config['base-url'])
+        assert parseurl.port == self.config['port']
+        self._web_test_cnx = httplib.HTTPConnection(parseurl.hostname,
+                                                    parseurl.port)
         self._ident_cookie = None
 
     def stop_server(self, timeout=15):
@@ -169,7 +186,6 @@ class CubicWebServerTC(CubicWebTC):
 
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.init_server()
         self.start_server()
 
     def tearDown(self):
@@ -179,4 +195,3 @@ class CubicWebServerTC(CubicWebTC):
             # Server could be launched manually
             print err
         CubicWebTC.tearDown(self)
-

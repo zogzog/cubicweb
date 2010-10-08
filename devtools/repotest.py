@@ -158,7 +158,10 @@ class RQLGeneratorTC(TestCase):
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
         if self.backend is not None:
-            dbhelper = get_db_helper(self.backend)
+            try:
+                dbhelper = get_db_helper(self.backend)
+            except ImportError, ex:
+                self.skipTest(str(ex))
             self.o = SQLGenerator(self.schema, dbhelper)
 
     def tearDown(self):

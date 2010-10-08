@@ -25,6 +25,7 @@
 
 
 import os, os.path as osp
+from logging import getLogger, ERROR
 import sys
 
 # imported by default to simplify further import statements
@@ -32,6 +33,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 import windmill
 from windmill.dep import functest
+from windmill.bin.admin_lib import configure_global_settings, setup, teardown
 
 from cubicweb.devtools.httptest import CubicWebServerTC
 
@@ -44,46 +46,81 @@ class UnitTestReporter(functest.reports.FunctestReportInterface):
 unittestreporter = UnitTestReporter()
 functest.reports.register_reporter(unittestreporter)
 
-class WindmillUnitTestCase(TestCase):
+
+# Windmill use case are written with no anonymous user
+from cubicweb.devtools.httptest import CubicWebServerConfig
+CubicWebServerConfig.anonymous_logged = False
+
+class CubicWebWindmillUseCase(CubicWebServerTC):
+    """basic class for Windmill use case tests
+
+    If you want to change cubicweb test server parameters, define a new
+    :class:`CubicWebServerConfig` and override the :var:`configcls`
+    attribute:
+
+        configcls = CubicWebServerConfig
+
+    From Windmill configuration:
+
+    .. attribute:: browser
+        identification string (firefox|ie|safari|chrome) (firefox by default)
+    .. attribute :: edit_test
+        load and edit test for debugging (False by default)
+    .. attribute:: test_dir (optional)
+        testing file path or directory (windmill directory under your unit case
+        file by default)
+
+    Examples:
+
+        browser = 'firefox'
+        test_dir = osp.join(__file__, 'windmill')
+        edit_test = False
+
+    If you prefer, you can put here the use cases recorded by windmill GUI
+    (services transformer) instead of the windmill sub-directory
+    You can change `test_dir` as following:
+
+        test_dir = __file__
+
+    Instead of toggle `edit_test` value, try `pytest -i`
+    """
+    browser = 'firefox'
+    edit_test = "-i" in sys.argv # detection for pytest invocation
+
+    def _test_dir(self):
+        """access to class attribute if possible or make assumption
+        of expected directory"""
+        try:
+            return getattr(self, 'test_dir')
+        except AttributeError:
+            if os.path.basename(sys.argv[0]) == "pytest":
+                test_dir = os.getcwd()
+            else:
+                import inspect
+                test_dir = os.path.dirname(inspect.stack()[-1][1])
+            return osp.join(test_dir, 'windmill')
+
     def setUp(self):
+        # Start CubicWeb session before running the server to populate self.vreg
+        CubicWebServerTC.setUp(self)
+        # XXX reduce log output (should be done in a cleaner way)
+        # windmill fu** up our logging configuration
+        for logkey in ('windmill', 'logilab', 'cubicweb'):
+            getLogger(logkey).setLevel(ERROR)
+        self.test_dir = self._test_dir()
+        msg = "provide a valid 'test_dir' as the given test file/dir (current: %s)"
+        assert os.path.exists(self.test_dir), (msg % self.test_dir)
+        # windmill setup
         windmill.stdout, windmill.stdin = sys.stdout, sys.stdin
-        from windmill.bin.admin_lib import configure_global_settings, setup
         configure_global_settings()
-        windmill.settings['TEST_URL'] = self.test_url
+        windmill.settings['TEST_URL'] = self.config['base-url']
         if hasattr(self,"windmill_settings"):
             for (setting,value) in self.windmill_settings.iteritems():
                 windmill.settings[setting] = value
         self.windmill_shell_objects = setup()
 
     def tearDown(self):
-        from windmill.bin.admin_lib import teardown
         teardown(self.windmill_shell_objects)
-
-
-class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
-    """basic class for Windmill use case tests
-
-    :param browser: browser identification string (firefox|ie|safari|chrome) (firefox by default)
-    :param test_dir: testing file path or directory (./windmill by default)
-    :param edit_test: load and edit test for debugging (False by default)
-    """
-    browser = 'firefox'
-    test_dir = osp.join(os.getcwd(), 'windmill')
-    edit_test = "-i" in sys.argv # detection for pytest invocation
-
-    def setUp(self):
-        # reduce log output
-        from logging import getLogger, ERROR
-        getLogger('cubicweb').setLevel(ERROR)
-        getLogger('logilab').setLevel(ERROR)
-        getLogger('windmill').setLevel(ERROR)
-        # Start CubicWeb session before running the server to populate self.vreg
-        CubicWebServerTC.setUp(self)
-        assert os.path.exists(self.test_dir), "provide 'test_dir' as the given test file/dir"
-        WindmillUnitTestCase.setUp(self)
-
-    def tearDown(self):
-        WindmillUnitTestCase.tearDown(self)
         CubicWebServerTC.tearDown(self)
 
     def testWindmill(self):
@@ -91,8 +128,8 @@ class CubicWebWindmillUseCase(CubicWebServerTC, WindmillUnitTestCase):
             # see windmill.bin.admin_options.Firebug
             windmill.settings['INSTALL_FIREBUG'] = 'firebug'
             windmill.settings.setdefault('MOZILLA_PLUGINS', []).extend(
-                '/usr/share/mozilla-extensions/',
-                '/usr/share/xul-ext/')
+                ['/usr/share/mozilla-extensions/',
+                 '/usr/share/xul-ext/'])
         controller = self.windmill_shell_objects['start_' + self.browser]()
         self.windmill_shell_objects['do_test'](self.test_dir,
                                                load=self.edit_test,

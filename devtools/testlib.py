@@ -71,7 +71,6 @@ def line_context_filter(line_no, center, before=3, after=None):
         after = before
     return center - before <= line_no <= center + after
 
-
 def unprotected_entities(schema, strict=False):
     """returned a set of each non final entity type, excluding "system" entities
     (eg CWGroup, CWUser...)
@@ -81,7 +80,6 @@ def unprotected_entities(schema, strict=False):
     else:
         protected_entities = yams.schema.BASE_TYPES.union(SYSTEM_ENTITIES)
     return set(schema.entities()) - protected_entities
-
 
 def refresh_repo(repo, resetschema=False, resetvreg=False):
     for pool in repo.pools:
@@ -144,6 +142,7 @@ class MockSMTP:
 
 cwconfig.SMTP = MockSMTP
 
+
 class TestCaseConnectionProxy(object):
     """thin wrapper around `cubicweb.dbapi.Connection` context-manager
     used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
@@ -192,8 +191,9 @@ class CubicWebTC(TestCase):
 
     @classproperty
     def config(cls):
-        """return the configuration object. Configuration is cached on the test
-        class.
+        """return the configuration object
+
+        Configuration is cached on the test class.
         """
         try:
             return cls.__dict__['_config']
@@ -204,7 +204,12 @@ class CubicWebTC(TestCase):
 
     @classmethod
     def init_config(cls, config):
-        """configuration initialization hooks. You may want to override this."""
+        """configuration initialization hooks.
+
+        You may only want to override here the configuraton logic.
+
+        Otherwise, consider to use a different :class:`ApptestConfiguration`
+        defined in the `configcls` class attribute"""
         source = config.sources()['system']
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']
@@ -226,7 +231,7 @@ class CubicWebTC(TestCase):
         config.global_set_option('default-dest-addrs', send_to)
         config.global_set_option('sender-name', 'cubicweb-test')
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
-        config.global_set_option('base-url', BASE_URL)
+        
         # web resources
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))

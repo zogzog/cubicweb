@@ -100,6 +100,23 @@ Or use the internal windmill shell to explore available commands:
 Integrate Windmill tests into CubicWeb
 ======================================
 
+Set environment
+---------------
+
+You have to create a new unit test file and a `windmill` directory and copy all
+your windmill use case into it.
+
+.. sourcecode:: python
+
+    # test_windmill.py
+
+    # Run all scenarii found in windmill directory
+    from cubicweb.devtools.cwwindmill import (CubicWebWindmillUseCase,
+                                              unittest_main)
+
+    if __name__ == '__main__':
+        unittest_main()
+
 Run your tests
 --------------
 
@@ -114,9 +131,34 @@ By default, CubicWeb will use **firefox** as the default browser and will try
 to run test instance server on localhost. In the general case, You've no need
 to change anything.
 
-Check the :class:`cubicweb.devtools.cwwindmill.CubicWebServerTC` class for server
-parameters and :class:`cubicweb.devtools.cwwindmill.CubicWebWindmillUseCase` for
-Windmill configuration.
+Check :class:`cubicweb.devtools.cwwindmill.CubicWebWindmillUseCase` for
+Windmill configuration. You can edit windmill settings with following class attributes:
+
+* browser
+  identification string (firefox|ie|safari|chrome) (firefox by default)
+* test_dir
+  testing file path or directory (windmill directory under your unit case
+  file by default)
+* edit_test
+  load and edit test for debugging (False by default)
+
+Examples:
+
+    browser = 'firefox'
+    test_dir = osp.join(__file__, 'windmill')
+    edit_test = False
+
+If you want to change cubicweb test server parameters, you can check class
+variables from :class:`CubicWebServerConfig` or inherit it with overriding the
+:var:`configcls` attribute in :class:`CubicWebServerTC` ::
+
+.. sourcecode:: python
+
+    class OtherCubicWebServerConfig(CubicWebServerConfig):
+        port = 9999
+
+    class NewCubicWebServerTC(CubicWebServerTC):
+        configcls = OtherCubicWebServerConfig
 
 For instance, CubicWeb framework windmill tests can be manually run by::
 
