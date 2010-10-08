@@ -618,6 +618,8 @@ class WorkflowHooksTC(CubicWebTC):
                                iworkflowable.fire_transition, 'deactivate')
         self.assertEqual(self._cleanup_msg(ex.errors['by_transition-subject']),
                                             u"transition isn't allowed from")
+        cnx.rollback()
+        session.set_pool()
         # get back now
         iworkflowable.fire_transition('activate')
         cnx.commit()

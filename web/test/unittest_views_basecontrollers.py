@@ -223,7 +223,7 @@ class EditControllerTC(CubicWebTC):
         feid = self.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
                             {'data': Binary('yo')})[0][0]
         self.commit()
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
@@ -232,7 +232,7 @@ class EditControllerTC(CubicWebTC):
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
         self.assertEqual(ex.errors, {'amount-subject': 'value must be >= 0'})
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
@@ -241,7 +241,7 @@ class EditControllerTC(CubicWebTC):
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
         self.assertEqual(ex.errors, {'amount-subject': 'value must be <= 100'})
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
