@@ -450,7 +450,7 @@ class LogFormView(View):
 
     def call(self, id, klass, title=True, showmessage=True):
         w = self.w
-        w(u'<div id="%s" class="popupLoginBox %s">' % (id, klass))
+        w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             stitle = self._cw.property_value('ui.site-title')
             if stitle:

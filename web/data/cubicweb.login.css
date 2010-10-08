@@ -23,7 +23,7 @@ div.popupLoginBox div.loginContent {
   padding: 5px 3px 4px;
 }
 
-div.loginBox {
+div#loginBox {
   position : absolute;
   top: 15%;
   left : 50%;
@@ -49,11 +49,12 @@ div.loginTitle {
   background: %(headerBgColor)s url("banner.png") repeat-x top left;
 }
 
-div.loginBox div.loginContent form {
+div#loginBox div.loginContent form {
   padding-top: 1em;
   width: 90%;
   margin: auto;
 }
+
 
 .popupLoginBox table td {
   padding: 0px 3px;
@@ -65,12 +66,12 @@ div.loginBox div.loginContent form {
   margin: auto;
 }
 
-.loginBox table td {
+#loginBox table td {
   padding: 0px 3px 0.6em;
   white-space: nowrap;
 }
 
-.loginBox .loginButton {
+#loginBox .loginButton {
   margin-top: 0.6em;
  }
 
