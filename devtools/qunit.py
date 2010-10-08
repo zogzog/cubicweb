@@ -106,8 +106,6 @@ class QUnitTestCase(CubicWebServerTC):
            return osp.abspath(osp.join(dirname,path))
         return path
 
-
-
     def test_javascripts(self):
         for args in self.all_js_tests:
             test_file = self.abspath(args[0])
@@ -130,12 +128,11 @@ class QUnitTestCase(CubicWebServerTC):
         for data in data_files:
             assert osp.exists(data), data
 
-
         # generate html test file
         jquery_dir = 'file://' + self.config.locate_resource('jquery.js')[0]
         html_test_file = NamedTemporaryFile(suffix='.html')
         html_test_file.write(make_qunit_html(test_file, depends,
-                             server_data=(self.test_host, self.test_port),
+                             base_url=self.config['base-url'],
                              web_data_path=jquery_dir))
         html_test_file.flush()
         # copying data file
@@ -210,21 +207,19 @@ class QUnitResultController(Controller):
         self._log_stack.append('%s: %s' % (result, message))
 
 
-
 def cw_path(*paths):
   return file_path(osp.join(cubicweb.CW_SOFTWARE_ROOT, *paths))
 
 def file_path(path):
     return 'file://' + osp.abspath(path)
 
-def build_js_script( host, port):
+def build_js_script(host):
     return """
     var host = '%s';
-    var port = '%s';
 
     QUnit.moduleStart = function (name) {
       jQuery.ajax({
-                  url: 'http://'+host+':'+port+'/qunit_result',
+                  url: host+'/qunit_result',
                  data: {"event": "module_start",
                         "name": name},
                  async: false});
@@ -232,7 +227,7 @@ def build_js_script( host, port):
 
     QUnit.testDone = function (name, failures, total) {
       jQuery.ajax({
-                  url: 'http://'+host+':'+port+'/qunit_result',
+                  url: host+'/qunit_result',
                  data: {"event": "test_done",
                         "name": name,
                         "failures": failures,
@@ -242,7 +237,7 @@ def build_js_script( host, port):
 
     QUnit.done = function (failures, total) {
       jQuery.ajax({
-                   url: 'http://'+host+':'+port+'/qunit_result',
+                   url: host+'/qunit_result',
                    data: {"event": "done",
                           "failures": failures,
                           "total":total},
@@ -252,15 +247,15 @@ def build_js_script( host, port):
 
     QUnit.log = function (result, message) {
       jQuery.ajax({
-                   url: 'http://'+host+':'+port+'/qunit_result',
+                   url: host+'/qunit_result',
                    data: {"event": "log",
                           "result": result,
                           "message": message},
                    async: false});
     }
-    """ % (host, port)
+    """ % host
 
-def make_qunit_html(test_file, depends=(), server_data=None,
+def make_qunit_html(test_file, depends=(), base_url=None,
                     web_data_path=cw_path('web', 'data')):
     """"""
     data = {
@@ -276,11 +271,10 @@ def make_qunit_html(test_file, depends=(), server_data=None,
     <script src="%(web_test)s/cwmock.js" type="text/javascript"></script>
     <script src="%(web_test)s/qunit.js" type="text/javascript"></script>'''
     % data]
-    if server_data is not None:
-        host, port = server_data
+    if base_url is not None:
         html.append('<!-- result report tools -->')
         html.append('<script type="text/javascript">')
-        html.append(build_js_script(host, port))
+        html.append(build_js_script(base_url))
         html.append('</script>')
     html.append('<!-- Test script dependencies (tested code for example) -->')
 
@@ -300,10 +294,6 @@ def make_qunit_html(test_file, depends=(), server_data=None,
   </body>
 </html>''')
     return u'\n'.join(html)
-
-
-
-
 
 
 

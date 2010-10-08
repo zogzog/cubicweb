@@ -190,13 +190,14 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
         # threads
         return True
 
-
+# XXX merge with BaseApptestConfiguration ?
 class ApptestConfiguration(BaseApptestConfiguration):
 
     def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
         BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
+
 
 class RealDatabaseConfiguration(ApptestConfiguration):
     """configuration class for tests to run on a real database.
@@ -220,6 +221,7 @@ class RealDatabaseConfiguration(ApptestConfiguration):
     db_require_setup = False    # skip init_db / reset_db steps
     read_instance_schema = True # read schema from database
 
+
 # test database handling #######################################################
 
 def init_test_database(config=None, configdir='data'):
@@ -241,7 +243,6 @@ def init_test_database(config=None, configdir='data'):
     if driver == 'sqlite':
         install_sqlite_patch(repo.querier)
     return repo, cnx
-
 
 def reset_test_database(config):
     """init a test database for a specific driver"""
@@ -341,7 +342,6 @@ def init_test_database_sqlite(config):
         init_repository(config, interactive=False)
         dbfile = config.sources()['system']['db-name']
         shutil.copy(dbfile, '%s-template' % dbfile)
-
 
 def install_sqlite_patch(querier):
     """This patch hotfixes the following sqlite bug :
