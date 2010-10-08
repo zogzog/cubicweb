@@ -79,7 +79,7 @@ class LoginPasswordRetreiver(WebAuthInfoRetreiver):
         return login, {'password': password}
 
     def request_has_auth_info(self, req):
-        return '__login' in req.form
+        return req.get_authorization()[0] is not None
 
     def revalidate_login(self, req):
         return req.get_authorization()[0]
