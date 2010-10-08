@@ -22,6 +22,8 @@ client
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from logilab.common.deprecation import class_deprecated, class_renamed
 from logilab.mtconverter import xml_escape
 
@@ -221,6 +223,8 @@ class CtxComponent(AppObject):
                                        _('ctxtoolbar')),
                            help=_('context where this component should be displayed')),
         }
+    visible = True
+    order = 0
     context = 'left'
     contextual = False
     title = None
@@ -228,6 +232,15 @@ class CtxComponent(AppObject):
     # XXX support kwargs for compat with old boxes which gets the view as
     # argument
     def render(self, w, **kwargs):
+        if hasattr(self, 'call'):
+            warn('[3.10] should not anymore implements call on %s, see new CtxComponent api'
+                 % self.__class__, DeprecationWarning)
+            self.w = w
+            def wview(__vid, rset=None, __fallback_vid=None, **kwargs):
+                self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
+            self.wview = wview
+            self.call(**kwargs)
+            return
         getlayout = self._cw.vreg['components'].select
         try:
             # XXX ensure context is given when the component is reloaded through
