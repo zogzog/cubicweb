@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""cubicweb.server.hooks.syncschema unit and functional tests"""
+
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ValidationError
@@ -258,6 +260,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.commit()
         # should not be able anymore to add cwuser without surname
         self.assertRaises(ValidationError, self.create_user, "toto")
+        self.rollback()
         self.execute('SET DEF cardinality "?1" '
                      'WHERE DEF relation_type RT, DEF from_entity E,'
                      'RT name "surname", E name "CWUser"')

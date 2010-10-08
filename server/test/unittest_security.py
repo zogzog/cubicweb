@@ -22,7 +22,7 @@ import sys
 from logilab.common.testlib import unittest_main, TestCase
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb import Unauthorized, ValidationError
+from cubicweb import Unauthorized, ValidationError, QueryError
 from cubicweb.server.querier import check_read_access
 
 class BaseSecurityTC(CubicWebTC):
@@ -189,6 +189,8 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         # to actually get Unauthorized exception, try to delete an entity we can read
         self.assertRaises(Unauthorized, cu.execute, "DELETE Societe S")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback() # required after Unauthorized
         cu.execute("INSERT Affaire X: X sujet 'pascool'")
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A sujet 'pascool', S nom 'chouette'")
@@ -216,6 +218,8 @@ class SecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized, ent.cw_check_perm, 'update')
         self.assertRaises(Unauthorized,
                           cu.execute, "SET P travaille S WHERE P is Personne, S is Societe")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback()
         # test nothing has actually been inserted:
         self.assertEqual(cu.execute('Any P,S WHERE P travaille S,P is Personne, S is Societe').rowcount, 0)
         cu.execute("INSERT Societe X: X nom 'chouette'")
@@ -239,6 +243,8 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized, cu.execute, "DELETE A concerne S")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback() # required after Unauthorized
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A is Affaire, S nom 'chouette'")
         cnx.commit()

@@ -98,8 +98,8 @@ class CubicWebConfigurationTC(TestCase):
     def test_expand_cubes(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.config.adjust_sys_path()
-        self.assertEqual(self.config.expand_cubes(('email', 'blog')),
-                          ['email', 'blog', 'file'])
+        self.assertEqual(self.config.expand_cubes(('email', 'comment')),
+                          ['email', 'comment', 'file'])
 
     def test_vregistry_path(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
@@ -113,7 +113,7 @@ class CubicWebConfigurationTC(TestCase):
     def test_cubes_path(self):
         # make sure we don't import the email cube, but the stdlib email package
         import email
-        self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
+        self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.assertEqual(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])

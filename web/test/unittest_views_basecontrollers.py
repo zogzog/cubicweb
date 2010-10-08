@@ -223,7 +223,7 @@ class EditControllerTC(CubicWebTC):
         feid = self.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
                             {'data': Binary('yo')})[0][0]
         self.commit()
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
@@ -232,7 +232,7 @@ class EditControllerTC(CubicWebTC):
                 }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
         self.assertEqual(ex.errors, {'amount-subject': 'value must be >= 0'})
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
@@ -241,7 +241,7 @@ class EditControllerTC(CubicWebTC):
                     }
         ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
         self.assertEqual(ex.errors, {'amount-subject': 'value must be <= 100'})
-        req = self.request()
+        req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
                     '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
@@ -285,26 +285,6 @@ class EditControllerTC(CubicWebTC):
         self.assertItemsEqual(usergroups, ['managers'])
         self.assertEqual(get_pending_deletes(req), [])
 
-    # def test_custom_attribute_handler(self):
-    #     def custom_login_edit(self, formparams, value, relations):
-    #         formparams['login'] = value.upper()
-    #         relations.append('X login %(login)s')
-    #     CWUser.custom_login_edit = custom_login_edit
-    #     try:
-    #         user = self.user()
-    #         eid = repr(user.eid)
-    #         req = self.request()
-    #         req.form = {
-    #             'eid': eid,
-    #             '__type:'+eid:  'CWUser',
-    #             'login:'+eid: u'foo',
-    #             }
-    #         path, params = self.expect_redirect_publish(req, 'edit')
-    #         rset = self.execute('Any L WHERE X eid %(x)s, X login L', {'x': user.eid}, 'x')
-    #         self.assertEqual(rset[0][0], 'FOO')
-    #     finally:
-    #         del CWUser.custom_login_edit
-
     def test_redirect_apply_button(self):
         redirectrql = rql_for_eid(4012) # whatever
         req = self.request()
@@ -323,7 +303,7 @@ class EditControllerTC(CubicWebTC):
         self.failUnless(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         self.assertEqual(params['vid'], 'edition')
-        self.assertNotEquals(int(eid), 4012)
+        self.assertNotEqual(int(eid), 4012)
         self.assertEqual(params['__redirectrql'], redirectrql)
         self.assertEqual(params['__redirectvid'], 'primary')
         self.assertEqual(params['__redirectparams'], 'toto=tutu&tata=titi')
