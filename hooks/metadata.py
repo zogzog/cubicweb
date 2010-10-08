@@ -64,11 +64,11 @@ class UpdateMetaAttrsHook(MetaDataHook):
             self.entity.cw_edited.setdefault('modification_date', datetime.now())
 
 
-class _SetCreatorOp(hook.Operation):
+class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        for eid in session.transaction_data.pop('set_creator_op'):
+        for eid in self.get_data():
             if session.deleted_in_transaction(eid):
                 # entity have been created and deleted in the same transaction
                 continue
@@ -109,11 +109,12 @@ class SetOwnershipHook(MetaDataHook):
     def __call__(self):
         if not self._cw.is_internal_session:
             self._cw.add_relation(self.entity.eid, 'owned_by', self._cw.user.eid)
-            hook.set_operation(self._cw, 'set_creator_op', self.entity.eid, _SetCreatorOp)
+            SetCreatorOp.get_instance(self._cw).add_data(self.entity.eid)
 
-class _SyncOwnersOp(hook.Operation):
+
+class SyncOwnersOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
-        for compositeeid, composedeid in self.session.transaction_data.pop('sync_owners_op'):
+        for compositeeid, composedeid in self.get_data():
             self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                  'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                  {'c': compositeeid, 'x': composedeid})
@@ -133,9 +134,9 @@ class SyncCompositeOwner(MetaDataHook):
         eidfrom, eidto = self.eidfrom, self.eidto
         composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
         if composite == 'subject':
-            hook.set_operation(self._cw, 'sync_owners_op', (eidfrom, eidto), _SyncOwnersOp)
+            SyncOwnersOp.get_instance(self._cw).add_data( (eidfrom, eidto) )
         elif composite == 'object':
-            hook.set_operation(self._cw, 'sync_owners_op', (eidto, eidfrom), _SyncOwnersOp)
+            SyncOwnersOp.get_instance(self._cw).add_data( (eidto, eidfrom) )
 
 
 class FixUserOwnershipHook(MetaDataHook):

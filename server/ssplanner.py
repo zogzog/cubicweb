@@ -651,13 +651,9 @@ class DeleteEntitiesStep(Step):
         # mark eids as being deleted in session info and setup cache update
         # operation (register pending eids before actual deletion to avoid
         # multiple call to glob_delete_entity)
-        try:
-            pending = session.transaction_data['pendingeids']
-        except KeyError:
-            pending = session.transaction_data['pendingeids'] = set()
-            CleanupDeletedEidsCacheOp(session)
-        actual = todelete - pending
-        pending |= actual
+        op = CleanupDeletedEidsCacheOp.get_instance(session)
+        actual = todelete - op._container
+        op._container |= actual
         for eid in actual:
             delete(session, eid)
         return results

@@ -1220,8 +1220,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 "no more supported" % {'eid': eid, 'etype': etype})]
         entity.eid = eid
         # for proper eid/type cache update
-        hook.set_operation(session, 'pendingeids', eid,
-                           CleanupDeletedEidsCacheOp)
+        CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
         self.repo.hm.call_hooks('before_delete_entity', session, entity=entity)
         # remove is / is_instance_of which are added using sql by hooks, hence
         # unvisible as transaction action
@@ -1288,7 +1287,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        hook.set_operation(session, 'ftindex', entity.eid, FTIndexEntityOp)
+        FTIndexEntityOp.get_instance(session).add_data(entity.eid)
 
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
@@ -1313,7 +1312,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.exception('error while reindexing %s', entity)
 
 
-class FTIndexEntityOp(hook.LateOperation):
+class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
     """operation to delay entity full text indexation to commit
 
     since fti indexing may trigger discovery of other entities, it should be
@@ -1326,7 +1325,7 @@ class FTIndexEntityOp(hook.LateOperation):
         source = session.repo.system_source
         pendingeids = session.transaction_data.get('pendingeids', ())
         done = session.transaction_data.setdefault('indexedeids', set())
-        for eid in session.transaction_data.pop('ftindex', ()):
+        for eid in self.get_data():
             if eid in pendingeids or eid in done:
                 # entity added and deleted in the same transaction or already
                 # processed

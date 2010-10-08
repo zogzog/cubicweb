@@ -307,11 +307,10 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             return # watched changes to final relation type are unexpected
         session = self.session
         if 'fulltext_container' in self.values:
+            op = UpdateFTIndexOp.get_instance(session)
             for subjtype, objtype in rschema.rdefs:
-                hook.set_operation(session, 'fti_update_etypes', subjtype,
-                                   UpdateFTIndexOp)
-                hook.set_operation(session, 'fti_update_etypes', objtype,
-                                   UpdateFTIndexOp)
+                op.add_data(subjtype)
+                op.add_data(objtype)
         # update the in-memory schema first
         self.oldvalues = dict( (attr, getattr(rschema, attr)) for attr in self.values)
         self.rschema.__dict__.update(self.values)
@@ -603,8 +602,7 @@ class RDefUpdateOp(MemSchemaOperation):
             syssource.update_rdef_null_allowed(self.session, rdef)
             self.null_allowed_changed = True
         if 'fulltextindexed' in self.values:
-            hook.set_operation(session, 'fti_update_etypes', rdef.subject,
-                               UpdateFTIndexOp)
+            UpdateFTIndexOp.get_instance(session).add_data(rdef.subject)
 
     def revertprecommit_event(self):
         if self.rdef is None:
@@ -1181,19 +1179,20 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
 
 
 
-class UpdateFTIndexOp(hook.SingleLastOperation):
+class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
     """operation to update full text indexation of entity whose schema change
 
-    We wait after the commit to as the schema in memory is only updated after the commit.
+    We wait after the commit to as the schema in memory is only updated after
+    the commit.
     """
 
     def postcommit_event(self):
         session = self.session
         source = session.repo.system_source
-        to_reindex = session.transaction_data.pop('fti_update_etypes', ())
+        schema = session.repo.vreg.schema
+        to_reindex = self.get_data()
         self.info('%i etypes need full text indexed reindexation',
                   len(to_reindex))
-        schema = self.session.repo.vreg.schema
         for etype in to_reindex:
             rset = session.execute('Any X WHERE X is %s' % etype)
             self.info('Reindexing full text index for %i entity of type %s',
@@ -1205,8 +1204,8 @@ class UpdateFTIndexOp(hook.SingleLastOperation):
                     if still_fti or container is not entity:
                         source.fti_unindex_entity(session, container.eid)
                         source.fti_index_entity(session, container)
-        if len(to_reindex):
-            # Transaction have already been committed
+        if to_reindex:
+            # Transaction has already been committed
             session.pool.commit()
 
 

@@ -960,8 +960,7 @@ class ServerMigrationHelper(MigrationHelper):
                     # get some validation error on commit since integrity hooks
                     # may think some required relation is missing... This also ensure
                     # repository caches are properly cleanup
-                    hook.set_operation(session, 'pendingeids', eid,
-                                       hook.CleanupDeletedEidsCacheOp)
+                    CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
                     # and don't forget to remove record from system tables
                     self.repo.system_source.delete_info(
                         session, session.entity_from_eid(eid, rdeftype),

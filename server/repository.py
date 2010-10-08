@@ -1031,8 +1031,7 @@ class Repository(object):
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        hook.set_operation(session, 'neweids', entity.eid,
-                           hook.CleanupNewEidsCacheOp)
+        hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
     def delete_info(self, session, entity, sourceuri, extid):
@@ -1041,8 +1040,7 @@ class Repository(object):
         """
         # mark eid as being deleted in session info and setup cache update
         # operation
-        hook.set_operation(session, 'pendingeids', entity.eid,
-                           hook.CleanupDeletedEidsCacheOp)
+        hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid)
 
     def _delete_info(self, session, entity, sourceuri, extid):

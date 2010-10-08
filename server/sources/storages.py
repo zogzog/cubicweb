@@ -136,7 +136,7 @@ class BytesFileSystemStorage(Storage):
             # bytes storage used to store file's path
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
             file(fpath, 'wb').write(binary.getvalue())
-            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
+            AddFileOp.get_instance(entity._cw).add_data(fpath)
         return binary
 
     def entity_updated(self, entity, attr):
@@ -167,20 +167,19 @@ class BytesFileSystemStorage(Storage):
             file(fpath, 'wb').write(binary.getvalue())
             # Mark the new file as added during the transaction.
             # The file will be removed on rollback
-            hook.set_operation(entity._cw, 'bfss_added', fpath, AddFileOp)
+            AddFileOp.get_instance(entity._cw).add_data(fpath)
         if oldpath != fpath:
             # register the new location for the file.
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
             # Mark the old file as useless so the file will be removed at
             # commit.
-            hook.set_operation(entity._cw, 'bfss_deleted', oldpath,
-                               DeleteFileOp)
+            DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
         return binary
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         fpath = self.current_fs_path(entity, attr)
-        hook.set_operation(entity._cw, 'bfss_deleted', fpath, DeleteFileOp)
+        DeleteFileOp.get_instance(entity._cw).add_data(fpath)
 
     def new_fs_path(self, entity, attr):
         # We try to get some hint about how to name the file using attribute's
@@ -223,17 +222,17 @@ class BytesFileSystemStorage(Storage):
         entity.cw_edited = None
 
 
-class AddFileOp(hook.Operation):
+class AddFileOp(hook.DataOperationMixIn, hook.Operation):
     def rollback_event(self):
-        for filepath in self.session.transaction_data.pop('bfss_added'):
+        for filepath in self.get_data():
             try:
                 unlink(filepath)
             except Exception, ex:
                 self.error('cant remove %s: %s' % (filepath, ex))
 
-class DeleteFileOp(hook.Operation):
+class DeleteFileOp(hook.DataOperationMixIn, hook.Operation):
     def postcommit_event(self):
-        for filepath in self.session.transaction_data.pop('bfss_deleted'):
+        for filepath in self.get_data():
             try:
                 unlink(filepath)
             except Exception, ex:

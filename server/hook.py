@@ -239,9 +239,8 @@ Hooks and operations classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.server.hook.Hook
 .. autoclass:: cubicweb.server.hook.Operation
+.. autoclass:: cubicweb.server.hook.DataOperation
 .. autoclass:: cubicweb.server.hook.LateOperation
-.. autofunction:: cubicweb.server.hook.set_operation
-
 """
 
 from __future__ import with_statement
@@ -726,6 +725,99 @@ set_log_methods(Operation, getLogger('cubicweb.session'))
 def _container_add(container, value):
     {set: set.add, list: list.append}[container.__class__](container, value)
 
+
+class DataOperationMixIn(object):
+    """Mix-in class to ease applying a single operation on a set of data,
+    avoiding to create as many as operation as they are individual modification.
+    The body of the operation must then iterate over the values that have been
+    stored in a single operation instance.
+
+    You should try to use this instead of creating on operation for each
+    `value`, since handling operations becomes costly on massive data import.
+
+    Usage looks like:
+    .. sourcecode:: python
+
+        class MyEntityHook(Hook):
+            __regid__ = 'my.entity.hook'
+            __select__ = Hook.__select__ & is_instance('MyEntity')
+            events = ('after_add_entity',)
+
+            def __call__(self):
+                MyOperation.get_instance(self._cw).add_data(self.entity)
+
+
+        class MyOperation(DataOperation, DataOperationMixIn):
+            def precommit_event(self):
+                for bucket in self.get_data():
+                    process(bucket)
+
+    You can modify the `containercls` class attribute, which defines the
+    container class that should be instantiated to hold payloads. An instance is
+    created on instantiation, and then the :meth:`add_data` method will add the
+    given data to the existing container. Default to a `set`. Give `list` if you
+    want to keep arrival ordering. You can also use another kind of container
+    by redefining :meth:`_build_container` and :meth:`add_data`
+
+    More optional parameters can be given to the `get_instance` operation, that
+    will be given to the operation constructer (though those parameters should
+    not vary accross different calls to this method for a same operation for
+    obvious reason).
+
+    .. Note::
+        For sanity reason `get_data` will reset the operation, so that once
+        the operation has started its treatment, if some hook want to push
+        additional data to this same operation, a new instance will be created
+        (else that data has a great chance to be never treated). This implies:
+
+        * you should **always** call `get_data` when starting treatment
+
+        * you should **never** call `get_data` for another reason.
+    """
+    containercls = set
+
+    @classproperty
+    def data_key(cls):
+        return ('cw.dataops', cls.__name__)
+
+    @classmethod
+    def get_instance(cls, session, **kwargs):
+        # no need to lock: transaction_data already comes from thread's local storage
+        try:
+            return session.transaction_data[cls.data_key]
+        except KeyError:
+            op = session.transaction_data[cls.data_key] = cls(session, **kwargs)
+            return op
+
+    def __init__(self, *args, **kwargs):
+        super(DataOperationMixIn, self).__init__(*args, **kwargs)
+        self._container = self._build_container()
+        self._processed = False
+
+    def __contains__(self, value):
+        return value in self._container
+
+    def _build_container(self):
+        return self.containercls()
+
+    def add_data(self, data):
+        assert not self._processed, """Trying to add data to a closed operation.
+Iterating over operation data closed it and should be reserved to precommit /
+postcommit method of the operation."""
+        _container_add(self._container, data)
+
+    def get_data(self):
+        assert not self._processed, """Trying to get data from a closed operation.
+Iterating over operation data closed it and should be reserved to precommit /
+postcommit method of the operation."""
+        self._processed = True
+        op = self.session.transaction_data.pop(self.data_key)
+        assert op is self, "Bad handling of operation data, found %s instead of %s for key %s" % (
+            op, self, self.data_key)
+        return self._container
+
+
+@deprecated('[3.10] use opcls.get_instance(session, **opkwargs).add_data(value)')
 def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
     """Function to ease applying a single operation on a set of data, avoiding
     to create as many as operation as they are individual modification. You
@@ -766,9 +858,6 @@ def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
        **poping** the key from `transaction_data` is not an option, else you may
        get unexpected data loss in some case of nested hooks.
     """
-
-
-
     try:
         # Search for session.transaction_data[`datakey`] (expected to be a set):
         # if found, simply append `value`
@@ -861,7 +950,7 @@ class RQLPrecommitOperation(Operation):
             execute(*rql)
 
 
-class CleanupNewEidsCacheOp(SingleLastOperation):
+class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     """on rollback of a insert query we have to remove from repository's
     type/source cache eids of entities added in that transaction.
 
@@ -871,28 +960,27 @@ class CleanupNewEidsCacheOp(SingleLastOperation):
     too expensive. Notice that there is no pb when using args to specify eids
     instead of giving them into the rql string.
     """
+    data_key = 'neweids'
 
     def rollback_event(self):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
         """
         try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['neweids'])
+            self.session.repo.clear_caches(self.get_data())
         except KeyError:
             pass
 
-class CleanupDeletedEidsCacheOp(SingleLastOperation):
+class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     """on commit of delete query, we have to remove from repository's
     type/source cache eids of entities deleted in that transaction.
     """
-
+    data_key = 'pendingeids'
     def postcommit_event(self):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
         """
         try:
-            self.session.repo.clear_caches(
-                self.session.transaction_data['pendingeids'])
+            self.session.repo.clear_caches(self.get_data())
         except KeyError:
             pass
