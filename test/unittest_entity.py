@@ -340,6 +340,7 @@ du :eid:`1:*ReST*`'''
         e.cw_attr_cache['content'] = u'<b>yo (zou éà ;)</b>'
         e.cw_attr_cache['content_format'] = 'text/html'
         self.assertEqual(e.printable_value('content', format='text/plain').strip(),
+                         u'**yo (zou éà ;)**')
         if HAS_TAL:
             e.cw_attr_cache['content'] = '<h1 tal:content="self/title">titre</h1>'
             e.cw_attr_cache['content_format'] = 'text/cubicweb-page-template'
@@ -396,11 +397,10 @@ du :eid:`1:*ReST*`'''
                          u'yo !! R&amp;D <div> pas fermé</div>')
         e.cw_attr_cache['content'] = u'été <div> été'
         self.assertEqual(tidy(e.printable_value('content')),
+                         u'été <div> été</div>')
         e.cw_attr_cache['content'] = u'C&apos;est un exemple s&eacute;rieux'
         self.assertEqual(tidy(e.printable_value('content')),
-        e['content'] = u'C&apos;est un exemple s&eacute;rieux'
-        self.assertEqual(tidy(e.printable_value('content')),
-                          u"C'est un exemple sérieux")
+                         u"C'est un exemple sérieux")
         # make sure valid xhtml is left untouched
         e.cw_attr_cache['content'] = u'<div>R&amp;D<br/></div>'
         self.assertEqual(e.printable_value('content'), e.cw_attr_cache['content'])
@@ -441,7 +441,7 @@ du :eid:`1:*ReST*`'''
         e.cw_attr_cache['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
         self.assertEqual(e.cw_adapt_to('IFTIndexable').get_words(),
-                          {'C': [u'du', u'html', 'an', 'html', 'file', u'some', u'data']})
+                          {'C': ['an', 'html', 'file', 'du', 'html', 'some', 'data']})
 
 
     def test_nonregr_relation_cache(self):
