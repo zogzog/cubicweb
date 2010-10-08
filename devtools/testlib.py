@@ -294,6 +294,9 @@ class CubicWebTC(TestCase):
     def set_debug(self, debugmode):
         server.set_debug(debugmode)
 
+    def debugged(self, debugmode):
+        return server.debugged(debugmode)
+
     # default test setup and teardown #########################################
 
     def setUp(self):

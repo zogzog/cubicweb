@@ -64,10 +64,10 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ])
         self.assertListEqual(rbc(e, 'main', 'metadata'),
                               [('last_login_time', 'subject'),
-                               ('modification_date', 'subject'),
-                               ('created_by', 'subject'),
                                ('creation_date', 'subject'),
                                ('cwuri', 'subject'),
+                               ('modification_date', 'subject'),
+                               ('created_by', 'subject'),
                                ('owned_by', 'subject'),
                                ('bookmarked_by', 'object'),
                                ])
@@ -77,8 +77,8 @@ class AutomaticEntityFormTC(CubicWebTC):
         self.assertListEqual([x for x in rbc(e, 'main', 'relations')
                                if x != ('tags', 'object')],
                               [('primary_email', 'subject'),
-                               ('custom_workflow', 'subject'),
                                ('connait', 'subject'),
+                               ('custom_workflow', 'subject'),
                                ('checked_by', 'object'),
                                ])
         self.assertListEqual(rbc(e, 'main', 'inlined'),

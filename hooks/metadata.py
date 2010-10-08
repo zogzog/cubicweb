@@ -23,7 +23,6 @@ from datetime import datetime
 
 from cubicweb.selectors import is_instance
 from cubicweb.server import hook
-from cubicweb.server.utils import eschema_eid
 
 
 class MetaDataHook(hook.Hook):
@@ -75,30 +74,6 @@ class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
             entity = session.entity_from_eid(eid)
             if not entity.created_by:
                 session.add_relation(eid, 'created_by', session.user.eid)
-
-
-class SetIsHook(MetaDataHook):
-    """create a new entity -> set is and is_instance_of relations
-
-    those relations are inserted using sql so they are not hookable.
-    """
-    __regid__ = 'setis'
-    events = ('after_add_entity',)
-
-    def __call__(self):
-        if hasattr(self.entity, '_cw_recreating'):
-            return
-        session = self._cw
-        entity = self.entity
-        try:
-            session.system_sql('INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                           % (entity.eid, eschema_eid(session, entity.e_schema)))
-        except IndexError:
-            # during schema serialization, skip
-            return
-        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-            session.system_sql('INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                               % (entity.eid, eschema_eid(session, eschema)))
 
 
 class SetOwnershipHook(MetaDataHook):

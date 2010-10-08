@@ -64,7 +64,7 @@ def load_mapping_file(mappingfile):
     assert not unknown, 'unknown mapping attribute(s): %s' % unknown
     # relations that are necessarily not crossed
     mapping['dont_cross_relations'] |= set(('owned_by', 'created_by'))
-    for rtype in ('is', 'is_instance_of'):
+    for rtype in ('is', 'is_instance_of', 'cw_source'):
         assert rtype not in mapping['dont_cross_relations'], \
                '%s relation should not be in dont_cross_relations' % rtype
         assert rtype not in mapping['support_relations'], \
@@ -146,17 +146,26 @@ repository (default to 5 minutes).',
     PUBLIC_KEYS = AbstractSource.PUBLIC_KEYS + ('base-url',)
     _conn = None
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+    def __init__(self, repo, source_config, *args, **kwargs):
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         mappingfile = source_config['mapping-file']
         if not mappingfile[0] == '/':
             mappingfile = join(repo.config.apphome, mappingfile)
-        mapping = load_mapping_file(mappingfile)
-        self.support_entities = mapping['support_entities']
-        self.support_relations = mapping['support_relations']
-        self.dont_cross_relations = mapping['dont_cross_relations']
-        self.cross_relations = mapping['cross_relations']
+        try:
+            mapping = load_mapping_file(mappingfile)
+        except IOError:
+            self.disabled = True
+            self.error('cant read mapping file %s, source disabled',
+                       mappingfile)
+            self.support_entities = {}
+            self.support_relations = {}
+            self.dont_cross_relations = set()
+            self.cross_relations = set()
+        else:
+            self.support_entities = mapping['support_entities']
+            self.support_relations = mapping['support_relations']
+            self.dont_cross_relations = mapping['dont_cross_relations']
+            self.cross_relations = mapping['cross_relations']
         baseurl = source_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             source_config['base-url'] += '/'

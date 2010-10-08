@@ -284,8 +284,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
 
     def add_source(self, sourcecls, uri):
-        self.sources.append(sourcecls(self.repo, self.o.schema,
-                                      {'uri': uri}))
+        self.sources.append(sourcecls(self.repo, {'uri': uri}))
         self.repo.sources_by_uri[uri] = self.sources[-1]
         setattr(self, uri, self.sources[-1])
         self.newsources += 1

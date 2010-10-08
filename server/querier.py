@@ -602,9 +602,7 @@ class QuerierHelper(object):
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner
-        # note: don't use repo.sources, may not be built yet, and also "admin"
-        #       isn't an actual source
-        if len([uri for uri in repo.config.sources() if uri != 'admin']) < 2:
+        if len(repo.sources) < 2:
             from cubicweb.server.ssplanner import SSPlanner
             self._planner = SSPlanner(schema, rqlhelper)
         else:
@@ -612,6 +610,14 @@ class QuerierHelper(object):
             self._planner = MSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
+
+    def set_planner(self):
+        if len(self._repo.sources) < 2:
+            from cubicweb.server.ssplanner import SSPlanner
+            self._planner = SSPlanner(self.schema, self._repo.vreg.rqlhelper)
+        else:
+            from cubicweb.server.msplanner import MSPlanner
+            self._planner = MSPlanner(self.schema, self._repo.vreg.rqlhelper)
 
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""

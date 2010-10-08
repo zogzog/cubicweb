@@ -319,7 +319,7 @@ class EntityTC(CubicWebTC):
         e = self.request().create_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
                                          content_format=u'text/rest')
         self.assertEqual(e.printable_value('content'),
-                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/guests">*ReST*</a></p>\n')
+                         '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwsource/system">*ReST*</a></p>\n')
         e.cw_attr_cache['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e.cw_attr_cache['content_format'] = 'text/html'
         self.assertEqual(e.printable_value('content'),
@@ -513,7 +513,7 @@ du :eid:`1:*ReST*`'''
         req = self.request()
         note = req.create_entity('Note', type=u'z')
         metainf = note.cw_metainformation()
-        self.assertEqual(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
+        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
         self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'

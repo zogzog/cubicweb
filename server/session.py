@@ -46,6 +46,7 @@ NO_UNDO_TYPES.add('CWCache')
 # anyway in the later case
 NO_UNDO_TYPES.add('is')
 NO_UNDO_TYPES.add('is_instance_of')
+NO_UNDO_TYPES.add('cw_source')
 # XXX rememberme,forgotpwd,apycot,vcsfile
 
 def _make_description(selected, args, solution):

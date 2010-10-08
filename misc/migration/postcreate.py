@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb post creation script, set user's workflow
+"""cubicweb post creation script, set user's workflow"""
 
-"""
 # insert versions
 create_entity('CWProperty', pkey=u'system.version.cubicweb',
               value=unicode(config.cubicweb_version()))

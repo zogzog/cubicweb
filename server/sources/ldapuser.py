@@ -162,9 +162,8 @@ directory (default to once a day).',
 
     )
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+    def __init__(self, repo, source_config, *args, **kwargs):
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         self.host = source_config['host']
         self.protocol = source_config.get('protocol', 'ldap')
         self.authmode = source_config.get('auth-mode', 'simple')

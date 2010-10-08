@@ -158,6 +158,8 @@ class TestServerConfiguration(ServerConfiguration):
         sources = super(TestServerConfiguration, self).sources()
         if not sources:
             sources = DEFAULT_SOURCES
+        if 'admin' not in sources:
+            sources['admin'] = DEFAULT_SOURCES['admin']
         return sources
 
 

@@ -137,6 +137,11 @@ class FilterBox(component.CtxComponent):
 
 # facets ######################################################################
 
+class CWSourceFacet(RelationFacet):
+    __regid__ = 'cw_source-facet'
+    rtype = 'cw_source'
+    target_attr = 'name'
+
 class CreatedByFacet(RelationFacet):
     __regid__ = 'created_by-facet'
     rtype = 'created_by'

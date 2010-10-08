@@ -257,7 +257,12 @@ class CWETypeAddOp(MemSchemaOperation):
         gmap = group_mapping(session)
         cmap = ss.cstrtype_mapping(session)
         for rtype in (META_RTYPES - VIRTUAL_RTYPES):
-            rschema = schema[rtype]
+            try:
+                rschema = schema[rtype]
+            except:
+                if rtype == 'cw_source':
+                    continue # XXX 3.10 migration
+                raise
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))

@@ -191,7 +191,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.schema.rebuild_infered_relations()
         self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
-                          ['created_by', 'creation_date', 'cwuri',
+                          ['created_by', 'creation_date', 'cw_source', 'cwuri',
                            'description', 'description_format',
                            'eid',
                            'filed_under2', 'has_text',
@@ -336,7 +336,7 @@ class MigrationCommandsTC(CubicWebTC):
         migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
         delete_concerne_rqlexpr = self._rrqlexpr_rset('delete', 'concerne')
         add_concerne_rqlexpr = self._rrqlexpr_rset('add', 'concerne')
-        
+
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEqual(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],

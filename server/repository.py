@@ -39,7 +39,7 @@ from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.compat import any
 from logilab.common import flatten
 
@@ -122,27 +122,15 @@ class Repository(object):
         # initial schema, should be build or replaced latter
         self.schema = schema.CubicWebSchema(config.appid)
         self.vreg.schema = self.schema # until actual schema is loaded...
-        # querier helper, need to be created after sources initialization
-        self.querier = querier.QuerierHelper(self, self.schema)
-        # sources
-        self.sources = []
-        self.sources_by_uri = {}
         # shutdown flag
         self.shutting_down = False
-        # FIXME: store additional sources info in the system database ?
-        # FIXME: sources should be ordered (add_entity priority)
-        for uri, source_config in config.sources().items():
-            if uri == 'admin':
-                # not an actual source
-                continue
-            source = self.get_source(uri, source_config)
-            self.sources_by_uri[uri] = source
-            if config.source_enabled(uri):
-                self.sources.append(source)
-        self.system_source = self.sources_by_uri['system']
-        # ensure system source is the first one
-        self.sources.remove(self.system_source)
-        self.sources.insert(0, self.system_source)
+        # sources (additional sources info in the system database)
+        self.system_source = self.get_source('native', 'system',
+                                             config.sources()['system'])
+        self.sources = [self.system_source]
+        self.sources_by_uri = {'system': self.system_source}
+        # querier helper, need to be created after sources initialization
+        self.querier = querier.QuerierHelper(self, self.schema)
         # cache eid -> type / source
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
@@ -194,6 +182,7 @@ class Repository(object):
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
         if not config.creating:
+            self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
             # call source's init method to complete their initialisation if
@@ -210,7 +199,7 @@ class Repository(object):
         # close initialization pool and reopen fresh ones for proper
         # initialization now that we know cubes
         self._get_pool().close(True)
-        # list of available pools (we can't iterated on Queue instance)
+        # list of available pools (we can't iterate on Queue instance)
         self.pools = []
         for i in xrange(config['connections-pool-size']):
             self.pools.append(pool.ConnectionsPool(self.sources))
@@ -221,9 +210,60 @@ class Repository(object):
 
     # internals ###############################################################
 
-    def get_source(self, uri, source_config):
+    def init_sources_from_database(self):
+        self.sources_by_eid = {}
+        if not 'CWSource' in self.schema:
+            # 3.10 migration
+            return
+        session = self.internal_session()
+        try:
+            # FIXME: sources should be ordered (add_entity priority)
+            for sourceent in session.execute(
+                'Any S, SN, SA, SC WHERE S is CWSource, '
+                'S name SN, S type SA, S config SC').entities():
+                if sourceent.name == 'system':
+                    self.system_source.eid = sourceent.eid
+                    self.sources_by_eid[sourceent.eid] = self.system_source
+                    continue
+                self.add_source(sourceent, add_to_pools=False)
+        finally:
+            session.close()
+
+    def _clear_planning_caches(self):
+        for cache in ('source_defs', 'is_multi_sources_relation',
+                      'can_cross_relation', 'rel_type_sources'):
+            clear_cache(self, cache)
+
+    def add_source(self, sourceent, add_to_pools=True):
+        source = self.get_source(sourceent.type, sourceent.name,
+                                 sourceent.host_config)
+        source.eid = sourceent.eid
+        self.sources_by_eid[sourceent.eid] = source
+        self.sources_by_uri[sourceent.name] = source
+        if self.config.source_enabled(source):
+            self.sources.append(source)
+            self.querier.set_planner()
+            if add_to_pools:
+                for pool in self.pools:
+                    pool.add_source(source)
+        self._clear_planning_caches()
+
+    def remove_source(self, uri):
+        source = self.sources_by_uri.pop(uri)
+        del self.sources_by_eid[source.eid]
+        if self.config.source_enabled(source):
+            self.sources.remove(source)
+            self.querier.set_planner()
+            for pool in self.pools:
+                pool.remove_source(source)
+        self._clear_planning_caches()
+
+    def get_source(self, type, uri, source_config):
+        # set uri and type in source config so it's available through
+        # source_defs()
         source_config['uri'] = uri
-        return sources.get_source(source_config, self.schema, self)
+        source_config['type'] = type
+        return sources.get_source(type, source_config, self)
 
     def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
         if rebuildinfered:
@@ -525,14 +565,10 @@ class Repository(object):
 
         This is a public method, not requiring a session id.
         """
-        sources = self.config.sources().copy()
-        # remove manager information
-        sources.pop('admin', None)
+        sources = {}
         # remove sensitive information
-        for uri, sourcedef in sources.iteritems():
-            sourcedef = sourcedef.copy()
-            self.sources_by_uri[uri].remove_sensitive_information(sourcedef)
-            sources[uri] = sourcedef
+        for uri, source in self.sources_by_uri.iteritems():
+            sources[uri] = source.cfg
         return sources
 
     def properties(self):
@@ -1016,10 +1052,6 @@ class Repository(object):
             source.after_entity_insertion(session, extid, entity)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            else:
-                # minimal meta-data
-                session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
-                                {'x': entity.eid, 'name': entity.__regid__})
             session.commit(reset_pool)
             return eid
         except:

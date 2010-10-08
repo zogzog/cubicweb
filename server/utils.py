@@ -24,8 +24,6 @@ from threading import Timer, Thread
 from getpass import getpass
 from random import choice
 
-from logilab.common.configuration import Configuration
-
 from cubicweb.server import SOURCE_TYPES
 
 try:
@@ -110,12 +108,6 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
     # XXX decode password using stdin encoding then encode it using appl'encoding
     return user, passwd
 
-
-def ask_source_config(sourcetype, inputlevel=0):
-    sconfig = Configuration(options=SOURCE_TYPES[sourcetype].options)
-    sconfig.adapter = sourcetype
-    sconfig.input_config(inputlevel=inputlevel)
-    return sconfig
 
 _MARKER=object()
 def func_name(func):

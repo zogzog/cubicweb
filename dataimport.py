@@ -651,6 +651,11 @@ class NoHookRQLObjectStore(RQLObjectStore):
 
 
 class MetaGenerator(object):
+    META_RELATIONS = (META_RTYPES
+                      - VIRTUAL_RTYPES
+                      - set(('eid', 'cwuri',
+                             'is', 'is_instance_of', 'cw_source')))
+
     def __init__(self, session, baseurl=None):
         self.session = session
         self.source = session.repo.system_source
@@ -669,17 +674,11 @@ class MetaGenerator(object):
         #self.entity_rels = [] XXX not handled (YAGNI?)
         schema = session.vreg.schema
         rschema = schema.rschema
-        for rtype in META_RTYPES:
-            if rtype in ('eid', 'cwuri') or rtype in VIRTUAL_RTYPES:
-                continue
+        for rtype in self.META_RELATIONS:
             if rschema(rtype).final:
                 self.etype_attrs.append(rtype)
             else:
                 self.etype_rels.append(rtype)
-        if not schema._eid_index:
-            # test schema loaded from the fs
-            self.gen_is = self.test_gen_is
-            self.gen_is_instance_of = self.test_gen_is_instanceof
 
     @cached
     def base_etype_dicts(self, etype):
@@ -710,26 +709,7 @@ class MetaGenerator(object):
     def gen_modification_date(self, entity):
         return self.time
 
-    def gen_is(self, entity):
-        return entity.e_schema.eid
-    def gen_is_instance_of(self, entity):
-        eids = []
-        for etype in entity.e_schema.ancestors() + [entity.e_schema]:
-            eids.append(entity.e_schema.eid)
-        return eids
-
     def gen_created_by(self, entity):
         return self.session.user.eid
     def gen_owned_by(self, entity):
         return self.session.user.eid
-
-    # implementations of gen_is / gen_is_instance_of to use during test where
-    # schema has been loaded from the fs (hence entity type schema eids are not
-    # known)
-    def test_gen_is(self, entity):
-        return eschema_eid(self.session, entity.e_schema)
-    def test_gen_is_instanceof(self, entity):
-        eids = []
-        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-            eids.append(eschema_eid(self.session, eschema))
-        return eids

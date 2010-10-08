@@ -20,8 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            String, Datetime, Password)
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+                            SubjectRelation, String, Datetime, Password)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -62,7 +62,7 @@ class EmailAddress(EntityType):
         }
 
     alias   = String(fulltextindexed=True, maxsize=56)
-    address = String(required=True, fulltextindexed=True,
+    address = String(required=True,  fulltextindexed=True,
                      indexed=True, unique=True, maxsize=128)
     prefered_form = SubjectRelation('EmailAddress', cardinality='?*',
                                     description=_('when multiple addresses are equivalent \
@@ -198,6 +198,7 @@ class ExternalUri(EntityType):
     uri = String(required=True, unique=True, maxsize=256,
                  description=_('the URI of the object'))
 
+
 class same_as(RelationType):
     """generic relation to specify that an external entity represent the same
     object as a local one:
@@ -215,6 +216,7 @@ class same_as(RelationType):
     # NOTE: the 'object = ExternalUri' declaration will still be mandatory
     #       in the cube's schema.
     object = 'ExternalUri'
+
 
 class CWCache(EntityType):
     """a simple cache entity characterized by a name and
@@ -234,12 +236,74 @@ class CWCache(EntityType):
         'delete': ('managers',),
         }
 
-    name = String(required=True, unique=True, indexed=True,  maxsize=128,
+    name = String(required=True, unique=True, maxsize=128,
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')
 
 
-# "abtract" relation types, not used in cubicweb itself
+class CWSource(EntityType):
+    name = String(required=True, unique=True, maxsize=128,
+                  description=_('name of the source'))
+    type = String(required=True, maxsize=20, description=_('type of the source'))
+    config = String(description=_('source\'s configuration. One key=value per '
+                                  'line, authorized keys depending on the '
+                                  'source\'s type'),
+                    __permissions__={
+                        'read':   ('managers',),
+                        'update': ('managers',),
+                        })
+
+
+class CWSourceHostConfig(EntityType):
+    __permissions__ = {
+        'read':   ('managers',),
+        'add':    ('managers',),
+        'update': ('managers',),
+        'delete': ('managers',),
+        }
+    match_host = String(required=True, unique=True, maxsize=128,
+                        description=_('regexp matching host(s) to which this config applies'))
+    config = String(required=True,
+                    description=_('Source\'s configuration for a particular host. '
+                                  'One key=value per line, authorized keys '
+                                  'depending on the source\'s type, overriding '
+                                  'values defined on the source.'),
+                    __permissions__={
+                        'read':   ('managers',),
+                        'update': ('managers',),
+                        })
+
+
+class cw_host_config_of(RelationDefinition):
+    subject = 'CWSourceHostConfig'
+    object = 'CWSource'
+    cardinality = '1*'
+    composite = 'object'
+    inlined = True
+
+class cw_source(RelationDefinition):
+    __permissions__ = {
+        'read':   ('managers', 'users', 'guests'),
+        'add':    (),
+        'delete': (),
+        }
+    subject = '*'
+    object = 'CWSource'
+    cardinality = '1*'
+
+class cw_support(RelationDefinition):
+    subject = 'CWSource'
+    object = ('CWEType', 'CWRType')
+
+class cw_dont_cross(RelationDefinition):
+    subject = 'CWSource'
+    object = 'CWRType'
+
+class cw_may_cross(RelationDefinition):
+    subject = 'CWSource'
+    object = 'CWRType'
+
+# "abtract" relation types, no definition in cubicweb itself ###################
 
 class identical_to(RelationType):
     """identical to"""

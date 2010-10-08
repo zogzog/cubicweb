@@ -63,7 +63,7 @@ from cubicweb.server.session import hooks_control
 from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
-    from cubicweb.server.utils import manager_userpasswd, ask_source_config
+    from cubicweb.server.utils import manager_userpasswd
     from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
@@ -642,13 +642,6 @@ class ServerMigrationHelper(MigrationHelper):
         for cube in newcubes:
             self.cmd_set_property('system.version.'+cube,
                                   self.config.cube_version(cube))
-            if cube in SOURCE_TYPES:
-                # don't use config.sources() in case some sources have been
-                # disabled for migration
-                sourcescfg = self.config.read_sources_file()
-                sourcescfg[cube] = ask_source_config(cube)
-                self.config.write_sources_file(sourcescfg)
-                clear_cache(self.config, 'read_sources_file')
             # ensure added cube is in config cubes
             # XXX worth restoring on error?
             if not cube in self.config._cubes:

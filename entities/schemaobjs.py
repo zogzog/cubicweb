@@ -15,12 +15,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""schema definition related entities
+"""schema definition related entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
+import re
+from socket import gethostname
+
 from logilab.common.decorators import cached
+from logilab.common.textutils import text_to_dict
 
 from yams.schema import role_name
 
@@ -28,6 +31,41 @@ from cubicweb import ValidationError
 from cubicweb.schema import ERQLExpression, RRQLExpression
 
 from cubicweb.entities import AnyEntity, fetch_config
+
+
+
+class CWSource(AnyEntity):
+    __regid__ = 'CWSource'
+    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
+
+    @property
+    def dictconfig(self):
+        return self.config and text_to_dict(self.config) or {}
+
+    @property
+    def host_config(self):
+        dictconfig = self.dictconfig
+        host = gethostname()
+        for hostcfg in self.host_configs:
+            if hostcfg.match(hostname):
+                dictconfig.update(hostcfg.dictconfig)
+        return dictconfig
+
+    @property
+    def host_configs(self):
+        return self.reverse_cw_host_config_of
+
+
+class CWSourceHostConfig(AnyEntity):
+    __regid__ = 'CWSourceHostConfig'
+    fetch_attrs, fetch_order = fetch_config(['match_host', 'config'])
+
+    @property
+    def dictconfig(self):
+        return self.config and text_to_dict(self.config) or {}
+
+    def match(self, hostname):
+        return re.match(self.match_host, hostname)
 
 
 class CWEType(AnyEntity):

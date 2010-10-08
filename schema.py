@@ -49,7 +49,7 @@ VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 # set of meta-relations available for every entity types
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
-    'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
+    'eid', 'creation_date', 'cw_source', 'modification_date', 'has_text', 'cwuri',
     ))
 WORKFLOW_RTYPES = set(('custom_workflow', 'in_state', 'wf_info_for'))
 WORKFLOW_DEF_RTYPES = set(('workflow_of', 'state_of', 'transition_of',

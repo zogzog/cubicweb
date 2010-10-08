@@ -173,6 +173,7 @@ class SchemaReaderClassTest(TestCase):
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType',
+                             'CWSource', 'CWSourceHostConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
@@ -186,10 +187,12 @@ class SchemaReaderClassTest(TestCase):
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
-                              'composite', 'condition', 'connait',
+                              'composite', 'condition', 'config', 'connait',
                               'constrained_by', 'constraint_of',
                               'content', 'content_format',
-                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
+                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
+                              'cwuri', 'cw_source', 'cw_host_config_of',
+                              'cw_support', 'cw_dont_cross', 'cw_may_cross',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
@@ -205,7 +208,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'label', 'last_login_time', 'login',
 
-                              'mainvars', 'modification_date',
+                              'mainvars', 'match_host', 'modification_date',
 
                               'name', 'nom',
 
@@ -225,11 +228,12 @@ class SchemaReaderClassTest(TestCase):
 
                               'wf_info_for', 'wikiid', 'workflow_of']
 
-        self.assertListEqual(relations, expected_relations)
+        self.assertListEqual(relations, sorted(expected_relations))
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
-        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow', 'cwuri', 'eid',
+        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow',
+                                    'cw_source', 'cwuri', 'eid',
                                      'evaluee', 'firstname', 'has_text', 'identity',
                                      'in_group', 'in_state', 'is',
                                      'is_instance_of', 'last_login_time',

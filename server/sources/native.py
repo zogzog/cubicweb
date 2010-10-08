@@ -263,13 +263,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           }),
     )
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
+    def __init__(self, repo, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
         self.authentifiers = [LoginPasswordAuthentifier(self)]
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         # sql generator
-        self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
+        self._rql_sqlgen = self.sqlgen_class(self.schema, self.dbhelper,
                                              ATTR_MAP.copy())
         # full text index helper
         self.do_fti = not repo.config['delay-full-text-indexation']
@@ -880,6 +879,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
+        # insert core relations: is, is_instance_of and cw_source
+        if not hasattr(entity, '_cw_recreating'):
+            try:
+                self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                            % (entity.eid, eschema_eid(session, entity.e_schema)))
+            except IndexError:
+                # during schema serialization, skip
+                pass
+            else:
+                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                    self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                               % (entity.eid, eschema_eid(session, eschema)))
+            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+                self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
+                            'VALUES (%s,%s)' % (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
@@ -926,7 +940,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         for etype in etypes:
             if not etype in self.multisources_etypes:
-                self.critical('%s not listed as a multi-sources entity types. '
+                self.error('%s not listed as a multi-sources entity types. '
                               'Modify your configuration' % etype)
                 self.multisources_etypes.add(etype)
         modsql = _modified_sql('entities', etypes)
@@ -1157,13 +1171,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         action.changes['cw_eid'] = eid
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(session, sql, action.changes)
-        # add explicitly is / is_instance_of whose deletion is not recorded for
-        # consistency with addition (done by sql in hooks)
-        self.doexec(session, 'INSERT INTO is_relation(eid_from, eid_to) '
-                    'VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
-        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-            self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,'
-                        'eid_to) VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
         # remove record from deleted_entities if entity's type is multi-sources
@@ -1226,6 +1233,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # unvisible as transaction action
         self.doexec(session, 'DELETE FROM is_relation WHERE eid_from=%s' % eid)
         self.doexec(session, 'DELETE FROM is_instance_of_relation WHERE eid_from=%s' % eid)
+        self.doexec(session, 'DELETE FROM cw_source_relation WHERE eid_from=%s' % self.eid)
         # XXX check removal of inlined relation?
         # delete the entity
         attrs = {'cw_eid': eid}

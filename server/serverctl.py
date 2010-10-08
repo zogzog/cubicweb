@@ -32,8 +32,9 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
-                                          SourceConfiguration)
+from cubicweb.server.serverconfig import (
+    USER_OPTIONS, ServerConfiguration, SourceConfiguration,
+    ask_source_config, generate_source_config)
 
 # utility functions ###########################################################
 
@@ -161,7 +162,6 @@ class RepositoryCreateHandler(CommandHandler):
         """create an instance by copying files from the given cube and by asking
         information necessary to build required configuration files
         """
-        from cubicweb.server.utils import ask_source_config
         config = self.config
         print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
@@ -176,37 +176,9 @@ class RepositoryCreateHandler(CommandHandler):
         # defs (in native.py)
         sconfig = SourceConfiguration(config,
                                       options=SOURCE_TYPES['native'].options)
-        sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg = {'system': sconfig}
-        for cube in cubes:
-            # if a source is named as the cube containing it, we need the
-            # source to use the cube, so add it.
-            if cube in SOURCE_TYPES:
-                sourcescfg[cube] = ask_source_config(cube, inputlevel)
         print
-        while ASK.confirm('Enter another source ?', default_is_yes=False):
-            available = sorted(stype for stype in SOURCE_TYPES
-                               if not stype in cubes)
-            while True:
-                sourcetype = raw_input('source type (%s): ' % ', '.join(available))
-                if sourcetype in available:
-                    break
-                print '-> unknown source type, use one of the available types.'
-            while True:
-                sourceuri = raw_input('source identifier (a unique name used to tell sources apart): ').strip()
-                if sourceuri != 'admin' and sourceuri not in sourcescfg:
-                    break
-                print '-> uri already used, choose another one.'
-            sourcescfg[sourceuri] = ask_source_config(sourcetype, inputlevel)
-            sourcemodule = SOURCE_TYPES[sourcetype].module
-            if not sourcemodule.startswith('cubicweb.'):
-                # module names look like cubes.mycube.themodule
-                sourcecube = SOURCE_TYPES[sourcetype].module.split('.', 2)[1]
-                # if the source adapter is coming from an external component,
-                # ensure it's specified in used cubes
-                if not sourcecube in cubes:
-                    cubes.append(sourcecube)
         sconfig = Configuration(options=USER_OPTIONS)
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg['admin'] = sconfig
@@ -294,7 +266,7 @@ class CreateInstanceDBCommand(Command):
 
     You will be prompted for a login / password to use to connect to
     the system database.  The given user should have almost all rights
-    on the database (ie a super user on the dbms allowed to create
+    on the database (ie a super user on the DBMS allowed to create
     database, users, languages...).
 
     <instance>
@@ -383,9 +355,8 @@ class CreateInstanceDBCommand(Command):
 class InitInstanceCommand(Command):
     """Initialize the system database of an instance (run after 'db-create').
 
-    You will be prompted for a login / password to use to connect to
-    the system database.  The given user should have the create tables,
-    and grant permissions.
+    Notice this will be done using user specified in the sources files, so this
+    user should have the create tables grant permissions on the database.
 
     <instance>
       the identifier of the instance to initialize.
@@ -422,6 +393,63 @@ tables, indexes... (no by default)'}),
                 'the %s file. Resolve this first (error: %s).'
                 % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
+        while ASK.confirm('Enter another source ?', default_is_yes=False):
+            CWCTL.run(['add-source', config.appid])
+
+
+class AddSourceCommand(Command):
+    """Add a data source to an instance.
+
+    <instance>
+      the identifier of the instance to initialize.
+    """
+    name = 'add-source'
+    arguments = '<instance>'
+    min_args = max_args = 1
+    options = ()
+
+    def run(self, args):
+        appid = args[0]
+        config = ServerConfiguration.config_for(appid)
+        config.quick_start = True
+        repo, cnx = repo_cnx(config)
+        req = cnx.request()
+        used = set(n for n, in req.execute('Any SN WHERE S is CWSource, S name SN'))
+        cubes = repo.get_cubes()
+        while True:
+            type = raw_input('source type (%s): '
+                                % ', '.join(sorted(SOURCE_TYPES)))
+            if type not in SOURCE_TYPES:
+                print '-> unknown source type, use one of the available types.'
+                continue
+            sourcemodule = SOURCE_TYPES[type].module
+            if not sourcemodule.startswith('cubicweb.'):
+                # module names look like cubes.mycube.themodule
+                sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
+                # if the source adapter is coming from an external component,
+                # ensure it's specified in used cubes
+                if not sourcecube in cubes:
+                    print ('-> this source type require the %s cube which is '
+                           'not used by the instance.')
+                    continue
+            break
+        while True:
+            sourceuri = raw_input('source identifier (a unique name used to '
+                                  'tell sources apart): ').strip()
+            if not sourceuri:
+                print '-> mandatory.'
+            else:
+                sourceuri = unicode(sourceuri, sys.stdin.encoding)
+                if sourceuri in used:
+                    print '-> uri already used, choose another one.'
+                else:
+                    break
+        # XXX configurable inputlevel
+        sconfig = ask_source_config(config, type, inputlevel=0)
+        cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
+        req.create_entity('CWSource', name=sourceuri,
+                          type=unicode(type), config=cfgstr)
+        cnx.commit()
 
 
 class GrantUserOnInstanceCommand(Command):
@@ -900,7 +928,7 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
-                 CheckRepositoryCommand, RebuildFTICommand,
+                 AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
                  SynchronizeInstanceSchemaCommand,
                  CheckMappingCommand,
                  ):

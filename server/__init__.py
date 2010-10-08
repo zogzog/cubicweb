@@ -19,8 +19,8 @@
 (repository) side
 
 This module contains functions to initialize a new repository.
-
 """
+
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
@@ -60,7 +60,6 @@ def set_debug(debugmode):
             DEBUG |= globals()[mode]
     else:
         DEBUG |= debugmode
-
 
 class debugged(object):
     """repository debugging context manager / decorator
@@ -132,7 +131,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config.consider_user_state = False
     config.set_language = False
     # only enable the system source at initialization time
-    config.enabled_sources = ('system',)
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
     sourcescfg = config.sources()
@@ -162,6 +160,12 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     sqlcnx.commit()
     sqlcnx.close()
     session = repo.internal_session()
+    # insert entity representing the system source
+    ssource = session.create_entity('CWSource', type=u'native', name=u'system')
+    repo.system_source.eid = ssource.eid
+    session.execute('SET X cw_source X WHERE X eid %(x)s', {'x': ssource.eid})
+    # insert base groups and default admin
+    print '-> inserting default user and default groups.'
     try:
         login = unicode(sourcescfg['admin']['login'])
         pwd = sourcescfg['admin']['password']
@@ -171,17 +175,18 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
             login, pwd = manager_userpasswd(msg=msg, confirm=True)
         else:
             login, pwd = unicode(source['db-user']), source['db-password']
-    print '-> inserting default user and default groups.'
     # sort for eid predicatability as expected in some server tests
     for group in sorted(BASE_GROUPS):
-        session.execute('INSERT CWGroup X: X name %(name)s',
-                        {'name': unicode(group)})
-    create_user(session, login, pwd, 'managers')
+        session.create_entity('CWGroup', name=unicode(group))
+    admin = create_user(session, login, pwd, 'managers')
+    session.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
+                    {'u': admin.eid})
     session.commit()
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_cnx(config, login, password=pwd)
+    repo.system_source.eid = ssource.eid # redo this manually
     # trigger vreg initialisation of entity classes
     config.cubicweb_appobject_path = set(('entities',))
     config.cube_appobject_path = set(('entities',))
@@ -197,13 +202,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     initialize_schema(config, schema, handler)
     # yoo !
     cnx.commit()
-    config.enabled_sources = None
-    for uri, source_config in config.sources().items():
-        if uri in ('admin', 'system'):
-            # not an actual source or init_creating already called
-            continue
-        source = repo.get_source(uri, source_config)
-        source.init_creating()
+    repo.system_source.init_creating()
     cnx.commit()
     cnx.close()
     session.close()

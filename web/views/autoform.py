@@ -901,13 +901,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 _AFS.tag_attribute(('*', 'eid'), 'main', 'attributes')
 _AFS.tag_attribute(('*', 'eid'), 'muledit', 'attributes')
 _AFS.tag_attribute(('*', 'description'), 'main', 'attributes')
-_AFS.tag_attribute(('*', 'creation_date'), 'main', 'metadata')
-_AFS.tag_attribute(('*', 'modification_date'), 'main', 'metadata')
-_AFS.tag_attribute(('*', 'cwuri'), 'main', 'metadata')
 _AFS.tag_attribute(('*', 'has_text'), 'main', 'hidden')
 _AFS.tag_subject_of(('*', 'in_state', '*'), 'main', 'hidden')
-_AFS.tag_subject_of(('*', 'owned_by', '*'), 'main', 'metadata')
-_AFS.tag_subject_of(('*', 'created_by', '*'), 'main', 'metadata')
+for rtype in ('creation_date', 'modification_date', 'cwuri',
+              'owned_by', 'created_by', 'cw_source'):
+    _AFS.tag_subject_of(('*', rtype, '*'), 'main', 'metadata')
+
 _AFS.tag_subject_of(('*', 'require_permission', '*'), 'main', 'hidden')
 _AFS.tag_subject_of(('*', 'by_transition', '*'), 'main', 'attributes')
 _AFS.tag_subject_of(('*', 'by_transition', '*'), 'muledit', 'attributes')

@@ -224,7 +224,7 @@ class CookieSessionHandler(object):
     def _update_last_login_time(self, req):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
-        if req.user.cw_metainformation()['source']['adapter'] == 'ldapuser':
+        if req.user.cw_metainformation()['source']['type'] == 'ldapuser':
             return
         try:
             req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
