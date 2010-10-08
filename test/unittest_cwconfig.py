@@ -98,8 +98,8 @@ class CubicWebConfigurationTC(TestCase):
     def test_expand_cubes(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.config.adjust_sys_path()
-        self.assertEqual(self.config.expand_cubes(('email', 'blog')),
-                          ['email', 'blog', 'file'])
+        self.assertEqual(self.config.expand_cubes(('email', 'comment')),
+                          ['email', 'comment', 'file'])
 
     def test_vregistry_path(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
