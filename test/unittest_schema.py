@@ -167,8 +167,7 @@ class SchemaReaderClassTest(TestCase):
         schema = loader.load(config)
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEqual(schema.name, 'data')
-        entities = [str(e) for e in schema.entities()]
-        entities.sort()
+        entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['BaseTransition', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
@@ -182,8 +181,7 @@ class SchemaReaderClassTest(TestCase):
                              'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(entities, sorted(expected_entities))
-        relations = [str(r) for r in schema.relations()]
-        relations.sort()
+        relations = sorted([str(r) for r in schema.relations()])
         expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
                               'bookmarked_by', 'by_transition',
 
@@ -308,7 +306,7 @@ class RQLExpressionTC(TestCase):
     def test_comparison(self):
         self.assertEqual(ERQLExpression('X is CWUser', 'X', 0),
                           ERQLExpression('X is CWUser', 'X', 0))
-        self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0),
+        self.assertNotEqual(ERQLExpression('X is CWUser', 'X', 0),
                              ERQLExpression('X is CWGroup', 'X', 0))
 
 class GuessRrqlExprMainVarsTC(TestCase):

@@ -317,7 +317,7 @@ class EntityTC(CubicWebTC):
 
     def test_printable_value_string(self):
         e = self.request().create_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
-                            content_format=u'text/rest')
+                                         content_format=u'text/rest')
         self.assertEqual(e.printable_value('content'),
                           '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/guests">*ReST*</a></p>\n')
         e.cw_attr_cache['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
@@ -393,7 +393,7 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(tidy(e.printable_value('content')), u'R&amp;D;')
         e.cw_attr_cache['content'] = u'yo !! R&amp;D <div> pas fermé'
         self.assertEqual(tidy(e.printable_value('content')),
-                          u'yo !! R&amp;D <div> pas fermé</div>')
+                         u'yo !! R&amp;D <div> pas fermé</div>')
         e.cw_attr_cache['content'] = u'été <div> été'
         self.assertEqual(tidy(e.printable_value('content')),
         e.cw_attr_cache['content'] = u'C&apos;est un exemple s&eacute;rieux'
@@ -497,7 +497,7 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(card3.rest_path(), 'card/eid/%d' % card3.eid)
         card4 = req.create_entity('Card', title=u'pod', wikiid=u'zo?bi')
         self.assertEqual(card4.rest_path(), 'card/eid/%d' % card4.eid)
-        
+
 
     def test_set_attributes(self):
         req = self.request()

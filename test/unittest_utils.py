@@ -33,8 +33,8 @@ except ImportError:
 
 class MakeUidTC(TestCase):
     def test_1(self):
-        self.assertNotEquals(make_uid('xyz'), make_uid('abcd'))
-        self.assertNotEquals(make_uid('xyz'), make_uid('xyz'))
+        self.assertNotEqual(make_uid('xyz'), make_uid('abcd'))
+        self.assertNotEqual(make_uid('xyz'), make_uid('xyz'))
 
     def test_2(self):
         d = set()

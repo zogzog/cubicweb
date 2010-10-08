@@ -281,7 +281,7 @@ class ResultSetTC(CubicWebTC):
         e = rset.get_entity(0, 0)
         self.assertEqual(e.cw_attr_cache['title'], 'zou')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
-                          [('created_by_subject', [5])])
+                          [('created_by_subject', [self.user().eid])])
         # first level of recursion
         u = e.created_by[0]
         self.assertEqual(u.cw_attr_cache['login'], 'admin')
