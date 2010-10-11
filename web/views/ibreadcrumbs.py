@@ -81,7 +81,7 @@ class IBreadCrumbsAdapter(EntityAdapter):
             if recurs:
                 _recurs = recurs
             else:
-                if reculs is False:
+                if recurs is False:
                     warn('[3.10] recurs argument should be a set() or None',
                          DeprecationWarning, stacklevel=2)
                 _recurs = set()
