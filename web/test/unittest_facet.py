@@ -119,3 +119,8 @@ class BaseFacetTC(CubicWebTC):
         # is not in real life)
         self.assertEqual(f.rqlst.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X login 'admin'")
+
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
