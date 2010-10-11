@@ -53,28 +53,23 @@ function ajaxBoxShowSelector(boxid, eid,
         deferred.addCallback(function (unrelated) {
             var input = INPUT({'type': 'text', 'id': inputid, 'size': 20});
             holder.append(input).show();
-            $input = $(input);
-            $input.keypress(function (event) {
-                if (event.keyCode == KEYS.KEY_ENTER) {
-                    // XXX not very user friendly: we should test that the suggestions
-                    //     aren't visible anymore
+            var $input = $(input);
+            $input.keypress(function (evt) {
+                if (evt.keyCode == $.ui.keyCode.ENTER) {
                     ajaxBoxValidateSelectorInput(boxid, eid, separator, addfname, msg);
                 }
             });
+            $input.cwautocomplete(unrelated, {multiple: true});
             var buttons = DIV({'class' : "sgformbuttons"},
-                              A({'href' : "javascript: noop();",
-                                 'onclick' : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
+                              A({href : "javascript: noop();",
+                                 onclick : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
                                                                   boxid, eid, separator, addfname, msg)},
-                                  oklabel),
+                                oklabel),
                               ' / ',
                               A({'href' : "javascript: noop();",
                                  'onclick' : '$("#' + holderid + '").empty()'},
                                   cancellabel));
             holder.append(buttons);
-            $input.autocomplete(unrelated, {
-                multiple: separator,
-                max: 15
-            });
             $input.focus();
         });
     }

@@ -4,7 +4,13 @@
 .. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
-.. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+.. _guide: http://www.learningjquery.com/2010/06/autocomplete-migration-guide
+
+  --  3.10.0
+  * upgraded jQuery and jQuery UI respectively to version 1.4.2 and 1.8. Removed
+    jquery.autocomplete.js since jQuery UI provides its own autocomplete
+    plugin. It's not backward compatible but required changes should be minimal
+    and this guide_ describes how to migrate from one version to another.
 
 2010-06-11  --  3.8.4
    * support full text prefix search for instances using postgres > 8.4 as database: try it

@@ -56,67 +56,222 @@ function getJSON(url, data, callback) {
     return jQuery.get(url, data, callback, 'json');
 }
 
+
+(function ($) {
+    var defaultSettings = {
+        initialvalue: '',
+        multiple: false,
+        mustMatch: false,
+        delay: 50,
+        limit: 50
+    };
+    function split(val) { return val.split( /\s*,\s*/ ); }
+    function extractLast(term) { return split(term).pop(); }
+    function allButLast(val) {
+        var terms = split(val);
+        terms.pop();
+        return terms;
+    }
+
+    var methods = {
+        __init__: function(suggestions, options) {
+            return this.each(function() {
+                // here, `this` refers to the DOM element (e.g. input) being wrapped
+                // by cwautomplete plugin
+                var instanceData = $(this).data('cwautocomplete');
+                if (instanceData) {
+                    // already initialized
+                    return;
+                }
+                var settings = $.extend({}, defaultSettings, options);
+                instanceData =  {
+                    initialvalue: settings.initialvalue,
+                    userInput: this,
+                    hiddenInput: null
+                };
+                var hiHandlers = methods.hiddenInputHandlers;
+                $(this).data('cwautocomplete', instanceData);
+                $.ui.autocomplete.prototype._search = methods.search;
+                if (settings.multiple) {
+                    $.ui.autocomplete.filter = methods.multiple.makeFilter(this);
+                    $(this).bind({
+                        autocompleteselect: methods.multiple.select,
+                        autocompletefocus: methods.multiple.focus,
+                        keydown: methods.multiple.keydown
+                        });
+                }
+                if ($.isArray(suggestions)) { // precomputed list of suggestions
+                    settings.source = hiHandlers.checkSuggestionsDataFormat(instanceData, suggestions);
+                } else { // url to call each time something is typed
+                    settings.source = function(request, response) {
+                        var d = loadRemote(suggestions, {q: request.term, limit: settings.limit}, 'POST');
+                        d.addCallback(function (suggestions) {
+                            suggestions = hiHandlers.checkSuggestionsDataFormat(instanceData, suggestions);
+                            response(suggestions);
+                        });
+                    };
+                }
+                $(this).autocomplete(settings);
+                if (settings.mustMach) {
+                    $(this).keypress(methods.ensureExactMatch);
+                }
+            });
+        },
+
+        multiple: {
+            focus: function() {
+                // prevent value inserted on focus
+                return false;
+            },
+            select: function(event, ui) {
+                var terms = allButLast(this.value);
+                // add the selected item
+                terms.push(ui.item.value);
+                // add placeholder to get the comma-and-space at the end
+                terms.push("");
+                this.value = terms.join( ", " );
+                return false;
+            },
+            keydown: function(evt) {
+                if ($(this).data('autocomplete').menu.active && evt.keyCode == $.ui.keyCode.TAB) {
+                    evt.preventDefault();
+                }
+            },
+            makeFilter: function(userInput) {
+                return function(array, term) {
+                    // remove already entered terms from suggestion list
+                    array = cw.utils.difference(array, allButLast(userInput.value));
+                    var matcher = new RegExp( $.ui.autocomplete.escapeRegex(term), "i" );
+                    return $.grep( array, function(value) {
+                        return matcher.test( value.label || value.value || value );
+                    });
+                };
+            }
+        },
+
+        search: function(value) {
+            this.element.addClass("ui-autocomplete-loading");
+            if (this.options.multiple) {
+                value = extractLast(value);
+            }
+            this.source({term: value}, this.response);
+        },
+        ensureExactMatch: function(evt) {
+            var instanceData = $(this).data('cwautocomplete');
+            if (evt.keyCode == $.ui.keyCode.ENTER || evt.keyCode == $.ui.keyCode.TAB) {
+                var validChoices = $.map($('ul.ui-autocomplete li'),
+                                         function(li) {return $(li).text();});
+                if ($.inArray($(instanceData.userInput).val(), validChoices) == -1) {
+                    $(instanceData.userInput).val('');
+                    $(instanceData.hiddenInput).val(instanceData.initialvalue || '');
+                }
+            }
+        },
+
+        hiddenInputHandlers: {
+            /**
+             * `hiddenInputHandlers` defines all methods specific to handle the
+             * hidden input created along the standard text input.
+             * An hiddenInput is necessary when displayed suggestions are
+             * different from actual values to submit.
+             * Imagine an autocompletion widget to choose among a list of CWusers.
+             * Suggestions would be the list of logins, but actual values would
+             * be the corresponding eids.
+             * To handle such cases, suggestions list should be a list of JS objects
+             * with two `label` and `value` properties.
+             **/
+            suggestionSelected: function(evt, ui) {
+                var instanceData = $(this).data('cwautocomplete');
+                instanceData.hiddenInput.value = ui.item.value;
+                instanceData.value = ui.item.label;
+                return false; // stop propagation
+            },
+
+            suggestionFocusChanged: function(evt, ui) {
+                var instanceData = $(this).data('cwautocomplete');
+                instanceData.userInput.value = ui.item.label;
+                return false; // stop propagation
+            },
+
+            needsHiddenInput: function(suggestions) {
+                return suggestions[0].label !== undefined;
+            },
+
+            initializeHiddenInput: function(instanceData) {
+                var userInput = instanceData.userInput;
+                var hiddenInput = INPUT({
+                    type: "hidden",
+                    name: userInput.name,
+                    value: userInput.value
+                });
+                $(userInput).removeAttr('name').after(hiddenInput);
+                instanceData.hiddenInput = hiddenInput;
+                $(userInput).bind({
+                    autocompleteselect: methods.hiddenInputHandlers.suggestionSelected,
+                    autocompletefocus: methods.hiddenInputHandlers.suggestionFocusChanged
+                });
+            },
+
+            /*
+             * internal convenience function: old jquery plugin accepted to be fed
+             * with a list of couples (value, label). The new (jquery-ui) autocomplete
+             * plugin expects a list of objects with "value" and "label" properties.
+             *
+             * This function converts the old format to the new one.
+             */
+            checkSuggestionsDataFormat: function(instanceData, suggestions) {
+                // check for old (value, label) format
+                if ($.isArray(suggestions) && suggestions.length &&
+                    $.isArray(suggestions[0]) && suggestions[0].length == 2) {
+                    cw.log('[3.10] autocomplete init func should return {label,value} dicts instead of lists');
+                    suggestions = $.map(suggestions, function(sugg) {
+                        return {value: sugg[0], label: sugg[1]};
+                    });
+                }
+                var hiHandlers = methods.hiddenInputHandlers;
+                if (suggestions.length && hiHandlers.needsHiddenInput(suggestions)
+                    && !instanceData.hiddenInput) {
+                    hiHandlers.initializeHiddenInput(instanceData);
+                    hiHandlers.fixUserInputInitialValue(instanceData, suggestions);
+                }
+                // otherwise, assume data shape is correct
+                return suggestions;
+            },
+
+            fixUserInputInitialValue: function(instanceData, suggestions) {
+                // called when the data is loaded to reset the correct displayed
+                // value in the visible input field (typically replacing an eid
+                // by a displayable value)
+                var curvalue = instanceData.userInput.value;
+                if (!curvalue) {
+                    return;
+                }
+                for (var i=0, length=suggestions.length; i < length; i++) {
+                    var sugg = suggestions[i];
+                    if (sugg.value == curvalue) {
+                        instanceData.userInput.value = sugg.label;
+                        return;
+                    }
+                }
+            }
+        }
+    };
+
+    $.fn.cwautocomplete = function(data, options) {
+        return methods.__init__.apply(this, [data, options]);
+    };
+})(jQuery);
+
+
 Widgets.SuggestField = defclass('SuggestField', null, {
     __init__: function(node, options) {
-        var multi = node.getAttribute('cubicweb:multi') || "no";
         options = options || {};
+        var multi = node.getAttribute('cubicweb:multi');
         options.multiple = (multi == "yes") ? true: false;
-        var dataurl = node.getAttribute('cubicweb:dataurl');
-        var method = postJSON;
-        if (options.method == 'get') {
-            method = function(url, data, callback) {
-                // We can't rely on jQuery.getJSON because the server
-                // might set the Content-Type's response header to 'text/plain'
-                jQuery.get(url, data, function(response) {
-                    callback(cw.evalJSON(response));
-                });
-            };
-        }
-        var self = this; // closure
-        method(dataurl, null, function(data) {
-            // in case we received a list of couple, we assume that the first
-            // element is the real value to be sent, and the second one is the
-            // value to be displayed
-            if (data.length && data[0].length == 2) {
-                options.formatItem = function(row) {
-                    return row[1];
-                };
-                self.hideRealValue(node);
-                self.setCurrentValue(node, data);
-            }
-            jQuery(node).autocomplete(data, options);
+        var d = loadRemote(node.getAttribute('cubicweb:dataurl'));
+        d.addCallback(function(data) {
+            $(node).cwautocomplete(data, options);
         });
-    },
-
-    hideRealValue: function(node) {
-        var hidden = INPUT({
-            'type': "hidden",
-            'name': node.name,
-            'value': node.value
-        });
-        node.parentNode.appendChild(hidden);
-        // remove 'name' attribute from visible input so that it is not submitted
-        // and set correct value in the corresponding hidden field
-        jQuery(node).removeAttr('name').bind('result', function(_, row, _) {
-            hidden.value = row[0];
-        });
-    },
-
-    setCurrentValue: function(node, data) {
-        // called when the data is loaded to reset the correct displayed
-        // value in the visible input field (typically replacing an eid
-        // by a displayable value)
-        var curvalue = node.value;
-        if (!node.value) {
-            return;
-        }
-        for (var i = 0, length = data.length; i < length; i++) {
-            var row = data[i];
-            if (row[0] == curvalue) {
-                node.value = row[1];
-                return;
-            }
-        }
     }
 });
 
@@ -124,84 +279,35 @@ Widgets.StaticFileSuggestField = defclass('StaticSuggestField', [Widgets.Suggest
 
     __init__: function(node) {
         Widgets.SuggestField.__init__(this, node, {
-            method: 'get'
+            method: 'get' // XXX
         });
     }
 
 });
 
 Widgets.RestrictedSuggestField = defclass('RestrictedSuggestField', [Widgets.SuggestField], {
-
     __init__: function(node) {
         Widgets.SuggestField.__init__(this, node, {
             mustMatch: true
         });
     }
-
 });
+
 //remote version of RestrictedSuggestField
 Widgets.LazySuggestField = defclass('LazySuggestField', [Widgets.SuggestField], {
     __init__: function(node, options) {
         var self = this;
-        var multi = "no";
         options = options || {};
-        options.max = 50;
         options.delay = 50;
-        options.cacheLength = 0;
-        options.mustMatch = true;
         // multiple selection not supported yet (still need to formalize correctly
         // initial values / display values)
         var initialvalue = cw.evalJSON(node.getAttribute('cubicweb:initialvalue') || 'null');
         if (!initialvalue) {
             initialvalue = node.value;
         }
-        options = jQuery.extend({
-            dataType: 'json',
-            multiple: (multi == "yes") ? true: false,
-            parse: this.parseResult
-        },
-        options);
-        var dataurl = node.getAttribute('cubicweb:dataurl');
-        // remove 'name' from original input and add the hidden one that will
-        // store the actual value
-        var hidden = INPUT({
-            'type': "hidden",
-            'name': node.name,
-            'value': initialvalue
-        });
-        node.parentNode.appendChild(hidden);
-        jQuery(node).bind('result', {
-            hinput: hidden,
-            input: node
-        },
-        self.hideRealValue).removeAttr('name').autocomplete(dataurl, options);
-    },
-
-    hideRealValue: function(evt, data, value) {
-        if (!value) {
-            value = "";
-        }
-        evt.data.hinput.value = value;
-    },
-
-    /*
-     * @param data: a list of couple (value, label) to fill the suggestion list,
-     *              (returned by CW through AJAX)
-     */
-    parseResult: function(data) {
-        var parsed = [];
-        for (var i = 0; i < data.length; i++) {
-            var value = '' + data[i][0]; // a string is required later by jquery.autocomplete.js
-            var label = data[i][1];
-            parsed[parsed.length] = {
-                data: [label],
-                value: value,
-                result: label
-            };
-        };
-        return parsed;
+        options.initialvalue = initialvalue;
+        Widgets.SuggestField.__init__(this, node, options);
     }
-
 });
 
 /**

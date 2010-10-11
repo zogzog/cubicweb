@@ -939,3 +939,12 @@ div#footer a {
 .releditForm {
  display:none;
 }
+
+/********************************/
+/* overwite other css here      */
+/********************************/
+
+.ui-menu li.ui-menu-item {
+  /* remove background image (orange bullet) for autocomplete suggestions */
+  background-image: none;
+}

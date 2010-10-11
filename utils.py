@@ -255,7 +255,7 @@ class HTMLHead(UStringIO):
         if jsoncall is not _MARKER:
             warn('[3.7] specifying jsoncall is not needed anymore',
                  DeprecationWarning, stacklevel=2)
-        self.add_post_inline_script(u"""jQuery(CubicWeb).one('server-response', function(event) {
+        self.add_post_inline_script(u"""$(cw).one('server-response', function(event) {
 %s});""" % jscode)
 
 

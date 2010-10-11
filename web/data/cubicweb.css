@@ -970,6 +970,11 @@ img.align-left {
 /* overwite other css here      */
 /********************************/
 
+.ui-menu li.ui-menu-item {
+  /* remove background image (orange bullet) for autocomplete suggestions */
+  background-image: none;
+}
+
 /* ui.tabs.css */
 ul.ui-tabs-nav,
 div.ui-tabs-panel {

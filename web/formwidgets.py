@@ -698,8 +698,8 @@ class AutoCompletionWidget(TextInput):
     controller. This method is expected to return allowed values for the input,
     that the widget will use to propose matching values as you type.
     """
-    needs_js = ('cubicweb.widgets.js', 'jquery.autocomplete.js')
-    needs_css = ('jquery.autocomplete.css',)
+    needs_js = ('cubicweb.widgets.js', 'jquery.ui.js')
+    needs_css = ('jquery.ui.css',)
     wdgtype = 'SuggestField'
     loadtype = 'auto'
 

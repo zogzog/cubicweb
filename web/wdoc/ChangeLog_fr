@@ -5,6 +5,12 @@
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
 .. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+.. _guide: http://www.learningjquery.com/2010/06/autocomplete-migration-guide
+
+  --  3.10.0
+  * passage à jQuery 1.4.2, et jQuery UI 1.8 : jquery.autocomplete.js disparait
+    car intégré à jQuery UI. L'API n'est pas exactement la même mais ce guide_
+    expliquer comment migrer de l'un vers l'autre.
 
 2010-06-11  --  3.8.4
    * support pour la recherche de préfixe pour les instances utilisant postgres > 8.4 :
