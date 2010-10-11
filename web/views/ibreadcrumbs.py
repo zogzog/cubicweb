@@ -62,7 +62,7 @@ class IBreadCrumbsAdapter(EntityAdapter):
             return itree.parent()
         return None
 
-    def breadcrumbs(self, view=None, recurs=False):
+    def breadcrumbs(self, view=None, recurs=None):
         """return a list containing some:
 
         * tuple (url, label)
@@ -71,14 +71,26 @@ class IBreadCrumbsAdapter(EntityAdapter):
 
         defining path from a root to the current view
 
-        the main view is given as argument so breadcrumbs may vary according
-        to displayed view (may be None). When recursing on a parent entity,
-        the `recurs` argument should be set to True.
+        the main view is given as argument so breadcrumbs may vary according to
+        displayed view (may be None). When recursing on a parent entity, the
+        `recurs` argument should be a set of already traversed nodes (infinite
+        loop safety belt).
         """
         parent = self.parent_entity()
         if parent is not None:
+            if recurs:
+                _recurs = recurs
+            else:
+                if reculs is False:
+                    warn('[3.10] recurs argument should be a set() or None',
+                         DeprecationWarning, stacklevel=2)
+                _recurs = set()
+            if _recurs and parent.eid in _recurs:
+                self.error('cycle in breadcrumbs for entity %s' % self.entity)
+                return []
+            _recurs.add(parent.eid)
             adapter = ibreadcrumb_adapter(parent)
-            path = adapter.breadcrumbs(view, True) + [self.entity]
+            path = adapter.breadcrumbs(view, _recurs) + [self.entity]
         else:
             path = [self.entity]
         if not recurs:
