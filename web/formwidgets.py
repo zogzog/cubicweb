@@ -93,6 +93,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.date import todatetime
 
 from cubicweb import tags, uilib
+from cubicweb.utils import json_dumps
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 
@@ -700,10 +701,11 @@ class AutoCompletionWidget(TextInput):
     """
     needs_js = ('cubicweb.widgets.js', 'jquery.ui.js')
     needs_css = ('jquery.ui.css',)
-    wdgtype = 'SuggestField'
-    loadtype = 'auto'
+    default_settings = {}
 
     def __init__(self, *args, **kwargs):
+        self.autocomplete_settings = kwargs.pop('autocomplete_settings',
+                                                self.default_settings)
         try:
             self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         except KeyError:
@@ -720,12 +722,17 @@ class AutoCompletionWidget(TextInput):
             values = ('',)
         return values
 
-    def attributes(self, form, field):
-        attrs = super(AutoCompletionWidget, self).attributes(form, field)
-        init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
-        # XXX entity form specific
-        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
-        return attrs
+    def _render(self, form, field, renderer):
+        entity = form.edited_entity
+        domid = field.dom_id(form).replace(':', r'\\:')
+        if callable(self.autocomplete_initfunc):
+            data = self.autocomplete_initfunc(form, field)
+        else:
+            data = xml_escape(self._get_url(entity, field))
+        form._cw.add_onload(u'$("#%s").cwautocomplete(%s, %s);'
+                            % (domid, json_dumps(data),
+                               json_dumps(self.autocomplete_settings)))
+        return super(AutoCompletionWidget, self)._render(form, field, renderer)
 
     def _get_url(self, entity, field):
         if self.autocomplete_initfunc is None:
@@ -735,6 +742,7 @@ class AutoCompletionWidget(TextInput):
             fname = self.autocomplete_initfunc
         return entity._cw.build_url('json', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
+
 
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
@@ -752,12 +760,11 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
-    wdgtype = 'RestrictedSuggestField'
+    default_settings = {'mustMatch': True}
 
 
 class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
     """remote autocomplete """
-    wdgtype = 'LazySuggestField'
 
     def values_and_attributes(self, form, field):
         """override values_and_attributes to handle initial displayed values"""
