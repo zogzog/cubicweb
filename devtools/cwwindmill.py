@@ -35,7 +35,7 @@ import windmill
 from windmill.dep import functest
 from windmill.bin.admin_lib import configure_global_settings, setup, teardown
 
-from cubicweb.devtools.httptest import CubicWebServerTC
+from cubicweb.devtools.httptest import CubicWebServerTC, CubicWebServerConfig
 
 
 # Excerpt from :ref:`windmill.authoring.unit`
@@ -45,11 +45,6 @@ class UnitTestReporter(functest.reports.FunctestReportInterface):
 
 unittestreporter = UnitTestReporter()
 functest.reports.register_reporter(unittestreporter)
-
-
-# Windmill use case are written with no anonymous user
-from cubicweb.devtools.httptest import CubicWebServerConfig
-CubicWebServerConfig.anonymous_logged = False
 
 class CubicWebWindmillUseCase(CubicWebServerTC):
     """basic class for Windmill use case tests
@@ -86,6 +81,8 @@ class CubicWebWindmillUseCase(CubicWebServerTC):
     """
     browser = 'firefox'
     edit_test = "-i" in sys.argv # detection for pytest invocation
+    # Windmill use case are written with no anonymous user
+    anonymous_logged = False
 
     def _test_dir(self):
         """access to class attribute if possible or make assumption

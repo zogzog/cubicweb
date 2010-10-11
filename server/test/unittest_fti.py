@@ -57,3 +57,7 @@ class PostgresFTITC(CubicWebTC):
             self.commit()
             self.assertEqual(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c1.eid], [c3.eid], [c2.eid]])
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
