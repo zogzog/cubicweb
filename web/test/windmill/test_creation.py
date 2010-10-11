@@ -26,7 +26,7 @@ def test_creation():
     client.type(text=u'myuser', id=u'upassword-subject:A')
     client.type(text=u'myuser', name=u'upassword-subject-confirm:A')
     client.type(text=u'myuser', id=u'firstname-subject:A')
-    client.select(val=u'4', id=u'in_group-subject:A')
+    client.select(option=u'managers', id=u'in_group-subject:A')
     client.waits.forPageLoad(timeout=u'20000')
     client.click(id=u'adduse_email:Alink')
     client.waits.forPageLoad(timeout=u'20000')
