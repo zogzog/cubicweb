@@ -495,7 +495,11 @@ class configuration_values(Selector):
         try:
             return self._score
         except AttributeError:
-            self._score = req.vreg.config[self._key] in self._values
+            if req is None:
+                config = kwargs['repo'].config
+            else:
+                config = req.vreg.config
+            self._score = config[self._key] in self._values
         return self._score
 
 
