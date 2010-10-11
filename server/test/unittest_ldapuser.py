@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb.server.sources.ldapusers unit and functional tests
-
-"""
+"""cubicweb.server.sources.ldapusers unit and functional tests"""
 
 import socket
 
@@ -30,10 +28,14 @@ from cubicweb.server.sources.ldapuser import *
 
 if '17.1' in socket.gethostbyname('ldap1'):
     SYT = 'syt'
+    SYT_EMAIL = 'Sylvain Thenault'
     ADIM = 'adim'
+    SOURCESFILE = 'data/sources_ldap1'
 else:
     SYT = 'sthenault'
+    SYT_EMAIL = 'sylvain.thenault@logilab.fr'
     ADIM = 'adimascio'
+    SOURCESFILE = 'data/sources_ldap2'
 
 
 def nopwd_authenticate(self, session, login, password):
@@ -59,7 +61,7 @@ def nopwd_authenticate(self, session, login, password):
 
 class LDAPUserSourceTC(CubicWebTC):
     config = TestServerConfiguration('data')
-    config.sources_file = lambda : 'data/sourcesldap'
+    config.sources_file = lambda: SOURCESFILE
 
     def patch_authenticate(self):
         self._orig_authenticate = LDAPUserSource.authenticate
@@ -101,7 +103,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(e.in_group[0].name, 'users')
         self.assertEqual(e.owned_by[0].login, SYT)
         self.assertEqual(e.created_by, ())
-        self.assertEqual(e.primary_email[0].address, 'Sylvain Thenault')
+        self.assertEqual(e.primary_email[0].address, SYT_EMAIL)
         # email content should be indexed on the user
         rset = self.sexecute('CWUser X WHERE X has_text "thenault"')
         self.assertEqual(rset.rows, [[e.eid]])
@@ -398,6 +400,8 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
         self.pool = repo._get_pool()
         session = mock_object(pool=self.pool)
         self.o = RQL2LDAPFilter(ldapsource, session)
+        self.ldapclasses = ''.join('(objectClass=%s)' % ldapcls
+                                   for ldapcls in ldapsource.user_classes)
 
     def tearDown(self):
         repo._free_pool(self.pool)
@@ -406,13 +410,13 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
     def test_base(self):
         rqlst = self._prepare('CWUser X WHERE X login "toto"').children[0]
         self.assertEqual(self.o.generate(rqlst, 'X')[1],
-                          '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
+                          '(&%s(uid=toto))' % self.ldapclasses)
 
     def test_kwargs(self):
         rqlst = self._prepare('CWUser X WHERE X login %(x)s').children[0]
         self.o._args = {'x': "toto"}
         self.assertEqual(self.o.generate(rqlst, 'X')[1],
-                          '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
+                          '(&%s(uid=toto))' % self.ldapclasses)
 
     def test_get_attr(self):
         rqlst = self._prepare('Any X WHERE E firstname X, E eid 12').children[0]
