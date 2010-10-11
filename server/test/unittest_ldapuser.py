@@ -27,10 +27,28 @@ from cubicweb.server.sources.ldapuser import *
 
 if '17.1' in socket.gethostbyname('ldap1'):
     SYT = 'syt'
+    SYT_EMAIL = 'Sylvain Thenault'
     ADIM = 'adim'
+    CONFIG = u'''host=ldap1
+user-base-dn=ou=People,dc=logilab,dc=fr
+user-scope=ONELEVEL
+user-classes=top,posixAccount
+user-login-attr=uid
+user-default-group=users
+user-attrs-map=gecos:email,uid:login
+'''
 else:
     SYT = 'sthenault'
+    SYT_EMAIL = 'sylvain.thenault@logilab.fr'
     ADIM = 'adimascio'
+    CONFIG = u'''host=ldap1
+user-base-dn=ou=People,dc=logilab,dc=net
+user-scope=ONELEVEL
+user-classes=top,OpenLDAPperson
+user-login-attr=uid
+user-default-group=users
+user-attrs-map=mail:email,uid:login
+'''
 
 
 def nopwd_authenticate(self, session, login, password):
@@ -65,22 +83,7 @@ def teardown_module(*args):
 
 def add_ldap_source(cnx):
     cnx.request().create_entity('CWSource', name=u'ldapuser', type=u'ldapuser',
-                                config=u'''
-# ldap host
-host=ldap1
-# base DN to lookup for usres
-user-base-dn=ou=People,dc=logilab,dc=fr
-# user search scope
-user-scope=ONELEVEL
-# classes of user
-user-classes=top,posixAccount
-# attribute used as login on authentication
-user-login-attr=uid
-# name of a group in which ldap users will be by default
-user-default-group=users
-# map from ldap user attributes to cubicweb attributes
-user-attrs-map=gecos:email,uid:login
-''')
+                                config=CONFIG)
     cnx.commit()
     # XXX: need this first query else we get 'database is locked' from
     # sqlite since it doesn't support multiple connections on the same
@@ -124,7 +127,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(e.in_group[0].name, 'users')
         self.assertEqual(e.owned_by[0].login, SYT)
         self.assertEqual(e.created_by, ())
-        self.assertEqual(e.primary_email[0].address, 'Sylvain Thenault')
+        self.assertEqual(e.primary_email[0].address, SYT_EMAIL)
         # email content should be indexed on the user
         rset = self.sexecute('CWUser X WHERE X has_text "thenault"')
         self.assertEqual(rset.rows, [[e.eid]])
@@ -412,6 +415,8 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
         self.pool = repo._get_pool()
         session = mock_object(pool=self.pool)
         self.o = RQL2LDAPFilter(ldapsource, session)
+        self.ldapclasses = ''.join('(objectClass=%s)' % ldapcls
+                                   for ldapcls in ldapsource.user_classes)
 
     def tearDown(self):
         repo._free_pool(self.pool)
@@ -420,13 +425,13 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
     def test_base(self):
         rqlst = self._prepare('CWUser X WHERE X login "toto"').children[0]
         self.assertEqual(self.o.generate(rqlst, 'X')[1],
-                          '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
+                          '(&%s(uid=toto))' % self.ldapclasses)
 
     def test_kwargs(self):
         rqlst = self._prepare('CWUser X WHERE X login %(x)s').children[0]
         self.o._args = {'x': "toto"}
         self.assertEqual(self.o.generate(rqlst, 'X')[1],
-                          '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
+                          '(&%s(uid=toto))' % self.ldapclasses)
 
     def test_get_attr(self):
         rqlst = self._prepare('Any X WHERE E firstname X, E eid 12').children[0]

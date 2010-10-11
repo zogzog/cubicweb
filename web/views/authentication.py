@@ -60,8 +60,8 @@ class WebAuthInfoRetreiver(Component):
         raise NotImplementedError()
 
     def revalidate_login(self, req):
-        """returns a login string or None, for repository session
-        validation purposes
+        """returns a login string or None, for repository session validation
+        purposes
         """
         raise NotImplementedError()
 
