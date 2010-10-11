@@ -26,10 +26,10 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.utils import support_args
-from cubicweb.selectors import match_kwargs
+from cubicweb.selectors import match_kwargs, match_context
 from cubicweb.view import EntityView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
-from cubicweb.web import uicfg
+from cubicweb.web import uicfg, component
 
 
 class PrimaryView(EntityView):
@@ -382,6 +382,14 @@ class AttributeView(EntityView):
             if rset:
                 self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})
 
+
+
+class ToolbarLayout(component.Layout):
+    __select__ = match_context('ctxtoolbar')
+
+    def render(self, w):
+        if self.init_rendering():
+            self.cw_extra_kwargs['view'].render_body(w)
 
 ## default primary ui configuration ###########################################
 
