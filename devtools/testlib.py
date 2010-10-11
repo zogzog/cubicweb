@@ -187,7 +187,7 @@ class CubicWebTC(TestCase):
     appid = 'data'
     configcls = devtools.ApptestConfiguration
     reset_schema = reset_vreg = False # reset schema / vreg between tests
-    tags= TestCase.tags | Tags('cubicweb', 'cw_repo')
+    tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
 
     @classproperty
     def config(cls):

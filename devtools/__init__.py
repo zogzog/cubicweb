@@ -127,9 +127,6 @@ class TestServerConfiguration(ServerConfiguration):
         """return instance's control configuration file"""
         return join(self.apphome, '%s.conf' % self.name)
 
-    def instance_md5_version(self):
-        return ''
-
     def bootstrap_cubes(self):
         try:
             super(TestServerConfiguration, self).bootstrap_cubes()
@@ -162,6 +159,15 @@ class TestServerConfiguration(ServerConfiguration):
             sources['admin'] = DEFAULT_SOURCES['admin']
         return sources
 
+    # web config methods needed here for cases when we use this config as a web
+    # config
+
+    def instance_md5_version(self):
+        return ''
+
+    def default_base_url(self):
+        return BASE_URL
+
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
@@ -172,9 +178,6 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
 
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
-
-    def default_base_url(self):
-        return BASE_URL
 
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
