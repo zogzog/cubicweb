@@ -78,7 +78,11 @@ class IBreadCrumbsAdapter(EntityAdapter):
         """
         parent = self.parent_entity()
         if parent is not None:
-            if recurs:
+            if recurs is True:
+                _recurs = set()
+                warn('[3.10] recurs argument should be a set() or None',
+                     DeprecationWarning, stacklevel=2)
+            elif recurs:
                 _recurs = recurs
             else:
                 if recurs is False:
