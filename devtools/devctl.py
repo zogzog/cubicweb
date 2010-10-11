@@ -234,6 +234,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
 
 def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
+        if reg in ('boxes', 'contentnavigation'):
+            continue
         for objects in objdict.values():
             for obj in objects:
                 objid = '%s_%s' % (reg, obj.__regid__)
