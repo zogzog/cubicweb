@@ -231,7 +231,8 @@ class CubicWebTC(TestCase):
         config.global_set_option('default-dest-addrs', send_to)
         config.global_set_option('sender-name', 'cubicweb-test')
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
-        
+        # default_base_url on config class isn't enough for TestServerConfiguration
+        config.global_set_option('base-url', BASE_URL)
         # web resources
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
