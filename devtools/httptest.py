@@ -63,18 +63,13 @@ def get_available_port(ports_scan):
 class CubicWebServerConfig(ApptestConfiguration):
     """basic configuration class for configuring test server
 
-    :param ports_range: range of http ports to test (range(7000, 8000) by default)
-    :type ports_range: iterable
-    :param anonymous_logged: is anonymous user logged by default ? (True by default)
-    :type anonymous_logged: bool
-    :param port: server port (optional, used to force value)
-    :type port: int
+    Class attributes:
 
-    The first port found as available in `ports_range` will be used to launch
-    the test server
+    * `ports_range`: list giving range of http ports to test (range(7000, 8000)
+      by default). The first port found as available in `ports_range` will be
+      used to launch the test web server.
+
     """
-    # anonymous is logged by default in cubicweb test cases
-    anonymous_logged = True
     ports_range = range(7000, 8000)
 
     def default_base_url(self):
@@ -87,23 +82,19 @@ class CubicWebServerConfig(ApptestConfiguration):
 
     def load_configuration(self):
         super(CubicWebServerConfig, self).load_configuration()
-        self.global_set_option('base-url', self.default_base_url())
-        if not self.anonymous_logged:
-            self.global_set_option('anonymous-user', None)
-        else:
-            self.global_set_option('anonymous-user', 'anon')
-            self.global_set_option('anonymous-password', 'anon')
         self.global_set_option('force-html-content-type', True)
-        # no undo support in tests
-        self.global_set_option('undo-support', '')
 
 
 class CubicWebServerTC(CubicWebTC):
-    """class for running test server
+    """Class for running test web server. See :class:`CubicWebServerConfig`.
 
-    :cvar: :ref:`CubicWebServerConfig` class
+    Class attributes:
+    * ` anonymous_logged`: flag telling ifs anonymous user should be log logged
+      by default (True by default)
     """
     configcls = CubicWebServerConfig
+    # anonymous is logged by default in cubicweb test cases
+    anonymous_logged = True
 
     def start_server(self):
         # use a semaphore to avoid starting test while the http server isn't
@@ -126,7 +117,7 @@ class CubicWebServerTC(CubicWebTC):
             raise RuntimeError('Could not start the web server')
         #pre init utils connection
         parseurl = urlparse(self.config['base-url'])
-        assert parseurl.port == self.config['port']
+        assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
         self._web_test_cnx = httplib.HTTPConnection(parseurl.hostname,
                                                     parseurl.port)
         self._ident_cookie = None
@@ -195,3 +186,12 @@ class CubicWebServerTC(CubicWebTC):
             # Server could be launched manually
             print err
         CubicWebTC.tearDown(self)
+
+    @classmethod
+    def init_config(cls, config):
+        super(CubicWebServerTC, cls).init_config(config)
+        if not cls.anonymous_logged:
+            config.global_set_option('anonymous-user', None)
+        else:
+            config.global_set_option('anonymous-user', 'anon')
+            config.global_set_option('anonymous-password', 'anon')
