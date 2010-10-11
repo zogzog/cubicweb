@@ -100,6 +100,9 @@ function getJSON(url, data, callback) {
                         keydown: methods.multiple.keydown
                         });
                 }
+                // XXX katia we dont need it if minLength == 0, but by setting minLength = 0
+                // we probably break the backward compatibility
+                $(this).bind('blur', methods.blur);
                 if ($.isArray(suggestions)) { // precomputed list of suggestions
                     settings.source = hiHandlers.checkSuggestionsDataFormat(instanceData, suggestions);
                 } else { // url to call each time something is typed
@@ -108,11 +111,14 @@ function getJSON(url, data, callback) {
                         d.addCallback(function (suggestions) {
                             suggestions = hiHandlers.checkSuggestionsDataFormat(instanceData, suggestions);
                             response(suggestions);
+                            if((suggestions.length) == 0){
+                                methods.resetValues(instanceData);
+                            }
                         });
                     };
                 }
                 $(this).autocomplete(settings);
-                if (settings.mustMach) {
+                if (settings.mustMatch) {
                     $(this).keypress(methods.ensureExactMatch);
                 }
             });
@@ -148,7 +154,12 @@ function getJSON(url, data, callback) {
                 };
             }
         },
-
+        blur: function(evt){
+            var instanceData = $(this).data('cwautocomplete');
+            if($(instanceData.userInput).val().strip().length==0){
+                methods.resetValues(instanceData);
+            }
+        },
         search: function(value) {
             this.element.addClass("ui-autocomplete-loading");
             if (this.options.multiple) {
@@ -167,6 +178,11 @@ function getJSON(url, data, callback) {
                 }
             }
         },
+        resetValues: function(instanceData){
+            $(instanceData.userInput).val('');
+            $(instanceData.hiddenInput).val('');
+        },
+
 
         hiddenInputHandlers: {
             /**
@@ -196,13 +212,14 @@ function getJSON(url, data, callback) {
             needsHiddenInput: function(suggestions) {
                 return suggestions[0].label !== undefined;
             },
-
             initializeHiddenInput: function(instanceData) {
                 var userInput = instanceData.userInput;
                 var hiddenInput = INPUT({
                     type: "hidden",
                     name: userInput.name,
-                    value: userInput.value
+                    // XXX katia : this must be handeled in .SuggestField widget, but
+                    // it seems not to be used anymore
+                    value: $(userInput).attr('cubicweb:initialvalue') || userInput.value
                 });
                 $(userInput).removeAttr('name').after(hiddenInput);
                 instanceData.hiddenInput = hiddenInput;
@@ -222,11 +239,19 @@ function getJSON(url, data, callback) {
             checkSuggestionsDataFormat: function(instanceData, suggestions) {
                 // check for old (value, label) format
                 if ($.isArray(suggestions) && suggestions.length &&
-                    $.isArray(suggestions[0]) && suggestions[0].length == 2) {
-                    cw.log('[3.10] autocomplete init func should return {label,value} dicts instead of lists');
-                    suggestions = $.map(suggestions, function(sugg) {
-                        return {value: sugg[0], label: sugg[1]};
-                    });
+                    $.isArray(suggestions[0])){
+                    if (suggestions[0].length == 2) {
+                        cw.log('[3.10] autocomplete init func should return {label,value} dicts instead of lists');
+                        suggestions = $.map(suggestions, function(sugg) {
+                                            return {value: sugg[0], label: sugg[1]};
+                                            });
+                    } else {
+                        if(suggestions[0].length == 1){
+                            suggestions = $.map(suggestions, function(sugg) {
+                                return {value: sugg[0], label: sugg[0]};
+                            });
+                        }
+                    }
                 }
                 var hiHandlers = methods.hiddenInputHandlers;
                 if (suggestions.length && hiHandlers.needsHiddenInput(suggestions)
