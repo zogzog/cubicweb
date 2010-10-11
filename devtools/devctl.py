@@ -347,7 +347,7 @@ class UpdateCubicWebCatalogCommand(Command):
         print 'when you are done, run "cubicweb-ctl i18ncube yourcube".'
 
 
-class UpdateTemplateCatalogCommand(Command):
+class UpdateCubeCatalogCommand(Command):
     """Update i18n catalogs for cubes. If no cube is specified, update
     catalogs of all registered cubes.
     """
@@ -784,7 +784,7 @@ class GenerateQUnitHTML(Command):
         print make_qunit_html(args[0], args[1:])
 
 for cmdcls in (UpdateCubicWebCatalogCommand,
-               UpdateTemplateCatalogCommand,
+               UpdateCubeCatalogCommand,
                #LiveServerCommand,
                NewCubeCommand,
                ExamineLogCommand,
