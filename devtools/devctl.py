@@ -122,8 +122,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from copy import deepcopy
     from cubicweb.i18n import add_msg
     from cubicweb.web import uicfg
-    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES, CONSTRAINTS
-    no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
+    from cubicweb.schema import META_RTYPES, WORKFLOW_RTYPES, CONSTRAINTS
+    no_context_rtypes = META_RTYPES | WORKFLOW_RTYPES
     w('# schema pot file, generated on %s\n'
       % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
