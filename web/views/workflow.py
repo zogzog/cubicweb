@@ -161,17 +161,17 @@ class WFHistoryView(EntityView):
                        displaycols=displaycols, headers=headers)
 
 
-class WFHistoryVComponent(component.CtxComponent):
+class WFHistoryVComponent(component.EntityCtxComponent):
     """display the workflow history for entities supporting it"""
     __regid__ = 'wfhistory'
-    __select__ = component.EntityVComponent.__select__ & WFHistoryView.__select__
+    __select__ = component.EntityCtxComponent.__select__ & WFHistoryView.__select__
     context = 'navcontentbottom'
     title = _('Workflow history')
 
     def render_body(self, w):
         if hasattr(self, 'cell_call'):
-            warn('[3.10] %s should now implement render_body instead of cell_call',
-                 DeprecationWarning, self.__class__)
+            warn('[3.10] %s should now implement render_body instead of cell_call'
+                 % self.__class__, DeprecationWarning)
             self.w = w
             self.cell_call(self.entity.cw_row, self.entity.cw_col)
         else:
