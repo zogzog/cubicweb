@@ -514,6 +514,20 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
             w(u'</td></tr></table>')
 
 
+class RelatedObjectsCtxComponent(EntityCtxComponent):
+    """a contextual component to display entities related to another"""
+    __select__ = EntityCtxComponent.__select__ & partial_has_related_entities()
+    context = 'navcontentbottom'
+    rtype = None
+    role = 'subject'
+
+    vid = 'list'
+
+    def render_body(self, w):
+        rset = self.entity.related(self.rtype, role(self))
+        self.wview(self.vid, rset)
+
+
 # old contextual components, deprecated ########################################
 
 class EntityVComponent(Component):
