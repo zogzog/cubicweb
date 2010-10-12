@@ -819,6 +819,14 @@ table.htableForm .validateButton {
   margin-bottom: 0.2em; /* because vertical-align doesn't seems to have any effect */
 }
 
+
+table.ajaxEditRelationTable{
+  margin-bottom: 0.5em;
+}
+table.ajaxEditRelationTable td.entity{
+  padding-left: 0.5em;
+}
+
 /***************************************/
 /* error view (views/management.py)    */
 /***************************************/

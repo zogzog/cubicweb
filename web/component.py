@@ -479,7 +479,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
             req.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
         _ = req._
         if related:
-            w(u'<table>')
+            w(u'<table class="ajaxEditRelationTable">')
             for rentity in related.entities():
                 # for each related entity, provide a link to remove the relation
                 subview = rentity.view(self.item_vid)
@@ -488,11 +488,11 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
                         self.__regid__, entity.eid, rentity.eid,
                         self.fname_remove,
                         self.removed_msg and _(self.removed_msg)))
-                    w(u'<tr><td>[<a href="javascript: %s">-</a>]</td>'
-                      '<td class="tagged"> %s</td></tr>' % (xml_escape(jscall),
+                    w(u'<tr><td class="dellink">[<a href="javascript: %s">-</a>]</td>'
+                      '<td class="entity"> %s</td></tr>' % (xml_escape(jscall),
                                                             subview))
                 else:
-                    w(u'<tr><td class="tagged">%s</td></tr>' % (subview))
+                    w(u'<tr><td class="entity">%s</td></tr>' % (subview))
             w(u'</table>')
         else:
             w(_('no related entity'))
