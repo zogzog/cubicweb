@@ -250,16 +250,18 @@ class EtypeRestrictionComponent(component.Component):
 
 # contextual components ########################################################
 
-# class SeeAlsoVComponent(component.RelatedObjectsVComponent):
-#     """display any entity's see also"""
-#     __regid__ = 'seealso'
-#     context = 'navcontentbottom'
-#     rtype = 'see_also'
-#     role = 'subject'
-#     order = 40
-#     # register msg not generated since no entity use see_also in cubicweb itself
-#     title = _('ctxcomponents_seealso')
-#     help = _('ctxcomponents_seealso_description')
+class SeeAlsoComponent(component.RelatedObjectsCtxComponent):
+    """display any entity's see also"""
+    __regid__ = 'seealso'
+    context = 'navcontentbottom'
+    rtype = 'see_also'
+    role = 'subject'
+    order = 40
+    title = _('see_also')
+    # register msg not generated since no entity use see_also in cubicweb itself
+    _('ctxcomponents_seealso')
+    _('ctxcomponents_seealso_description')
+
 
 
 class MetaDataComponent(component.EntityCtxComponent):
@@ -287,7 +289,7 @@ class SectionLayout(component.Layout):
             w(u'</div>\n')
 
 
-# def registration_callback(vreg):
-#     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
-#     if 'see_also' in vreg.schema:
-#         vreg.register(SeeAlsoVComponent)
+def registration_callback(vreg):
+    vreg.register_all(globals().values(), __name__, (SeeAlsoComponent,))
+    if 'see_also' in vreg.schema:
+        vreg.register(SeeAlsoComponent)
