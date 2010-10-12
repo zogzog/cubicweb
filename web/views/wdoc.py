@@ -283,7 +283,7 @@ class AboutAction(action.Action):
 
     category = 'footer'
     order = 2
-    title = _('about this site')
+    title = _('About this site')
 
     def url(self):
         return self._cw.build_url('doc/about')

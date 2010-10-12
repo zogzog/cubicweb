@@ -407,7 +407,7 @@ class PoweredByAction(action.Action):
 
     category = 'footer'
     order = 3
-    title = _('powered by CubicWeb')
+    title = _('Powered by CubicWeb')
 
     def url(self):
         return 'http://www.cubicweb.org'

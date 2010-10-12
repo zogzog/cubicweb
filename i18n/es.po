@@ -871,7 +871,7 @@ msgstr ""
 "Para recuperar un caché, hace falta utilizar el método\n"
 "get_cache(cachename)."
 
-msgid "about this site"
+msgid "About this site"
 msgstr "Información del Sistema"
 
 msgid "abstract base class for transitions"
@@ -3135,7 +3135,7 @@ msgstr "Por favor corregir los siguientes errores:"
 msgid "possible views"
 msgstr "Vistas posibles"
 
-msgid "powered by CubicWeb"
+msgid "Powered by CubicWeb"
 msgstr "Potenciado en CubicWeb"
 
 msgid "prefered_form"
