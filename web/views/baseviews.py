@@ -33,11 +33,12 @@ from rql import nodes
 
 from logilab.mtconverter import TransformError, xml_escape, xml_escape
 
-from cubicweb import NoSelectableObject
-from cubicweb.selectors import yes, empty_rset, one_etype_rset
+from cubicweb import NoSelectableObject, tags
+from cubicweb.selectors import yes, empty_rset, one_etype_rset, match_kwargs
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.uilib import cut, printable_value
+from cubicweb.web.views import calendar
 
 
 class NullView(AnyRsetView):
@@ -436,3 +437,109 @@ XmlRsetView = class_moved(xmlrss.XMLRsetView)
 RssView = class_moved(xmlrss.RSSView)
 RssItemView = class_moved(xmlrss.RSSItemView)
 
+
+class GroupByView(EntityView):
+    """grouped view of a result set. The `group_key` method return the group
+    key of an entities (a string or tuple of string).
+
+    For each group, display a link to entities of this group by generating url
+    like <basepath>/<key> or <basepath>/<key item 1>/<key item 2>.
+    """
+    __abstrack__ = True
+    __select__ = EntityView.__select__ & match_kwargs('basepath')
+    entity_attribute = None
+    reversed = False
+
+    def index_url(self, basepath, key, **kwargs):
+        if isinstance(key, (list, tuple)):
+            key = '/'.join(key)
+        return self._cw.build_url('%s/%s' % (basepath, key),
+                                  **kwargs)
+
+    def index_link(self, basepath, key, items):
+        url = self.index_url(basepath, key)
+        if isinstance(key, (list, tuple)):
+            key = ' '.join(key)
+        return tags.a(key, href=url)
+
+    def group_key(self, entity, **kwargs):
+        value = getattr(entity, self.entity_attribute)
+        if callable(value):
+            value = value()
+        return value
+
+    def call(self, basepath, maxentries=None, **kwargs):
+        index = {}
+        for entity in self.cw_rset.entities():
+            index.setdefault(self.group_key(entity, **kwargs), []).append(entity)
+        displayed = sorted(index)
+        if self.reversed:
+            displayed = reversed(displayed)
+        if maxentries is None:
+            needmore = False
+        else:
+            needmore = len(index) > maxentries
+            displayed = tuple(displayed)[:maxentries]
+        w = self.w
+        w(u'<ul class="boxListing">')
+        for key in displayed:
+            w(u'<li>%s</li>\n' %
+              self.index_link(basepath, key, index[key]))
+        if needmore:
+            url = self._cw.build_url('view', vid=self.__regid__,
+                                     rql=self.cw_rset.printable_rql())
+            w( u'<li>%s</li>\n' % tags.a(u'[%s]' % self._cw._('see more'),
+                                         href=url))
+        w(u'</ul>\n')
+
+
+class ArchiveView(GroupByView):
+    """archive view of a result set. Links to months are built using a basepath
+    parameters, eg using url like <basepath>/<year>/<month>
+    """
+    __regid__ = 'cw.archive.by_date'
+    entity_attribute = 'creation_date'
+    reversed = True
+
+    def group_key(self, entity, **kwargs):
+        value = super(ArchiveView, self).group_key(entity, **kwargs)
+        return '%04d' % value.year, '%02d' % value.month
+
+    def index_link(self, basepath, key, items):
+        """represent a single month entry"""
+        year, month = key
+        label = u'%s %s [%s]' % (self._cw._(calendar.MONTHNAMES[int(month)-1]),
+                                 year, len(items))
+        etypes = set(entity.__regid__ for entity in items)
+        vtitle = '%s %s' % (', '.join(display_name(self._cw, etype, 'plural')
+                                      for etype in etypes),
+                            label)
+        title = self._cw._('archive for %(month)s/%(year)s') % {
+            'month': month, 'year': year}
+        url = self.index_url(basepath, key, vtitle=vtitle)
+        return tags.a(label, href=url, title=title)
+
+
+class AuthorView(GroupByView):
+    """author view of a result set. Links to month are built using a basepath
+    parameters, eg using url like <basepath>/<author>
+    """
+    __regid__ = 'cw.archive.by_author'
+    entity_attribute = 'creator'
+
+    def group_key(self, entity, **kwargs):
+        value = super(AuthorView, self).group_key(entity, **kwargs)
+        if value:
+            return value.login
+        return value
+
+    def index_link(self, basepath, key, items):
+        label = u'%s [%s]' % (key, len(items))
+        etypes = set(entity.__regid__ for entity in items)
+        vtitle = self._cw._('%(etype)s by %(author)s') % {
+            'etype': ', '.join(display_name(self._cw, etype, 'plural')
+                               for etype in etypes),
+            'author': label}
+        url = self.index_url(basepath, key, vtitle=vtitle)
+        title = self._cw._('archive for %(author)s') % {'author': key}
+        return tags.a(label, href=url, title=title)
