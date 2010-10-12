@@ -479,7 +479,7 @@ class LogFormView(View):
         else:
             label = cw.pgettext('CWUser', 'login')
         form.field_by_name('__login').label = label
-        self.w(form.render(table_class='', display_progress_div=False))
+        form.render(w=self.w, table_class='', display_progress_div=False)
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)

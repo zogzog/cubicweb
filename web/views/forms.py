@@ -168,10 +168,20 @@ class FieldsForm(form.Form):
             warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
                  DeprecationWarning, stacklevel=2)
             kwargs = rendervalues
+        w = kwargs.pop('w', None)
+        if w is None:
+            warn('[3.10] you should specify "w" to form.render() named arguments',
+                 DeprecationWarning, stacklevel=2)
+            data = []
+            w = data.append
+        else:
+            data = None
         self.build_context(formvalues)
         if renderer is None:
             renderer = self.default_renderer()
-        return renderer.render(self, kwargs)
+        renderer.render(w, self, kwargs)
+        if data is not None:
+            return '\n'.join(data)
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(

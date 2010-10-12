@@ -90,7 +90,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
                                       href=entity.absolute_url()))
         w(u'</ul>\n')
-        w(form.render())
+        form.render(w=self.w)
 
 
 class EditionFormView(FormViewMixIn, EntityView):
@@ -112,7 +112,7 @@ class EditionFormView(FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.render())
+        form.render(w=self.w)
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -258,7 +258,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
                                              rset=self.cw_rset,
                                              copy_nav_params=True,
                                              formvid='edition')
-        self.w(form.render())
+        form.render(w=self.w)
 
 
 # click and edit handling ('reledit') ##########################################

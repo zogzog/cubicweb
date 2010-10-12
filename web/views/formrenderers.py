@@ -104,11 +104,9 @@ class FormRenderer(AppObject):
 
     # renderer interface ######################################################
 
-    def render(self, form, values):
+    def render(self, w, form, values):
         self._set_options(values)
         form.add_media()
-        data = []
-        w = data.append
         w(self.open_form(form, values))
         if self.display_progress_div:
             w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
@@ -120,7 +118,6 @@ class FormRenderer(AppObject):
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
-        return '\n'.join(data)
 
     def render_label(self, form, field):
         if field.label is None:
@@ -179,29 +176,29 @@ class FormRenderer(AppObject):
 
     def open_form(self, form, values):
         if form.needs_multipart:
-            enctype = 'multipart/form-data'
+            enctype = u'multipart/form-data'
         else:
-            enctype = 'application/x-www-form-urlencoded'
-        tag = ('<form action="%s" method="post" enctype="%s"' % (
+            enctype = u'application/x-www-form-urlencoded'
+        tag = (u'<form action="%s" method="post" enctype="%s"' % (
             xml_escape(form.form_action() or '#'), enctype))
         if form.domid:
-            tag += ' id="%s"' % form.domid
+            tag += u' id="%s"' % form.domid
         if form.onsubmit:
-            tag += ' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
+            tag += u' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
         if form.cssstyle:
-            tag += ' style="%s"' % xml_escape(form.cssstyle)
+            tag += u' style="%s"' % xml_escape(form.cssstyle)
         if form.cssclass:
-            tag += ' class="%s"' % xml_escape(form.cssclass)
+            tag += u' class="%s"' % xml_escape(form.cssclass)
         if form.cwtarget:
-            tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
-        return tag + '>'
+            tag += u' cubicweb:target="%s"' % xml_escape(form.cwtarget)
+        return tag + u'>'
 
     def close_form(self, form, values):
         """seems dumb but important for consistency w/ close form, and necessary
         for form renderers overriding open_form to use something else or more than
         and <form>
         """
-        return '</form>'
+        return u'</form>'
 
     def render_fields(self, w, form, values):
         fields = self._render_hidden_fields(w, form)
@@ -244,9 +241,9 @@ class FormRenderer(AppObject):
                 w(u'<tr class="%s_%s_row">' % (field.name, field.role))
                 if self.display_label and field.label is not None:
                     w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
-                w('<td')
+                w(u'<td')
                 if field.label is None:
-                    w(' colspan="2"')
+                    w(u' colspan="2"')
                 error = form.field_error(field)
                 if error:
                     w(u' class="error"')
@@ -448,10 +445,8 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     """
     __regid__ = 'inline'
 
-    def render(self, form, values):
+    def render(self, w, form, values):
         form.add_media()
-        data = []
-        w = data.append
         try:
             w(u'<div id="div-%(divid)s" onclick="%(divonclick)s">' % values)
         except KeyError:
@@ -477,7 +472,6 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             values.pop(key, None)
         self.render_fields(w, form, values)
         w(u'</div></div>')
-        return '\n'.join(data)
 
     def render_fields(self, w, form, values):
         w(u'<fieldset id="fs-%(divid)s">' % values)

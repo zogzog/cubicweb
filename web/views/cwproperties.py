@@ -219,7 +219,9 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             self.form_row(form, key, splitlabel)
         renderer = self._cw.vreg['formrenderers'].select('cwproperties', self._cw,
                                                      display_progress_div=False)
-        return form.render(renderer=renderer)
+        data = []
+        form.render(w=data.append, renderer=renderer)
+        return u'\n'.join(data)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
