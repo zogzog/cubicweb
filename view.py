@@ -170,7 +170,6 @@ class View(AppObject):
         else:
             view_func = self.call
         stream = self.set_stream(w)
-        # stream = self.set_stream(context)
         view_func(**context)
         # return stream content if we have created it
         if stream is not None:
