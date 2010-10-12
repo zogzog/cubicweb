@@ -1143,9 +1143,9 @@ class rql_condition(EntitySelector):
     def __init__(self, expression, once_is_enough=False):
         super(rql_condition, self).__init__(once_is_enough)
         if 'U' in frozenset(split_expression(expression)):
-            rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
+            rql = 'Any COUNT(X) WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
-            rql = 'Any X WHERE X eid %%(x)s, %s' % expression
+            rql = 'Any COUNT(X) WHERE X eid %%(x)s, %s' % expression
         self.rql = rql
 
     def __repr__(self):
@@ -1153,8 +1153,8 @@ class rql_condition(EntitySelector):
 
     def score(self, req, rset, row, col):
         try:
-            return len(req.execute(self.rql, {'x': rset[row][col],
-                                              'u': req.user.eid}))
+            return req.execute(self.rql, {'x': rset[row][col],
+                                          'u': req.user.eid})[0][0]
         except Unauthorized:
             return 0
 
