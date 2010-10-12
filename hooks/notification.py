@@ -140,7 +140,7 @@ class EntityUpdateHook(NotificationHook):
         rset = session.execute(rql, {'x': self.entity.eid})
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
-            newvalue = self.entity[attr]
+            newvalue = self.entity.cw_edited[attr]
             if oldvalue != newvalue:
                 thisentitychanges.add((attr, oldvalue, newvalue))
         if thisentitychanges:

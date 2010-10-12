@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""base classes to handle tabbed views
-
-"""
+"""base classes to handle tabbed views"""
 
 __docformat__ = "restructuredtext en"
 
