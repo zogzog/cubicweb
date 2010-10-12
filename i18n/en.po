@@ -47,6 +47,10 @@ msgid "%(cstr)s constraint failed for value %(value)r"
 msgstr ""
 
 #, python-format
+msgid "%(etype)s by %(author)s"
+msgstr ""
+
+#, python-format
 msgid "%(firstname)s %(surname)s"
 msgstr ""
 
@@ -200,6 +204,9 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr ""
 
+msgid "About this site"
+msgstr ""
+
 msgid "Any"
 msgstr ""
 
@@ -319,6 +326,18 @@ msgstr "Relation"
 
 msgid "CWRelation_plural"
 msgstr "Relations"
+
+msgid "CWSource"
+msgstr ""
+
+msgid "CWSourceHostConfig"
+msgstr ""
+
+msgid "CWSourceHostConfig_plural"
+msgstr ""
+
+msgid "CWSource_plural"
+msgstr ""
 
 msgid "CWUniqueTogetherConstraint"
 msgstr ""
@@ -505,6 +524,12 @@ msgstr "New relation type"
 msgid "New CWRelation"
 msgstr "New relation"
 
+msgid "New CWSource"
+msgstr ""
+
+msgid "New CWSourceHostConfig"
+msgstr ""
+
 msgid "New CWUniqueTogetherConstraint"
 msgstr ""
 
@@ -569,6 +594,9 @@ msgstr ""
 msgid "Please note that this is only a shallow copy"
 msgstr ""
 
+msgid "Powered by CubicWeb"
+msgstr ""
+
 msgid "RQLConstraint"
 msgstr "RQL constraint"
 
@@ -614,6 +642,12 @@ msgstr ""
 
 msgid "SizeConstraint"
 msgstr "size constraint"
+
+msgid ""
+"Source's configuration for a particular host. One key=value per line, "
+"authorized keys depending on the source's type, overriding values defined on "
+"the source."
+msgstr ""
 
 msgid "Startup views"
 msgstr ""
@@ -697,6 +731,12 @@ msgstr "This relation type"
 
 msgid "This CWRelation"
 msgstr "This relation"
+
+msgid "This CWSource"
+msgstr ""
+
+msgid "This CWSourceHostConfig"
+msgstr ""
 
 msgid "This CWUniqueTogetherConstraint"
 msgstr ""
@@ -829,9 +869,6 @@ msgid ""
 "get_cache() method."
 msgstr ""
 
-msgid "about this site"
-msgstr ""
-
 msgid "abstract base class for transitions"
 msgstr ""
 
@@ -894,6 +931,9 @@ msgstr "read rql expression"
 
 msgid "add CWRelation relation_type CWRType object"
 msgstr "relation definition"
+
+msgid "add CWSourceHostConfig cw_host_config_of CWSource object"
+msgstr ""
 
 msgid "add CWUniqueTogetherConstraint constraint_of CWEType object"
 msgstr ""
@@ -1083,6 +1123,14 @@ msgid "april"
 msgstr ""
 
 #, python-format
+msgid "archive for %(author)s"
+msgstr ""
+
+#, python-format
+msgid "archive for %(month)s/%(year)s"
+msgstr ""
+
+#, python-format
 msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
 msgstr ""
 
@@ -1138,54 +1186,6 @@ msgstr ""
 
 msgid "boxes"
 msgstr ""
-
-msgid "ctxcomponents_bookmarks_box"
-msgstr "bookmarks box"
-
-msgid "ctxcomponents_bookmarks_box_description"
-msgstr "box listing the user's bookmarks"
-
-msgid "ctxcomponents_download_box"
-msgstr "download box"
-
-msgid "ctxcomponents_download_box_description"
-msgstr ""
-
-msgid "ctxcomponents_edit_box"
-msgstr "actions box"
-
-msgid "ctxcomponents_edit_box_description"
-msgstr "box listing the applicable actions on the displayed data"
-
-msgid "ctxcomponents_filter_box"
-msgstr "filter"
-
-msgid "ctxcomponents_filter_box_description"
-msgstr "box providing filter within current search results functionality"
-
-msgid "ctxcomponents_possible_views_box"
-msgstr "possible views box"
-
-msgid "ctxcomponents_possible_views_box_description"
-msgstr "box listing the possible views for the displayed data"
-
-msgid "ctxcomponents_rss"
-msgstr "rss box"
-
-msgid "ctxcomponents_rss_description"
-msgstr "RSS icon to get displayed data as a RSS thread"
-
-msgid "ctxcomponents_search_box"
-msgstr "search box"
-
-msgid "ctxcomponents_search_box_description"
-msgstr "search box"
-
-msgid "ctxcomponents_startup_views_box"
-msgstr "startup views box"
-
-msgid "ctxcomponents_startup_views_box_description"
-msgstr "box listing the possible start pages"
 
 msgid "bug report sent"
 msgstr ""
@@ -1279,6 +1279,9 @@ msgid ""
 "%(card)s"
 msgstr ""
 
+msgid "cancel"
+msgstr ""
+
 msgid "cancel select"
 msgstr ""
 
@@ -1338,44 +1341,11 @@ msgstr "format"
 msgid "components"
 msgstr ""
 
-msgid "components_appliname"
-msgstr "application title"
-
-msgid "components_appliname_description"
-msgstr "display the application title in the page's header"
-
-msgid "components_breadcrumbs"
-msgstr "breadcrumbs"
-
-msgid "components_breadcrumbs_description"
-msgstr "breadcrumbs bar that display a path locating the page in the site"
-
 msgid "components_etypenavigation"
 msgstr "filtering by type"
 
 msgid "components_etypenavigation_description"
 msgstr "permit to filter search results by entity type"
-
-msgid "components_help"
-msgstr "help button"
-
-msgid "components_help_description"
-msgstr "the help button on the top right-hand corner"
-
-msgid "components_loggeduserlink"
-msgstr "user link"
-
-msgid "components_loggeduserlink_description"
-msgstr ""
-"for anonymous users, this is a link pointing to authentication form, for "
-"logged in users, this is a link that makes a box appear and listing some "
-"possible user actions"
-
-msgid "components_logo"
-msgstr "icon"
-
-msgid "components_logo_description"
-msgstr "the application's icon displayed in the page's header"
 
 msgid "components_navigation"
 msgstr "page navigation"
@@ -1419,6 +1389,17 @@ msgid "condition_object"
 msgstr "condition of"
 
 msgid "conditions"
+msgstr ""
+
+msgid "config"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "config"
+msgstr ""
+
+msgctxt "CWSourceHostConfig"
+msgid "config"
 msgstr ""
 
 msgid "config mode"
@@ -1473,43 +1454,6 @@ msgstr ""
 
 msgid "content type"
 msgstr ""
-
-msgid "ctxcomponents"
-msgstr "contextual components"
-
-msgid "ctxcomponents_breadcrumbs"
-msgstr "breadcrumb"
-
-msgid "ctxcomponents_breadcrumbs_description"
-msgstr "breadcrumbs bar that display a path locating the page in the site"
-
-msgid "ctxcomponents_metadata"
-msgstr "entity's metadata"
-
-msgid "ctxcomponents_metadata_description"
-msgstr ""
-
-msgid "ctxcomponents_prevnext"
-msgstr "previous / next entity"
-
-msgid "ctxcomponents_prevnext_description"
-msgstr ""
-"display link to go from one entity to another on entities implementing the "
-"\"previous/next\" interface."
-
-msgid "ctxcomponents_seealso"
-msgstr "see also"
-
-msgid "ctxcomponents_seealso_description"
-msgstr ""
-"section containing entities related by the \"see also\" relation on entities "
-"supporting it."
-
-msgid "ctxcomponents_wfhistory"
-msgstr "workflow history"
-
-msgid "ctxcomponents_wfhistory_description"
-msgstr "show the workflow's history."
 
 msgid "context"
 msgstr ""
@@ -1589,9 +1533,14 @@ msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "creating relation %(linkto)s"
 
 msgid ""
+"creating CWSourceHostConfig (CWSourceHostConfig cw_host_config_of CWSource "
+"%(linkto)s)"
+msgstr "creating host configuration for source %(linkto)s"
+
+msgid ""
 "creating CWUniqueTogetherConstraint (CWUniqueTogetherConstraint "
 "constraint_of CWEType %(linkto)s)"
-msgstr ""
+msgstr "creating unique together constrain for entity type %(linkto)s"
 
 msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "creating a new user in group %(linkto)s"
@@ -1710,6 +1659,118 @@ msgstr ""
 msgid "csv export"
 msgstr ""
 
+msgid "ctxcomponents"
+msgstr "contextual components"
+
+msgid "ctxcomponents_anonuserlink"
+msgstr "user link"
+
+msgid "ctxcomponents_anonuserlink_description"
+msgstr ""
+"for anonymous users, this is a link pointing to authentication form, for "
+"logged in users, this is a link that makes a box appear and listing some "
+"possible user actions"
+
+msgid "ctxcomponents_appliname"
+msgstr "application title"
+
+msgid "ctxcomponents_appliname_description"
+msgstr "display the application title in the page's header"
+
+msgid "ctxcomponents_bookmarks_box"
+msgstr "bookmarks box"
+
+msgid "ctxcomponents_bookmarks_box_description"
+msgstr "box listing the user's bookmarks"
+
+msgid "ctxcomponents_breadcrumbs"
+msgstr "breadcrumb"
+
+msgid "ctxcomponents_breadcrumbs_description"
+msgstr "breadcrumbs bar that display a path locating the page in the site"
+
+msgid "ctxcomponents_download_box"
+msgstr "download box"
+
+msgid "ctxcomponents_download_box_description"
+msgstr ""
+
+msgid "ctxcomponents_edit_box"
+msgstr "actions box"
+
+msgid "ctxcomponents_edit_box_description"
+msgstr "box listing the applicable actions on the displayed data"
+
+msgid "ctxcomponents_facet.filters"
+msgstr "facets box"
+
+msgid "ctxcomponents_facet.filters_description"
+msgstr "box providing filter within current search results functionality"
+
+msgid "ctxcomponents_logo"
+msgstr "logo"
+
+msgid "ctxcomponents_logo_description"
+msgstr "the application's icon displayed in the page's header"
+
+msgid "ctxcomponents_metadata"
+msgstr "entity's metadata"
+
+msgid "ctxcomponents_metadata_description"
+msgstr ""
+
+msgid "ctxcomponents_possible_views_box"
+msgstr "possible views box"
+
+msgid "ctxcomponents_possible_views_box_description"
+msgstr "box listing the possible views for the displayed data"
+
+msgid "ctxcomponents_prevnext"
+msgstr "previous / next entity"
+
+msgid "ctxcomponents_prevnext_description"
+msgstr ""
+"display link to go from one entity to another on entities implementing the "
+"\"previous/next\" interface."
+
+msgid "ctxcomponents_rss"
+msgstr "rss box"
+
+msgid "ctxcomponents_rss_description"
+msgstr "RSS icon to get displayed data as a RSS thread"
+
+msgid "ctxcomponents_search_box"
+msgstr "search box"
+
+msgid "ctxcomponents_search_box_description"
+msgstr "search box"
+
+msgid "ctxcomponents_seealso"
+msgstr "see also"
+
+msgid "ctxcomponents_seealso_description"
+msgstr ""
+"section containing entities related by the \"see also\" relation on entities "
+"supporting it."
+
+msgid "ctxcomponents_startup_views_box"
+msgstr "startup views box"
+
+msgid "ctxcomponents_startup_views_box_description"
+msgstr "box listing the possible start pages"
+
+msgid "ctxcomponents_userstatus"
+msgstr ""
+
+msgid "ctxcomponents_userstatus_description"
+msgstr ""
+
+msgid "ctxcomponents_wfhistory"
+msgstr "workflow history"
+
+msgid "ctxcomponents_wfhistory_description"
+msgstr "show the workflow's history."
+
 msgid "ctxtoolbar"
 msgstr "toolbar"
 
@@ -1718,6 +1779,72 @@ msgstr "custom workflow"
 
 msgid "custom_workflow_object"
 msgstr "custom workflow of"
+
+msgid "cw_dont_cross"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "cw_dont_cross"
+msgstr ""
+
+msgid "cw_dont_cross_object"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "cw_dont_cross_object"
+msgstr ""
+
+msgid "cw_host_config_of"
+msgstr ""
+
+msgctxt "CWSourceHostConfig"
+msgid "cw_host_config_of"
+msgstr ""
+
+msgid "cw_host_config_of_object"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "cw_host_config_of_object"
+msgstr ""
+
+msgid "cw_may_cross"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "cw_may_cross"
+msgstr ""
+
+msgid "cw_may_cross_object"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "cw_may_cross_object"
+msgstr ""
+
+msgid "cw_source"
+msgstr ""
+
+msgid "cw_source_object"
+msgstr ""
+
+msgid "cw_support"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "cw_support"
+msgstr ""
+
+msgid "cw_support_object"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "cw_support_object"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "cw_support_object"
+msgstr ""
 
 msgid "cwetype-box"
 msgstr "\"box\" view"
@@ -2112,10 +2239,6 @@ msgstr ""
 msgid "error while embedding page"
 msgstr ""
 
-#, python-format
-msgid "error while handling __method: %s"
-msgstr "error while handling method %s"
-
 msgid "error while publishing ReST text"
 msgstr ""
 
@@ -2159,13 +2282,22 @@ msgstr "expression type"
 msgid "external page"
 msgstr ""
 
+msgid "facet.filters"
+msgstr "filter"
+
 msgid "facetbox"
-msgstr ""
+msgstr "facettes"
 
 msgid "facets_created_by-facet"
 msgstr "\"created by\" facet"
 
 msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_cw_source-facet"
+msgstr "data source"
+
+msgid "facets_cw_source-facet_description"
 msgstr ""
 
 msgid "facets_cwfinal-facet"
@@ -2372,8 +2504,11 @@ msgstr ""
 msgid "has_text"
 msgstr "has text"
 
-msgid "help"
-msgstr ""
+msgid "header-center"
+msgstr "header (center)"
+
+msgid "header-right"
+msgstr "header (right)"
 
 msgid "hide filter form"
 msgstr ""
@@ -2679,6 +2814,9 @@ msgctxt "CWUser"
 msgid "login"
 msgstr "login"
 
+msgid "login / password"
+msgstr ""
+
 msgid "login or email"
 msgstr ""
 
@@ -2721,6 +2859,13 @@ msgid "mandatory relation"
 msgstr ""
 
 msgid "march"
+msgstr ""
+
+msgid "match_host"
+msgstr ""
+
+msgctxt "CWSourceHostConfig"
+msgid "match_host"
 msgstr ""
 
 msgid "maximum number of characters in short description"
@@ -2803,6 +2948,10 @@ msgctxt "CWRType"
 msgid "name"
 msgstr "name"
 
+msgctxt "CWSource"
+msgid "name"
+msgstr ""
+
 msgctxt "State"
 msgid "name"
 msgstr "name"
@@ -2825,6 +2974,9 @@ msgstr ""
 msgid ""
 "name of the main variables which should be used in the selection if "
 "necessary (comma separated)"
+msgstr ""
+
+msgid "name of the source"
 msgstr ""
 
 msgid "name or identifier of the permission"
@@ -3020,9 +3172,6 @@ msgstr ""
 msgid "possible views"
 msgstr ""
 
-msgid "powered by CubicWeb"
-msgstr ""
-
 msgid "prefered_form"
 msgstr "prefered form"
 
@@ -3106,6 +3255,9 @@ msgstr "can be read by"
 msgctxt "RQLExpression"
 msgid "read_permission_object"
 msgstr "can be read by"
+
+msgid "regexp matching host(s) to which this config applies"
+msgstr ""
 
 msgid "registry"
 msgstr ""
@@ -3279,6 +3431,9 @@ msgstr ""
 msgid "security"
 msgstr ""
 
+msgid "see more"
+msgstr ""
+
 msgid "see them all"
 msgstr ""
 
@@ -3374,6 +3529,11 @@ msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
+msgstr ""
+
+msgid ""
+"source's configuration. One key=value per line, authorized keys depending on "
+"the source's type"
 msgstr ""
 
 msgid "sparql xml"
@@ -3695,6 +3855,10 @@ msgctxt "BaseTransition"
 msgid "type"
 msgstr "type"
 
+msgctxt "CWSource"
+msgid "type"
+msgstr ""
+
 msgctxt "Transition"
 msgid "type"
 msgstr "type"
@@ -3704,6 +3868,9 @@ msgid "type"
 msgstr "type"
 
 msgid "type here a sparql query"
+msgstr ""
+
+msgid "type of the source"
 msgstr ""
 
 msgid "ui"
@@ -4045,15 +4212,3 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
-
-#~ msgid "add_perm"
-#~ msgstr "add permission"
-
-#~ msgid "delete_perm"
-#~ msgstr "delete permission"
-
-#~ msgid "read_perm"
-#~ msgstr "read permission"
-
-#~ msgid "update_perm"
-#~ msgstr "update permission"

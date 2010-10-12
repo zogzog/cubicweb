@@ -40,11 +40,11 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
 
 class FilterBox(component.CtxComponent):
     """filter results of a query"""
-    __regid__ = 'filter_box'
+    __regid__ = 'facet.filters'
     __select__ = ((non_final_entity() & multi_lines_rset())
                   | contextview_selector())
     context = 'left' # XXX doesn't support 'incontext', only 'left' or 'right'
-    title = _('boxes_filter_box')
+    title = _('facet.filters')
     visible = True # functionality provided by the search box by default
     order = 1
     roundcorners = True
