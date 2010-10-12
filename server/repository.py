@@ -1174,11 +1174,9 @@ class Repository(object):
         try:
             source.add_entity(session, entity)
         except UniqueTogetherError, exc:
-            etype, rtypes = exc.args
-            problems = {}
-            for col in rtypes:
-                problems[col] = session._('violates unique_together constraints (%s)') % (','.join(rtypes))
-            raise ValidationError(entity.eid, problems)
+            userhdlr = session.vreg['adapters'].select(
+                'IUserFriendlyError', session, entity=entity, exc=exc)
+            userhdlr.raise_user_exception()
         self.add_info(session, entity, source, extid, complete=False)
         edited.saved = entity._cw_is_saved = True
         # trigger after_add_entity after after_add_relation

@@ -28,7 +28,8 @@ from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements, is_instance, relation_possible
+from cubicweb.selectors import (implements, is_instance, relation_possible,
+                                match_exception)
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 
 
@@ -463,3 +464,24 @@ class IMileStoneAdapter(IProgressAdapter):
     def contractors(self):
         """returns the list of persons supposed to work on this task"""
         raise NotImplementedError
+
+
+# error handling adapters ######################################################
+
+from cubicweb import UniqueTogetherError
+
+class IUserFriendlyError(EntityAdapter):
+    __regid__ = 'IUserFriendlyError'
+    __abstract__ = True
+    def __init__(self, *args, **kwargs):
+        self.exc = kwargs.pop('exc')
+        super(IUserFriendlyError, self).__init__(*args, **kwargs)
+
+
+class IUserFriendlyUniqueTogether(IUserFriendlyError):
+    __select__ = match_exception(UniqueTogetherError)
+    def raise_user_exception(self):
+        etype, rtypes = self.exc.args
+        msg = self._cw._('violates unique_together constraints (%s)') % (
+            ', '.join(self._cw._(rtypes)))
+        raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))

@@ -1430,6 +1430,21 @@ class match_transition(ExpectedValueSelector):
         return 0
 
 
+class match_exception(ExpectedValueSelector):
+    """Return 1 if a view is specified an as its registry id is in one of the
+    expected view id given to the initializer.
+    """
+    def __init__(self, *expected):
+        assert expected, self
+        self.expected = expected
+
+    @lltrace
+    def __call__(self, cls, req, exc=None, **kwargs):
+        if exc is not None and isinstance(exc, self.expected):
+            return 1
+        return 0
+
+
 @objectify_selector
 def debug_mode(cls, req, rset=None, **kwargs):
     """Return 1 if running in debug mode."""
