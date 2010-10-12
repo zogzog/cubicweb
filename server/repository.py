@@ -54,6 +54,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
+from cubicweb.entity import prefill_entity_caches
 from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
@@ -1169,6 +1170,7 @@ class Repository(object):
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
             edited.check(creation=True)
+        prefill_entity_caches(entity, relations)
         try:
             source.add_entity(session, entity)
         except UniqueTogetherError, exc:
@@ -1179,25 +1181,6 @@ class Repository(object):
             raise ValidationError(entity.eid, problems)
         self.add_info(session, entity, source, extid, complete=False)
         edited.saved = entity._cw_is_saved = True
-        # prefill entity relation caches
-        for rschema in eschema.subject_relations():
-            rtype = str(rschema)
-            if rtype in schema.VIRTUAL_RTYPES:
-                continue
-            if rschema.final:
-                entity.cw_attr_cache.setdefault(rtype, None)
-            else:
-                entity.cw_set_relation_cache(rtype, 'subject',
-                                             session.empty_rset())
-        for rschema in eschema.object_relations():
-            rtype = str(rschema)
-            if rtype in schema.VIRTUAL_RTYPES:
-                continue
-            entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
-        # set inlined relation cache before call to after_add_entity
-        for attr, value in relations:
-            session.update_rel_cache_add(entity.eid, attr, value)
-            del_existing_rel_if_needed(session, entity.eid, attr, value)
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', session, entity=entity)

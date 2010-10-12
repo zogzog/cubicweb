@@ -61,6 +61,28 @@ def can_use_rest_path(value):
         return False
     return True
 
+def prefill_entity_caches(entity, relations):
+    session = entity._cw
+    # prefill entity relation caches
+    for rschema in entity.e_schema.subject_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        if rschema.final:
+            entity.cw_attr_cache.setdefault(rtype, None)
+        else:
+            entity.cw_set_relation_cache(rtype, 'subject',
+                                         session.empty_rset())
+    for rschema in entity.e_schema.object_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
+    # set inlined relation cache before call to after_add_entity
+    for attr, value in relations:
+        session.update_rel_cache_add(entity.eid, attr, value)
+        del_existing_rel_if_needed(session, entity.eid, attr, value)
+
 
 
 class Entity(AppObject):
