@@ -37,7 +37,7 @@ from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache
-from logilab.common.deprecation import deprecated
+from logilab.common.deprecation import deprecated, class_deprecated
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, devtools, web, server
@@ -495,7 +495,8 @@ class CubicWebTC(TestCase):
                 continue
             views = [view for view in views
                      if view.category != 'startupview'
-                     and not issubclass(view, notification.NotificationView)]
+                     and not issubclass(view, notification.NotificationView)
+                     and not isinstance(view, class_deprecated)]
             if views:
                 try:
                     view = viewsvreg._select_best(views, req, rset=rset)

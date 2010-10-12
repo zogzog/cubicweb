@@ -196,7 +196,7 @@ _ = unicode
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import  deprecated
+from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
 
 from rql import RQLHelper
@@ -389,6 +389,8 @@ class ViewsRegistry(CWRegistry):
         for vid, views in self.items():
             if vid[0] == '_':
                 continue
+            views = [view for view in views
+                     if not isinstance(view, class_deprecated)]
             try:
                 view = self._select_best(views, req, rset=rset, **kwargs)
                 if view.linkable():
