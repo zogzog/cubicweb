@@ -271,7 +271,7 @@ and if not set, it will be choosen randomly',
                 assert len(self.sources_mode) == 1
                 if source.connect_for_migration:
                     return True
-                print 'not connecting to source', uri, 'during migration'
+                print 'not connecting to source', source.uri, 'during migration'
                 return False
             if 'all' in self.sources_mode:
                 assert len(self.sources_mode) == 1
