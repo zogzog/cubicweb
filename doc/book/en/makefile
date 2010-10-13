@@ -28,7 +28,6 @@ ALLSPHINXOPTS   = -d ${BUILDDIR}/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  all       to make standalone HTML files, developer manual and API doc"
-	@echo "  apidoc    to make API doc"
 	@echo "  html      to make standalone HTML files"
 	@echo "---  "
 	@echo "  pickle    to make pickle files (usable by e.g. sphinx-web)"
@@ -38,20 +37,14 @@ help:
 	@echo "  linkcheck to check all external links for integrity"
 
 clean:
-	rm -rf apidoc/
 	rm -f *.html
 	-rm -rf ${BUILDDIR}/*
 	-rm -rf ${BUILDJS}
 
-all: ${TARGET} apidoc html
+all: ${TARGET} html
 
 %.html: %.txt
 	${MKHTML} ${MKHTMLOPTS} $<
-
-#apydoc:
-#	epydoc --html -o epydoc/ -n ../server/*.py ../core/*.py ../common/*.py ../server/*/*.py ../modpython/*/*.py ../common/*/*.py
-apidoc:
-	epydoc --html -o apidoc -n "cubicweb" --exclude=setup --exclude=__pkginfo__ ../../../
 
 # run sphinx ###
 html: js
