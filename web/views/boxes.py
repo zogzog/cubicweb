@@ -222,7 +222,12 @@ class RsetBox(component.CtxComponent):
         w(self.cw_extra_kwargs['title'])
 
     def render_body(self, w):
-        self._cw.view(self.cw_extra_kwargs['vid'], self.cw_rset, w=w)
+        if 'dispctrl' in self.cw_extra_kwargs:
+            # XXX do not modify dispctrl!
+            self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
+            self.cw_extra_kwargs['dispctrl'].setdefault('use_list_limit', 1)
+        self._cw.view(self.cw_extra_kwargs['vid'], self.cw_rset, w=w,
+                      initargs=self.cw_extra_kwargs)
 
  # helper classes ##############################################################
 
@@ -238,6 +243,7 @@ class SideBoxView(EntityView):
         if 'dispctrl' in self.cw_extra_kwargs:
             # XXX do not modify dispctrl!
             self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
+            self.cw_extra_kwargs['dispctrl'].setdefault('use_list_limit', 1)
         box = self._cw.vreg['ctxcomponents'].select(
             'rsetbox', self._cw, rset=self.cw_rset, vid='autolimited',
             title=title, **self.cw_extra_kwargs)
