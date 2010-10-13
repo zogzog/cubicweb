@@ -283,6 +283,7 @@ try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
 except KeyError:
     _INSTALL_PREFIX = _find_prefix()
+_USR_INSTALL = _INSTALL_PREFIX == '/usr'
 
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
@@ -778,11 +779,11 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
 
     if CubicWebNoAppConfiguration.mode == 'user':
         _INSTANCES_DIR = expanduser('~/etc/cubicweb.d/')
-    else: #mode = 'system'
-        if _INSTALL_PREFIX == '/usr':
-            _INSTANCES_DIR = '/etc/cubicweb.d/'
-        else:
-            _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
+    #mode == system'
+    elif _USR_INSTALL:
+        _INSTANCES_DIR = '/etc/cubicweb.d/'
+    else:
+        _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
 
     if os.environ.get('APYCOT_ROOT'):
         _cubes_init = join(CubicWebNoAppConfiguration.CUBES_DIR, '__init__.py')
@@ -907,13 +908,21 @@ the repository',
                     path = '%s-%s.log' % (basepath, i)
                     i += 1
             return path
-        return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        if _USR_INSTALL:
+            return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        else:
+            log_path = os.path.join(_INSTALL_PREFIX, 'var', 'log', 'cubicweb', '%s-%s.log')
+            return log_path % (self.appid, self.name)
+
+
 
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            default = '/var/run/cubicweb/'
+            if _USR_INSTALL:
+                default = '/var/run/cubicweb/'
+            else:
+                default = os.path.join(_INSTALL_PREFIX, 'var', 'run', 'cubicweb')
         else:
             import tempfile
             default = tempfile.gettempdir()
@@ -944,8 +953,10 @@ the repository',
     @property
     def appdatahome(self):
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            iddir = '/var/lib/cubicweb/instances/'
+            if _USR_INSTALL:
+                iddir = os.path.join('/var','lib', 'cubicweb', 'instances')
+            else:
+                iddir = os.path.join(_INSTALL_PREFIX, 'var', 'lib', 'cubicweb', 'instances')
         else:
             iddir = self.instances_dir()
         iddir = abspath(os.environ.get('CW_INSTANCES_DATA_DIR', iddir))
