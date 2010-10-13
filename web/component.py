@@ -525,7 +525,7 @@ class RelatedObjectsCtxComponent(EntityCtxComponent):
 
     def render_body(self, w):
         rset = self.entity.related(self.rtype, role(self))
-        self.wview(self.vid, rset)
+        self._cw.view(self.vid, rset, w=w)
 
 
 # old contextual components, deprecated ########################################
