@@ -332,15 +332,15 @@ class RelatedView(EntityView):
         # else show links to display related entities
         else:
             rql = self.cw_rset.printable_rql()
-            self.cw_rset.limit(limit) # remove extra entity
+            rset = self.cw_rset.limit(limit) # remove extra entity
             if list_limit is None:
-                self.wview('csv', self.cw_rset, subvid=subvid)
+                self.wview('csv', rset, subvid=subvid)
                 self.w(u'[<a href="%s">%s</a>]' % (
                     xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
                     self._cw._('see them all')))
             else:
                 self.w(u'<div>')
-                self.wview('simplelist', self.cw_rset, subvid=subvid)
+                self.wview('simplelist', rset, subvid=subvid)
                 self.w(u'[<a href="%s">%s</a>]' % (
                     xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
                     self._cw._('see them all')))
