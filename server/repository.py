@@ -54,11 +54,32 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
-from cubicweb.entity import prefill_entity_caches
 from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
+
+def prefill_entity_caches(entity, relations):
+    session = entity._cw
+    # prefill entity relation caches
+    for rschema in entity.e_schema.subject_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        if rschema.final:
+            entity.cw_attr_cache.setdefault(rtype, None)
+        else:
+            entity.cw_set_relation_cache(rtype, 'subject',
+                                         session.empty_rset())
+    for rschema in entity.e_schema.object_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
+    # set inlined relation cache before call to after_add_entity
+    for attr, value in relations:
+        session.update_rel_cache_add(entity.eid, attr, value)
+        del_existing_rel_if_needed(session, entity.eid, attr, value)
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
