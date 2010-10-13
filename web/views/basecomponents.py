@@ -35,7 +35,7 @@ from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
-from cubicweb.web import component
+from cubicweb.web import component, uicfg
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
 
@@ -293,3 +293,4 @@ def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__, (SeeAlsoComponent,))
     if 'see_also' in vreg.schema:
         vreg.register(SeeAlsoComponent)
+        uicfg.primaryview_section.tag_subject_of(('*', 'see_also', '*'), 'hidden')
