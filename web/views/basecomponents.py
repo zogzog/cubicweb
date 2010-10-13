@@ -250,19 +250,6 @@ class EtypeRestrictionComponent(component.Component):
 
 # contextual components ########################################################
 
-class SeeAlsoComponent(component.RelatedObjectsCtxComponent):
-    """display any entity's see also"""
-    __regid__ = 'seealso'
-    context = 'navcontentbottom'
-    rtype = 'see_also'
-    role = 'subject'
-    order = 40
-    title = _('see_also')
-    # register msg not generated since no entity use see_also in cubicweb itself
-    _('ctxcomponents_seealso')
-    _('ctxcomponents_seealso_description')
-
-
 
 class MetaDataComponent(component.EntityCtxComponent):
     __regid__ = 'metadata'
@@ -287,10 +274,3 @@ class SectionLayout(component.Layout):
                 view.render_title(wow)
             view.render_body(w)
             w(u'</div>\n')
-
-
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__, (SeeAlsoComponent,))
-    if 'see_also' in vreg.schema:
-        vreg.register(SeeAlsoComponent)
-        uicfg.primaryview_section.tag_subject_of(('*', 'see_also', '*'), 'hidden')
