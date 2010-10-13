@@ -62,6 +62,8 @@ SYSTEM_RTYPES = set(('in_group', 'require_group', 'require_permission',
                      # cwproperty
                      'for_user',
                      )) | WORKFLOW_RTYPES
+NO_I18NCONTEXT = META_RTYPES | WORKFLOW_RTYPES
+NO_I18NCONTEXT.add('require_permission')
 
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
