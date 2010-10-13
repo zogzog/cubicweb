@@ -910,6 +910,7 @@ class AutoPopulateTest(CubicWebTC):
             except ValidationError, ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
+                self.session.commit_state = None # reset uncommitable flag
         self.post_populate(cu)
         self.commit()
 
