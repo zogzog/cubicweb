@@ -2949,6 +2949,9 @@ msgstr "boucle détectée en parcourant la relation %(rel)s de l'entité #%(eid)
 msgid "main informations"
 msgstr "Informations générales"
 
+msgid "main_tab"
+msgstr "description"
+
 msgid "mainvars"
 msgstr "variables principales"
 

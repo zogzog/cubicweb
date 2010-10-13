@@ -201,7 +201,7 @@ class EntityRelationView(EntityView):
 class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
     __abstract__ = True # don't register
 
-    tabs = ['main_tab']
+    tabs = [_('main_tab')]
     default_tab = 'main_tab'
 
     def cell_call(self, row, col):
@@ -215,7 +215,7 @@ TabedPrimaryView = class_renamed('TabedPrimaryView', TabbedPrimaryView)
 
 class PrimaryTab(primary.PrimaryView):
     __regid__ = 'main_tab'
-    title = None
+    title = None # should not appear in possible views
 
     def is_primary(self):
         return True

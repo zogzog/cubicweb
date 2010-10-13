@@ -2947,6 +2947,9 @@ msgstr "loop detectado en %(rel)s de la entidad #%(eid)s"
 msgid "main informations"
 msgstr "Informaciones Generales"
 
+msgid "main_tab"
+msgstr ""
+
 msgid "mainvars"
 msgstr "Variables principales"
 
