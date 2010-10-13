@@ -327,7 +327,7 @@ Testing with other cubes
 Sometimes a small component cannot be tested all by itself, so one
 needs to specify other cubes to be used as part of the the unit test
 suite. This is handled by the ``bootstrap_cubes`` file located under
-``mycube\test\data``. One example from the `preview` cube::
+``mycube/test/data``. One example from the `preview` cube::
 
  card, file, preview
 
@@ -336,6 +336,10 @@ The format is:
 * possibly several empy lines or lines starting with ``#`` (comment lines)
 * one line containing a coma separated list of cube names.
 
+It is also possible to add a ``schema.py`` file in
+``mycube/test/data``, which will be used by the testing framework,
+therefore making new entity types and relations available to the
+tests. 
 
 Test APIS
 ---------
