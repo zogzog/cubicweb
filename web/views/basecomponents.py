@@ -125,9 +125,9 @@ cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
     def call(self):
         self.w(self._html % (self._cw._('login / password'),
                              self.loginboxid, self._cw._('i18n_login_popup')))
-        self.view('logform', rset=self.cw_rset, id=self.loginboxid,
-                  klass='%s hidden' % self.loginboxid, title=False, showmessage=False,
-                  w=self.w)
+        self._cw.view('logform', rset=self.cw_rset, id=self.loginboxid,
+                      klass='%s hidden' % self.loginboxid, title=False,
+                      showmessage=False, w=self.w)
 
 
 class HTTPLoginComponent(CookieLoginComponent):
