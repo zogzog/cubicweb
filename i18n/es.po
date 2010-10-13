@@ -1807,14 +1807,6 @@ msgstr ""
 "Permite realizar una búsqueda simple para cualquier tipo de dato en la "
 "aplicación"
 
-msgid "ctxcomponents_seealso"
-msgstr "Vea también"
-
-msgid "ctxcomponents_seealso_description"
-msgstr ""
-"sección que muestra las entidades relacionadas por la relación \"vea también"
-"\" , si la entidad soporta esta relación."
-
 msgid "ctxcomponents_startup_views_box"
 msgstr "Caja Vistas de inicio"
 
@@ -4355,6 +4347,3 @@ msgstr "Ha terminado la sesión"
 
 msgid "you should probably delete that property"
 msgstr "Debería probablamente suprimir esta propriedad"
-
-#~ msgid "edition"
-#~ msgstr "Edición"

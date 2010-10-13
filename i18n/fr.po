@@ -1813,14 +1813,6 @@ msgstr "boîte de recherche"
 msgid "ctxcomponents_search_box_description"
 msgstr "boîte avec un champ de recherche simple"
 
-msgid "ctxcomponents_seealso"
-msgstr "voir aussi"
-
-msgid "ctxcomponents_seealso_description"
-msgstr ""
-"section affichant les entités liées par la relation \"voir aussi\" si "
-"l'entité supporte cette relation."
-
 msgid "ctxcomponents_startup_views_box"
 msgstr "boîte des vues de départs"
 

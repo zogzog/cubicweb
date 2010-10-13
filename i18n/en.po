@@ -1745,14 +1745,6 @@ msgstr "search box"
 msgid "ctxcomponents_search_box_description"
 msgstr "search box"
 
-msgid "ctxcomponents_seealso"
-msgstr "see also"
-
-msgid "ctxcomponents_seealso_description"
-msgstr ""
-"section containing entities related by the \"see also\" relation on entities "
-"supporting it."
-
 msgid "ctxcomponents_startup_views_box"
 msgstr "startup views box"
 
