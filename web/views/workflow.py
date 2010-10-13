@@ -134,7 +134,7 @@ class WFHistoryView(EntityView):
 
     title = _('Workflow history')
 
-    def cell_call(self, row, col, view=None):
+    def cell_call(self, row, col, view=None, title=title):
         _ = self._cw._
         eid = self.cw_rset[row][col]
         sel = 'Any FS,TS,WF,D'
@@ -157,7 +157,9 @@ class WFHistoryView(EntityView):
         except Unauthorized:
             return
         if rset:
-            self.wview('table', rset, title=_(self.title), displayactions=False,
+            if title:
+                title = _(title)
+            self.wview('table', rset, title=title, displayactions=False,
                        displaycols=displaycols, headers=headers)
 
 
@@ -175,7 +177,7 @@ class WFHistoryVComponent(component.EntityCtxComponent):
             self.w = w
             self.cell_call(self.entity.cw_row, self.entity.cw_col)
         else:
-            self.entity.view('wfhistory', w=w)
+            self.entity.view('wfhistory', w=w, title=None)
 
 
 # workflow actions #############################################################
