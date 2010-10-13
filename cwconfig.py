@@ -151,7 +151,7 @@ from logilab.common.configuration import (Configuration, Method,
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary)
-from cubicweb.toolsutils import env_path, create_dir
+from cubicweb.toolsutils import create_dir
 
 CONFIGURATIONS = []
 
@@ -304,7 +304,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
-    CUBES_DIR = env_path('CW_CUBES_DIR', _CUBES_DIR, 'cubes', checkexists=False)
+    CUBES_DIR = abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
@@ -835,7 +835,7 @@ the repository',
     @classmethod
     def instances_dir(cls):
         """return the control directory"""
-        return env_path('CW_INSTANCES_DIR', cls._INSTANCES_DIR, 'registry')
+        return abspath(os.environ.get('CW_INSTANCES_DIR', cls._INSTANCES_DIR))
 
     @classmethod
     def migration_scripts_dir(cls):
@@ -919,8 +919,7 @@ the repository',
             default = tempfile.gettempdir()
         # runtime directory created on startup if necessary, don't check it
         # exists
-        rtdir = env_path('CW_RUNTIME_DIR', default, 'run time',
-                         checkexists=False)
+        rtdir = abspath(os.environ.get('CW_RUNTIME_DIR', default))
         return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
     # instance methods used to get instance specific resources #############
@@ -949,7 +948,7 @@ the repository',
             iddir = '/var/lib/cubicweb/instances/'
         else:
             iddir = self.instances_dir()
-        iddir = env_path('CW_INSTANCES_DATA_DIR', iddir, 'additional data')
+        iddir = abspath(os.environ.get('CW_INSTANCES_DATA_DIR', iddir))
         return join(iddir, self.appid)
 
     def init_cubes(self, cubes):
