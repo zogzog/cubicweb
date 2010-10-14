@@ -186,7 +186,7 @@ class RepeatList(object):
         return other[:] + ([self._item] * self._size)
     def __eq__(self, other):
         if isinstance(other, RepeatList):
-            return other._size == self.size and other._item == self.item
+            return other._size == self._size and other._item == self._item
         return self[:] == other
     def pop(self, i):
         self._size -= 1

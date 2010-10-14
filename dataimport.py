@@ -85,7 +85,7 @@ from cubicweb.server.ssplanner import EditedEntity
 
 def count_lines(stream_or_filename):
     if isinstance(stream_or_filename, basestring):
-        f = open(filename)
+        f = open(stream_or_filename)
     else:
         f = stream_or_filename
         f.seek(0)
@@ -98,8 +98,8 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
     """same as ucsvreader but a progress bar is displayed as we iter on rows"""
     if isinstance(stream_or_path, basestring):
-        if not osp.exists(filepath):
-            raise Exception("file doesn't exists: %s" % filepath)
+        if not osp.exists(stream_or_path):
+            raise Exception("file doesn't exists: %s" % stream_or_path)
         stream = open(stream_or_path)
     else:
         stream = stream_or_path
@@ -421,7 +421,6 @@ class RQLObjectStore(ObjectStore):
         ObjectStore.__init__(self)
         if session is None:
             sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
-            session = cnx
         if not hasattr(session, 'set_pool'):
             # connection
             cnx = session
