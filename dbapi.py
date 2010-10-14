@@ -532,9 +532,8 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
-        cubespath = [config.cube_dir(p) for p in cubes]
-        config.load_site_cubicweb(cubespath)
-        vpath = config.build_vregistry_path(reversed(cubespath),
+        config.init_cubes(cubes)
+        vpath = config.build_vregistry_path(reversed(config.cubes_path()),
                                             evobjpath=esubpath,
                                             tvobjpath=subpath)
         self.vreg.register_objects(vpath)

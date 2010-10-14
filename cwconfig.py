@@ -671,6 +671,7 @@ this option is set to yes",
     def __init__(self, debugmode=False):
         register_stored_procedures()
         ConfigurationMixIn.__init__(self)
+        self._cubes = None
         self.debugmode = debugmode
         self.adjust_sys_path()
         self.load_defaults()
@@ -772,6 +773,31 @@ this option is set to yes",
         as default value
         """
         return None
+
+    _cubes = None
+
+    def init_cubes(self, cubes):
+        assert self._cubes is None, self._cubes
+        self._cubes = self.reorder_cubes(cubes)
+        # load cubes'__init__.py file first
+        for cube in cubes:
+            __import__('cubes.%s' % cube)
+        self.load_site_cubicweb()
+
+    def cubes(self):
+        """return the list of cubes used by this instance
+
+        result is ordered from the top level cubes to inner dependencies
+        cubes
+        """
+        assert self._cubes is not None, 'cubes not initialized'
+        return self._cubes
+
+    def cubes_path(self):
+        """return the list of path to cubes used by this instance, from outer
+        most to inner most cubes
+        """
+        return [self.cube_dir(p) for p in self.cubes()]
 
 
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
@@ -929,7 +955,6 @@ the repository',
     def __init__(self, appid, debugmode=False):
         self.appid = appid
         CubicWebNoAppConfiguration.__init__(self, debugmode)
-        self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
     def adjust_sys_path(self):
@@ -954,32 +979,12 @@ the repository',
         return join(iddir, self.appid)
 
     def init_cubes(self, cubes):
-        assert self._cubes is None, self._cubes
-        self._cubes = self.reorder_cubes(cubes)
-        # load cubes'__init__.py file first
-        for cube in cubes:
-            __import__('cubes.%s' % cube)
-        self.load_site_cubicweb()
+        super(CubicWebConfiguration, self).init_cubes(cubes)
         # reload config file in cases options are defined in cubes __init__
         # or site_cubicweb files
         self.load_file_configuration(self.main_config_file())
         # configuration initialization hook
         self.load_configuration()
-
-    def cubes(self):
-        """return the list of cubes used by this instance
-
-        result is ordered from the top level cubes to inner dependencies
-        cubes
-        """
-        assert self._cubes is not None
-        return self._cubes
-
-    def cubes_path(self):
-        """return the list of path to cubes used by this instance, from outer
-        most to inner most cubes
-        """
-        return [self.cube_dir(p) for p in self.cubes()]
 
     def add_cubes(self, cubes):
         """add given cubes to the list of used cubes"""
