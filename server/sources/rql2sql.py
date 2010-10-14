@@ -1337,10 +1337,10 @@ class SQLGenerator(object):
 
     # tables handling #########################################################
 
-    def alias_and_add_table(self, tablename):
+    def alias_and_add_table(self, tablename, scope=-1):
         alias = '%s%s' % (tablename, self._state.count)
         self._state.count += 1
-        self.add_table('%s AS %s' % (tablename, alias), alias)
+        self.add_table('%s AS %s' % (tablename, alias), alias, scope)
         return alias
 
     def add_table(self, table, key=None, scope=-1):
@@ -1437,6 +1437,7 @@ class SQLGenerator(object):
             except AttributeError:
                 pass
         self._state.done.add(relation)
-        alias = self.alias_and_add_table(self.dbhelper.fti_table)
+        scope = self._state.scopes[relation.scope]
+        alias = self.alias_and_add_table(self.dbhelper.fti_table, scope=scope)
         relation._q_sqltable = alias
         return alias

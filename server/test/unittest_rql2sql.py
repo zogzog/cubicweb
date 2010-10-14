@@ -570,8 +570,6 @@ ORDER BY T1.C2'''),
     ('Any 1 WHERE X in_group G, X is CWUser',
      '''SELECT 1
 FROM in_group_relation AS rel_in_group0'''),
-
-
     ]
 
 
@@ -1414,6 +1412,13 @@ ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0
              """SELECT appears0.uid, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight
 FROM appears AS appears0
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata')"""),
+
+
+            ('Any X WHERE NOT A tags X, X has_text "pouet"',
+             '''SELECT appears1.uid
+FROM appears AS appears1
+WHERE NOT (EXISTS(SELECT 1 FROM tags_relation AS rel_tags0 WHERE appears1.uid=rel_tags0.eid_to)) AND appears1.words @@ to_tsquery('default', 'pouet')
+'''),
 
             )):
             yield t
