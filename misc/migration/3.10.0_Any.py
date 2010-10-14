@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from cubicweb.server.session import hooks_control
 
 for uri, cfg in config.sources().items():
