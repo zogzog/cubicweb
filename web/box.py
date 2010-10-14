@@ -23,7 +23,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated, class_renamed
 
-from cubicweb import Unauthorized, role as get_role, target as get_target
+from cubicweb import Unauthorized, role as get_role
 from cubicweb.schema import display_name
 from cubicweb.selectors import no_cnx, one_line_rset
 from cubicweb.view import View

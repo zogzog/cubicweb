@@ -27,7 +27,8 @@ from warnings import warn
 from logilab.common.deprecation import class_deprecated, class_renamed
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized, role, tags
+from cubicweb import Unauthorized, role, target, tags
+from cubicweb.schema import display_name
 from cubicweb.uilib import js, domid
 from cubicweb.utils import json_dumps
 from cubicweb.view import ReloadableMixIn, Component
@@ -35,7 +36,7 @@ from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
                                 non_final_entity, partial_relation_possible,
                                 partial_has_related_entities)
 from cubicweb.appobject import AppObject
-from cubicweb.web import htmlwidgets, stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, htmlwidgets, stdmsgs
 
 
 # abstract base class for navigation components ################################
@@ -362,7 +363,7 @@ class RQLCtxComponent(CtxComponent):
 class EditRelationMixIn(ReloadableMixIn):
     def box_item(self, entity, etarget, rql, label):
         """builds HTML link to edit relation between `entity` and `etarget`"""
-        args = {role(self)[0] : entity.eid, get_target(self)[0] : etarget.eid}
+        args = {role(self)[0] : entity.eid, target(self)[0] : etarget.eid}
         url = self._cw.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
         return u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
