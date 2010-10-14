@@ -57,7 +57,7 @@ class AddRelationView(EditRelationMixIn, View):
                   'ent': entity.view('incontext')})
         self.w(u'<ul>')
         for boxitem in self.unrelated_boxitems(entity):
-            self.w('<li class="invisible">%s</li>' % botitem)
+            self.w('<li class="invisible">%s</li>' % boxitem)
         self.w(u'</ul></div>')
 
     def unrelated_entities(self, entity):
