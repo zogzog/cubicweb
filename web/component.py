@@ -362,8 +362,7 @@ class RQLCtxComponent(CtxComponent):
 class EditRelationMixIn(ReloadableMixIn):
     def box_item(self, entity, etarget, rql, label):
         """builds HTML link to edit relation between `entity` and `etarget`"""
-        role, target = role(self), get_target(self)
-        args = {role[0] : entity.eid, target[0] : etarget.eid}
+        args = {role(self)[0] : entity.eid, get_target(self)[0] : etarget.eid}
         url = self._cw.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
         return u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
