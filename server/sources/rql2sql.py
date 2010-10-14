@@ -508,7 +508,7 @@ class SQLGenerator(object):
                 select.need_distinct = True
         return self.__union_sql(union, needalias)
 
-    def union_sql(self, union, needalias=False): # pylint: disable-msg=E0202
+    def union_sql(self, union, needalias=False): # pylint: disable=E0202
         if len(union.children) == 1:
             return self.select_sql(union.children[0], needalias)
         sqls = ('(%s)' % self.select_sql(select, needalias)

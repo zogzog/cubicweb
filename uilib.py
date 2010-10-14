@@ -81,7 +81,7 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
 # text publishing #############################################################
 
 try:
-    from cubicweb.ext.rest import rest_publish # pylint: disable-msg=W0611
+    from cubicweb.ext.rest import rest_publish # pylint: disable=W0611
 except ImportError:
     def rest_publish(entity, data):
         """default behaviour if docutils was not found"""

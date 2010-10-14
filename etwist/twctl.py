@@ -21,7 +21,7 @@ from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
 
 # trigger configuration registration
-import cubicweb.etwist.twconfig # pylint: disable-msg=W0611
+import cubicweb.etwist.twconfig # pylint: disable=W0611
 
 class TWCreateHandler(WebCreateHandler):
     cfgname = 'twisted'
