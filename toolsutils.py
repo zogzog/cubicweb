@@ -194,30 +194,6 @@ def read_config(config_file):
                 config_file, ex)
     return config
 
-def env_path(env_var, default, name, checkexists=True):
-    """get a path specified in a variable or using the default value and return
-    it.
-
-    :type env_var: str
-    :param env_var: name of an environment variable
-
-    :type default: str
-    :param default: default value if the environment variable is not defined
-
-    :type name: str
-    :param name: the informal name of the path, used for error message
-
-    :rtype: str
-    :return: the value of the environment variable or the default value
-
-    :raise `ConfigurationError`: if the returned path does not exist
-    """
-    path = environ.get(env_var, default)
-    if checkexists and not exists(path):
-        raise ConfigurationError('%s directory %s doesn\'t exist' % (name, path))
-    return abspath(path)
-
-
 
 _HDLRS = {}
 

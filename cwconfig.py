@@ -152,7 +152,7 @@ from logilab.common.configuration import (Configuration, Method,
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary)
-from cubicweb.toolsutils import env_path, create_dir
+from cubicweb.toolsutils import create_dir
 
 CONFIGURATIONS = []
 
@@ -202,7 +202,8 @@ def _find_prefix(start_path=CW_SOFTWARE_ROOT):
     old_prefix = None
     if not isdir(start_path):
         prefix = dirname(start_path)
-    while not isdir(join(prefix, 'share', 'cubicweb')) and prefix != old_prefix:
+    while (not isdir(join(prefix, 'share', 'cubicweb'))
+          or prefix.endswith('.egg')) and prefix != old_prefix:
         old_prefix = prefix
         prefix = dirname(prefix)
     if isdir(join(prefix, 'share', 'cubicweb')):
@@ -284,6 +285,7 @@ try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
 except KeyError:
     _INSTALL_PREFIX = _find_prefix()
+_USR_INSTALL = _INSTALL_PREFIX == '/usr'
 
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
@@ -305,7 +307,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
-    CUBES_DIR = env_path('CW_CUBES_DIR', _CUBES_DIR, 'cubes', checkexists=False)
+    CUBES_DIR = abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
@@ -805,11 +807,11 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
 
     if CubicWebNoAppConfiguration.mode == 'user':
         _INSTANCES_DIR = expanduser('~/etc/cubicweb.d/')
-    else: #mode = 'system'
-        if _INSTALL_PREFIX == '/usr':
-            _INSTANCES_DIR = '/etc/cubicweb.d/'
-        else:
-            _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
+    #mode == system'
+    elif _USR_INSTALL:
+        _INSTANCES_DIR = '/etc/cubicweb.d/'
+    else:
+        _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
 
     if os.environ.get('APYCOT_ROOT'):
         _cubes_init = join(CubicWebNoAppConfiguration.CUBES_DIR, '__init__.py')
@@ -862,7 +864,7 @@ the repository',
     @classmethod
     def instances_dir(cls):
         """return the control directory"""
-        return env_path('CW_INSTANCES_DIR', cls._INSTANCES_DIR, 'registry')
+        return abspath(os.environ.get('CW_INSTANCES_DIR', cls._INSTANCES_DIR))
 
     @classmethod
     def migration_scripts_dir(cls):
@@ -934,20 +936,27 @@ the repository',
                     path = '%s-%s.log' % (basepath, i)
                     i += 1
             return path
-        return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        if _USR_INSTALL:
+            return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        else:
+            log_path = os.path.join(_INSTALL_PREFIX, 'var', 'log', 'cubicweb', '%s-%s.log')
+            return log_path % (self.appid, self.name)
+
+
 
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            default = '/var/run/cubicweb/'
+            if _USR_INSTALL:
+                default = '/var/run/cubicweb/'
+            else:
+                default = os.path.join(_INSTALL_PREFIX, 'var', 'run', 'cubicweb')
         else:
             import tempfile
             default = tempfile.gettempdir()
         # runtime directory created on startup if necessary, don't check it
         # exists
-        rtdir = env_path('CW_RUNTIME_DIR', default, 'run time',
-                         checkexists=False)
+        rtdir = abspath(os.environ.get('CW_RUNTIME_DIR', default))
         return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
     # instance methods used to get instance specific resources #############
@@ -971,11 +980,13 @@ the repository',
     @property
     def appdatahome(self):
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            iddir = '/var/lib/cubicweb/instances/'
+            if _USR_INSTALL:
+                iddir = os.path.join('/var','lib', 'cubicweb', 'instances')
+            else:
+                iddir = os.path.join(_INSTALL_PREFIX, 'var', 'lib', 'cubicweb', 'instances')
         else:
             iddir = self.instances_dir()
-        iddir = env_path('CW_INSTANCES_DATA_DIR', iddir, 'additional data')
+        iddir = abspath(os.environ.get('CW_INSTANCES_DATA_DIR', iddir))
         return join(iddir, self.appid)
 
     def init_cubes(self, cubes):

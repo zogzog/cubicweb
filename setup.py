@@ -31,10 +31,12 @@ try:
         raise ImportError() # do as there is no setuptools
     from setuptools import setup
     from setuptools.command import install_lib
+    from setuptools.command import install_data
     USE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
     from distutils.command import install_lib
+    from distutils.command import install_data
     USE_SETUPTOOLS = False
 
 # import required features
@@ -163,6 +165,16 @@ class MyInstallLib(install_lib.install_lib):
                 dest = join(self.install_dir, base, directory)
                 export(directory, dest, verbose=False)
 
+class MyInstallData(install_data.install_data):
+    def run(self):
+        """overridden from install_data class"""
+        install_data.install_data.run(self)
+        path = join(self.install_dir, 'share', 'cubicweb', 'cubes', '__init__.py')
+        ini = open(path, 'w')
+        ini.write('# Cubicweb cubes directory\n')
+        ini.close()
+
+
 def install(**kwargs):
     """setup entry point"""
     if USE_SETUPTOOLS:
@@ -188,7 +200,7 @@ def install(**kwargs):
                  author=author, author_email=author_email,
                  scripts=ensure_scripts(scripts), data_files=data_files,
                  ext_modules=ext_modules,
-                 cmdclass={'install_lib': MyInstallLib},
+                 cmdclass={'install_lib': MyInstallLib, 'install_data': MyInstallData},
                  **kwargs
                  )
 
