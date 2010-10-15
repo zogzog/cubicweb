@@ -90,7 +90,7 @@ class PrimaryView(EntityView):
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
         for comp in self._cw.vreg['ctxcomponents'].poss_visible_objects(
-            self._cw, rset=self.cw_rset, row=self.cw_row, view=self, context=context):
+            self._cw, rset=self.cw_rset, view=self, context=context):
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
             except NotImplementedError:
@@ -249,7 +249,7 @@ class PrimaryView(EntityView):
                                   context='incontext')
             sideboxes.append(box)
         sideboxes += boxesreg.poss_visible_objects(
-             self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
+             self._cw, rset=self.cw_rset, view=self,
              context='incontext')
         # XXX since we've two sorted list, it may be worth using bisect
         def get_order(x):
