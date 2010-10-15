@@ -63,7 +63,10 @@ def wait_process_end(pid, maxtry=10, waittime=1):
         raise ExecutionError('can\'t kill process %s' % pid)
 
 def list_instances(regdir):
-    return sorted(idir for idir in listdir(regdir) if isdir(join(regdir, idir)))
+    if isdir(regdir):
+        return sorted(idir for idir in listdir(regdir) if isdir(join(regdir, idir)))
+    else:
+        return []
 
 def detect_available_modes(templdir):
     modes = []
