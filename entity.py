@@ -1094,7 +1094,7 @@ class Attribute(object):
             return self
         return eobj.cw_attr_value(self._attrname)
 
-    @deprecated('[3.10] use entity.cw_attr_cache[attr] = value')
+    @deprecated('[3.10] assign to entity.cw_attr_cache[attr] or entity.cw_edited[attr]')
     def __set__(self, eobj, value):
         if hasattr(eobj, 'cw_edited') and not eobj.cw_edited.saved:
             eobj.cw_edited[self._attrname] = value

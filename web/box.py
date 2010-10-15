@@ -191,5 +191,5 @@ class EditRelationBoxTemplate(EditRelationMixIn, EntityBoxTemplate):
 
 AjaxEditRelationBoxTemplate = class_renamed(
     'AjaxEditRelationBoxTemplate', AjaxEditRelationCtxComponent,
-    '[3.10] AjaxEditRelationBoxTemplate has been renamed to AjaxEditRelationCtxComponent')
+    '[3.10] AjaxEditRelationBoxTemplate has been renamed to AjaxEditRelationCtxComponent (%(cls)s)')
 
