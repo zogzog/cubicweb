@@ -31,13 +31,12 @@ try:
         raise ImportError() # do as there is no setuptools
     from setuptools import setup
     from setuptools.command import install_lib
-    from setuptools.command import install_data
     USE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
     from distutils.command import install_lib
-    from distutils.command import install_data
     USE_SETUPTOOLS = False
+from distutils.command import install_data
 
 # import required features
 from __pkginfo__ import modname, version, license, description, web, \
