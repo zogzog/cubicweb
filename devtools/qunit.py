@@ -11,6 +11,7 @@ from uuid import uuid4
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest
 
 import os
+from os.path import expanduser
 import cubicweb
 from cubicweb.view import StartupView
 from cubicweb.web.controller import Controller
@@ -53,14 +54,18 @@ class FirefoxHelper(object):
         stdout = TemporaryFile()
         stderr = TemporaryFile()
         try:
-          check_call(['firefox', '-no-remote', '-CreateProfile',
-                      '%s %s' % (self._profile_name, self._tmp_dir)],
-                                stdout=stdout, stderr=stderr)
+            home = expanduser('~')
+            user = os.getlogin()
+            assert os.access(home, os.W_OK), \
+                   'No write access to your home directory, Firefox will crash.'\
+                   ' Are you sure "%s" is a valid home  for user "%s"' % (home, user)
+            check_call(['firefox', '-no-remote', '-CreateProfile',
+                        '%s %s' % (self._profile_name, self._tmp_dir)],
+                                  stdout=stdout, stderr=stderr)
         except CalledProcessError, cpe:
             stdout.seek(0)
             stderr.seek(0)
             raise VerboseCalledProcessError(cpe.returncode, cpe.cmd, stdout.read(), stderr.read())
-
 
     def start(self, url):
         self.stop()
