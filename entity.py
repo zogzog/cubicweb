@@ -1096,7 +1096,10 @@ class Attribute(object):
 
     @deprecated('[3.10] use entity.cw_attr_cache[attr] = value')
     def __set__(self, eobj, value):
-        eobj.cw_attr_cache[self._attrname] = value
+        if hasattr(eobj, 'cw_edited') and not eobj.cw_edited.saved:
+            eobj.cw_edited[self._attrname] = value
+        else:
+            eobj.cw_attr_cache[self._attrname] = value
 
 
 class Relation(object):
