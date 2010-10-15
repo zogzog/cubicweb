@@ -146,3 +146,4 @@ def onevent(event, *args, **kwargs):
         CW_EVENT_MANAGER.bind(event, func, *args, **kwargs)
         return func
     return _decorator
+import cubicweb.__setuptools_hack__
