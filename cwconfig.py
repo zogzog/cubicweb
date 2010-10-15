@@ -201,7 +201,8 @@ def _find_prefix(start_path=CW_SOFTWARE_ROOT):
     old_prefix = None
     if not isdir(start_path):
         prefix = dirname(start_path)
-    while not isdir(join(prefix, 'share', 'cubicweb')) and prefix != old_prefix:
+    while (not isdir(join(prefix, 'share', 'cubicweb'))
+          or prefix.endswith('.egg')) and prefix != old_prefix:
         old_prefix = prefix
         prefix = dirname(prefix)
     if isdir(join(prefix, 'share', 'cubicweb')):
