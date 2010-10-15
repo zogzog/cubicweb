@@ -61,7 +61,7 @@ include_dirs = getattr(__pkginfo__, 'include_dirs', ())
 data_files = getattr(__pkginfo__, 'data_files', None)
 subpackage_of = getattr(__pkginfo__, 'subpackage_of', None)
 ext_modules = getattr(__pkginfo__, 'ext_modules', None)
-
+package_data = getattr(__pkginfo__, 'package_data', {})
 
 BASE_BLACKLIST = ('CVS', 'debian', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
@@ -194,6 +194,7 @@ def install(**kwargs):
     if USE_SETUPTOOLS:
         kwargs['install_requires'] = install_requires
     kwargs['packages'] = packages
+    kwargs['package_data'] = package_data
     return setup(name=distname, version=version, license=license, url=web,
                  description=description, long_description=long_description,
                  author=author, author_email=author_email,

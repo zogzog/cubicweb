@@ -96,7 +96,13 @@ if '--home' in sys.argv:
 else:
     pydir = join('python' + _pyversion, 'site-packages')
 
+# data files that shall be copied into the main package directory
+package_data = {
+    'cubicweb.web.views':['*.pt'],
+    }
+
 try:
+    # data files that shall be copied outside the main package directory
     data_files = [
         # server data
         [join('share', 'cubicweb', 'schemas'),
@@ -119,10 +125,6 @@ try:
          [join(_wdocimages_dir, fname) for fname in listdir(_wdocimages_dir)]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
          [join(_i18n_dir, fname) for fname in listdir(_i18n_dir)]],
-        # XXX: drop .pt files
-        [join('lib', pydir, 'cubicweb', 'web', 'views'),
-         [join(_views_dir, fname) for fname in listdir(_views_dir)
-          if fname.endswith('.pt')]],
         # skeleton
         ]
 except OSError:
