@@ -164,7 +164,9 @@ class MyInstallLib(install_lib.install_lib):
                 dest = join(self.install_dir, base, directory)
                 export(directory, dest, verbose=False)
 
+# write required share/cubicweb/cubes/__init__.py
 class MyInstallData(install_data.install_data):
+    """A class That manages data files installation"""
     def run(self):
         """overridden from install_data class"""
         install_data.install_data.run(self)
@@ -173,6 +175,33 @@ class MyInstallData(install_data.install_data):
         ini.write('# Cubicweb cubes directory\n')
         ini.close()
 
+# re-enable copying data files in sys.prefix
+if USE_SETUPTOOLS:
+    # overwrite MyInstallData to use sys.prefix instead of the egg directory
+    MyInstallMoreData = MyInstallData
+    class MyInstallData(MyInstallMoreData):
+        """A class that manages data files installation"""
+        def run(self):
+            _old_install_dir = self.install_dir
+            if self.install_dir.endswith('egg'):
+                self.install_dir = sys.prefix
+            MyInstallMoreData.run(self)
+            self.install_dir = _old_install_dir
+    try:
+        import setuptools.command.easy_install # only if easy_install avaible
+        # monkey patch: Crack SandboxViolation verification
+        from setuptools.sandbox import DirectorySandbox as DS
+        old_ok = DS._ok
+        def _ok(self, path):
+            """Return True if ``path`` can be written during installation."""
+            out = old_ok(self, path)
+            realpath = os.path.normcase(os.path.realpath(path))
+            if realpath.startswith(sys.prefix):
+                out = True
+            return out
+        DS._ok = _ok
+    except ImportError:
+        pass
 
 def install(**kwargs):
     """setup entry point"""
@@ -200,7 +229,8 @@ def install(**kwargs):
                  author=author, author_email=author_email,
                  scripts=ensure_scripts(scripts), data_files=data_files,
                  ext_modules=ext_modules,
-                 cmdclass={'install_lib': MyInstallLib, 'install_data': MyInstallData},
+                 cmdclass={'install_lib': MyInstallLib,
+                           'install_data': MyInstallData},
                  **kwargs
                  )
 
