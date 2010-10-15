@@ -35,7 +35,7 @@ class TreeMixIn(object):
     benefit from this default implementation
     """
     __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.9] TreeMixIn is deprecated, use/override ITreeAdapter instead'
+    __deprecation_warning__ = '[3.9] TreeMixIn is deprecated, use/override ITreeAdapter instead (%(cls)s)'
 
     tree_attribute = None
     # XXX misnamed
@@ -205,7 +205,7 @@ def _done_init(done, view, row, col):
 class TreeViewMixIn(object):
     """a recursive tree view"""
     __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.9] TreeViewMixIn is deprecated, use/override BaseTreeView instead'
+    __deprecation_warning__ = '[3.9] TreeViewMixIn is deprecated, use/override BaseTreeView instead (%(cls)s)'
 
     __regid__ = 'tree'
     __select__ = implements(ITree, warn=False)
@@ -244,7 +244,7 @@ class TreeViewMixIn(object):
 class TreePathMixIn(object):
     """a recursive path view"""
     __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.9] TreePathMixIn is deprecated, use/override TreePathView instead'
+    __deprecation_warning__ = '[3.9] TreePathMixIn is deprecated, use/override TreePathView instead (%(cls)s)'
     __regid__ = 'path'
     item_vid = 'oneline'
     separator = u'&#160;&gt;&#160;'
@@ -270,7 +270,7 @@ class TreePathMixIn(object):
 class ProgressMixIn(object):
     """provide a default implementations for IProgress interface methods"""
     __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.9] ProgressMixIn is deprecated, use/override IProgressAdapter instead'
+    __deprecation_warning__ = '[3.9] ProgressMixIn is deprecated, use/override IProgressAdapter instead (%(cls)s)'
 
     @property
     def cost(self):
