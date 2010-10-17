@@ -122,7 +122,7 @@ incontextBoxTitleColor = '#000'
 # body of boxes in the left or right column (whatever contextFree / contextual)
 leftrightBoxBodyBgColor = '#FFF'
 leftrightBoxBodyBg = lazystr('%(leftrightBoxBodyBgColor)s')
-leftrightBoxBodyColor = '#black'
+leftrightBoxBodyColor = 'black'
 leftrightBoxBodyHoverBgColor = '#EEEDD9'
 
 # body of 'incontext' boxes (eg displayed insinde the primary view)
