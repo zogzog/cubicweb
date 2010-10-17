@@ -253,7 +253,6 @@ class SideBoxView(EntityView):
 class ContextualBoxLayout(component.Layout):
     __select__ = match_context('incontext', 'left', 'right') & contextual()
     # predefined class in cubicweb.css: contextualBox | contextFreeBox
-    # XXX: navigationBox | actionBox
     cssclass = 'contextualBox'
 
     def render(self, w):
