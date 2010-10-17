@@ -44,7 +44,6 @@ install: build $(basename $(wildcard debian/*.in))
         # wdoc in the cubicweb-web package
 	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/wdoc
 	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/data
-	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/i18n
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
