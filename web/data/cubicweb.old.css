@@ -557,6 +557,10 @@ a.popupMenu {
   padding: 0;
 }
 
+.bookmarks_box ul.boxListing div {
+  padding-bottom: 0.3em;
+}
+
 .download_box div.boxTitle {
   background : #8fbc8f !important;
 }
