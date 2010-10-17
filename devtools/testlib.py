@@ -742,6 +742,7 @@ class CubicWebTC(TestCase):
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
+            msg = str(msg) # ensure no unicode
             if output is not None:
                 position = getattr(exc, "position", (0,))[0]
                 if position:
