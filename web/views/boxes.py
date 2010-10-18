@@ -238,7 +238,7 @@ class SideBoxView(EntityView):
 
     __regid__ = 'sidebox'
 
-    def call(self, **kwargs):
+    def call(self, title=u'', **kwargs):
         """display a list of entities by calling their <item_vid> view"""
         if 'dispctrl' in self.cw_extra_kwargs:
             # XXX do not modify dispctrl!
