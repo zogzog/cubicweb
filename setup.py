@@ -222,6 +222,7 @@ def install(**kwargs):
         packages = [modname] + get_packages(os.getcwd(), modname)
     if USE_SETUPTOOLS:
         kwargs['install_requires'] = install_requires
+        kwargs['zip_safe'] = False
     kwargs['packages'] = packages
     kwargs['package_data'] = package_data
     return setup(name=distname, version=version, license=license, url=web,

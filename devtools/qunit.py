@@ -9,9 +9,8 @@ from uuid import uuid4
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest
+from logilab.common.shellutils import getlogin
 
-import os
-from os.path import expanduser
 import cubicweb
 from cubicweb.view import StartupView
 from cubicweb.web.controller import Controller
@@ -54,8 +53,8 @@ class FirefoxHelper(object):
         stdout = TemporaryFile()
         stderr = TemporaryFile()
         try:
-            home = expanduser('~')
-            user = os.getlogin()
+            home = osp.expanduser('~')
+            user = getlogin()
             assert os.access(home, os.W_OK), \
                    'No write access to your home directory, Firefox will crash.'\
                    ' Are you sure "%s" is a valid home  for user "%s"' % (home, user)
