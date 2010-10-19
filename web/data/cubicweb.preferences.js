@@ -46,19 +46,22 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref) {
 
 function validatePrefsForm(formid) {
     clearPreviousMessages();
-    clearPreviousErrors(formid);
+    _clearPreviousErrors(formid);
     return validateForm(formid, null, submitSucces, submitFailure);
 }
 
-function submitFailure(formid) {
+function submitFailure(result, formid, cbargs) {
     var $form = jQuery('#' + formid);
     var dom = DIV({'class': 'critical'}, _("please correct errors below"));
     $form.find('div.formsg').empty().append(dom);
-    // clearPreviousMessages()
+    unfreezeFormButtons(formid);
+    var descr = result[1];
+    _displayValidationerrors(formid, descr[0], descr[1]);
     $form.find('span.error').next().focus();
+    return false; // so handleFormValidationResponse doesn't try to display error
 }
 
-function submitSucces(url, formid) {
+function submitSucces(result, formid, cbargs) {
     var $form = jQuery('#' + formid);
     setCurrentValues($form);
     var dom = DIV({'class': 'msg'}, _("changes applied"));
@@ -71,10 +74,6 @@ function submitSucces(url, formid) {
 function clearPreviousMessages() {
     jQuery('div#appMsg').addClass('hidden');
     jQuery('div.formsg').empty();
-}
-
-function clearPreviousErrors(formid) {
-    jQuery('#err-value:' + formid).remove();
 }
 
 function checkValues(form, success) {
@@ -95,7 +94,7 @@ function checkValues(form, success) {
         if (!success) {
             clearPreviousMessages();
         }
-        clearPreviousErrors(form.attr('id'));
+        _clearPreviousErrors(form.attr('id'));
         freezeFormButtons(form.attr('id'));
     }
 }
