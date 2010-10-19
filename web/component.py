@@ -116,7 +116,7 @@ class NavigationComponent(Component):
         # XXX hack to avoid opening a new page containing the evaluation of the
         # js expression on ajax call
         if url.startswith('javascript:'):
-            url += '; noop();'
+            url += '; $.noop();'
         return url
 
     def ajax_page_url(self, **params):

@@ -162,10 +162,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                                            for o, f in objects.iteritems())
             for label, oid, form in sorted_objects:
                 w(u'<div class="component">')
-                w(u'''<div class="componentLink"><a href="javascript:noop();"
+                w(u'''<div class="componentLink"><a href="javascript:$.noop();"
                            onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
                            class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
-                w(u''' (<div class="openlink"><a href="javascript:noop();"
+                w(u''' (<div class="openlink"><a href="javascript:$.noop();"
                              onclick="javascript:openFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
                   % {'label':_('open all'), 'group':group})
                 w(u'</div>')

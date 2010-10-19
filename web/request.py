@@ -609,7 +609,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         extraparams.setdefault('fname', 'view')
         url = self.build_url('json', **extraparams)
-        return "javascript: $('#%s').%s; noop()" % (
+        return "javascript: $('#%s').%s; $.noop()" % (
             nodeid, js.loadxhtml(url, None, 'get', replacemode))
 
     # urls/path management ####################################################

@@ -460,7 +460,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             values['removemsg'] = self._cw._('remove-inlined-entity-form')
             w(u'<div class="iformTitle"><span>%(title)s</span> '
               '#<span class="icounter">%(counter)s</span> '
-              '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
+              '[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]</div>'
               % values)
         else:
             w(u'<div class="iformTitle"><span>%(title)s</span> '

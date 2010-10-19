@@ -464,6 +464,7 @@ class JSonController(Controller):
     @jsonize
     def js_i18n(self, msgids):
         """returns the translation of `msgid`"""
+        print 'translate', msgids, [self._cw._(msgid) for msgid in msgids]
         return [self._cw._(msgid) for msgid in msgids]
 
     @jsonize
