@@ -25,7 +25,7 @@ for uri, cfg in config.sources().items():
         continue
     repo.sources_by_uri.pop(uri)
     config = u'\n'.join('%s=%s' % (key, value) for key, value in cfg.items()
-                        if key != 'adapter')
+                        if key != 'adapter' and value is not None)
     create_entity('CWSource', name=unicode(uri), type=unicode(cfg['adapter']),
                   config=config)
 commit()
