@@ -91,7 +91,7 @@ class Controller(AppObject):
             pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
                 return pp.process_query(rql)
-        if 'eid' in req.form:
+        if 'eid' in req.form and not isinstance(req.form['eid'], list):
             return req.eid_rset(req.form['eid'])
         return None
 
