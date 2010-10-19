@@ -366,8 +366,8 @@ class EditRelationMixIn(ReloadableMixIn):
         args = {role(self)[0] : entity.eid, target(self)[0] : etarget.eid}
         url = self._cw.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
-        return u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
-                                              etarget.view('incontext'))
+        return u'[<a href="%s" class="action">%s</a>] %s' % (
+            xml_escape(url), label, etarget.view('incontext'))
 
     def related_boxitems(self, entity):
         rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype

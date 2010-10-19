@@ -490,8 +490,11 @@ ul.boxListing ul {
 
 ul.boxListing a {
   color: %(defaultColor)s;
-  display: block;
   padding: 1px 3px;
+}
+
+ul.boxListing a.action {
+  padding: 0;
 }
 
 ul.boxListing li {
@@ -549,12 +552,6 @@ a.popupMenu {
 .search_box div.boxBody {
   padding: 4px 4px 3px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
-}
-
-.bookmarks_box ul.boxListing div a {
-  background: #fff;
-  display: inline;
-  padding: 0;
 }
 
 .bookmarks_box ul.boxListing div {

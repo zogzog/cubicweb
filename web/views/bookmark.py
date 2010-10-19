@@ -99,7 +99,7 @@ class BookmarksBox(component.CtxComponent):
         for bookmark in self.bookmarks_rset.entities():
             label = self.build_link(bookmark.title, bookmark.action_url())
             if self.can_delete:
-                dlink = u'[<a href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
+                dlink = u'[<a class="action" href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
                     bookmark.eid, _('delete this bookmark'))
                 label = '<div>%s %s</div>' % (dlink, label)
             self.append(label)
