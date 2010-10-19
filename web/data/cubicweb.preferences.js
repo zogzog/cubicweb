@@ -51,25 +51,19 @@ function validatePrefsForm(formid) {
 }
 
 function submitFailure(formid) {
-    var form = jQuery('#' + formid);
-    var dom = DIV({
-        'class': 'critical'
-    },
-    _("please correct errors below"));
-    jQuery(form).find('div.formsg').empty().append(dom);
+    var $form = jQuery('#' + formid);
+    var dom = DIV({'class': 'critical'}, _("please correct errors below"));
+    $form.find('div.formsg').empty().append(dom);
     // clearPreviousMessages()
-    jQuery(form).find('span.error').next().focus();
+    $form.find('span.error').next().focus();
 }
 
 function submitSucces(url, formid) {
-    var form = jQuery('#' + formid);
-    setCurrentValues(form);
-    var dom = DIV({
-        'class': 'msg'
-    },
-    _("changes applied"));
-    jQuery(form).find('div.formsg').empty().append(dom);
-    jQuery(form).find('input').removeClass('changed');
+    var $form = jQuery('#' + formid);
+    setCurrentValues($form);
+    var dom = DIV({'class': 'msg'}, _("changes applied"));
+    $form.find('div.formsg').empty().append(dom);
+    $form.find('input').removeClass('changed');
     checkValues(form, true);
     return;
 }
