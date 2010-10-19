@@ -438,6 +438,11 @@ div.boxBody a:hover {
   background-color: %(leftrightBoxBodyHoverBgColor)s;
 }
 
+hr.boxSeparator {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 /* boxes contextual customization */
 
 .contextFreeBox div.boxTitle {

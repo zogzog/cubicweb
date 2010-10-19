@@ -420,7 +420,7 @@ class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
         unrelated = self.unrelated_boxitems(self.entity)
         self.items.extend(related)
         if related and unrelated:
-            self.items.append(htmlwidgets.BoxSeparator())
+            self.items.append(u'<hr class="boxSeparator"/>')
         self.items.extend(unrelated)
         self.render_items(w)
 
