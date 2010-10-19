@@ -403,7 +403,7 @@ class EditRelationMixIn(ReloadableMixIn):
                     entities.append(entity)
         return entities
 
-
+# XXX should be a view usable using uicfg
 class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
     """base class for boxes which let add or remove entities linked by a given
     relation
