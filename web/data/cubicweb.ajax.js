@@ -36,12 +36,10 @@ jQuery.extend(Deferred.prototype, {
     },
 
     addCallback: function(callback) {
-        if (this._req.readyState == 4) {
-            if (this._result) {
-                var args = [this._result, this._req];
-                jQuery.merge(args, cw.utils.sliceList(arguments, 1));
-                callback.apply(null, args);
-            }
+        if ((this._req.readyState == 4) & this._result) {
+            var args = [this._result, this._req];
+            jQuery.merge(args, cw.utils.sliceList(arguments, 1));
+            callback.apply(null, args);
         }
         else {
             this._onSuccess.push([callback, cw.utils.sliceList(arguments, 1)]);
@@ -332,7 +330,7 @@ function loadRemote(url, form, reqtype, sync) {
         });
         // check result.responseText instead of result to avoid error encountered with IE
         if (result.responseText) {
-            // XXX no good reason to force json here, 
+            // XXX no good reason to force json here,
             // it should depends on request content-type
             result = cw.evalJSON(result.responseText);
         }
