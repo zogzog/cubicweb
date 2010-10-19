@@ -265,7 +265,7 @@ function cancelPendingDelete(nodeId, eid) {
  */
 function togglePendingDelete(nodeId, eid) {
     // node found means we should cancel deletion
-    if (jQuery.className.has(cw.getNode('span' + nodeId), 'pendingDelete')) {
+    if (jQuery(cw.getNode('span' + nodeId)).hasClass('pendingDelete')) {
         cancelPendingDelete(nodeId, eid);
     } else {
         addPendingDelete(nodeId, eid);

@@ -80,9 +80,9 @@ removeElementClass = cw.utils.deprecatedFunction(
 );
 
 hasElementClass = cw.utils.deprecatedFunction(
-    '[3.9] hasElementClass(node, cls) is depcreated, use $.className.has(node, cls)',
+    '[3.9] hasElementClass(node, cls) is deprecated, use $(node).hasClass(cls)',
     function(node, klass) {
-        return $.className.has(node, klass);
+        return $(node).hasClass(klass);
     }
 );
 
