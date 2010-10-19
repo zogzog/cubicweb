@@ -66,14 +66,14 @@ filter = cw.utils.deprecatedFunction(
 );
 
 addElementClass = cw.utils.deprecatedFunction(
-    '[3.9] addElementClass(node, cls) is depcreated, use $(node).addClass(cls) instead',
+    '[3.9] addElementClass(node, cls) is deprecated, use $(node).addClass(cls) instead',
     function(node, klass) {
         $(node).addClass(klass);
     }
 );
 
 removeElementClass = cw.utils.deprecatedFunction(
-    '[3.9] removeElementClass(node, cls) is depcreated, use $(node).removeClass(cls) instead',
+    '[3.9] removeElementClass(node, cls) is deprecated, use $(node).removeClass(cls) instead',
     function(node, klass) {
         $(node).removeClass(klass);
     }

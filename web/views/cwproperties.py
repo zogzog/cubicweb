@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for CWProperty
+"""Specific views for CWProperty (eg site/user preferences"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -66,8 +65,8 @@ _('category')
 
 def make_togglable_link(nodeid, label):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: togglePrefVisibility('%s')" % nodeid
-    return u'<a href="%s">%s</a>' % (action, label)
+    return u'<a href="javascript: togglePrefVisibility(\'%s\')">%s</a>' % (
+        nodeid, label)
 
 def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
@@ -111,7 +110,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return status
 
     def call(self, **kwargs):
-        self._cw.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
+        self._cw.add_js(('cubicweb.preferences.js',
+                         'cubicweb.edition.js', 'cubicweb.ajax.js'))
         self._cw.add_css('cubicweb.preferences.css')
         vreg = self._cw.vreg
         values = self.defined_keys
@@ -135,7 +135,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
 
         for group, objects in groupedopts.items():
             for oid, keys in objects.items():
-                groupedopts[group][oid] = self.form(group + '-' + oid, keys, True)
+                groupedopts[group][oid] = self.form(group + '_' + oid, keys, True)
 
         w = self.w
         req = self._cw
