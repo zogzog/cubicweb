@@ -411,8 +411,8 @@ class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
     subclasses should define at least id, rtype and target class attributes.
     """
     def render_title(self, w):
-        return display_name(self._cw, self.rtype, role(self),
-                            context=self.entity.__regid__)
+        w(display_name(self._cw, self.rtype, role(self),
+                       context=self.entity.__regid__))
 
     def render_body(self, w):
         self._cw.add_js('cubicweb.ajax.js')
