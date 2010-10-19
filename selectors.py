@@ -450,7 +450,8 @@ class appobject_selectable(Selector):
                 req.vreg[self.registry].select(regid, req, **kwargs)
                 return self.selectable_score
             except NoSelectableObject:
-                return 0
+                continue
+        return 0
 
 
 class adaptable(appobject_selectable):
