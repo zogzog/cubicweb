@@ -107,7 +107,10 @@ class BoxWidget(HTMLWidget):
         if self.items:
             self.box_begin_content()
             for item in self.items:
-                item.render(self.w)
+                if hasattr(item, 'render'):
+                    item.render(self.w)
+                else:
+                    self.w(u'<li>%s</li>' % item)
             self.box_end_content()
         self.w(u'</div>')
 
