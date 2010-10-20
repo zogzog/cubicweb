@@ -365,11 +365,11 @@ div.sideBox {
 }
 
 ul.sideBox,
-ul.sideBox ul{
+ul.sideBox ul {
   margin-bottom: 0px;
 }
 
-ul.sideBox li{
+ul.sideBox li {
  padding: 0px 0px 1px 1px;
  margin: 1px 0 1px 4px;
 }
@@ -518,7 +518,7 @@ ul.boxListing a.boxMenu:hover {
 }
 
 a.boxMenu,
-ul.boxListing a.boxMenu{
+ul.boxListing a.boxMenu {
   display: block;
   padding: 1px 3px;
   background: transparent %(bulletDownImg)s;

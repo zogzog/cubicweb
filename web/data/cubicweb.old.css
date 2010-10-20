@@ -204,7 +204,7 @@ blockquote {
 li.invisible { list-style: none; background: none; padding: 0px 0px
 1px 1px; }
 
-li.invisible div{
+li.invisible div {
   display: inline;
 }
 
@@ -383,7 +383,7 @@ div.sideBox {
   margin-bottom: 0.5em;
 }
 
-ul.sideBox li{
+ul.sideBox li {
  list-style: none;
  background: none;
  padding: 0px 0px 1px 1px;
@@ -537,7 +537,7 @@ ul.boxListing a.boxMenu:hover {
 }
 
 a.boxMenu,
-ul.boxListing a.boxMenu{
+ul.boxListing a.boxMenu {
   display: block;
   padding: 1px 3px;
   background: transparent %(bulletDownImg)s;
