@@ -322,12 +322,21 @@ function loadRemote(url, form, reqtype, sync) {
         });
         return deferred;
     } else {
-        var result = jQuery.ajax({
+        var result;
+        // jQuery.ajax returns the XHR object, even for synchronous requests,
+        // but in that case, the success callback will be called before
+        // jQuery.ajax returns. The first argument of the callback will be
+        // the server result, interpreted by jQuery according to the reponse's
+        // content-type (i.e. json or xml)
+        jQuery.ajax({
             url: url,
             type: (reqtype || 'GET').toUpperCase(),
             data: form,
             traditional: true,
-            async: false
+            async: false,
+            success: function(res) {
+                result = res;
+            }
         });
         return result;
     }
