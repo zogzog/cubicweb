@@ -36,12 +36,10 @@ jQuery.extend(Deferred.prototype, {
     },
 
     addCallback: function(callback) {
-        if (this._req.readyState == 4) {
-            if (this._result) {
-                var args = [this._result, this._req];
-                jQuery.merge(args, cw.utils.sliceList(arguments, 1));
-                callback.apply(null, args);
-            }
+        if ((this._req.readyState == 4) && this._result) {
+            var args = [this._result, this._req];
+            jQuery.merge(args, cw.utils.sliceList(arguments, 1));
+            callback.apply(null, args);
         }
         else {
             this._onSuccess.push([callback, cw.utils.sliceList(arguments, 1)]);
@@ -50,10 +48,8 @@ jQuery.extend(Deferred.prototype, {
     },
 
     addErrback: function(callback) {
-        if (this._req.readyState == 4) {
-            if (this._error) {
-                callback.apply(null, [this._error, this._req]);
-            }
+        if (this._req.readyState == 4 && this._error) {
+            callback.apply(null, [this._error, this._req]);
         }
         else {
             this._onFailure.push([callback, cw.utils.sliceList(arguments, 1)]);
