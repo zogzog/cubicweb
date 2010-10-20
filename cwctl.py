@@ -35,6 +35,7 @@ except ImportError:
     def getpgid():
         """win32 getpgid implementation"""
 
+
 from os.path import exists, join, isfile, isdir, dirname, abspath
 
 from logilab.common.clcommands import CommandLine
@@ -952,6 +953,9 @@ for cmdcls in (ListCommand,
 
 def run(args):
     """command line tool"""
+    import os
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     cwcfg.load_cwctl_plugins()
     try:
         CWCTL.run(args)
