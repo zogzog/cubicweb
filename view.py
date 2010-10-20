@@ -170,7 +170,11 @@ class View(AppObject):
         else:
             view_func = self.call
         stream = self.set_stream(w)
-        view_func(**context)
+        try:
+            view_func(**context)
+        except:
+            self.debug('view call %s failed (context=%s)', view_func, context)
+            raise
         # return stream content if we have created it
         if stream is not None:
             return self._stream.getvalue()
