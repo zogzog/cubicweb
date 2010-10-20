@@ -477,10 +477,16 @@ ul.boxListing ul {
 ul.boxListing a {
   color: %(defaultColor)s;
   padding: 1px 9px 1px 3px;
+  display: block; /* necessary to get links across all width available (see on mouse over) */
 }
 
 ul.boxListing a.action {
   padding: 0;
+  display: inline;
+}
+
+ul.boxListing a.action + a{
+  display: inline;
 }
 
 ul.boxListing li {
