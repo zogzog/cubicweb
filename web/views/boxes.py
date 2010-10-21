@@ -244,9 +244,11 @@ class SideBoxView(EntityView):
             # XXX do not modify dispctrl!
             self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
             self.cw_extra_kwargs['dispctrl'].setdefault('use_list_limit', 1)
+        if title:
+            self.cw_extra_kwargs['title'] = title
         box = self._cw.vreg['ctxcomponents'].select(
             'rsetbox', self._cw, rset=self.cw_rset, vid='autolimited',
-            title=title, **self.cw_extra_kwargs)
+            **self.cw_extra_kwargs)
         box.render(self.w)
 
 
