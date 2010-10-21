@@ -135,8 +135,8 @@ class FormRenderer(AppObject):
             if support_args(descr, 'form', 'field'):
                 descr = descr(form, field)
             else:
-                warn("[3.10] field's help callback must now take form and field as argument",
-                     DeprecationWarning)
+                warn("[3.10] field's help callback must now take form and field as argument (%s)"
+                     % field, DeprecationWarning)
                 descr = descr(form)
         if descr:
             help.append('<div class="helper">%s</div>' % self._cw._(descr))
