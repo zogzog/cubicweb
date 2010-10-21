@@ -48,6 +48,9 @@ def _fake_property_value(self, name):
     except KeyError:
         return ''
 
+def fake(*args, **kwargs):
+    return None
+
 def multiple_connections_fix():
     """some monkey patching necessary when an application has to deal with
     several connections to different repositories. It tries to hide buggy class
@@ -480,6 +483,7 @@ class Connection(object):
         self.sessionid = cnxid
         self._close_on_del = getattr(cnxprops, 'close_on_del', True)
         self._cnxtype = getattr(cnxprops, 'cnxtype', 'pyro')
+        self._web_request = False
         if cnxprops and cnxprops.log_queries:
             self.executed_queries = []
             self.cursor_class = LogCursor
@@ -544,35 +548,32 @@ class Connection(object):
 
         You should call `load_appobjects` at some point to register those views.
         """
-        from cubicweb.web.request import CubicWebRequestBase as cwrb
-        DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func
-        DBAPIRequest.ajax_replace_url = cwrb.ajax_replace_url.im_func
-        DBAPIRequest.list_form_param = cwrb.list_form_param.im_func
         DBAPIRequest.property_value = _fake_property_value
         DBAPIRequest.next_tabindex = count().next
-        DBAPIRequest.form = {}
-        DBAPIRequest.data = {}
-        fake = lambda *args, **kwargs: None
         DBAPIRequest.relative_path = fake
         DBAPIRequest.url = fake
-        DBAPIRequest.next_tabindex = fake
         DBAPIRequest.get_page_data = fake
         DBAPIRequest.set_page_data = fake
-        DBAPIRequest.add_js = fake #cwrb.add_js.im_func
-        DBAPIRequest.add_css = fake #cwrb.add_css.im_func
         # XXX could ask the repo for it's base-url configuration
         self.vreg.config.set_option('base-url', baseurl)
+        self.vreg.config.uiprops = {}
+        self.vreg.config.datadir_url = baseurl + '/data'
         # XXX why is this needed? if really needed, could be fetched by a query
         if sitetitle is not None:
             self.vreg['propertydefs']['ui.site-title'] = {'default': sitetitle}
+        self._web_request = True
 
-    @check_not_closed
-    def source_defs(self):
-        """Return the definition of sources used by the repository.
-
-        This is NOT part of the DB-API.
-        """
-        return self._repo.source_defs()
+    def request(self):
+        if self._web_request:
+            from cubicweb.web.request import CubicWebRequestBase
+            req = CubicWebRequestBase(self.vreg, False)
+            req.get_header = lambda x, default=None: default
+            req.set_session = lambda session, user=None: DBAPIRequest.set_session(
+                req, session, user)
+        else:
+            req = DBAPIRequest(self.vreg)
+        req.set_session(DBAPISession(self))
+        return req
 
     @check_not_closed
     def user(self, req=None, props=None):
@@ -604,9 +605,6 @@ class Connection(object):
         # return a dict as bw compat trick
         return {'txid': currentThread().getName()}
 
-    def request(self):
-        return DBAPIRequest(self.vreg, DBAPISession(self))
-
     # session data methods #####################################################
 
     @check_not_closed
@@ -637,6 +635,11 @@ class Connection(object):
         return self._repo.set_shared_data(self.sessionid, key, value, txdata)
 
     # meta-data accessors ######################################################
+
+    @check_not_closed
+    def source_defs(self):
+        """Return the definition of sources used by the repository."""
+        return self._repo.source_defs()
 
     @check_not_closed
     def get_schema(self):

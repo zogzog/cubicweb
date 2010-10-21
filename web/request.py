@@ -84,7 +84,6 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
-        self.authmode = vreg.config['auth-mode']
         self.https = https
         if https:
             self.uiprops = vreg.config.https_uiprops
@@ -119,6 +118,10 @@ class CubicWebRequestBase(DBAPIRequest):
             pid = make_uid(id(self))
         self.pageid = pid
         self.html_headers.define_var('pageid', pid, override=False)
+
+    @property
+    def authmode(self):
+        return self.vreg.config['auth-mode']
 
     @property
     def varmaker(self):
