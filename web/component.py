@@ -183,7 +183,7 @@ class Layout(Component):
 
 
 class CtxComponent(AppObject):
-    """base class for contextual compontents. The following contexts are
+    """base class for contextual components. The following contexts are
     predefined:
 
     * boxes: 'left', 'incontext', 'right'
@@ -191,12 +191,12 @@ class CtxComponent(AppObject):
     * other: 'ctxtoolbar'
 
     The 'incontext', 'navcontenttop', 'navcontentbottom' and 'ctxtoolbar'
-    context are handled by the default primary view, others by the default main
+    contexts are handled by the default primary view, others by the default main
     template.
 
     All subclasses may not support all those contexts (for instance if it can't
     be displayed as box, or as a toolbar icon). You may restrict allowed context
-    as followed:
+    as follows:
 
     .. sourcecode:: python
 
@@ -205,8 +205,8 @@ class CtxComponent(AppObject):
                                           vocabulary=[list of contexts])
           context = 'my default context'
 
-    You can configure default component's context by simply giving appropriate
-    value to the `context` class attribute, as seen above.
+    You can configure a component's default context by simply giving an
+    appropriate value to the `context` class attribute, as seen above.
     """
     __registry__ = 'ctxcomponents'
     __select__ = ~no_cnx()
@@ -290,7 +290,7 @@ class CtxComponent(AppObject):
         w(u'<ul class="%s">' % klass)
         for item in items:
             if hasattr(item, 'render'):
-                item.render(w) # XXX display <li> by itself
+                item.render(w) # XXX displays <li> by itself
             else:
                 w(u'<li>')
                 w(item)

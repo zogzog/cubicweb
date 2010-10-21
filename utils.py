@@ -77,6 +77,16 @@ def support_args(callable, *argnames):
 
 
 class wrap_on_write(object):
+    """ Sometimes it is convenient to NOT write some container element
+    if it happens that there is nothing to be written within,
+    but this cannot be known beforehand.
+    Hence one can do this:
+
+    .. sourcecode:: python
+
+       with wrap_on_write(w, '<div class="foo">', '</div>') as wow:
+           component.render_stuff(wow)
+    """
     def __init__(self, w, tag, closetag=None):
         self.written = False
         self.tag = unicode(tag)
