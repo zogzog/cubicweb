@@ -45,7 +45,6 @@ from contextlib import contextmanager
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.testlib import mock_object
 
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
@@ -67,6 +66,10 @@ try:
     from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
+
+
+def mock_object(**params):
+    return type('Mock', (), params)()
 
 class ClearGroupMap(hook.Hook):
     __regid__ = 'cw.migration.clear_group_mapping'
