@@ -33,7 +33,6 @@ from cubicweb.schema import ERQLExpression, RRQLExpression
 from cubicweb.entities import AnyEntity, fetch_config
 
 
-
 class CWSource(AnyEntity):
     __regid__ = 'CWSource'
     fetch_attrs, fetch_order = fetch_config(['name', 'type'])
@@ -47,7 +46,8 @@ class CWSource(AnyEntity):
         dictconfig = self.dictconfig
         host = gethostname()
         for hostcfg in self.host_configs:
-            if hostcfg.match(hostname):
+            if hostcfg.match(host):
+                self.info('matching host config %s' % hostcfg.match_host)
                 dictconfig.update(hostcfg.dictconfig)
         return dictconfig
 
