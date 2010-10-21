@@ -267,9 +267,9 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
             self._cw.data[countkey] += 1
         except KeyError:
             self._cw.data[countkey] = 1
-        self.w(self.form.render(
-            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
-            counter=self._cw.data[countkey] , **kwargs))
+        self.form.render(w=self.w, divid=divid, title=title, removejs=removejs,
+                         i18nctx=i18nctx, counter=self._cw.data[countkey] ,
+                         **kwargs)
 
     def form_title(self, entity, i18nctx):
         return self._cw.pgettext(i18nctx, entity.__regid__)
