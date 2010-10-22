@@ -221,7 +221,7 @@ class FormRenderer(AppObject):
         for field in form.fields:
             if not field.is_visible():
                 w(field.render(form, self))
-                w('\n')
+                w(u'\n')
                 fields.remove(field)
         return fields
 
@@ -255,7 +255,7 @@ class FormRenderer(AppObject):
                     w(u' class="error"')
                 w(u'>\n')
                 w(field.render(form, self))
-                w('\n')
+                w(u'\n')
                 if error:
                     self.render_error(w, error)
                 if self.display_help:
