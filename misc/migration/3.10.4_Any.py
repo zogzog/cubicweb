@@ -1,5 +1,5 @@
 for eschema in schema.entities():
-    if not 'cw_source' in eschema.subjrels:
+    if not (eschema.final or 'cw_source' in eschema.subjrels):
         add_relation_definition(eschema, 'cw_source', 'CWSource')
 
 sql('INSERT INTO cw_source_relation(eid_from, eid_to) '
