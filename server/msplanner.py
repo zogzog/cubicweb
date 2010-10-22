@@ -1032,7 +1032,7 @@ class PartPlanInformation(object):
         if isinstance(term, Relation) and term in cross_rels:
             cross_terms = cross_rels.pop(term)
             base_accept_term = accept_term
-            accept_term = lambda x: (accept_term(x) or x in cross_terms)
+            accept_term = lambda x: (base_accept_term(x) or x in cross_terms)
             for refed in cross_terms:
                 if not refed in candidates:
                     terms.append(refed)
@@ -1125,7 +1125,7 @@ class PartPlanInformation(object):
     def build_final_part(self, select, solindices, inputmap,  sources,
                          insertedvars):
         solutions = [self._solutions[i] for i in solindices]
-        if self._conflicts:
+        if self._conflicts and inputmap:
             for varname, mappedto in self._conflicts:
                 var = select.defined_vars[varname]
                 newvar = select.make_variable()
