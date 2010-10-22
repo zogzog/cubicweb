@@ -109,6 +109,8 @@ It is possible to have these tests run continuously using `apycot`_.
 
 .. _apycot: http://www.logilab.org/project/apycot
 
+.. _securitytest:
+
 Managing connections or users
 +++++++++++++++++++++++++++++
 
