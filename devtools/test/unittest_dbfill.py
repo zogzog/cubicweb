@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for database value generator
-
-"""
+"""unit tests for database value generator"""
 
 import os.path as osp
 import re
@@ -56,7 +54,7 @@ class ValueGeneratorTC(TestCase):
         return [f.strip() for f in file(osp.join(DATADIR, 'firstnames.txt'))]
 
     def setUp(self):
-        config = ApptestConfiguration('data')
+        config = ApptestConfiguration('data', apphome=DATADIR)
         config.bootstrap_cubes()
         schema = config.load_schema()
         e_schema = schema.eschema('Person')

@@ -111,7 +111,14 @@ class TestServerConfiguration(ServerConfiguration):
           }),
         ))
 
-    def __init__(self, appid, log_threshold=logging.CRITICAL+10):
+    def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
+        # must be set before calling parent __init__
+        if apphome is None:
+            if exists(appid):
+                apphome = abspath(appid)
+            else: # cube test
+                apphome = abspath('..')
+        self._apphome = apphome
         ServerConfiguration.__init__(self, appid)
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
@@ -121,10 +128,7 @@ class TestServerConfiguration(ServerConfiguration):
 
     @property
     def apphome(self):
-        if exists(self.appid):
-            return abspath(self.appid)
-        # cube test
-        return abspath('..')
+        return self._apphome
     appdatahome = apphome
 
     def load_configuration(self):
@@ -196,8 +200,10 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
 # XXX merge with BaseApptestConfiguration ?
 class ApptestConfiguration(BaseApptestConfiguration):
 
-    def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
-        BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
+    def __init__(self, appid, apphome=None,
+                 log_threshold=logging.CRITICAL, sourcefile=None):
+        BaseApptestConfiguration.__init__(self, appid, apphome,
+                                          log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
 
