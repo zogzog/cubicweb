@@ -24,8 +24,9 @@ __docformat__ = "restructuredtext en"
 import os
 import sys
 import re
-from urllib import unquote
 import urlparse
+from os.path import dirname
+from urllib import unquote
 from math import log
 from contextlib import contextmanager
 from warnings import warn
@@ -198,7 +199,9 @@ class CubicWebTC(TestCase):
         try:
             return cls.__dict__['_config']
         except KeyError:
-            config = cls._config = cls.configcls(cls.appid)
+            home = join(dirname(sys.modules[self.__class__.__module__].__file__),
+                        cls.appid)
+            config = cls._config = cls.configcls(cls.appid, apphome=home)
             config.mode = 'test'
             return config
 
