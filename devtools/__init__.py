@@ -103,8 +103,8 @@ class TestServerConfiguration(ServerConfiguration):
     def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
-            if exists(self.appid):
-                apphome = abspath(self.appid)
+            if exists(appid):
+                apphome = abspath(appid)
             else: # cube test
                 apphome = abspath('..')
         self._apphome = apphome
