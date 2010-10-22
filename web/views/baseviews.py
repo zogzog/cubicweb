@@ -359,7 +359,7 @@ class CSVView(SimpleListView):
 
     def call(self, subvid=None, **kwargs):
         if subvid is None and 'vid' in kwargs:
-            warn("should give a 'subvid' argument instead of 'vid'",
+            warn("[3.9] should give a 'subvid' argument instead of 'vid'",
                  DeprecationWarning, stacklevel=2)
         else:
             kwargs['vid'] = subvid
