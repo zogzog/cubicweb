@@ -114,10 +114,10 @@ class FormRenderer(AppObject):
         _w(self.open_form(form, values))
         if self.display_progress_div:
             _w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
-        _w(u'<fieldset>')
+        _w(u'\n<fieldset>\n')
         self.render_fields(_w, form, values)
         self.render_buttons(_w, form)
-        _w(u'</fieldset>')
+        _w(u'\n</fieldset>\n')
         _w(self.close_form(form, values))
         errormsg = self.error_message(form)
         if errormsg:
@@ -221,6 +221,7 @@ class FormRenderer(AppObject):
         for field in form.fields:
             if not field.is_visible():
                 w(field.render(form, self))
+                w('\n')
                 fields.remove(field)
         return fields
 
@@ -238,28 +239,29 @@ class FormRenderer(AppObject):
             except KeyError:
                 self.warning('no such fieldset: %s (%s)', fieldset, form)
                 continue
-            w(u'<fieldset class="%s">' % (fieldset or u'default'))
+            w(u'<fieldset class="%s">\n' % (fieldset or u'default'))
             if fieldset:
                 w(u'<legend>%s</legend>' % self._cw._(fieldset))
-            w(u'<table class="%s">' % self.table_class)
+            w(u'<table class="%s">\n' % self.table_class)
             for field in fields:
-                w(u'<tr class="%s_%s_row">' % (field.name, field.role))
+                w(u'<tr class="%s_%s_row">\n' % (field.name, field.role))
                 if self.display_label and field.label is not None:
-                    w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
+                    w(u'<th class="labelCol">%s</th>\n' % self.render_label(form, field))
                 w(u'<td')
                 if field.label is None:
                     w(u' colspan="2"')
                 error = form.field_error(field)
                 if error:
                     w(u' class="error"')
-                w(u'>')
+                w(u'>\n')
                 w(field.render(form, self))
+                w('\n')
                 if error:
                     self.render_error(w, error)
                 if self.display_help:
                     w(self.render_help(form, field))
-                w(u'</td></tr>')
-            w(u'</table></fieldset>')
+                w(u'</td></tr>\n')
+            w(u'</table></fieldset>\n')
         if byfieldset:
             self.warning('unused fieldsets: %s', ', '.join(byfieldset))
 
