@@ -25,7 +25,7 @@ import os
 import sys
 import re
 import urlparse
-from os.path import dirname
+from os.path import dirname, join
 from urllib import unquote
 from math import log
 from contextlib import contextmanager
