@@ -324,7 +324,7 @@ class ClickAndEditFormView(EntityView):
         w(u'<div id="%s-value" class="editableFieldValue">' % divid)
         w(value)
         w(u'</div>')
-        w(form.render(renderer=renderer))
+        form.render(w=w, renderer=renderer)
         w(u'<div id="%s" class="editableField hidden">' % divid)
 
     def _edit_action(self, divid, args, edit_related, add_related, _delete_related):
