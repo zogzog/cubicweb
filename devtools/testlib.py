@@ -199,8 +199,7 @@ class CubicWebTC(TestCase):
         try:
             return cls.__dict__['_config']
         except KeyError:
-            home = join(dirname(sys.modules[self.__class__.__module__].__file__),
-                        cls.appid)
+            home = join(dirname(sys.modules[cls.__module__].__file__), cls.appid)
             config = cls._config = cls.configcls(cls.appid, apphome=home)
             config.mode = 'test'
             return config
