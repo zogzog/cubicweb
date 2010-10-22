@@ -127,6 +127,16 @@ class FakeRequest(CubicWebRequestBase):
     def validate_cache(self):
         pass
 
+    def build_url_params(self, **kwargs):
+        # overriden to get predictable resultts
+        args = []
+        for param, values in sorted(kwargs.iteritems()):
+            if not isinstance(values, (list, tuple)):
+                values = (values,)
+            for value in values:
+                assert value is not None
+                args.append(u'%s=%s' % (param, self.url_quote(value)))
+        return '&'.join(args)
 
 class FakeUser(object):
     login = 'toto'

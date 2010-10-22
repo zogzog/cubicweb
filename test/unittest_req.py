@@ -40,7 +40,7 @@ class RebuildURLTC(TestCase):
         self.assertEqual(req.build_url('one'), u'http://testing.fr/cubicweb/one')
         self.assertEqual(req.build_url(param='ok'), u'http://testing.fr/cubicweb/view?param=ok')
         self.assertRaises(AssertionError, req.build_url, 'one', 'two not allowed')
-        self.assertRaises(ValueError, req.build_url, 'view', test=None)
+        self.assertRaises(AssertionError, req.build_url, 'view', test=None)
 
 
 if __name__ == '__main__':

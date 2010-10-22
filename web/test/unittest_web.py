@@ -21,15 +21,25 @@ from cubicweb.devtools.fake import FakeRequest
 
 class AjaxReplaceUrlTC(TestCase):
 
-    def test_ajax_replace_url(self):
+    def test_ajax_replace_url_1(self):
+        self._test_arurl("fname=view&rql=Person%20P&vid=list",
+                         rql='Person P', vid='list')
+
+    def test_ajax_replace_url_2(self):
+        self._test_arurl("age=12&fname=view&name=bar&rql=Person%20P&vid=oneline",
+                         rql='Person P', vid='oneline', name='bar', age=12)
+
+    def _test_arurl(self, qs, **kwargs):
         req = FakeRequest()
         arurl = req.ajax_replace_url
         # NOTE: for the simplest use cases, we could use doctest
-        self.assertEqual(arurl('foo', rql='Person P', vid='list'),
-                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?rql=Person%20P&fname=view&vid=list",null,"get","replace"); noop()""")
-        self.assertEqual(arurl('foo', rql='Person P', vid='oneline', name='bar', age=12),
-                          """javascript: $('#foo').loadxhtml("http://testing.fr/cubicweb/json?name=bar&age=12&rql=Person%20P&fname=view&vid=oneline",null,"get","replace"); noop()""")
-
+        url = arurl('foo', **kwargs)
+        self.failUnless(url.startswith('javascript:'))
+        self.failUnless(url.endswith('()'))
+        cbname = url.split()[1][:-2]
+        self.assertMultiLineEqual(
+            'function %s() { $("#foo").loadxhtml("http://testing.fr/cubicweb/json?%s",null,"get","replace"); }' % (cbname, qs),
+            req.html_headers.post_inlined_scripts[0])
 
 if __name__ == '__main__':
     unittest_main()
