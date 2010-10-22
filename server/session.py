@@ -28,6 +28,7 @@ from uuid import uuid4
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
+from rql import CoercionError
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 

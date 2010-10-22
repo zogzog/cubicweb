@@ -20,6 +20,7 @@ object to handle publication.
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.date import strptime
 
@@ -119,7 +120,7 @@ class ViewController(Controller):
         self.validate_cache(view)
         template = self.appli.main_template_id(self._cw)
         return self._cw.vreg['views'].main_template(self._cw, template,
-                                                rset=rset, view=view)
+                                                    rset=rset, view=view)
 
     def _select_view_and_rset(self, rset):
         req = self._cw
@@ -584,7 +585,9 @@ class MailBugReportController(Controller):
 
     def publish(self, rset=None):
         body = self._cw.form['description']
-        self.sendmail(self._cw.config['submit-mail'], _('%s error report') % self._cw.config.appid, body)
+        self.sendmail(self._cw.config['submit-mail'],
+                      self._cw._('%s error report') % self._cw.config.appid,
+                      body)
         url = self._cw.build_url(__message=self._cw._('bug report sent'))
         raise Redirect(url)
 
@@ -596,11 +599,10 @@ class UndoController(Controller):
     def publish(self, rset=None):
         txuuid = self._cw.form['txuuid']
         errors = self._cw.cnx.undo_transaction(txuuid)
-        if errors:
-            self.w(self._cw._('some errors occurred:'))
-            self.wview('pyvalist', pyvalue=errors)
-        else:
+        if not errors:
             self.redirect()
+        return self._cw._('some errors occurred:') + self.view('pyvalist',
+                                                               pyvalue=errors)
 
     def redirect(self):
         req = self._cw

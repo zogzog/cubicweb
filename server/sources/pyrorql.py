@@ -18,6 +18,7 @@
 """Source to query another RQL repository using pyro"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import threading
 from os.path import join

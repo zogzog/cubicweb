@@ -17,6 +17,9 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """html calendar views"""
 
+__docformat__ = "restructuredtext en"
+_ = unicode
+
 from datetime import date, time, timedelta
 
 from logilab.mtconverter import xml_escape

@@ -18,6 +18,7 @@
 """base classes to handle tabbed views"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape

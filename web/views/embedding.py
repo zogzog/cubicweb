@@ -20,6 +20,7 @@ functionality.
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import re
 from urlparse import urljoin

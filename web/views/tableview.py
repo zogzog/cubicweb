@@ -18,6 +18,7 @@
 """generic table view, including filtering abilities"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
 

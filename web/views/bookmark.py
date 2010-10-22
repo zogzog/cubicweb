@@ -18,6 +18,7 @@
 """Primary view for bookmarks + user's bookmarks box"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
 
@@ -100,7 +101,7 @@ class BookmarksBox(component.CtxComponent):
             label = self.build_link(bookmark.title, bookmark.action_url())
             if self.can_delete:
                 dlink = u'[<a class="action" href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
-                    bookmark.eid, _('delete this bookmark'))
+                    bookmark.eid, req._('delete this bookmark'))
                 label = '<div>%s %s</div>' % (dlink, label)
             self.append(label)
         if self.can_edit:

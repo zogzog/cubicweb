@@ -55,7 +55,7 @@ class TimedCache(dict):
     def __init__(self, ttl):
         # time to live in seconds
         if ttl <= 0:
-            raise ValueError('TimedCache initialized with a ttl of %ss' % self.ttl.seconds)
+            raise ValueError('TimedCache initialized with a ttl of %ss' % ttl.seconds)
         self.ttl = timedelta(seconds=ttl)
 
     def __setitem__(self, key, value):

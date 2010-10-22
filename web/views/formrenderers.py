@@ -31,7 +31,9 @@ Here are the base renderers available:
 .. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
 
 """
+
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from warnings import warn
 
@@ -107,17 +109,20 @@ class FormRenderer(AppObject):
     def render(self, w, form, values):
         self._set_options(values)
         form.add_media()
-        w(self.open_form(form, values))
+        data = []
+        _w = data.append
+        _w(self.open_form(form, values))
         if self.display_progress_div:
-            w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
-        w(u'<fieldset>')
-        self.render_fields(w, form, values)
-        self.render_buttons(w, form)
-        w(u'</fieldset>')
-        w(self.close_form(form, values))
+            _w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
+        _w(u'<fieldset>')
+        self.render_fields(_w, form, values)
+        self.render_buttons(_w, form)
+        _w(u'</fieldset>')
+        _w(self.close_form(form, values))
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
+        w(''.join(data))
 
     def render_label(self, form, field):
         if field.label is None:

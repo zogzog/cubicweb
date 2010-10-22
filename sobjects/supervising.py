@@ -18,6 +18,7 @@
 """some hooks and views to handle supervising of any data changes"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from cubicweb import UnknownEid
 from cubicweb.selectors import none_rset
@@ -133,7 +134,8 @@ class SupervisionEmailView(Component):
         self.w(msg % locals())
 
     def change_state(self, (entity, fromstate, tostate)):
-        msg = self._cw._('changed state of %(etype)s #%(eid)s (%(title)s)')
+        _ = self._cw._
+        msg = _('changed state of %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(entity)))
         self.w(_('  from state %(fromstate)s to state %(tostate)s\n' %
                  {'fromstate': _(fromstate.name), 'tostate': _(tostate.name)}))

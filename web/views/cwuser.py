@@ -18,6 +18,7 @@
 """Specific views for users and groups"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import hashlib
 
@@ -107,6 +108,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
     __select__ = tabs.PrimaryTab.__select__ & is_instance('CWGroup')
 
     def render_entity_attributes(self, entity):
+        _ = self._cw._
         rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
               'U login L, U firstname FN, U surname LN, U creation_date CD, ' \
               'U last_login_time LL, G eid %(x)s'

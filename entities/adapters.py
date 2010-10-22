@@ -27,6 +27,7 @@ from warnings import warn
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
+from cubicweb import ValidationError
 from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.selectors import (implements, is_instance, relation_possible,
                                 match_exception)

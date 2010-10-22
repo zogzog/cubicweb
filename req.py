@@ -210,8 +210,7 @@ class RequestSessionBase(object):
             if not isinstance(values, (list, tuple)):
                 values = (values,)
             for value in values:
-                if value is None:
-                    raise ValueError(_('unauthorized value'))
+                assert value is not None
                 args.append(u'%s=%s' % (param, self.url_quote(value)))
         return '&'.join(args)
 

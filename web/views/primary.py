@@ -371,13 +371,13 @@ class AttributeView(EntityView):
     __regid__ = 'attribute'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def cell_call(self, row, col, rtype, **kwargs):
+    def cell_call(self, row, col, rtype, role, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         if self._cw.vreg.schema.rschema(rtype).final:
             self.w(entity.printable_value(rtype))
         else:
             dispctrl = uicfg.primaryview_display_ctrl.etype_get(
-                entity.e_schema, rtype, kwargs['role'], '*')
+                entity.e_schema, rtype, role, '*')
             rset = entity.related(rtype, role)
             if rset:
                 self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})

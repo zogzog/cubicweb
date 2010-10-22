@@ -18,6 +18,7 @@
 """the facets box and some basic facets"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
 

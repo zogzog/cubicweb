@@ -20,6 +20,7 @@ plugin.
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from warnings import warn
 

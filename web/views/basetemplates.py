@@ -18,6 +18,7 @@
 """default templates for CubicWeb web client"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed

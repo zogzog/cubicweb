@@ -45,6 +45,7 @@ to skip those classes...
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from copy import deepcopy
 from datetime import date, datetime, timedelta

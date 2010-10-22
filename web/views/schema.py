@@ -18,6 +18,7 @@
 """Specific views for schema related entities"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from itertools import cycle
 
@@ -125,6 +126,7 @@ class SecurityViewMixIn(object):
         # set layout permissions in a table for each group of relation
         # definition
         w = self.w
+        _ = self._cw._
         w(u'<div style="margin: 0px 1.5em">')
         tmpl = u'<strong>%s</strong> %s <strong>%s</strong>'
         for perm, rdefs in perms.iteritems():
@@ -147,7 +149,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
     default_tab = 'schema-diagram'
 
     def call(self):
-        self.w(u'<h1>%s</h1>' % _('Schema of the data model'))
+        self.w(u'<h1>%s</h1>' % self._cw._('Schema of the data model'))
         self.render_tabs(self.tabs, self.default_tab)
 
 
@@ -155,9 +157,11 @@ class SchemaImageTab(StartupView):
     __regid__ = 'schema-diagram'
 
     def call(self):
-        self.w(_(u'<div>This schema of the data model <em>excludes</em> the '
-                 u'meta-data, but you can also display a <a href="%s">complete '
-                 u'schema with meta-data</a>.</div>')
+        _ = self._cw._
+        self.w(self._cw._(
+            u'<div>This schema of the data model <em>excludes</em> the '
+            'meta-data, but you can also display a <a href="%s">complete '
+            'schema with meta-data</a>.</div>')
                % xml_escape(self._cw.build_url('view', vid='schemagraph', skipmeta=0)))
         self.w(u'<div><a href="%s">%s</a></div>' %
                (self._cw.build_url('view', vid='owl'),
@@ -397,15 +401,16 @@ class CWETypePermTab(SecurityViewMixIn, EntityView):
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         eschema = self._cw.vreg.schema.eschema(entity.name)
-        self.w(u'<h4>%s</h4>' % _('This entity type permissions:').capitalize())
+        self.w(u'<h4>%s</h4>' % self._cw._('This entity type permissions:'))
         self.permissions_table(eschema)
         self.w(u'<div style="margin: 0px 1.5em">')
-        self.w(u'<h4>%s</h4>' % _('Attributes permissions:').capitalize())
+        self.w(u'<h4>%s</h4>' % self._cw._('Attributes permissions:'))
         for attr, etype in  eschema.attribute_definitions():
             if attr not in META_RTYPES:
                 rdef = eschema.rdef(attr)
                 attrtype = str(rdef.rtype)
-                self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attrtype, _(attrtype)))
+                self.w(u'<h4 class="schema">%s (%s)</h4> '
+                       % (attrtype, self._cw._(attrtype)))
                 self.permissions_table(rdef)
         self.w(u'</div>')
 

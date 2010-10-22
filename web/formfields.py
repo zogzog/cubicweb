@@ -349,8 +349,8 @@ class Field(object):
                 if support_args(self.value, 'form', 'field'):
                     return self.value(form, self)
                 else:
-                    warn("[3.10] field's value callback must now take form and field as argument",
-                         DeprecationWarning)
+                    warn("[3.10] field's value callback must now take form and "
+                         "field as argument (%s)" % self, DeprecationWarning)
                     return self.value(form)
             return self.value
         formattr = '%s_%s_default' % (self.role, self.name)

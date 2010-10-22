@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""basic plot views
+"""basic plot views"""
 
-"""
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
