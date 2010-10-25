@@ -837,10 +837,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             # to add new related entities
             if self.should_display_add_new_relation_link(rschema, formviews, card):
                 rdef = entity.e_schema.rdef(rschema, role, ttype)
-                if role == 'subject':
-                    rdefkwargs = {'fromeid': entity.eid}
+                if entity.has_eid():
+                    if role == 'subject':
+                        rdefkwargs = {'fromeid': entity.eid}
+                    else:
+                        rdefkwargs = {'toeid': entity.eid}
                 else:
-                    rdefkwargs = {'toeid': entity.eid}
+                    rdefkwargs = {}
                 if (tschema.has_perm(self._cw, 'add')
                     and rdef.has_perm(self._cw, 'add', **rdefkwargs)):
                     addnewlink = self._cw.vreg['views'].select(
