@@ -22,6 +22,7 @@ _ = unicode
 
 from warnings import warn
 
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject
@@ -68,7 +69,15 @@ class PrimaryView(EntityView):
             boxes = None
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
-        self.render_entity_summary(entity)
+        if hasattr(self, 'render_entity_summary'):
+            warn('[3.10] render_entity_summary method is deprecated (%s)' % self,
+                 DeprecationWarning)
+            self.render_entity_summary(entity)
+        summary = self.summary(entity)
+        if summary:
+            warn('[3.10] summary method is deprecated (%s)' % self,
+                 DeprecationWarning)
+            self.w(u'<div class="summary">%s</div>' % summary)
         self.w(u'<div class="mainInfo">')
         self.content_navigation_components('navcontenttop')
         self.render_entity_attributes(entity)
@@ -111,13 +120,9 @@ class PrimaryView(EntityView):
     def render_entity_toolbox(self, entity):
         self.content_navigation_components('ctxtoolbar')
 
+    @deprecated('[3.8] render_entity_metadata method is deprecated')
     def render_entity_metadata(self, entity):
         entity.view('metadata', w=self.w)
-
-    def render_entity_summary(self, entity):
-        summary = self.summary(entity) # deprecate summary?
-        if summary:
-            self.w(u'<div class="summary">%s</div>' % summary)
 
     def summary(self, entity):
         """default implementation return an empty string"""
