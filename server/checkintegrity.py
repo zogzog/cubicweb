@@ -336,6 +336,11 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         cnx.commit()
 
 
+def info(msg, *args):
+    if args:
+        msg = msg % args
+    print 'INFO: %s' % msg
+
 def warning(msg, *args):
     if args:
         msg = msg % args
@@ -374,13 +379,13 @@ def check_mapping(schema, mapping, warning=warning, error=error):
     # check relation in dont_cross_relations aren't in support_relations
     for rschema in mapping['dont_cross_relations']:
         if rschema in mapping['support_relations']:
-            warning('relation %s is in dont_cross_relations and in support_relations',
-                    rschema)
+            info('relation %s is in dont_cross_relations and in support_relations',
+                 rschema)
     # check relation in cross_relations are in support_relations
     for rschema in mapping['cross_relations']:
         if rschema not in mapping['support_relations']:
-            warning('relation %s is in cross_relations but not in support_relations',
-                    rschema)
+            info('relation %s is in cross_relations but not in support_relations',
+                 rschema)
     # check for relation in both cross_relations and dont_cross_relations
     for rschema in mapping['cross_relations'] & mapping['dont_cross_relations']:
         error('relation %s is in both cross_relations and dont_cross_relations',
@@ -410,7 +415,7 @@ def check_mapping(schema, mapping, warning=warning, error=error):
                     if role == 'subject' and rschema.inlined:
                         error('inlined relation %s of %s should be supported',
                               rschema, eschema)
-                    elif not somethingprinted and rschema not in seen:
+                    elif not somethingprinted and rschema not in seen and rschema not in mapping['cross_relations']:
                         print 'you may want to specify something for %s' % rschema
                         seen.add(rschema)
             else:
