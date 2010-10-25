@@ -462,6 +462,7 @@ class BwCompatCWRegistry(object):
     def clear(self): pass
     def initialization_completed(self): pass
 
+
 class CubicWebVRegistry(VRegistry):
     """Central registry for the cubicweb instance, extending the generic
     VRegistry with some cubicweb specific stuff.
@@ -558,6 +559,14 @@ class CubicWebVRegistry(VRegistry):
         path = self.config.vregistry_path()
         if self.is_reload_needed(path):
             self.reload(path)
+
+    def load_file(self, filepath, modname):
+        try:
+            super(CubicWebVRegistry, self).load_file(filepath, modname)
+        except ImportError:
+            if self.config.debugmode:
+                raise
+            self.exception('failed to load %s from %s', filepath, modname)
 
     def reload(self, path, force_reload=True):
         """modification detected, reset and reload the vreg"""
