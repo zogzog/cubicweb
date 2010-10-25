@@ -261,7 +261,8 @@ class CWSourceHostConfig(EntityType):
         'update': ('managers',),
         'delete': ('managers',),
         }
-    match_host = String(required=True, unique=True, maxsize=128,
+    __unique_together__ = [('match_host', 'cw_host_config_of')]
+    match_host = String(required=True, maxsize=128,
                         description=_('regexp matching host(s) to which this config applies'))
     config = String(required=True,
                     description=_('Source\'s configuration for a particular host. '

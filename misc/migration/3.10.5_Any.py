@@ -1,3 +1,4 @@
+sync_schema_props_perms('CWSourceHostConfig', syncperms=False)
 
 sql('INSERT INTO cw_source_relation(eid_from, eid_to) '
     'SELECT e.eid,s.cw_eid FROM entities as e, cw_CWSource as s '
