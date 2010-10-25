@@ -290,7 +290,7 @@ function loadRemote(url, form, reqtype, sync) {
         var deferred = new Deferred();
         jQuery.ajax({
             url: url,
-            type: (reqtype || 'GET').toUpperCase(),
+            type: (reqtype || 'POST').toUpperCase(),
             data: form,
             traditional: true,
             async: true,
