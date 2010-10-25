@@ -26,16 +26,6 @@ AutomaticWebTest.application_rql = [
     'Any COUNT(X) WHERE X is CWUser',
     ]
 
-class ComposityCopy(CubicWebTC):
-
-    def test_regr_copy_view(self):
-        """regression test: make sure we can ask a copy of a
-        composite entity
-        """
-        rset = self.execute('CWUser X WHERE X login "admin"')
-        self.view('copy', rset)
-
-
 
 class SomeView(AnyRsetView):
     __regid__ = 'someview'
@@ -46,8 +36,13 @@ class SomeView(AnyRsetView):
 
 
 class ManualCubicWebTCs(AutoPopulateTest):
-    def setup_database(self):
-        self.auto_populate(10)
+
+    def test_regr_copy_view(self):
+        """regression test: make sure we can ask a copy of a
+        composite entity
+        """
+        rset = self.execute('CWUser X WHERE X login "admin"')
+        self.view('copy', rset)
 
     def test_manual_tests(self):
         rset = self.execute('Any P,F,S WHERE P is CWUser, P firstname F, P surname S')
@@ -67,10 +62,6 @@ class ManualCubicWebTCs(AutoPopulateTest):
         rset = self.execute('CWUser X')
         source = self.view('someview', rset).source
         self.assertEqual(source.count('spam.js'), 1)
-
-
-
-class ExplicitViewsTest(CubicWebTC):
 
     def test_unrelateddivs(self):
         rset = self.execute('Any X WHERE X is CWUser, X login "admin"')
