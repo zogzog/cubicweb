@@ -26,10 +26,7 @@ from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
-from cubicweb.web import component
-from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
-                                prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
-                                _prepare_vocabulary_rqlst)
+from cubicweb.web import component, facet
 
 @objectify_selector
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
@@ -88,13 +85,12 @@ class FilterBox(component.CtxComponent):
             return ()
         rqlst = rqlst.copy()
         req.vreg.rqlhelper.annotate(rqlst)
-        mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
+        mainvar, baserql = facet.prepare_facets_rqlst(rqlst, rset.args)
         widgets = []
-        for facet in self.get_facets(rset, rqlst.children[0], mainvar):
-            if facet.cw_propval('visible'):
-                wdg = facet.get_widget()
-                if wdg is not None:
-                    widgets.append(wdg)
+        for facetobj in self.get_facets(rset, rqlst.children[0], mainvar):
+            wdg = facetobj.get_widget()
+            if wdg is not None:
+                widgets.append(wdg)
         if not widgets:
             return
         if vid is None:
@@ -109,7 +105,7 @@ class FilterBox(component.CtxComponent):
         for param in ('subvid', 'vtitle'):
             if param in req.form:
                 hiddens[param] = req.form[param]
-        filter_hiddens(w, **hiddens)
+        facet.filter_hiddens(w, **hiddens)
         for wdg in widgets:
             wdg.render(w=w)
         w(u'</fieldset>\n</form>\n')
@@ -138,28 +134,28 @@ class FilterBox(component.CtxComponent):
 
 # facets ######################################################################
 
-class CWSourceFacet(RelationFacet):
+class CWSourceFacet(facet.RelationFacet):
     __regid__ = 'cw_source-facet'
     rtype = 'cw_source'
     target_attr = 'name'
 
-class CreatedByFacet(RelationFacet):
+class CreatedByFacet(facet.RelationFacet):
     __regid__ = 'created_by-facet'
     rtype = 'created_by'
     target_attr = 'login'
 
-class InGroupFacet(RelationFacet):
+class InGroupFacet(facet.RelationFacet):
     __regid__ = 'in_group-facet'
     rtype = 'in_group'
     target_attr = 'name'
 
-class InStateFacet(RelationFacet):
+class InStateFacet(facet.RelationAttributeFacet):
     __regid__ = 'in_state-facet'
     rtype = 'in_state'
     target_attr = 'name'
 
 # inherit from RelationFacet to benefit from its possible_values implementation
-class ETypeFacet(RelationFacet):
+class ETypeFacet(facet.RelationFacet):
     __regid__ = 'etype-facet'
     __select__ = yes()
     order = 1
@@ -190,8 +186,9 @@ class ETypeFacet(RelationFacet):
         rqlst = self.rqlst
         rqlst.save_state()
         try:
-            _cleanup_rqlst(rqlst, self.filtered_variable)
-            etype_var = _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            facet._cleanup_rqlst(rqlst, self.filtered_variable)
+            etype_var = facet._prepare_vocabulary_rqlst(
+                rqlst, self.filtered_variable, self.rtype, self.role)
             attrvar = rqlst.make_variable()
             rqlst.add_selected(attrvar)
             rqlst.add_relation(etype_var, 'name', attrvar)
@@ -199,7 +196,7 @@ class ETypeFacet(RelationFacet):
         finally:
             rqlst.recover()
 
-class HasTextFacet(AbstractFacet):
+class HasTextFacet(facet.AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
     __regid__ = 'has_text-facet'
     rtype = 'has_text'
@@ -215,7 +212,7 @@ class HasTextFacet(AbstractFacet):
         default implentation expects a .vocabulary method on the facet and
         return a combobox displaying this vocabulary
         """
-        return FacetStringWidget(self)
+        return facet.FacetStringWidget(self)
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
