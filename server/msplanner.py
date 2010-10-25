@@ -519,17 +519,15 @@ class PartPlanInformation(object):
                 neged = srel.neged(traverse_scope=True) or (rel and rel.neged(strict=True))
                 if neged:
                     for source in sources:
-                        self._remove_source_term(source, lhs, check=True)
+                        self._remove_source_term(source, lhs)
                 else:
                     for source, terms in sourcesterms.items():
                         if lhs in terms and not source in sources:
-                            self._remove_source_term(source, lhs, check=True)
+                            self._remove_source_term(source, lhs)
                 if rel is None:
                     self._remove_source_term(self.system_source, vref)
-                    srel.parent.remove(srel)
                 elif len(var.stinfo['relations']) == 2 and not var.stinfo['selected']:
                     self._remove_source_term(self.system_source, var)
-                    self.rqlst.undefine_variable(var)
         return termssources
 
     def _handle_cross_relation(self, rel, relsources, termssources):
@@ -776,16 +774,14 @@ class PartPlanInformation(object):
             if not sourcesterms[source][term]:
                 self._remove_source_term(source, term)
 
-    def _remove_source_term(self, source, term, check=False):
-        poped = self._sourcesterms[source].pop(term, None)
-        if not self._sourcesterms[source]:
-            del self._sourcesterms[source]
-        if poped is not None and check:
-            for terms in self._sourcesterms.itervalues():
-                if term in terms:
-                    break
-            else:
-                raise BadRQLQuery('source conflict for term %s' % term.as_string())
+    def _remove_source_term(self, source, term):
+        try:
+            poped = self._sourcesterms[source].pop(term, None)
+        except KeyError:
+            pass
+        else:
+            if not self._sourcesterms[source]:
+                del self._sourcesterms[source]
 
     def crossed_relation(self, source, relation):
         return relation in self._crossrelations.get(source, ())

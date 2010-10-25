@@ -1845,7 +1845,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_0_0(self):
         self._test('Card X WHERE X cw_source S, S eid 1',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
+                   [('OneFetchStep', [('Any X WHERE X cw_source 1, X is Card',
                                        [{'X': 'Card'}])],
                      None, None,
                      [self.system],{}, [])
@@ -1853,7 +1853,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_0_1(self):
         self._test('Any X, S WHERE X is Card, X cw_source S, S eid 1',
-                   [('OneFetchStep', [('Any X,1 WHERE X is Card',
+                   [('OneFetchStep', [('Any X,1 WHERE X is Card, X cw_source 1',
                                        [{'X': 'Card'}])],
                      None, None,
                      [self.system],{}, [])
@@ -1861,8 +1861,8 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_1_0(self):
         self._test('Card X WHERE X cw_source S, S name "system"',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
-                                       [{'X': 'Card'}])],
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, S name "system", X is Card',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
                      None, None,
                      [self.system],{}, [])
                     ])
@@ -1875,15 +1875,28 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])
                     ])
 
+    def test_source_specified_1_2(self):
+        sols = []
+        for sol in X_ALL_SOLS:
+            sol = sol.copy()
+            sol['S'] = 'CWSource'
+            sols.append(sol)
+        self._test('Any X WHERE X cw_source S, S name "cards"',
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, S name "cards"',
+                                       sols)],
+                     None, None,
+                     [self.system],{}, [])
+                    ])
+
     def test_source_specified_2_0(self):
         self._test('Card X WHERE X cw_source S, NOT S eid 1',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
-                                       [{'X': 'Card'}])],
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, NOT S eid 1, X is Card, S is CWSource',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
                      None, None,
                      [self.cards],{}, [])
                     ])
         self._test('Card X WHERE NOT X cw_source S, S eid 1',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
+                   [('OneFetchStep', [('Any X WHERE NOT EXISTS(X cw_source 1), X is Card',
                                        [{'X': 'Card'}])],
                      None, None,
                      [self.cards],{}, [])
@@ -1891,14 +1904,14 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_2_1(self):
         self._test('Card X WHERE X cw_source S, NOT S name "system"',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
-                                       [{'X': 'Card'}])],
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, NOT S name "system", X is Card, S is CWSource',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
                      None, None,
                      [self.cards],{}, [])
                     ])
         self._test('Card X WHERE NOT X cw_source S, S name "system"',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
-                                       [{'X': 'Card'}])],
+                   [('OneFetchStep', [('Any X WHERE NOT EXISTS(X cw_source S), S name "system", X is Card, S is CWSource',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
                      None, None,
                      [self.cards],{}, [])
                     ])
@@ -1916,9 +1929,13 @@ class MSPlannerTC(BaseMSPlannerTC):
         self.assertEqual(str(ex), 'source conflict for term X')
 
     def test_source_conflict_3(self):
-        ex = self.assertRaises(BadRQLQuery,
-                               self._test, 'CWSource X WHERE X cw_source S, S name "cards"', [])
-        self.assertEqual(str(ex), 'source conflict for term X')
+        self._test('CWSource X WHERE X cw_source S, S name "cards"',
+                   [('OneFetchStep',
+                     [(u'Any X WHERE X cw_source S, S name "cards", X is CWSource',
+                       [{'S': 'CWSource', 'X': 'CWSource'}])],
+                     None, None,
+                     [self.system],
+                     {}, [])])
 
     def test_ambigous_cross_relation_source_specified(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
