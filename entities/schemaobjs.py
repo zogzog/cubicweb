@@ -24,6 +24,7 @@ from socket import gethostname
 
 from logilab.common.decorators import cached
 from logilab.common.textutils import text_to_dict
+from logilab.common.configuration import OptionError
 
 from yams.schema import role_name
 
@@ -33,13 +34,33 @@ from cubicweb.schema import ERQLExpression, RRQLExpression
 from cubicweb.entities import AnyEntity, fetch_config
 
 
-class CWSource(AnyEntity):
-    __regid__ = 'CWSource'
-    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
-
+class _CWSourceCfgMixIn(object):
     @property
     def dictconfig(self):
         return self.config and text_to_dict(self.config) or {}
+
+    def update_config(self, skip_unknown=False, **config):
+        from cubicweb.server import SOURCE_TYPES
+        from cubicweb.server.serverconfig import (SourceConfiguration,
+                                                  generate_source_config)
+        cfg = self.dictconfig
+        cfg.update(config)
+        options = SOURCE_TYPES[self.type].options
+        sconfig = SourceConfiguration(self._cw.vreg.config, options=options)
+        for opt, val in cfg.iteritems():
+            try:
+                sconfig.set_option(opt, val)
+            except OptionError:
+                if skip_unknown:
+                    continue
+                raise
+        cfgstr = unicode(generate_source_config(sconfig), self._cw.encoding)
+        self.set_attributes(config=cfgstr)
+
+
+class CWSource(_CWSourceCfgMixIn, AnyEntity):
+    __regid__ = 'CWSource'
+    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
 
     @property
     def host_config(self):
@@ -56,13 +77,9 @@ class CWSource(AnyEntity):
         return self.reverse_cw_host_config_of
 
 
-class CWSourceHostConfig(AnyEntity):
+class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
     __regid__ = 'CWSourceHostConfig'
     fetch_attrs, fetch_order = fetch_config(['match_host', 'config'])
-
-    @property
-    def dictconfig(self):
-        return self.config and text_to_dict(self.config) or {}
 
     def match(self, hostname):
         return re.match(self.match_host, hostname)
