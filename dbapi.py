@@ -570,6 +570,7 @@ class Connection(object):
             req.get_header = lambda x, default=None: default
             req.set_session = lambda session, user=None: DBAPIRequest.set_session(
                 req, session, user)
+            req.relative_path = lambda includeparams=True: ''
         else:
             req = DBAPIRequest(self.vreg)
         req.set_session(DBAPISession(self))
