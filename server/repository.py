@@ -1088,17 +1088,16 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid):
+    def delete_info(self, session, entity, sourceuri, extid, scleanup=False):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
         # mark eid as being deleted in session info and setup cache update
         # operation
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self._delete_info(session, entity, sourceuri, extid)
+        self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid):
-                     # attributes=None, relations=None):
+    def _delete_info(self, session, entity, sourceuri, extid, scleanup):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
         * call delete info on the system source which will transfer record from
@@ -1119,7 +1118,11 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                session.execute(rql, {'x': eid}, build_descr=False)
+                if scleanup:
+                    # source cleaning: only delete relations stored locally
+                    rql += ', NOT Y cw_source S, S name %(source)s'
+                session.execute(rql, {'x': eid, 'source': sourceuri},
+                                build_descr=False)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
     def locate_relation_source(self, session, subject, rtype, object):
