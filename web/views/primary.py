@@ -93,10 +93,8 @@ class PrimaryView(EntityView):
             self._cw, rset=self.cw_rset, view=self, context=context):
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
-            except NotImplementedError:
-                warn('[3.2] component %s doesnt implement cell_call, please update'
-                     % comp.__class__, DeprecationWarning)
-                comp.render(w=self.w, view=self)
+            except TypeError:
+                comp.render(w=self.w)
         self.w(u'</div>')
 
     def render_entity_title(self, entity):
@@ -229,11 +227,8 @@ class PrimaryView(EntityView):
             else:
                  try:
                      box.render(w=self.w, row=self.cw_row)
-                 except NotImplementedError:
-                    # much probably a context insensitive box, which only
-                    # implements .call() and not cell_call()
-                    # XXX shouldn't occurs with the new box system
-                    box.render(w=self.w)
+                 except TypeError:
+                     box.render(w=self.w)
 
     def _prepare_side_boxes(self, entity):
         sideboxes = []
