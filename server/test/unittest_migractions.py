@@ -414,7 +414,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)
         self.assertItemsEqual(self.schema.eschema('Personne')._unique_together[0],
                                            ('nom', 'prenom', 'datenaiss'))
-        rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint')
+        rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint, C constraint_of ET, ET name "Personne"')
         self.assertEqual(len(rset), 1)
         relations = [r.rtype.name for r in rset.get_entity(0, 0).relations]
         self.assertItemsEqual(relations, ('nom', 'prenom', 'datenaiss'))
