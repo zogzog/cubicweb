@@ -777,7 +777,11 @@ class is_instance(EClassSelector):
 
     def score_class(self, eclass, req):
         # cache on vreg to avoid reloading issues
-        cache = req.vreg._is_instance_selector_cache
+        try:
+            cache = req.vreg._is_instance_selector_cache
+        except AttributeError:
+            # XXX 'before-registry-reset' not called for db-api connections
+            cache = req.vreg._is_instance_selector_cache = {}
         try:
             expected_eclasses = cache[self]
         except KeyError:
