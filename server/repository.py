@@ -1097,7 +1097,7 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid, scleanup):
+    def _delete_info(self, session, entity, sourceuri, extid, scleanup=False):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
         * call delete info on the system source which will transfer record from
