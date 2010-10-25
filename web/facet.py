@@ -608,6 +608,7 @@ class RelationFacet(VocabularyFacet):
             values = [str(x) for x, in self.rqlexec(rqlst.as_string())]
         except:
             self.exception('while computing values for %s', self)
+            return []
         finally:
             rqlst.recover()
         if self._include_no_relation():
