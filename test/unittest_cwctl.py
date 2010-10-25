@@ -20,6 +20,7 @@
 """
 import sys
 import os
+from os.path import join
 from cStringIO import StringIO
 from logilab.common.testlib import TestCase, unittest_main
 
@@ -54,9 +55,10 @@ class CubicWebShellTC(CubicWebTC):
                    'script2.py': ['-v'],
                    'script3.py': ['-vd', '-f', 'FILE.TXT'],
                   }
-        mih.cmd_process_script('data/scripts/script1.py', funcname=None)
+        mih.cmd_process_script(join(self.datadir, 'scripts', 'script1.py'),
+                               funcname=None)
         for script, args in scripts.items():
-            scriptname = os.path.join('data/scripts/', script)
+            scriptname = os.path.join(self.datadir, 'scripts', script)
             self.assert_(os.path.exists(scriptname))
             mih.cmd_process_script(scriptname, None, scriptargs=args)
 

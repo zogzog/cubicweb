@@ -15,11 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb.migration unit tests
+"""cubicweb.migration unit tests"""
 
-"""
-
-from os.path import abspath
+from os.path import abspath, dirname, join
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools import TestServerConfiguration
@@ -32,8 +30,8 @@ class Schema(dict):
     def has_entity(self, e_type):
         return self.has_key(e_type)
 
-SMIGRDIR = abspath('data/server_migration') + '/'
-TMIGRDIR = abspath('data/migration') + '/'
+SMIGRDIR = join(dirname(__file__), 'data', 'server_migration') + '/'
+TMIGRDIR = join(dirname(__file__), 'data', 'migration') + '/'
 
 class MigrTestConfig(TestServerConfiguration):
     verbosity = 0
@@ -105,7 +103,7 @@ class BaseCreationTC(TestCase):
 
     def test_db_creation(self):
         """make sure database can be created"""
-        config = ApptestConfiguration('data')
+        config = ApptestConfiguration('data', apphome=self.datadir)
         source = config.sources()['system']
         self.assertEqual(source['db-driver'], 'sqlite')
         cleanup_sqlite(source['db-name'], removetemplate=True)

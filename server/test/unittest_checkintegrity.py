@@ -26,7 +26,7 @@ from cubicweb.server.checkintegrity import check, reindex_entities
 
 class CheckIntegrityTC(TestCase):
     def setUp(self):
-        self.repo, self.cnx = init_test_database()
+        self.repo, self.cnx = init_test_database(apphome=self.datadir)
         self.execute = self.cnx.cursor().execute
         self.session = self.repo._sessions[self.cnx.sessionid]
         sys.stderr = sys.stdout = StringIO()

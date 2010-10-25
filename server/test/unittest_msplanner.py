@@ -75,7 +75,9 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
 
 
 # keep cnx so it's not garbage collected and the associated session is closed
-repo, cnx = init_test_database()
+def setup_module(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=BaseMSPlannerTC.datadir)
 
 def teardown_module(*args):
     global repo, cnx
@@ -89,9 +91,9 @@ class BaseMSPlannerTC(BasePlannerTC):
     * ldap source supporting CWUser
     * rql source supporting Card
     """
-    repo = repo
 
     def setUp(self):
+        self.__class__.repo = repo
         #_QuerierTC.setUp(self)
         self.setup()
         # hijack Affaire security
@@ -2243,9 +2245,9 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
 
     * 2 rql sources supporting Card
     """
-    repo = repo
 
     def setUp(self):
+        self.__class__.repo = repo
         self.setup()
         self.add_source(FakeCardSource, 'cards')
         self.add_source(FakeCardSource, 'cards2')
@@ -2452,9 +2454,9 @@ class FakeVCSSource(AbstractSource):
         return []
 
 class MSPlannerVCSSource(BasePlannerTC):
-    repo = repo
 
     def setUp(self):
+        self.__class__.repo = repo
         self.setup()
         self.add_source(FakeVCSSource, 'vcs')
         self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)

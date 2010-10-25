@@ -23,17 +23,19 @@ from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 from cubicweb.server.ssplanner import SSPlanner
 
 # keep cnx so it's not garbage collected and the associated session closed
-repo, cnx = init_test_database()
+def setup_module(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=SSPlannerTC.datadir)
 
 def teardown_module(*args):
     global repo, cnx
     del repo, cnx
 
 class SSPlannerTC(BasePlannerTC):
-    repo = repo
     _test = test_plan
 
     def setUp(self):
+        self.__class__.repo = repo
         BasePlannerTC.setUp(self)
         self.planner = SSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         self.system = self.o._repo.system_source

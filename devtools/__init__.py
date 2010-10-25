@@ -224,10 +224,10 @@ class RealDatabaseConfiguration(ApptestConfiguration):
 
 # test database handling #######################################################
 
-def init_test_database(config=None, configdir='data'):
+def init_test_database(config=None, appid='data', apphome=None):
     """init a test database for a specific driver"""
     from cubicweb.dbapi import in_memory_cnx
-    config = config or TestServerConfiguration(configdir)
+    config = config or TestServerConfiguration(appid, apphome=apphome)
     sources = config.sources()
     driver = sources['system']['db-driver']
     if config.db_require_setup:
@@ -335,12 +335,13 @@ def reset_test_database_sqlite(config):
 def init_test_database_sqlite(config):
     """initialize a fresh sqlite databse used for testing purpose"""
     # remove database file if it exists
+    dbfile = join(config.apphome, config.sources()['system']['db-name'])
+    config.sources()['system']['db-name'] = dbfile
     if not reset_test_database_sqlite(config):
         # initialize the database
         import shutil
         from cubicweb.server import init_repository
         init_repository(config, interactive=False)
-        dbfile = config.sources()['system']['db-name']
         shutil.copy(dbfile, '%s-template' % dbfile)
 
 def install_sqlite_patch(querier):

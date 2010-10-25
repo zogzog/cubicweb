@@ -62,7 +62,9 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-repo, cnx = init_test_database()
+def setup_module(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=UtilsTC.datadir)
 
 def teardown_module(*args):
     global repo, cnx
@@ -72,7 +74,9 @@ def teardown_module(*args):
 
 
 class UtilsTC(BaseQuerierTC):
-    repo = repo
+    def setUp(self):
+        self.__class__.repo = repo
+        super(UtilsTC, self).setUp()
 
     def get_max_eid(self):
         # no need for cleanup here
@@ -225,7 +229,9 @@ class UtilsTC(BaseQuerierTC):
 
 
 class QuerierTC(BaseQuerierTC):
-    repo = repo
+    def setUp(self):
+        self.__class__.repo = repo
+        super(QuerierTC, self).setUp()
 
     def test_encoding_pb(self):
         self.assertRaises(RQLSyntaxError, self.execute,

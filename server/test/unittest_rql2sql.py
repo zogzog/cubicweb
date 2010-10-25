@@ -38,12 +38,14 @@ except AssertionError, ex:
     pass # already registered
 
 
-config = TestServerConfiguration('data')
-config.bootstrap_cubes()
-schema = config.load_schema()
-schema['in_state'].inlined = True
-schema['state_of'].inlined = False
-schema['comments'].inlined = False
+def setup_module(*args):
+    global config, schema
+    config = TestServerConfiguration('data', apphome=CWRQLTC.datadir)
+    config.bootstrap_cubes()
+    schema = config.load_schema()
+    schema['in_state'].inlined = True
+    schema['state_of'].inlined = False
+    schema['comments'].inlined = False
 
 def teardown_module(*args):
     global config, schema
@@ -1076,8 +1078,12 @@ WHERE rel_is0.eid_to=2'''),
 
     ]
 class CWRQLTC(RQLGeneratorTC):
-    schema = schema
     backend = 'sqlite'
+
+    def setUp(self):
+        self.__class__.schema = schema
+        super(CWRQLTC, self).setUp()
+
     def test_nonregr_sol(self):
         delete = self.rqlhelper.parse(
             'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
@@ -1105,8 +1111,11 @@ def strip(text):
     return '\n'.join(l.strip() for l in text.strip().splitlines())
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
-    schema = schema
     backend = 'postgres'
+
+    def setUp(self):
+        self.__class__.schema = schema
+        super(PostgresSQLGeneratorTC, self).setUp()
 
     def _norm_sql(self, sql):
         return sql.strip()

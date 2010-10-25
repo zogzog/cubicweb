@@ -48,8 +48,10 @@ Connection_close = Connection.close
 
 def setup_module(*args):
     global repo2, cnx2, repo3, cnx3
-    repo2, cnx2 = init_test_database(config=ExternalSource1Configuration('data'))
-    repo3, cnx3 = init_test_database(config=ExternalSource2Configuration('data'))
+    cfg1 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
+    repo2, cnx2 = init_test_database(config=cfg1)
+    cfg2 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
+    repo3, cnx3 = init_test_database(config=cfg2)
     cnx3.request().create_entity('CWSource', name=u'extern', type=u'pyrorql',
                                  config=EXTERN_SOURCE_CFG)
     cnx3.commit()

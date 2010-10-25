@@ -22,7 +22,10 @@
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BaseQuerierTC
 
-repo, cnx = init_test_database()
+
+def setup_module(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=SQLGenAnnotatorTC.datadir)
 
 def teardown_module(*args):
     global repo, cnx
@@ -30,7 +33,10 @@ def teardown_module(*args):
 
 
 class SQLGenAnnotatorTC(BaseQuerierTC):
-    repo = repo
+
+    def setUp(self):
+        self.__class__.repo = repo
+        super(SQLGenAnnotatorTC, self).setUp()
 
     def get_max_eid(self):
         # no need for cleanup here
