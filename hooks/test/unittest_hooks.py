@@ -229,10 +229,10 @@ class CWPropertyHooksTC(CubicWebTC):
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key'})
+        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key bla.bla'})
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key'})
+        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key bla.bla'})
 
     def test_site_wide_eproperty(self):
         ex = self.assertRaises(ValidationError,
