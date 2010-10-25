@@ -31,6 +31,7 @@ from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
+# XXX deprecated
 def download_box(w, entity, title=None, label=None, footer=u''):
     req = entity._cw
     w(u'<div class="sideBox">')

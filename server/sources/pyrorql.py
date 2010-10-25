@@ -139,7 +139,7 @@ from all_in_one.conf. It may contains port information using <host>:<port> notat
           'default': None,
           'help': 'Pyro name server\'s group where the repository will be \
 registered. If not set, default to the value from all_in_one.conf.',
-          'group': 'pyro-source', 'level': 1,
+          'group': 'pyro-source', 'level': 2,
           }),
         ('synchronization-interval',
          {'type' : 'int',
@@ -195,10 +195,10 @@ repository (default to 5 minutes).',
 
     def last_update_time(self):
         pkey = u'sources.%s.latest-update-time' % self.uri
-        rql = 'Any V WHERE X is CWProperty, X value V, X pkey %(k)s'
         session = self.repo.internal_session()
         try:
-            rset = session.execute(rql, {'k': pkey})
+            rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
+                                   {'k': pkey})
             if not rset:
                 # insert it
                 session.execute('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',

@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 from cubicweb.server.ssplanner import SSPlanner

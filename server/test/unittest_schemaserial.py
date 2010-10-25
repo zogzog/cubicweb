@@ -15,8 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for schema rql (de)serialization
-"""
+"""unit tests for schema rql (de)serialization"""
 
 import sys
 from cStringIO import StringIO
