@@ -155,13 +155,15 @@ class AddCWPropertyHook(SyncSessionHook):
 
     def __call__(self):
         key, value = self.entity.pkey, self.entity.value
+        if key.startswith('sources.'):
+            return
         session = self._cw
         try:
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
             qname = role_name('pkey', 'subject')
-            raise ValidationError(self.entity.eid,
-                                  {qname: session._('unknown property key')})
+            msg = session._('unknown property key %s') % key
+            raise ValidationError(self.entity.eid, {qname: msg})
         except ValueError, ex:
             qname = role_name('value', 'subject')
             raise ValidationError(self.entity.eid,
@@ -182,6 +184,8 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
                 'value' in entity.cw_edited):
             return
         key, value = entity.pkey, entity.value
+        if key.startswith('sources.'):
+            return
         session = self._cw
         try:
             value = session.vreg.typed_value(key, value)
