@@ -1,3 +1,9 @@
+cubicweb (3.10.5-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 25 Oct 2010 18:22:20 +0200
+
 cubicweb (3.10.4-1) unstable; urgency=low
 
   * new upstream release
