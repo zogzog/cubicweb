@@ -151,7 +151,7 @@ class CubicWebSchemaTC(TestCase):
         self.assertEqual(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
 loader = CubicWebSchemaLoader()
-config = TestConfiguration('data')
+config = TestConfiguration('data', apphome=DATADIR)
 config.bootstrap_cubes()
 
 class SchemaReaderClassTest(TestCase):

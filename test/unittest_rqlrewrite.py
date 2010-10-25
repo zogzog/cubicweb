@@ -26,20 +26,23 @@ from cubicweb.schema import RRQLExpression, ERQLExpression
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
-config = TestServerConfiguration('data/rewrite')
-config.bootstrap_cubes()
-schema = config.load_schema()
-from yams.buildobjs import RelationDefinition
-schema.add_relation_def(RelationDefinition(subject='Card', name='in_state', object='State', cardinality='1*'))
-
-rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
-                                                 'has_text': 'fti'})
 
 def setup_module(*args):
+    global rqlhelper, schema
+    config = TestServerConfiguration(RQLRewriteTC.datapath('rewrite'))
+    config.bootstrap_cubes()
+    schema = config.load_schema()
+    from yams.buildobjs import RelationDefinition
+    schema.add_relation_def(RelationDefinition(subject='Card', name='in_state', object='State', cardinality='1*'))
+
+    rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
+                                                     'has_text': 'fti'})
     repotest.do_monkey_patch()
 
 def teardown_module(*args):
     repotest.undo_monkey_patch()
+    global rqlhelper, schema
+    del rqlhelper, schema
 
 def eid_func_map(eid):
     return {1: 'CWUser',
