@@ -29,6 +29,7 @@ from base64 import b64decode
 from Pyro.errors import PyroError, ConnectionClosedError
 
 from logilab.common.configuration import REQUIRED
+from logilab.common.optik_ext import check_yn
 
 from rql.nodes import Constant
 from rql.utils import rqlvar_maker
@@ -120,6 +121,12 @@ class PyroRQLSource(AbstractSource):
           'to generate external link to entities from this repository',
           'group': 'pyro-source', 'level': 1,
           }),
+        ('skip-external-entities',
+         {'type' : 'yn',
+          'default': False,
+          'help': 'should entities not local to the source be considered or not',
+          'group': 'pyro-source', 'level': 0,
+          }),
         ('pyro-ns-host',
          {'type' : 'string',
           'default': None,
@@ -179,6 +186,8 @@ repository (default to 5 minutes).',
                        }),)
         register_persistent_options(myoptions)
         self._query_cache = TimedCache(1800)
+        self._skip_externals = check_yn(None, 'skip-external-entities',
+                                        source_config.get('skip-external-entities', False))
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -210,6 +219,10 @@ repository (default to 5 minutes).',
         self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                self._query_cache.clear_expired)
 
+    def map_entity_source(self, exturi):
+        return (exturi == 'system' or
+                not (exturi in self.repo.sources_by_uri or self._skip_externals))
+
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the
         external repository
@@ -235,7 +248,7 @@ repository (default to 5 minutes).',
             for etype, extid in modified:
                 try:
                     exturi = cnx.describe(extid)[1]
-                    if exturi == 'system' or not exturi in repo.sources_by_uri:
+                    if self.map_entity_source(exturi):
                         eid = self.extid2eid(str(extid), etype, session)
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)
@@ -364,7 +377,7 @@ repository (default to 5 minutes).',
                         if row[colindex] is not None: # optional variable
                             etype = descr[rowindex][colindex]
                             exttype, exturi, extid = cnx.describe(row[colindex])
-                            if exturi == 'system' or not exturi in self.repo.sources_by_uri:
+                            if self.map_entity_source(exturi):
                                 eid = self.extid2eid(str(row[colindex]), etype,
                                                      session)
                                 row[colindex] = eid
