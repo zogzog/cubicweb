@@ -4056,8 +4056,9 @@ msgstr "identifiant unique utilisé pour se connecter à l'application"
 msgid "unknown external entity"
 msgstr "entité (externe) introuvable"
 
-msgid "unknown property key"
-msgstr "clé de propriété inconnue"
+#, python-format
+msgid "unknown property key %s"
+msgstr "clé de propriété inconnue : %s"
 
 msgid "unknown vocabulary:"
 msgstr "vocabulaire inconnu : "

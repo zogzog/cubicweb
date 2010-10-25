@@ -3919,7 +3919,8 @@ msgstr ""
 msgid "unknown external entity"
 msgstr ""
 
-msgid "unknown property key"
+#, python-format
+msgid "unknown property key %s"
 msgstr ""
 
 msgid "unknown vocabulary:"

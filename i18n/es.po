@@ -4047,8 +4047,9 @@ msgstr "Identificador único utilizado para conectarse al Sistema"
 msgid "unknown external entity"
 msgstr "Entidad externa desconocida"
 
-msgid "unknown property key"
-msgstr "Clave de Propiedad desconocida"
+#, python-format
+msgid "unknown property key %s"
+msgstr "Clave de Propiedad desconocida: %s"
 
 msgid "unknown vocabulary:"
 msgstr "Vocabulario desconocido: "
