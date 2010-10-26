@@ -395,7 +395,7 @@ repository (default to 5 minutes).',
     def _entity_relations_and_kwargs(self, session, entity):
         relations = []
         kwargs = {'x': self.eid2extid(entity.eid, session)}
-        for key, val in entity.iteritems():
+        for key, val in entity.cw_attr_cache.iteritems():
             relations.append('X %s %%(%s)s' % (key, key))
             kwargs[key] = val
         return relations, kwargs
