@@ -1162,7 +1162,7 @@ class PartPlanInformation(object):
         inputmapkey = tuple(sorted(solindices))
         inputmap = self._inputmaps.setdefault(inputmapkey, {})
         for varname, mapping in step.outputmap.iteritems():
-            if varname in inputmap and \
+            if varname in inputmap and not '.' in varname and  \
                    not (mapping == inputmap[varname] or
                         self._schema.eschema(solutions[0][varname]).final):
                 self._conflicts.append((varname, inputmap[varname]))
