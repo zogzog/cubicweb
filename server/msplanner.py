@@ -1108,14 +1108,17 @@ class PartPlanInformation(object):
         """
         if not self._inputmaps:
             return [(allsolindices, None)]
+        _allsolindices = allsolindices.copy()
         mapbysol = {}
         # compute a single map for each solution
         for solindices, basemap in self._inputmaps.iteritems():
             for solindex in solindices:
+                if not solindex in allsolindices:
+                    continue
                 solmap = mapbysol.setdefault(solindex, {})
                 solmap.update(basemap)
                 try:
-                    allsolindices.remove(solindex)
+                    _allsolindices.remove(solindex)
                 except KeyError:
                     continue # already removed
         # group results by identical input map
@@ -1127,8 +1130,8 @@ class PartPlanInformation(object):
                     break
             else:
                 result.append( ([solindex], solmap) )
-        if allsolindices:
-            result.append( (list(allsolindices), None) )
+        if _allsolindices:
+            result.append( (list(_allsolindices), None) )
         return result
 
     def build_final_part(self, select, solindices, inputmap,  sources,
