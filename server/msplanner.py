@@ -441,7 +441,7 @@ class PartPlanInformation(object):
             # during bootstrap)
             if rel.r_type == 'cw_source':
                 sourcerels.append(rel)
-            elif not (rel.is_types_restriction() or rschema(rel.r_type).final):
+            if not (rel.is_types_restriction() or rschema(rel.r_type).final):
                 # nothing to do if relation is not supported by multiple sources
                 # or if some source has it listed in its cross_relations
                 # attribute
@@ -479,6 +479,7 @@ class PartPlanInformation(object):
             if isinstance(vref, Constant):
                 # simplified variable
                 sourceeids = None, (vref.eval(self.plan.args),)
+                var = vref
             else:
                 var = vref.variable
                 for rel in var.stinfo['relations'] - var.stinfo['rhsrelations']:
@@ -515,19 +516,31 @@ class PartPlanInformation(object):
                         raise BadRQLQuery('source conflict for term %s' % lhs.as_string())
                 else:
                     lhs = getattr(lhs, 'variable', lhs)
+                invariant = getattr(lhs, '_q_invariant', False)
                 # XXX NOT NOT
                 neged = srel.neged(traverse_scope=True) or (rel and rel.neged(strict=True))
                 if neged:
                     for source in sources:
+                        if invariant and source is self.system_source:
+                            continue
                         self._remove_source_term(source, lhs)
+                    usesys = self.system_source not in sources
                 else:
                     for source, terms in sourcesterms.items():
                         if lhs in terms and not source in sources:
+                            if invariant and source is self.system_source:
+                                continue
                             self._remove_source_term(source, lhs)
-                if rel is None:
-                    self._remove_source_term(self.system_source, vref)
-                elif len(var.stinfo['relations']) == 2 and not var.stinfo['selected']:
+                    usesys = self.system_source in sources
+                if rel is None or (len(var.stinfo['relations']) == 2 and
+                                   not var.stinfo['selected']):
                     self._remove_source_term(self.system_source, var)
+                    if not (len(sources) > 1 or usesys or invariant):
+                        if rel is None:
+                            srel.parent.remove(srel)
+                        else:
+                            self.rqlst.undefine_variable(var)
+                        self._remove_source_term(self.system_source, srel)
         return termssources
 
     def _handle_cross_relation(self, rel, relsources, termssources):
@@ -851,7 +864,7 @@ class PartPlanInformation(object):
                             else:
                                 needsel.add(var.name)
                                 final = False
-                    # check where all relations are supported by the sources
+                    # check all relations are supported by the sources
                     for rel in scope.iget_nodes(Relation):
                         if rel.is_types_restriction():
                             continue
