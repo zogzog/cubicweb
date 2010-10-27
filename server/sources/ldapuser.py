@@ -266,7 +266,10 @@ directory (default to once a day).',
     def get_connection(self):
         """open and return a connection to the source"""
         if self._conn is None:
-            self._connect()
+            try:
+                self._connect()
+            except:
+                self.exception('cant connect to ldap')
         return ConnectionWrapper(self._conn)
 
     def authenticate(self, session, login, password=None, **kwargs):
