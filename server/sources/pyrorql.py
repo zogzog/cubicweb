@@ -219,9 +219,17 @@ repository (default to 5 minutes).',
         self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                self._query_cache.clear_expired)
 
-    def map_entity_source(self, exturi):
-        return (exturi == 'system' or
-                not (exturi in self.repo.sources_by_uri or self._skip_externals))
+    def local_eid(self, cnx, extid, session):
+        etype, dexturi, dextid = cnx.describe(extid)
+        if dexturi == 'system' or not (
+            dexturi in self.repo.sources_by_uri or self._skip_externals):
+            return self.repo.extid2eid(self, str(extid), etype, session), True
+        if dexturi in self.repo.sources_by_uri:
+            source = self.repo.sources_by_uri[dexturi]
+            cnx = session.pool.connection(source.uri)
+            eid = source.local_eid(cnx, dextid, session)[0]
+            return eid, False
+        return None, None
 
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the
@@ -247,9 +255,8 @@ repository (default to 5 minutes).',
         try:
             for etype, extid in modified:
                 try:
-                    exturi = cnx.describe(extid)[1]
-                    if self.map_entity_source(exturi):
-                        eid = self.extid2eid(str(extid), etype, session)
+                    eid = self.local_eid(cnx, extid, session)
+                    if eid is not None:
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)
                         entity.complete(entity.e_schema.indexable_attributes())
@@ -347,8 +354,9 @@ repository (default to 5 minutes).',
             msg = session._("can't connect to source %s, some data may be missing")
             session.set_shared_data('sources_error', msg % self.uri)
             return []
+        translator = RQL2RQL(self)
         try:
-            rql = RQL2RQL(self).generate(session, union, args)
+            rql = translator.generate(session, union, args)
         except UnknownEid, ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
@@ -374,19 +382,27 @@ repository (default to 5 minutes).',
                 cnx = session.pool.connection(self.uri)
                 for rowindex in xrange(rset.rowcount - 1, -1, -1):
                     row = rows[rowindex]
+                    localrow = False
                     for colindex in needtranslation:
                         if row[colindex] is not None: # optional variable
-                            etype = descr[rowindex][colindex]
-                            exttype, exturi, extid = cnx.describe(row[colindex])
-                            if self.map_entity_source(exturi):
-                                eid = self.extid2eid(str(row[colindex]), etype,
-                                                     session)
+                            eid, local = self.local_eid(cnx, row[colindex], session)
+                            if local:
+                                localrow = True
+                            if eid is not None:
                                 row[colindex] = eid
                             else:
                                 # skip this row
                                 del rows[rowindex]
                                 del descr[rowindex]
                                 break
+                    else:
+                        # skip row if it only contains eids of entities which
+                        # are actually from a source we also know locally,
+                        # except if some args specified (XXX should actually
+                        # check if there are some args local to the source)
+                        if not (translator.has_local_eid or localrow):
+                            del rows[rowindex]
+                            del descr[rowindex]
             results = rows
         else:
             results = []
@@ -458,6 +474,7 @@ class RQL2RQL(object):
         self._session = session
         self.kwargs = args
         self.need_translation = False
+        self.has_local_eid = False
         return self.visit_union(rqlst)
 
     def visit_union(self, node):
@@ -604,6 +621,7 @@ class RQL2RQL(object):
     def visit_constant(self, node):
         if self.need_translation or node.uidtype:
             if node.type == 'Int':
+                self.has_local_eid = True
                 return str(self.eid2extid(node.value))
             if node.type == 'Substitute':
                 key = node.value
@@ -611,6 +629,7 @@ class RQL2RQL(object):
                 if not key in self._const_var:
                     self.kwargs[key] = self.eid2extid(self.kwargs[key])
                     self._const_var[key] = None
+                    self.has_local_eid = True
         return node.as_string()
 
     def visit_variableref(self, node):
