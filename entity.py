@@ -633,7 +633,11 @@ class Entity(AppObject):
             # if some outer join are included to fetch inlined relations
             rql = 'Any %s,%s %s' % (V, ','.join(var for attr, var in selected),
                                     ','.join(rql))
-            rset = self._cw.execute(rql, {'x': self.eid}, build_descr=False)[0]
+            try:
+                rset = self._cw.execute(rql, {'x': self.eid}, build_descr=False)[0]
+            except IndexError:
+                raise Exception('unable to fetch attributes for entity with eid %s'
+                                % self.eid)
             # handle attributes
             for i in xrange(1, lastattr):
                 self.cw_attr_cache[str(selected[i-1][0])] = rset[i]
