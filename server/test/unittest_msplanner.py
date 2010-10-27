@@ -2296,13 +2296,6 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     _test = test_plan
 
 
-    def test_crossed_relation_eid_1_noninvariant(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        self.set_debug('DBG_MS')
-        self._test('Any Y,YT WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type YT',
-                   [],
-                   {'x': 999999})
-
     def test_linked_external_entities(self):
         repo._type_source_cache[999999] = ('Tag', 'system', 999999)
         self._test('Any X,XT WHERE X is Card, X title XT, T tags X, T eid %(t)s',

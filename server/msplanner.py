@@ -1094,7 +1094,7 @@ class PartPlanInformation(object):
             if not sourceterms:
                 del self._sourcesterms[source]
 
-    def merge_input_maps(self, allsolindices):
+    def merge_input_maps(self, allsolindices, complete=True):
         """inputmaps is a dictionary with tuple of solution indices as key with
         an associated input map as value. This function compute for each
         solution its necessary input map and return them grouped
@@ -1113,7 +1113,7 @@ class PartPlanInformation(object):
         # compute a single map for each solution
         for solindices, basemap in self._inputmaps.iteritems():
             for solindex in solindices:
-                if not solindex in allsolindices:
+                if not (complete or solindex in allsolindices):
                     continue
                 solmap = mapbysol.setdefault(solindex, {})
                 solmap.update(basemap)
@@ -1294,13 +1294,15 @@ class MSPlanner(SSPlanner):
         ppi.temptable = atemptable
         vfilter = TermsFiltererVisitor(self.schema, ppi)
         steps = []
+        multifinal = len([x for x in stepdefs if x[-1]]) >= 2
         for sources, terms, solindices, scope, needsel, final in stepdefs:
             # extract an executable query using only the specified terms
             if sources[0].uri == 'system':
                 # in this case we have to merge input maps before call to
                 # filter so already processed restriction are correctly
                 # removed
-                solsinputmaps = ppi.merge_input_maps(solindices)
+                solsinputmaps = ppi.merge_input_maps(solindices,
+                                                     complete=not (final and multifinal))
                 for solindices, inputmap in solsinputmaps:
                     minrqlst, insertedvars = vfilter.filter(
                         sources, terms, scope, set(solindices), needsel, final)

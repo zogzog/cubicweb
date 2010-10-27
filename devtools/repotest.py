@@ -363,15 +363,15 @@ try:
     from cubicweb.server.msplanner import PartPlanInformation
 except ImportError:
     class PartPlanInformation(object):
-        def merge_input_maps(self, *args):
+        def merge_input_maps(self, *args, **kwargs):
             pass
         def _choose_term(self, sourceterms):
             pass
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
 _orig_choose_term = PartPlanInformation._choose_term
 
-def _merge_input_maps(*args):
-    return sorted(_orig_merge_input_maps(*args))
+def _merge_input_maps(*args, **kwargs):
+    return sorted(_orig_merge_input_maps(*args, **kwargs))
 
 def _choose_term(self, sourceterms):
     # predictable order for test purpose
