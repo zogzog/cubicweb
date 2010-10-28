@@ -495,8 +495,6 @@ this option is set to yes",
                 deps = dict( (x[len('cubicweb-'):], v)
                              for x, v in gendeps.iteritems()
                              if x.startswith('cubicweb-'))
-                if 'cubicweb' in gendeps:
-                    deps['cubicweb'] = gendeps['cubicweb']
         if not isinstance(deps, dict):
             deps = dict((key, None) for key in deps)
             warn('[3.8] cube %s should define %s as a dict' % (cube, key),
@@ -509,6 +507,16 @@ this option is set to yes",
             else:
                 deps[newname] = deps.pop(depcube)
         return deps
+
+    @classmethod
+    def cube_depends_cubicweb_version(cls, cube):
+        # XXX no backward compat (see _cube_deps above)
+        try:
+            pkginfo = cls.cube_pkginfo(cube)
+            deps = getattr(pkginfo, '__depends__')
+            return deps.get('cubicweb')
+        except AttributeError:
+            return None
 
     @classmethod
     def cube_dependencies(cls, cube):
