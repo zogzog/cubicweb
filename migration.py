@@ -33,7 +33,7 @@ from logilab.common.shellutils import ASK
 from logilab.common.changelog import Version
 
 from cubicweb import ConfigurationError, ExecutionError
-
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 
 def filter_scripts(config, directory, fromversion, toversion, quiet=True):
     """return a list of paths of migration files to consider to upgrade
@@ -454,8 +454,8 @@ class ConfigurationProblem(object):
     """
 
     def __init__(self, config):
-        self.cubes = {}
         self.config = config
+        self.cubes = {'cubicweb': cwcfg.cubicweb_version()}
 
     def add_cube(self, name, version):
         self.cubes[name] = version
@@ -463,44 +463,49 @@ class ConfigurationProblem(object):
     def solve(self):
         self.warnings = []
         self.errors = []
-        self.read_constraints()
-        for cube, versions in sorted(self.constraints.items()):
-            oper, version = None, None
-            # simplify constraints
-            if versions:
-                for constraint in versions:
-                    op, ver = constraint
-                    if oper is None:
-                        oper = op
-                        version = ver
-                    elif op == '>=' and oper == '>=':
-                        version = max_version(ver, version)
-                    else:
-                        print 'unable to handle this case', oper, version, op, ver
-            # "solve" constraint satisfaction problem
-            if cube not in self.cubes:
-                self.errors.append( ('add', cube, version) )
-            elif versions:
-                lower_strict = version_strictly_lower(self.cubes[cube], version)
-                if oper in ('>=','='):
-                    if lower_strict:
-                        self.errors.append( ('update', cube, version) )
-                else:
-                    print 'unknown operator', oper
-
-    def read_constraints(self):
+        self.dependencies = {}
+        self.reverse_dependencies = {}
         self.constraints = {}
-        self.reverse_constraints = {}
+        # read dependencies
         for cube in self.cubes:
-            use = self.config.cube_dependencies(cube)
-            for name, constraint in use.iteritems():
-                self.constraints.setdefault(name,set())
+            if cube == 'cubicweb': continue
+            self.dependencies[cube] = dict(self.config.cube_dependencies(cube))
+        # compute reverse dependencies
+        for cube, dependencies in self.dependencies.iteritems():
+            for name, constraint in dependencies.iteritems():
+                self.reverse_dependencies.setdefault(name,set())
                 if constraint:
                     try:
                         oper, version = constraint.split()
-                        self.constraints[name].add( (oper, version) )
+                        self.reverse_dependencies[name].add( (oper, version, cube) )
                     except:
                         self.warnings.append(
                             'cube %s depends on %s but constraint badly '
                             'formatted: %s' % (cube, name, constraint))
-                self.reverse_constraints.setdefault(name, set()).add(cube)
+        # check consistency
+        for cube, versions in sorted(self.reverse_dependencies.items()):
+            oper, version, source = None, None, None
+            # simplify constraints
+            if versions:
+                for constraint in versions:
+                    op, ver, src = constraint
+                    if oper is None:
+                        oper = op
+                        version = ver
+                        source = src
+                    elif op == '>=' and oper == '>=':
+                        if version_strictly_lower(version, ver):
+                            version = ver
+                            source = src
+                    else:
+                        print 'unable to handle this case', oper, version, op, ver
+            # "solve" constraint satisfaction problem
+            if cube not in self.cubes:
+                self.errors.append( ('add', cube, version, source) )
+            elif versions:
+                lower_strict = version_strictly_lower(self.cubes[cube], version)
+                if oper in ('>=','='):
+                    if lower_strict:
+                        self.errors.append( ('update', cube, version, source) )
+                else:
+                    print 'unknown operator', oper
