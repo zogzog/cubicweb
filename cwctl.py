@@ -283,15 +283,15 @@ class ListCommand(Command):
             print 'Warnings:\n', '\n'.join('* '+txt for txt in cfgpb.warnings)
         if cfgpb.errors:
             print 'Errors:'
-            for op, cube, version in cfgpb.errors:
+            for op, cube, version, src in cfgpb.errors:
                 if op == 'add':
                     print '* cube', cube,
                     if version:
                         print ' version', version,
-                    print 'is not installed, but required by %s' % ' '.join(cfgpb.reverse_constraints[cube])
+                    print 'is not installed, but required by %s' % src
                 else:
-                    print '* cube %s version %s is installed, but version %s is required by (%s)' % (
-                        cube, cfgpb.cubes[cube], version, ', '.join(cfgpb.reverse_constraints[cube]))
+                    print '* cube %s version %s is installed, but version %s is required by %s' % (
+                        cube, cfgpb.cubes[cube], version, src)
 
 class CreateInstanceCommand(Command):
     """Create an instance from a cube. This is an unified

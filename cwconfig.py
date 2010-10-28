@@ -494,6 +494,8 @@ this option is set to yes",
                 deps = dict( (x[len('cubicweb-'):], v)
                              for x, v in gendeps.iteritems()
                              if x.startswith('cubicweb-'))
+                if 'cubicweb' in gendeps:
+                    deps['cubicweb'] = gendeps['cubicweb']
         if not isinstance(deps, dict):
             deps = dict((key, None) for key in deps)
             warn('[3.8] cube %s should define %s as a dict' % (cube, key),
