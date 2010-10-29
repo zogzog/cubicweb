@@ -480,7 +480,7 @@ class VRegistry(dict):
         - first ensure parent classes are already registered
 
         - class with __abstract__ == True in their local dictionnary or
-          with a name starting starting by an underscore are not registered
+          with a name starting with an underscore are not registered
 
         - appobject class needs to have __registry__ and __regid__ attributes
           set to a non empty string to be registered.
