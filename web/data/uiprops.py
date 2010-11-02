@@ -114,7 +114,7 @@ contextualBoxTitleBgColor = '#FF9900'
 contextualBoxTitleBg = lazystr('%(contextualBoxTitleBgColor)s url("contextualBoxHeader.png") repeat-x 50%% 50%%')
 contextualBoxTitleColor = '#FFF'
 
-# title of 'incontext' boxes (eg displayed insinde the primary view)
+# title of 'incontext' boxes (eg displayed inside the primary view)
 incontextBoxTitleBgColor = lazystr('%(contextFreeBoxTitleBgColor)s')
 incontextBoxTitleBg = lazystr('%(incontextBoxTitleBgColor)s url("incontextBoxHeader.png") repeat-x 50%% 50%%')
 incontextBoxTitleColor = '#000'
