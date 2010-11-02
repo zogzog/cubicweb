@@ -543,7 +543,7 @@ class RelationFacet(VocabularyFacet):
             eschema = self._cw.vreg.schema.rschema(self.rtype).objects()[0]
         else:
             eschema = self._cw.vreg.schema.rschema(self.rtype).subjects()[0]
-        return eschema.rdef(self.target_attr).internationalizable
+        return getattr(eschema.rdef(self.target_attr), 'internationalizable', False)
 
     @property
     def no_relation(self):
