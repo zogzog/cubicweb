@@ -22,7 +22,7 @@ import sys
 from logilab.common.testlib import unittest_main, TestCase
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb import Unauthorized, ValidationError
+from cubicweb import Unauthorized, ValidationError, QueryError
 from cubicweb.server.querier import check_read_access
 
 class BaseSecurityTC(CubicWebTC):
@@ -81,10 +81,10 @@ class SecurityRewritingTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         self.hijack_source_execute()
         self.execute('Any U WHERE NOT A todo_by U, A is Affaire')
-        self.assertEquals(self.query[0][1].as_string(),
+        self.assertEqual(self.query[0][1].as_string(),
                           'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
         self.execute('Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
-        self.assertEquals(self.query[0][1].as_string(),
+        self.assertEqual(self.query[0][1].as_string(),
                           'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
 
 class SecurityTC(BaseSecurityTC):
@@ -103,7 +103,7 @@ class SecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         cu.execute("INSERT Personne X: X nom 'bidule'")
         self.assertRaises(Unauthorized, cnx.commit)
-        self.assertEquals(cu.execute('Personne X').rowcount, 1)
+        self.assertEqual(cu.execute('Personne X').rowcount, 1)
 
     def test_insert_rql_permission(self):
         # test user can only add une affaire related to a societe he owns
@@ -113,7 +113,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized, cnx.commit)
         # test nothing has actually been inserted
         self.restore_connection()
-        self.assertEquals(self.execute('Affaire X').rowcount, 1)
+        self.assertEqual(self.execute('Affaire X').rowcount, 1)
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         cu.execute("INSERT Affaire X: X sujet 'cool'")
@@ -128,7 +128,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute( "SET X nom 'bidulechouette' WHERE X is Personne")
         self.assertRaises(Unauthorized, cnx.commit)
         self.restore_connection()
-        self.assertEquals(self.execute('Personne X WHERE X nom "bidulechouette"').rowcount, 0)
+        self.assertEqual(self.execute('Personne X WHERE X nom "bidulechouette"').rowcount, 0)
 
     def test_update_security_2(self):
         cnx = self.login('anon')
@@ -139,7 +139,7 @@ class SecurityTC(BaseSecurityTC):
         #self.assertRaises(Unauthorized, cnx.commit)
         # test nothing has actually been inserted
         self.restore_connection()
-        self.assertEquals(self.execute('Personne X WHERE X nom "bidulechouette"').rowcount, 0)
+        self.assertEqual(self.execute('Personne X WHERE X nom "bidulechouette"').rowcount, 0)
 
     def test_update_security_3(self):
         cnx = self.login('iaminusersgrouponly')
@@ -189,6 +189,8 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         # to actually get Unauthorized exception, try to delete an entity we can read
         self.assertRaises(Unauthorized, cu.execute, "DELETE Societe S")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback() # required after Unauthorized
         cu.execute("INSERT Affaire X: X sujet 'pascool'")
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A sujet 'pascool', S nom 'chouette'")
@@ -210,15 +212,16 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         # to actually get Unauthorized exception, try to insert a relation were we can read both entities
         rset = cu.execute('Personne P')
-        self.assertEquals(len(rset), 1)
+        self.assertEqual(len(rset), 1)
         ent = rset.get_entity(0, 0)
         session.set_pool() # necessary
-        self.assertRaises(Unauthorized,
-                          ent.e_schema.check_perm, session, 'update', eid=ent.eid)
+        self.assertRaises(Unauthorized, ent.cw_check_perm, 'update')
         self.assertRaises(Unauthorized,
                           cu.execute, "SET P travaille S WHERE P is Personne, S is Societe")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback()
         # test nothing has actually been inserted:
-        self.assertEquals(cu.execute('Any P,S WHERE P travaille S,P is Personne, S is Societe').rowcount, 0)
+        self.assertEqual(cu.execute('Any P,S WHERE P travaille S,P is Personne, S is Societe').rowcount, 0)
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A is Affaire, S nom 'chouette'")
         cnx.commit()
@@ -240,6 +243,8 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized, cu.execute, "DELETE A concerne S")
+        self.assertRaises(QueryError, cnx.commit) # can't commit anymore
+        cnx.rollback() # required after Unauthorized
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A is Affaire, S nom 'chouette'")
         cnx.commit()
@@ -279,7 +284,7 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         rset = cu.execute('Affaire X')
-        self.assertEquals(rset.rows, [])
+        self.assertEqual(rset.rows, [])
         self.assertRaises(Unauthorized, cu.execute, 'Any X WHERE X eid %(x)s', {'x': eid})
         # cache test
         self.assertRaises(Unauthorized, cu.execute, 'Any X WHERE X eid %(x)s', {'x': eid})
@@ -288,12 +293,12 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("SET A concerne S WHERE A is Affaire, S is Societe")
         cnx.commit()
         rset = cu.execute('Any X WHERE X eid %(x)s', {'x': aff2})
-        self.assertEquals(rset.rows, [[aff2]])
+        self.assertEqual(rset.rows, [[aff2]])
         # more cache test w/ NOT eid
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': eid})
-        self.assertEquals(rset.rows, [[aff2]])
+        self.assertEqual(rset.rows, [[aff2]])
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2})
-        self.assertEquals(rset.rows, [])
+        self.assertEqual(rset.rows, [])
         # test can't update an attribute of an entity that can't be readen
         self.assertRaises(Unauthorized, cu.execute, 'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid})
 
@@ -310,7 +315,7 @@ class SecurityTC(BaseSecurityTC):
             self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
             # XXX would be nice if it worked
             rset = cu.execute("Affaire X WHERE X sujet 'cool'")
-            self.assertEquals(len(rset), 0)
+            self.assertEqual(len(rset), 0)
         finally:
             affschema.set_action_permissions('read', origperms)
             cnx.close()
@@ -330,7 +335,7 @@ class SecurityTC(BaseSecurityTC):
         self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
         self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':card1}))
         rset = cu.execute("Any X WHERE X has_text 'cool'")
-        self.assertEquals(sorted(eid for eid, in rset.rows),
+        self.assertEqual(sorted(eid for eid, in rset.rows),
                           [card1, aff2])
 
     def test_read_erqlexpr_has_text2(self):
@@ -341,9 +346,9 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         rset = cu.execute('Any N WHERE N has_text "bidule"')
-        self.assertEquals(len(rset.rows), 1, rset.rows)
+        self.assertEqual(len(rset.rows), 1, rset.rows)
         rset = cu.execute('Any N WITH N BEING (Any N WHERE N has_text "bidule")')
-        self.assertEquals(len(rset.rows), 1, rset.rows)
+        self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_read_erqlexpr_optional_rel(self):
         self.execute("INSERT Personne X: X nom 'bidule'")
@@ -353,7 +358,7 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('anon')
         cu = cnx.cursor()
         rset = cu.execute('Any N,U WHERE N has_text "bidule", N owned_by U?')
-        self.assertEquals(len(rset.rows), 1, rset.rows)
+        self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_read_erqlexpr_aggregat(self):
         self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -361,22 +366,22 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         rset = cu.execute('Any COUNT(X) WHERE X is Affaire')
-        self.assertEquals(rset.rows, [[0]])
+        self.assertEqual(rset.rows, [[0]])
         aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
         soc1 = cu.execute("INSERT Societe X: X nom 'chouette'")[0][0]
         cu.execute("SET A concerne S WHERE A is Affaire, S is Societe")
         cnx.commit()
         rset = cu.execute('Any COUNT(X) WHERE X is Affaire')
-        self.assertEquals(rset.rows, [[1]])
+        self.assertEqual(rset.rows, [[1]])
         rset = cu.execute('Any ETN, COUNT(X) GROUPBY ETN WHERE X is ET, ET name ETN')
         values = dict(rset)
-        self.assertEquals(values['Affaire'], 1)
-        self.assertEquals(values['Societe'], 2)
+        self.assertEqual(values['Affaire'], 1)
+        self.assertEqual(values['Societe'], 2)
         rset = cu.execute('Any ETN, COUNT(X) GROUPBY ETN WHERE X is ET, ET name ETN WITH X BEING ((Affaire X) UNION (Societe X))')
-        self.assertEquals(len(rset), 2)
+        self.assertEqual(len(rset), 2)
         values = dict(rset)
-        self.assertEquals(values['Affaire'], 1)
-        self.assertEquals(values['Societe'], 2)
+        self.assertEqual(values['Affaire'], 1)
+        self.assertEqual(values['Societe'], 2)
 
 
     def test_attribute_security(self):
@@ -405,7 +410,7 @@ class SecurityTC(BaseSecurityTC):
         # Note.para attribute editable by managers or if the note is in "todo" state
         note = self.execute("INSERT Note X: X para 'bidule'").get_entity(0, 0)
         self.commit()
-        note.fire_transition('markasdone')
+        note.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
         self.execute('SET X para "truc" WHERE X eid %(x)s', {'x': note.eid})
         self.commit()
         cnx = self.login('iaminusersgrouponly')
@@ -414,13 +419,13 @@ class SecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized, cnx.commit)
         note2 = cu.execute("INSERT Note X: X para 'bidule'").get_entity(0, 0)
         cnx.commit()
-        note2.fire_transition('markasdone')
+        note2.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
         cnx.commit()
-        self.assertEquals(len(cu.execute('Any X WHERE X in_state S, S name "todo", X eid %(x)s', {'x': note2.eid})),
+        self.assertEqual(len(cu.execute('Any X WHERE X in_state S, S name "todo", X eid %(x)s', {'x': note2.eid})),
                           0)
         cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
         self.assertRaises(Unauthorized, cnx.commit)
-        note2.fire_transition('redoit')
+        note2.cw_adapt_to('IWorkflowable').fire_transition('redoit')
         cnx.commit()
         cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
         cnx.commit()
@@ -434,11 +439,11 @@ class SecurityTC(BaseSecurityTC):
         rset = cu.execute('CWUser X')
         self.failUnless(rset)
         x = rset.get_entity(0, 0)
-        self.assertEquals(x.login, None)
+        self.assertEqual(x.login, None)
         self.failUnless(x.creation_date)
         x = rset.get_entity(1, 0)
         x.complete()
-        self.assertEquals(x.login, None)
+        self.assertEqual(x.login, None)
         self.failUnless(x.creation_date)
         cnx.rollback()
 
@@ -455,11 +460,11 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cnx.commit()
         self.restore_connection()
         affaire = self.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
-        affaire.fire_transition('abort')
+        affaire.cw_adapt_to('IWorkflowable').fire_transition('abort')
         self.commit()
-        self.assertEquals(len(self.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01"')),
+        self.assertEqual(len(self.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01"')),
                           1)
-        self.assertEquals(len(self.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01",'
+        self.assertEqual(len(self.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01",'
                                            'X owned_by U, U login "admin"')),
                           1) # TrInfo at the above state change
         cnx = self.login('iaminusersgrouponly')
@@ -474,9 +479,9 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         # anonymous user can only read itself
         rset = cu.execute('Any L WHERE X owned_by U, U login L')
-        self.assertEquals(rset.rows, [['anon']])
+        self.assertEqual(rset.rows, [['anon']])
         rset = cu.execute('CWUser X')
-        self.assertEquals(rset.rows, [[anon.eid]])
+        self.assertEqual(rset.rows, [[anon.eid]])
         # anonymous user can read groups (necessary to check allowed transitions for instance)
         self.assert_(cu.execute('CWGroup X'))
         # should only be able to read the anonymous user, not another one
@@ -489,7 +494,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         #                  {'x': self.user.eid})
 
         rset = cu.execute('CWUser X WHERE X eid %(x)s', {'x': anon.eid})
-        self.assertEquals(rset.rows, [[anon.eid]])
+        self.assertEqual(rset.rows, [[anon.eid]])
         # but can't modify it
         cu.execute('SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})
         self.assertRaises(Unauthorized, cnx.commit)
@@ -517,14 +522,14 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cnx = self.login('anon')
         cu = cnx.cursor()
         anoneid = self.session.user.eid
-        self.assertEquals(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
+        self.assertEqual(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
                                      'B bookmarked_by U, U eid %s' % anoneid).rows,
                           [['index', '?vid=index']])
-        self.assertEquals(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
+        self.assertEqual(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
                                      'B bookmarked_by U, U eid %(x)s', {'x': anoneid}).rows,
                           [['index', '?vid=index']])
         # can read others bookmarks as well
-        self.assertEquals(cu.execute('Any B where B is Bookmark, NOT B bookmarked_by U').rows,
+        self.assertEqual(cu.execute('Any B where B is Bookmark, NOT B bookmarked_by U').rows,
                           [[beid1]])
         self.assertRaises(Unauthorized, cu.execute,'DELETE B bookmarked_by U')
         self.assertRaises(Unauthorized,
@@ -536,7 +541,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cnx = self.login('anon')
         cu = cnx.cursor()
         names = [t for t, in cu.execute('Any N ORDERBY lower(N) WHERE X name N')]
-        self.assertEquals(names, sorted(names, key=lambda x: x.lower()))
+        self.assertEqual(names, sorted(names, key=lambda x: x.lower()))
 
     def test_in_state_without_update_perm(self):
         """check a user change in_state without having update permission on the
@@ -557,14 +562,15 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             cu = cnx.cursor()
             self.schema['Affaire'].set_action_permissions('read', ('users',))
             aff = cu.execute('Any X WHERE X ref "ARCT01"').get_entity(0, 0)
-            aff.fire_transition('abort')
+            aff.cw_adapt_to('IWorkflowable').fire_transition('abort')
             cnx.commit()
             # though changing a user state (even logged user) is reserved to managers
             user = cnx.user(self.session)
             # XXX wether it should raise Unauthorized or ValidationError is not clear
             # the best would probably ValidationError if the transition doesn't exist
             # from the current state but Unauthorized if it exists but user can't pass it
-            self.assertRaises(ValidationError, user.fire_transition, 'deactivate')
+            self.assertRaises(ValidationError,
+                              user.cw_adapt_to('IWorkflowable').fire_transition, 'deactivate')
         finally:
             # restore orig perms
             for action, perms in affaire_perms.iteritems():
@@ -572,18 +578,19 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)
+        iworkflowable = aff.cw_adapt_to('IWorkflowable')
         self.commit()
-        aff.fire_transition('abort')
+        iworkflowable.fire_transition('abort')
         self.commit()
         # can change tr info comment
         self.execute('SET TI comment %(c)s WHERE TI wf_info_for X, X ref "ARCT01"',
                      {'c': u'bouh!'})
         self.commit()
-        aff.clear_related_cache('wf_info_for', 'object')
-        trinfo = aff.latest_trinfo()
-        self.assertEquals(trinfo.comment, 'bouh!')
+        aff.cw_clear_relation_cache('wf_info_for', 'object')
+        trinfo = iworkflowable.latest_trinfo()
+        self.assertEqual(trinfo.comment, 'bouh!')
         # but not from_state/to_state
-        aff.clear_related_cache('wf_info_for', role='object')
+        aff.cw_clear_relation_cache('wf_info_for', role='object')
         self.assertRaises(Unauthorized,
                           self.execute, 'SET TI from_state S WHERE TI eid %(ti)s, S name "ben non"',
                           {'ti': trinfo.eid})

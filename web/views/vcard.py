@@ -20,7 +20,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.view import EntityView
 
 _ = unicode
@@ -33,7 +33,7 @@ class VCardCWUserView(EntityView):
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'
-    __select__ = implements('CWUser')
+    __select__ = is_instance('CWUser')
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""

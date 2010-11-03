@@ -31,9 +31,9 @@ class LogFormTemplateTC(CubicWebTC):
 
     def test_label(self):
         self.set_option('allow-email-login', 'yes')
-        self.assertEquals(self._login_labels(), ['login or email', 'password'])
+        self.assertEqual(self._login_labels(), ['login or email', 'password'])
         self.set_option('allow-email-login', 'no')
-        self.assertEquals(self._login_labels(), ['login', 'password'])
+        self.assertEqual(self._login_labels(), ['login', 'password'])
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

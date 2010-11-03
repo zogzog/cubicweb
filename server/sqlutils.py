@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""SQL utilities functions and classes.
+"""SQL utilities functions and classes."""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
@@ -263,8 +262,7 @@ class SQLAdapterMixIn(object):
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
             value = entity[attr]
-            rschema = eschema.subjrels[attr]
-            if rschema.final:
+            if value is not None and eschema.subjrels[attr].final:
                 atype = str(entity.e_schema.destination(attr))
                 if atype == 'Boolean':
                     value = self.dbhelper.boolean_value(value)

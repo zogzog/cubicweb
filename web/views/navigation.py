@@ -25,11 +25,10 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.interfaces import IPrevNext
 from cubicweb.selectors import (paginated_rset, sorted_rset,
-                                primary_view, match_context_prop,
-                                one_line_rset, implements)
+                                adaptable, implements)
 from cubicweb.uilib import cut
+from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
 
@@ -133,7 +132,7 @@ class SortedNavigation(NavigationComponent):
                 if rel is None:
                     continue
                 attrname = rel.r_type
-                if attrname == 'is':
+                if attrname in ('is', 'has_text'):
                     continue
                 if not rschema(attrname).final:
                     col = var.selected_index()
@@ -182,43 +181,73 @@ class SortedNavigation(NavigationComponent):
         self.w(u'</div>')
 
 
+from cubicweb.interfaces import IPrevNext
+
+class IPrevNextAdapter(EntityAdapter):
+    """interface for entities which can be linked to a previous and/or next
+    entity
+    """
+    __regid__ = 'IPrevNext'
+    __select__ = implements(IPrevNext, warn=False) # XXX for bw compat, else should be abstract
+
+    @implements_adapter_compat('IPrevNext')
+    def next_entity(self):
+        """return the 'next' entity"""
+        raise NotImplementedError
+
+    @implements_adapter_compat('IPrevNext')
+    def previous_entity(self):
+        """return the 'previous' entity"""
+        raise NotImplementedError
+
+
 class NextPrevNavigationComponent(EntityVComponent):
     __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __select__ = (one_line_rset() & primary_view()
-                  & match_context_prop() & implements(IPrevNext))
+    __select__ = EntityVComponent.__select__ & adaptable('IPrevNext')
     context = 'navbottom'
     order = 10
+
     def call(self, view=None):
-        entity = self.cw_rset.get_entity(0, 0)
-        previous = entity.previous_entity()
-        next = entity.next_entity()
+        self.cell_call(0, 0, view=view)
+
+    def cell_call(self, row, col, view=None):
+        entity = self.cw_rset.get_entity(row, col)
+        adapter = entity.cw_adapt_to('IPrevNext')
+        previous = adapter.previous_entity()
+        next = adapter.next_entity()
         if previous or next:
             textsize = self._cw.property_value('navigation.short-line-size')
             self.w(u'<div class="prevnext">')
             if previous:
-                self.w(u'<div class="previousEntity left">')
-                self.w(self.previous_link(previous, textsize))
-                self.w(u'</div>')
-                self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
-                                              % xml_escape(previous.absolute_url()))
+                self.previous_div(previous, textsize)
             if next:
-                self.w(u'<div class="nextEntity right">')
-                self.w(self.next_link(next, textsize))
-                self.w(u'</div>')
-                self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
-                                              % xml_escape(next.absolute_url()))
+                self.next_div(next, textsize)
             self.w(u'</div>')
             self.w(u'<div class="clear"></div>')
+
+    def previous_div(self, previous, textsize):
+        self.w(u'<div class="previousEntity left">')
+        self.w(self.previous_link(previous, textsize))
+        self.w(u'</div>')
+        self._cw.html_headers.add_raw('<link rel="prev" href="%s" />'
+                                      % xml_escape(previous.absolute_url()))
 
     def previous_link(self, previous, textsize):
         return u'<a href="%s" title="%s">&lt;&lt; %s</a>' % (
             xml_escape(previous.absolute_url()),
             self._cw._('i18nprevnext_previous'),
             xml_escape(cut(previous.dc_title(), textsize)))
+
+    def next_div(self, next, textsize):
+        self.w(u'<div class="nextEntity right">')
+        self.w(self.next_link(next, textsize))
+        self.w(u'</div>')
+        self._cw.html_headers.add_raw('<link rel="next" href="%s" />'
+                                      % xml_escape(next.absolute_url()))
 
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
@@ -248,9 +277,11 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
         nav.clean_params(params)
         # make a link to see them all
         if show_all_option:
-            url = xml_escape(req.build_url(__force_display=1, **params))
-            w(u'<span><a href="%s">%s</a></span>\n'
-              % (url, req._('show %s results') % len(rset)))
+            basepath = req.relative_path(includeparams=False)
+            params['__force_display'] = 1
+            url = nav.page_url(basepath, params)
+            w(u'<div><a href="%s">%s</a></div>\n'
+              % (xml_escape(url), req._('show %s results') % len(rset)))
         rset.limit(offset=start, limit=stop-start, inplace=True)
 
 

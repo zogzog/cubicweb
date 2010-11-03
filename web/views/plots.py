@@ -23,10 +23,9 @@ __docformat__ = "restructuredtext en"
 from logilab.common.date import datetime2ticks
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import UStringIO
+from cubicweb.utils import UStringIO, json_dumps
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import multi_columns_rset
-from cubicweb.web import dumps
 from cubicweb.web.views import baseviews
 
 @objectify_selector
@@ -107,7 +106,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
         #     cf. function onPlotHover in cubicweb.flot.js
         if self.timemode:
             plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x, y in plot]
-        return dumps(plot)
+        return json_dumps(plot)
 
     def _render(self, req, width=500, height=400):
         if req.ie_browser():

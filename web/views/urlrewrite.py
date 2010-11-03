@@ -24,7 +24,7 @@ from cubicweb.appobject import AppObject
 
 
 def rgx(pattern, flags=0):
-    """this is just a convenient shortcout to add the $ sign"""
+    """this is just a convenient shortcut to add the $ sign"""
     return re.compile(pattern+'$', flags)
 
 class metarewriter(type):
@@ -163,7 +163,7 @@ def update_form(**kwargs):
     return do_build_rset
 
 def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
-               form=None, formgroups=(), transforms={}, controller=None):
+               form=None, formgroups=(), transforms={}, rqlformparams=(), controller=None):
     def do_build_rset(inputurl, uri, req, schema,
                       cachekey=cachekey # necessary to avoid UnboundLocalError
                       ):
@@ -183,6 +183,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
                         kwargs[key] = typed_eid(value)
             if setuser:
                 kwargs['u'] = req.user.eid
+            for param in rqlformparams:
+                kwargs.setdefault(param, req.form.get(param))
             rset = req.execute(rql, kwargs, cachekey)
         else:
             rset = None
@@ -206,7 +208,7 @@ class SchemaBasedRewriter(URLRewriter):
     __regid__ = 'schemabased'
     rules = [
         # rgxp : callback
-        (rgx('/search/(.+)'), build_rset(rql=r'Any X WHERE X has_text %(text)s',
+        (rgx('/search/(.+)'), build_rset(rql=r'Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s',
                                          rgxgroups=[('text', 1)])),
         ]
 

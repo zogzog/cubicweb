@@ -22,7 +22,7 @@ from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
-from cubicweb.selectors import (match_user_groups, implements,
+from cubicweb.selectors import (match_user_groups, is_instance,
                                 specified_etype_implements, rql_condition,
                                 traced_selection)
 from cubicweb.web import NoSelectableObject
@@ -41,7 +41,7 @@ USERACTIONS = [actions.UserPreferencesAction,
 SITEACTIONS = [actions.SiteConfigurationAction,
                actions.ManageAction,
                schema.ViewSchemaAction,
-               actions.SiteInfoAction]
+               debug.SiteInfoAction]
 FOOTERACTIONS = [wdoc.HelpAction,
                  wdoc.ChangeLogAction,
                  wdoc.AboutAction,
@@ -65,7 +65,7 @@ class VRegistryTC(ViewSelectorTC):
         except AttributeError:
             return
         if registry == 'hooks':
-            self.assertEquals(len(content), expected, content)
+            self.assertEqual(len(content), expected, content)
             return
         try:
             self.assertSetEqual(content.keys(), expected)
@@ -408,27 +408,37 @@ class VRegistryTC(ViewSelectorTC):
                               tableview.TableView)
 
     def test_interface_selector(self):
-        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
+        image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X data_name "bim.png"')
+        rset = req.execute('File X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                               idownloadable.IDownloadablePrimaryView)
 
 
     def test_score_entity_selector(self):
-        image = self.request().create_entity('Image', data_name=u'bim.png', data=Binary('bim'))
-        # image primary view priority
+        image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))
+        # image/ehtml primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X data_name "bim.png"')
+        rset = req.execute('File X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
-        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('bim'))
-        # image primary view priority
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'ehtml', req, rset=rset)
+
+        fileobj = self.request().create_entity('File', data_name=u'bim.html', data=Binary('<html>bam</html'))
+        # image/ehtml primary view priority
+        req = self.request()
+        rset = req.execute('File X WHERE X data_name "bim.html"')
+        self.assertIsInstance(self.vreg['views'].select('ehtml', req, rset=rset),
+                              idownloadable.EHTMLView)
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
+
+        fileobj = self.request().create_entity('File', data_name=u'bim.txt', data=Binary('boum'))
+        # image/ehtml primary view priority
         req = self.request()
         rset = req.execute('File X WHERE X data_name "bim.txt"')
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
-
+        self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'ehtml', req, rset=rset)
 
 
     def _test_view(self, vid, rql, args):
@@ -457,18 +467,18 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_properties(self):
-        self.assertEquals(sorted(k for k in self.vreg['propertydefs'].keys()
+        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].keys()
                                  if k.startswith('boxes.edit_box')),
                           ['boxes.edit_box.context',
                            'boxes.edit_box.order',
                            'boxes.edit_box.visible'])
-        self.assertEquals([k for k in self.vreg['propertyvalues'].keys()
+        self.assertEqual([k for k in self.vreg['propertyvalues'].keys()
                            if not k.startswith('system.version')],
                           [])
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.visible'), True)
-        self.assertEquals(self.vreg.property_value('boxes.edit_box.order'), 2)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
-        self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.visible'), True)
+        self.assertEqual(self.vreg.property_value('boxes.edit_box.order'), 2)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.visible'), False)
+        self.assertEqual(self.vreg.property_value('boxes.possible_views_box.order'), 10)
         self.assertRaises(UnknownProperty, self.vreg.property_value, 'boxes.actions_box')
 
 
@@ -476,7 +486,7 @@ class VRegistryTC(ViewSelectorTC):
 
 class CWETypeRQLAction(Action):
     __regid__ = 'testaction'
-    __select__ = implements('CWEType') & rql_condition('X name "CWEType"')
+    __select__ = is_instance('CWEType') & rql_condition('X name "CWEType"')
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):

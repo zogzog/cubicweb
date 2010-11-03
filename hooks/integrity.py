@@ -26,19 +26,17 @@ from threading import Lock
 from yams.schema import role_name
 
 from cubicweb import ValidationError
-from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
-from cubicweb.selectors import implements
+from cubicweb.schema import (META_RTYPES, WORKFLOW_RTYPES,
+                             RQLConstraint, RQLUniqueConstraint)
+from cubicweb.selectors import is_instance
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 from cubicweb.server.hook import set_operation
 
 # special relations that don't have to be checked for integrity, usually
 # because they are handled internally by hooks (so we trust ourselves)
-DONT_CHECK_RTYPES_ON_ADD = set(('owned_by', 'created_by',
-                                'is', 'is_instance_of',
-                                'wf_info_for', 'from_state', 'to_state'))
-DONT_CHECK_RTYPES_ON_DEL = set(('is', 'is_instance_of',
-                                'wf_info_for', 'from_state', 'to_state'))
+DONT_CHECK_RTYPES_ON_ADD = META_RTYPES | WORKFLOW_RTYPES
+DONT_CHECK_RTYPES_ON_DEL = META_RTYPES | WORKFLOW_RTYPES
 
 _UNIQUE_CONSTRAINTS_LOCK = Lock()
 _UNIQUE_CONSTRAINTS_HOLDER = None
@@ -253,7 +251,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
     __regid__ = 'checkownersgroup'
-    __select__ = IntegrityHook.__select__ & implements('CWGroup')
+    __select__ = IntegrityHook.__select__ & is_instance('CWGroup')
     events = ('before_delete_entity', 'before_update_entity')
 
     def __call__(self):
@@ -293,7 +291,7 @@ class TidyHtmlFields(IntegrityHook):
 class StripCWUserLoginHook(IntegrityHook):
     """ensure user logins are stripped"""
     __regid__ = 'stripuserlogin'
-    __select__ = IntegrityHook.__select__ & implements('CWUser')
+    __select__ = IntegrityHook.__select__ & is_instance('CWUser')
     events = ('before_add_entity', 'before_update_entity',)
 
     def __call__(self):

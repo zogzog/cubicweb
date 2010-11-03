@@ -100,9 +100,9 @@ def get_repository(method, database=None, config=None, vreg=None):
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy
+        pyroid = database or config['pyro-instance-id'] or config.appid
         try:
-            return ns_get_proxy(database,
-                                defaultnsgroup=config['pyro-ns-group'],
+            return ns_get_proxy(pyroid, defaultnsgroup=config['pyro-ns-group'],
                                 nshost=config['pyro-ns-host'])
         except Exception, ex:
             raise ConnectionError(str(ex))
@@ -254,9 +254,6 @@ class DBAPIRequest(RequestSessionBase):
             # established
             self.session = None
             self.cnx = self.user = _NeedAuthAccessMock()
-
-    def base_url(self):
-        return self.vreg.config['base-url']
 
     def from_controller(self):
         return 'view'
@@ -462,6 +459,12 @@ class LogCursor(Cursor):
                                                  time() - tstart, clock() - cstart))
         return rset
 
+def check_not_closed(func):
+    def decorator(self, *args, **kwargs):
+        if self._closed is not None:
+            raise ProgrammingError('Closed connection')
+        return func(self, *args, **kwargs)
+    return decorator
 
 class Connection(object):
     """DB-API 2.0 compatible Connection object for CubicWeb
@@ -502,51 +505,15 @@ class Connection(object):
             self.rollback()
             return False #propagate the exception
 
-    def _txid(self, cursor=None): # XXX could now handle various isolation level!
-        # return a dict as bw compat trick
-        return {'txid': currentThread().getName()}
+    def __del__(self):
+        """close the remote connection if necessary"""
+        if self._closed is None and self._close_on_del:
+            try:
+                self.close()
+            except:
+                pass
 
-    def request(self):
-        return DBAPIRequest(self.vreg, DBAPISession(self))
-
-    def check(self):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        self._repo.check_session(self.sessionid)
-
-    def set_session_props(self, **props):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        self._repo.set_session_props(self.sessionid, props)
-
-    def get_shared_data(self, key, default=None, pop=False):
-        """return value associated to `key` in shared data"""
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        return self._repo.get_shared_data(self.sessionid, key, default, pop)
-
-    def set_shared_data(self, key, value, querydata=False):
-        """set value associated to `key` in shared data
-
-        if `querydata` is true, the value will be added to the repository
-        session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
-        """
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        return self._repo.set_shared_data(self.sessionid, key, value, querydata)
-
-    def get_schema(self):
-        """Return the schema currently used by the repository.
-
-        This is NOT part of the DB-API.
-        """
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
-        return self._repo.get_schema()
+    # connection initialization methods ########################################
 
     def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True):
         config = self.vreg.config
@@ -582,6 +549,7 @@ class Connection(object):
         """
         from cubicweb.web.request import CubicWebRequestBase as cwrb
         DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func
+        DBAPIRequest.ajax_replace_url = cwrb.ajax_replace_url.im_func
         DBAPIRequest.list_form_param = cwrb.list_form_param.im_func
         DBAPIRequest.property_value = _fake_property_value
         DBAPIRequest.next_tabindex = count().next
@@ -601,20 +569,18 @@ class Connection(object):
         if sitetitle is not None:
             self.vreg['propertydefs']['ui.site-title'] = {'default': sitetitle}
 
+    @check_not_closed
     def source_defs(self):
         """Return the definition of sources used by the repository.
 
         This is NOT part of the DB-API.
         """
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
         return self._repo.source_defs()
 
+    @check_not_closed
     def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         # cnx validity is checked by the call to .user_info
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
         eid, login, groups, properties = self._repo.user_info(self.sessionid,
                                                               props)
         if req is None:
@@ -630,34 +596,63 @@ class Connection(object):
         user['login'] = login # cache login
         return user
 
-    def __del__(self):
-        """close the remote connection if necessary"""
-        if self._closed is None and self._close_on_del:
-            try:
-                self.close()
-            except:
-                pass
+    @check_not_closed
+    def check(self):
+        """raise `BadConnectionId` if the connection is no more valid"""
+        self._repo.check_session(self.sessionid)
 
+    def _txid(self, cursor=None): # XXX could now handle various isolation level!
+        # return a dict as bw compat trick
+        return {'txid': currentThread().getName()}
+
+    def request(self):
+        return DBAPIRequest(self.vreg, DBAPISession(self))
+
+    # session data methods #####################################################
+
+    @check_not_closed
+    def set_session_props(self, **props):
+        """raise `BadConnectionId` if the connection is no more valid"""
+        self._repo.set_session_props(self.sessionid, props)
+
+    @check_not_closed
+    def get_shared_data(self, key, default=None, pop=False):
+        """return value associated to `key` in shared data"""
+        return self._repo.get_shared_data(self.sessionid, key, default, pop)
+
+    @check_not_closed
+    def set_shared_data(self, key, value, querydata=False):
+        """set value associated to `key` in shared data
+
+        if `querydata` is true, the value will be added to the repository
+        session's query data which are cleared on commit/rollback of the current
+        transaction, and won't be available through the connexion, only on the
+        repository side.
+        """
+        return self._repo.set_shared_data(self.sessionid, key, value, querydata)
+
+    # meta-data accessors ######################################################
+
+    @check_not_closed
+    def get_schema(self):
+        """Return the schema currently used by the repository."""
+        return self._repo.get_schema()
+
+    @check_not_closed
+    def get_option_value(self, option, foreid=None):
+        """Return the value for `option` in the configuration. If `foreid` is
+        specified, the actual repository to which this entity belongs is
+        dereferenced and the option value retrieved from it.
+        """
+        return self._repo.get_option_value(option, foreid)
+
+    @check_not_closed
     def describe(self, eid):
-        if self._closed is not None:
-            raise ProgrammingError('Closed connection')
         return self._repo.describe(self.sessionid, eid, **self._txid())
 
-    def close(self):
-        """Close the connection now (rather than whenever __del__ is called).
+    # db-api like interface ####################################################
 
-        The connection will be unusable from this point forward; an Error (or
-        subclass) exception will be raised if any operation is attempted with
-        the connection. The same applies to all cursor objects trying to use the
-        connection.  Note that closing a connection without committing the
-        changes first will cause an implicit rollback to be performed.
-        """
-        if self._closed:
-            raise ProgrammingError('Connection is already closed')
-        self._repo.close(self.sessionid, **self._txid())
-        del self._repo # necessary for proper garbage collection
-        self._closed = 1
-
+    @check_not_closed
     def commit(self):
         """Commit pending transaction for this connection to the repository.
 
@@ -666,10 +661,9 @@ class Connection(object):
 
         If the transaction is undoable, a transaction id will be returned.
         """
-        if not self._closed is None:
-            raise ProgrammingError('Connection is already closed')
         return self._repo.commit(self.sessionid, **self._txid())
 
+    @check_not_closed
     def rollback(self):
         """This method is optional since not all databases provide transaction
         support.
@@ -679,10 +673,9 @@ class Connection(object):
         a connection without committing the changes first will cause an implicit
         rollback to be performed.
         """
-        if not self._closed is None:
-            raise ProgrammingError('Connection is already closed')
         self._repo.rollback(self.sessionid, **self._txid())
 
+    @check_not_closed
     def cursor(self, req=None):
         """Return a new Cursor Object using the connection.
 
@@ -690,14 +683,27 @@ class Connection(object):
         load_appobjects method if desired (which you should call if you intend
         to use ORM abilities).
         """
-        if self._closed is not None:
-            raise ProgrammingError('Can\'t get cursor on closed connection')
         if req is None:
             req = self.request()
         return self.cursor_class(self, self._repo, req=req)
 
+    @check_not_closed
+    def close(self):
+        """Close the connection now (rather than whenever __del__ is called).
+
+        The connection will be unusable from this point forward; an Error (or
+        subclass) exception will be raised if any operation is attempted with
+        the connection. The same applies to all cursor objects trying to use the
+        connection.  Note that closing a connection without committing the
+        changes first will cause an implicit rollback to be performed.
+        """
+        self._repo.close(self.sessionid, **self._txid())
+        del self._repo # necessary for proper garbage collection
+        self._closed = 1
+
     # undo support ############################################################
 
+    @check_not_closed
     def undoable_transactions(self, ueid=None, req=None, **actionfilters):
         """Return a list of undoable transaction objects by the connection's
         user, ordered by descendant transaction time.
@@ -730,6 +736,7 @@ class Connection(object):
             txinfo.req = req
         return txinfos
 
+    @check_not_closed
     def transaction_info(self, txuuid, req=None):
         """Return transaction object for the given uid.
 
@@ -744,6 +751,7 @@ class Connection(object):
         txinfo.req = req
         return txinfo
 
+    @check_not_closed
     def transaction_actions(self, txuuid, public=True):
         """Return an ordered list of action effectued during that transaction.
 
@@ -757,6 +765,7 @@ class Connection(object):
         return self._repo.transaction_actions(self.sessionid, txuuid, public,
                                               **self._txid())
 
+    @check_not_closed
     def undo_transaction(self, txuuid):
         """Undo the given transaction. Return potential restoration errors.
 

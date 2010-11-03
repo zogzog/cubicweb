@@ -215,13 +215,24 @@ class Field(object):
         self.creation_rank = Field.__creation_rank
         Field.__creation_rank += 1
 
+    def as_string(self, repr=True):
+        l = [u'<%s' % self.__class__.__name__]
+        for attr in ('name', 'eidparam', 'role', 'id', 'value'):
+            value = getattr(self, attr)
+            if value is not None and value is not _MARKER:
+                l.append('%s=%r' % (attr, value))
+        if repr:
+            l.append('@%#x' % id(self))
+        return u'%s>' % ' '.join(l)
+
     def __unicode__(self):
-        return u'<%s name=%r eidparam=%s role=%r id=%r value=%r visible=%r @%x>' % (
-            self.__class__.__name__, self.name, self.eidparam, self.role,
-            self.id, self.value, self.is_visible(), id(self))
+        return self.as_string(False)
+
+    def __str__(self):
+        return self.as_string(False).encode('UTF8')
 
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return self.as_string(True).encode('UTF8')
 
     def init_widget(self, widget):
         if widget is not None:
@@ -325,7 +336,7 @@ class Field(object):
                     value = getattr(entity, self.name)
                     if value is not None or not self.fallback_on_none_attribute:
                         return value
-            elif entity.has_eid() or entity.relation_cached(self.name, self.role):
+            elif entity.has_eid() or entity.cw_relation_cached(self.name, self.role):
                 value = [r[0] for r in entity.related(self.name, self.role)]
                 if value or not self.fallback_on_none_attribute:
                     return value
@@ -361,8 +372,11 @@ class Field(object):
         return widget.render(form, self, renderer)
 
     def vocabulary(self, form, **kwargs):
-        """return vocabulary for this field. This method will be called by
-        widgets which requires a vocabulary.
+        """return vocabulary for this field. This method will be
+        called by widgets which requires a vocabulary.
+
+        It should return a list of tuple (label, value), where value
+        *must be an unicode string*, not a typed value.
         """
         assert self.choices is not None
         if callable(self.choices):
@@ -387,12 +401,25 @@ class Field(object):
         if vocab and not isinstance(vocab[0], (list, tuple)):
             vocab = [(x, x) for x in vocab]
         if self.internationalizable:
-            # the short-cirtcuit 'and' boolean operator is used here to permit
-            # a valid empty string in vocabulary without attempting to translate
-            # it by gettext (which can lead to weird strings display)
-            vocab = [(label and form._cw._(label), value) for label, value in vocab]
+            # the short-cirtcuit 'and' boolean operator is used here
+            # to permit a valid empty string in vocabulary without
+            # attempting to translate it by gettext (which can lead to
+            # weird strings display)
+            vocab = [(label and form._cw._(label), value)
+                     for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
+        # XXX pre 3.9 bw compat
+        for i, option in enumerate(vocab):
+            # option may be a 2 or 3-uple (see Select widget _render method for
+            # explanation)
+            value = option[1]
+            if value is not None and not isinstance(value, basestring):
+                warn('[3.9] %s: vocabulary value should be an unicode string'
+                     % self, DeprecationWarning)
+                option = list(option)
+                option[1] = unicode(value)
+                vocab[i] = option
         return vocab
 
     def format(self, form):
@@ -401,7 +428,7 @@ class Field(object):
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'format') and (
                 entity.has_eid() or '%s_format' % self.name in entity):
-                return form.edited_entity.attr_metadata(self.name, 'format')
+                return form.edited_entity.cw_attr_metadata(self.name, 'format')
         return form._cw.property_value('ui.default-text-format')
 
     def encoding(self, form):
@@ -410,7 +437,7 @@ class Field(object):
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'encoding') and (
                 entity.has_eid() or '%s_encoding' % self.name in entity):
-                return form.edited_entity.attr_metadata(self.name, 'encoding')
+                return form.edited_entity.cw_attr_metadata(self.name, 'encoding')
         return form._cw.encoding
 
     def form_init(self, form):
@@ -420,6 +447,12 @@ class Field(object):
         pass
 
     def has_been_modified(self, form):
+        for field in self.actual_fields(form):
+            if field._has_been_modified(form):
+                return True # XXX
+        return False # not modified
+
+    def _has_been_modified(self, form):
         # fields not corresponding to an entity attribute / relations
         # are considered modified
         if not self.eidparam or not self.role or not form.edited_entity.has_eid():
@@ -445,7 +478,7 @@ class Field(object):
         except ProcessFormError:
             return True
         except UnmodifiedField:
-            return False
+            return False # not modified
         if previous_value == new_value:
             return False # not modified
         return True
@@ -826,12 +859,32 @@ class BooleanField(Field):
     """
     widget = fw.Radio
 
+    def __init__(self, allow_none=False, **kwargs):
+        super(BooleanField, self).__init__(**kwargs)
+        self.allow_none = allow_none
+
     def vocabulary(self, form):
         if self.choices:
             return super(BooleanField, self).vocabulary(form)
+        if self.allow_none:
+            return [('', ''), (form._cw._('yes'), '1'), (form._cw._('no'), '0')]
+        # XXX empty string for 'no' in that case for bw compat
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
+    def format_single_value(self, req, value):
+        """return value suitable for display"""
+        if self.allow_none:
+            if value is None:
+                return u''
+            if value is False:
+                return '0'
+        return super(BooleanField, self).format_single_value(req, value)
+
     def _ensure_correctly_typed(self, form, value):
+        if self.allow_none:
+            if value:
+                return bool(int(value))
+            return None
         return bool(value)
 
 
@@ -943,7 +996,7 @@ def relvoc_linkedto(entity, rtype, role):
     linkedto = entity.linked_to(rtype, role)
     if linkedto:
         buildent = entity._cw.entity_from_eid
-        return [(buildent(eid).view('combobox'), eid) for eid in linkedto]
+        return [(buildent(eid).view('combobox'), unicode(eid)) for eid in linkedto]
     return []
 
 def relvoc_init(entity, rtype, role, required=False):
@@ -954,7 +1007,7 @@ def relvoc_init(entity, rtype, role, required=False):
     # vocabulary doesn't include current values, add them
     if entity.has_eid():
         rset = entity.related(rtype, role)
-        vocab += [(e.view('combobox'), e.eid) for e in rset.entities()]
+        vocab += [(e.view('combobox'), unicode(e.eid)) for e in rset.entities()]
     return vocab
 
 def relvoc_unrelated(entity, rtype, role, limit=None):
@@ -985,7 +1038,7 @@ def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
         if entity.eid in done:
             continue
         done.add(entity.eid)
-        res.append((entity.view('combobox'), entity.eid))
+        res.append((entity.view('combobox'), unicode(entity.eid)))
     return res
 
 
@@ -1044,7 +1097,7 @@ class RelationField(Field):
             form.formvalues[(self, form)] = value
 
     def format_single_value(self, req, value):
-        return value
+        return unicode(value)
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
@@ -1080,18 +1133,13 @@ class RelationField(Field):
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs
 
-def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
+def guess_field(eschema, rschema, role='subject', **kwargs):
     """This function return the most adapted field to edit the given relation
     (`rschema`) where the given entity type (`eschema`) is the subject or object
     (`role`).
 
     The field is initialized according to information found in the schema,
     though any value can be explicitly specified using `kwargs`.
-
-    The `skip_meta_attr` flag is used to specify wether this function should
-    return a field for attributes considered as a meta-attributes
-    (e.g. describing an other attribute, such as the format or file name of a
-    file (`Bytes`) attribute).
     """
     fieldclass = None
     rdef = eschema.rdef(rschema, role)
@@ -1113,8 +1161,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs.setdefault('help', rdef.description)
     if rschema.final:
-        if skip_meta_attr and rschema in eschema.meta_attributes():
-            return None
         fieldclass = FIELDS[targetschema]
         if fieldclass is StringField:
             if eschema.has_metadata(rschema, 'format'):
@@ -1140,7 +1186,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 if metaschema is not None:
                     metakwargs = _AFF_KWARGS.etype_get(eschema, metaschema, 'subject')
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                skip_meta_attr=False,
                                                                 **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)

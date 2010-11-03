@@ -15,8 +15,8 @@ class SessionTC(CubicWebTC):
         # make is if the web session has been opened by the session manager
         sm._sessions[self.cnx.sessionid] = self.websession
         sessionid = self.websession.sessionid
-        self.assertEquals(len(sm._sessions), 1)
-        self.assertEquals(self.websession.sessionid, self.websession.cnx.sessionid)
+        self.assertEqual(len(sm._sessions), 1)
+        self.assertEqual(self.websession.sessionid, self.websession.cnx.sessionid)
         # fake the repo session is expiring
         self.repo.close(sessionid)
         try:
@@ -24,9 +24,9 @@ class SessionTC(CubicWebTC):
             # don't use self.request() which try to call req.set_session
             req = self.requestcls(self.vreg)
             websession = sm.get_session(req, sessionid)
-            self.assertEquals(len(sm._sessions), 1)
+            self.assertEqual(len(sm._sessions), 1)
             self.assertIs(websession, self.websession)
-            self.assertEquals(websession.sessionid, sessionid)
+            self.assertEqual(websession.sessionid, sessionid)
             self.assertNotEquals(websession.sessionid, websession.cnx.sessionid)
         finally:
             # avoid error in tearDown by telling this connection is closed...

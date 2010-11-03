@@ -18,6 +18,7 @@
 """custom storages for the system source"""
 
 from os import unlink, path as osp
+from contextlib import contextmanager
 
 from yams.schema import role_name
 
@@ -92,6 +93,17 @@ def uniquify_path(dirpath, basename):
         if not osp.isfile(path):
             return path
     return None
+
+@contextmanager
+def fsimport(session):
+    present = 'fs_importing' in session.transaction_data
+    old_value = session.transaction_data.get('fs_importing')
+    session.transaction_data['fs_importing'] = True
+    yield
+    if present:
+        session.transaction_data['fs_importing'] = old_value
+    else:
+        del session.transaction_data['fs_importing']
 
 
 class BytesFileSystemStorage(Storage):
@@ -174,7 +186,7 @@ class BytesFileSystemStorage(Storage):
         # PIL processing that use filename extension to detect content-type, as
         # well as providing more understandable file names on the fs.
         basename = [str(entity.eid), attr]
-        name = entity.attr_metadata(attr, 'name')
+        name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
             basename.append(name.encode(self.fsencoding))
         fspath = uniquify_path(self.default_directory, '_'.join(basename))

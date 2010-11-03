@@ -115,14 +115,6 @@ class CWRelation(AnyEntity):
             scard, self.relation_type[0].name, ocard,
             self.to_entity[0].name)
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.relation_type:
-            return self.relation_type[0].rest_path(), {}
-        return super(CWRelation, self).after_deletion_path()
-
     @property
     def rtype(self):
         return self.relation_type[0]
@@ -138,6 +130,7 @@ class CWRelation(AnyEntity):
     def yams_schema(self):
         rschema = self._cw.vreg.schema.rschema(self.rtype.name)
         return rschema.rdefs[(self.stype.name, self.otype.name)]
+
 
 class CWAttribute(CWRelation):
     __regid__ = 'CWAttribute'
@@ -159,14 +152,6 @@ class CWConstraint(AnyEntity):
 
     def dc_title(self):
         return '%s(%s)' % (self.cstrtype[0].name, self.value or u'')
-
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.reverse_constrained_by:
-            return self.reverse_constrained_by[0].rest_path(), {}
-        return super(CWConstraint, self).after_deletion_path()
 
     @property
     def type(self):
@@ -201,14 +186,6 @@ class RQLExpression(AnyEntity):
     def check_expression(self, *args, **kwargs):
         return self._rqlexpr().check(*args, **kwargs)
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if self.expression_of:
-            return self.expression_of.rest_path(), {}
-        return super(RQLExpression, self).after_deletion_path()
-
 
 class CWPermission(AnyEntity):
     __regid__ = 'CWPermission'
@@ -218,12 +195,3 @@ class CWPermission(AnyEntity):
         if self.label:
             return '%s (%s)' % (self._cw._(self.name), self.label)
         return self._cw._(self.name)
-
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        permissionof = getattr(self, 'reverse_require_permission', ())
-        if len(permissionof) == 1:
-            return permissionof[0].rest_path(), {}
-        return super(CWPermission, self).after_deletion_path()

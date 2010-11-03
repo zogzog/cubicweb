@@ -74,10 +74,14 @@ class ChangeStateTextParser(TextParser):
             if not hasattr(entity, 'in_state'):
                 self.error('bad change state instruction for eid %s', eid)
                 continue
-            tr = entity.current_workflow and entity.current_workflow.transition_by_name(trname)
+            iworkflowable = entity.cw_adapt_to('IWorkflowable')
+            if iworkflowable.current_workflow:
+                tr = iworkflowable.current_workflow.transition_by_name(trname)
+            else:
+                tr = None
             if tr and tr.may_be_fired(entity.eid):
                 try:
-                    trinfo = entity.fire_transition(tr)
+                    trinfo = iworkflowable.fire_transition(tr)
                     caller.fire_event('state-changed', {'trinfo': trinfo,
                                                         'entity': entity})
                 except:

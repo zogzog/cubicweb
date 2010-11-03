@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The edit controller, handling form submitting.
+"""The edit controller, automatically handling entity form submitting"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -27,8 +26,36 @@ from rql.utils import rqlvar_maker
 from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, NothingToEdit, ProcessFormError
+from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb.selectors import is_instance
+from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
+                          ProcessFormError)
 from cubicweb.web.views import basecontrollers, autoform
+
+
+class IEditControlAdapter(EntityAdapter):
+    __regid__ = 'IEditControl'
+    __select__ = is_instance('Any')
+
+    @implements_adapter_compat('IEditControl')
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        parent = self.entity.cw_adapt_to('IBreadCrumbs').parent_entity()
+        if parent is not None:
+            return parent.rest_path(), {}
+        return str(self.entity.e_schema).lower(), {}
+
+    @implements_adapter_compat('IEditControl')
+    def pre_web_edit(self):
+        """callback called by the web editcontroller when an entity will be
+        created/modified, to let a chance to do some entity specific stuff.
+
+        Do nothing by default.
+        """
+        pass
+
 
 def valerror_eid(eid):
     try:
@@ -133,8 +160,6 @@ class EditController(basecontrollers.ViewController):
     def _insert_entity(self, etype, eid, rqlquery):
         rql = rqlquery.insert_query(etype)
         try:
-            # get the new entity (in some cases, the type might have
-            # changed as for the File --> Image mutation)
             entity = self._cw.execute(rql, rqlquery.kwargs).get_entity(0, 0)
             neweid = entity.eid
         except ValidationError, ex:
@@ -152,10 +177,10 @@ class EditController(basecontrollers.ViewController):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
         entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
-        entity.eid = formparams['eid']
+        entity.eid = valerror_eid(formparams['eid'])
         is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff
-        entity.pre_web_edit()
+        entity.cw_adapt_to('IEditControl').pre_web_edit()
         # create a rql query from parameters
         rqlquery = RqlQuery()
         # process inlined relations at the same time as attributes
@@ -179,9 +204,8 @@ class EditController(basecontrollers.ViewController):
                 field = form.field_by_name(name, role, eschema=entity.e_schema)
             else:
                 field = form.field_by_name(name, role)
-            for field in field.actual_fields(form):
-                if field.has_been_modified(form):
-                    self.handle_formfield(form, field, rqlquery)
+            if field.has_been_modified(form):
+                self.handle_formfield(form, field, rqlquery)
         if self.errors:
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(valerror_eid(entity.eid), errors)
@@ -276,9 +300,9 @@ class EditController(basecontrollers.ViewController):
         eidtypes = tuple(eidtypes)
         for eid, etype in eidtypes:
             entity = self._cw.entity_from_eid(eid, etype)
-            path, params = entity.after_deletion_path()
+            path, params = entity.cw_adapt_to('IEditControl').after_deletion_path()
             redirect_info.add( (path, tuple(params.iteritems())) )
-            entity.delete()
+            entity.cw_delete()
         if len(redirect_info) > 1:
             # In the face of ambiguity, refuse the temptation to guess.
             self._after_deletion_path = 'view', ()

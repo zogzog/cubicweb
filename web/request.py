@@ -27,6 +27,7 @@ import base64
 from datetime import date
 from urlparse import urlsplit
 from itertools import count
+from warnings import warn
 
 from rql.utils import rqlvar_maker
 
@@ -36,14 +37,12 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.mail import header
-from cubicweb.uilib import remove_html_tags
+from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
-                          RequestError, StatusResponse, json)
+                          RequestError, StatusResponse)
 from cubicweb.web.http_headers import Headers
-
-dumps = json.dumps
 
 _MARKER = object()
 
@@ -83,6 +82,12 @@ class CubicWebRequestBase(DBAPIRequest):
         super(CubicWebRequestBase, self).__init__(vreg)
         self.authmode = vreg.config['auth-mode']
         self.https = https
+        if https:
+            self.uiprops = vreg.config.https_uiprops
+            self.datadir_url = vreg.config.https_datadir_url
+        else:
+            self.uiprops = vreg.config.uiprops
+            self.datadir_url = vreg.config.datadir_url
         # raw html headers that can be added from any view
         self.html_headers = HTMLHead()
         # form parameters
@@ -94,12 +99,8 @@ class CubicWebRequestBase(DBAPIRequest):
         # search state: 'normal' or 'linksearch' (eg searching for an object
         # to create a relation with another)
         self.search_state = ('normal',)
-        # tabindex generator
-        self.tabindexgen = count(1)
-        self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
-        self.datadir_url = self._datadir_url()
         self._set_pageid()
         # prepare output header
         self.headers_out = Headers()
@@ -127,6 +128,13 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         return self.set_varmaker()
 
+    def _get_tabindex_func(self):
+        nextfunc = self.get_page_data('nexttabfunc')
+        if nextfunc is None:
+            nextfunc = count(1).next
+            self.set_page_data('nexttabfunc', nextfunc)
+        return nextfunc
+
     def set_varmaker(self):
         varmaker = self.get_page_data('rql_varmaker')
         if varmaker is None:
@@ -139,6 +147,8 @@ class CubicWebRequestBase(DBAPIRequest):
         or an anonymous connection is open
         """
         super(CubicWebRequestBase, self).set_session(session, user)
+        # tabindex generator
+        self.next_tabindex = self._get_tabindex_func()
         # set request language
         vreg = self.vreg
         if self.user:
@@ -339,23 +349,37 @@ class CubicWebRequestBase(DBAPIRequest):
             return breadcrumbs.pop()
         return self.base_url()
 
-    def user_rql_callback(self, args, msg=None):
+    def user_rql_callback(self, rqlargs, *args, **kwargs):
         """register a user callback to execute some rql query and return an url
-        to call it ready to be inserted in html
+        to call it ready to be inserted in html.
+
+        rqlargs should be a tuple containing argument to give to the execute function.
+
+        For other allowed arguments, see :meth:`user_callback` method
         """
         def rqlexec(req, rql, args=None, key=None):
             req.execute(rql, args, key)
-        return self.user_callback(rqlexec, args, msg)
+        return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
 
-    def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
-        inserted in html
+    def user_callback(self, cb, cbargs, *args, **kwargs):
+        """register the given user callback and return an url to call it ready
+        to be inserted in html.
+
+        You can specify the underlying js function to call using a 'jsfunc'
+        named args, to one of :func:`userCallback`,
+        ':func:`userCallbackThenUpdateUI`, ':func:`userCallbackThenReloadPage`
+        (the default). Take care arguments may vary according to the used
+        function.
         """
         self.add_js('cubicweb.ajax.js')
-        cbname = self.register_onetime_callback(cb, *args)
-        msg = dumps(msg or '')
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (
-            cbname, msg)
+        jsfunc = kwargs.pop('jsfunc', 'userCallbackThenReloadPage')
+        if 'msg' in kwargs:
+            warn('[3.10] msg should be given as positional argument',
+                 DeprecationWarning, stacklevel=2)
+            args = (kwargs.pop('msg'),) + args
+        assert not kwargs, 'dunno what to do with remaining kwargs: %s' % kwargs
+        cbname = self.register_onetime_callback(cb, *cbargs)
+        return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)
 
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
@@ -366,7 +390,6 @@ class CubicWebRequestBase(DBAPIRequest):
             try:
                 ret = func(req, *args)
             except TypeError:
-                from warnings import warn
                 warn('[3.2] user callback should now take request as argument')
                 ret = func(*args)
             self.unregister_callback(self.pageid, cbname)
@@ -508,7 +531,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """set output content type for this request. An optional filename
         may be given
         """
-        if content_type.startswith('text/'):
+        if content_type.startswith('text/') and ';charset=' not in content_type:
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:
@@ -564,34 +587,36 @@ class CubicWebRequestBase(DBAPIRequest):
                 cssfile = self.datadir_url + cssfile
             add_css(cssfile, media, *extraargs)
 
+    @deprecated('[3.9] use ajax_replace_url() instead, naming rql and vid arguments')
     def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
                                **extraparams):
+        return self.ajax_replace_url(nodeid, replacemode, rql=rql, vid=vid,
+                                     **extraparams)
+
+    def ajax_replace_url(self, nodeid, replacemode='replace', **extraparams):
         """builds an ajax url that will replace nodeid's content
 
         :param nodeid: the dom id of the node to replace
-        :param rql: rql to execute
-        :param vid: the view to apply on the resultset
         :param replacemode: defines how the replacement should be done.
 
-        Possible values are :
-        - 'replace' to replace the node's content with the generated HTML
-        - 'swap' to replace the node itself with the generated HTML
-        - 'append' to append the generated HTML to the node's content
+          Possible values are :
+          - 'replace' to replace the node's content with the generated HTML
+          - 'swap' to replace the node itself with the generated HTML
+          - 'append' to append the generated HTML to the node's content
+
+        Arbitrary extra named arguments may be given, they will be included as
+        parameters of the generated url.
         """
-        url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
-                             **extraparams)
-        return "javascript: loadxhtml('%s', '%s', '%s')" % (
-            nodeid, xml_escape(url), replacemode)
+        extraparams.setdefault('fname', 'view')
+        url = self.build_url('json', **extraparams)
+        return "javascript: $('#%s').%s; noop()" % (
+            nodeid, js.loadxhtml(url, None, 'get', replacemode))
 
     # urls/path management ####################################################
 
     def url(self, includeparams=True):
         """return currently accessed url"""
         return self.base_url() + self.relative_path(includeparams)
-
-    def _datadir_url(self):
-        """return url of the instance's data directory"""
-        return self.base_url() + 'data%s/' % self.vreg.config.instance_md5_version()
 
     def selected(self, url):
         """return True if the url is equivalent to currently accessed url"""
@@ -617,25 +642,6 @@ class CubicWebRequestBase(DBAPIRequest):
         if controller in registered_controllers:
             return controller
         return 'view'
-
-    def external_resource(self, rid, default=_MARKER):
-        """return a path to an external resource, using its identifier
-
-        raise KeyError  if the resource is not defined
-        """
-        try:
-            value = self.vreg.config.ext_resources[rid]
-        except KeyError:
-            if default is _MARKER:
-                raise
-            return default
-        if value is None:
-            return None
-        baseurl = self.datadir_url[:-1] # remove trailing /
-        if isinstance(value, list):
-            return [v.replace('DATADIR', baseurl) for v in value]
-        return value.replace('DATADIR', baseurl)
-    external_resource = cached(external_resource, keyarg=1)
 
     def validate_cache(self):
         """raise a `DirectResponse` exception if a cached page along the way
@@ -711,12 +717,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 self.debug('bad authorization %s (%s: %s)',
                            auth, ex.__class__.__name__, ex)
         return None, None
-
-    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
-    def header_accept_language(self):
-        """returns an ordered list of preferred languages"""
-        return [value.split('-')[0] for value in
-                self.parse_accept_header('Accept-Language')]
 
     def parse_accept_header(self, header):
         """returns an ordered list of preferred languages"""
@@ -822,6 +822,26 @@ class CubicWebRequestBase(DBAPIRequest):
             return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE + # XXX encoding ?
                     u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
         return u'<div>'
+
+    @deprecated('[3.9] use req.uiprops[rid]')
+    def external_resource(self, rid, default=_MARKER):
+        """return a path to an external resource, using its identifier
+
+        raise `KeyError` if the resource is not defined
+        """
+        try:
+            return self.uiprops[rid]
+        except KeyError:
+            if default is _MARKER:
+                raise
+            return default
+
+    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
+    def header_accept_language(self):
+        """returns an ordered list of preferred languages"""
+        return [value.split('-')[0] for value in
+                self.parse_accept_header('Accept-Language')]
+
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)

@@ -77,10 +77,16 @@ class ResultSet(object):
         rows = self.rows
         if len(rows) > 10:
             rows = rows[:10] + ['...']
+        if len(rows) > 1:
+            # add a line break before first entity if more that one.
+            pattern = '<resultset %r (%s rows):\n%s>' 
+        else:
+            pattern = '<resultset %r (%s rows): %s>'
+
         if not self.description:
-            return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+            return pattern % (self.rql, len(self.rows),
                                                      '\n'.join(str(r) for r in rows))
-        return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+        return pattern % (self.rql, len(self.rows),
                                                  '\n'.join('%s (%s)' % (r, d)
                                                            for r, d in zip(rows, self.description)))
 
@@ -453,7 +459,7 @@ class ResultSet(object):
         etype = self.description[row][col]
         entity = self.req.vreg['etypes'].etype_class(etype)(req, rset=self,
                                                             row=row, col=col)
-        entity.set_eid(eid)
+        entity.eid = eid
         # cache entity
         req.set_entity_cache(entity)
         eschema = entity.e_schema
@@ -494,7 +500,7 @@ class ResultSet(object):
                         rrset.req = req
                     else:
                         rrset = self._build_entity(row, outerselidx).as_rset()
-                    entity.set_related_cache(attr, role, rrset)
+                    entity.cw_set_relation_cache(attr, role, rrset)
         return entity
 
     @cached
@@ -563,7 +569,8 @@ class ResultSet(object):
                     if i == col:
                         continue
                     coletype = self.description[row][i]
-                    # None description possible on column resulting from an outer join
+                    # None description possible on column resulting from an
+                    # outer join
                     if coletype is None or eschema(coletype).final:
                         continue
                     try:
@@ -582,11 +589,20 @@ class ResultSet(object):
 
     @cached
     def related_entity(self, row, col):
-        """try to get the related entity to extract format information if any"""
+        """given an cell of the result set, try to return a (entity, relation
+        name) tuple to which this cell is linked.
+
+        This is especially useful when the cell is an attribute of an entity,
+        to get the entity to which this attribute belongs to.
+        """
         rqlst = self.syntax_tree()
+        # UNION query, we've first to find a 'pivot' column to use to get the
+        # actual query from which the row is coming
         etype, locate_query_col = self._locate_query_params(rqlst, row, col)
-        # UNION query, find the subquery from which this entity has been found
+        # now find the query from which this entity has been found. Returned
+        # select node may be a subquery with different column indexes.
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
+        # then get the index of root query's col in the subquery
         col = rqlst.subquery_selection_index(select, col)
         if col is None:
             # XXX unexpected, should fix subquery_selection_index ?

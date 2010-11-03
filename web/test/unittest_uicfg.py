@@ -62,7 +62,7 @@ class DefinitionOrderTC(CubicWebTC):
     def test_definition_order_hidden(self):
         result = uicfg.autoform_section.get('CWUser', 'login', 'String', 'subject')
         expected = set(['main_inlined', 'muledit_attributes', 'inlined_attributes'])
-        self.assertSetEquals(result, expected)
+        self.assertSetEqual(result, expected)
 
     def tearDown(self):
         super(DefinitionOrderTC, self).tearDown()

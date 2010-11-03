@@ -15,76 +15,72 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
 from cubicweb.devtools.testlib import CubicWebTC
-
+from cubicweb.utils import json
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
-from cubicweb.web import json
-loads = json.loads
 
 def loadjson(value):
-    return loads(html_unescape(value))
+    return json.loads(html_unescape(value))
 
 class VidFromRsetTC(CubicWebTC):
 
     def test_no_rset(self):
         req = self.request()
-        self.assertEquals(vid_from_rset(req, None, self.schema), 'index')
+        self.assertEqual(vid_from_rset(req, None, self.schema), 'index')
 
     def test_no_entity(self):
         req = self.request()
         rset = self.execute('Any X WHERE X login "blabla"')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'noresult')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'noresult')
 
     def test_one_entity(self):
         req = self.request()
         rset = self.execute('Any X WHERE X login "admin"')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'primary')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'primary')
         rset = self.execute('Any X, L WHERE X login "admin", X login L')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'primary')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'primary')
         req.search_state = ('pasnormal',)
         rset = self.execute('Any X WHERE X login "admin"')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'outofcontext-search')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'outofcontext-search')
 
     def test_one_entity_eid(self):
         req = self.request()
         rset = self.execute('Any X WHERE X eid 1')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'primary')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'primary')
 
     def test_more_than_one_entity_same_type(self):
         req = self.request()
         rset = self.execute('Any X WHERE X is CWUser')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'sameetypelist')
         rset = self.execute('Any X, L WHERE X login L')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'sameetypelist')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'sameetypelist')
 
     def test_more_than_one_entity_diff_type(self):
         req = self.request()
         rset = self.execute('Any X WHERE X is IN (CWUser, CWGroup)')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'list')
 
     def test_more_than_one_entity_by_row(self):
         req = self.request()
         rset = self.execute('Any X, G WHERE X in_group G')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'table')
 
     def test_more_than_one_entity_by_row_2(self):
         req = self.request()
         rset = self.execute('Any X, GN WHERE X in_group G, G name GN')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'table')
 
     def test_aggregat(self):
         req = self.request()
         rset = self.execute('Any X, COUNT(T) GROUPBY X WHERE X is T')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'table')
         rset = self.execute('Any MAX(X) WHERE X is CWUser')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'table')
 
     def test_subquery(self):
         rset = self.execute(
@@ -94,7 +90,7 @@ class VidFromRsetTC(CubicWebTC):
 '       UNION'
 '     (DISTINCT Any W,N WHERE W is CWGroup, W name N))')
         req = self.request()
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
+        self.assertEqual(vid_from_rset(req, rset, self.schema), 'table')
 
 
 class TableViewTC(CubicWebTC):
@@ -108,7 +104,7 @@ class TableViewTC(CubicWebTC):
         return e, rset, view
 
     def test_headers(self):
-        self.skip('implement me')
+        self.skipTest('implement me')
 
     def test_sortvalue(self):
         e, _, view = self._prepare_entity()

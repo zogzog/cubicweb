@@ -19,8 +19,8 @@
 tree.
 
 This is used for instance for read security checking in the repository.
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException
@@ -45,14 +45,12 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
     allpossibletypes = {}
     for solution in solutions:
         for varname, etype in solution.iteritems():
-            if not varname in newroot.defined_vars or eschema(etype).final:
+            # XXX not considering aliases by design, right ?
+            if varname not in newroot.defined_vars or eschema(etype).final:
                 continue
             allpossibletypes.setdefault(varname, set()).add(etype)
     for varname in sorted(allpossibletypes):
-        try:
-            var = newroot.defined_vars[varname]
-        except KeyError:
-            continue
+        var = newroot.defined_vars[varname]
         stinfo = var.stinfo
         if stinfo.get('uidrel') is not None:
             continue # eid specified, no need for additional type specification
@@ -64,7 +62,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
         if newroot is rqlst and typerel is not None:
             mytyperel = typerel
         else:
-            for vref in newroot.defined_vars[varname].references():
+            for vref in var.references():
                 rel = vref.relation()
                 if rel and rel.is_types_restriction():
                     mytyperel = rel
@@ -79,12 +77,6 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
             for cst in mytyperel.get_nodes(n.Constant):
                 if not cst.value in possibletypes:
                     cst.parent.remove(cst)
-                    try:
-                        stinfo['possibletypes'].remove(cst.value)
-                    except KeyError:
-                        # restriction on a type not used by this query, may
-                        # occurs with X is IN(...)
-                        pass
         else:
             # we have to add types restriction
             if stinfo.get('scope') is not None:
@@ -94,7 +86,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 # to the root
                 rel = newroot.add_type_restriction(var, possibletypes)
             stinfo['typerel'] = rel
-            stinfo['possibletypes'] = possibletypes
+        stinfo['possibletypes'] = possibletypes
 
 
 def remove_solutions(origsolutions, solutions, defined):

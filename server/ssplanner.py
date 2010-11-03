@@ -15,14 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""plan execution of rql queries on a single source
+"""plan execution of rql queries on a single source"""
 
-"""
 from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
-
-from copy import copy
 
 from rql.stmts import Union, Select
 from rql.nodes import Constant, Relation
@@ -479,7 +476,7 @@ class InsertRelationsStep(Step):
             result = [[]]
         for row in result:
             # get a new entity definition for this row
-            edef = copy(base_edef)
+            edef = base_edef.cw_copy()
             # complete this entity def using row values
             index = 0
             for rtype, rorder, value in self.rdefs:
@@ -487,7 +484,7 @@ class InsertRelationsStep(Step):
                     value = row[index]
                     index += 1
                 if rorder == InsertRelationsStep.FINAL:
-                    edef.rql_set_value(rtype, value)
+                    edef._cw_rql_set_value(rtype, value)
                 elif rorder == InsertRelationsStep.RELATION:
                     self.plan.add_relation_def( (edef, rtype, value) )
                     edef.querier_pending_relations[(rtype, 'subject')] = value
@@ -584,7 +581,7 @@ class UpdateStep(Step):
                         edef = edefs[eid]
                     except KeyError:
                         edefs[eid] = edef = session.entity_from_eid(eid)
-                    edef.rql_set_value(str(rschema), rhsval)
+                    edef._cw_rql_set_value(str(rschema), rhsval)
                 else:
                     repo.glob_add_relation(session, lhsval, str(rschema), rhsval)
             result[i] = newrow

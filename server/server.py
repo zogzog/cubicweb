@@ -74,10 +74,10 @@ class QuitEvent(TimeEvent):
 
 class RepositoryServer(object):
 
-    def __init__(self, config, debug=False):
+    def __init__(self, config):
         """make the repository available as a PyRO object"""
         self.config = config
-        self.repo = Repository(config, debug=debug)
+        self.repo = Repository(config)
         self.ns = None
         self.quiting = None
         # event queue

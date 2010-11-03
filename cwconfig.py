@@ -51,7 +51,7 @@ directories that are affected according to mode:
         CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
         CW_RUNTIME_DIR = /var/run/cubicweb/
 
- * 'user': ::
+* 'user': ::
 
         CW_INSTANCES_DIR = ~/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
@@ -151,7 +151,7 @@ from logilab.common.configuration import (Configuration, Method,
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary)
-from cubicweb.toolsutils import env_path, create_dir
+from cubicweb.toolsutils import create_dir
 
 CONFIGURATIONS = []
 
@@ -201,7 +201,8 @@ def _find_prefix(start_path=CW_SOFTWARE_ROOT):
     old_prefix = None
     if not isdir(start_path):
         prefix = dirname(start_path)
-    while not isdir(join(prefix, 'share', 'cubicweb')) and prefix != old_prefix:
+    while (not isdir(join(prefix, 'share', 'cubicweb'))
+          or prefix.endswith('.egg')) and prefix != old_prefix:
         old_prefix = prefix
         prefix = dirname(prefix)
     if isdir(join(prefix, 'share', 'cubicweb')):
@@ -283,6 +284,7 @@ try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
 except KeyError:
     _INSTALL_PREFIX = _find_prefix()
+_USR_INSTALL = _INSTALL_PREFIX == '/usr'
 
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
@@ -296,9 +298,6 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # log_format = '%(asctime)s - [%(threadName)s] (%(name)s) %(levelname)s: %(message)s'
     # nor remove appobjects based on unused interface [???]
     cleanup_interface_sobjects = True
-    # debug mode
-    debugmode = False
-
 
     if (CWDEV and _forced_mode != 'system'):
         mode = 'user'
@@ -307,7 +306,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
-    CUBES_DIR = env_path('CW_CUBES_DIR', _CUBES_DIR, 'cubes', checkexists=False)
+    CUBES_DIR = abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
@@ -499,7 +498,24 @@ this option is set to yes",
             deps = dict((key, None) for key in deps)
             warn('[3.8] cube %s should define %s as a dict' % (cube, key),
                  DeprecationWarning)
+        for depcube in deps:
+            try:
+                newname = CW_MIGRATION_MAP[depcube]
+            except KeyError:
+                pass
+            else:
+                deps[newname] = deps.pop(depcube)
         return deps
+
+    @classmethod
+    def cube_depends_cubicweb_version(cls, cube):
+        # XXX no backward compat (see _cube_deps above)
+        try:
+            pkginfo = cls.cube_pkginfo(cube)
+            deps = getattr(pkginfo, '__depends__')
+            return deps.get('cubicweb')
+        except AttributeError:
+            return None
 
     @classmethod
     def cube_dependencies(cls, cube):
@@ -518,17 +534,17 @@ this option is set to yes",
         """
         cubes = list(cubes)
         todo = cubes[:]
+        if with_recommends:
+            available = set(cls.available_cubes())
         while todo:
             cube = todo.pop(0)
             for depcube in cls.cube_dependencies(cube):
                 if depcube not in cubes:
-                    depcube = CW_MIGRATION_MAP.get(depcube, depcube)
                     cubes.append(depcube)
                     todo.append(depcube)
             if with_recommends:
                 for depcube in cls.cube_recommends(cube):
-                    if depcube not in cubes:
-                        depcube = CW_MIGRATION_MAP.get(depcube, depcube)
+                    if depcube not in cubes and depcube in available:
                         cubes.append(depcube)
                         todo.append(depcube)
         return cubes
@@ -663,12 +679,14 @@ this option is set to yes",
                     vregpath.append(path + '.py')
         return vregpath
 
-    def __init__(self):
+    def __init__(self, debugmode=False):
         register_stored_procedures()
         ConfigurationMixIn.__init__(self)
+        self.debugmode = debugmode
         self.adjust_sys_path()
         self.load_defaults()
-        self.translations = {}
+        # will be properly initialized later by _gettext_init
+        self.translations = {'en': (unicode, lambda ctx, msgid: unicode(msgid) )}
         self._site_loaded = set()
         # don't register ReStructured Text directives by simple import, avoid pb
         # with eg sphinx.
@@ -684,25 +702,23 @@ this option is set to yes",
         # overriden in CubicWebConfiguration
         self.cls_adjust_sys_path()
 
-    def init_log(self, logthreshold=None, debug=False,
-                 logfile=None, syslog=False):
+    def init_log(self, logthreshold=None, logfile=None, syslog=False):
         """init the log service"""
         if logthreshold is None:
-            if debug:
+            if self.debugmode:
                 logthreshold = 'DEBUG'
             else:
                 logthreshold = self['log-threshold']
-        self.debugmode = debug
         if sys.platform == 'win32':
             # no logrotate on win32, so use logging rotation facilities
             # for now, hard code weekly rotation every sunday, and 52 weeks kept
             # idea: make this configurable?
-            init_log(debug, syslog, logthreshold, logfile, self.log_format,
+            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format,
                      rotation_parameters={'when': 'W6', # every sunday
                                           'interval': 1,
                                           'backupCount': 52})
         else:
-            init_log(debug, syslog, logthreshold, logfile, self.log_format)
+            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
 
@@ -737,7 +753,7 @@ this option is set to yes",
         # XXX extrapath argument to load_module_from_file only in lgc > 0.50.2
         from logilab.common.modutils import load_module_from_modpath, modpath_from_file
         module = load_module_from_modpath(modpath_from_file(sitefile, self.extrapath))
-        self.info('%s loaded', sitefile)
+        self.debug('%s loaded', sitefile)
         return module
 
     def eproperty_definitions(self):
@@ -774,11 +790,11 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
 
     if CubicWebNoAppConfiguration.mode == 'user':
         _INSTANCES_DIR = expanduser('~/etc/cubicweb.d/')
-    else: #mode = 'system'
-        if _INSTALL_PREFIX == '/usr':
-            _INSTANCES_DIR = '/etc/cubicweb.d/'
-        else:
-            _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
+    #mode == system'
+    elif _USR_INSTALL:
+        _INSTANCES_DIR = '/etc/cubicweb.d/'
+    else:
+        _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
 
     if os.environ.get('APYCOT_ROOT'):
         _cubes_init = join(CubicWebNoAppConfiguration.CUBES_DIR, '__init__.py')
@@ -831,7 +847,7 @@ the repository',
     @classmethod
     def instances_dir(cls):
         """return the control directory"""
-        return env_path('CW_INSTANCES_DIR', cls._INSTANCES_DIR, 'registry')
+        return abspath(os.environ.get('CW_INSTANCES_DIR', cls._INSTANCES_DIR))
 
     @classmethod
     def migration_scripts_dir(cls):
@@ -844,12 +860,12 @@ the repository',
         return mdir
 
     @classmethod
-    def config_for(cls, appid, config=None):
+    def config_for(cls, appid, config=None, debugmode=False):
         """return a configuration instance for the given instance identifier
         """
         config = config or guess_configuration(cls.instance_home(appid))
         configcls = configuration_cls(config)
-        return configcls(appid)
+        return configcls(appid, debugmode)
 
     @classmethod
     def possible_configurations(cls, appid):
@@ -903,23 +919,34 @@ the repository',
                     path = '%s-%s.log' % (basepath, i)
                     i += 1
             return path
-        return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        if _USR_INSTALL:
+            return '/var/log/cubicweb/%s-%s.log' % (self.appid, self.name)
+        else:
+            log_path = os.path.join(_INSTALL_PREFIX, 'var', 'log', 'cubicweb', '%s-%s.log')
+            return log_path % (self.appid, self.name)
+
+
 
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            rtdir = env_path('CW_RUNTIME_DIR', '/var/run/cubicweb/', 'run time')
+            if _USR_INSTALL:
+                default = '/var/run/cubicweb/'
+            else:
+                default = os.path.join(_INSTALL_PREFIX, 'var', 'run', 'cubicweb')
         else:
             import tempfile
-            rtdir = env_path('CW_RUNTIME_DIR', tempfile.gettempdir(), 'run time')
+            default = tempfile.gettempdir()
+        # runtime directory created on startup if necessary, don't check it
+        # exists
+        rtdir = abspath(os.environ.get('CW_RUNTIME_DIR', default))
         return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
     # instance methods used to get instance specific resources #############
 
-    def __init__(self, appid):
+    def __init__(self, appid, debugmode=False):
         self.appid = appid
-        CubicWebNoAppConfiguration.__init__(self)
+        CubicWebNoAppConfiguration.__init__(self, debugmode)
         self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
@@ -937,11 +964,13 @@ the repository',
     @property
     def appdatahome(self):
         if self.mode == 'system':
-            # XXX not under _INSTALL_PREFIX, right?
-            iddir = '/var/lib/cubicweb/instances/'
+            if _USR_INSTALL:
+                iddir = os.path.join('/var','lib', 'cubicweb', 'instances')
+            else:
+                iddir = os.path.join(_INSTALL_PREFIX, 'var', 'lib', 'cubicweb', 'instances')
         else:
             iddir = self.instances_dir()
-        iddir = env_path('CW_INSTANCES_DATA_DIR', iddir, 'additional data')
+        iddir = abspath(os.environ.get('CW_INSTANCES_DATA_DIR', iddir))
         return join(iddir, self.appid)
 
     def init_cubes(self, cubes):
@@ -986,6 +1015,32 @@ the repository',
         """write down current configuration"""
         self.generate_config(open(self.main_config_file(), 'w'))
 
+    def check_writeable_uid_directory(self, path):
+        """check given directory path exists, belongs to the user running the
+        server process and is writeable.
+
+        If not, try to fix this, letting exception propagate when not possible.
+        """
+        if not exists(path):
+            os.makedirs(path)
+        if self['uid']:
+            try:
+                uid = int(self['uid'])
+            except ValueError:
+                from pwd import getpwnam
+                uid = getpwnam(self['uid']).pw_uid
+        else:
+            try:
+                uid = os.getuid()
+            except AttributeError: # we are on windows
+                return
+        fstat = os.stat(path)
+        if fstat.st_uid != uid:
+            os.chown(path, uid, os.getgid())
+        import stat
+        if not (fstat.st_mode & stat.S_IWUSR):
+            os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+
     @cached
     def instance_md5_version(self):
         import hashlib
@@ -1000,7 +1055,7 @@ the repository',
         super(CubicWebConfiguration, self).load_configuration()
         if self.apphome and self.set_language:
             # init gettext
-            self._set_language()
+            self._gettext_init()
 
     def _load_site_cubicweb(self, sitefile):
         # overriden to register cube specific options
@@ -1009,12 +1064,12 @@ the repository',
             self.register_options(mod.options)
             self.load_defaults()
 
-    def init_log(self, logthreshold=None, debug=False, force=False):
+    def init_log(self, logthreshold=None, force=False):
         """init the log service"""
         if not force and hasattr(self, '_logging_initialized'):
             return
         self._logging_initialized = True
-        CubicWebNoAppConfiguration.init_log(self, logthreshold, debug,
+        CubicWebNoAppConfiguration.init_log(self, logthreshold,
                                             logfile=self.get('log-file'))
         # read a config file if it exists
         logconfig = join(self.apphome, 'logging.conf')
@@ -1035,7 +1090,7 @@ the repository',
             if lang != 'en':
                 yield lang
 
-    def _set_language(self):
+    def _gettext_init(self):
         """set language for gettext"""
         from gettext import translation
         path = join(self.apphome, 'i18n')
@@ -1115,6 +1170,7 @@ _EXT_REGISTERED = False
 def register_stored_procedures():
     from logilab.database import FunctionDescr
     from rql.utils import register_function, iter_funcnode_variables
+    from rql.nodes import SortTerm, Constant, VariableRef
 
     global _EXT_REGISTERED
     if _EXT_REGISTERED:
@@ -1158,6 +1214,34 @@ def register_stored_procedures():
         supported_backends = ('mysql', 'postgres', 'sqlite',)
 
     register_function(TEXT_LIMIT_SIZE)
+
+
+    class FTIRANK(FunctionDescr):
+        """return ranking of a variable that must be used as some has_text
+        relation subject in the query's restriction. Usually used to sort result
+        of full-text search by ranking.
+        """
+        supported_backends = ('postgres',)
+        rtype = 'Float'
+
+        def st_check_backend(self, backend, funcnode):
+            """overriden so that on backend not supporting fti ranking, the
+            function is removed when in an orderby clause, or replaced by a 1.0
+            constant.
+            """
+            if not self.supports(backend):
+                parent = funcnode.parent
+                while parent is not None and not isinstance(parent, SortTerm):
+                    parent = parent.parent
+                if isinstance(parent, SortTerm):
+                    parent.parent.remove(parent)
+                else:
+                    funcnode.parent.replace(funcnode, Constant(1.0, 'Float'))
+                    parent = funcnode
+                for vref in parent.iget_nodes(VariableRef):
+                    vref.unregister_reference()
+
+    register_function(FTIRANK)
 
 
     class FSPATH(FunctionDescr):

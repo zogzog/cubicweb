@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""functions for schema / permissions (de)serialization using RQL
+"""functions for schema / permissions (de)serialization using RQL"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
@@ -25,9 +24,11 @@ from itertools import chain
 
 from logilab.common.shellutils import ProgressBar
 
-from yams import schema as schemamod, buildobjs as ybo
+from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
-from cubicweb.schema import CONSTRAINTS, ETYPE_NAME_MAP, VIRTUAL_RTYPES
+from cubicweb import CW_SOFTWARE_ROOT, typed_eid
+from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
+                             VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
 
 def group_mapping(cursor, interactive=True):
@@ -57,10 +58,18 @@ def group_mapping(cursor, interactive=True):
                 if not value:
                     continue
                 try:
-                    res[group] = int(value)
+                    eid = typed_eid(value)
                 except ValueError:
                     print 'eid should be an integer'
                     continue
+                for eid_ in res.values():
+                    if eid == eid_:
+                        break
+                else:
+                    print 'eid is not a group eid'
+                    continue
+                res[name] = eid
+                break
     return res
 
 def cstrtype_mapping(cursor):
@@ -78,7 +87,7 @@ def deserialize_schema(schema, session):
     """
     repo = session.repo
     dbhelper = repo.system_source.dbhelper
-    # 3.6 migration
+    # XXX bw compat (3.6 migration)
     sqlcu = session.pool['system']
     sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
     if sqlcu.fetchall():
@@ -86,8 +95,10 @@ def deserialize_schema(schema, session):
                                       dbhelper.TYPE_MAPPING['Boolean'], True)
         sqlcu.execute(sql)
         sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
-    sidx = {}
-    permsdict = deserialize_ertype_permissions(session)
+        session.commit(False)
+    ertidx = {}
+    copiedeids = set()
+    permsidx = deserialize_ertype_permissions(session)
     schema.reading_from_database = True
     for eid, etype, desc in session.execute(
         'Any X, N, D WHERE X is CWEType, X name N, X description D',
@@ -97,20 +108,32 @@ def deserialize_schema(schema, session):
             # just set the eid
             eschema = schema.eschema(etype)
             eschema.eid = eid
-            sidx[eid] = eschema
+            ertidx[eid] = etype
             continue
         if etype in ETYPE_NAME_MAP:
+            needcopy = False
             netype = ETYPE_NAME_MAP[etype]
             # can't use write rql queries at this point, use raw sql
-            session.system_sql('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
-                               % {'p': sqlutils.SQL_PREFIX},
-                               {'x': eid, 'n': netype})
-            session.system_sql('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
-                               {'x': etype, 'n': netype})
+            sqlexec = session.system_sql
+            if sqlexec('SELECT 1 FROM %(p)sCWEType WHERE %(p)sname=%%(n)s'
+                       % {'p': sqlutils.SQL_PREFIX}, {'n': netype}).fetchone():
+                # the new type already exists, we should copy (eg make existing
+                # instances of the old type instances of the new type)
+                assert etype.lower() != netype.lower()
+                needcopy = True
+            else:
+                # the new type doesn't exist, we should rename
+                sqlexec('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
+                        % {'p': sqlutils.SQL_PREFIX}, {'x': eid, 'n': netype})
+                if etype.lower() != netype.lower():
+                    sqlexec('ALTER TABLE %s%s RENAME TO %s%s' % (
+                        sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))
+            sqlexec('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
+                    {'x': etype, 'n': netype})
             session.commit(False)
             try:
-                session.system_sql('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
-                                   {'x': etype, 'n': netype})
+                sqlexec('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
+                        {'x': etype, 'n': netype})
             except:
                 pass
             tocleanup = [eid]
@@ -118,56 +141,102 @@ def deserialize_schema(schema, session):
                           if etype == eidetype)
             repo.clear_caches(tocleanup)
             session.commit(False)
+            if needcopy:
+                ertidx[eid] = netype
+                copiedeids.add(eid)
+                # copy / CWEType entity removal expected to be done through
+                # rename_entity_type in a migration script
+                continue
             etype = netype
-        etype = ybo.EntityType(name=etype, description=desc, eid=eid)
-        eschema = schema.add_entity_type(etype)
-        sidx[eid] = eschema
-        set_perms(eschema, permsdict)
+        ertidx[eid] = etype
+        eschema = schema.add_entity_type(
+            ybo.EntityType(name=etype, description=desc, eid=eid))
+        set_perms(eschema, permsidx)
     for etype, stype in session.execute(
         'Any XN, ETN WHERE X is CWEType, X name XN, X specializes ET, ET name ETN',
         build_descr=False):
+        etype = ETYPE_NAME_MAP.get(etype, etype)
+        stype = ETYPE_NAME_MAP.get(stype, stype)
         schema.eschema(etype)._specialized_type = stype
         schema.eschema(stype)._specialized_by.append(etype)
     for eid, rtype, desc, sym, il, ftc in session.execute(
         'Any X,N,D,S,I,FTC WHERE X is CWRType, X name N, X description D, '
         'X symmetric S, X inlined I, X fulltext_container FTC', build_descr=False):
-        rtype = ybo.RelationType(name=rtype, description=desc,
-                                 symmetric=bool(sym), inlined=bool(il),
-                                 fulltext_container=ftc, eid=eid)
-        rschema = schema.add_relation_type(rtype)
-        sidx[eid] = rschema
-    cstrsdict = deserialize_rdef_constraints(session)
+        ertidx[eid] = rtype
+        rschema = schema.add_relation_type(
+            ybo.RelationType(name=rtype, description=desc,
+                             symmetric=bool(sym), inlined=bool(il),
+                             fulltext_container=ftc, eid=eid))
+    cstrsidx = deserialize_rdef_constraints(session)
+    pendingrdefs = []
+    # closure to factorize common code of attribute/relation rdef addition
+    def _add_rdef(rdefeid, seid, reid, oeid, **kwargs):
+        rdef = ybo.RelationDefinition(ertidx[seid], ertidx[reid], ertidx[oeid],
+                                      constraints=cstrsidx.get(rdefeid, ()),
+                                      eid=rdefeid, **kwargs)
+        if seid in copiedeids or oeid in copiedeids:
+            # delay addition of this rdef. We'll insert them later if needed. We
+            # have to do this because:
+            #
+            # * on etype renaming, we want relation of the old entity type being
+            #   redirected to the new type during migration
+            #
+            # * in the case of a copy, we've to take care that rdef already
+            #   existing in the schema are not overwritten by a redirected one,
+            #   since we want correct eid on them (redirected rdef will be
+            #   removed in rename_entity_type)
+            pendingrdefs.append(rdef)
+        else:
+            # add_relation_def return a RelationDefinitionSchema if it has been
+            # actually added (can be None on duplicated relation definitions,
+            # e.g. if the relation type is marked as beeing symmetric)
+            rdefs = schema.add_relation_def(rdef)
+            if rdefs is not None:
+                ertidx[rdefeid] = rdefs
+                set_perms(rdefs, permsidx)
+
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
         'X relation_type RT, X cardinality CARD, X ordernum ORD, X indexed IDX,'
         'X description DESC, X internationalizable I18N, X defaultval DFLT,'
         'X fulltextindexed FTIDX, X from_entity SE, X to_entity OE',
         build_descr=False):
-        rdefeid, seid, reid, teid, card, ord, desc, idx, ftidx, i18n, default = values
-        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
-                                      cardinality=card,
-                                      constraints=cstrsdict.get(rdefeid, ()),
-                                      order=ord, description=desc,
-                                      indexed=idx, fulltextindexed=ftidx,
-                                      internationalizable=i18n,
-                                      default=default, eid=rdefeid)
-        rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
-        if rdefs is not None:
-            set_perms(rdefs, permsdict)
+        rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
+        _add_rdef(rdefeid, seid, reid, oeid,
+                  cardinality=card, description=desc, order=ord,
+                  indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
+                  default=default)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
         'X from_entity SE, X to_entity OE, X composite C', build_descr=False):
-        rdefeid, seid, reid, teid, card, ord, desc, c = values
-        rdef = ybo.RelationDefinition(sidx[seid].type, sidx[reid].type, sidx[teid].type,
-                                      constraints=cstrsdict.get(rdefeid, ()),
-                                      cardinality=card, order=ord, description=desc,
-                                      composite=c,  eid=rdefeid)
-        rdefs = schema.add_relation_def(rdef)
-        # rdefs can be None on duplicated relation definitions (e.g. symmetrics)
+        rdefeid, seid, reid, oeid, card, ord, desc, comp = values
+        _add_rdef(rdefeid, seid, reid, oeid,
+                  cardinality=card, description=desc, order=ord,
+                  composite=comp)
+    for rdef in pendingrdefs:
+        try:
+            rdefs = schema.add_relation_def(rdef)
+        except BadSchemaDefinition:
+            continue
         if rdefs is not None:
-            set_perms(rdefs, permsdict)
+            set_perms(rdefs, permsidx)
+    unique_togethers = {}
+    try:
+        rset = session.execute(
+        'Any X,E,R WHERE '
+        'X is CWUniqueTogetherConstraint, '
+        'X constraint_of E, X relations R', build_descr=False)
+    except Exception:
+        session.rollback() # first migration introducing CWUniqueTogetherConstraint cw 3.9.6
+    else:
+        for values in rset:
+            uniquecstreid, eeid, releid = values
+            eschema = schema.schema_by_eid(eeid)
+            relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
+            relations[1].append(ertidx[releid].rtype.type)
+        for eschema, unique_together in unique_togethers.itervalues():
+            eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     session.commit()
     schema.reading_from_database = False
@@ -204,7 +273,7 @@ def deserialize_rdef_constraints(session):
         res.setdefault(rdefeid, []).append(cstr)
     return res
 
-def set_perms(erschema, permsdict):
+def set_perms(erschema, permsidx):
     """set permissions on the given erschema according to the permission
     definition dictionary as built by deserialize_ertype_permissions for a
     given erschema's eid
@@ -212,7 +281,7 @@ def set_perms(erschema, permsdict):
     # reset erschema permissions here to avoid getting yams default anyway
     erschema.permissions = dict((action, ()) for action in erschema.ACTIONS)
     try:
-        thispermsdict = permsdict[erschema.eid]
+        thispermsdict = permsidx[erschema.eid]
     except KeyError:
         return
     for action, somethings in thispermsdict.iteritems():
@@ -281,6 +350,10 @@ def serialize_schema(cursor, schema):
                           rdef2rql(rdef, cstrtypemap, groupmap))
         if pb is not None:
             pb.update()
+    # serialize unique_together constraints
+    for eschema in eschemas:
+        for unique_together in eschema._unique_together:
+            execschemarql(execute, eschema, [uniquetogether2rql(eschema, unique_together)])
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
         if pb is not None:
@@ -337,6 +410,31 @@ def eschemaspecialize2rql(eschema):
     if specialized_type:
         values = {'x': eschema.eid, 'et': specialized_type.eid}
         yield 'SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s', values
+
+def uniquetogether2rql(eschema, unique_together):
+    relations = []
+    restrictions = []
+    substs = {}
+    for i, name in enumerate(unique_together):
+        rschema = eschema.rdef(name)
+        var = 'R%d' % i
+        rtype = 'T%d' % i
+        substs[rtype] = rschema.rtype.type
+        relations.append('C relations %s' % var)
+        restrictions.append('%(var)s from_entity X, '
+                            '%(var)s relation_type %(rtype)s, '
+                            '%(rtype)s name %%(%(rtype)s)s' \
+                            % {'var': var,
+                               'rtype':rtype})
+    relations = ', '.join(relations)
+    restrictions = ', '.join(restrictions)
+    rql = ('INSERT CWUniqueTogetherConstraint C: '
+           '    C constraint_of X, %s  '
+           'WHERE '
+           '    X eid %%(x)s, %s' )
+
+    return rql % (relations, restrictions), substs
+
 
 def _ervalues(erschema):
     try:

@@ -55,18 +55,20 @@ class LazyViewMixin(object):
             urlparams['rql'] = uilib.rql_for_eid(eid)
         elif rset:
             urlparams['rql'] = rset.printable_rql()
+        if tabid is None:
+            tabid = uilib.domid(vid)
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
-            tabid or vid, xml_escape(self._cw.build_url('json', **urlparams))))
+            tabid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
-              % (tabid or vid, self._cw._('(loading ...)')))
+              % (tabid, self._cw._('(loading ...)')))
         else:
-            w(u'<div id="%s-hole"></div>' % (tabid or vid))
+            w(u'<div id="%s-hole"></div>' % tabid)
         w(u'<noscript><p><a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
-          % (tabid or vid, xml_escape(self._cw.build_url(**urlparams)), xml_escape('%s (%s)') %
-             (tabid or vid, self._cw._('follow this link if javascript is deactivated'))))
+          % (tabid, xml_escape(self._cw.build_url(**urlparams)), xml_escape('%s (%s)') %
+             (tabid, self._cw._('follow this link if javascript is deactivated'))))
         w(u'</div>')
-        self._prepare_bindings(tabid or vid, reloadable)
+        self._prepare_bindings(tabid, reloadable)
 
     def forceview(self, vid):
         """trigger an event that will force immediate loading of the view
@@ -91,15 +93,16 @@ class TabsMixin(LazyViewMixin):
         cookiename = self.cookie_name
         activetab = cookies.get(cookiename)
         if activetab is None:
-            cookies[cookiename] = default
+            domid = uilib.domid(default)
+            cookies[cookiename] = domid
             self._cw.set_cookie(cookies, cookiename)
-            return default
+            return domid
         return activetab.value
 
     def prune_tabs(self, tabs, default_tab):
         selected_tabs = []
         may_be_active_tab = self.active_tab(default_tab)
-        active_tab = default_tab
+        active_tab = uilib.domid(default_tab)
         viewsvreg = self._cw.vreg['views']
         for tab in tabs:
             try:
@@ -109,13 +112,14 @@ class TabsMixin(LazyViewMixin):
                 tabid, tabkwargs = tab, {}
             tabkwargs.setdefault('rset', self.cw_rset)
             vid = tabkwargs.get('vid', tabid)
+            domid = uilib.domid(tabid)
             try:
                 viewsvreg.select(vid, self._cw, **tabkwargs)
-                selected_tabs.append((tabid, tabkwargs))
             except NoSelectableObject:
                 continue
-            if tabid == may_be_active_tab:
-                active_tab = tabid
+            selected_tabs.append((tabid, domid, tabkwargs))
+            if domid == may_be_active_tab:
+                active_tab = domid
         return selected_tabs, active_tab
 
     def render_tabs(self, tabs, default, entity=None):
@@ -135,21 +139,21 @@ class TabsMixin(LazyViewMixin):
         w(u'<div id="entity-tabs-%s">' % uid)
         w(u'<ul>')
         active_tab_idx = None
-        for i, (tabid, tabkwargs) in enumerate(tabs):
+        for i, (tabid, domid, tabkwargs) in enumerate(tabs):
             w(u'<li>')
-            w(u'<a href="#%s">' % tabid)
-            w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (tabid, self.cookie_name))
+            w(u'<a href="#%s">' % domid)
+            w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (domid, self.cookie_name))
             w(tabkwargs.pop('label', self._cw._(tabid)))
             w(u'</span>')
             w(u'</a>')
             w(u'</li>')
-            if tabid == active_tab:
+            if domid == active_tab:
                 active_tab_idx = i
         w(u'</ul>')
         w(u'</div>')
-        for tabid, tabkwargs in tabs:
-            w(u'<div id="%s">' % tabid)
-            tabkwargs.setdefault('tabid', tabid)
+        for tabid, domid, tabkwargs in tabs:
+            w(u'<div id="%s">' % domid)
+            tabkwargs.setdefault('tabid', domid)
             tabkwargs.setdefault('vid', tabid)
             tabkwargs.setdefault('rset', self.cw_rset)
             self.lazyview(**tabkwargs)
@@ -159,9 +163,9 @@ class TabsMixin(LazyViewMixin):
         # XXX make work history: true
         self._cw.add_onload(u"""
   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
-  set_tab('%(vid)s', '%(cookiename)s');
+  set_tab('%(domid)s', '%(cookiename)s');
 """ % {'tabindex'   : active_tab_idx,
-       'vid'        : active_tab,
+       'domid'        : active_tab,
        'eeid'       : (entity and entity.eid or uid),
        'cookiename' : self.cookie_name})
 
@@ -175,7 +179,7 @@ class EntityRelationView(EntityView):
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
         __regid__ = title = _('projectscreenshots')
-        __select__ = EntityRelationView.__select__ & implements('Project')
+        __select__ = EntityRelationView.__select__ & is_instance('Project')
         rtype = 'screenshot'
         role = 'subject'
         vid = 'gallery'
@@ -205,6 +209,7 @@ class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)
         self.render_entity_toolbox(entity)
+        self.w(u'<div class="tabbedprimary"></div>')
         self.render_entity_title(entity)
         self.render_tabs(self.tabs, self.default_tab, entity)
 

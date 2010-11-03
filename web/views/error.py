@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of HTML errors views. Error view are generally implemented
 as startup views and are used for standard error pages (404, 500, etc.)
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from cubicweb.view import StartupView
@@ -37,4 +37,4 @@ class ErrorOccured(StartupView):
     def call(self):
         _ = self._cw._
         self.w(u"<h1>%s</h1>" %
-               _('an error occured, the request cannot be fulfilled'))
+               _('an error occurred, the request cannot be fulfilled'))

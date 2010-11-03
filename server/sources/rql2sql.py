@@ -101,15 +101,12 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     subquery. This function check this and rewrite the rql syntax tree if
     necessary (in place). Return a boolean telling if the tree has been modified
     """
-    torewrite = set()
     modified = False
     for varname in tuple(unstable):
         var = select.defined_vars[varname]
         if not var.stinfo.get('optrelations'):
             continue
-        modified = True
         unstable.remove(varname)
-        torewrite.add(var)
         newselect = Select()
         newselect.need_distinct = False
         myunion = Union()
@@ -139,10 +136,17 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
                 var.stinfo['rhsrelations'].add(newrel)
                 if rel.optional in ('right', 'both'):
                     var.add_optional_relation(newrel)
+        if not select.where and not modified:
+            # oops, generated the same thing as the original select....
+            # restore original query, else we'll indefinitly loop
+            for var, rel in towrap_rels:
+                select.add_restriction(rel)
+            continue
+        modified = True
         # extract subquery solutions
         mysolutions = [sol.copy() for sol in solutions]
         cleanup_solutions(newselect, mysolutions)
-        newselect.set_possible_types(solutions)
+        newselect.set_possible_types(mysolutions)
         # full sub-query
         aliases = [VariableRef(select.get_variable(avar.name, i))
                    for i, avar in enumerate(newselect.selection)]
@@ -611,12 +615,14 @@ class SQLGenerator(object):
                 sql += '\nHAVING %s' % having
             # sort
             if sorts:
-                sql += '\nORDER BY %s' % ','.join(self._sortterm_sql(sortterm,
-                                                                     fselectidx)
-                                                  for sortterm in sorts)
-                if fneedwrap:
-                    selection = ['T1.C%s' % i for i in xrange(len(origselection))]
-                    sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
+                sqlsortterms = [self._sortterm_sql(sortterm, fselectidx)
+                                for sortterm in sorts]
+                sqlsortterms = [x for x in sqlsortterms if x is not None]
+                if sqlsortterms:
+                    sql += '\nORDER BY %s' % ','.join(sqlsortterms)
+                    if sorts and fneedwrap:
+                        selection = ['T1.C%s' % i for i in xrange(len(origselection))]
+                        sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
             state.finalize_source_cbs()
         finally:
             select.selection = origselection
@@ -696,12 +702,14 @@ class SQLGenerator(object):
     def _sortterm_sql(self, sortterm, selectidx):
         term = sortterm.term
         try:
-            sqlterm = str(selectidx.index(str(term)) + 1)
+            sqlterm = selectidx.index(str(term)) + 1
         except ValueError:
             # Constant node or non selected term
-            sqlterm = str(term.accept(self))
+            sqlterm = term.accept(self)
+            if sqlterm is None:
+                return None
         if sortterm.asc:
-            return sqlterm
+            return str(sqlterm)
         else:
             return '%s DESC' % sqlterm
 
@@ -753,6 +761,8 @@ class SQLGenerator(object):
             restrictions.append(restriction)
         restriction = ' AND '.join(restrictions)
         if not restriction:
+            if tables:
+                return 'SELECT 1 FROM %s' % ', '.join(tables)
             return ''
         if not tables:
             # XXX could leave surrounding EXISTS() in this case no?
@@ -814,26 +824,35 @@ class SQLGenerator(object):
 
     def _visit_inlined_relation(self, relation):
         lhsvar, _, rhsvar, rhsconst = relation_info(relation)
-        # we are sure here to have a lhsvar
-        assert lhsvar is not None
-        if isinstance(relation.parent, Not) \
-               and len(lhsvar.stinfo['relations']) > 1 \
-               and (rhsvar is not None and rhsvar._q_invariant):
-            self._state.done.add(relation.parent)
-            return '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
+        # we are sure lhsvar is not None
         lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
-        if rhsconst is not None:
-            return '%s=%s' % (lhssql, rhsconst.accept(self))
-        if isinstance(rhsvar, Variable) and not rhsvar.name in self._varmap:
+        if rhsvar is None:
+            moresql = None
+        else:
+            moresql = self._extra_join_sql(relation, lhssql, rhsvar)
+        if isinstance(relation.parent, Not):
+            self._state.done.add(relation.parent)
+            if rhsvar is not None and rhsvar._q_invariant:
+                sql = '%s IS NULL' % lhssql
+            else:
+                # column != 1234 may not get back rows where column is NULL...
+                sql = '(%s IS NULL OR %s!=%s)' % (
+                    lhssql, lhssql, (rhsvar or rhsconst).accept(self))
+        elif rhsconst is not None:
+            sql = '%s=%s' % (lhssql, rhsconst.accept(self))
+        elif isinstance(rhsvar, Variable) and rhsvar._q_invariant and \
+                 not rhsvar.name in self._varmap:
             # if the rhs variable is only linked to this relation, this mean we
             # only want the relation to exists, eg NOT NULL in case of inlined
             # relation
-            if rhsvar._q_invariant:
-                sql = self._extra_join_sql(relation, lhssql, rhsvar)
-                if sql:
-                    return sql
-                return '%s IS NOT NULL' % lhssql
-        return '%s=%s' % (lhssql, rhsvar.accept(self))
+            if moresql is not None:
+                return moresql
+            return '%s IS NOT NULL' % lhssql
+        else:
+            sql = '%s=%s' % (lhssql, rhsvar.accept(self))
+        if moresql is None:
+            return sql
+        return '%s AND %s' % (sql, moresql)
 
     def _process_relation_term(self, relation, rid, termvar, termconst, relfield):
         if termconst or not termvar._q_invariant:
@@ -845,7 +864,7 @@ class SQLGenerator(object):
                 termsql = termvar.accept(self)
                 yield '%s.%s=%s' % (rid, relfield, termsql)
             extrajoin = self._extra_join_sql(relation, '%s.%s' % (rid, relfield), termvar)
-            if extrajoin:
+            if extrajoin is not None:
                 yield extrajoin
 
     def _visit_relation(self, relation, rschema):
@@ -1060,7 +1079,8 @@ class SQLGenerator(object):
             not_ = True
         else:
             not_ = False
-        return self.dbhelper.fti_restriction_sql(alias, const.eval(self._args),
+        query = const.eval(self._args)
+        return self.dbhelper.fti_restriction_sql(alias, query,
                                                  jointo, not_) + restriction
 
     def visit_comparison(self, cmp):
@@ -1104,6 +1124,15 @@ class SQLGenerator(object):
 
     def visit_function(self, func):
         """generate SQL name for a function"""
+        if func.name == 'FTIRANK':
+            try:
+                rel = iter(func.children[0].variable.stinfo['ftirels']).next()
+            except KeyError:
+                raise BadRQLQuery("can't use FTIRANK on variable not used in an"
+                                  " 'has_text' relation (eg full-text search)")
+            const = rel.get_parts()[1].children[0]
+            return self.dbhelper.fti_rank_order(self._fti_table(rel),
+                                                const.eval(self._args))
         args = [c.accept(self) for c in func.children]
         if func in self._state.source_cb_funcs:
             # function executed as a callback on the source
@@ -1114,11 +1143,11 @@ class SQLGenerator(object):
 
     def visit_constant(self, constant):
         """generate SQL name for a constant"""
-        value = constant.value
         if constant.type is None:
             return 'NULL'
+        value = constant.value
         if constant.type == 'Int' and  isinstance(constant.parent, SortTerm):
-            return constant.value
+            return value
         if constant.type in ('Date', 'Datetime'):
             rel = constant.relation()
             if rel is not None:
@@ -1127,13 +1156,15 @@ class SQLGenerator(object):
         if constant.type == 'Boolean':
             value = self.dbhelper.boolean_value(value)
         if constant.type == 'Substitute':
-            _id = constant.value
-            if isinstance(_id, unicode):
-                _id = _id.encode()
+            try:
+                # we may found constant from simplified var in varmap
+                return self._mapped_term(constant, '%%(%s)s' % value)[0]
+            except KeyError:
+                _id = value
+                if isinstance(_id, unicode):
+                    _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
-            if isinstance(value, unicode):
-                value = value.encode(self.dbencoding)
             self._query_attrs[_id] = value
         return '%%(%s)s' % _id
 
@@ -1222,7 +1253,7 @@ class SQLGenerator(object):
             # no principal defined, relation is necessarily the principal and
             # so nothing to return here
             pass
-        return ''
+        return None
 
     def _temp_table_scope(self, select, table):
         scope = 9999
@@ -1237,12 +1268,19 @@ class SQLGenerator(object):
                     break
         return scope
 
+    def _mapped_term(self, term, key):
+        """return sql and table alias to the `term`, mapped as `key` or raise
+        KeyError when the key is not found in the varmap
+        """
+        sql = self._varmap[key]
+        tablealias = sql.split('.', 1)[0]
+        scope = self._temp_table_scope(term.stmt, tablealias)
+        self.add_table(tablealias, scope=scope)
+        return sql, tablealias
+
     def _var_info(self, var):
         try:
-            sql = self._varmap[var.name]
-            tablealias = sql.split('.', 1)[0]
-            scope = self._temp_table_scope(var.stmt, tablealias)
-            self.add_table(tablealias, scope=scope)
+            return self._mapped_term(var, var.name)
         except KeyError:
             scope = self._state.scopes[var.scope]
             etype = self._state.solution[var.name]

@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from __future__ import with_statement
 
 from cubicweb import ValidationError
@@ -57,36 +54,36 @@ class UndoableTransactionTC(CubicWebTC):
                           self.cnx.undo_transaction, 'hop')
         txinfo = self.cnx.transaction_info(self.txuuid)
         self.failUnless(txinfo.datetime)
-        self.assertEquals(txinfo.user_eid, self.session.user.eid)
-        self.assertEquals(txinfo.user().login, 'admin')
+        self.assertEqual(txinfo.user_eid, self.session.user.eid)
+        self.assertEqual(txinfo.user().login, 'admin')
         actions = txinfo.actions_list()
-        self.assertEquals(len(actions), 2)
+        self.assertEqual(len(actions), 2)
         actions = txinfo.actions_list(public=False)
-        self.assertEquals(len(actions), 6)
+        self.assertEqual(len(actions), 6)
         a1 = actions[0]
-        self.assertEquals(a1.action, 'C')
-        self.assertEquals(a1.eid, self.toto.eid)
-        self.assertEquals(a1.etype,'CWUser')
-        self.assertEquals(a1.changes, None)
-        self.assertEquals(a1.public, True)
-        self.assertEquals(a1.order, 1)
+        self.assertEqual(a1.action, 'C')
+        self.assertEqual(a1.eid, self.toto.eid)
+        self.assertEqual(a1.etype,'CWUser')
+        self.assertEqual(a1.changes, None)
+        self.assertEqual(a1.public, True)
+        self.assertEqual(a1.order, 1)
         a4 = actions[3]
-        self.assertEquals(a4.action, 'A')
-        self.assertEquals(a4.rtype, 'in_group')
-        self.assertEquals(a4.eid_from, self.toto.eid)
-        self.assertEquals(a4.eid_to, self.toto.in_group[0].eid)
-        self.assertEquals(a4.order, 4)
+        self.assertEqual(a4.action, 'A')
+        self.assertEqual(a4.rtype, 'in_group')
+        self.assertEqual(a4.eid_from, self.toto.eid)
+        self.assertEqual(a4.eid_to, self.toto.in_group[0].eid)
+        self.assertEqual(a4.order, 4)
         for i, rtype in ((1, 'owned_by'), (2, 'owned_by'),
                          (4, 'in_state'), (5, 'created_by')):
             a = actions[i]
-            self.assertEquals(a.action, 'A')
-            self.assertEquals(a.eid_from, self.toto.eid)
-            self.assertEquals(a.rtype, rtype)
-            self.assertEquals(a.order, i+1)
+            self.assertEqual(a.action, 'A')
+            self.assertEqual(a.eid_from, self.toto.eid)
+            self.assertEqual(a.rtype, rtype)
+            self.assertEqual(a.order, i+1)
         # test undoable_transactions
         txs = self.cnx.undoable_transactions()
-        self.assertEquals(len(txs), 1)
-        self.assertEquals(txs[0].uuid, self.txuuid)
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0].uuid, self.txuuid)
         # test transaction_info / undoable_transactions security
         cnx = self.login('anon')
         self.assertRaises(NoSuchTransaction,
@@ -96,7 +93,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertRaises(NoSuchTransaction,
                           cnx.undo_transaction, self.txuuid)
         txs = cnx.undoable_transactions()
-        self.assertEquals(len(txs), 0)
+        self.assertEqual(len(txs), 0)
 
     def test_undoable_transactions(self):
         toto = self.toto
@@ -104,35 +101,35 @@ class UndoableTransactionTC(CubicWebTC):
                                        address=u'toto@logilab.org',
                                        reverse_use_email=toto)
         txuuid1 = self.commit()
-        toto.delete()
+        toto.cw_delete()
         txuuid2 = self.commit()
         undoable_transactions = self.cnx.undoable_transactions
         txs = undoable_transactions(action='D')
-        self.assertEquals(len(txs), 1, txs)
-        self.assertEquals(txs[0].uuid, txuuid2)
+        self.assertEqual(len(txs), 1, txs)
+        self.assertEqual(txs[0].uuid, txuuid2)
         txs = undoable_transactions(action='C')
-        self.assertEquals(len(txs), 2, txs)
-        self.assertEquals(txs[0].uuid, txuuid1)
-        self.assertEquals(txs[1].uuid, self.txuuid)
+        self.assertEqual(len(txs), 2, txs)
+        self.assertEqual(txs[0].uuid, txuuid1)
+        self.assertEqual(txs[1].uuid, self.txuuid)
         txs = undoable_transactions(eid=toto.eid)
-        self.assertEquals(len(txs), 3)
-        self.assertEquals(txs[0].uuid, txuuid2)
-        self.assertEquals(txs[1].uuid, txuuid1)
-        self.assertEquals(txs[2].uuid, self.txuuid)
+        self.assertEqual(len(txs), 3)
+        self.assertEqual(txs[0].uuid, txuuid2)
+        self.assertEqual(txs[1].uuid, txuuid1)
+        self.assertEqual(txs[2].uuid, self.txuuid)
         txs = undoable_transactions(etype='CWUser')
-        self.assertEquals(len(txs), 2)
+        self.assertEqual(len(txs), 2)
         txs = undoable_transactions(etype='CWUser', action='C')
-        self.assertEquals(len(txs), 1)
-        self.assertEquals(txs[0].uuid, self.txuuid)
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0].uuid, self.txuuid)
         txs = undoable_transactions(etype='EmailAddress', action='D')
-        self.assertEquals(len(txs), 0)
+        self.assertEqual(len(txs), 0)
         txs = undoable_transactions(etype='EmailAddress', action='D',
                                     public=False)
-        self.assertEquals(len(txs), 1)
-        self.assertEquals(txs[0].uuid, txuuid2)
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0].uuid, txuuid2)
         txs = undoable_transactions(eid=toto.eid, action='R', public=False)
-        self.assertEquals(len(txs), 1)
-        self.assertEquals(txs[0].uuid, txuuid2)
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0].uuid, txuuid2)
 
     def test_undo_deletion_base(self):
         toto = self.toto
@@ -146,34 +143,34 @@ class UndoableTransactionTC(CubicWebTC):
                                        for_user=toto)
         self.commit()
         txs = self.cnx.undoable_transactions()
-        self.assertEquals(len(txs), 2)
-        toto.delete()
+        self.assertEqual(len(txs), 2)
+        toto.cw_delete()
         txuuid = self.commit()
         actions = self.cnx.transaction_info(txuuid).actions_list()
-        self.assertEquals(len(actions), 1)
+        self.assertEqual(len(actions), 1)
         toto.clear_all_caches()
         e.clear_all_caches()
         errors = self.cnx.undo_transaction(txuuid)
         undotxuuid = self.commit()
-        self.assertEquals(undotxuuid, None) # undo not undoable
-        self.assertEquals(errors, [])
+        self.assertEqual(undotxuuid, None) # undo not undoable
+        self.assertEqual(errors, [])
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
         self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
         self.failUnless(self.execute('Any X WHERE X has_text "toto@logilab"'))
-        self.assertEquals(toto.state, 'activated')
-        self.assertEquals(toto.get_email(), 'toto@logilab.org')
-        self.assertEquals([(p.pkey, p.value) for p in toto.reverse_for_user],
+        self.assertEqual(toto.cw_adapt_to('IWorkflowable').state, 'activated')
+        self.assertEqual(toto.cw_adapt_to('IEmailable').get_email(), 'toto@logilab.org')
+        self.assertEqual([(p.pkey, p.value) for p in toto.reverse_for_user],
                           [('ui.default-text-format', 'text/rest')])
-        self.assertEquals([g.name for g in toto.in_group],
+        self.assertEqual([g.name for g in toto.in_group],
                           ['users'])
-        self.assertEquals([et.name for et in toto.related('is', entities=True)],
+        self.assertEqual([et.name for et in toto.related('is', entities=True)],
                           ['CWUser'])
-        self.assertEquals([et.name for et in toto.is_instance_of],
+        self.assertEqual([et.name for et in toto.is_instance_of],
                           ['CWUser'])
         # undoing shouldn't be visble in undoable transaction, and the undoed
         # transaction should be removed
         txs = self.cnx.undoable_transactions()
-        self.assertEquals(len(txs), 2)
+        self.assertEqual(len(txs), 2)
         self.assertRaises(NoSuchTransaction,
                           self.cnx.transaction_info, txuuid)
         self.check_transaction_deleted(txuuid)
@@ -186,7 +183,7 @@ class UndoableTransactionTC(CubicWebTC):
         c = session.create_entity('Card', title=u'hop', content=u'hop')
         p = session.create_entity('Personne', nom=u'louis', fiche=c)
         self.commit()
-        c.delete()
+        c.cw_delete()
         txuuid = self.commit()
         c2 = session.create_entity('Card', title=u'hip', content=u'hip')
         p.set_relations(fiche=c2)
@@ -194,9 +191,9 @@ class UndoableTransactionTC(CubicWebTC):
         errors = self.cnx.undo_transaction(txuuid)
         self.commit()
         p.clear_all_caches()
-        self.assertEquals(p.fiche[0].eid, c2.eid)
-        self.assertEquals(len(errors), 1)
-        self.assertEquals(errors[0],
+        self.assertEqual(p.fiche[0].eid, c2.eid)
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0],
                           "Can't restore object relation fiche to entity "
                           "%s which is already linked using this relation." % p.eid)
 
@@ -207,17 +204,17 @@ class UndoableTransactionTC(CubicWebTC):
         session.execute('DELETE U in_group G WHERE U eid %(x)s', {'x': self.toto.eid})
         self.toto.set_relations(in_group=g)
         self.commit()
-        self.toto.delete()
+        self.toto.cw_delete()
         txuuid = self.commit()
-        g.delete()
+        g.cw_delete()
         self.commit()
         errors = self.cnx.undo_transaction(txuuid)
-        self.assertEquals(errors,
+        self.assertEqual(errors,
                           [u"Can't restore relation in_group, object entity "
                           "%s doesn't exist anymore." % g.eid])
         ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEquals(ex.entity, self.toto.eid)
-        self.assertEquals(ex.errors,
+        self.assertEqual(ex.entity, self.toto.eid)
+        self.assertEqual(ex.errors,
                           {'in_group-subject': u'at least one relation in_group is '
                            'required on CWUser (%s)' % self.toto.eid})
 
@@ -257,8 +254,8 @@ class UndoableTransactionTC(CubicWebTC):
         self.commit()
         ex = self.assertRaises(ValidationError,
                                self.cnx.undo_transaction, txuuid)
-        self.assertEquals(ex.entity, tutu.eid)
-        self.assertEquals(ex.errors,
+        self.assertEqual(ex.entity, tutu.eid)
+        self.assertEqual(ex.errors,
                           {None: 'some later transaction(s) touch entity, undo them first'})
 
     def test_undo_creation_integrity_2(self):
@@ -270,15 +267,15 @@ class UndoableTransactionTC(CubicWebTC):
         self.commit()
         ex = self.assertRaises(ValidationError,
                                self.cnx.undo_transaction, txuuid)
-        self.assertEquals(ex.entity, g.eid)
-        self.assertEquals(ex.errors,
+        self.assertEqual(ex.entity, g.eid)
+        self.assertEqual(ex.errors,
                           {None: 'some later transaction(s) touch entity, undo them first'})
-        # self.assertEquals(errors,
+        # self.assertEqual(errors,
         #                   [u"Can't restore relation in_group, object entity "
         #                   "%s doesn't exist anymore." % g.eid])
         # ex = self.assertRaises(ValidationError, self.commit)
-        # self.assertEquals(ex.entity, self.toto.eid)
-        # self.assertEquals(ex.errors,
+        # self.assertEqual(ex.entity, self.toto.eid)
+        # self.assertEqual(ex.errors,
         #                   {'in_group-subject': u'at least one relation in_group is '
         #                    'required on CWUser (%s)' % self.toto.eid})
 

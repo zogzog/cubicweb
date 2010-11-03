@@ -134,8 +134,9 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
-from cubicweb.web import stdmsgs, uicfg, eid_param, dumps, \
-     form as f, formwidgets as fw, formfields as ff
+from cubicweb.utils import json_dumps
+from cubicweb.web import (stdmsgs, uicfg, eid_param,
+                          form as f, formwidgets as fw, formfields as ff)
 from cubicweb.web.views import forms
 
 _AFS = uicfg.autoform_section
@@ -374,7 +375,7 @@ def toggleable_relation_link(eid, nodeid, label='x'):
     entities
     """
     js = u"javascript: togglePendingDelete('%s', %s);" % (
-        nodeid, xml_escape(dumps(eid)))
+        nodeid, xml_escape(json_dumps(eid)))
     return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (
         js, nodeid, label)
 
@@ -442,7 +443,8 @@ class GenericRelationsWidget(fw.FieldWidget):
         for rschema, role, related in field.relations_table(form):
             # already linked entities
             if related:
-                w(u'<tr><th class="labelCol">%s</th>' % rschema.display_name(req, role))
+                label = rschema.display_name(req, role, context=form.edited_entity.__regid__)
+                w(u'<tr><th class="labelCol">%s</th>' % label)
                 w(u'<td>')
                 w(u'<ul>')
                 for viewparams in related:
@@ -475,7 +477,7 @@ class GenericRelationsWidget(fw.FieldWidget):
         w(u'<th class="labelCol">')
         w(u'<select id="relationSelector_%s" tabindex="%s" '
           'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
+          % (eid, req.next_tabindex(), xml_escape(json_dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
         for i18nrtype, rschema, role in field.relations:
             # more entities to link to
@@ -599,7 +601,7 @@ class UnrelatedDivs(EntityView):
   </select>
 </div>
 """ % (hidden and 'hidden' or '', divid, selectid,
-       xml_escape(dumps(entity.eid)), is_cell and 'true' or 'null', relname,
+       xml_escape(json_dumps(entity.eid)), is_cell and 'true' or 'null', relname,
        '\n'.join(options))
 
     def _get_select_options(self, entity, rschema, role):
@@ -783,7 +785,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
             return self.display_fields
-        if self.edited_entity.has_eid() and not self.edited_entity.has_perm('update'):
+        if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return []
         # XXX we should simply put eid in the generated section, no?
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
@@ -886,7 +888,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             vvreg = self._cw.vreg['views']
             # display inline-edition view for all existing related entities
             for i, relentity in enumerate(related.entities()):
-                if relentity.has_perm('update'):
+                if relentity.cw_has_perm('update'):
                     yield vvreg.select('inline-edition', self._cw,
                                        rset=related, row=i, col=0,
                                        etype=ttype, rtype=rschema, role=role,
@@ -949,7 +951,12 @@ def registration_callback(vreg):
     global etype_relation_field
 
     def etype_relation_field(etype, rtype, role='subject'):
-        eschema = vreg.schema.eschema(etype)
-        return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+        try:
+            eschema = vreg.schema.eschema(etype)
+            return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+        except (KeyError, f.FieldNotFound):
+            # catch KeyError raised when etype/rtype not found in schema
+            AutomaticEntityForm.error('field for %s %s may not be found in schema' % (rtype, role))
+            return None
 
     vreg.register_all(globals().values(), __name__)

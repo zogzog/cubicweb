@@ -39,7 +39,7 @@ class UrlRewriteTC(CubicWebTC):
             if hasattr(pattern, 'pattern'):
                 pattern = pattern.pattern
             rules.append((pattern, values))
-        self.assertListEquals(rules, [
+        self.assertListEqual(rules, [
             ('foo' , dict(rql='Foo F')),
             ('/index' , dict(vid='index2')),
             ('/_', dict(vid='manage')),
@@ -71,7 +71,7 @@ class UrlRewriteTC(CubicWebTC):
                 ('foo', dict(rql='Foo F')),
                 ('/index', dict(vid='index2')),
                 ]
-        self.assertListEquals(Rewriter.rules, [
+        self.assertListEqual(Rewriter.rules, [
             ('foo' , dict(rql='Foo F')),
             ('/index' , dict(vid='index2')),
             ])
@@ -81,19 +81,19 @@ class UrlRewriteTC(CubicWebTC):
         req = FakeRequest()
         rewriter = SimpleReqRewriter(req)
         self.assertRaises(KeyError, rewriter.rewrite, req, '/view?vid=whatever')
-        self.assertEquals(req.form, {})
+        self.assertEqual(req.form, {})
         rewriter.rewrite(req, '/index')
-        self.assertEquals(req.form, {'vid' : "index"})
+        self.assertEqual(req.form, {'vid' : "index"})
 
     def test_regexp_transformation(self):
         """test regexp-based rewrite"""
         req = FakeRequest()
         rewriter = SimpleReqRewriter(req)
         rewriter.rewrite(req, '/add/Task')
-        self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
+        self.assertEqual(req.form, {'vid' : "creation", 'etype' : "Task"})
         req = FakeRequest()
         rewriter.rewrite(req, '/add/Task/')
-        self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
+        self.assertEqual(req.form, {'vid' : "creation", 'etype' : "Task"})
 
 
 
@@ -117,8 +117,8 @@ class RgxActionRewriteTC(CubicWebTC):
         req = self.request()
         rewriter = TestSchemaBasedRewriter(req)
         pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
-        self.assertEquals(len(rset), 1)
-        self.assertEquals(rset[0][0], self.p1.eid)
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset[0][0], self.p1.eid)
 
     def test_inheritance_precedence(self):
         RQL1 = 'Any C WHERE C is CWEType'
@@ -142,17 +142,17 @@ class RgxActionRewriteTC(CubicWebTC):
         req = self.request()
         rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
-        self.assertEquals(rset.rql, RQL1)
-        self.assertEquals(req.form, {'vid' : "baseindex"})
+        self.assertEqual(rset.rql, RQL1)
+        self.assertEqual(req.form, {'vid' : "baseindex"})
         pmid, rset = rewriter.rewrite(req, '/collector/something')
-        self.assertEquals(rset.rql, RQL2)
-        self.assertEquals(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
         pmid, rset = rewriter.rewrite(req, '/collector/something/')
-        self.assertEquals(req.form, {'vid' : "index"})
-        self.assertEquals(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
         pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
-        self.assertEquals(rset.rql, RQL1)
-        self.assertEquals(req.form, {'vid' : "baseindex"})
+        self.assertEqual(rset.rql, RQL1)
+        self.assertEqual(req.form, {'vid' : "baseindex"})
 
     def test_inheritance_precedence_same_rgx(self):
         RQL1 = 'Any C WHERE C is CWEType'
@@ -176,17 +176,17 @@ class RgxActionRewriteTC(CubicWebTC):
         req = self.request()
         rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
-        self.assertEquals(rset.rql, RQL2)
-        self.assertEquals(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
         pmid, rset = rewriter.rewrite(req, '/collector/something')
-        self.assertEquals(rset.rql, RQL2)
-        self.assertEquals(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
         pmid, rset = rewriter.rewrite(req, '/collector/something/')
-        self.assertEquals(req.form, {'vid' : "index"})
-        self.assertEquals(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
         pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
-        self.assertEquals(rset.rql, RQL2)
-        self.assertEquals(req.form, {'vid' : "index"})
+        self.assertEqual(rset.rql, RQL2)
+        self.assertEqual(req.form, {'vid' : "index"})
 
 
 if __name__ == '__main__':

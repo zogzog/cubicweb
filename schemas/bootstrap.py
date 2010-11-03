@@ -154,6 +154,17 @@ class CWConstraint(EntityType):
     value = String(description=_('depends on the constraint type'))
 
 
+class CWUniqueTogetherConstraint(EntityType):
+    """defines a sql-level multicolumn unique index"""
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+    constraint_of = SubjectRelation('CWEType', cardinality='1*', composite='object',
+                                    inlined=True)
+    relations = SubjectRelation(('CWAttribute', 'CWRelation'), cardinality='+*',
+                                 constraints=[RQLConstraint(
+           'O from_entity X, S constraint_of X, O relation_type T, '
+           'T final TRUE OR (T final FALSE AND T inlined TRUE)')])
+
+
 class CWConstraintType(EntityType):
     """define a schema constraint type"""
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS

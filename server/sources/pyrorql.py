@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Source to query another RQL repository using pyro
+"""Source to query another RQL repository using pyro"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import threading
@@ -44,6 +43,34 @@ def uidtype(union, col, etype, args):
     select, col = union.locate_subquery(col, etype, args)
     return getattr(select.selection[col], 'uidtype', None)
 
+def load_mapping_file(mappingfile):
+    mapping = {}
+    execfile(mappingfile, mapping)
+    for junk in ('__builtins__', '__doc__'):
+        mapping.pop(junk, None)
+    mapping.setdefault('support_relations', {})
+    mapping.setdefault('dont_cross_relations', set())
+    mapping.setdefault('cross_relations', set())
+
+    # do some basic checks of the mapping content
+    assert 'support_entities' in mapping, \
+           'mapping file should at least define support_entities'
+    assert isinstance(mapping['support_entities'], dict)
+    assert isinstance(mapping['support_relations'], dict)
+    assert isinstance(mapping['dont_cross_relations'], set)
+    assert isinstance(mapping['cross_relations'], set)
+    unknown = set(mapping) - set( ('support_entities', 'support_relations',
+                                   'dont_cross_relations', 'cross_relations') )
+    assert not unknown, 'unknown mapping attribute(s): %s' % unknown
+    # relations that are necessarily not crossed
+    mapping['dont_cross_relations'] |= set(('owned_by', 'created_by'))
+    for rtype in ('is', 'is_instance_of'):
+        assert rtype not in mapping['dont_cross_relations'], \
+               '%s relation should not be in dont_cross_relations' % rtype
+        assert rtype not in mapping['support_relations'], \
+               '%s relation should not be in support_relations' % rtype
+    return mapping
+
 
 class ReplaceByInOperator(Exception):
     def __init__(self, eids):
@@ -58,8 +85,6 @@ class PyroRQLSource(AbstractSource):
     # boolean telling if the repository should connect to this source during
     # migration
     connect_for_migration = False
-
-    support_entities = None
 
     options = (
         # XXX pyro-ns host/port
@@ -127,12 +152,11 @@ repository (default to 5 minutes).',
         mappingfile = source_config['mapping-file']
         if not mappingfile[0] == '/':
             mappingfile = join(repo.config.apphome, mappingfile)
-        mapping = {}
-        execfile(mappingfile, mapping)
+        mapping = load_mapping_file(mappingfile)
         self.support_entities = mapping['support_entities']
-        self.support_relations = mapping.get('support_relations', {})
-        self.dont_cross_relations = mapping.get('dont_cross_relations', ())
-        self.cross_relations = mapping.get('cross_relations', ())
+        self.support_relations = mapping['support_relations']
+        self.dont_cross_relations = mapping['dont_cross_relations']
+        self.cross_relations = mapping['cross_relations']
         baseurl = source_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             source_config['base-url'] += '/'
@@ -173,7 +197,8 @@ repository (default to 5 minutes).',
         """method called by the repository once ready to handle request"""
         interval = int(self.config.get('synchronization-interval', 5*60))
         self.repo.looping_task(interval, self.synchronize)
-        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired)
+        self.repo.looping_task(self._query_cache.ttl.seconds/10,
+                               self._query_cache.clear_expired)
 
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the

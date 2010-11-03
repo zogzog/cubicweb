@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""automatic tests
-
-"""
+"""automatic tests"""
 
 from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView
@@ -68,7 +66,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
         self.vreg.register(SomeView)
         rset = self.execute('CWUser X')
         source = self.view('someview', rset).source
-        self.assertEquals(source.count('spam.js'), 1)
+        self.assertEqual(source.count('spam.js'), 1)
 
 
 

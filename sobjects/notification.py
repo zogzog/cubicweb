@@ -46,7 +46,8 @@ class RecipientsFinder(Component):
         mode = self._cw.vreg.config['default-recipients-mode']
         if mode == 'users':
             execute = self._cw.execute
-            dests = [(u.get_email(), u.property_value('ui.language'))
+            dests = [(u.cw_adapt_to('IEmailable').get_email(),
+                      u.property_value('ui.language'))
                      for u in execute(self.user_rql, build_descr=True).entities()]
         elif mode == 'default-dest-addrs':
             lang = self._cw.vreg.property_value('ui.language')

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Some utilities for CubicWeb server/clients.
+"""Some utilities for CubicWeb server/clients."""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
@@ -121,6 +120,9 @@ class RepeatList(object):
     def __init__(self, size, item):
         self._size = size
         self._item = item
+    def __repr__(self):
+        return '<cubicweb.utils.RepeatList at %s item=%s size=%s>' % (
+            id(self), self._item, self._size)
     def __len__(self):
         return self._size
     def __nonzero__(self):
@@ -129,6 +131,9 @@ class RepeatList(object):
         return repeat(self._item, self._size)
     def __getitem__(self, index):
         return self._item
+    def __delitem__(self, idc):
+        assert self._size > 0
+        self._size -= 1
     def __getslice__(self, i, j):
         # XXX could be more efficient, but do we bother?
         return ([self._item] * self._size)[i:j]
@@ -178,6 +183,11 @@ class HTMLHead(UStringIO):
     javascripts and stylesheets
     """
     js_unload_code = u'jQuery(window).unload(unloadPageData);'
+    # Making <script> tag content work properly with all possible
+    # content-types (xml/html) and all possible browsers is very
+    # tricky, see http://www.hixie.ch/advocacy/xhtml for an in-depth discussion
+    xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
+    xhtml_safe_script_closing = u'\n//--><!]]></script>'
 
     def __init__(self):
         super(HTMLHead, self).__init__()
@@ -251,14 +261,14 @@ class HTMLHead(UStringIO):
         w = self.write
         # 1/ variable declaration if any
         if self.jsvars:
-            w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
+            w(self.xhtml_safe_script_opening)
             for var, value, override in self.jsvars:
                 vardecl = u'%s = %s;' % (var, json.dumps(value))
                 if not override:
                     vardecl = (u'if (typeof %s == "undefined") {%s}' %
                                (var, vardecl))
                 w(vardecl + u'\n')
-            w(u'//--><!]]></script>\n')
+            w(self.xhtml_safe_script_closing)
         # 2/ css files
         for cssfile, media in self.cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
@@ -276,9 +286,9 @@ class HTMLHead(UStringIO):
               xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)
         if self.post_inlined_scripts:
-            w(u'<script type="text/javascript">\n')
+            w(self.xhtml_safe_script_opening)
             w(u'\n\n'.join(self.post_inlined_scripts))
-            w(u'\n</script>\n')
+            w(self.xhtml_safe_script_closing)
         header = super(HTMLHead, self).getvalue()
         if skiphead:
             return header
@@ -324,36 +334,28 @@ class HTMLStream(object):
 
 try:
     # may not be there if cubicweb-web not installed
-    if sys.version_info < (2,6):
+    if sys.version_info < (2, 6):
         import simplejson as json
     else:
         import json
 except ImportError:
-    pass
+    json_dumps = None
+
 else:
+    from logilab.common.date import ustrftime
 
     class CubicWebJsonEncoder(json.JSONEncoder):
         """define a json encoder to be able to encode yams std types"""
 
-        # _iterencode is the only entry point I've found to use a custom encode
-        # hook early enough: .default() is called if nothing else matched before,
-        # .iterencode() is called once on the main structure to encode and then
-        # never gets called again.
-        # For the record, our main use case is in FormValidateController with:
-        #   json.dumps((status, args, entity), cls=CubicWebJsonEncoder)
-        # where we want all the entity attributes, including eid, to be part
-        # of the json object dumped.
-        # This would have once more been easier if Entity didn't extend dict.
-        def _iterencode(self, obj, markers=None):
-            if hasattr(obj, '__json_encode__'):
-                obj = obj.__json_encode__()
-            return json.JSONEncoder._iterencode(self, obj, markers)
-
         def default(self, obj):
+            if hasattr(obj, 'eid'):
+                d = obj.cw_attr_cache.copy()
+                d['eid'] = obj.eid
+                return d
             if isinstance(obj, datetime.datetime):
-                return obj.strftime('%Y/%m/%d %H:%M:%S')
+                return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
-                return obj.strftime('%Y/%m/%d')
+                return ustrftime(obj, '%Y/%m/%d')
             elif isinstance(obj, datetime.time):
                 return obj.strftime('%H:%M:%S')
             elif isinstance(obj, datetime.timedelta):
@@ -367,6 +369,9 @@ else:
                 # just return None in those cases.
                 return None
 
+    def json_dumps(value):
+        return json.dumps(value, cls=CubicWebJsonEncoder)
+
 
 @deprecated('[3.7] merge_dicts is deprecated')
 def merge_dicts(dict1, dict2):
@@ -379,7 +384,7 @@ from logilab.common import date
 _THIS_MOD_NS = globals()
 for funcname in ('date_range', 'todate', 'todatetime', 'datetime2ticks',
                  'days_in_month', 'days_in_year', 'previous_month',
-                 'next_month', 'first_day', 'last_day', 'ustrftime',
+                 'next_month', 'first_day', 'last_day',
                  'strptime'):
     msg = '[3.6] %s has been moved to logilab.common.date' % funcname
     _THIS_MOD_NS[funcname] = deprecated(msg)(getattr(date, funcname))

@@ -96,19 +96,24 @@ from logilab.common.decorators import cached
 
 from rql.stmts import Union, Select
 from rql.nodes import (VariableRef, Comparison, Relation, Constant, Variable,
-                       Not, Exists)
+                       Not, Exists, SortTerm, Function)
 
 from cubicweb import server
 from cubicweb.utils import make_uid
+from cubicweb.rqlrewrite import add_types_restriction
 from cubicweb.server.utils import cleanup_solutions
-from cubicweb.server.ssplanner import (SSPlanner, OneFetchStep,
-                                       add_types_restriction)
+from cubicweb.server.ssplanner import SSPlanner, OneFetchStep
 from cubicweb.server.mssteps import *
 
 Variable._ms_table_key = lambda x: x.name
 Relation._ms_table_key = lambda x: x.r_type
 # str() Constant.value to ensure generated table name won't be unicode
 Constant._ms_table_key = lambda x: str(x.value)
+
+Variable._ms_may_be_processed = lambda x, terms, linkedterms: any(
+    t for t in terms if t in linkedterms.get(x, ()))
+Relation._ms_may_be_processed = lambda x, terms, linkedterms: all(
+    getattr(hs, 'variable', hs) in terms for hs in x.get_variable_parts())
 
 def ms_scope(term):
     rel = None
@@ -411,7 +416,8 @@ class PartPlanInformation(object):
                 for const in vconsts:
                     self._set_source_for_term(source, const)
             elif not self._sourcesterms:
-                self._set_source_for_term(source, const)
+                for const in vconsts:
+                    self._set_source_for_term(source, const)
             elif source in self._sourcesterms:
                 source_scopes = frozenset(ms_scope(t) for t in self._sourcesterms[source])
                 for const in vconsts:
@@ -419,9 +425,9 @@ class PartPlanInformation(object):
                         self._set_source_for_term(source, const)
                         # if system source is used, add every rewritten constant
                         # to its supported terms even when associated entity
-                        # doesn't actually come from it so we get a changes
-                        # that allequals will return True as expected when
-                        # computing needsplit
+                        # doesn't actually come from it so we get a changes that
+                        # allequals will return True as expected when computing
+                        # needsplit
                         # check const is used in a relation restriction
                         if const.relation() and self.system_source in sourcesterms:
                             self._set_source_for_term(self.system_source, const)
@@ -432,14 +438,16 @@ class PartPlanInformation(object):
             # process non final relations only
             # note: don't try to get schema for 'is' relation (not available
             # during bootstrap)
-            if not rel.is_types_restriction() and not rschema(rel.r_type).final:
+            if not (rel.is_types_restriction() or rschema(rel.r_type).final):
                 # nothing to do if relation is not supported by multiple sources
                 # or if some source has it listed in its cross_relations
                 # attribute
                 #
                 # XXX code below don't deal if some source allow relation
                 #     crossing but not another one
-                relsources = repo.rel_type_sources(rel.r_type)
+                relsources = [s for s in repo.rel_type_sources(rel.r_type)
+                               if s is self.system_source
+                               or s in self._sourcesterms]
                 if len(relsources) < 2:
                     # filter out sources being there because they have this
                     # relation in their dont_cross_relations attribute
@@ -478,6 +486,7 @@ class PartPlanInformation(object):
                     # not supported by the source, so we can stop here
                     continue
                 self._sourcesterms.setdefault(ssource, {})[rel] = set(self._solindices)
+                solindices = None
                 for term in crossvars:
                     if len(termssources[term]) == 1 and iter(termssources[term]).next()[0].uri == 'system':
                         for ov in crossvars:
@@ -485,8 +494,14 @@ class PartPlanInformation(object):
                                 ssset = frozenset((ssource,))
                                 self._remove_sources(ov, termssources[ov] - ssset)
                         break
+                    if solindices is None:
+                        solindices = set(sol for s, sol in termssources[term]
+                                         if s is source)
+                    else:
+                        solindices &= set(sol for s, sol in termssources[term]
+                                          if s is source)
                 else:
-                    self._sourcesterms.setdefault(source, {})[rel] = set(self._solindices)
+                    self._sourcesterms.setdefault(source, {})[rel] = solindices
 
     def _remove_invalid_sources(self, termssources):
         """removes invalid sources from `sourcesterms` member according to
@@ -799,10 +814,13 @@ class PartPlanInformation(object):
                                     rhsvar = rhs.variable
                                 except AttributeError:
                                     rhsvar = rhs
-                                if lhsvar in terms and not rhsvar in terms:
-                                    needsel.add(lhsvar.name)
-                                elif rhsvar in terms and not lhsvar in terms:
-                                    needsel.add(rhsvar.name)
+                                try:
+                                    if lhsvar in terms and not rhsvar in terms:
+                                        needsel.add(lhsvar.name)
+                                    elif rhsvar in terms and not lhsvar in terms:
+                                        needsel.add(rhsvar.name)
+                                except AttributeError:
+                                    continue # not an attribute, no selection needed
                 if final and source.uri != 'system':
                     # check rewritten constants
                     for vconsts in select.stinfo['rewritten'].itervalues():
@@ -937,13 +955,14 @@ class PartPlanInformation(object):
                 exclude[vars[1]] = vars[0]
             except IndexError:
                 pass
-        accept_term = lambda x: (not any(s for s in sources if not x in sourcesterms.get(s, ()))
-                                 and any(t for t in terms if t in linkedterms.get(x, ()))
+        accept_term = lambda x: (not any(s for s in sources
+                                         if not x in sourcesterms.get(s, ()))
+                                 and x._ms_may_be_processed(terms, linkedterms)
                                  and not exclude.get(x) in terms)
         if isinstance(term, Relation) and term in cross_rels:
             cross_terms = cross_rels.pop(term)
             base_accept_term = accept_term
-            accept_term = lambda x: (base_accept_term(x) or x in cross_terms)
+            accept_term = lambda x: (accept_term(x) or x in cross_terms)
             for refed in cross_terms:
                 if not refed in candidates:
                     terms.append(refed)
@@ -954,7 +973,11 @@ class PartPlanInformation(object):
             modified = False
             for term in candidates[:]:
                 if isinstance(term, Constant):
-                    if sorted(set(x[0] for x in self._term_sources(term))) != sources:
+                    termsources = set(x[0] for x in self._term_sources(term))
+                    # ensure system source is there for constant
+                    if self.system_source in sources:
+                        termsources.add(self.system_source)
+                    if sorted(termsources) != sources:
                         continue
                     terms.append(term)
                     candidates.remove(term)
@@ -1076,14 +1099,14 @@ class MSPlanner(SSPlanner):
 
         the rqlst should not be tagged at this point
         """
-        if server.DEBUG & server.DBG_MS:
-            print '-'*80
-            print 'PLANNING', rqlst
         # preprocess deals with security insertion and returns a new syntax tree
         # which have to be executed to fulfill the query: according
         # to permissions for variable's type, different rql queries may have to
         # be executed
         plan.preprocess(rqlst)
+        if server.DEBUG & server.DBG_MS:
+            print '-'*80
+            print 'PLANNING', rqlst
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
         steps = self._union_plan(plan, ppis)
@@ -1213,11 +1236,16 @@ class MSPlanner(SSPlanner):
                     sources, terms, scope, solindices, needsel, final)
                 if final:
                     solsinputmaps = ppi.merge_input_maps(solindices)
+                    if len(solsinputmaps) > 1:
+                        refrqlst = minrqlst
                     for solindices, inputmap in solsinputmaps:
                         if inputmap is None:
                             inputmap = subinputmap
                         else:
                             inputmap.update(subinputmap)
+                        if len(solsinputmaps) > 1:
+                            minrqlst = refrqlst.copy()
+                            sources = sources[:]
                         if inputmap and len(sources) > 1:
                             sources.remove(ppi.system_source)
                             steps.append(ppi.build_final_part(minrqlst, solindices, None,
@@ -1330,6 +1358,12 @@ class TermsFiltererVisitor(object):
                                                orderby.append)
                 if orderby:
                     newroot.set_orderby(orderby)
+            elif rqlst.orderby:
+                for sortterm in rqlst.orderby:
+                    if any(f for f in sortterm.iget_nodes(Function) if f.name == 'FTIRANK'):
+                        newnode, oldnode = sortterm.accept(self, newroot, terms)
+                        if newnode is not None:
+                            newroot.add_sort_term(newnode)
             self.process_selection(newroot, terms, rqlst)
         elif not newroot.where:
             # no restrictions have been copied, just select terms and add
@@ -1423,8 +1457,8 @@ class TermsFiltererVisitor(object):
         if not node.is_types_restriction():
             if node in self.skip and self.solindices.issubset(self.skip[node]):
                 if not self.schema.rschema(node.r_type).final:
-                    # can't really skip the relation if one variable is selected and only
-                    # referenced by this relation
+                    # can't really skip the relation if one variable is selected
+                    # and only referenced by this relation
                     for vref in node.iget_nodes(VariableRef):
                         stinfo = vref.variable.stinfo
                         if stinfo['selected'] and len(stinfo['relations']) == 1:
@@ -1435,13 +1469,14 @@ class TermsFiltererVisitor(object):
                     return None, node
             if not self._relation_supported(node):
                 raise UnsupportedBranch()
-        # don't copy type restriction unless this is the only relation for the
-        # rhs variable, else they'll be reinserted later as needed (else we may
-        # copy a type restriction while the variable is not actually used)
-        elif not any(self._relation_supported(rel)
-                     for rel in node.children[0].variable.stinfo['relations']):
-            rel, node = self.visit_default(node, newroot, terms)
-            return rel, node
+        # don't copy type restriction unless this is the only supported relation
+        # for the lhs variable, else they'll be reinserted later as needed (in
+        # other cases we may copy a type restriction while the variable is not
+        # actually used)
+        elif not (node.neged(strict=True) or
+                  any(self._relation_supported(rel)
+                      for rel in node.children[0].variable.stinfo['relations'])):
+            return self.visit_default(node, newroot, terms)
         else:
             raise UnsupportedBranch()
         rschema = self.schema.rschema(node.r_type)
@@ -1530,12 +1565,38 @@ class TermsFiltererVisitor(object):
             copy.operator = '='
         return copy, node
 
+    def visit_function(self, node, newroot, terms):
+        if node.name == 'FTIRANK':
+            # FTIRANK is somewhat special... Rank function should be included in
+            # the same query has the has_text relation, potentially added to
+            # selection for latter usage
+            if not self.hasaggrstep and self.final and node not in self.skip:
+                return self.visit_default(node, newroot, terms)
+            elif any(s for s in self.sources if s.uri != 'system'):
+                return None, node
+            # p = node.parent
+            # while p is not None and not isinstance(p, SortTerm):
+            #     p = p.parent
+            # if isinstance(p, SortTerm):
+            if not self.hasaggrstep and self.final and node in self.skip:
+                return Constant(self.skip[node], 'Int'), node
+            # XXX only if not yet selected
+            newroot.append_selected(node.copy(newroot))
+            self.skip[node] = len(newroot.selection)
+            return None, node
+        return self.visit_default(node, newroot, terms)
+
     def visit_default(self, node, newroot, terms):
         subparts, node = self._visit_children(node, newroot, terms)
         return copy_node(newroot, node, subparts), node
 
-    visit_mathexpression = visit_constant = visit_function = visit_default
-    visit_sort = visit_sortterm = visit_default
+    visit_mathexpression = visit_constant = visit_default
+
+    def visit_sortterm(self, node, newroot, terms):
+        subparts, node = self._visit_children(node, newroot, terms)
+        if not subparts:
+            return None, node
+        return copy_node(newroot, node, subparts), node
 
     def _visit_children(self, node, newroot, terms):
         subparts = []
@@ -1574,6 +1635,8 @@ class TermsFiltererVisitor(object):
                 for vref in supportedvars:
                     if not vref in newroot.get_selected_variables():
                         newroot.append_selected(VariableRef(newroot.get_variable(vref.name)))
+            elif term in self.terms:
+                newroot.append_selected(term.copy(newroot))
 
     def add_necessary_selection(self, newroot, terms):
         selected = tuple(newroot.get_selected_variables())

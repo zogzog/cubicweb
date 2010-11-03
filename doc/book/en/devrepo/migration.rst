@@ -91,6 +91,24 @@ In the `repository` scripts, the following identifiers are also defined:
 * `session`, repository session object
 
 
+New cube dependencies
+---------------------
+
+If your code depends on some new cubes, you have to add them in a migration
+script by using:
+
+* `add_cube(cube, update_database=True)`, add a cube.
+* `add_cubes(cubes, update_database=True)`, add a list of cubes.
+
+The `update_database` parameter is telling if the database schema
+should be updated or if only the relevant persistent property should be
+inserted (for the case where a new cube has been extracted from an
+existing one, so the new cube schema is actually already in there).
+
+If some of the added cubes are already used by an instance, they'll simply be
+silently skipped.
+
+
 Schema migration
 ----------------
 The following functions for schema migration are available in `repository`
@@ -181,6 +199,40 @@ scripts:
 * `option_added(oldname, newname)`, indicates that an option has been added.
 
 * `option_removed(oldname, newname)`, indicates that an option has been deleted.
+
+The `config` variable is an object which can be used to access the
+configuration values, for reading and updating, with a dictionary-like
+syntax. 
+
+Example 1: migration script changing the variable 'sender-addr' in
+all-in-one.conf. The script also checks that in that the instance is
+configured with a known value for that variable, and only updates the
+value in that case.
+
+.. sourcecode:: python
+
+ wrong_addr = 'cubicweb@loiglab.fr' # known wrong address
+ fixed_addr = 'cubicweb@logilab.fr'
+ configured_addr = config.get('sender-addr')
+ # check that the address has not been hand fixed by a sysadmin
+ if configured_addr == wrong_addr: 
+     config['sender-addr'] = fixed-addr
+     config.save()
+
+Example 2: checking the value of the database backend driver, which
+can be useful in case you need to issue backend-dependent raw SQL
+queries in a migration script.
+
+.. sourcecode:: python
+
+ dbdriver  = config.sources()['system']['db-driver']
+ if dbdriver == "sqlserver2005":
+     # this is now correctly handled by CW :-)
+     sql('ALTER TABLE cw_Xxxx ALTER COLUMN cw_name varchar(64) NOT NULL;')
+     commit()
+ else: # postgresql
+     sync_schema_props_perms(ertype=('Xxxx', 'name', 'String'),
+     syncperms=False)
 
 
 Others migration functions

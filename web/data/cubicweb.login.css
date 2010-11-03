@@ -11,7 +11,7 @@ div#popupLoginBox {
   right: 0px;
   width: 26em;
   padding: 0px 1px 1px;
-  background: #E4EAD8;
+  background: %(listingBorderColor)s; 
 }
 
 div#popupLoginBox label{
@@ -30,13 +30,13 @@ div#loginBox {
   margin-left: -14em;
   width: 28em;
   background: #fff;
-  border: 2px solid #cfceb7;
+  border: 2px solid %(actionBoxTitleBgColor)s;
   padding-bottom: 0.5em;
   text-align: center;
 }
 
 div#loginBox h1 {
-  color: #FF7700;
+  color: %(aColor)s;
   font-size: 140%;
 }
 
@@ -46,7 +46,7 @@ div#loginTitle {
   font-size: 140%;
   text-align: center;
   padding: 3px 0px;
-  background: #ff7700 url("banner.png") left top repeat-x;
+  background: %(headerBgColor)s url("banner.png") repeat-x top left;
 }
 
 div#loginBox div#loginContent form {
@@ -80,7 +80,7 @@ div#loginBox div#loginContent form {
 
 .loginButton {
   border: 1px solid #edecd2;
-  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
+  border-color: #edecd2 %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s  #edecd2;
   margin: 2px 0px 0px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
 }

@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.schema
-
-"""
+"""unit tests for module cubicweb.schema"""
 
 import sys
 from os.path import join, isabs, basename, dirname
@@ -144,13 +142,13 @@ class CubicWebSchemaTC(TestCase):
     def test_erqlexpression(self):
         self.assertRaises(RQLSyntaxError, ERQLExpression, '1')
         expr = ERQLExpression('X travaille S, S owned_by U')
-        self.assertEquals(str(expr), 'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
+        self.assertEqual(str(expr), 'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
 
     def test_rrqlexpression(self):
         self.assertRaises(Exception, RRQLExpression, '1')
         self.assertRaises(RQLSyntaxError, RRQLExpression, 'O X Y')
         expr = RRQLExpression('U has_update_permission O')
-        self.assertEquals(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
+        self.assertEqual(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
 loader = CubicWebSchemaLoader()
 config = TestConfiguration('data')
@@ -160,37 +158,40 @@ class SchemaReaderClassTest(TestCase):
 
     def test_order_eschemas(self):
         schema = loader.load(config)
-        self.assertEquals(order_eschemas([schema['Note'], schema['SubNote']]),
+        self.assertEqual(order_eschemas([schema['Note'], schema['SubNote']]),
                                          [schema['Note'], schema['SubNote']])
-        self.assertEquals(order_eschemas([schema['SubNote'], schema['Note']]),
+        self.assertEqual(order_eschemas([schema['SubNote'], schema['Note']]),
                                          [schema['Note'], schema['SubNote']])
 
     def test_knownValues_load_schema(self):
         schema = loader.load(config)
         self.assert_(isinstance(schema, CubicWebSchema))
-        self.assertEquals(schema.name, 'data')
+        self.assertEqual(schema.name, 'data')
         entities = [str(e) for e in schema.entities()]
         entities.sort()
         expected_entities = ['BaseTransition', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
-                             'CWPermission', 'CWProperty', 'CWRType', 'CWUser',
-                             'ExternalUri', 'File', 'Float', 'Image', 'Int', 'Interval', 'Note',
+                             'CWPermission', 'CWProperty', 'CWRType',
+                             'CWUniqueTogetherConstraint', 'CWUser',
+                             'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
                              'Societe', 'State', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
-        self.assertListEquals(entities, sorted(expected_entities))
+        self.assertListEqual(entities, sorted(expected_entities))
         relations = [str(r) for r in schema.relations()]
         relations.sort()
         expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
-                              'composite', 'condition', 'connait', 'constrained_by', 'content',
-                              'content_format', 'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
+                              'composite', 'condition', 'connait',
+                              'constrained_by', 'constraint_of',
+                              'content', 'content_format',
+                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
@@ -214,7 +215,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
-                              'read_permission', 'relation_type', 'require_group',
+                              'read_permission', 'relation_type', 'relations', 'require_group',
 
                               'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
@@ -226,11 +227,11 @@ class SchemaReaderClassTest(TestCase):
 
                               'wf_info_for', 'wikiid', 'workflow_of']
 
-        self.assertListEquals(relations, expected_relations)
+        self.assertListEqual(relations, expected_relations)
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
-        self.assertListEquals(rels, ['created_by', 'creation_date', 'custom_workflow', 'cwuri', 'eid',
+        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow', 'cwuri', 'eid',
                                      'evaluee', 'firstname', 'has_text', 'identity',
                                      'in_group', 'in_state', 'is',
                                      'is_instance_of', 'last_login_time',
@@ -238,11 +239,11 @@ class SchemaReaderClassTest(TestCase):
                                      'primary_email', 'surname', 'upassword',
                                      'use_email'])
         rels = sorted(r.type for r in eschema.object_relations())
-        self.assertListEquals(rels, ['bookmarked_by', 'created_by', 'for_user',
+        self.assertListEqual(rels, ['bookmarked_by', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
         rschema = schema.rschema('relation_type')
         properties = rschema.rdef('CWAttribute', 'CWRType')
-        self.assertEquals(properties.cardinality, '1*')
+        self.assertEqual(properties.cardinality, '1*')
         constraints = properties.constraints
         self.failUnlessEqual(len(constraints), 1, constraints)
         constraint = constraints[0]
@@ -257,13 +258,13 @@ class SchemaReaderClassTest(TestCase):
     def test_permission_settings(self):
         schema = loader.load(config)
         aschema = schema['TrInfo'].rdef('comment')
-        self.assertEquals(aschema.get_groups('read'),
+        self.assertEqual(aschema.get_groups('read'),
                           set(('managers', 'users', 'guests')))
-        self.assertEquals(aschema.get_rqlexprs('read'),
+        self.assertEqual(aschema.get_rqlexprs('read'),
                           ())
-        self.assertEquals(aschema.get_groups('update'),
+        self.assertEqual(aschema.get_groups('update'),
                           set(('managers',)))
-        self.assertEquals([x.expression for x in aschema.get_rqlexprs('update')],
+        self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
                           ['U has_update_permission X'])
 
 class BadSchemaRQLExprTC(TestCase):
@@ -278,7 +279,7 @@ class BadSchemaRQLExprTC(TestCase):
         self.loader.handle_file(join(DATADIR, schemafile))
         ex = self.assertRaises(BadSchemaDefinition,
                                self.loader._build_schema, 'toto', False)
-        self.assertEquals(str(ex), msg)
+        self.assertEqual(str(ex), msg)
 
     def test_rrqlexpr_on_etype(self):
         self._test('rrqlexpr_on_eetype.py',
@@ -300,12 +301,12 @@ class BadSchemaRQLExprTC(TestCase):
 class NormalizeExpressionTC(TestCase):
 
     def test(self):
-        self.assertEquals(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
+        self.assertEqual(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
                                                'X bla Y, Y blur Z, Z zigoulou X')
 
 class RQLExpressionTC(TestCase):
     def test_comparison(self):
-        self.assertEquals(ERQLExpression('X is CWUser', 'X', 0),
+        self.assertEqual(ERQLExpression('X is CWUser', 'X', 0),
                           ERQLExpression('X is CWUser', 'X', 0))
         self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0),
                              ERQLExpression('X is CWGroup', 'X', 0))
@@ -313,7 +314,7 @@ class RQLExpressionTC(TestCase):
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
         mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
-        self.assertEquals(mainvars, 'O')
+        self.assertEqual(mainvars, 'O')
 
 
 if __name__ == '__main__':

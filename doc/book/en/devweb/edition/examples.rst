@@ -18,7 +18,7 @@ is to select reviewers for the submitted talk.
  from cubicweb.web import formfields as ff, formwidgets as fwdgs
  class SendToReviewerStatusChangeView(ChangeStateFormView):
      __select__ = (ChangeStateFormView.__select__ &
-                   implements('Talk') &
+                   is_instance('Talk') &
                    rql_condition('X in_state S, S name "submitted"'))
 
      def get_form(self, entity, transition, **kwargs):
@@ -126,7 +126,7 @@ To see this form, we still have to wrap it in a view. This is pretty simple:
 
     class MassMailingFormView(form.FormViewMixIn, EntityView):
 	__regid__ = 'massmailing'
-	__select__ = implements(IEmailable) & authenticated_user()
+	__select__ = is_instance(IEmailable) & authenticated_user()
 
 	def call(self):
 	    form = self._cw.vreg['forms'].select('massmailing', self._cw,

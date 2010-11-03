@@ -15,9 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract component class and base components definition for CubicWeb web client
-
+"""abstract component class and base components definition for CubicWeb web
+client
 """
+
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -25,7 +26,8 @@ from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import role
-from cubicweb.web import json
+from cubicweb.utils import json_dumps
+from cubicweb.uilib import js
 from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
@@ -61,9 +63,15 @@ class EntityVComponent(Component):
     context = 'navcontentbottom'
 
     def call(self, view=None):
-        return self.cell_call(0, 0, view=view)
+        if self.cw_rset is None:
+            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+        else:
+            self.cell_call(0, 0, view=view)
 
     def cell_call(self, row, col, view=None):
+        self.entity_call(self.cw_rset.get_entity(row, col), view=view)
+
+    def entity_call(self, entity, view=None):
         raise NotImplementedError()
 
 
@@ -126,22 +134,30 @@ class NavigationComponent(Component):
         if self.stop_param in params:
             del params[self.stop_param]
 
-    def page_url(self, path, params, start, stop):
+    def page_url(self, path, params, start=None, stop=None):
         params = dict(params)
-        params.update({self.start_param : start,
-                       self.stop_param : stop,})
+        if start is not None:
+            params[self.start_param] = start
+        if stop is not None:
+            params[self.stop_param] = stop
         view = self.cw_extra_kwargs.get('view')
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
         elif path == 'json':
-            rql = params.pop('rql', self.cw_rset.printable_rql())
-            # latest 'true' used for 'swap' mode
-            url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
-                json.dumps(params.get('divid', 'pageContent')),
-                json.dumps(rql), json.dumps(params.pop('vid', None)), json.dumps(params))
+            url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
+        # XXX hack to avoid opening a new page containing the evaluation of the
+        # js expression on ajax call
+        if url.startswith('javascript:'):
+            url += '; noop();'
         return url
+
+    def ajax_page_url(self, **params):
+        divid = params.setdefault('divid', 'pageContent')
+        params['rql'] = self.cw_rset.printable_rql()
+        return "javascript: $(%s).loadxhtml('json', %s, 'get', 'swap')" % (
+            json_dumps('#'+divid), js.ajaxFuncArgs('view', params))
 
     def page_link(self, path, params, start, stop, content):
         url = xml_escape(self.page_url(path, params, start, stop))

@@ -43,7 +43,7 @@ class Function:
 class MakeDescriptionTC(TestCase):
     def test_known_values(self):
         solution = {'A': 'Int', 'B': 'CWUser'}
-        self.assertEquals(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
+        self.assertEqual(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
                           ['Int','CWUser'])
 
 class InternalSessionTC(CubicWebTC):

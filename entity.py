@@ -19,11 +19,12 @@
 
 __docformat__ = "restructuredtext en"
 
+from copy import copy
 from warnings import warn
 
 from logilab.common import interface
-from logilab.common.compat import all
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
@@ -50,8 +51,20 @@ def greater_card(rschema, subjtypes, objtypes, index):
                 return card
     return '1'
 
+def can_use_rest_path(value):
+    """return True if value can be used at the end of a Rest URL path"""
+    if value is None:
+        return False
+    value = unicode(value)
+    # the check for ?, /, & are to prevent problems when running
+    # behind Apache mod_proxy
+    if value == u'' or u'?' in value or u'/' in value or u'&' in value:
+        return False
+    return True
 
-class Entity(AppObject, dict):
+
+
+class Entity(AppObject):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
 
@@ -106,10 +119,10 @@ class Entity(AppObject, dict):
                     if not interface.implements(cls, iface):
                         interface.extend(cls, iface)
             if role == 'subject':
-                setattr(cls, rschema.type, SubjectRelation(rschema))
+                attr = rschema.type
             else:
                 attr = 'reverse_%s' % rschema.type
-                setattr(cls, attr, ObjectRelation(rschema))
+            setattr(cls, attr, Relation(rschema, role))
         if mixins:
             # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
             # due to class dumping, cls is the generated top level class with actual
@@ -123,6 +136,24 @@ class Entity(AppObject, dict):
             mixins += cls.__bases__[1:]
             cls.__bases__ = tuple(mixins)
             cls.info('plugged %s mixins on %s', mixins, cls)
+
+    fetch_attrs = ('modification_date',)
+    @classmethod
+    def fetch_order(cls, attr, var):
+        """class method used to control sort order when multiple entities of
+        this type are fetched
+        """
+        return cls.fetch_unrelated_order(attr, var)
+
+    @classmethod
+    def fetch_unrelated_order(cls, attr, var):
+        """class method used to control sort order when multiple entities of
+        this type are fetched to use in edition (eg propose them to create a
+        new relation on an edited entity).
+        """
+        if attr == 'modification_date':
+            return '%s DESC' % var
+        return None
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
@@ -192,9 +223,10 @@ class Entity(AppObject, dict):
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
                                             user, ordermethod, visited=visited)
-            orderterm = getattr(cls, ordermethod)(attr, var)
-            if orderterm:
-                orderby.append(orderterm)
+            if ordermethod is not None:
+                orderterm = getattr(cls, ordermethod)(attr, var)
+                if orderterm:
+                    orderby.append(orderterm)
         return selection, orderby, restrictions
 
     @classmethod
@@ -269,17 +301,17 @@ class Entity(AppObject, dict):
 
     def __init__(self, req, rset=None, row=None, col=0):
         AppObject.__init__(self, req, rset=rset, row=row, col=col)
-        dict.__init__(self)
-        self._related_cache = {}
+        self._cw_related_cache = {}
         if rset is not None:
             self.eid = rset[row][col]
         else:
             self.eid = None
-        self._is_saved = True
+        self._cw_is_saved = True
+        self.cw_attr_cache = {}
 
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
-            self.e_schema, self.eid, self.keys(), id(self))
+            self.e_schema, self.eid, self.cw_attr_cache.keys(), id(self))
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -298,12 +330,18 @@ class Entity(AppObject, dict):
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
+    def __contains__(self, key):
+        return key in self.cw_attr_cache
+
+    def __iter__(self):
+        return iter(self.cw_attr_cache)
+
     def __getitem__(self, key):
         if key == 'eid':
             warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
                  DeprecationWarning, stacklevel=2)
             return self.eid
-        return super(Entity, self).__getitem__(key)
+        return self.cw_attr_cache[key]
 
     def __setitem__(self, attr, value):
         """override __setitem__ to update self.edited_attributes.
@@ -321,13 +359,13 @@ class Entity(AppObject, dict):
                  DeprecationWarning, stacklevel=2)
             self.eid = value
         else:
-            super(Entity, self).__setitem__(attr, value)
+            self.cw_attr_cache[attr] = value
             # don't add attribute into skip_security if already in edited
             # attributes, else we may accidentaly skip a desired security check
             if hasattr(self, 'edited_attributes') and \
                    attr not in self.edited_attributes:
                 self.edited_attributes.add(attr)
-                self.skip_security_attributes.add(attr)
+                self._cw_skip_security_attributes.add(attr)
 
     def __delitem__(self, attr):
         """override __delitem__ to update self.edited_attributes on cleanup of
@@ -345,28 +383,35 @@ class Entity(AppObject, dict):
                 del self.entity['load_left']
 
         """
-        super(Entity, self).__delitem__(attr)
+        del self.cw_attr_cache[attr]
         if hasattr(self, 'edited_attributes'):
             self.edited_attributes.remove(attr)
 
+    def clear(self):
+        self.cw_attr_cache.clear()
+
+    def get(self, key, default=None):
+        return self.cw_attr_cache.get(key, default)
+
     def setdefault(self, attr, default):
         """override setdefault to update self.edited_attributes"""
-        super(Entity, self).setdefault(attr, default)
+        value = self.cw_attr_cache.setdefault(attr, default)
         # don't add attribute into skip_security if already in edited
         # attributes, else we may accidentaly skip a desired security check
         if hasattr(self, 'edited_attributes') and \
                attr not in self.edited_attributes:
             self.edited_attributes.add(attr)
-            self.skip_security_attributes.add(attr)
+            self._cw_skip_security_attributes.add(attr)
+        return value
 
     def pop(self, attr, default=_marker):
         """override pop to update self.edited_attributes on cleanup of
         undesired changes introduced in the entity's dict. See `__delitem__`
         """
         if default is _marker:
-            value = super(Entity, self).pop(attr)
+            value = self.cw_attr_cache.pop(attr)
         else:
-            value = super(Entity, self).pop(attr, default)
+            value = self.cw_attr_cache.pop(attr, default)
         if hasattr(self, 'edited_attributes') and attr in self.edited_attributes:
             self.edited_attributes.remove(attr)
         return value
@@ -377,27 +422,24 @@ class Entity(AppObject, dict):
         for attr, value in values.items():
             self[attr] = value # use self.__setitem__ implementation
 
-    def rql_set_value(self, attr, value):
-        """call by rql execution plan when some attribute is modified
+    def cw_adapt_to(self, interface):
+        """return an adapter the entity to the given interface name.
 
-        don't use dict api in such case since we don't want attribute to be
-        added to skip_security_attributes.
+        return None if it can not be adapted.
         """
-        super(Entity, self).__setitem__(attr, value)
+        try:
+            cache = self._cw_adapters_cache
+        except AttributeError:
+            self._cw_adapters_cache = cache = {}
+        try:
+            return cache[interface]
+        except KeyError:
+            adapter = self._cw.vreg['adapters'].select_or_none(
+                interface, self._cw, entity=self)
+            cache[interface] = adapter
+            return adapter
 
-    def pre_add_hook(self):
-        """hook called by the repository before doing anything to add the entity
-        (before_add entity hooks have not been called yet). This give the
-        occasion to do weird stuff such as autocast (File -> Image for instance).
-
-        This method must return the actual entity to be added.
-        """
-        return self
-
-    def set_eid(self, eid):
-        self.eid = eid
-
-    def has_eid(self):
+    def has_eid(self): # XXX cw_has_eid
         """return True if the entity has an attributed eid (False
         meaning that the entity has to be created
         """
@@ -407,38 +449,38 @@ class Entity(AppObject, dict):
         except (ValueError, TypeError):
             return False
 
-    def is_saved(self):
+    def cw_is_saved(self):
         """during entity creation, there is some time during which the entity
-        has an eid attributed though it's not saved (eg during before_add_entity
-        hooks). You can use this method to ensure the entity has an eid *and* is
-        saved in its source.
+        has an eid attributed though it's not saved (eg during
+        'before_add_entity' hooks). You can use this method to ensure the entity
+        has an eid *and* is saved in its source.
         """
-        return self.has_eid() and self._is_saved
+        return self.has_eid() and self._cw_is_saved
 
     @cached
-    def metainformation(self):
+    def cw_metainformation(self):
         res = dict(zip(('type', 'source', 'extid'), self._cw.describe(self.eid)))
         res['source'] = self._cw.source_defs()[res['source']]
         return res
 
-    def clear_local_perm_cache(self, action):
-        for rqlexpr in self.e_schema.get_rqlexprs(action):
-            self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
-
-    def check_perm(self, action):
+    def cw_check_perm(self, action):
         self.e_schema.check_perm(self._cw, action, eid=self.eid)
 
-    def has_perm(self, action):
+    def cw_has_perm(self, action):
         return self.e_schema.has_perm(self._cw, action, eid=self.eid)
 
-    def view(self, __vid, __registry='views', w=None, **kwargs):
+    def view(self, __vid, __registry='views', w=None, initargs=None, **kwargs): # XXX cw_view
         """shortcut to apply a view on this entity"""
+        if initargs is None:
+            initargs = kwargs
+        else:
+            initargs.update(kwargs)
         view = self._cw.vreg[__registry].select(__vid, self._cw, rset=self.cw_rset,
                                                 row=self.cw_row, col=self.cw_col,
-                                                **kwargs)
+                                                **initargs)
         return view.render(row=self.cw_row, col=self.cw_col, w=w, **kwargs)
 
-    def absolute_url(self, *args, **kwargs):
+    def absolute_url(self, *args, **kwargs): # XXX cw_url
         """return an absolute url to view this entity"""
         # use *args since we don't want first argument to be "anonymous" to
         # avoid potential clash with kwargs
@@ -450,11 +492,16 @@ class Entity(AppObject, dict):
         # in linksearch mode, we don't want external urls else selecting
         # the object for use in the relation is tricky
         # XXX search_state is web specific
-        if getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            kwargs['base_url'] = self.metainformation()['source'].get('base-url')
+        use_ext_id = False
+        if 'base_url' not in kwargs and \
+               getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
+            baseurl = self.cw_metainformation()['source'].get('base-url')
+            if baseurl:
+                kwargs['base_url'] = baseurl
+                use_ext_id = True
         if method in (None, 'view'):
             try:
-                kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+                kwargs['_restpath'] = self.rest_path(use_ext_id)
             except TypeError:
                 warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
                      'please update' % self.__regid__, DeprecationWarning)
@@ -463,14 +510,14 @@ class Entity(AppObject, dict):
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self._cw.build_url(method, **kwargs)
 
-    def rest_path(self, use_ext_eid=False):
+    def rest_path(self, use_ext_eid=False): # XXX cw_rest_path
         """returns a REST-like (relative) path for this entity"""
         mainattr, needcheck = self._rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
         if mainattr != 'eid':
             value = getattr(self, mainattr)
-            if value is None or unicode(value) == u'':
+            if not can_use_rest_path(value):
                 mainattr = 'eid'
                 path += '/eid'
             elif needcheck:
@@ -486,12 +533,12 @@ class Entity(AppObject, dict):
                     path += '/eid'
         if mainattr == 'eid':
             if use_ext_eid:
-                value = self.metainformation()['extid']
+                value = self.cw_metainformation()['extid']
             else:
                 value = self.eid
         return '%s/%s' % (path, self._cw.url_quote(value))
 
-    def attr_metadata(self, attr, metadata):
+    def cw_attr_metadata(self, attr, metadata):
         """return a metadata for an attribute (None if unspecified)"""
         value = getattr(self, '%s_%s' % (attr, metadata), None)
         if value is None and metadata == 'encoding':
@@ -499,7 +546,7 @@ class Entity(AppObject, dict):
         return value
 
     def printable_value(self, attr, value=_marker, attrtype=None,
-                        format='text/html', displaytime=True):
+                        format='text/html', displaytime=True): # XXX cw_printable_value
         """return a displayable value (i.e. unicode string) which may contains
         html tags
         """
@@ -518,16 +565,16 @@ class Entity(AppObject, dict):
             # description...
             if props.internationalizable:
                 value = self._cw._(value)
-            attrformat = self.attr_metadata(attr, 'format')
+            attrformat = self.cw_attr_metadata(attr, 'format')
             if attrformat:
-                return self.mtc_transform(value, attrformat, format,
-                                          self._cw.encoding)
+                return self._cw_mtc_transform(value, attrformat, format,
+                                              self._cw.encoding)
         elif attrtype == 'Bytes':
-            attrformat = self.attr_metadata(attr, 'format')
+            attrformat = self.cw_attr_metadata(attr, 'format')
             if attrformat:
-                encoding = self.attr_metadata(attr, 'encoding')
-                return self.mtc_transform(value.getvalue(), attrformat, format,
-                                          encoding)
+                encoding = self.cw_attr_metadata(attr, 'encoding')
+                return self._cw_mtc_transform(value.getvalue(), attrformat, format,
+                                              encoding)
             return u''
         value = printable_value(self._cw, attrtype, value, props,
                                 displaytime=displaytime)
@@ -535,8 +582,8 @@ class Entity(AppObject, dict):
             value = xml_escape(value)
         return value
 
-    def mtc_transform(self, data, format, target_format, encoding,
-                      _engine=ENGINE):
+    def _cw_mtc_transform(self, data, format, target_format, encoding,
+                          _engine=ENGINE):
         trdata = TransformData(data, format, encoding, appobject=self)
         data = _engine.convert(trdata, target_format).decode()
         if format == 'text/html':
@@ -545,7 +592,13 @@ class Entity(AppObject, dict):
 
     # entity cloning ##########################################################
 
-    def copy_relations(self, ceid):
+    def cw_copy(self):
+        thecopy = copy(self)
+        thecopy.cw_attr_cache = copy(self.cw_attr_cache)
+        thecopy._cw_related_cache = {}
+        return thecopy
+
+    def copy_relations(self, ceid): # XXX cw_copy_relations
         """copy relations of the object with the given eid on this
         object (this method is called on the newly created copy, and
         ceid designates the original entity).
@@ -574,7 +627,7 @@ class Entity(AppObject, dict):
             rql = 'SET X %s V WHERE X eid %%(x)s, Y eid %%(y)s, Y %s V' % (
                 rschema.type, rschema.type)
             execute(rql, {'x': self.eid, 'y': ceid})
-            self.clear_related_cache(rschema.type, 'subject')
+            self.cw_clear_relation_cache(rschema.type, 'subject')
         for rschema in self.e_schema.object_relations():
             if rschema.meta:
                 continue
@@ -592,36 +645,32 @@ class Entity(AppObject, dict):
             rql = 'SET V %s X WHERE X eid %%(x)s, Y eid %%(y)s, V %s Y' % (
                 rschema.type, rschema.type)
             execute(rql, {'x': self.eid, 'y': ceid})
-            self.clear_related_cache(rschema.type, 'object')
+            self.cw_clear_relation_cache(rschema.type, 'object')
 
     # data fetching methods ###################################################
 
     @cached
-    def as_rset(self):
+    def as_rset(self): # XXX .cw_as_rset
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
                          {'x': self.eid}, [(self.__regid__,)])
         rset.req = self._cw
         return rset
 
-    def to_complete_relations(self):
+    def _cw_to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
         for rschema in self.e_schema.subject_relations():
             if rschema.final:
                 continue
             targets = rschema.objects(self.e_schema)
-            if len(targets) > 1:
-                # ambigous relations, the querier doesn't handle
-                # outer join correctly in this case
-                continue
             if rschema.inlined:
                 matching_groups = self._cw.user.matching_groups
-                rdef = rschema.rdef(self.e_schema, targets[0])
-                if matching_groups(rdef.get_groups('read')) and \
-                   all(matching_groups(e.get_groups('read')) for e in targets):
+                if all(matching_groups(e.get_groups('read')) and
+                       rschema.rdef(self.e_schema, e).get_groups('read')
+                       for e in targets):
                     yield rschema, 'subject'
 
-    def to_complete_attributes(self, skip_bytes=True, skip_pwd=True):
+    def _cw_to_complete_attributes(self, skip_bytes=True, skip_pwd=True):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             # skip binary data by default
             if skip_bytes and attrschema.type == 'Bytes':
@@ -638,7 +687,7 @@ class Entity(AppObject, dict):
             yield attr
 
     _cw_completed = False
-    def complete(self, attributes=None, skip_bytes=True, skip_pwd=True):
+    def complete(self, attributes=None, skip_bytes=True, skip_pwd=True): # XXX cw_complete
         """complete this entity by adding missing attributes (i.e. query the
         repository to fill the entity)
 
@@ -655,9 +704,9 @@ class Entity(AppObject, dict):
         V = varmaker.next()
         rql = ['WHERE %s eid %%(x)s' % V]
         selected = []
-        for attr in (attributes or self.to_complete_attributes(skip_bytes, skip_pwd)):
+        for attr in (attributes or self._cw_to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
-            if self.has_key(attr):
+            if self.cw_attr_cache.has_key(attr):
                 continue
             # case where attribute must be completed, but is not yet in entity
             var = varmaker.next()
@@ -665,28 +714,24 @@ class Entity(AppObject, dict):
             selected.append((attr, var))
         # +1 since this doen't include the main variable
         lastattr = len(selected) + 1
-        if attributes is None:
+        # don't fetch extra relation if attributes specified or of the entity is
+        # coming from an external source (may lead to error)
+        if attributes is None and self.cw_metainformation()['source']['uri'] == 'system':
             # fetch additional relations (restricted to 0..1 relations)
-            for rschema, role in self.to_complete_relations():
+            for rschema, role in self._cw_to_complete_relations():
                 rtype = rschema.type
-                if self.relation_cached(rtype, role):
+                if self.cw_relation_cached(rtype, role):
                     continue
+                # at this point we suppose that:
+                # * this is a inlined relation
+                # * entity (self) is the subject
+                # * user has read perm on the relation and on the target entity
+                assert rschema.inlined
+                assert role == 'subject'
                 var = varmaker.next()
-                targettype = rschema.targets(self.e_schema, role)[0]
-                rdef = rschema.role_rdef(self.e_schema, targettype, role)
-                card = rdef.role_cardinality(role)
-                assert card in '1?', '%s %s %s %s' % (self.e_schema, rtype,
-                                                      role, card)
-                if role == 'subject':
-                    if card == '1':
-                        rql.append('%s %s %s' % (V, rtype, var))
-                    else:
-                        rql.append('%s %s %s?' % (V, rtype, var))
-                else:
-                    if card == '1':
-                        rql.append('%s %s %s' % (var, rtype, V))
-                    else:
-                        rql.append('%s? %s %s' % (var, rtype, V))
+                # keep outer join anyway, we don't want .complete to crash on
+                # missing mandatory relation (see #1058267)
+                rql.append('%s %s %s?' % (V, rtype, var))
                 selected.append(((rtype, role), var))
         if selected:
             # select V, we need it as the left most selected variable
@@ -706,9 +751,9 @@ class Entity(AppObject, dict):
                     rrset.req = self._cw
                 else:
                     rrset = self._cw.eid_rset(value)
-                self.set_related_cache(rtype, role, rrset)
+                self.cw_set_relation_cache(rtype, role, rrset)
 
-    def get_value(self, name):
+    def cw_attr_value(self, name):
         """get value for the attribute relation <name>, query the repository
         to get the value if necessary.
 
@@ -716,9 +761,9 @@ class Entity(AppObject, dict):
         :param name: name of the attribute to get
         """
         try:
-            value = self[name]
+            value = self.cw_attr_cache[name]
         except KeyError:
-            if not self.is_saved():
+            if not self.cw_is_saved():
                 return None
             rql = "Any A WHERE X eid %%(x)s, X %s A" % name
             try:
@@ -740,7 +785,7 @@ class Entity(AppObject, dict):
                         self[name] = value = None
         return value
 
-    def related(self, rtype, role='subject', limit=None, entities=False):
+    def related(self, rtype, role='subject', limit=None, entities=False): # XXX .cw_related
         """returns a resultset of related entities
 
         :param role: is the role played by 'self' in the relation ('subject' or 'object')
@@ -748,19 +793,19 @@ class Entity(AppObject, dict):
         :param entities: if True, the entites are returned; if False, a result set is returned
         """
         try:
-            return self.related_cache(rtype, role, entities, limit)
+            return self._cw_relation_cache(rtype, role, entities, limit)
         except KeyError:
             pass
         if not self.has_eid():
             if entities:
                 return []
             return self.empty_rset()
-        rql = self.related_rql(rtype, role)
+        rql = self.cw_related_rql(rtype, role)
         rset = self._cw.execute(rql, {'x': self.eid})
-        self.set_related_cache(rtype, role, rset)
+        self.cw_set_relation_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
-    def related_rql(self, rtype, role='subject', targettypes=None):
+    def cw_related_rql(self, rtype, role='subject', targettypes=None):
         rschema = self._cw.vreg.schema[rtype]
         if role == 'subject':
             restriction = 'E eid %%(x)s, E %s X' % rtype
@@ -809,7 +854,7 @@ class Entity(AppObject, dict):
 
     # generic vocabulary methods ##############################################
 
-    def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
+    def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
@@ -871,12 +916,12 @@ class Entity(AppObject, dict):
         return rql, args
 
     def unrelated(self, rtype, targettype, role='subject', limit=None,
-                  ordermethod=None):
+                  ordermethod=None): # XXX .cw_unrelated
         """return a result set of target type objects that may be related
         by a given relation, with self as subject or object
         """
         try:
-            rql, args = self.unrelated_rql(rtype, targettype, role, ordermethod)
+            rql, args = self.cw_unrelated_rql(rtype, targettype, role, ordermethod)
         except Unauthorized:
             return self._cw.empty_rset()
         if limit is not None:
@@ -884,18 +929,19 @@ class Entity(AppObject, dict):
             rql = '%s LIMIT %s WHERE %s' % (before, limit, after)
         return self._cw.execute(rql, args)
 
-    # relations cache handling ################################################
+    # relations cache handling #################################################
 
-    def relation_cached(self, rtype, role):
-        """return true if the given relation is already cached on the instance
+    def cw_relation_cached(self, rtype, role):
+        """return None if the given relation isn't already cached on the
+        instance, else the content of the cache (a 2-uple (rset, entities)).
         """
-        return self._related_cache.get('%s_%s' % (rtype, role))
+        return self._cw_related_cache.get('%s_%s' % (rtype, role))
 
-    def related_cache(self, rtype, role, entities=True, limit=None):
+    def _cw_relation_cache(self, rtype, role, entities=True, limit=None):
         """return values for the given relation if it's cached on the instance,
         else raise `KeyError`
         """
-        res = self._related_cache['%s_%s' % (rtype, role)][entities]
+        res = self._cw_related_cache['%s_%s' % (rtype, role)][entities]
         if limit is not None and limit < len(res):
             if entities:
                 res = res[:limit]
@@ -903,10 +949,10 @@ class Entity(AppObject, dict):
                 res = res.limit(limit)
         return res
 
-    def set_related_cache(self, rtype, role, rset, col=0):
+    def cw_set_relation_cache(self, rtype, role, rset):
         """set cached values for the given relation"""
         if rset:
-            related = list(rset.entities(col))
+            related = list(rset.entities(0))
             rschema = self._cw.vreg.schema.rschema(rtype)
             if role == 'subject':
                 rcard = rschema.rdef(self.e_schema, related[0].e_schema).cardinality[1]
@@ -916,23 +962,24 @@ class Entity(AppObject, dict):
                 target = 'subject'
             if rcard in '?1':
                 for rentity in related:
-                    rentity._related_cache['%s_%s' % (rtype, target)] = (
+                    rentity._cw_related_cache['%s_%s' % (rtype, target)] = (
                         self.as_rset(), (self,))
         else:
             related = ()
-        self._related_cache['%s_%s' % (rtype, role)] = (rset, related)
+        self._cw_related_cache['%s_%s' % (rtype, role)] = (rset, related)
 
-    def clear_related_cache(self, rtype=None, role=None):
+    def cw_clear_relation_cache(self, rtype=None, role=None):
         """clear cached values for the given relation or the entire cache if
         no relation is given
         """
         if rtype is None:
-            self._related_cache = {}
+            self._cw_related_cache = {}
+            self._cw_adapters_cache = {}
         else:
             assert role
-            self._related_cache.pop('%s_%s' % (rtype, role), None)
+            self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
 
-    def clear_all_caches(self):
+    def clear_all_caches(self): # XXX cw_clear_all_caches
         """flush all caches on this entity. Further attributes/relations access
         will triggers new database queries to get back values.
 
@@ -942,10 +989,9 @@ class Entity(AppObject, dict):
         # clear attributes cache
         haseid = 'eid' in self
         self._cw_completed = False
-        self.clear()
+        self.cw_attr_cache.clear()
         # clear relations cache
-        for rschema, _, role in self.e_schema.relation_definitions():
-            self.clear_related_cache(rschema.type, role)
+        self.cw_clear_relation_cache()
         # rest path unique cache
         try:
             del self.__unique
@@ -954,10 +1000,10 @@ class Entity(AppObject, dict):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, **kwargs):
+    def set_attributes(self, **kwargs): # XXX cw_set_attributes
         _check_cw_unsafe(kwargs)
         assert kwargs
-        assert self._is_saved, "should not call set_attributes while entity "\
+        assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
         relations = []
         for key in kwargs:
@@ -972,7 +1018,7 @@ class Entity(AppObject, dict):
         # edited_attributes / skip_security_attributes machinery
         self.update(kwargs)
 
-    def set_relations(self, **kwargs):
+    def set_relations(self, **kwargs): # XXX cw_set_relations
         """add relations to the given object. To set a relation where this entity
         is the object of the relation, use 'reverse_'<relation> as argument name.
 
@@ -996,28 +1042,42 @@ class Entity(AppObject, dict):
                 restr, ','.join(str(r.eid) for r in values)),
                              {'x': self.eid})
 
-    def delete(self, **kwargs):
+    def cw_delete(self, **kwargs):
         assert self.has_eid(), self.eid
         self._cw.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
                          {'x': self.eid}, **kwargs)
 
     # server side utilities ###################################################
 
-    @property
-    def skip_security_attributes(self):
-        try:
-            return self._skip_security_attributes
-        except:
-            self._skip_security_attributes = set()
-            return self._skip_security_attributes
+    def _cw_rql_set_value(self, attr, value):
+        """call by rql execution plan when some attribute is modified
 
-    def set_defaults(self):
+        don't use dict api in such case since we don't want attribute to be
+        added to skip_security_attributes.
+
+        This method is for internal use, you should not use it.
+        """
+        self.cw_attr_cache[attr] = value
+
+    def _cw_clear_local_perm_cache(self, action):
+        for rqlexpr in self.e_schema.get_rqlexprs(action):
+            self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
+
+    @property
+    def _cw_skip_security_attributes(self):
+        try:
+            return self.__cw_skip_security_attributes
+        except:
+            self.__cw_skip_security_attributes = set()
+            return self.__cw_skip_security_attributes
+
+    def _cw_set_defaults(self):
         """set default values according to the schema"""
         for attr, value in self.e_schema.defaults():
-            if not self.has_key(attr):
+            if not self.cw_attr_cache.has_key(attr):
                 self[str(attr)] = value
 
-    def check(self, creation=False):
+    def _cw_check(self, creation=False):
         """check this entity against its schema. Only final relation
         are checked here, constraint on actual relations are checked in hooks
         """
@@ -1040,60 +1100,33 @@ class Entity(AppObject, dict):
         self.e_schema.check(self, creation=creation, _=_,
                             relations=relations)
 
-    def fti_containers(self, _done=None):
-        if _done is None:
-            _done = set()
-        _done.add(self.eid)
-        containers = tuple(self.e_schema.fulltext_containers())
-        if containers:
-            for rschema, target in containers:
-                if target == 'object':
-                    targets = getattr(self, rschema.type)
-                else:
-                    targets = getattr(self, 'reverse_%s' % rschema)
-                for entity in targets:
-                    if entity.eid in _done:
-                        continue
-                    for container in entity.fti_containers(_done):
-                        yield container
-                        yielded = True
-        else:
-            yield self
+    @deprecated('[3.9] use entity.cw_attr_value(attr)')
+    def get_value(self, name):
+        return self.cw_attr_value(name)
 
-    def get_words(self):
-        """used by the full text indexer to get words to index
+    @deprecated('[3.9] use entity.cw_delete()')
+    def delete(self, **kwargs):
+        return self.cw_delete(**kwargs)
 
-        this method should only be used on the repository side since it depends
-        on the logilab.database package
+    @deprecated('[3.9] use entity.cw_attr_metadata(attr, metadata)')
+    def attr_metadata(self, attr, metadata):
+        return self.cw_attr_metadata(attr, metadata)
 
-        :rtype: list
-        :return: the list of indexable word of this entity
-        """
-        from logilab.database.fti import tokenize
-        # take care to cases where we're modyfying the schema
-        pending = self._cw.transaction_data.setdefault('pendingrdefs', set())
-        words = []
-        for rschema in self.e_schema.indexable_attributes():
-            if (self.e_schema, rschema) in pending:
-                continue
-            try:
-                value = self.printable_value(rschema, format='text/plain')
-            except TransformError:
-                continue
-            except:
-                self.exception("can't add value of %s to text index for entity %s",
-                               rschema, self.eid)
-                continue
-            if value:
-                words += tokenize(value)
-        for rschema, role in self.e_schema.fulltext_relations():
-            if role == 'subject':
-                for entity in getattr(self, rschema.type):
-                    words += entity.get_words()
-            else: # if role == 'object':
-                for entity in getattr(self, 'reverse_%s' % rschema.type):
-                    words += entity.get_words()
-        return words
+    @deprecated('[3.9] use entity.cw_has_perm(action)')
+    def has_perm(self, action):
+        return self.cw_has_perm(action)
+
+    @deprecated('[3.9] use entity.cw_set_relation_cache(rtype, role, rset)')
+    def set_related_cache(self, rtype, role, rset):
+        self.cw_set_relation_cache(rtype, role, rset)
+
+    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role, rset)')
+    def clear_related_cache(self, rtype=None, role=None):
+        self.cw_clear_relation_cache(rtype, role)
+
+    @deprecated('[3.9] use entity.cw_related_rql(rtype, [role, [targettypes]])')
+    def related_rql(self, rtype, role='subject', targettypes=None):
+        return self.cw_related_rql(rtype, role, targettypes)
 
 
 # attribute and relation descriptors ##########################################
@@ -1108,36 +1141,28 @@ class Attribute(object):
     def __get__(self, eobj, eclass):
         if eobj is None:
             return self
-        return eobj.get_value(self._attrname)
+        return eobj.cw_attr_value(self._attrname)
 
     def __set__(self, eobj, value):
         eobj[self._attrname] = value
 
+
 class Relation(object):
     """descriptor that controls schema relation access"""
-    _role = None # for pylint
 
-    def __init__(self, rschema):
-        self._rschema = rschema
+    def __init__(self, rschema, role):
         self._rtype = rschema.type
+        self._role = role
 
     def __get__(self, eobj, eclass):
         if eobj is None:
-            raise AttributeError('%s cannot be only be accessed from instances'
+            raise AttributeError('%s can only be accessed from instances'
                                  % self._rtype)
         return eobj.related(self._rtype, self._role, entities=True)
 
     def __set__(self, eobj, value):
         raise NotImplementedError
 
-
-class SubjectRelation(Relation):
-    """descriptor that controls schema relation access"""
-    _role = 'subject'
-
-class ObjectRelation(Relation):
-    """descriptor that controls schema relation access"""
-    _role = 'object'
 
 from logging import getLogger
 from cubicweb import set_log_methods

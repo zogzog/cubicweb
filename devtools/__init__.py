@@ -15,12 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Test tools for cubicweb
+"""Test tools for cubicweb"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import os
+import sys
 import logging
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
@@ -95,6 +95,7 @@ class TestServerConfiguration(ServerConfiguration):
     set_language = False
     read_instance_schema = False
     init_repository = True
+    db_require_setup = True
     options = cwconfig.merge_options(ServerConfiguration.options + (
         ('anonymous-user',
          {'type' : 'string',
@@ -110,7 +111,14 @@ class TestServerConfiguration(ServerConfiguration):
           }),
         ))
 
-    def __init__(self, appid, log_threshold=logging.CRITICAL+10):
+    def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
+        # must be set before calling parent __init__
+        if apphome is None:
+            if exists(appid):
+                apphome = abspath(appid)
+            else: # cube test
+                apphome = abspath('..')
+        self._apphome = apphome
         ServerConfiguration.__init__(self, appid)
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
@@ -120,10 +128,7 @@ class TestServerConfiguration(ServerConfiguration):
 
     @property
     def apphome(self):
-        if exists(self.appid):
-            return abspath(self.appid)
-        # cube test
-        return abspath('..')
+        return self._apphome
     appdatahome = apphome
 
     def load_configuration(self):
@@ -136,9 +141,6 @@ class TestServerConfiguration(ServerConfiguration):
     def main_config_file(self):
         """return instance's control configuration file"""
         return join(self.apphome, '%s.conf' % self.name)
-
-    def instance_md5_version(self):
-        return ''
 
     def bootstrap_cubes(self):
         try:
@@ -170,6 +172,15 @@ class TestServerConfiguration(ServerConfiguration):
             sources = DEFAULT_SOURCES
         return sources
 
+    # web config methods needed here for cases when we use this config as a web
+    # config
+
+    def instance_md5_version(self):
+        return ''
+
+    def default_base_url(self):
+        return BASE_URL
+
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
@@ -181,21 +192,43 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
 
-    def ext_resources_file(self):
-        """return instance's external resources file"""
-        return join(self.apphome, 'data', 'external_resources')
-
     def pyro_enabled(self):
-        # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and threads
+        # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
+        # threads
         return True
 
-
+# XXX merge with BaseApptestConfiguration ?
 class ApptestConfiguration(BaseApptestConfiguration):
 
-    def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
-        BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
+    def __init__(self, appid, apphome=None,
+                 log_threshold=logging.CRITICAL, sourcefile=None):
+        BaseApptestConfiguration.__init__(self, appid, apphome,
+                                          log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
+
+
+class RealDatabaseConfiguration(ApptestConfiguration):
+    """configuration class for tests to run on a real database.
+
+    The intialization is done by specifying a source file path.
+
+    Important note: init_test_database / reset_test_database steps are
+    skipped. It's thus up to the test developer to implement setUp/tearDown
+    accordingly.
+
+    Example usage::
+
+      class MyTests(CubicWebTC):
+          _config = RealDatabseConfiguration('myapp',
+                                             sourcefile='/path/to/sources')
+          def test_something(self):
+              rset = self.execute('Any X WHERE X is CWUser')
+              self.view('foaf', rset)
+
+    """
+    db_require_setup = False    # skip init_db / reset_db steps
+    read_instance_schema = True # read schema from database
 
 
 # test database handling #######################################################
@@ -206,14 +239,13 @@ def init_test_database(config=None, configdir='data'):
     config = config or TestServerConfiguration(configdir)
     sources = config.sources()
     driver = sources['system']['db-driver']
-    if driver == 'sqlite':
-        init_test_database_sqlite(config)
-    elif driver == 'postgres':
-        init_test_database_postgres(config)
-    elif driver == 'sqlserver2005':
-        init_test_database_sqlserver2005(config)
-    else:
-        raise ValueError('no initialization function for driver %r' % driver)
+    if config.db_require_setup:
+        if driver == 'sqlite':
+            init_test_database_sqlite(config)
+        elif driver == 'postgres':
+            init_test_database_postgres(config)
+        else:
+            raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
                               password=sources['admin']['password'] or 'xxx')
@@ -221,16 +253,15 @@ def init_test_database(config=None, configdir='data'):
         install_sqlite_patch(repo.querier)
     return repo, cnx
 
-
 def reset_test_database(config):
     """init a test database for a specific driver"""
+    if not config.db_require_setup:
+        return
     driver = config.sources()['system']['db-driver']
     if driver == 'sqlite':
         reset_test_database_sqlite(config)
-    elif driver in ('sqlserver2005', 'postgres'):
-        # XXX do something with dump/restore ?
-        print 'resetting the database is not done for', driver
-        print 'you should handle it manually'
+    elif driver == 'postgres':
+        init_test_database_postgres(config)
     else:
         raise ValueError('no reset function for driver %r' % driver)
 
@@ -239,11 +270,46 @@ def reset_test_database(config):
 
 def init_test_database_postgres(config):
     """initialize a fresh postgresql databse used for testing purpose"""
-    if config.init_repository:
-        from cubicweb.server import init_repository
-        init_repository(config, interactive=False, drop=True)
+    from logilab.database import get_db_helper
+    from cubicweb.server import init_repository
+    from cubicweb.server.serverctl import (createdb, system_source_cnx,
+                                           _db_sys_cnx)
+    source = config.sources()['system']
+    dbname = source['db-name']
+    templdbname = dbname + '_template'
+    helper = get_db_helper('postgres')
+    # connect on the dbms system base to create our base
+    dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=0)
+    cursor = dbcnx.cursor()
+    try:
+        if dbname in helper.list_databases(cursor):
+            cursor.execute('DROP DATABASE %s' % dbname)
+        if not templdbname in helper.list_databases(cursor):
+            source['db-name'] = templdbname
+            createdb(helper, source, dbcnx, cursor)
+            dbcnx.commit()
+            cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=0)
+            templcursor = cnx.cursor()
+            # XXX factorize with db-create code
+            helper.init_fti_extensions(templcursor)
+            # install plpythonu/plpgsql language if not installed by the cube
+            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
+            for extlang in langs:
+                helper.create_language(templcursor, extlang)
+            cnx.commit()
+            templcursor.close()
+            cnx.close()
+            init_repository(config, interactive=False)
+            source['db-name'] = dbname
+    except:
+        dbcnx.rollback()
+        # XXX drop template
+        raise
+    createdb(helper, source, dbcnx, cursor, template=templdbname)
+    dbcnx.commit()
+    dbcnx.close()
 
-### sqlserver2005 test database handling ############################################
+### sqlserver2005 test database handling #######################################
 
 def init_test_database_sqlserver2005(config):
     """initialize a fresh sqlserver databse used for testing purpose"""
@@ -285,7 +351,6 @@ def init_test_database_sqlite(config):
         init_repository(config, interactive=False)
         dbfile = config.sources()['system']['db-name']
         shutil.copy(dbfile, '%s-template' % dbfile)
-
 
 def install_sqlite_patch(querier):
     """This patch hotfixes the following sqlite bug :

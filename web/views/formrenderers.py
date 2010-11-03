@@ -40,8 +40,9 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import tags
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import implements, yes
-from cubicweb.web import dumps, eid_param, formwidgets as fwdgs
+from cubicweb.selectors import is_instance, yes
+from cubicweb.utils import json_dumps
+from cubicweb.web import eid_param, formwidgets as fwdgs
 
 
 def checkbox(name, value, attrs='', checked=None):
@@ -334,15 +335,21 @@ class EntityCompositeFormRenderer(FormRenderer):
     def render_fields(self, w, form, values):
         if form.parent_form is None:
             w(u'<table class="listing">')
-            subfields = [field for field in form.forms[0].fields
-                         if field.is_visible()]
+            # get fields from the first subform with something to display (we
+            # may have subforms with nothing editable that will simply be
+            # skipped later)
+            for subform in form.forms:
+                subfields = [field for field in subform.fields
+                             if field.is_visible()]
+                if subfields:
+                    break
             if subfields:
                 # main form, display table headers
                 w(u'<tr class="header">')
                 w(u'<th align="left">%s</th>' %
                   tags.input(type='checkbox',
                              title=self._cw._('toggle check boxes'),
-                             onclick="setCheckboxesState('eid', this.checked)"))
+                             onclick="setCheckboxesState('eid', null, this.checked)"))
                 for field in subfields:
                     w(u'<th>%s</th>' % field_label(form, field))
                 w(u'</tr>')
@@ -358,8 +365,8 @@ class EntityCompositeFormRenderer(FormRenderer):
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
-            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
-                         xml_escape(dumps(entity.eid))
+            cbsetstate = "setCheckboxesState('eid', %s, 'checked')" % \
+                         xml_escape(json_dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.cw_row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
             w(u'<td>%s</td>' % checkbox('eid', entity.eid,
@@ -392,7 +399,7 @@ class EntityFormRenderer(BaseFormRenderer):
     """
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
-    __select__ = implements('Any') & yes()
+    __select__ = is_instance('Any') & yes()
 
     _options = FormRenderer._options + ('main_form_title',)
     main_form_title = _('main informations')

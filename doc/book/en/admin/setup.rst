@@ -59,7 +59,26 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 
 
+.. _PipInstallation:
+
+Installation with pip
+`````````````````````
+
+|cubicweb| and its cubes have been pip_ installable since version 3.8. Search
+for them on pypi_::
+
+  pip install cubicweb
+
+.. _pip: http://pypi.python.org/pypi/pip
+.. _pypi: http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb
+
 .. _SourceInstallation:
+
+.. warning::
+
+  This method may still have hiccups. If it does not work for you,
+  please consider installing from version control system
+  (:ref:`MercurialInstallation`).
 
 Install from source
 ```````````````````
@@ -70,37 +89,56 @@ You can download the archive containing the sources from our `ftp site`_ at::
 
 .. _`ftp site`: http://ftp.logilab.org/pub/cubicweb/
 
-Make sure you have installed the dependencies (see appendixes for the list).
+Make sure you also have all the :ref:`InstallDependencies`.
 
-|cubicweb| should soon be pip_ installable, stay tuned (expected in 3.8).
-
-.. _pip: http://pypi.python.org/pypi/pip
-
+.. _MercurialInstallation:
 
 Install from version control system
 ```````````````````````````````````
 
-You can keep up to date with on-going development by using Mercurial and its
-forest extension::
+You can keep up to date with on-going development by using Mercurial::
 
-  hg fclone http://www.logilab.org/hg/forests/cubicweb
+  hg clone http://www.logilab.org/hg/forests/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
+
+A practical way to get many of CubicWeb's dependencies and a nice set
+of base cubes is to run the `clone_deps.py` script located in
+`cubicweb/bin/`::
+
+  python cubicweb/bin/clone_deps.py
+
+(Windows users should replace slashes with antislashes).
+
+This script will clone a set of mercurial repositories into in the
+directory containing the CubicWeb repository, and update them to the
+latest published version tag (if any).
 
 When cloning a repository, you might be set in a development branch
 (the 'default' branch). You should check that the branches of the
 repositories are set to 'stable' (using `hg up stable` for each one)
 if you do not intend to develop the framework itself.
 
-Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
+Even better, `hg tags` will display a list of tags in reverse
+chronological order. One reasonnable way to get to a working version
+is to pick the latest published version (as done by the `clone_deps`
+script). These look like `cubicweb-debian-version-3.9.7-1`. Typing::
 
-Make sure you have installed the dependencies (see appendixes for the list).
+ hg update cubicweb-debian-version-3.9.7-1
+
+will update the repository files to this version.
+
+Make sure you also have all the :ref:`InstallDependencies`.
 
 
 .. _WindowsInstallation:
 
 Windows installation
 ````````````````````
+
+Your best option is probably the :ref:`PipInstallation`. If it does not work or
+if you want more control over the process, continue with the following
+instructions.
 
 Base elements
 ~~~~~~~~~~~~~
@@ -110,14 +148,15 @@ a series of small steps. What is proposed there is only an example of what can b
 done. We assume everything goes into `C:\\` in this document. Adjusting the
 installation drive should be straightforward.
 
-You should start by downloading and installing the Python(x,y) distribution. It
-contains python 2.5 plus numerous useful third-party modules and applications::
+You should start by downloading and installing Python version >= 2.5 and < 3.
 
-  http://www.pythonxy.com/download_fr.php
+An alternative option would be installing the Python(x,y)
+distribution. Python(x,y) is not a requirement, but it makes things easier for
+Windows user by wrapping in a single installer python 2.5 plus numerous useful
+third-party modules and applications (including Eclipse + pydev, which is an
+arguably good IDE for Python under Windows). Download it from this page::
 
-At the time of this writting, one gets version 2.1.15. Among the many things
-provided, one finds Eclipse + pydev (an arguably good IDE for python under
-windows).
+  http://code.google.com/p/pythonxy/wiki/Downloads
 
 Then you must grab Twisted. There is a windows installer directly available from
 this page::
@@ -166,10 +205,13 @@ not mandatory). You should get an msi installer there::
 
   http://www.graphviz.org/Download_windows.php
 
-Simplejson will be provided within the forest, but a win32 compiled version will
-run much faster::
+Simplejson is needed when installing with Python 2.5, but included in the
+standard library for Python >= 2.6. Get it from there::
 
   http://www.osuch.org/python-simplejson%3Awin32
+
+Make sure you also have all the :ref:`InstallDependencies` that are not specific
+to Windows.
 
 Tools
 ~~~~~
@@ -189,32 +231,13 @@ it. Instructions are set there, in the `Download & Install` section::
 
   http://www.vectrace.com/mercurialeclipse/
 
-Setting up the sources
-~~~~~~~~~~~~~~~~~~~~~~
+Getting the sources
+~~~~~~~~~~~~~~~~~~~
 
-You need to enable the mercurial forest extension. To do this, edit the file::
-
-  C:\Program Files\TortoiseHg\Mercurial.ini
-
-In the [extensions] section, add the following line::
-
-  forest=C:\Program Files\TortoiseHg\ext\forest\forest.py
-
-Now, you need to clone the cubicweb repository. We assume that you use
-Eclipse. From the IDE, choose File -> Import. In the box, select `Mercurial/Clone
-repository using MercurialEclipse`.
-
-In the import main panel you just have to:
-
-* fill the URL field with http://www.logilab.org/hg/forests/cubicwin32
-
-* check the 'Repository is a forest' box.
-
-Then, click on 'Finish'. It might take some time to get it all. Note that the
-`cubicwin32` forest contains additional python packages such as yapps, vobject,
-simplejson and twisted-web2 which are not provided with Python(x,y). This is
-provided for convenience, as we do not ensure the up-to-dateness of these
-packages, especially with respect to security fixes.
+You can either download the latest release (see
+:ref:`SourceInstallation`) or get the development version using
+Mercurial (see :ref:`MercurialInstallation` and below), which is more
+convenient.
 
 Environment variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -250,14 +273,14 @@ Running an instance as a service
 This currently assumes that the instances configurations is located at
 C:\\etc\\cubicweb.d.
 
-For a cube 'my_cube', you will then find
-C:\\etc\\cubicweb.d\\my_cube\\win32svc.py that has to be used thusly::
+For a cube 'my_instance', you will then find
+C:\\etc\\cubicweb.d\\my_instance\\win32svc.py that has to be used as follows::
 
   win32svc install
 
 This should just register your instance as a windows service. A simple::
 
-  net start cubicweb-my_cube
+  net start cubicweb-my_instance
 
 should start the service.
 
@@ -280,9 +303,17 @@ You can also install:
 Databases configuration
 -----------------------
 
-Whatever the backend used, database connection information are stored in the
-instance's :file:`sources` file. Currently cubicweb has been tested using
-Postgresql (recommanded), MySQL, SQLServer and SQLite.
+Each instance can be configured with its own database connection information,
+that will be stored in the instance's :file:`sources` file. The database to use
+will be chosen when creating the instance. Currently cubicweb has been tested
+using Postgresql (recommended), MySQL, SQLServer and SQLite.
+
+Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
+but at least one relational database is required for CubicWeb to work. You do
+not need to install a backend that you do not intend to use for one of your
+instances. SQLite is not fit for production use, but it works well for testing
+and ships with Python, which saves installation time when you want to get
+started quickly.
 
 .. _PostgresqlConfiguration:
 
@@ -394,7 +425,7 @@ Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
     max_allowed_packet = 128M
 
 .. Note::
-    It is unclear whether mysql supports indexed string of arbitrary lenght or
+    It is unclear whether mysql supports indexed string of arbitrary length or
     not.
 
 
@@ -403,9 +434,10 @@ Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 SQLServer configuration
 ```````````````````````
 
-As of this writing, sqlserver support is in progress. You should be able to
-connect, create a database and go quite far, but some of the generated SQL is
-still currently not accepted by the backend.
+As of this writing, support for SQLServer 2005 is functional but incomplete. You
+should be able to connect, create a database and go quite far, but some of the
+SQL generated from RQL queries is still currently not accepted by the
+backend. Porting to SQLServer 2008 is also an item on the backlog.
 
 The `source` configuration file may look like this (specific parts only are
 shown)::
@@ -440,14 +472,13 @@ Pyro configuration
 ------------------
 
 If you want to use Pyro to access your instance remotly, or to have multi-source
-or distributed configuration, it is required to have a name server Pyro running
-on your network. By by default it is detected by a broadcast request, but you can
+or distributed configuration, it is required to have a Pyro name server running
+on your network. By default it is detected by a broadcast request, but you can
 specify a location in the instance's configuration file.
 
 To do so, you need to :
 
-* launch the server manually before starting cubicweb as a server with `pyro-nsd
-  start`
+* launch the pyro name server with `pyro-nsd start` before starting cubicweb
 
 * under debian, edit the file :file:`/etc/default/pyro-nsd` so that the name
   server pyro will be launched automatically when the machine fire up

@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 8, 7)
+numversion = (3, 9, 9)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
@@ -40,10 +40,10 @@ classifiers = [
 ]
 
 __depends__ = {
-    'logilab-common': '>= 0.50.2',
-    'logilab-mtconverter': '>= 0.6.0',
+    'logilab-common': '>= 0.51.0',
+    'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.26.2',
-    'yams': '>= 0.28.1',
+    'yams': '>= 0.30.1',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
@@ -52,12 +52,12 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.0.5',
+    'logilab-database': '>= 1.3.0',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 
 __recommends__ = {
-    'Pyro': '>= 3.9.1',
+    'Pyro': '>= 3.9.1, < 4.0.0',
     'PIL': '',                  # for captcha
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
@@ -77,6 +77,7 @@ include_dirs = [join('test', 'data'),
                 join('server', 'test', 'data'),
                 join('hooks', 'test', 'data'),
                 join('web', 'test', 'data'),
+                join('devtools', 'data'),
                 join('devtools', 'test', 'data'),
                 'schemas', 'skeleton']
 
@@ -95,7 +96,13 @@ if '--home' in sys.argv:
 else:
     pydir = join('python' + _pyversion, 'site-packages')
 
+# data files that shall be copied into the main package directory
+package_data = {
+    'cubicweb.web.views':['*.pt'],
+    }
+
 try:
+    # data files that shall be copied outside the main package directory
     data_files = [
         # server data
         [join('share', 'cubicweb', 'schemas'),
@@ -118,10 +125,6 @@ try:
          [join(_wdocimages_dir, fname) for fname in listdir(_wdocimages_dir)]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
          [join(_i18n_dir, fname) for fname in listdir(_i18n_dir)]],
-        # XXX: drop .pt files
-        [join('lib', pydir, 'cubicweb', 'web', 'views'),
-         [join(_views_dir, fname) for fname in listdir(_views_dir)
-          if fname.endswith('.pt')]],
         # skeleton
         ]
 except OSError:

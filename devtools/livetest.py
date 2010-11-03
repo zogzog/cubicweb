@@ -55,7 +55,7 @@ class LivetestResource(CubicWebRootResource):
         """Indicate which resource to use to process down the URL's path"""
         if len(segments) and segments[0] == 'data':
             # Anything in data/ is treated as static files
-            datadir = self.config.locate_resource(segments[1])
+            datadir = self.config.locate_resource(segments[1])[0]
             if datadir:
                 return static.File(str(datadir), segments[1:])
         # Otherwise we use this single resource

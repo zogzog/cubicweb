@@ -18,8 +18,8 @@
 """some utilities to ease repository testing
 
 This module contains functions to initialize a new repository.
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from pprint import pprint
@@ -41,7 +41,7 @@ def test_plan(self, rql, expected, kwargs=None):
     plan = self._prepare_plan(rql, kwargs)
     self.planner.build_plan(plan)
     try:
-        self.assertEquals(len(plan.steps), len(expected),
+        self.assertEqual(len(plan.steps), len(expected),
                           'expected %s steps, got %s' % (len(expected), len(plan.steps)))
         # step order is important
         for i, step in enumerate(plan.steps):
@@ -52,20 +52,20 @@ def test_plan(self, rql, expected, kwargs=None):
 
 def compare_steps(self, step, expected):
     try:
-        self.assertEquals(step[0], expected[0], 'expected step type %s, got %s' % (expected[0], step[0]))
+        self.assertEqual(step[0], expected[0], 'expected step type %s, got %s' % (expected[0], step[0]))
         if len(step) > 2 and isinstance(step[1], list) and isinstance(expected[1], list):
             queries, equeries = step[1], expected[1]
-            self.assertEquals(len(queries), len(equeries),
+            self.assertEqual(len(queries), len(equeries),
                               'expected %s queries, got %s' % (len(equeries), len(queries)))
             for i, (rql, sol) in enumerate(queries):
-                self.assertEquals(rql, equeries[i][0])
-                self.assertEquals(sorted(sol), sorted(equeries[i][1]))
+                self.assertEqual(rql, equeries[i][0])
+                self.assertEqual(sorted(sol), sorted(equeries[i][1]))
             idx = 2
         else:
             idx = 1
-        self.assertEquals(step[idx:-1], expected[idx:-1],
+        self.assertEqual(step[idx:-1], expected[idx:-1],
                           'expected step characteristic \n%s\n, got\n%s' % (expected[1:-1], step[1:-1]))
-        self.assertEquals(len(step[-1]), len(expected[-1]),
+        self.assertEqual(len(step[-1]), len(expected[-1]),
                           'got %s child steps, expected %s' % (len(step[-1]), len(expected[-1])))
     except AssertionError:
         print 'error on step ',
@@ -134,24 +134,35 @@ def restore_schema_eids_idx(schema, schema_eids):
             schema._eid_index[rdef.eid] = rdef
 
 
-from logilab.common.testlib import TestCase
+from logilab.common.testlib import TestCase, mock_object
+from logilab.database import get_db_helper
+
 from rql import RQLHelper
+
 from cubicweb.devtools.fake import FakeRepo, FakeSession
 from cubicweb.server import set_debug
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
-from cubicweb.server.sources.rql2sql import remove_unused_solutions
+from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
 class RQLGeneratorTC(TestCase):
-    schema = None # set this in concret test
+    schema = backend = None # set this in concret test
 
     def setUp(self):
         self.repo = FakeRepo(self.schema)
+        self.repo.system_source = mock_object(dbdriver=self.backend)
         self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
-                                                                   'has_text': 'fti'})
+                                                                   'has_text': 'fti'},
+                                   backend=self.backend)
         self.qhelper = QuerierHelper(self.repo, self.schema)
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
+        if self.backend is not None:
+            try:
+                dbhelper = get_db_helper(self.backend)
+            except ImportError, ex:
+                self.skipTest(str(ex))
+            self.o = SQLGenerator(self.schema, dbhelper)
 
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
@@ -270,6 +281,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.system = self.sources[-1]
         do_monkey_patch()
         self._dumb_sessions = [] # by hi-jacked parent setup
+        self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
 
     def add_source(self, sourcecls, uri):
         self.sources.append(sourcecls(self.repo, self.o.schema,

@@ -62,9 +62,11 @@ def get_insertion_point(section, index):
         snode = index[section.attrib['insertbefore']]
         node = snode.parent
         idx = node.getchildren().index(snode)
-    else:
+    elif 'appendto' in section.attrib:
         node = index[section.attrib['appendto']]
         idx = None
+    else:
+        node, idx = None, None
     return node, idx
 
 def build_toc(config):
@@ -79,6 +81,8 @@ def build_toc(config):
         toc = parse(fpath).getroot()
         for section in toc:
             node, idx = get_insertion_point(section, index)
+            if node is None:
+                continue
             if idx is None:
                 node.append(section)
             else:

@@ -32,8 +32,16 @@
 # serve to show the default value.
 
 import sys, os
+from os import path as osp
 
-from cubicweb import __pkginfo__ as cw
+path = __file__
+path = osp.dirname(path) #./doc/book/en
+path = osp.dirname(path) #./doc/book/
+path = osp.dirname(path) #./doc/
+path = osp.dirname(path) #./
+path = osp.join(path,'__pkginfo__.py') #./__pkginfo__.py
+cw = {}
+execfile(path,{},cw)
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -64,9 +72,9 @@ copyright = '2001-2010, Logilab'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '.'.join(str(n) for n in cw.numversion[:2])
+version = '.'.join(str(n) for n in cw['numversion'][:2])
 # The full version, including alpha/beta/rc tags.
-release = cw.version
+release = cw['version']
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

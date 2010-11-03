@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""additional cubicweb-ctl commands and command handlers for cubicweb and cubicweb's
-cubes development
-
+"""additional cubicweb-ctl commands and command handlers for cubicweb and
+cubicweb's cubes development
 """
+
 __docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -26,17 +26,16 @@ __docformat__ = "restructuredtext en"
 # completion). So import locally in command helpers.
 import sys
 from datetime import datetime
-from os import mkdir, chdir
-from os.path import join, exists, abspath, basename, normpath, split, isdir
+from os import mkdir, chdir, listdir, path as osp
 from warnings import warn
 
 from logilab.common import STD_BLACKLIST
-from logilab.common.clcommands import register_commands, pop_arg
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
-from cubicweb.toolsutils import (SKEL_EXCLUDE, Command,
-                                 copy_skeleton, underline_title)
+from cubicweb.cwctl import CWCTL
+from cubicweb.toolsutils import (SKEL_EXCLUDE, Command, copy_skeleton,
+                                 underline_title)
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -67,7 +66,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         return None
     def main_config_file(self):
         return None
-    def init_log(self, debug=None):
+    def init_log(self):
         pass
     def load_configuration(self):
         pass
@@ -102,7 +101,7 @@ def generate_schema_pot(w, cubedir=None):
     """
     from cubicweb.cwvreg import CubicWebVRegistry
     if cubedir:
-        cube = split(cubedir)[-1]
+        cube = osp.split(cubedir)[-1]
         config = DevConfiguration(cube)
         depcubes = list(config._cubes)
         depcubes.remove(cube)
@@ -125,7 +124,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from cubicweb.web import uicfg
     from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES, CONSTRAINTS
     no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
-    w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    w('# schema pot file, generated on %s\n'
+      % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
@@ -177,7 +177,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
                     add_msg(w, str(tschema),
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                 if appearsin_addmenu.etype_get(eschema, rschema, role, tschema):
-                    if libconfig is not None and libappearsin_addmenu.etype_get(eschema, rschema, role, tschema):
+                    if libconfig is not None and libappearsin_addmenu.etype_get(
+                        eschema, rschema, role, tschema):
                         if eschema in libschema and tschema in libschema:
                             continue
                     if role == 'subject':
@@ -200,7 +201,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     for rschema in sorted(schema.relations()):
         rtype = rschema.type
         if rtype not in libschema:
-            # bw compat, necessary until all translation of relation are done properly...
+            # bw compat, necessary until all translation of relation are done
+            # properly...
             add_msg(w, rtype)
             if rschema.description and rschema.description not in done:
                 done.add(rschema.description)
@@ -222,7 +224,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
                     if not objschema in libobjects:
                         add_msg(w, '%s_object' % rtype, objschema.type)
             if rtype not in libschema:
-                # bw compat, necessary until all translation of relation are done properly...
+                # bw compat, necessary until all translation of relation are
+                # done properly...
                 add_msg(w, '%s_object' % rtype)
     for objid in _iter_vreg_objids(vreg, vregdone):
         add_msg(w, '%s_description' % objid)
@@ -246,8 +249,6 @@ def _iter_vreg_objids(vreg, done):
                     break
 
 
-LANGS = ('en', 'fr', 'es')
-I18NDIR = join(BASEDIR, 'i18n')
 DEFAULT_POT_HEAD = r'''msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb %s\n"
@@ -262,6 +263,11 @@ msgstr ""
 
 ''' % cubicwebversion
 
+def cw_languages():
+    for fname in listdir(osp.join(WebConfiguration.i18n_lib_dir())):
+        if fname.endswith('.po'):
+            yield osp.splitext(fname)[0]
+
 
 class UpdateCubicWebCatalogCommand(Command):
     """Update i18n catalogs for cubicweb library.
@@ -270,11 +276,10 @@ class UpdateCubicWebCatalogCommand(Command):
     files to add translations of newly added messages.
     """
     name = 'i18ncubicweb'
+    min_args = max_args = 0
 
     def run(self, args):
         """run the command with its specific arguments"""
-        if args:
-            raise BadCommandUsage('Too many arguments')
         import shutil
         import tempfile
         import yams
@@ -283,9 +288,10 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.modutils import get_module_files
         from cubicweb.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
-        potfiles = [join(I18NDIR, 'static-messages.pot')]
+        cwi18ndir = WebConfiguration.i18n_lib_dir()
         print '-> extract schema messages.'
-        schemapot = join(tempdir, 'schema.pot')
+        schemapot = osp.join(tempdir, 'schema.pot')
+        potfiles = [schemapot]
         potfiles.append(schemapot)
         # explicit close necessary else the file may not be yet flushed when
         # we'll using it below
@@ -293,36 +299,43 @@ class UpdateCubicWebCatalogCommand(Command):
         generate_schema_pot(schemapotstream.write, cubedir=None)
         schemapotstream.close()
         print '-> extract TAL messages.'
-        tali18nfile = join(tempdir, 'tali18n.py')
-        extract_from_tal(find(join(BASEDIR, 'web'), ('.py', '.pt')), tali18nfile)
+        tali18nfile = osp.join(tempdir, 'tali18n.py')
+        extract_from_tal(find(osp.join(BASEDIR, 'web'), ('.py', '.pt')),
+                         tali18nfile)
         print '-> generate .pot files.'
-        for id, files, lang in [('pycubicweb', get_module_files(BASEDIR) + list(globfind(join(BASEDIR, 'misc', 'migration'), '*.py')), None),
-                                ('schemadescr', globfind(join(BASEDIR, 'schemas'), '*.py'), None),
+        pyfiles = get_module_files(BASEDIR)
+        pyfiles += globfind(osp.join(BASEDIR, 'misc', 'migration'), '*.py')
+        schemafiles = globfind(osp.join(BASEDIR, 'schemas'), '*.py')
+        jsfiles = globfind(osp.join(BASEDIR, 'web'), 'cub*.js')
+        for id, files, lang in [('pycubicweb', pyfiles, None),
+                                ('schemadescr', schemafiles, None),
                                 ('yams', get_module_files(yams.__path__[0]), None),
                                 ('tal', [tali18nfile], None),
-                                ('js', globfind(join(BASEDIR, 'web'), 'cub*.js'), 'java'),
+                                ('js', jsfiles, 'java'),
                                 ]:
             cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
             if lang is not None:
                 cmd += ' -L %s' % lang
-            potfile = join(tempdir, '%s.pot' % id)
+            potfile = osp.join(tempdir, '%s.pot' % id)
             execute(cmd % (potfile, ' '.join('"%s"' % f for f in files)))
-            if exists(potfile):
+            if osp.exists(potfile):
                 potfiles.append(potfile)
             else:
                 print '-> WARNING: %s file was not generated' % potfile
         print '-> merging %i .pot files' % len(potfiles)
-        cubicwebpot = join(tempdir, 'cubicweb.pot')
-        execute('msgcat -o %s %s' % (cubicwebpot, ' '.join('"%s"' % f for f in potfiles)))
+        cubicwebpot = osp.join(tempdir, 'cubicweb.pot')
+        execute('msgcat -o %s %s'
+                % (cubicwebpot, ' '.join('"%s"' % f for f in potfiles)))
         print '-> merging main pot file with existing translations.'
-        chdir(I18NDIR)
+        chdir(cwi18ndir)
         toedit = []
-        for lang in LANGS:
+        for lang in cw_languages():
             target = '%s.po' % lang
-            execute('msgmerge -N --sort-output -o "%snew" "%s" "%s"' % (target, target, cubicwebpot))
+            execute('msgmerge -N --sort-output -o "%snew" "%s" "%s"'
+                    % (target, target, cubicwebpot))
             ensure_fs_mode(target)
             shutil.move('%snew' % target, target)
-            toedit.append(abspath(target))
+            toedit.append(osp.abspath(target))
         # cleanup
         rm(tempdir)
         # instructions pour la suite
@@ -346,13 +359,14 @@ class UpdateTemplateCatalogCommand(Command):
         else:
             cubes = [DevConfiguration.cube_dir(cube)
                      for cube in DevConfiguration.available_cubes()]
-            cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
+            cubes = [cubepath for cubepath in cubes
+                     if osp.exists(osp.join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
 
 def update_cubes_catalogs(cubes):
     for cubedir in cubes:
-        if not isdir(cubedir):
+        if not osp.isdir(cubedir):
             print '-> ignoring %s that is not a directory.' % cubedir
             continue
         try:
@@ -376,20 +390,20 @@ def update_cube_catalogs(cubedir):
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
     from cubicweb.i18n import extract_from_tal, execute
-    cube = basename(normpath(cubedir))
+    cube = osp.basename(osp.normpath(cubedir))
     tempdir = tempfile.mkdtemp()
     print underline_title('Updating i18n catalogs for cube %s' % cube)
     chdir(cubedir)
-    if exists(join('i18n', 'entities.pot')):
+    if osp.exists(osp.join('i18n', 'entities.pot')):
         warn('entities.pot is deprecated, rename file to static-messages.pot (%s)'
-             % join('i18n', 'entities.pot'), DeprecationWarning)
-        potfiles = [join('i18n', 'entities.pot')]
-    elif exists(join('i18n', 'static-messages.pot')):
-        potfiles = [join('i18n', 'static-messages.pot')]
+             % osp.join('i18n', 'entities.pot'), DeprecationWarning)
+        potfiles = [osp.join('i18n', 'entities.pot')]
+    elif osp.exists(osp.join('i18n', 'static-messages.pot')):
+        potfiles = [osp.join('i18n', 'static-messages.pot')]
     else:
         potfiles = []
     print '-> extract schema messages'
-    schemapot = join(tempdir, 'schema.pot')
+    schemapot = osp.join(tempdir, 'schema.pot')
     potfiles.append(schemapot)
     # explicit close necessary else the file may not be yet flushed when
     # we'll using it below
@@ -397,30 +411,32 @@ def update_cube_catalogs(cubedir):
     generate_schema_pot(schemapotstream.write, cubedir)
     schemapotstream.close()
     print '-> extract TAL messages'
-    tali18nfile = join(tempdir, 'tali18n.py')
-    extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
+    tali18nfile = osp.join(tempdir, 'tali18n.py')
+    ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',))
+    extract_from_tal(ptfiles, tali18nfile)
     print '-> extract Javascript messages'
-    jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
+    jsfiles =  [jsfile for jsfile in find('.', '.js')
+                if osp.basename(jsfile).startswith('cub')]
     if jsfiles:
-        tmppotfile = join(tempdir, 'js.pot')
-        execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
-                % (tmppotfile, ' '.join(jsfiles)))
+        tmppotfile = osp.join(tempdir, 'js.pot')
+        execute('xgettext --no-location --omit-header -k_ -L java '
+                '--from-code=utf-8 -o %s %s' % (tmppotfile, ' '.join(jsfiles)))
         # no pot file created if there are no string to translate
-        if exists(tmppotfile):
+        if osp.exists(tmppotfile):
             potfiles.append(tmppotfile)
     print '-> create cube-specific catalog'
-    tmppotfile = join(tempdir, 'generated.pot')
+    tmppotfile = osp.join(tempdir, 'generated.pot')
     cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
     cubefiles.append(tali18nfile)
     execute('xgettext --no-location --omit-header -k_ -o %s %s'
             % (tmppotfile, ' '.join('"%s"' % f for f in cubefiles)))
-    if exists(tmppotfile): # doesn't exists of no translation string found
+    if osp.exists(tmppotfile): # doesn't exists of no translation string found
         potfiles.append(tmppotfile)
-    potfile = join(tempdir, 'cube.pot')
+    potfile = osp.join(tempdir, 'cube.pot')
     print '-> merging %i .pot files:' % len(potfiles)
     execute('msgcat -o %s %s' % (potfile,
                                  ' '.join('"%s"' % f for f in potfiles)))
-    if not exists(potfile):
+    if not osp.exists(potfile):
         print 'no message catalog for cube', cube, 'nothing to translate'
         # cleanup
         rm(tempdir)
@@ -428,16 +444,16 @@ def update_cube_catalogs(cubedir):
     print '-> merging main pot file with existing translations:'
     chdir('i18n')
     toedit = []
-    for lang in LANGS:
+    for lang in cw_languages():
         print '-> language', lang
         cubepo = '%s.po' % lang
-        if not exists(cubepo):
+        if not osp.exists(cubepo):
             shutil.copy(potfile, cubepo)
         else:
             execute('msgmerge -N -s -o %snew %s %s' % (cubepo, cubepo, potfile))
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
-        toedit.append(abspath(cubepo))
+        toedit.append(osp.abspath(cubepo))
     # cleanup
     rm(tempdir)
     return toedit
@@ -465,7 +481,7 @@ class NewCubeCommand(Command):
     """
     name = 'newcube'
     arguments = '<cubename>'
-
+    min_args = max_args = 1
     options = (
         ("layout",
          {'short': 'L', 'type' : 'choice', 'metavar': '<cube layout>',
@@ -546,32 +562,34 @@ layout, and a full featured cube with "full" layout.',
     def run(self, args):
         import re
         from logilab.common.shellutils import ASK
-        if len(args) != 1:
-            raise BadCommandUsage("exactly one argument (cube name) is expected")
         cubename = args[0]
         if not re.match('[_A-Za-z][_A-Za-z0-9]*$', cubename):
-            raise BadCommandUsage("cube name should be a valid python module name")
+            raise BadCommandUsage(
+                'cube name must be a valid python module name')
         verbose = self.get('verbose')
         cubesdir = self.get('directory')
         if not cubesdir:
             cubespath = ServerConfiguration.cubes_search_path()
             if len(cubespath) > 1:
-                raise BadCommandUsage("can't guess directory where to put the new cube."
-                                      " Please specify it using the --directory option")
+                raise BadCommandUsage(
+                    "can't guess directory where to put the new cube."
+                    " Please specify it using the --directory option")
             cubesdir = cubespath[0]
-        if not isdir(cubesdir):
+        if not osp.isdir(cubesdir):
             print "-> creating cubes directory", cubesdir
             try:
                 mkdir(cubesdir)
             except OSError, err:
-                self.fail("failed to create directory %r\n(%s)" % (cubesdir, err))
-        cubedir = join(cubesdir, cubename)
-        if exists(cubedir):
-            self.fail("%s already exists !" % (cubedir))
-        skeldir = join(BASEDIR, 'skeleton')
+                self.fail("failed to create directory %r\n(%s)"
+                          % (cubesdir, err))
+        cubedir = osp.join(cubesdir, cubename)
+        if osp.exists(cubedir):
+            self.fail("%s already exists !" % cubedir)
+        skeldir = osp.join(BASEDIR, 'skeleton')
         default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:
-            distname = raw_input('Debian name for your cube ? [%s]): ' % default_name).strip()
+            distname = raw_input('Debian name for your cube ? [%s]): '
+                                 % default_name).strip()
             if not distname:
                 distname = default_name
             elif not distname.startswith('cubicweb-'):
@@ -580,10 +598,13 @@ layout, and a full featured cube with "full" layout.',
         else:
             distname = default_name
         if not re.match('[a-z][-a-z0-9]*$', distname):
-            raise BadCommandUsage("cube distname should be a valid debian package name")
-        longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
+            raise BadCommandUsage(
+                'cube distname should be a valid debian package name')
+        longdesc = shortdesc = raw_input(
+            'Enter a short description for your cube: ')
         if verbose:
-            longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
+            longdesc = raw_input(
+                'Enter a long description (leave empty to reuse the short one): ')
         dependencies = {'cubicweb': '>= %s' % cubicwebversion}
         if verbose:
             dependencies.update(self._ask_for_dependencies())
@@ -603,7 +624,7 @@ layout, and a full featured cube with "full" layout.',
         exclude = SKEL_EXCLUDE
         if self['layout'] == 'simple':
             exclude += ('sobjects.py*', 'precreate.py*', 'realdb_test*',
-                        'cubes.*', 'external_resources*')
+                        'cubes.*', 'uiprops.py*')
         copy_skeleton(skeldir, cubedir, context, exclude=exclude)
 
     def _ask_for_dependencies(self):
@@ -638,8 +659,7 @@ class ExamineLogCommand(Command):
     """
     arguments = 'rql.log'
     name = 'exlog'
-    options = (
-        )
+    options = ()
 
     def run(self, args):
         import re
@@ -684,34 +704,44 @@ class GenerateSchema(Command):
     """Generate schema image for the given cube"""
     name = "schema"
     arguments = '<cube>'
-    options = [('output-file', {'type':'file', 'default': None,
-                 'metavar': '<file>', 'short':'o', 'help':'output image file',
-                 'input':False}),
-               ('viewer', {'type': 'string', 'default':None,
-                'short': "d", 'metavar':'<cmd>',
-                 'help':'command use to view the generated file (empty for none)'}
-               ),
-               ('show-meta', {'action': 'store_true', 'default':False,
-                'short': "m", 'metavar': "<yN>",
-                 'help':'include meta and internal entities in schema'}
-               ),
-               ('show-workflow', {'action': 'store_true', 'default':False,
-                'short': "w", 'metavar': "<yN>",
-                'help':'include workflow entities in schema'}
-               ),
-               ('show-cw-user', {'action': 'store_true', 'default':False,
-                'metavar': "<yN>",
-                'help':'include cubicweb user entities in schema'}
-               ),
-               ('exclude-type', {'type':'string', 'default':'',
-                'short': "x", 'metavar': "<types>",
-                 'help':'coma separated list of entity types to remove from view'}
-               ),
-               ('include-type', {'type':'string', 'default':'',
-                'short': "i", 'metavar': "<types>",
-                 'help':'coma separated list of entity types to include in view'}
-               ),
-              ]
+    min_args = max_args = 1
+    options = [
+        ('output-file',
+         {'type':'file', 'default': None,
+          'metavar': '<file>', 'short':'o', 'help':'output image file',
+          'input':False,
+          }),
+        ('viewer',
+         {'type': 'string', 'default':None,
+          'short': "d", 'metavar':'<cmd>',
+          'help':'command use to view the generated file (empty for none)',
+          }),
+        ('show-meta',
+         {'action': 'store_true', 'default':False,
+          'short': "m", 'metavar': "<yN>",
+          'help':'include meta and internal entities in schema',
+          }),
+        ('show-workflow',
+         {'action': 'store_true', 'default':False,
+          'short': "w", 'metavar': "<yN>",
+          'help':'include workflow entities in schema',
+          }),
+        ('show-cw-user',
+         {'action': 'store_true', 'default':False,
+          'metavar': "<yN>",
+          'help':'include cubicweb user entities in schema',
+          }),
+        ('exclude-type',
+         {'type':'string', 'default':'',
+          'short': "x", 'metavar': "<types>",
+          'help':'coma separated list of entity types to remove from view',
+          }),
+        ('include-type',
+         {'type':'string', 'default':'',
+          'short': "i", 'metavar': "<types>",
+          'help':'coma separated list of entity types to include in view',
+          }),
+        ]
 
     def run(self, args):
         from subprocess import Popen
@@ -720,7 +750,7 @@ class GenerateSchema(Command):
         from yams import schema2dot, BASE_TYPES
         from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                                      WORKFLOW_TYPES, INTERNAL_TYPES)
-        cubes = splitstrip(pop_arg(args, 1))
+        cubes = splitstrip(args[0])
         dev_conf = DevConfiguration(*cubes)
         schema = dev_conf.load_schema()
         out, viewer = self['output-file'], self['viewer']
@@ -741,10 +771,22 @@ class GenerateSchema(Command):
             p = Popen((viewer, out))
             p.wait()
 
-register_commands((UpdateCubicWebCatalogCommand,
-                   UpdateTemplateCatalogCommand,
-                   #LiveServerCommand,
-                   NewCubeCommand,
-                   ExamineLogCommand,
-                   GenerateSchema,
-                   ))
+
+class GenerateQUnitHTML(Command):
+    """Generate a QUnit html file to see test in your browser"""
+    name = "qunit-html"
+    arguments = '<test file> [<dependancy js file>...]'
+
+    def run(self, args):
+        from cubicweb.devtools.qunit import make_qunit_html
+        print make_qunit_html(args[0], args[1:])
+
+for cmdcls in (UpdateCubicWebCatalogCommand,
+               UpdateTemplateCatalogCommand,
+               #LiveServerCommand,
+               NewCubeCommand,
+               ExamineLogCommand,
+               GenerateSchema,
+               GenerateQUnitHTML,
+               ):
+    CWCTL.register(cmdcls)

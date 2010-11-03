@@ -18,7 +18,6 @@
 """allways executed before all others in server migration
 
 it should only include low level schema changes
-
 """
 from __future__ import with_statement
 
@@ -93,6 +92,10 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
         for action in ('read', 'add', 'delete'):
             drop_relation_definition('CWRType', '%s_permission' % action, 'CWGroup', commit=False)
             drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
+    sync_schema_props_perms('read_permission', syncperms=False) # fix read_permission cardinality
+
+if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6):
+    add_entity_type('CWUniqueTogetherConstraint')
 
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 

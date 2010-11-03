@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """web session component: by dfault the session is actually the db connection
 object :/
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from cubicweb.web import InvalidSession

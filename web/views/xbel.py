@@ -23,7 +23,7 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.view import EntityView
 from cubicweb.web.views.xmlrss import XMLView
 
@@ -62,7 +62,7 @@ class XbelItemView(EntityView):
 
 
 class XbelItemBookmarkView(XbelItemView):
-    __select__ = implements('Bookmark')
+    __select__ = is_instance('Bookmark')
 
     def url(self, entity):
         return entity.actual_url()

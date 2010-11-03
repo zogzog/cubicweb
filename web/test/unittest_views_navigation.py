@@ -62,10 +62,10 @@ class NavigationTC(CubicWebTC):
         req = self.request()
         rset = self.execute('Any X,N LIMIT 10 WHERE X name N')
         navcomp = self.vreg['components'].select_or_none('navigation', req, rset=rset)
-        self.assertEquals(navcomp, None)
+        self.assertEqual(navcomp, None)
         req.set_search_state('W:X:Y:Z')
         navcomp = self.vreg['components'].select_or_none('navigation', req, rset=rset)
-        self.assertEquals(navcomp, None)
+        self.assertEqual(navcomp, None)
         req.set_search_state('normal')
 
     def test_navigation_selection_not_enough(self):

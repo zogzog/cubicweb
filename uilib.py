@@ -31,6 +31,8 @@ from StringIO import StringIO
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 
+from cubicweb.utils import json_dumps
+
 
 def rql_for_eid(eid):
     """return the rql query necessary to fetch entity with the given eid.  This
@@ -44,6 +46,11 @@ def rql_for_eid(eid):
     """
     return 'Any X WHERE X eid %s' % eid
 
+def eid_param(name, eid):
+    assert eid is not None
+    if eid is None:
+        eid = ''
+    return '%s:%s' % (name, eid)
 
 def printable_value(req, attrtype, value, props=None, displaytime=True):
     """return a displayable value (i.e. unicode string)"""
@@ -227,6 +234,54 @@ def cut(text, length):
 
 
 # HTML generation helper functions ############################################
+
+class _JSId(object):
+    def __init__(self, id, parent=None):
+        self.id = id
+        self.parent = parent
+    def __unicode__(self):
+        if self.parent:
+            return u'%s.%s' % (self.parent, self.id)
+        return unicode(self.id)
+    def __str__(self):
+        return unicode(self).encode('utf8')
+    def __getattr__(self, attr):
+        return _JSId(attr, self)
+    def __call__(self, *args):
+        return _JSCallArgs(args, self)
+
+class _JSCallArgs(_JSId):
+    def __init__(self, args, parent=None):
+        assert isinstance(args, tuple)
+        self.args = args
+        self.parent = parent
+    def __unicode__(self):
+        args = u','.join(json_dumps(arg) for arg in self.args)
+        if self.parent:
+            return u'%s(%s)' % (self.parent, args)
+        return args
+
+class _JS(object):
+    def __getattr__(self, attr):
+        return _JSId(attr)
+
+"""magic object to return strings suitable to call some javascript function with
+the given arguments (which should be correctly typed).
+
+>>> str(js.pouet(1, "2"))
+'pouet(1,"2")'
+>>> str(js.cw.pouet(1, "2"))
+'cw.pouet(1,"2")'
+>>> str(js.cw.pouet(1, "2").pouet(None))
+'cw.pouet(1,"2").pouet(null)')
+"""
+js = _JS()
+
+def domid(string):
+    """return a valid DOM id from a string (should also be usable in jQuery
+    search expression...)
+    """
+    return string.replace('.', '_').replace('-', '_')
 
 HTML4_EMPTY_TAGS = frozenset(('base', 'meta', 'link', 'hr', 'br', 'param',
                               'img', 'area', 'input', 'col'))

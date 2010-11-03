@@ -1,5 +1,5 @@
-How to use entities objects
----------------------------
+How to use entities objects and adapters
+----------------------------------------
 
 The previous chapters detailed the classes and methods available to
 the developper at the so-called `ORM`_ level. However they say little
@@ -7,9 +7,9 @@ about the common patterns of usage of these objects.
 
 .. _`ORM`: http://en.wikipedia.org/wiki/Object-relational_mapping
 
-Entities objects are used in the repository and web sides of
-CubicWeb. On the repository side of things, one should manipulate them
-in Hooks and Operations.
+Entities objects (and their adapters) are used in the repository and
+web sides of CubicWeb. On the repository side of things, one should
+manipulate them in Hooks and Operations.
 
 Hooks and Operations provide support for the implementation of rules
 such as computed attributes, coherency invariants, etc (they play the
@@ -32,21 +32,22 @@ the web frontend are separated process communicating over the
 wire. There is no way state can be shared between these processes
 (there is a specific API for that). Hence, it is not possible to use
 entity objects as messengers between these components of an
-application. It means that an attribute set as in `obj.x = 42`,
+application. It means that an attribute set as in ``obj.x = 42``,
 whether or not x is actually an entity schema attribute, has a short
 life span, limited to the hook, operation or view within which the
 object was built.
 
 Setting an attribute or relation value can be done in the context of a
-Hook/Operation, using the obj.set_attributes(x=42) notation or a plain
+Hook/Operation, using the obj.set_relations(x=42) notation or a plain
 RQL SET expression.
 
 In views, it would be preferable to encapsulate the necessary logic in
-a method of the concerned entity class(es). But of course, this advice
-is also reasonnable for Hooks/Operations, though the separation of
-concerns here is less stringent than in the case of views.
+a method of an adapter for the concerned entity class(es). But of
+course, this advice is also reasonnable for Hooks/Operations, though
+the separation of concerns here is less stringent than in the case of
+views.
 
-This leads to the practical role of entity objects: it's where an
+This leads to the practical role of objects adapters: it's where an
 important part of the application logic lie (the other part being
 located in the Hook/Operations).
 
@@ -58,26 +59,31 @@ cube. Let us begin to study the entities/project.py content.
 
 .. sourcecode:: python
 
-    class Project(TreeMixIn, AnyEntity):
+    from cubicweb.entities.adapters import ITreeAdapter
+
+    class ProjectAdapter(ITreeAdapter):
+        __select__ = is_instance('Project')
+        tree_relation = 'subproject_of'
+
+    class Project(AnyEntity):
         __regid__ = 'Project'
-        __implements__ = AnyEntity.__implements__ + (ITree,)
         fetch_attrs, fetch_order = fetch_config(('name', 'description',
                                                  'description_format', 'summary'))
 
         TICKET_DEFAULT_STATE_RESTR = 'S name IN ("created","identified","released","scheduled")'
 
-        tree_attribute = 'subproject_of'
-        parent_target = 'subject'
-        children_target = 'object'
-
         def dc_title(self):
             return self.name
 
-First we see that it uses an ITree interface and the TreeMixIn default
-implementation. The attributes `tree_attribute`, `parent_target` and
-`children_target` are used by the TreeMixIn code. This is typically
-used in views concerned with the representation of tree-like
-structures (CubicWeb provides several such views).
+The fact that the `Project` entity type implements an ``ITree``
+interface is materialized by the ``ProjectAdapter`` class (inheriting
+the pre-defined ``ITreeAdapter`` whose __regid__ is of course
+``ITree``), which will be selected on `Project` entity types because
+of its selector. On this adapter, we redefine the ``tree_relation``
+attribute of the ITreeAdapter class.
+
+This is typically used in views concerned with the representation of
+tree-like structures (CubicWeb provides several such views).
 
 It is important that the views themselves try not to implement this
 logic, not only because such views would be hardly applyable to other
@@ -89,7 +95,17 @@ fully and portably expressed at the level of database entities (think
 about the transitive closure of the child relation). This is a further
 argument to implement it at entity class level.
 
-The `dc_title` method provides a (unicode string) value likely to be
+The fetch_attrs, fetch_order class attributes are parameters of the
+`ORM`_ layer. They tell which attributes should be loaded at once on
+entity object instantiation (by default, only the eid is known, other
+attributes are loaded on demand), and which attribute is to be used to
+order the .related() and .unrelated() methods output.
+
+We can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
+application domain piece of data. There is, of course, no limitation
+to the amount of class attributes of this kind.
+
+The ``dc_title`` method provides a (unicode string) value likely to be
 consummed by views, but note that here we do not care about output
 encodings. We care about providing data in the most universal format
 possible, because the data could be used by a web view (which would be
@@ -97,17 +113,14 @@ responsible of ensuring XHTML compliance), or a console or file
 oriented output (which would have the necessary context about the
 needed byte stream encoding).
 
-The fetch_attrs, fetch_order class attributes are parameters of the
-`ORM`_ layer. They tell which attributes should be loaded at once on
-entity object instantiation (by default, only the eid is known, other
-attributes are loaded on demand), and which attribute is to be used to
-order the .related() and .unrelated() methods output.
+.. note::
 
-Finally, we can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
-application domain piece of data. There is, of course, no limitation
-to the amount of class attributes of this kind.
+  The dublin code `dc_xxx` methods are not moved to an adapter as they
+  are extremely prevalent in cubicweb and assorted cubes and should be
+  available for all entity types.
 
-Let us now dig into more substantial pieces of code.
+Let us now dig into more substantial pieces of code, continuing the
+Project class.
 
 .. sourcecode:: python
 
@@ -151,7 +164,7 @@ These few lines exhibit the important properties we want to outline:
 * it is NOT concerned with database coherency (this is the realm of
   Hooks/Operations); in other words, it assumes a coherent world
 
-* it is NOT concerned with end-user interfaces
+* it is NOT (directly) concerned with end-user interfaces
 
 * however it can be used in both contexts
 

@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Fake objects to ease testing of cubicweb without a fully working environment
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from logilab.database import get_db_helper
@@ -30,6 +30,7 @@ from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
 class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
+    uiprops = {}
     apphome = None
     def __init__(self, appid='data', apphome=None, cubes=()):
         self.appid = appid
@@ -39,12 +40,13 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self['uid'] = None
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 100
+        self.datadir_url = BASE_URL + 'data/'
 
     def cubes(self, expand=False):
         return self._cubes
 
     def sources(self):
-        return {}
+        return {'system': {'db-driver': 'sqlite'}}
 
 
 class FakeRequest(CubicWebRequestBase):
@@ -65,10 +67,6 @@ class FakeRequest(CubicWebRequestBase):
 
     def header_if_modified_since(self):
         return None
-
-    def base_url(self):
-        """return the root url of the instance"""
-        return BASE_URL
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative

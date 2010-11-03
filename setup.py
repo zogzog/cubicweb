@@ -36,6 +36,7 @@ except ImportError:
     from distutils.core import setup
     from distutils.command import install_lib
     USE_SETUPTOOLS = False
+from distutils.command import install_data
 
 # import required features
 from __pkginfo__ import modname, version, license, description, web, \
@@ -47,7 +48,7 @@ long_description = file('README').read()
 import __pkginfo__
 if USE_SETUPTOOLS:
     requires = {}
-    for entry in ("__depends__", "__recommends__"):
+    for entry in ("__depends__",): # "__recommends__"):
         requires.update(getattr(__pkginfo__, entry, {}))
     install_requires = [("%s %s" % (d, v and v or "")).strip()
                        for d, v in requires.iteritems()]
@@ -60,7 +61,7 @@ include_dirs = getattr(__pkginfo__, 'include_dirs', ())
 data_files = getattr(__pkginfo__, 'data_files', None)
 subpackage_of = getattr(__pkginfo__, 'subpackage_of', None)
 ext_modules = getattr(__pkginfo__, 'ext_modules', None)
-
+package_data = getattr(__pkginfo__, 'package_data', {})
 
 BASE_BLACKLIST = ('CVS', 'debian', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
@@ -163,6 +164,45 @@ class MyInstallLib(install_lib.install_lib):
                 dest = join(self.install_dir, base, directory)
                 export(directory, dest, verbose=False)
 
+# write required share/cubicweb/cubes/__init__.py
+class MyInstallData(install_data.install_data):
+    """A class That manages data files installation"""
+    def run(self):
+        """overridden from install_data class"""
+        install_data.install_data.run(self)
+        path = join(self.install_dir, 'share', 'cubicweb', 'cubes', '__init__.py')
+        ini = open(path, 'w')
+        ini.write('# Cubicweb cubes directory\n')
+        ini.close()
+
+# re-enable copying data files in sys.prefix
+if USE_SETUPTOOLS:
+    # overwrite MyInstallData to use sys.prefix instead of the egg directory
+    MyInstallMoreData = MyInstallData
+    class MyInstallData(MyInstallMoreData):
+        """A class that manages data files installation"""
+        def run(self):
+            _old_install_dir = self.install_dir
+            if self.install_dir.endswith('egg'):
+                self.install_dir = sys.prefix
+            MyInstallMoreData.run(self)
+            self.install_dir = _old_install_dir
+    try:
+        import setuptools.command.easy_install # only if easy_install avaible
+        # monkey patch: Crack SandboxViolation verification
+        from setuptools.sandbox import DirectorySandbox as DS
+        old_ok = DS._ok
+        def _ok(self, path):
+            """Return True if ``path`` can be written during installation."""
+            out = old_ok(self, path)
+            realpath = os.path.normcase(os.path.realpath(path))
+            if realpath.startswith(sys.prefix):
+                out = True
+            return out
+        DS._ok = _ok
+    except ImportError:
+        pass
+
 def install(**kwargs):
     """setup entry point"""
     if USE_SETUPTOOLS:
@@ -182,13 +222,16 @@ def install(**kwargs):
         packages = [modname] + get_packages(os.getcwd(), modname)
     if USE_SETUPTOOLS:
         kwargs['install_requires'] = install_requires
+        kwargs['zip_safe'] = False
     kwargs['packages'] = packages
+    kwargs['package_data'] = package_data
     return setup(name=distname, version=version, license=license, url=web,
                  description=description, long_description=long_description,
                  author=author, author_email=author_email,
                  scripts=ensure_scripts(scripts), data_files=data_files,
                  ext_modules=ext_modules,
-                 cmdclass={'install_lib': MyInstallLib},
+                 cmdclass={'install_lib': MyInstallLib,
+                           'install_data': MyInstallData},
                  **kwargs
                  )
 

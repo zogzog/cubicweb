@@ -46,9 +46,40 @@ a [foot note]_
 .. [foot note] the foot note content
 
 
+Boxes
+=====
 
-XXX
-* lien vers cw.cwconfig.CW_CUBES_PATH par ex.
+- warning box: 
+    .. warning::
+
+       Warning content
+- note box:
+    .. note::
+
+       Note content
 
 
-automodule, autofunction, automethod, autofunction
+
+Cross references
+================
+
+To arbitrary section
+--------------------
+
+:ref:`identifier` ou :ref:`label <identifier>`
+
+Label required of referencing node which as no title, else the node's title will be used.
+
+
+To API objects
+--------------
+See the autodoc sphinx extension documentation. Quick overview:
+
+* ref to a class: :class:`cubicweb.devtools.testlib.AutomaticWebTest`
+
+* if you can to see only the class name in the generated documentation, add a ~:
+  :class:`~cubicweb.devtools.testlib.AutomaticWebTest`
+
+* you can also use :mod: (module), :exc: (exception), :func: (function), :meth: (method)...
+
+* syntax explained above to specify label explicitly may also be used

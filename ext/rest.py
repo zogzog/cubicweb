@@ -229,7 +229,7 @@ def rest_publish(context, data):
 
     :rtype: unicode
     :return:
-      the data formatted as HTML or the original data if an error occured
+      the data formatted as HTML or the original data if an error occurred
     """
     req = context._cw
     if isinstance(data, unicode):
@@ -242,8 +242,14 @@ def rest_publish(context, data):
         data = data.translate(ESC_CAR_TABLE)
     settings = {'input_encoding': encoding, 'output_encoding': 'unicode',
                 'warning_stream': StringIO(),
+                'traceback': True, # don't sys.exit
+                'stylesheet': None, # don't try to embed stylesheet (may cause
+                                    # obscure bug due to docutils computing
+                                    # relative path according to the directory
+                                    # used *at import time*
                 # dunno what's the max, severe is 4, and we never want a crash
-                # (though try/except may be a better option...)
+                # (though try/except may be a better option...). May be the
+                # above traceback option will avoid this?
                 'halt_level': 10,
                 }
     if context:

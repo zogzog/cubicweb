@@ -18,16 +18,16 @@
 """basic support for SIMILE's timline widgets
 
 cf. http://code.google.com/p/simile-widgets/
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
+from logilab.common.date import ustrftime
 
-from cubicweb.interfaces import ICalendarable
-from cubicweb.selectors import implements
+from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView, StartupView
-from cubicweb.web import json
+from cubicweb.utils import json_dumps
 
 _ = unicode
 
@@ -37,11 +37,12 @@ class TimelineJsonView(EntityView):
     should be properties of entity classes or subviews)
     """
     __regid__ = 'timeline-json'
+    __select__ = adaptable('ICalendarable')
+
     binary = True
     templatable = False
     content_type = 'application/json'
 
-    __select__ = implements(ICalendarable)
     date_fmt = '%Y/%m/%d'
 
     def call(self):
@@ -52,7 +53,7 @@ class TimelineJsonView(EntityView):
                 events.append(event)
         timeline_data = {'dateTimeFormat': self.date_fmt,
                          'events': events}
-        self.w(json.dumps(timeline_data))
+        self.w(json_dumps(timeline_data))
 
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):
@@ -74,12 +75,13 @@ class TimelineJsonView(EntityView):
         'link': 'http://www.allposters.com/-sp/Portrait-of-Horace-Brodsky-Posters_i1584413_.htm'
         }
         """
-        start = entity.start
-        stop = entity.stop
+        icalendarable = entity.cw_adapt_to('ICalendarable')
+        start = icalendarable.start
+        stop = icalendarable.stop
         start = start or stop
         if start is None and stop is None:
             return None
-        event_data = {'start': start.strftime(self.date_fmt),
+        event_data = {'start': ustrftime(start, self.date_fmt),
                       'title': xml_escape(entity.dc_title()),
                       'description': entity.dc_description(format='text/html'),
                       'link': entity.absolute_url(),
@@ -88,7 +90,7 @@ class TimelineJsonView(EntityView):
         if onclick:
             event_data['onclick'] = onclick
         if stop:
-            event_data['end'] = stop.strftime(self.date_fmt)
+            event_data['end'] = ustrftime(stop, self.date_fmt)
         return event_data
 
 
@@ -116,7 +118,7 @@ class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     __regid__ = 'timeline'
     title = _('timeline')
-    __select__ = implements(ICalendarable)
+    __select__ = adaptable('ICalendarable')
     paginable = False
     def call(self, tlunit=None):
         self._cw.html_headers.define_var('Timeline_urlPrefix', self._cw.datadir_url)

@@ -24,6 +24,8 @@ __docformat__ = "restructuredtext en"
 import os
 import sys
 import re
+import urlparse
+from os.path import dirname, join
 from urllib import unquote
 from math import log
 from contextlib import contextmanager
@@ -31,7 +33,7 @@ from warnings import warn
 
 import yams.schema
 
-from logilab.common.testlib import TestCase, InnerTest
+from logilab.common.testlib import TestCase, InnerTest, Tags
 from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
@@ -44,8 +46,9 @@ from cubicweb.dbapi import ProgrammingError, DBAPISession, repo_connect
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.session import security_enabled
+from cubicweb.server.hook import SendMailOp
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
-from cubicweb.devtools import fake, htmlparser
+from cubicweb.devtools import BASE_URL, fake, htmlparser
 from cubicweb.utils import json
 
 # low-level utilities ##########################################################
@@ -69,7 +72,6 @@ def line_context_filter(line_no, center, before=3, after=None):
         after = before
     return center - before <= line_no <= center + after
 
-
 def unprotected_entities(schema, strict=False):
     """returned a set of each non final entity type, excluding "system" entities
     (eg CWGroup, CWUser...)
@@ -79,7 +81,6 @@ def unprotected_entities(schema, strict=False):
     else:
         protected_entities = yams.schema.BASE_TYPES.union(SYSTEM_ENTITIES)
     return set(schema.entities()) - protected_entities
-
 
 def refresh_repo(repo, resetschema=False, resetvreg=False):
     for pool in repo.pools:
@@ -143,6 +144,30 @@ class MockSMTP:
 cwconfig.SMTP = MockSMTP
 
 
+class TestCaseConnectionProxy(object):
+    """thin wrapper around `cubicweb.dbapi.Connection` context-manager
+    used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
+
+    It just proxies to the default connection context manager but
+    restores the original connection on exit.
+    """
+    def __init__(self, testcase, cnx):
+        self.testcase = testcase
+        self.cnx = cnx
+
+    def __getattr__(self, attrname):
+        return getattr(self.cnx, attrname)
+
+    def __enter__(self):
+        return self.cnx.__enter__()
+
+    def __exit__(self, exctype, exc, tb):
+        try:
+            return self.cnx.__exit__(exctype, exc, tb)
+        finally:
+            self.cnx.close()
+            self.testcase.restore_connection()
+
 # base class for cubicweb tests requiring a full cw environments ###############
 
 class CubicWebTC(TestCase):
@@ -163,22 +188,30 @@ class CubicWebTC(TestCase):
     appid = 'data'
     configcls = devtools.ApptestConfiguration
     reset_schema = reset_vreg = False # reset schema / vreg between tests
+    tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
 
     @classproperty
     def config(cls):
-        """return the configuration object. Configuration is cached on the test
-        class.
+        """return the configuration object
+
+        Configuration is cached on the test class.
         """
         try:
             return cls.__dict__['_config']
         except KeyError:
-            config = cls._config = cls.configcls(cls.appid)
+            home = join(dirname(sys.modules[cls.__module__].__file__), cls.appid)
+            config = cls._config = cls.configcls(cls.appid, apphome=home)
             config.mode = 'test'
             return config
 
     @classmethod
     def init_config(cls, config):
-        """configuration initialization hooks. You may want to override this."""
+        """configuration initialization hooks.
+
+        You may only want to override here the configuraton logic.
+
+        Otherwise, consider to use a different :class:`ApptestConfiguration`
+        defined in the `configcls` class attribute"""
         source = config.sources()['system']
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']
@@ -200,8 +233,9 @@ class CubicWebTC(TestCase):
         config.global_set_option('default-dest-addrs', send_to)
         config.global_set_option('sender-name', 'cubicweb-test')
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
+        # default_base_url on config class isn't enough for TestServerConfiguration
+        config.global_set_option('base-url', config.default_base_url())
         # web resources
-        config.global_set_option('base-url', devtools.BASE_URL)
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
         except: # not in server only configuration
@@ -266,10 +300,13 @@ class CubicWebTC(TestCase):
     # default test setup and teardown #########################################
 
     def setUp(self):
+        # monkey patch send mail operation so emails are sent synchronously
+        self._old_mail_commit_event = SendMailOp.commit_event
+        SendMailOp.commit_event = SendMailOp.sendmails
         pause_tracing()
         previous_failure = self.__class__.__dict__.get('_repo_init_failed')
         if previous_failure is not None:
-            self.skip('repository is not initialised: %r' % previous_failure)
+            self.skipTest('repository is not initialised: %r' % previous_failure)
         try:
             self._init_repo()
         except Exception, ex:
@@ -287,6 +324,7 @@ class CubicWebTC(TestCase):
         for cnx in self._cnxs:
             if not cnx._closed:
                 cnx.close()
+        SendMailOp.commit_event = self._old_mail_commit_event
 
     def setup_database(self):
         """add your database setup code by overriding this method"""
@@ -313,7 +351,7 @@ class CubicWebTC(TestCase):
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),
                     {'x': user.eid})
-        user.clear_related_cache('in_group', 'subject')
+        user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
             req.cnx.commit()
         return user
@@ -322,14 +360,18 @@ class CubicWebTC(TestCase):
         """return a connection for the given login/password"""
         if login == self.admlogin:
             self.restore_connection()
-        else:
-            if not kwargs:
-                kwargs['password'] = str(login)
-            self.cnx = repo_connect(self.repo, unicode(login), **kwargs)
-            self.websession = DBAPISession(self.cnx)
-            self._cnxs.append(self.cnx)
+            # definitly don't want autoclose when used as a context manager
+            return self.cnx
+        autoclose = kwargs.pop('autoclose', True)
+        if not kwargs:
+            kwargs['password'] = str(login)
+        self.cnx = repo_connect(self.repo, unicode(login), **kwargs)
+        self.websession = DBAPISession(self.cnx)
+        self._cnxs.append(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
+        if autoclose:
+            return TestCaseConnectionProxy(self, self.cnx)
         return self.cnx
 
     def restore_connection(self):
@@ -499,9 +541,11 @@ class CubicWebTC(TestCase):
         return publisher
 
     requestcls = fake.FakeRequest
-    def request(self, *args, **kwargs):
+    def request(self, rollbackfirst=False, **kwargs):
         """return a web ui request"""
         req = self.requestcls(self.vreg, form=kwargs)
+        if rollbackfirst:
+            self.websession.cnx.rollback()
         req.set_session(self.websession)
         return req
 
@@ -526,6 +570,30 @@ class CubicWebTC(TestCase):
             req.cnx.commit()
             raise
         return result
+
+    def req_from_url(self, url):
+        """parses `url` and builds the corresponding CW-web request
+
+        req.form will be setup using the url's query string
+        """
+        req = self.request()
+        if isinstance(url, unicode):
+            url = url.encode(req.encoding) # req.setup_params() expects encoded strings
+        querystring = urlparse.urlparse(url)[-2]
+        params = urlparse.parse_qs(querystring)
+        req.setup_params(params)
+        return req
+
+    def url_publish(self, url):
+        """takes `url`, uses application's app_resolver to find the
+        appropriate controller, and publishes the result.
+
+        This should pretty much correspond to what occurs in a real CW server
+        except the apache-rewriter component is not called.
+        """
+        req = self.req_from_url(url)
+        ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
+        return self.ctrl_publish(req, ctrlid)
 
     def expect_redirect(self, callback, req):
         """call the given callback with req as argument, expecting to get a
@@ -573,18 +641,18 @@ class CubicWebTC(TestCase):
         sh = self.app.session_handler
         path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
         session = req.session
-        self.assertEquals(len(self.open_sessions), nbsessions, self.open_sessions)
-        self.assertEquals(session.login, origsession.login)
-        self.assertEquals(session.anonymous_session, False)
-        self.assertEquals(path, 'view')
-        self.assertEquals(params, {'__message': 'welcome %s !' % req.user.login})
+        self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
+        self.assertEqual(session.login, origsession.login)
+        self.assertEqual(session.anonymous_session, False)
+        self.assertEqual(path, 'view')
+        self.assertEqual(params, {'__message': 'welcome %s !' % req.user.login})
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
         self.assertIsInstance(req.session, DBAPISession)
-        self.assertEquals(req.session.cnx, None)
-        self.assertEquals(req.cnx, None)
-        self.assertEquals(len(self.open_sessions), nbsessions)
+        self.assertEqual(req.session.cnx, None)
+        self.assertEqual(req.cnx, None)
+        self.assertEqual(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')
 
     # content validation #######################################################
@@ -620,7 +688,7 @@ class CubicWebTC(TestCase):
              **kwargs):
         """This method tests the view `vid` on `rset` using `template`
 
-        If no error occured while rendering the view, the HTML is analyzed
+        If no error occurred while rendering the view, the HTML is analyzed
         and parsed.
 
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
@@ -633,10 +701,10 @@ class CubicWebTC(TestCase):
         view = viewsreg.select(vid, req, **kwargs)
         # set explicit test description
         if rset is not None:
-            self.set_description("testing %s, mod=%s (%s)" % (
+            self.set_description("testing vid=%s defined in %s with (%s)" % (
                 vid, view.__module__, rset.printable_rql()))
         else:
-            self.set_description("testing %s, mod=%s (no rset)" % (
+            self.set_description("testing vid=%s defined in %s without rset" % (
                 vid, view.__module__))
         if template is None: # raw view testing, no template
             viewfunc = view.render
@@ -652,7 +720,7 @@ class CubicWebTC(TestCase):
     def _test_view(self, viewfunc, view, template='main-template', kwargs={}):
         """this method does the actual call to the view
 
-        If no error occured while rendering the view, the HTML is analyzed
+        If no error occurred while rendering the view, the HTML is analyzed
         and parsed.
 
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
@@ -704,7 +772,7 @@ class CubicWebTC(TestCase):
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
-            return None
+            return output.strip()
         validator = validatorclass()
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
@@ -786,6 +854,8 @@ class AutoPopulateTest(CubicWebTC):
     """base class for test with auto-populating of the database"""
     __abstract__ = True
 
+    tags = CubicWebTC.tags | Tags('autopopulated')
+
     pdbclass = CubicWebDebugger
     # this is a hook to be able to define a list of rql queries
     # that are application dependent and cannot be guessed automatically
@@ -842,6 +912,7 @@ class AutoPopulateTest(CubicWebTC):
             except ValidationError, ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
+                self.session.commit_state = None # reset uncommitable flag
         self.post_populate(cu)
         self.commit()
 
@@ -911,6 +982,9 @@ class AutoPopulateTest(CubicWebTC):
 
 class AutomaticWebTest(AutoPopulateTest):
     """import this if you wan automatic tests to be ran"""
+
+    tags = AutoPopulateTest.tags | Tags('web', 'generated')
+
     def setUp(self):
         AutoPopulateTest.setUp(self)
         # access to self.app for proper initialization of the authentication

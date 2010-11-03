@@ -216,7 +216,7 @@ title
 
     # XXX nothing to do here
     def generate_Any_data_format(self, entity, index, **kwargs):
-        # data_format attribute of Image/File has no vocabulary constraint, we
+        # data_format attribute of File has no vocabulary constraint, we
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'application/octet-stream'
@@ -226,12 +226,6 @@ title
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'text/plain'
-
-    def generate_Image_data_format(self, entity, index, **kwargs):
-        # data_format attribute of Image/File has no vocabulary constraint, we
-        # need this method else stupid values will be set which make mtconverter
-        # raise exception
-        return u'image/png'
 
 
 class autoextend(type):

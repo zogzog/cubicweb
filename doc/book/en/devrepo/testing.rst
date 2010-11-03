@@ -6,24 +6,24 @@ Tests
 Unit tests
 ----------
 
-The *CubicWeb* framework provides the `CubicWebTC` test base class in
-the module `cubicweb.devtools.testlib`.
+The *CubicWeb* framework provides the
+:class:`cubicweb.devtools.testlib.CubicWebTC` test base class .
 
 Tests shall be put into the mycube/test directory. Additional test
 data shall go into mycube/test/data.
 
-It is much advised to write tests concerning entities methods, hooks
-and operations, security. The CubicWebTC base class has convenience
-methods to help test all of this.
+It is much advised to write tests concerning entities methods,
+actions, hooks and operations, security. The
+:class:`~cubicweb.devtools.testlib.CubicWebTC` base class has
+convenience methods to help test all of this.
 
-.. note::
+In the realm of views, automatic tests check that views are valid
+XHTML. See :ref:`automatic_views_tests` for details. Since 3.9, bases
+for web functional testing using `windmill
+<http://www.getwindmill.com/>`_ are set. See test cases in
+cubicweb/web/test/windmill and python wrapper in
+cubicweb/web/test_windmill/ if you want to use this in your own cube.
 
-  In the realm of views, there is not much to do but check that the
-  views are valid XHTML.  See :ref:`automatic_views_tests` for
-  details. Integration of CubicWeb tests with UI testing tools such as
-  `selenium`_ are currently under invesitgation.
-
-.. _selenium: http://seleniumhq.org/projects/ide/
 
 Most unit tests need a live database to work against. This is achieved
 by CubicWeb using automatically sqlite (bundled with Python, see
@@ -41,6 +41,8 @@ be built automatically when the test suit starts.
   permissions) and generally dealt with using the
   `sync_schema_props_perms()` fonction of the migration environment
   need not a database regeneration step.
+
+.. _hook_test:
 
 Unit test by example
 ````````````````````
@@ -77,12 +79,28 @@ from http://www.cubicweb.org/project/cubicweb-keyword).
             self.kw1.set_relations(subkeyword_of=kw3)
             self.assertRaises(ValidationError, self.commit)
 
-The test class defines a `setup_database` method which populates the
+The test class defines a :meth:`setup_database` method which populates the
 database with initial data. Each test of the class runs with this
-pre-populated database.
+pre-populated database. A commit is done automatically after the
+:meth:`setup_database` call. You don't have to call it explicitely.
 
 The test case itself checks that an Operation does it job of
 preventing cycles amongst Keyword entities.
+
+`create_entity` is a useful method, which easily allows to create an
+entity. You can link this entity to others entities, by specifying as
+argument, the relation name, and the entity to link, as value. In the
+above example, the `Classification` entity is linked to a `CWEtype`
+via the relation `classifies`. Conversely, if you are creating a
+`CWEtype` entity, you can link it to a `Classification` entity, by
+adding `reverse_classifies` as argument.
+
+.. note::
+
+   :meth:`commit` method is not called automatically in test_XXX
+   methods. You have to call it explicitely if needed (notably to test
+   operations). It is a good practice to call :meth:`clear_all_caches`
+   on entities after a commit to avoid request cache effects.
 
 You can see an example of security tests in the
 :ref:`adv_tuto_security`.
@@ -145,11 +163,11 @@ Usage with restore_connection:
    connection from another !
 
 Email notifications tests
--------------------------
+`````````````````````````
 
 When running tests potentially generated e-mails are not really sent
 but is found in the list `MAILBOX` of module
-`cubicweb.devtools.testlib`.
+:mod:`cubicweb.devtools.testlib`.
 
 You can test your notifications by analyzing the contents of this list, which
 contains objects with two attributes:
@@ -184,15 +202,70 @@ Let us look at simple example from the ``blog`` cube.
             mail = MAILBOX[1]
             self.assertEquals(mail.subject, '[data] yes')
 
+Visible actions tests
+`````````````````````
+
+It is easy to write unit tests to test actions which are visible to
+user or to a category of users. Let's take an example in the
+`conference cube`_.
+
+.. _`conference cube`: http://www.cubicweb.org/project/cubicweb-conference
+.. sourcecode:: python
+
+    class ConferenceActionsTC(CubicWebTC):
+
+        def setup_database(self):
+            self.conf = self.create_entity('Conference',
+                                           title=u'my conf',
+                                           url_id=u'conf',
+                                           start_on=date(2010, 1, 27),
+                                           end_on = date(2010, 1, 29),
+                                           call_open=True,
+                                           reverse_is_chair_at=chair,
+                                           reverse_is_reviewer_at=reviewer)
+
+        def test_admin(self):
+            req = self.request()
+            rset = req.execute('Any C WHERE C is Conference')
+            self.assertListEquals(self.pactions(req, rset),
+                                  [('workflow', workflow.WorkflowActions),
+                                   ('edit', confactions.ModifyAction),
+                                   ('managepermission', actions.ManagePermissionsAction),
+                                   ('addrelated', actions.AddRelatedActions),
+                                   ('delete', actions.DeleteAction),
+                                   ('generate_badge_action', badges.GenerateBadgeAction),
+                                   ('addtalkinconf', confactions.AddTalkInConferenceAction)
+                                   ])
+            self.assertListEquals(self.action_submenu(req, rset, 'addrelated'),
+                                  [(u'add Track in_conf Conference object',
+                                    u'http://testing.fr/cubicweb/add/Track'
+                                    u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
+                                    u'__redirectpath=conference%%2Fconf&'
+                                    u'__redirectvid=' % {'conf': self.conf.eid}),
+                                   ])
+
+You just have to execute a rql query corresponding to the view you want to test,
+and to compare the result of
+:meth:`~cubicweb.devtools.testlib.CubicWebTC.pactions` with the list of actions
+that must be visible in the interface. This is a list of tuples. The first
+element is the action's `__regid__`, the second the action's class.
+
+To test actions in submenu, you just have to test the result of
+:meth:`~cubicweb.devtools.testlib.CubicWebTC.action_submenu` method. The last
+parameter of the method is the action's category. The result is a list of
+tuples. The first element is the action's title, and the second element the
+action's url.
+
+
 .. _automatic_views_tests:
 
 Automatic views testing
 -----------------------
 
-This is done automatically with the AutomaticWebTest class. At cube
-creation time, the mycube/test/test_mycube.py file contains such a
-test. The code here has to be uncommented to be usable, without
-further modification.
+This is done automatically with the :class:`cubicweb.devtools.testlib.AutomaticWebTest`
+class. At cube creation time, the mycube/test/test_mycube.py file
+contains such a test. The code here has to be uncommented to be
+usable, without further modification.
 
 The ``auto_populate`` method uses a smart algorithm to create
 pseudo-random data in the database, thus enabling the views to be
@@ -212,6 +285,61 @@ mechanism. These are:
   auto_populate cannot guess by itself; these must yield resultsets
   against which views may be selected.
 
+.. warning::
+
+  Take care to not let the imported `AutomaticWebTest` in your test module
+  namespace, else both your subclass *and* this parent class will be run.
+
+Testing on a real-life database
+-------------------------------
+
+The ``CubicWebTC`` class uses the `cubicweb.devtools.ApptestConfiguration`
+configuration class to setup its testing environment (database driver,
+user password, application home, and so on). The `cubicweb.devtools`
+module also provides a `RealDatabaseConfiguration`
+class that will read a regular cubicweb sources file to fetch all
+this information but will also prevent the database to be initalized
+and reset between tests.
+
+For a test class to use a specific configuration, you have to set
+the `_config` class attribute on the class as in:
+
+.. sourcecode:: python
+
+    from cubicweb.devtools import RealDatabaseConfiguration
+    from cubicweb.devtools.testlib import CubicWebTC
+
+    class BlogRealDatabaseTC(CubicWebTC):
+        _config = RealDatabaseConfiguration('blog',
+                                            sourcefile='/path/to/realdb_sources')
+
+        def test_blog_rss(self):
+	    req = self.request()
+	    rset = req.execute('Any B ORDERBY D DESC WHERE B is BlogEntry, '
+	                       'B created_by U, U login "logilab", B creation_date D')
+            self.view('rss', rset)
+
+
+
+Testing with other cubes
+------------------------
+
+Sometimes a small component cannot be tested all by itself, so one
+needs to specify other cubes to be used as part of the the unit test
+suite. This is handled by the ``bootstrap_cubes`` file located under
+``mycube/test/data``. One example from the `preview` cube::
+
+ card, file, preview
+
+The format is:
+
+* possibly several empy lines or lines starting with ``#`` (comment lines)
+* one line containing a coma separated list of cube names.
+
+It is also possible to add a ``schema.py`` file in
+``mycube/test/data``, which will be used by the testing framework,
+therefore making new entity types and relations available to the
+tests. 
 
 Test APIS
 ---------

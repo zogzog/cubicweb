@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""classes to define schemas for CubicWeb
+"""classes to define schemas for CubicWeb"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -52,15 +51,19 @@ META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
-SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state',
-                     'wf_info_for'))
+WORKFLOW_RTYPES = set(('custom_workflow', 'in_state', 'wf_info_for'))
+SYSTEM_RTYPES = set(('require_permission',)) | WORKFLOW_RTYPES
 
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
-    'CWConstraint', 'CWConstraintType', 'RQLExpression',
+    'CWConstraint', 'CWConstraintType', 'CWUniqueTogetherConstraint',
+    'RQLExpression',
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
+    'constraint_of', 'relations',
+    'read_permission', 'add_permission',
+    'delete_permission', 'update_permission',
     ))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
@@ -417,7 +420,7 @@ class CubicWebEntitySchema(EntitySchema):
             # avoid deleting the relation type accidentally...
             self.schema['has_text'].del_relation_def(self, self.schema['String'])
 
-    def schema_entity(self):
+    def schema_entity(self): # XXX @property for consistency with meta
         """return True if this entity type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -441,7 +444,7 @@ class CubicWebRelationSchema(RelationSchema):
     def meta(self):
         return self.type in META_RTYPES
 
-    def schema_relation(self):
+    def schema_relation(self): # XXX @property for consistency with meta
         """return True if this relation type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -612,6 +615,7 @@ class CubicWebSchema(Schema):
 class BaseRQLConstraint(BaseConstraint):
     """base class for rql constraints
     """
+    distinct_query = None
 
     def __init__(self, restriction, mainvars=None):
         self.restriction = normalize_expression(restriction)
@@ -651,8 +655,12 @@ class BaseRQLConstraint(BaseConstraint):
         pass # this is a vocabulary constraint, not enforce XXX why?
 
     def __str__(self):
-        return '%s(Any %s WHERE %s)' % (self.__class__.__name__, self.mainvars,
-                                        self.restriction)
+        if self.distinct_query:
+            selop = 'Any'
+        else:
+            selop = 'DISTINCT Any'
+        return '%s(%s %s WHERE %s)' % (self.__class__.__name__, selop,
+                                       self.mainvars, self.restriction)
 
     def __repr__(self):
         return '<%s @%#x>' % (self.__str__(), id(self))
@@ -699,7 +707,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         """
         if not self.match_condition(session, eidfrom, eidto):
             # XXX at this point if both or neither of S and O are in mainvar we
-            # dunno if the validation error `occured` on eidfrom or eidto (from
+            # dunno if the validation error `occurred` on eidfrom or eidto (from
             # user interface point of view)
             #
             # possible enhancement: check entity being created, it's probably
@@ -744,13 +752,14 @@ class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
 
 class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """the unique rql constraint check that the result of the query isn't
-    greater than one
-    """
-    distinct_query = True
+    greater than one.
 
-    # XXX turns mainvars into a required argument in __init__, since we've no
-    #     way to guess it correctly (eg if using S,O or U the constraint will
-    #     always be satisfied since we've to use a DISTINCT query)
+    You *must* specify mainvars when instantiating the constraint since there is
+    no way to guess it correctly (e.g. if using S,O or U the constraint will
+    always be satisfied because we've to use a DISTINCT query).
+    """
+    # XXX turns mainvars into a required argument in __init__
+    distinct_query = True
 
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1

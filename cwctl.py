@@ -17,9 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """the cubicweb-ctl tool, based on logilab.common.clcommands to
 provide a pluggable commands system.
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -36,14 +35,18 @@ except ImportError:
     def getpgid():
         """win32 getpgid implementation"""
 
+
 from os.path import exists, join, isfile, isdir, dirname, abspath
 
-from logilab.common.clcommands import register_commands, pop_arg
+from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
-from cubicweb.toolsutils import Command, main_run, rm, create_dir, underline_title
+from cubicweb.toolsutils import Command, rm, create_dir, underline_title
+from cubicweb.__pkginfo__ import version
+
+CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.', version=version)
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -61,7 +64,10 @@ def wait_process_end(pid, maxtry=10, waittime=1):
         raise ExecutionError('can\'t kill process %s' % pid)
 
 def list_instances(regdir):
-    return sorted(idir for idir in listdir(regdir) if isdir(join(regdir, idir)))
+    if isdir(regdir):
+        return sorted(idir for idir in listdir(regdir) if isdir(join(regdir, idir)))
+    else:
+        return []
 
 def detect_available_modes(templdir):
     modes = []
@@ -277,15 +283,15 @@ class ListCommand(Command):
             print 'Warnings:\n', '\n'.join('* '+txt for txt in cfgpb.warnings)
         if cfgpb.errors:
             print 'Errors:'
-            for op, cube, version in cfgpb.errors:
+            for op, cube, version, src in cfgpb.errors:
                 if op == 'add':
                     print '* cube', cube,
                     if version:
                         print ' version', version,
-                    print 'is not installed, but required by %s' % ' '.join(cfgpb.reverse_constraints[cube])
+                    print 'is not installed, but required by %s' % src
                 else:
-                    print '* cube %s version %s is installed, but version %s is required by (%s)' % (
-                        cube, cfgpb.cubes[cube], version, ', '.join(cfgpb.reverse_constraints[cube]))
+                    print '* cube %s version %s is installed, but version %s is required by %s' % (
+                        cube, cfgpb.cubes[cube], version, src)
 
 class CreateInstanceCommand(Command):
     """Create an instance from a cube. This is an unified
@@ -302,6 +308,7 @@ class CreateInstanceCommand(Command):
     """
     name = 'create'
     arguments = '<cube> <instance>'
+    min_args = max_args = 2
     options = (
         ("config-level",
          {'short': 'l', 'type' : 'int', 'metavar': '<level>',
@@ -326,8 +333,8 @@ repository and the web server.',
         """run the command with its specific arguments"""
         from logilab.common.textutils import splitstrip
         configname = self.config.config
-        cubes = splitstrip(pop_arg(args, 1))
-        appid = pop_arg(args)
+        cubes, appid = args
+        cubes = splitstrip(cubes)
         # get the configuration and helper
         config = cwcfg.config_for(appid, configname)
         config.set_language = False
@@ -416,12 +423,12 @@ class DeleteInstanceCommand(Command):
     """
     name = 'delete'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = ()
 
     def run(self, args):
         """run the command with its specific arguments"""
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = args[0]
         configs = [cwcfg.config_for(appid, configname)
                    for configname in cwcfg.possible_configurations(appid)]
         if not configs:
@@ -477,23 +484,23 @@ running.'}),
 
     def start_instance(self, appid):
         """start the instance's server"""
-        debug = self['debug']
-        force = self['force']
-        loglevel = self['loglevel']
-        config = cwcfg.config_for(appid)
-        if loglevel is not None:
-            loglevel = 'LOG_%s' % loglevel.upper()
-            config.global_set_option('log-threshold', loglevel)
-            config.init_log(loglevel, debug=debug, force=True)
+        config = cwcfg.config_for(appid, debugmode=self['debug'])
+        init_cmdline_log_threshold(config, self['loglevel'])
         if self['profile']:
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
         pidf = config['pid-file']
-        if exists(pidf) and not force:
+        if exists(pidf) and not self['force']:
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
-        helper.start_server(config, debug)
+        helper.start_server(config)
+
+
+def init_cmdline_log_threshold(config, loglevel):
+    if loglevel is not None:
+        config.global_set_option('log-threshold', loglevel.upper())
+        config.init_log(config['log-threshold'], force=True)
 
 
 class StopInstanceCommand(InstanceCommand):
@@ -570,7 +577,7 @@ class RestartInstanceCommand(StartInstanceCommand):
                 print '*'*72
                 if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
-            StopInstanceCommand().stop_instance(appid)
+            StopInstanceCommand(self.logger).stop_instance(appid)
         forkcmd = [w for w in sys.argv if not w in args]
         forkcmd[1] = 'start'
         forkcmd = ' '.join(forkcmd)
@@ -580,7 +587,7 @@ class RestartInstanceCommand(StartInstanceCommand):
                 sys.exit(status)
 
     def restart_instance(self, appid):
-        StopInstanceCommand().stop_instance(appid)
+        StopInstanceCommand(self.logger).stop_instance(appid)
         self.start_instance(appid)
 
 
@@ -739,7 +746,7 @@ given, appropriate sources for migration will be automatically selected \
             print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (CWDEV or self.config.nostartstop):
-            StopInstanceCommand().stop_instance(appid)
+            StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
         # rewrite main configuration file
@@ -788,11 +795,16 @@ class ShellCommand(Command):
     repository internals (session, etc...) so most migration commands won't be
     available.
 
+    Arguments after bare "--" string will not be processed by the shell command
+    You can use it to pass extra arguments to your script and expect for
+    them in '__args__' afterwards.
+
     <instance>
       the identifier of the instance to connect.
     """
     name = 'shell'
-    arguments = '<instance> [batch command file]'
+    arguments = '<instance> [batch command file(s)] [-- <script arguments>]'
+    min_args = 1
     options = (
         ('system-only',
          {'short': 'S', 'action' : 'store_true',
@@ -831,7 +843,7 @@ sources for migration will be automatically selected.",
         )
 
     def run(self, args):
-        appid = pop_arg(args, None, msg="No instance specified !")
+        appid = args.pop(0)
         if self.config.pyro:
             from cubicweb import AuthenticationError
             from cubicweb.dbapi import connect
@@ -868,8 +880,11 @@ sources for migration will be automatically selected.",
             mih = config.migration_handler()
         try:
             if args:
-                for arg in args:
-                    mih.cmd_process_script(arg)
+                # use cmdline parser to access left/right attributes only
+                # remember that usage requires instance appid as first argument
+                scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
+                for script in scripts:
+                    mih.cmd_process_script(script, scriptargs=args)
             else:
                 mih.interactive_shell()
         finally:
@@ -924,30 +939,32 @@ class ListCubesCommand(Command):
         for cube in cwcfg.available_cubes():
             print cube
 
-register_commands((ListCommand,
-                   CreateInstanceCommand,
-                   DeleteInstanceCommand,
-                   StartInstanceCommand,
-                   StopInstanceCommand,
-                   RestartInstanceCommand,
-                   ReloadConfigurationCommand,
-                   StatusCommand,
-                   UpgradeInstanceCommand,
-                   ShellCommand,
-                   RecompileInstanceCatalogsCommand,
-                   ListInstancesCommand, ListCubesCommand,
-                   ))
+for cmdcls in (ListCommand,
+               CreateInstanceCommand, DeleteInstanceCommand,
+               StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
+               ReloadConfigurationCommand, StatusCommand,
+               UpgradeInstanceCommand,
+               ShellCommand,
+               RecompileInstanceCatalogsCommand,
+               ListInstancesCommand, ListCubesCommand,
+               ):
+    CWCTL.register(cmdcls)
 
 
 def run(args):
     """command line tool"""
+    import os
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     cwcfg.load_cwctl_plugins()
-    main_run(args, """%%prog %s [options] %s
-
-The CubicWeb swiss-knife.
-
-%s"""
-)
+    try:
+        CWCTL.run(args)
+    except ConfigurationError, err:
+        print 'ERROR: ', err
+        sys.exit(1)
+    except ExecutionError, err:
+        print err
+        sys.exit(2)
 
 if __name__ == '__main__':
     run(sys.argv[1:])

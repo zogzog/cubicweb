@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The default primary view
+"""The default primary view"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -25,7 +24,7 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.schema import VIRTUAL_RTYPES, display_name
@@ -54,7 +53,6 @@ class PrimaryView(EntityView):
     def cell_call(self, row, col):
         self.cw_row = row
         self.cw_col = col
-        self.maxrelated = self._cw.property_value('navigation.related-limit')
         entity = self.cw_rset.complete_entity(row, col)
         self.render_entity(entity)
 
@@ -130,8 +128,9 @@ class PrimaryView(EntityView):
         display_attributes = []
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
-            if rschema.final or vid == 'reledit':
-                value = entity.view(vid, rtype=rschema.type, role=role)
+            if rschema.final or vid == 'reledit' or dispctrl.get('rtypevid'):
+                value = entity.view(vid, rtype=rschema.type, role=role,
+                                    initargs={'dispctrl': dispctrl})
             else:
                 rset = self._relation_rset(entity, rschema, role, dispctrl)
                 if rset:
@@ -146,23 +145,68 @@ class PrimaryView(EntityView):
                 try:
                     self._render_attribute(dispctrl, rschema, value,
                                            role=role, table=True)
+                    warn('[3.9] _render_attribute prototype has changed and '
+                         'renamed to render_attribute, please update %s'
+                         % self.__class___, DeprecationWarning)
                 except TypeError:
-                    warn('[3.6] _render_attribute prototype has changed, please'
-                         ' update %s' % self.__class___, DeprecationWarning)
                     self._render_attribute(rschema, value, role=role, table=True)
+                    warn('[3.6] _render_attribute prototype has changed and '
+                         'renamed to render_attribute, please update %s'
+                         % self.__class___, DeprecationWarning)
+                except AttributeError:
+                    label = self._rel_label(entity, rschema, role, dispctrl)
+                    self.render_attribute(label, value, table=True)
             self.w(u'</table>')
+
+    def render_attribute(self, label, value, table=False):
+        self.field(label, value, tr=False, table=table)
 
     def render_entity_relations(self, entity):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
-            rset = self._relation_rset(entity, rschema, role, dispctrl)
-            if rset:
+            if rschema.final or dispctrl.get('rtypevid'):
+                vid = dispctrl.get('vid', 'reledit')
                 try:
-                    self._render_relation(dispctrl, rset, 'autolimited')
-                except TypeError:
-                    warn('[3.6] _render_relation prototype has changed, '
-                         'please update %s' % self.__class__, DeprecationWarning)
-                    self._render_relation(rset, dispctrl, 'autolimited',
-                                          self.show_rel_label)
+                    rview = self._cw.vreg['views'].select(
+                        vid, self._cw, rset=entity.cw_rset, row=entity.cw_row,
+                        col=entity.cw_col, dispctrl=dispctrl,
+                        rtype=rschema, role=role)
+                except NoSelectableObject:
+                    continue
+                value = rview.render(row=entity.cw_row, col=entity.cw_col,
+                                     rtype=rschema.type, role=role)
+            else:
+                rset = self._relation_rset(entity, rschema, role, dispctrl)
+                if not rset:
+                    continue
+                if hasattr(self, '_render_relation'):
+                    try:
+                        self._render_relation(dispctrl, rset, 'autolimited')
+                        warn('[3.9] _render_relation prototype has changed and has '
+                             'been renamed to render_relation, please update %s'
+                             % self.__class__, DeprecationWarning)
+                    except TypeError:
+                        self._render_relation(rset, dispctrl, 'autolimited',
+                                              self.show_rel_label)
+                        warn('[3.6] _render_relation prototype has changed and has '
+                             'been renamed to render_relation, please update %s'
+                             % self.__class__, DeprecationWarning)
+                    continue
+                vid = dispctrl.get('vid', 'autolimited')
+                try:
+                    rview = self._cw.vreg['views'].select(
+                        vid, self._cw, rset=rset, dispctrl=dispctrl)
+                except NoSelectableObject:
+                    continue
+                value = rview.render()
+            label = self._rel_label(entity, rschema, role, dispctrl)
+            self.render_relation(label, value)
+
+    def render_relation(self, label, value):
+        self.w(u'<div class="section">')
+        if label:
+            self.w(u'<h4>%s</h4>' % label)
+        self.w(value)
+        self.w(u'</div>')
 
     def render_side_boxes(self, boxes):
         """display side related relations:
@@ -224,61 +268,58 @@ class PrimaryView(EntityView):
                 if section == where:
                     matchtschemas.append(tschema)
             if matchtschemas:
-                # XXX pick the latest dispctrl
-                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role,
-                                                       matchtschemas[-1])
-
+                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role, '*')
                 rdefs.append( (rschema, matchtschemas, role, dispctrl) )
         return sorted(rdefs, key=lambda x: x[-1]['order'])
 
     def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            dispctrl.setdefault('limit', self.maxrelated)
-            rset = entity.related(rschema.type, role, limit=dispctrl['limit']+1)
+            rset = entity.related(rschema.type, role)
         except Unauthorized:
             return
         if 'filter' in dispctrl:
             rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, dispctrl, rset, defaultvid):
-        self.w(u'<div class="section">')
-        if dispctrl.get('showlabel', self.show_rel_label):
-            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
-        self.wview(dispctrl.get('vid', defaultvid), rset,
-                   initargs={'dispctrl': dispctrl})
-        self.w(u'</div>')
-
-    def _render_attribute(self, dispctrl, rschema, value,
-                          role='subject', table=False):
+    def _rel_label(self, entity, rschema, role, dispctrl):
         if rschema.final:
             showlabel = dispctrl.get('showlabel', self.show_attr_label)
         else:
             showlabel = dispctrl.get('showlabel', self.show_rel_label)
-        if dispctrl.get('label'):
-            label = self._cw._(dispctrl.get('label'))
-        else:
-            label = display_name(self._cw, rschema.type, role)
-        self.field(label, value, show_label=showlabel, tr=False, table=table)
+        if showlabel:
+            if dispctrl.get('label'):
+                label = self._cw._(dispctrl['label'])
+            else:
+                label = display_name(self._cw, rschema.type, role,
+                                     context=entity.__regid__)
+            return label
+        return u''
 
 
 class RelatedView(EntityView):
+    """Display a rset, usually containing entities linked to another entity
+    being displayed.
+
+    It will try to display nicely according to the number of items in the result
+    set.
+    """
     __regid__ = 'autolimited'
 
     def call(self, **kwargs):
-        # nb: rset is retreived using entity.related with limit + 1 if any.
-        # Because of that, we know that rset.printable_rql() will return rql
-        # with no limit set anyway (since it's handled manually)
         if 'dispctrl' in self.cw_extra_kwargs:
-            limit = self.cw_extra_kwargs['dispctrl'].get('limit')
+            if 'limit' in self.cw_extra_kwargs['dispctrl']:
+                limit = self.cw_extra_kwargs['dispctrl']['limit']
+            else:
+                limit = self._cw.property_value('navigation.related-limit')
+            list_limit = self.cw_extra_kwargs['dispctrl'].get('use_list_limit', 5)
             subvid = self.cw_extra_kwargs['dispctrl'].get('subvid', 'incontext')
         else:
-            limit = None
+            limit = list_limit = None
             subvid = 'incontext'
         if limit is None or self.cw_rset.rowcount <= limit:
             if self.cw_rset.rowcount == 1:
                 self.wview(subvid, self.cw_rset, row=0)
-            elif 1 < self.cw_rset.rowcount <= 5:
+            elif list_limit is None or 1 < self.cw_rset.rowcount <= list_limit:
                 self.wview('csv', self.cw_rset, subvid=subvid)
             else:
                 self.w(u'<div>')
@@ -288,12 +329,18 @@ class RelatedView(EntityView):
         else:
             rql = self.cw_rset.printable_rql()
             self.cw_rset.limit(limit) # remove extra entity
-            self.w(u'<div>')
-            self.wview('simplelist', self.cw_rset, subvid=subvid)
-            self.w(u'[<a href="%s">%s</a>]' % (
-                xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
-                self._cw._('see them all')))
-            self.w(u'</div>')
+            if list_limit is None:
+                self.wview('csv', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+            else:
+                self.w(u'<div>')
+                self.wview('simplelist', self.cw_rset, subvid=subvid)
+                self.w(u'[<a href="%s">%s</a>]' % (
+                    xml_escape(self._cw.build_url(rql=rql, vid=subvid)),
+                    self._cw._('see them all')))
+                self.w(u'</div>')
 
 
 class URLAttributeView(EntityView):
@@ -308,6 +355,28 @@ class URLAttributeView(EntityView):
         url = entity.printable_value(rtype)
         if url:
             self.w(u'<a href="%s">%s</a>' % (url, url))
+
+class AttributeView(EntityView):
+    """use this view on an entity as an alternative to more sophisticated
+    views such as reledit.
+
+    Ex. usage:
+
+    uicfg.primaryview_display_ctrl.tag_attribute(('Foo', 'bar'), {'vid': 'attribute'})
+    """
+    __regid__ = 'attribute'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def cell_call(self, row, col, rtype, **kwargs):
+        entity = self.cw_rset.get_entity(row, col)
+        if self._cw.vreg.schema.rschema(rtype).final:
+            self.w(entity.printable_value(rtype))
+        else:
+            dispctrl = uicfg.primaryview_display_ctrl.etype_get(
+                entity.e_schema, rtype, kwargs['role'], '*')
+            rset = entity.related(rtype, role)
+            if rset:
+                self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})
 
 
 ## default primary ui configuration ###########################################

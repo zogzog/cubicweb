@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract action classes for CubicWeb web client
+"""abstract action classes for CubicWeb web client"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 

@@ -25,6 +25,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.view import StartupView
+from cubicweb.web.views import actions
 
 def dict_to_html(w, dict):
     # XHTML doesn't allow emtpy <ul> nodes
@@ -37,10 +38,17 @@ def dict_to_html(w, dict):
 
 
 
+class SiteInfoAction(actions.ManagersAction):
+    __regid__ = 'siteinfo'
+    __select__ = match_user_groups('users','managers')
+    title = _('info')
+    order = 30
+
+
 class ProcessInformationView(StartupView):
     """display various web server /repository information"""
     __regid__ = 'info'
-    __select__ = none_rset() & match_user_groups('managers')
+    __select__ = none_rset() & match_user_groups('managers', 'users')
 
     title = _('server information')
     cache_max_age = 0
@@ -81,7 +89,7 @@ class ProcessInformationView(StartupView):
                    % (element, xml_escape(unicode(stats[element])),
                       element.endswith('percent') and '%' or '' ))
         w(u'</table>')
-        if req.cnx._cnxtype == 'inmemory':
+        if req.cnx._cnxtype == 'inmemory' and req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
             sessions = repo._sessions.values()
             if sessions:
@@ -104,21 +112,22 @@ class ProcessInformationView(StartupView):
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('data directory url'), req.datadir_url))
         w(u'</table>')
-        from cubicweb.web.application import SESSION_MANAGER
-        sessions = SESSION_MANAGER.current_sessions()
-        w(u'<h3>%s</h3>' % _('opened web sessions'))
-        if sessions:
-            w(u'<ul>')
-            for session in sessions:
-                w(u'<li>%s (%s: %s)<br/>' % (
-                    session.sessionid,
-                    _('last usage'),
-                    strftime(dtformat, localtime(session.last_usage_time))))
-                dict_to_html(w, session.data)
-                w(u'</li>')
-            w(u'</ul>')
-        else:
-            w(u'<p>%s</p>' % _('no web sessions found'))
+        if req.user.is_in_group('managers'):
+            from cubicweb.web.application import SESSION_MANAGER
+            sessions = SESSION_MANAGER.current_sessions()
+            w(u'<h3>%s</h3>' % _('opened web sessions'))
+            if sessions:
+                w(u'<ul>')
+                for session in sessions:
+                    w(u'<li>%s (%s: %s)<br/>' % (
+                        session.sessionid,
+                        _('last usage'),
+                        strftime(dtformat, localtime(session.last_usage_time))))
+                    dict_to_html(w, session.data)
+                    w(u'</li>')
+                w(u'</ul>')
+            else:
+                w(u'<p>%s</p>' % _('no web sessions found'))
 
 
 

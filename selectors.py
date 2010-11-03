@@ -169,7 +169,7 @@ Also, think to use the :func:`lltrace` decorator on your selector class' :meth:`
 or below the :func:`objectify_selector` decorator of your selector function so it gets
 traceable when :class:`traced_selection` is activated (see :ref:`DebuggingSelectors`).
 
-.. autofunction:: cubicweb.selectors.lltrace
+.. autofunction:: cubicweb.appobject.lltrace
 
 .. note::
   Selectors __call__ should *always* return a positive integer, and shall never
@@ -183,127 +183,53 @@ Debugging selection
 
 Once in a while, one needs to understand why a view (or any application object)
 is, or is not selected appropriately. Looking at which selectors fired (or did
-not) is the way. The :class:`cubicweb.selectors.traced_selection` context
+not) is the way. The :class:`cubicweb.appobject.traced_selection` context
 manager to help with that, *if you're running your instance in debug mode*.
 
-.. autoclass:: cubicweb.selectors.traced_selection
+.. autoclass:: cubicweb.appobject.traced_selection
 
-
-.. |cubicweb| replace:: *CubicWeb*
 """
 
 __docformat__ = "restructuredtext en"
 
 import logging
 from warnings import warn
+from operator import eq
 
 from logilab.common.deprecation import class_renamed
 from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 
-from yams import BASE_TYPES
+from yams.schema import BASE_TYPES, role_name
+from rql.nodes import Function
 
-from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
+from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
+                      CW_EVENT_MANAGER, role)
 # even if not used, let yes here so it's importable through this module
-from cubicweb.appobject import Selector, objectify_selector, yes
-from cubicweb.vregistry import class_regid
-from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.uilib import eid_param
+from cubicweb.appobject import Selector, objectify_selector, lltrace, yes
 from cubicweb.schema import split_expression
 
-# helpers for debugging selectors
-SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
-TRACED_OIDS = None
+from cubicweb.appobject import traced_selection # XXX for bw compat
 
-def _trace_selector(cls, selector, args, ret):
-    # /!\ lltrace decorates pure function or __call__ method, this
-    #     means argument order may be different
-    if isinstance(cls, Selector):
-        selname = str(cls)
-        vobj = args[0]
-    else:
-        selname = selector.__name__
-        vobj = cls
-    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
-        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
-
-def lltrace(selector):
-    """use this decorator on your selectors so the becomes traceable with
-    :class:`traced_selection`
-    """
-    # don't wrap selectors if not in development mode
-    if CubicWebConfiguration.mode == 'system': # XXX config.debug
-        return selector
-    def traced(cls, *args, **kwargs):
-        ret = selector(cls, *args, **kwargs)
-        if TRACED_OIDS is not None:
-            _trace_selector(cls, selector, args, ret)
-        return ret
-    traced.__name__ = selector.__name__
-    traced.__doc__ = selector.__doc__
-    return traced
-
-class traced_selection(object):
-    """
-    Typical usage is :
-
-    .. sourcecode:: python
-
-        >>> from cubicweb.selectors import traced_selection
-        >>> with traced_selection():
-        ...     # some code in which you want to debug selectors
-        ...     # for all objects
-
-    Don't forget the 'from __future__ import with_statement' at the module top-level
-    if you're using python prior to 2.6.
-
-    This will yield lines like this in the logs::
-
-        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
-
-    You can also give to :class:`traced_selection` the identifiers of objects on
-    which you want to debug selection ('oid1' and 'oid2' in the example above).
-
-    .. sourcecode:: python
-
-        >>> with traced_selection( ('regid1', 'regid2') ):
-        ...     # some code in which you want to debug selectors
-        ...     # for objects with __regid__ 'regid1' and 'regid2'
-
-    A potentially usefull point to set up such a tracing function is
-    the `cubicweb.vregistry.Registry.select` method body.
-    """
-
-    def __init__(self, traced='all'):
-        self.traced = traced
-
-    def __enter__(self):
-        global TRACED_OIDS
-        TRACED_OIDS = self.traced
-
-    def __exit__(self, exctype, exc, traceback):
-        global TRACED_OIDS
-        TRACED_OIDS = None
-        return traceback is None
-
-
-def score_interface(etypesreg, cls_or_inst, cls, iface):
+def score_interface(etypesreg, eclass, iface):
     """Return XXX if the give object (maybe an instance or class) implements
     the interface.
     """
     if getattr(iface, '__registry__', None) == 'etypes':
         # adjust score if the interface is an entity class
-        parents = etypesreg.parent_classes(cls_or_inst.__regid__)
-        if iface is cls:
+        parents, any = etypesreg.parent_classes(eclass.__regid__)
+        if iface is eclass:
             return len(parents) + 4
-        if iface is parents[-1]: # Any
+        if iface is any: # Any
             return 1
-        for index, basecls in enumerate(reversed(parents[:-1])):
+        for index, basecls in enumerate(reversed(parents)):
             if iface is basecls:
                 return index + 3
         return 0
-    if implements_iface(cls_or_inst, iface):
-        # implenting an interface takes precedence other special Any interface
+    # XXX iface in implements deprecated in 3.9
+    if implements_iface(eclass, iface):
+        # implementing an interface takes precedence other special Any interface
         return 2
     return 0
 
@@ -319,31 +245,6 @@ class PartialSelectorMixIn(object):
     def __call__(self, cls, *args, **kwargs):
         self.complete(cls)
         return super(PartialSelectorMixIn, self).__call__(cls, *args, **kwargs)
-
-
-class ImplementsMixIn(object):
-    """mix-in class for selectors checking implemented interfaces of something
-    """
-    def __init__(self, *expected_ifaces, **kwargs):
-        super(ImplementsMixIn, self).__init__(**kwargs)
-        self.expected_ifaces = expected_ifaces
-
-    def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__,
-                           ','.join(str(s) for s in self.expected_ifaces))
-
-    def score_interfaces(self, req, cls_or_inst, cls):
-        score = 0
-        etypesreg = req.vreg['etypes']
-        for iface in self.expected_ifaces:
-            if isinstance(iface, basestring):
-                # entity type
-                try:
-                    iface = etypesreg.etype_class(iface)
-                except KeyError:
-                    continue # entity type not in the schema
-            score += score_interface(etypesreg, cls_or_inst, cls, iface)
-        return score
 
 
 class EClassSelector(Selector):
@@ -375,14 +276,17 @@ class EClassSelector(Selector):
         self.accept_none = accept_none
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
+                 **kwargs):
         if kwargs.get('entity'):
             return self.score_class(kwargs['entity'].__class__, req)
         if not rset:
             return 0
         score = 0
         if row is None:
-            if not self.accept_none:
+            if accept_none is None:
+                accept_none = self.accept_none
+            if not accept_none:
                 if any(rset[i][col] is None for i in xrange(len(rset))):
                     return 0
             for etype in rset.column_types(col):
@@ -442,7 +346,8 @@ class EntitySelector(EClassSelector):
     """
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
+                 **kwargs):
         if not rset and not kwargs.get('entity'):
             return 0
         score = 0
@@ -450,9 +355,11 @@ class EntitySelector(EClassSelector):
             score = self.score_entity(kwargs['entity'])
         elif row is None:
             col = col or 0
+            if accept_none is None:
+                accept_none = self.accept_none
             for row, rowvalue in enumerate(rset.rows):
                 if rowvalue[col] is None: # outer join
-                    if not self.accept_none:
+                    if not accept_none:
                         return 0
                     continue
                 escore = self.score(req, rset, row, col)
@@ -482,7 +389,7 @@ class ExpectedValueSelector(Selector):
     """Take a list of expected values as initializer argument and store them
     into the :attr:`expected` set attribute.
 
-    You should implements the :meth:`_get_value(cls, req, **kwargs)` method
+    You should implement the :meth:`_get_value(cls, req, **kwargs)` method
     which should return the value for the given context. The selector will then
     return 1 if the value is expected, else 0.
     """
@@ -528,19 +435,49 @@ class appobject_selectable(Selector):
 
     * `registry`, a registry name
 
-    * `regid`, an object identifier in this registry
+    * `regids`, object identifiers in this registry, one of them should be
+      selectable.
     """
-    def __init__(self, registry, regid):
+    selectable_score = 1
+    def __init__(self, registry, *regids):
         self.registry = registry
-        self.regid = regid
+        self.regids = regids
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        for regid in self.regids:
+            try:
+                req.vreg[self.registry].select(regid, req, **kwargs)
+                return self.selectable_score
+            except NoSelectableObject:
+                continue
+        return 0
+
+
+class adaptable(appobject_selectable):
+    """Return 1 if another appobject is selectable using the same input context.
+
+    Initializer arguments:
+
+    * `regids`, adapter identifiers (e.g. interface names) to which the context
+      (usually entities) should be adaptable. One of them should be selectable
+      when multiple identifiers are given.
+    """
+    def __init__(self, *regids):
+        super(adaptable, self).__init__('adapters', *regids)
 
     def __call__(self, cls, req, **kwargs):
-        try:
-            req.vreg[self.registry].select(self.regid, req, **kwargs)
-            return 1
-        except NoSelectableObject:
-            return 0
-
+        kwargs.setdefault('accept_none', False)
+        # being adaptable to an interface should takes precedence other is_instance('Any'),
+        # but not other explicit is_instance('SomeEntityType'), and:
+        # * is_instance('Any') score is 1
+        # * is_instance('SomeEntityType') score is at least 2
+        score = super(adaptable, self).__call__(cls, req, **kwargs)
+        if score >= 2:
+            return score - 0.5
+        if score == 1:
+            return score + 0.5
+        return score
 
 # rset selectors ##############################################################
 
@@ -586,8 +523,8 @@ def empty_rset(cls, req, rset=None, **kwargs):
 @objectify_selector
 @lltrace
 def one_line_rset(cls, req, rset=None, row=None, **kwargs):
-    """Return 1 if the result set is of size 1 or if a specific row in the
-    result set is specified ('row' argument).
+    """Return 1 if the result set is of size 1, or greater but a specific row in
+      the result set is specified ('row' argument).
     """
     if rset is not None and (row is not None or rset.rowcount == 1):
         return 1
@@ -595,25 +532,34 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
 
 
 class multi_lines_rset(Selector):
-    """If `nb`is specified, return 1 if the result set has exactly `nb` row of
-    result. Else (`nb` is None), return 1 if the result set contains *at least*
+    """Return 1 if the operator expression matches between `num` elements
+    in the result set and the `expected` value if defined.
+    
+    By default, multi_lines_rset(expected) matches equality expression:
+        `nb` row(s) in result set equals to expected value
+    But, you can perform richer comparisons by overriding default operator:
+        multi_lines_rset(expected, operator.gt)
+    
+    If `expected` is None, return 1 if the result set contains *at least*
     two rows.
+    If rset is None, return 0.
     """
-    def __init__(self, nb=None):
-        self.expected = nb
+    def __init__(self, expected=None, operator=eq):
+        self.expected = expected
+        self.operator = operator
 
     def match_expected(self, num):
         if self.expected is None:
             return num > 1
-        return num == self.expected
+        return self.operator(num, self.expected)
 
     @lltrace
     def __call__(self, cls, req, rset=None, **kwargs):
-        return rset is not None and self.match_expected(rset.rowcount)
+        return int(rset is not None and self.match_expected(rset.rowcount))
 
 
 class multi_columns_rset(multi_lines_rset):
-    """If `nb`is specified, return 1 if the result set has exactly `nb` column
+    """If `nb` is specified, return 1 if the result set has exactly `nb` column
     per row. Else (`nb` is None), return 1 if the result set contains *at least*
     two columns per row. Return 0 for empty result set.
     """
@@ -659,12 +605,17 @@ class paginated_rset(Selector):
 @lltrace
 def sorted_rset(cls, req, rset=None, **kwargs):
     """Return 1 for sorted result set (e.g. from an RQL query containing an
-    :ref:ORDERBY clause.
+    :ref:ORDERBY clause), with exception that it will return 0 if the rset is
+    'ORDERBY FTIRANK(VAR)' (eg sorted by rank value of the has_text index).
     """
     if rset is None:
         return 0
-    rqlst = rset.syntax_tree()
-    if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
+    selects = rset.syntax_tree().children
+    if (len(selects) > 1 or
+        not selects[0].orderby or
+        (isinstance(selects[0].orderby[0].term, Function) and
+         selects[0].orderby[0].term.name == 'FTIRANK')
+        ):
         return 0
     return 2
 
@@ -712,7 +663,7 @@ def logged_user_in_rset(cls, req, rset=None, row=None, col=0, **kwargs):
 class non_final_entity(EClassSelector):
     """Return 1 for entity of a non final entity type(s). Remember, "final"
     entity types are String, Int, etc... This is equivalent to
-    `implements('Any')` but more optimized.
+    `is_instance('Any')` but more optimized.
 
     See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
     class lookup / score rules according to the input context.
@@ -726,7 +677,7 @@ class non_final_entity(EClassSelector):
         return 1 # necessarily true if we're there
 
 
-class implements(ImplementsMixIn, EClassSelector):
+class implements(EClassSelector):
     """Return non-zero score for entity that are of the given type(s) or
     implements at least one of the given interface(s). If multiple arguments are
     given, matching one of them is enough.
@@ -739,9 +690,95 @@ class implements(ImplementsMixIn, EClassSelector):
 
     .. note:: when interface is an entity class, the score will reflect class
               proximity so the most specific object will be selected.
+
+    .. note:: deprecated in cubicweb >= 3.9, use either
+              :class:`~cubicweb.selectors.is_instance` or
+              :class:`~cubicweb.selectors.adaptable`.
     """
+
+    def __init__(self, *expected_ifaces, **kwargs):
+        emit_warn = kwargs.pop('warn', True)
+        super(implements, self).__init__(**kwargs)
+        self.expected_ifaces = expected_ifaces
+        if emit_warn:
+            warn('[3.9] implements selector is deprecated, use either '
+                 'is_instance or adaptable', DeprecationWarning, stacklevel=2)
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected_ifaces))
+
     def score_class(self, eclass, req):
-        return self.score_interfaces(req, eclass, eclass)
+        score = 0
+        etypesreg = req.vreg['etypes']
+        for iface in self.expected_ifaces:
+            if isinstance(iface, basestring):
+                # entity type
+                try:
+                    iface = etypesreg.etype_class(iface)
+                except KeyError:
+                    continue # entity type not in the schema
+            score += score_interface(etypesreg, eclass, iface)
+        return score
+
+def _reset_is_instance_cache(vreg):
+    vreg._is_instance_selector_cache = {}
+
+CW_EVENT_MANAGER.bind('before-registry-reset', _reset_is_instance_cache)
+
+class is_instance(EClassSelector):
+    """Return non-zero score for entity that is an instance of the one of given
+    type(s). If multiple arguments are given, matching one of them is enough.
+
+    Entity types should be given as string, the corresponding class will be
+    fetched from the registry at selection time.
+
+    See :class:`~cubicweb.selectors.EClassSelector` documentation for entity
+    class lookup / score rules according to the input context.
+
+    .. note:: the score will reflect class proximity so the most specific object
+              will be selected.
+    """
+
+    def __init__(self, *expected_etypes, **kwargs):
+        super(is_instance, self).__init__(**kwargs)
+        self.expected_etypes = expected_etypes
+        for etype in self.expected_etypes:
+            assert isinstance(etype, basestring), etype
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected_etypes))
+
+    def score_class(self, eclass, req):
+        # cache on vreg to avoid reloading issues
+        cache = req.vreg._is_instance_selector_cache
+        try:
+            expected_eclasses = cache[self]
+        except KeyError:
+            # turn list of entity types as string into a list of
+            #  (entity class, parent classes)
+            etypesreg = req.vreg['etypes']
+            expected_eclasses = cache[self] = []
+            for etype in self.expected_etypes:
+                try:
+                    expected_eclasses.append(etypesreg.etype_class(etype))
+                except KeyError:
+                    continue # entity type not in the schema
+        parents, any = req.vreg['etypes'].parent_classes(eclass.__regid__)
+        score = 0
+        for expectedcls in expected_eclasses:
+            # adjust score according to class proximity
+            if expectedcls is eclass:
+                score += len(parents) + 4
+            elif expectedcls is any: # Any
+                score += 1
+            else:
+                for index, basecls in enumerate(reversed(parents)):
+                    if expectedcls is basecls:
+                        score += index + 3
+                        break
+        return score
 
 
 class score_entity(EntitySelector):
@@ -764,6 +801,41 @@ class score_entity(EntitySelector):
                 return score
             return 1
         self.score_entity = intscore
+
+class attribute_edited(EntitySelector):
+    """Scores if the specified attribute has been edited
+    This is useful for selection of forms by the edit controller.
+    The initial use case is on a form, in conjunction with match_transition,
+    which will not score at edit time::
+
+     is_instance('Version') & (match_transition('ready') |
+                               attribute_edited('publication_date'))
+    """
+    def __init__(self, attribute, once_is_enough=False):
+        super(attribute_edited, self).__init__(once_is_enough)
+        self._attribute = attribute
+
+    def score_entity(self, entity):
+        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
+
+class has_mimetype(EntitySelector):
+    """Return 1 if the entity adapt to IDownloadable and has the given MIME type.
+
+    You can give 'image/' to match any image for instance, or 'image/png' to match
+    only PNG images.
+    """
+    def __init__(self, mimetype, once_is_enough=False):
+        super(has_mimetype, self).__init__(once_is_enough)
+        self.mimetype = mimetype
+
+    def score_entity(self, entity):
+        idownloadable = entity.cw_adapt_to('IDownloadable')
+        if idownloadable is None:
+            return 0
+        mt = idownloadable.download_content_type()
+        if not (mt and mt.startswith(self.mimetype)):
+            return 0
+        return 1
 
 
 class relation_possible(EntitySelector):
@@ -978,12 +1050,12 @@ class has_permission(EntitySelector):
             return self.score_entity(kwargs['entity'])
         if rset is None:
             return 0
-        user = req.user
-        action = self.action
         if row is None:
             score = 0
             need_local_check = []
             geteschema = req.vreg.schema.eschema
+            user = req.user
+            action = self.action
             for etype in rset.column_types(0):
                 if etype in BASE_TYPES:
                     return 0
@@ -1000,16 +1072,18 @@ class has_permission(EntitySelector):
             if need_local_check:
                 # check local role for entities of necessary types
                 for i, row in enumerate(rset):
-                    if not rset.description[i][0] in need_local_check:
+                    if not rset.description[i][col] in need_local_check:
                         continue
-                    if not self.score(req, rset, i, col):
+                    # micro-optimisation instead of calling self.score(req,
+                    # rset, i, col): rset may be large
+                    if not rset.get_entity(i, col).cw_has_perm(action):
                         return 0
                 score += 1
             return score
         return self.score(req, rset, row, col)
 
     def score_entity(self, entity):
-        if entity.has_perm(self.action):
+        if entity.cw_has_perm(self.action):
             return 1
         return 0
 
@@ -1233,18 +1307,15 @@ class match_form_params(ExpectedValueSelector):
         return len(self.expected)
 
 
-class specified_etype_implements(implements):
+class specified_etype_implements(is_instance):
     """Return non-zero score if the entity type specified by an 'etype' key
     searched in (by priority) input context kwargs and request form parameters
     match a known entity type (case insensitivly), and it's associated entity
-    class is of one of the type(s) given to the initializer or implements at
-    least one of the given interfaces. If multiple arguments are given, matching
-    one of them is enough.
+    class is of one of the type(s) given to the initializer. If multiple
+    arguments are given, matching one of them is enough.
 
-    Entity types should be given as string, the corresponding class will be
-    fetched from the entity types registry at selection time.
-
-    .. note:: when interface is an entity class, the score will reflect class
+    .. note:: as with :class:`~cubicweb.selectors.is_instance`, entity types
+              should be given as string and the score will reflect class
               proximity so the most specific object will be selected.
 
     This selector is usually used by views holding entity creation forms (since
@@ -1280,19 +1351,13 @@ class specified_etype_implements(implements):
 
 
 class match_transition(ExpectedValueSelector):
-    """Return 1 if:
-
-    * a `transition` argument is found in the input context which
-      has a `.name` attribute matching one of the expected names given to the
-      initializer
-
-    * no transition specified.
+    """Return 1 if `transition` argument is found in the input context
+      which has a `.name` attribute matching one of the expected names
+      given to the initializer
     """
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
-        if transition is None:
-            return 1
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
@@ -1300,25 +1365,30 @@ class match_transition(ExpectedValueSelector):
 class is_in_state(score_entity):
     """return 1 if entity is in one of the states given as argument list
 
-    you should use this instead of your own score_entity x: x.state == 'bla'
-    selector to avoid some gotchas:
+    you should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
 
     * possible views gives a fake entity with no state
-    * you must use the latest tr info, not entity.state for repository side
+    * you must use the latest tr info, not entity.in_state for repository side
       checking of the current state
     """
     def __init__(self, *states):
         def score(entity, states=set(states)):
+            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
             try:
-                return entity.latest_trinfo().new_state.name in states
+                return trinfo.new_state.name in states
             except AttributeError:
                 return None
         super(is_in_state, self).__init__(score)
 
+@objectify_selector
+def debug_mode(cls, req, rset=None, **kwargs):
+    """Return 1 if running in debug mode"""
+    return req.vreg.config.debugmode and 1 or 0
 
 ## deprecated stuff ############################################################
 
-entity_implements = class_renamed('entity_implements', implements)
+entity_implements = class_renamed('entity_implements', is_instance)
 
 class _but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.
@@ -1336,7 +1406,7 @@ class _but_etype(EntitySelector):
             return 0
         return 1
 
-but_etype = class_renamed('but_etype', _but_etype, 'use ~implements(*etypes) instead')
+but_etype = class_renamed('but_etype', _but_etype, 'use ~is_instance(*etypes) instead')
 
 
 # XXX deprecated the one_* variants of selectors below w/ multi_xxx(nb=1)?

@@ -29,10 +29,11 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import Relation, VariableRef, Constant, SubQuery, Exists, Not
+from rql.nodes import (Relation, VariableRef, Constant, SubQuery, Function,
+                       Exists, Not)
 
-from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
-from cubicweb import server
+from cubicweb import ValidationError, Unauthorized, QueryError, UnknownEid
+from cubicweb import server, typed_eid
 from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
@@ -50,7 +51,8 @@ def update_varmap(varmap, selected, table):
         key = term.as_string()
         value = '%s.C%s' % (table, i)
         if varmap.get(key, value) != value:
-            raise Exception('variable name conflict on %s' % key)
+            raise Exception('variable name conflict on %s: got %s / %s'
+                            % (key, value, varmap))
         varmap[key] = value
 
 # permission utilities ########################################################
@@ -294,7 +296,26 @@ class ExecutionPlan(object):
                     for term in origselection:
                         newselect.append_selected(term.copy(newselect))
                     if select.orderby:
-                        newselect.set_orderby([s.copy(newselect) for s in select.orderby])
+                        sortterms = []
+                        for sortterm in select.orderby:
+                            sortterms.append(sortterm.copy(newselect))
+                            for fnode in sortterm.get_nodes(Function):
+                                if fnode.name == 'FTIRANK':
+                                    # we've to fetch the has_text relation as well
+                                    var = fnode.children[0].variable
+                                    rel = iter(var.stinfo['ftirels']).next()
+                                    assert not rel.ored(), 'unsupported'
+                                    newselect.add_restriction(rel.copy(newselect))
+                                    # remove relation from the orig select and
+                                    # cleanup variable stinfo
+                                    rel.parent.remove(rel)
+                                    var.stinfo['ftirels'].remove(rel)
+                                    var.stinfo['relations'].remove(rel)
+                                    # XXX not properly re-annotated after security insertion?
+                                    newvar = newselect.get_variable(var.name)
+                                    newvar.stinfo.setdefault('ftirels', set()).add(rel)
+                                    newvar.stinfo.setdefault('relations', set()).add(rel)
+                        newselect.set_orderby(sortterms)
                         _expand_selection(select.orderby, selected, aliases, select, newselect)
                         select.orderby = () # XXX dereference?
                     if select.groupby:
@@ -339,6 +360,7 @@ class ExecutionPlan(object):
                     select.set_possible_types(localchecks[()])
                     add_types_restriction(self.schema, select)
                     add_noinvariant(noinvariant, restricted, select, nbtrees)
+                self.rqlhelper.annotate(union)
 
     def _check_permissions(self, rqlst):
         """return a dict defining "local checks", e.g. RQLExpression defined in
@@ -400,7 +422,9 @@ class ExecutionPlan(object):
         # raise Unautorized exception if the user can't access to any solution
         if not newsolutions:
             raise Unauthorized('\n'.join(msgs))
-        rqlst.set_possible_types(newsolutions)
+        if msgs:
+            # (else solutions have not been modified)
+            rqlst.set_possible_types(newsolutions)
         return localchecks, restricted_vars
 
     def finalize(self, select, solutions, insertedvars):
@@ -411,6 +435,7 @@ class ExecutionPlan(object):
             for sol in solutions:
                 sol[newvarname] = nvartype
         select.clean_solutions(solutions)
+        add_types_restriction(self.schema, select)
         self.rqlhelper.annotate(rqlst)
         self.preprocess(rqlst, security=False)
         return rqlst
@@ -571,6 +596,8 @@ class QuerierHelper(object):
         # rql parsing / analysing helper
         self.solutions = repo.vreg.solutions
         rqlhelper = repo.vreg.rqlhelper
+        # set backend on the rql helper, will be used for function checking
+        rqlhelper.backend = repo.config.sources()['system']['db-driver']
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner
@@ -674,15 +701,9 @@ class QuerierHelper(object):
         # execute the plan
         try:
             results = plan.execute()
-        except Unauthorized:
-            # XXX this could be done in security's after_add_relation hooks
-            # since it's actually realy only needed there (other relations
-            # security is done *before* actual changes, and add/update entity
-            # security is done after changes but in an operation, and exception
-            # generated in operation's events properly generate a rollback on
-            # the session). Even though, this is done here for a better
-            # consistency: getting an Unauthorized exception means the
-            # transaction has been rollbacked
+        except (Unauthorized, ValidationError):
+            # getting an Unauthorized/ValidationError exception means the
+            # transaction must been rollbacked
             #
             # notes:
             # * we should not reset the pool here, since we don't want the
@@ -690,7 +711,7 @@ class QuerierHelper(object):
             # * don't rollback if we're in the commit process, will be handled
             #   by the session
             if session.commit_state is None:
-                session.rollback(reset_pool=False)
+                session.commit_state = 'uncommitable'
             raise
         # build a description for the results if necessary
         descr = ()

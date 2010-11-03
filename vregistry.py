@@ -44,7 +44,8 @@ from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
-from cubicweb.appobject import AppObject
+from cubicweb.appobject import AppObject, class_regid
+
 
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
@@ -82,16 +83,6 @@ def _toload_info(path, extrapath, _toload=None):
 def classid(cls):
     """returns a unique identifier for an appobject class"""
     return '%s.%s' % (cls.__module__, cls.__name__)
-
-def class_regid(cls):
-    """returns a unique identifier for an appobject class"""
-    if 'id' in cls.__dict__:
-        warn('[3.6] %s.%s: id is deprecated, use __regid__'
-             % (cls.__module__, cls.__name__), DeprecationWarning)
-        cls.__regid__ = cls.id
-    if hasattr(cls, 'id') and not isinstance(cls.id, property):
-        return cls.id
-    return cls.__regid__
 
 def class_registries(cls, registryname):
     if registryname:
@@ -231,17 +222,14 @@ class Registry(dict):
             elif appobjectscore > 0 and appobjectscore == score:
                 winners.append(appobject)
         if winners is None:
-            raise NoSelectableObject('args: %s\nkwargs: %s %s'
-                                     % (args, kwargs.keys(),
-                                        [repr(v) for v in appobjects]))
+            raise NoSelectableObject(args, kwargs, appobjects)
         if len(winners) > 1:
-            # log in production environement, error while debugging
-            if self.config.debugmode:
-                raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
-                                % (args, kwargs.keys(),
-                                   [repr(v) for v in winners]))
-            self.error('select ambiguity, args: %s\nkwargs: %s %s',
-                       args, kwargs.keys(), [repr(v) for v in winners])
+            # log in production environement / test, error while debugging
+            msg = 'select ambiguity: %s\n(args: %s, kwargs: %s)'
+            if self.config.debugmode or self.config.mode == 'test':
+                # raise bare exception in debug mode
+                raise Exception(msg % (winners, args, kwargs.keys()))
+            self.error(msg, winners, args, kwargs.keys())
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
 
@@ -382,7 +370,7 @@ class VRegistry(dict):
         for registryname in class_registries(obj, registryname):
             registry = self.setdefault(registryname)
             registry.register(obj, oid=oid, clear=clear)
-            self.debug('registered appobject %s in registry %s with id %s',
+            self.debug('register %s in %s[\'%s\']',
                        vname, registryname, oid or class_regid(obj))
         self._loadedmods.setdefault(obj.__module__, {})[classid(obj)] = obj
 
@@ -405,6 +393,7 @@ class VRegistry(dict):
     # initialization methods ###################################################
 
     def init_registration(self, path, extrapath=None):
+        self.reset()
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path, extrapath)
         # XXX is _loadedmods still necessary ? It seems like it's useful
@@ -491,7 +480,7 @@ class VRegistry(dict):
         - first ensure parent classes are already registered
 
         - class with __abstract__ == True in their local dictionnary or
-          with a name starting starting by an underscore are not registered
+          with a name starting with an underscore are not registered
 
         - appobject class needs to have __registry__ and __regid__ attributes
           set to a non empty string to be registered.

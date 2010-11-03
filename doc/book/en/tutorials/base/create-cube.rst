@@ -307,11 +307,11 @@ To do so, please apply the following changes:
 
 .. sourcecode:: python
 
-  from cubicweb.selectors import implements
+  from cubicweb.selectors import is_instance
   from cubicweb.web.views import primary
 
   class BlogEntryPrimaryView(primary.PrimaryView):
-      __select__ = implements('BlogEntry')
+      __select__ = is_instance('BlogEntry')
 
       def render_entity_attributes(self, entity):
           self.w(u'<p>published on %s</p>' %
@@ -357,7 +357,6 @@ You can redefine each entity to provide additional functions to help you write y
     class BlogEntry(AnyEntity):
         """customized class for BlogEntry entities"""
     	__regid__ = 'BlogEntry'
-    	__implements__ = AnyEntity.__implements__
 
         def display_cw_logo(self):
             if 'CW' in self.title:
@@ -376,7 +375,7 @@ This function can then be used when you customize your views. For instance, you 
 .. sourcecode:: python
 
  class BlogEntryPrimaryView(primary.PrimaryView):
-     __select__ = implements('BlogEntry')
+     __select__ = is_instance('BlogEntry')
 
      ...
 

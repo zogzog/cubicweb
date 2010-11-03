@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import is_instance
 from cubicweb.server import hook
 from cubicweb.server.utils import eschema_eid
 
@@ -140,7 +140,7 @@ class SyncCompositeOwner(MetaDataHook):
 class FixUserOwnershipHook(MetaDataHook):
     """when a user has been created, add owned_by relation on itself"""
     __regid__ = 'fixuserowner'
-    __select__ = MetaDataHook.__select__ & implements('CWUser')
+    __select__ = MetaDataHook.__select__ & is_instance('CWUser')
     events = ('after_add_entity',)
 
     def __call__(self):

@@ -31,7 +31,7 @@ from logilab.common.deprecation import deprecated
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid, schema
+from cubicweb import Binary, UnknownEid, QueryError, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
@@ -250,7 +250,7 @@ class Session(RequestSessionBase):
             entity = self.entity_cache(eid)
         except KeyError:
             return
-        rcache = entity.relation_cached(rtype, role)
+        rcache = entity.cw_relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
             rset = rset.copy()
@@ -266,14 +266,15 @@ class Session(RequestSessionBase):
                 targetentity.cw_col = 0
             rset.rowcount += 1
             entities.append(targetentity)
-            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
 
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
         try:
             entity = self.entity_cache(eid)
         except KeyError:
             return
-        rcache = entity.relation_cached(rtype, role)
+        rcache = entity.cw_relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
             for idx, row in enumerate(rset.rows):
@@ -292,7 +293,8 @@ class Session(RequestSessionBase):
                 del rset.description[idx]
             del entities[idx]
             rset.rowcount -= 1
-            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
 
     # resource accessors ######################################################
 
@@ -312,16 +314,15 @@ class Session(RequestSessionBase):
 
     def set_language(self, language):
         """i18n configuration for translation"""
-        vreg = self.vreg
         language = language or self.user.property_value('ui.language')
         try:
-            gettext, pgettext = vreg.config.translations[language]
+            gettext, pgettext = self.vreg.config.translations[language]
             self._ = self.__ = gettext
             self.pgettext = pgettext
         except KeyError:
-            language = vreg.property_value('ui.language')
+            language = self.vreg.property_value('ui.language')
             try:
-                gettext, pgettext = vreg.config.translations[language]
+                gettext, pgettext = self.vreg.config.translations[language]
                 self._ = self.__ = gettext
                 self.pgettext = pgettext
             except KeyError:
@@ -661,16 +662,6 @@ class Session(RequestSessionBase):
         else:
             del self.transaction_data['ecache'][eid]
 
-    def base_url(self):
-        url = self.repo.config['base-url']
-        if not url:
-            try:
-                url = self.repo.config.default_base_url()
-            except AttributeError: # default_base_url() might not be available
-                self.warning('missing base-url definition in server config')
-                url = u''
-        return url
-
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
         sense here, always return 'view')
@@ -735,7 +726,10 @@ class Session(RequestSessionBase):
             self._touch()
             self.debug('commit session %s done (no db activity)', self.id)
             return
-        if self.commit_state:
+        cstate = self.commit_state
+        if cstate == 'uncommitable':
+            raise QueryError('transaction must be rollbacked')
+        if cstate is not None:
             return
         # on rollback, an operation should have the following state
         # information:
@@ -756,7 +750,6 @@ class Session(RequestSessionBase):
                         self.pending_operations[:] = processed
                         self.debug('%s session %s done', trstate, self.id)
                     except:
-                        self.exception('error while %sing', trstate)
                         # if error on [pre]commit:
                         #
                         # * set .failed = True on the operation causing the failure
@@ -768,8 +761,12 @@ class Session(RequestSessionBase):
                         # instead of having to implements rollback, revertprecommit
                         # and revertcommit, that will be enough in mont case.
                         operation.failed = True
-                        for operation in processed:
-                            operation.handle_event('revert%s_event' % trstate)
+                        for operation in reversed(processed):
+                            try:
+                                operation.handle_event('revert%s_event' % trstate)
+                            except:
+                                self.critical('error while reverting %sing', trstate,
+                                              exc_info=True)
                         # XXX use slice notation since self.pending_operations is a
                         # read-only property.
                         self.pending_operations[:] = processed + self.pending_operations
@@ -785,7 +782,7 @@ class Session(RequestSessionBase):
                     except:
                         self.critical('error while %sing', trstate,
                                       exc_info=sys.exc_info())
-                self.info('%s session %s done', trstate, self.id)
+                self.debug('%s session %s done', trstate, self.id)
                 return self.transaction_uuid(set=False)
         finally:
             self._touch()
@@ -1027,7 +1024,7 @@ class InternalSession(Session):
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
-        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
+        self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.disable_hook_categories('integrity')
 

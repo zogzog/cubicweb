@@ -69,7 +69,7 @@ class Note(Para):
     mydate = Date(default='TODAY')
     shortpara = String(maxsize=64)
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
-    attachment = SubjectRelation(('File', 'Image'))
+    attachment = SubjectRelation('File')
 
 class Text(Para):
     __specializes_schema__ = True
@@ -101,6 +101,7 @@ class filed_under2(RelationDefinition):
 
 
 class Personne(EntityType):
+    __unique_together__ = [('nom', 'prenom', 'datenaiss')]
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
     civility   = String(maxsize=1, default='M', fulltextindexed=True)
@@ -126,7 +127,6 @@ class Societe(WorkflowableEntityType):
         'delete': ('managers', 'owners'),
         'add': ('managers', 'users',)
         }
-
     nom  = String(maxsize=64, fulltextindexed=True)
     web  = String(maxsize=128)
     tel  = Int()
@@ -138,6 +138,9 @@ class Societe(WorkflowableEntityType):
     cp   = String(maxsize=12)
     ville= String(maxsize=32)
 
+class same_as(RelationDefinition):
+    subject = ('Societe',)
+    object = 'ExternalUri'
 
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')

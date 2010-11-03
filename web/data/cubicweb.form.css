@@ -9,7 +9,6 @@ div.formTitle {
   width: 100%;
   font-size : 160%;
   font-weight: bold;
-  color: #ff4500;
   padding-bottom : 0.4em;
   text-transform: capitalize;
   margin-bottom: 0.6em
@@ -23,9 +22,8 @@ div.formTitle span {
 div.iformTitle {
   font-weight: bold;
   font-size: 110%;
-  color: #222211;
-  background: #e4ead8;
-  border: 1px solid #E4EAD8;  /*#b7b6a3 */
+  background: %(formHeaderBgColor)s;
+  border: 1px solid %(formHeaderBgColor)s;  /*#b7b6a3 */
   border-bottom: none;
 }
 
@@ -46,14 +44,14 @@ div.formBody {
 }
 
 fieldset.subentity {
-  border: 1px solid #E4EAD8;
+  border: 1px solid %(formHeaderBgColor)s;
   display: block;
   margin-bottom: 1em;
   padding: 0.4em;
 }
 
 table.attributeForm {
-  border: 1px solid #E4EAD8;
+  border: 1px solid %(formHeaderBgColor)s;
   margin-bottom: 1em;
   padding: 0.8em 1.2em;
   width: 100%;
@@ -91,7 +89,7 @@ table.attributeForm div#comfirmPsw {
 table.attributeForm input,
 table.attributeForm textarea,
 table.attributeForm select {
-  border: 1px solid #E4EAD8;  /*#b7b6a3*/
+  border: 1px solid %(formHeaderBgColor)s;  /*#b7b6a3*/
 }
 
 table.attributeForm textarea {
@@ -163,10 +161,10 @@ a.handle {
 }
 
 a.editionPending {
-  color: #557755;
+  color: #9c9b24; /*557755*/
   font-weight: bold;
 }
-
+ 
 div.pendingDelete {
   text-decoration: line-through;
 }
@@ -187,22 +185,20 @@ div.editableFieldValue {
   display: inline;
 }
 
-div.editableField:hover,
-div.editableField p:hover {
-  background-color: #eeedd9;
-}
+/* div.editableField:hover, */
+/* div.editableField p:hover { */
+/*   background-color: #eeedd9; */
+/* } */
 
-.error input { /* error added by the form renderer */
-  background: transparent url("error.png") 100% 50% no-repeat;
-}
+.error input, /* error added by the form renderer */
 input.error { /* error added by javascript */
-  background: transparent url("error.png") 100% 50% no-repeat;
+  background: transparent %(errorMsgBgImg)s;
 }
 
 span.errorMsg {
   display: block;
   font-weight: bold;
-  color: #ed0d0d;
+  color: %(errorMsgColor)s;
 }
 
 option.separator {
@@ -216,12 +212,12 @@ div.notice {
   font-style: italic;
   font-size: 110%;
   padding-left: 2em;
-  background : #f8f8ee url("information.png") 5px center no-repeat ;
+  background : %(msgBgColor)s %(infoMsgBgImg)s;
 }
 
 .helper{
   font-size: 96%;
-  color: #555544;
+  color: %(helperColor)s;
 }
 
 .helper:hover {
@@ -231,8 +227,8 @@ div.notice {
 
 .validateButton {
   margin: 1em 1em 0px 0px;
-  border: 1px solid #edecd2;
-  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
-  background: #fffff8 url("button.png") bottom left repeat-x;
+  border-width: 1px;
+  border-style: solid;
+  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
+  background: %(buttonBgColor)s %(buttonBgImg)s;
 }
-

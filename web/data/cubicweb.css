@@ -3,82 +3,67 @@
  *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
+
 /***************************************/
-/* xhtml tags styles                   */
+/* xhtml tags                          */
 /***************************************/
 
-*{
-  margin:0px;
-  padding :0px;
+/* scale and rhythm cf http://lamb.cc/typograph/ */
+body {
+  font-family:  %(defaultFontFamily)s;
+  font-size: %(defaultSize)s;
+  line-height: %(defaultLineHeight)s;
+  color: %(defaultColor)s;
 }
+h1, h2, h3 { margin-top:0; margin-bottom:0; }
+
+/* got rhythm ? beat of 12*1.25 = 15 px */
+.rhythm_bg { background: url("%(baseRhythmBg)s") repeat ! important; }
+
+/* scale 3:5 stranded */
+/* h1 { font-size:2em; } */
+/* h2 { font-size:1.61538em; } */
+/* h3 { font-size:1.23077em; } */
+
+/* scale le corbusier */
+/* h1 { font-size:2.11538em; } */
+/* h2 { font-size:1.61538em; } */
+/* h3 { font-size:1.30769em; } */
+
+/* scale traditional */
+h1 { font-size: %(h1FontSize)s; }
+h2 { font-size: %(h2FontSize)s; }
+h3 { font-size: %(h3FontSize)s; }
+
+/* paddings */
+h1 {
+  border-bottom: %(h1BorderBottomStyle)s;
+  padding: %(h1Padding)s;
+  margin: %(h1Margin)s;
+  color: %(h1Color)s;
+}
+
+div.tabbedprimary + h1, h1.plain {
+ border-bottom: none;
+}
+
+h2 { padding: %(h2Padding)s; }
+h3 { padding: %(h3Padding)s; }
 
 html, body {
-  background: #e2e2e2;
-}
-
-body {
-  font-size: 69%;
-  font-weight: normal;
-  font-family: Verdana, sans-serif;
-}
-
-h1 {
-  font-size: 188%;
-  margin: 0.2em 0px 0.3em;
-  border-bottom: 1px solid #000;
-}
-
-h2, h3 {
-  margin-top: 0.2em;
-  margin-bottom: 0.3em;
-}
-
-h2 {
-  font-size: 135%;
-}
-
-h3 {
-  font-size: 130%;
-}
-
-h4 {
-  font-size: 120%;
-  margin: 0.2em 0px;
-}
-
-h5 {
-  font-size:110%;
-}
-
-h6{
-  font-size:105%;
+  background: %(pageBgColor)s;
 }
 
 a, a:active, a:visited, a:link {
-  color: #ff4500;
+  color: %(aColor)s;
   text-decoration: none;
 }
 
-a:hover{
+a:hover {
   text-decoration: underline;
 }
 
-a img, img {
-  border: none;
-  text-align: center;
-}
-
-p {
-  margin: 0em 0px 0.2em;
-  padding-top: 2px;
-}
-
-table, td, input, select{
-  font-size: 100%;
-}
-
 table {
-  border-collapse: collapse;
   border: none;
 }
 
@@ -86,89 +71,87 @@ table th, table td {
   vertical-align: top;
 }
 
-table td img {
-  vertical-align: middle;
-  margin-right: 10px;
+label, .label {
+  font-weight: bold;
+}
+
+pre {
+  clear: both;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.015em;
+  padding: 0.6em;
+  margin: 0 2em 1.7em;
+  background-color: %(listingHihligthedBgColor)s;
+  border: 1px solid %(listingBorderColor)s;
+}
+
+p {
+  text-align: justify;
+  margin-bottom: %(defaultLineHeightEm)s;
+}
+
+ul {
+  margin-bottom: %(defaultLineHeightEm)s;
 }
 
 ol {
-  margin: 1px 0px 1px 16px;
+  list-style-type: decimal;
+ /* margin-bottom: %(defaultLineHeightEm)s; */
 }
 
-ul{
-  margin: 1px 0px 1px 4px;
-  list-style-type: none;
+ol ol,
+ul ul{
+  margin-left: 8px;
+  margin-bottom : 0px;
 }
 
-ul li {
-  margin-top: 2px;
-  padding: 0px 0px 2px 8px;
-  background: url("bullet_orange.png") 0% 6px no-repeat;
+/* p + ul { */
+/*   margin-top: -%(defaultLineHeightEm)s; */
+/* } */
+
+li {
+  margin-left: 1.5em;
 }
 
-dt {
-  font-size:1.17em;
-  font-weight:600;
-}
-
-dd {
-  margin: 0.6em 0 1.5em 2em;
+img{
+  border: none;
 }
 
 fieldset {
   border: none;
 }
 
-legend {
-  padding: 0px 2px;
-  font: bold 1em Verdana, sans-serif;
+h1 a, h1 a:active, h1 a:visited, h1 a:link,
+h2 a, h2 a:active, h2 a:visited, h2 a:link,
+h3 a, h3 a:active, h3 a:visited, h3 a:link {
+  color: inherit;
+  text-decoration: none;
 }
 
 input, textarea {
-  padding: 0.2em;
-  vertical-align: middle;
-  border: 1px solid #ccc;
+  padding: 0.1em 0.2em;
+  vertical-align: bottom;
+  border: 1px solid %(pageContentBorderColor)s;
+
 }
 
 input:focus {
-  border: 1px inset #ff7700;
+  border: 1px inset %(headerBgColor)s;
 }
 
-label, .label {
-  font-weight: bold;
-}
-
-iframe {
-  border: 0px;
-}
-
-pre {
-  font-family: Courier, "Courier New", Monaco, monospace;
-  font-size: 100%;
-  color: #000;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
-}
-
-code {
-  font-size: 120%;
-  color: #000;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
-}
-
-blockquote {
-  font-family: Courier, "Courier New", serif;
-  font-size: 120%;
-  margin: 5px 0px;
-  padding: 0.8em;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
+hr{
+  border: none;
+  border-bottom: 1px solid %(defaultColor)s;
+  height: 1px;
 }
 
 /***************************************/
 /* generic classes                     */
 /***************************************/
+
+h1 a:hover {
+ text-decoration: none;
+}
 
 .odd {
   background-color: #f7f6f1;
@@ -179,8 +162,14 @@ blockquote {
 }
 
 .hr {
-  border-bottom: 1px dotted #ccc;
-  margin: 1em 0px;
+  border-bottom: 1px dotted %(pageContentBorderColor)s;
+  height: 17px;
+}
+
+hr.boxSeparator{
+  border: none;
+  border-bottom: 1px solid %(listingBorderColor)s;
+  height: 1px;
 }
 
 .left {
@@ -200,13 +189,26 @@ blockquote {
   visibility: hidden;
 }
 
-li.invisible { list-style: none; background: none; padding: 0px 0px
-1px 1px; }
+li.invisible {
+  background: none;
+  padding: 0px 0px 1px 1px;
+}
 
 li.invisible div{
   display: inline;
 }
 
+.caption {
+    font-weight: bold;
+}
+
+.legend{
+    font-style: italic;
+}
+
+.align-center{
+    text-align: center;
+}
 
 /***************************************/
 /*   LAYOUT                            */
@@ -215,7 +217,7 @@ li.invisible div{
 /* header */
 
 table#header {
-  background: #ff7700 url("banner.png") left top repeat-x;
+  background: %(headerBgColor)s url("banner.png") repeat-x top left;
   text-align: left;
 }
 
@@ -224,129 +226,136 @@ table#header td {
 }
 
 table#header a {
-color: #000;
+  color: %(defaultColor)s;
+}
+
+table#header img#logo{
+  vertical-align: middle;
 }
 
 span#appliName {
- font-weight: bold;
- color: #000;
- white-space: nowrap;
+  font-weight: bold;
+  color: %(defaultColor)s;
+  white-space: nowrap;
 }
 
 table#header td#headtext {
   width: 100%;
 }
 
-/* FIXME appear with 4px width in IE6 */
-div#stateheader{
-  min-width: 66%;
-}
-
 /* Popup on login box and userActionBox */
-div.popupWrapper{
- position:relative;
- z-index:100;
+div.popupWrapper {
+  position: relative;
+  z-index: 100;
 }
 
 div.popup {
   position: absolute;
   background: #fff;
-  border: 1px solid black;
+  /* background-color: #f0eff0; */
+  /* background-image: url(popup.png); */
+  /* background-repeat: repeat-x; */
+  /* background-positon: top left; */
+  border: 1px solid %(listingBorderColor)s;
+  border-top: none;
   text-align: left;
-  z-index:400;
+  z-index: 400;
 }
 
 div.popup ul li a {
   text-decoration: none;
-  color: black;
+  color: #000;
 }
 
 /* main zone */
 
 div#page {
-  background: #e2e2e2;
-  position: relative;
-  min-height: 800px;
+  margin: %(defaultLayoutMargin)s;
 }
 
-table#mainLayout{
- margin:0px 3px;
-}
-
-table#mainLayout td#contentcol {
-  padding: 8px 10px 5px;
-}
-
-table#mainLayout td.navcol {
+table#mainLayout #navColumnLeft {
   width: 16em;
+  padding-right: %(defaultLayoutMargin)s;
 }
 
+table#mainLayout #navColumnRight {
+  width: 16em;
+  padding-left: %(defaultLayoutMargin)s;
+}
+
+div#pageContent {
+  clear: both;
+  /* margin-top:-1px; *//* enable when testing rhythm */
+  background: %(pageContentBgColor)s;
+  border: 1px solid %(pageContentBorderColor)s;
+  padding: 0 %(pageContentPadding)s %(pageContentPadding)s;
+}
+
+div#pageContent #contentmain .pagination {
+  margin-top: 0;
+}
+
+div#pageContent .pagination{
+  margin-top: 1.5em;
+}
+
+div#contentmain{
+  margin-top: %(pageContentPadding)s
+}
+
+/*FIXME */
 #contentheader {
   margin: 0px;
   padding: 0.2em 0.5em 0.5em 0.5em;
 }
 
 #contentheader a {
-  color: #000;
-}
-
-div#pageContent {
-  clear: both;
-  padding: 10px 1em 2em;
-  background: #ffffff;
-  border: 1px solid #ccc;
+  color: %(defaultColor)s;
 }
 
 /* rql bar */
 
 div#rqlinput {
-  border: 1px solid #cfceb7;
-  margin-bottom: 8px;
-  padding: 3px;
-  background: #cfceb7;
+  margin-bottom: %(defaultLayoutMargin)s;
 }
 
 input#rql{
-  width: 95%;
+  padding: 0.25em 0.3em;
+  width: 99%;
 }
 
 /* boxes */
-div.navboxes {
- margin-top: 8px;
-}
 
 div.boxFrame {
   width: 100%;
 }
 
 div.boxTitle {
-  padding-top: 0px;
-  padding-bottom: 0.2em;
-  font: bold 100% Georgia;
   overflow: hidden;
+  font-weight: bold;
   color: #fff;
-  background: #ff9900 url("search.png") left bottom repeat-x;
-}
-
-div.searchBoxFrame div.boxTitle,
-div.greyBoxFrame div.boxTitle {
-  background: #cfceb7;
+  background: %(boxTitleBg)s;
 }
 
 div.boxTitle span,
 div.sideBoxTitle span {
-  padding: 0px 5px;
+  padding: 0px 0.5em;
   white-space: nowrap;
+}
+
+div.searchBoxFrame div.boxTitle,
+div.greyBoxFrame div.boxTitle {
+  background: %(actionBoxTitleBg)s;
 }
 
 div.sideBoxTitle span,
 div.searchBoxFrame div.boxTitle span,
 div.greyBoxFrame div.boxTitle span {
-  color: #222211;
+  color: %(defaultColor)s;
 }
 
 .boxFrame a {
-  color: #000;
+  color: %(defaultColor)s;
 }
 
 div.boxContent {
@@ -355,78 +364,20 @@ div.boxContent {
   border-top: none;
 }
 
-ul.boxListing {
-  margin: 0px;
-  padding: 0px 3px;
-}
-
-ul.boxListing li,
-ul.boxListing ul li {
-  display: inline;
-  margin: 0px;
-  padding: 0px;
-  background-image: none;
-}
-
-ul.boxListing ul {
-  margin: 0px 0px 0px 7px;
-  padding: 1px 3px;
-}
-
-ul.boxListing a {
-  color: #000;
-  display: block;
-  padding: 1px 9px 1px 3px;
-}
-
-ul.boxListing .selected {
-  color: #FF4500;
-  font-weight: bold;
-}
-
-ul.boxListing a.boxBookmark:hover,
-ul.boxListing a:hover,
-ul.boxListing ul li a:hover {
-  text-decoration: none;
-  background: #eeedd9;
-  color: #111100;
-}
-
-ul.boxListing a.boxMenu:hover {
-                                background: #eeedd9 url(puce_down.png) no-repeat scroll 98% 6px;
-                                cursor:pointer;
-                                border-top:medium none;
-                                }
 a.boxMenu {
-  background: transparent url("puce_down.png") 98% 6px no-repeat;
   display: block;
   padding: 1px 9px 1px 3px;
+  background: transparent %(bulletDownImg)s;
 }
 
+a.boxMenu:hover {
+  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
+  cursor: pointer;
+}
 
 a.popupMenu {
   background: transparent url("puce_down_black.png") 2% 6px no-repeat;
   padding-left: 2em;
-}
-
-ul.boxListing ul li a:hover {
-  background: #eeedd9  url("bullet_orange.png") 0% 6px no-repeat;
-}
-
-a.boxMenu:hover {
-  background: #eeedd9 url("puce_down.png") 98% 6px no-repeat;
-  cursor: pointer;
-}
-
-ul.boxListing a.boxBookmark {
-  padding-left: 3px;
-  background-image:none;
-  background:#fff;
-}
-
-ul.boxListing ul li a {
-  background: #fff url("bullet_orange.png") 0% 6px no-repeat;
-  padding: 1px 3px 0px 10px;
 }
 
 div.searchBoxFrame div.boxContent {
@@ -440,29 +391,32 @@ div.shadow{
 }
 
 div.sideBoxTitle {
-  background: #cfceb7;
+  background: %(actionBoxTitleBg)s;
   display: block;
-  font: bold 100% Georgia;
+  font-weight: bold;
 }
 
 div.sideBox {
-  padding: 0 0 0.2em;
-  margin-bottom: 0.5em;
+  margin-bottom: 1em;
+}
+
+ul.sideBox,
+ul.sideBox ul{
+  margin-bottom: 0px;
 }
 
 ul.sideBox li{
- list-style: none;
- background: none;
  padding: 0px 0px 1px 1px;
- }
+ margin: 1px 0 1px 4px;
+}
 
 div.sideBoxBody {
   padding: 0.2em 5px;
-  background: #eeedd9;
+  background: %(sideBoxBodyBg)s;
 }
 
 div.sideBoxBody a {
-  color:#555544;
+  color: %(sideBoxBodyColor)s;
 }
 
 div.sideBoxBody a:hover {
@@ -474,10 +428,11 @@ div.sideBox table td {
 }
 
 input.rqlsubmit{
-  background: #fffff8 url("go.png") 50% 50% no-repeat;
+  display: block;
   width: 20px;
   height: 20px;
-  margin: 0px;
+  background: %(buttonBgColor)s url("go.png") 50% 50% no-repeat;
+  vertical-align: bottom;
 }
 
 input#norql{
@@ -497,14 +452,14 @@ div#userActionsBox {
 }
 
 div#userActionsBox a.popupMenu {
-  color: black;
+  color: #000;
   text-decoration: underline;
   padding-right: 2em;
 }
 
 /* download box XXX move to its own file? */
 div.downloadBoxTitle{
- background : #8FBC8F;
+ background : #8fbc8f;
  font-weight: bold;
 }
 
@@ -513,7 +468,7 @@ div.downloadBox{
 }
 
 div.downloadBox div.sideBoxBody{
- background : #EEFED9;
+ background : #eefed9;
 }
 
 /**************/
@@ -521,17 +476,18 @@ div.downloadBox div.sideBoxBody{
 /**************/
 div#etyperestriction {
   margin-bottom: 1ex;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid %(pageContentBorderColor)s;
 }
 
+/* pagination */
 span.slice a:visited,
 span.slice a:hover{
-  color: #555544;
+  color: %(helperColor)s;
 }
 
 span.selectedSlice a:visited,
 span.selectedSlice a {
-  color: #000;
+  color: %(defaultColor)s;
 }
 
 /* FIXME should be moved to cubes/folder */
@@ -546,18 +502,12 @@ div.prevnext {
 }
 
 div.prevnext a {
-  color: #000;
+  color: %(defaultColor)s;
 }
 
 /***************************************/
 /* entity views                        */
 /***************************************/
-
-.mainInfo  {
-  margin-right: 1em;
-  padding: 0.2em;
-}
-
 
 div.mainRelated {
   border: none;
@@ -566,18 +516,17 @@ div.mainRelated {
 }
 
 div.primaryRight{
- }
+  margin-left: %(defaultLayoutMargin)s;
+}
 
 div.metadata {
   font-size: 90%;
   margin: 5px 0px 3px;
-  color: #666;
-  font-style: italic;
+  color: %(helperColor)s;
   text-align: right;
 }
 
 div.section {
-  margin-top: 0.5em;
   width:100%;
 }
 
@@ -600,6 +549,7 @@ div.ctxtoolbar {
   float: right;
   padding-left: 24px;
   position: relative;
+  z-index: 10;
 }
 div.toolbarButton {
   display: inline;
@@ -611,56 +561,50 @@ div.toolbarButton {
 
 .warning,
 .message,
-.errorMessage ,
-.searchMessage{
-  padding: 0.3em 0.3em 0.3em 1em;
+.errorMessage{
+  padding: 0.2em;
   font-weight: bold;
 }
 
-.simpleMessage {
+.searchMessage{
+ margin-top: %(defaultLayoutMargin)s;
+}
+
+.loginMessage {
   margin: 4px 0px;
   font-weight: bold;
-  color: #ff7700;
+  color: %(aColor)s;
 }
 
-div#appMsg, div.appMsg {
-  border: 1px solid #cfceb7;
-  margin-bottom: 8px;
-  padding: 3px;
-  background: #f8f8ee;
+div#appMsg {
+  margin-bottom: %(defaultLayoutMargin)s;
+  border: 1px solid %(actionBoxTitleBgColor)s;
 }
 
 .message {
-  margin: 0px;
-  background: #f8f8ee url("information.png") 5px center no-repeat;
+  background: %(msgBgColor)s %(infoMsgBgImg)s;
   padding-left: 15px;
 }
 
 .errorMessage {
   margin: 10px 0px;
   padding-left: 25px;
-  background: #f7f6f1 url("critical.png") 2px center no-repeat;
-  color: #ed0d0d;
-  border: 1px solid #cfceb7;
+  background: %(msgBgColor)s url("critical.png") 2px center no-repeat;
+  color: %(errorMsgColor)s;
+  border: 1px solid %(actionBoxTitleBgColor)s;
 }
 
-.searchMessage {
-  margin-top: 0.5em;
-  border-top: 1px solid #cfceb7;
-  background: #eeedd9 url("information.png") 0% 50% no-repeat; /*dcdbc7*/
-}
-
+/* search-associate message */
 .stateMessage {
-  border: 1px solid #ccc;
-  background: #f8f8ee url("information.png") 10px 50% no-repeat;
-  padding:4px 0px 4px 20px;
-  border-width: 1px 0px 1px 0px;
+  border: 1px solid %(pageContentBorderColor)s;
+  background: %(msgBgColor)s %(infoMsgBgImg)s;
+  padding: 0.1em 0 0.1em 20px;
 }
 
 /* warning messages like "There are too many results ..." */
 .warning {
   padding-left: 25px;
-  background: #f2f2f2 url("critical.png") 3px 50% no-repeat;
+  background: %(msgBgColor)s url("critical.png") 3px 50% no-repeat;
 }
 
 /* label shown in the top-right hand corner during form validation */
@@ -668,8 +612,8 @@ div#progress {
   position: fixed;
   right: 5px;
   top: 0px;
-  background: #222211;
-  color: white;
+  background: %(defaultColor)s;
+  color: #fff;
   font-weight: bold;
   display: none;
 }
@@ -679,72 +623,71 @@ div#progress {
 /***************************************/
 
 table.listing {
- padding: 10px 0em;
- color: #000;
- width: 100%;
- border-right: 1px solid #dfdfdf;
-}
-
-
-table.listing thead th.over {
-  background-color: #746B6B;
-  cursor: pointer;
-}
-
-table.listing tr th {
-  border: 1px solid #dfdfdf;
-  border-right:none;
-  font-size: 8pt;
-  padding: 4px;
-}
-
-table.listing tr .header {
-  border-right: 1px solid #dfdfdf;
-  cursor: pointer;
-}
-
-table.listing td {
-  color: #3D3D3D;
-  padding: 4px;
-  background-color: #FFF;
-  vertical-align: top;
-}
-
-table.listing th,
-table.listing td {
-  padding: 3px 0px 3px 5px;
-  border: 1px solid #dfdfdf;
-  border-right: none;
+  width: 100%;
+  font-size: 0.9167em;
+  padding: 10px 0em;
+  color: %(defaultColor)s;
+  border: 1px solid %(listingBorderColor)s;
+  margin-bottom: 1em;
 }
 
 table.listing th {
   font-weight: bold;
-  background: #ebe8d9 url("button.png") repeat-x;
+  font-size: 8pt;
+  background: %(listingHeaderBgColor)s; 
+  padding: 2px 4px;
+  border: 1px solid %(listingBorderColor)s;
+  border-right:none;
+ /* white-space: nowrap; */
+}
+
+table.listing thead th.over {
+  background-color: %(listingHeaderBgColor)s;
+  cursor: pointer;
+}
+
+table.listing tr .header {
+  border-right: 1px solid %(listingBorderColor)s;
+  cursor: pointer;
+}
+
+table.listing td {
+  padding: 3px;
+  vertical-align: top;
+  border: 1px solid %(listingBorderColor)s;
+  border-right: none;
+  background-color: #fff;
 }
 
 table.listing td a,
 table.listing td a:visited {
-  color: #666;
+  color: %(defaultColor)s;
 }
 
 table.listing a:hover,
 table.listing tr.highlighted td a {
-  color:#000;
+  color:%(defaultColor)s;
 }
 
 table.listing td.top {
-  border: 1px solid white;
+  border: 1px solid #fff;
   border-bottom: none;
   text-align: right ! important;
-  /* insane IE row bug workaround */
+  /* insane IE row bug workraound */
   position: relative;
   left: -1px;
   top: -1px;
 }
 
+table.listing input,
+table.listing textarea {
+ background: %(listingHihligthedBgColor)s;
+}
+
 table.htableForm {
   vertical-align: middle;
 }
+
 table.htableForm td{
   padding-left: 1em;
   padding-top: 0.5em;
@@ -774,27 +717,26 @@ div.pycontext span.name {
   color: #ff0000;
 }
 
-
 /***************************************/
 /* addcombobox                         */
 /***************************************/
 
-input#newopt{
- width:120px ;
- display:block;
- float:left;
- }
+input#newopt {
+  display: block;
+  float: left;
+  width: 120px;
+}
 
 div#newvalue{
- margin-top:2px;
- }
+  margin-top: 2px;
+}
 
-#add_newopt{
- background: #fffff8 url("go.png") 50% 50% no-repeat;
- width: 20px;
- line-height: 20px;
- display:block;
- float:left;
+#add_newopt {
+  display: block;
+  float: left;
+  width: 20px;
+  line-height: 20px;
+  background: %(buttonBgColor)s url("go.png") 50% 50% no-repeat;
 }
 
 /***************************************/
@@ -803,9 +745,8 @@ div#newvalue{
 
 input.button{
   margin: 1em 1em 0px 0px;
-  border: 1px solid #edecd2;
-  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
-  background: #fffff8 url("button.png") bottom left repeat-x;
+  border: 1px solid %(buttonBorderColor)s;
+  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
 }
 
 /* FileItemInnerView  jquery.treeview.css */
@@ -815,17 +756,104 @@ input.button{
 }
 
 /***************************************/
+/* lists                               */
+/***************************************/
+
+ul.section,
+ul.startup {
+  margin-bottom: 0px;
+}
+
+ul.startup li,
+ul.section li {
+  margin-left:0px
+}
+
+ul.boxListing {
+  margin: 0px;
+  padding: 0px 3px;
+}
+
+ul.boxListing li,
+ul.boxListing ul li {
+  margin: 0px;
+  padding: 0px;
+  background-image: none;
+}
+
+ul.boxListing ul {
+  padding: 1px 3px;
+}
+
+ul.boxListing a {
+  color: %(defaultColor)s;
+  display:block;
+  padding: 1px 9px 1px 3px;
+}
+
+ul.boxListing .selected {
+  color: %(aColor)s;
+  font-weight: bold;
+}
+
+ul.boxListing a.boxMenu:hover {
+  border-top: medium none;
+  background: %(sideBoxBodyBgColor)s %(bulletDownImg)s;
+}
+
+ul.boxListing a.boxBookmark {
+  padding-left: 3px;
+  background-image: none;
+  background:#fff;
+}
+
+ul.simple li,
+ul.boxListing ul li ,
+.popupWrapper ul li {
+  background: transparent url("bullet_orange.png") no-repeat 0% 6px;
+}
+
+ul.boxListing a.boxBookmark:hover,
+ul.boxListing a:hover,
+ul.boxListing ul li a:hover {
+  text-decoration: none;
+  background: %(sideBoxBodyBg)s;
+}
+
+ul.boxListing ul li a:hover{
+  background-color: transparent;
+}
+
+ul.boxListing ul li a {
+  padding: 1px 3px 0px 10px;
+}
+
+ul.simple li {
+  padding-left: 8px;
+}
+
+.popupWrapper ul {
+  padding:0.2em 0.3em;
+  margin-bottom: 0px;
+}
+
+.popupWrapper ul li {
+  padding-left: 8px;
+  margin-left: 0px;
+  white-space: nowrap;
+}
+
+/***************************************/
 /* footer                              */
 /***************************************/
 
-div.footer {
+div#footer {
   text-align: center;
 }
-div.footer a {
-  color: #000;
+div#footer a {
+  color: %(defaultColor)s;
   text-decoration: none;
 }
-
 
 /****************************************/
 /* FIXME must by managed by cubes       */
@@ -835,21 +863,11 @@ div.footer a {
   color: gray;
 }
 
-
-/***************************************/
-/* FIXME : Deprecated ? entity view ?  */
-/***************************************/
-.title {
-  text-align: left;
-  font-size:  large;
-  font-weight: bold;
-}
-
 .validateButton {
   margin: 1em 1em 0px 0px;
-  border: 1px solid #edecd2;
-  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
-  background: #fffff8 url("button.png") bottom left repeat-x;
+  border: 1px solid %(buttonBorderColor)s;
+  border-color: %(buttonBorderColor)s %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s %(buttonBorderColor)s;
+  background: %(buttonBgColor)s url("button.png") bottom left repeat-x;
 }
 
 /********************************/
@@ -858,4 +876,56 @@ div.footer a {
 
 .otherView {
   float: right;
+}
+
+/********************************/
+/* rest related classes         */
+/********************************/
+
+img.align-right {
+  margin-left: 1.5em;
+}
+
+img.align-left {
+  margin-right: 1.5em;
+}
+
+/******************************/
+/* reledit                    */
+/******************************/
+
+.releditField {
+    display: inline;
+}
+
+.releditForm {
+ display:none;
+}
+
+/********************************/
+/* overwite other css here      */
+/********************************/
+
+/* ui.tabs.css */
+ul.ui-tabs-nav,
+div.ui-tabs-panel {
+  font-family: %(defaultFontFamily)s;
+  font-size: %(defaultSize)s;
+}
+
+div.ui-tabs-panel {
+  border-top:1px solid #b6b6b6;
+}
+
+ul.ui-tabs-nav a {
+  color: #3d3d3d;
+}
+
+ul.ui-tabs-nav a:hover {
+  color: #000;
+}
+
+img.ui-datepicker-trigger {
+  margin-left: 0.5em;
+  vertical-align: bottom;
 }

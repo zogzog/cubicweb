@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import implements, one_line_rset
+from cubicweb.selectors import is_instance, one_line_rset
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web import action, box, uicfg, formwidgets as fw
 from cubicweb.web.views import primary
@@ -43,7 +43,7 @@ _affk.tag_attribute(('Bookmark', 'path'), {'widget': fw.EditableURLWidget})
 
 class FollowAction(action.Action):
     __regid__ = 'follow'
-    __select__ = one_line_rset() & implements('Bookmark')
+    __select__ = one_line_rset() & is_instance('Bookmark')
 
     title = _('follow')
     category = 'mainactions'
@@ -53,7 +53,7 @@ class FollowAction(action.Action):
 
 
 class BookmarkPrimaryView(primary.PrimaryView):
-    __select__ = implements('Bookmark')
+    __select__ = is_instance('Bookmark')
 
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""
@@ -96,7 +96,7 @@ class BookmarksBox(box.UserRQLBoxTemplate):
         eschema = self._cw.vreg.schema.eschema(self.etype)
         candelete = rschema.has_perm(req, 'delete', toeid=ueid)
         if candelete:
-            req.add_js( ('cubicweb.ajax.js', 'cubicweb.bookmarks.js') )
+            req.add_js('cubicweb.ajax.js')
         else:
             dlink = None
         for bookmark in rset.entities():

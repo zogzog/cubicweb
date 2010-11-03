@@ -15,68 +15,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-Standard interfaces.
+"""Standard interfaces. Deprecated in favor of adapters.
 
 .. note::
 
-  The `implements` selector matches not only entity classes but also
-  their interfaces. Writing __select__ = implements('IGeocodable') is
-  a perfectly fine thing to do.
+  The `implements` selector used to match not only entity classes but also their
+  interfaces. This will disappear in a future version. You should define an
+  adapter for that interface and use `adaptable('MyIFace')` selector on appobjects
+  that require that interface.
+
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.common.interface import Interface
 
-class IEmailable(Interface):
-    """interface for emailable entities"""
 
-    def get_email(self):
-        """return email address"""
-
-    @classmethod
-    def allowed_massmail_keys(cls):
-        """returns a set of allowed email substitution keys
-
-        The default is to return the entity's attribute list but an
-        entity class might override this method to allow extra keys.
-        For instance, the Person class might want to return a `companyname`
-        key.
-        """
-
-    def as_email_context(self):
-        """returns the dictionary as used by the sendmail controller to
-        build email bodies.
-
-        NOTE: the dictionary keys should match the list returned by the
-        `allowed_massmail_keys` method.
-        """
-
-
-class IWorkflowable(Interface):
-    """interface for entities dealing with a specific workflow"""
-    # XXX to be completed, see cw.entities.wfobjs.WorkflowableMixIn
-
-    @property
-    def state(self):
-        """return current state name"""
-
-    def change_state(self, stateeid, trcomment=None, trcommentformat=None):
-        """change the entity's state to the state of the given name in entity's
-        workflow
-        """
-
-    def latest_trinfo(self):
-        """return the latest transition information for this entity
-        """
-
-
+# XXX deprecates in favor of IProgressAdapter
 class IProgress(Interface):
-    """something that has a cost, a state and a progression
-
-    Take a look at cubicweb.mixins.ProgressMixIn for some
-    default implementations
-    """
+    """something that has a cost, a state and a progression"""
 
     @property
     def cost(self):
@@ -112,7 +68,7 @@ class IProgress(Interface):
     def progress(self):
         """returns the % progress of the task item"""
 
-
+# XXX deprecates in favor of IMileStoneAdapter
 class IMileStone(IProgress):
     """represents an ITask's item"""
 
@@ -135,7 +91,132 @@ class IMileStone(IProgress):
     def contractors(self):
         """returns the list of persons supposed to work on this task"""
 
+# XXX deprecates in favor of IEmbedableAdapter
+class IEmbedable(Interface):
+    """interface for embedable entities"""
 
+    def embeded_url(self):
+        """embed action interface"""
+
+# XXX deprecates in favor of ICalendarViewsAdapter
+class ICalendarViews(Interface):
+    """calendar views interface"""
+    def matching_dates(self, begin, end):
+        """
+        :param begin: day considered as begin of the range (`DateTime`)
+        :param end: day considered as end of the range (`DateTime`)
+
+        :return:
+          a list of dates (`DateTime`) in the range [`begin`, `end`] on which
+          this entity apply
+        """
+
+# XXX deprecates in favor of ICalendarableAdapter
+class ICalendarable(Interface):
+    """interface for items that do have a begin date 'start' and an end date 'stop'
+    """
+
+    @property
+    def start(self):
+        """return start date"""
+
+    @property
+    def stop(self):
+        """return stop state"""
+
+# XXX deprecates in favor of ICalendarableAdapter
+class ITimetableViews(Interface):
+    """timetable views interface"""
+    def timetable_date(self):
+        """XXX explain
+
+        :return: date (`DateTime`)
+        """
+
+# XXX deprecates in favor of IGeocodableAdapter
+class IGeocodable(Interface):
+    """interface required by geocoding views such as gmap-view"""
+
+    @property
+    def latitude(self):
+        """returns the latitude of the entity"""
+
+    @property
+    def longitude(self):
+        """returns the longitude of the entity"""
+
+    def marker_icon(self):
+        """returns the icon that should be used as the marker"""
+
+# XXX deprecates in favor of ISIOCItemAdapter
+class ISiocItem(Interface):
+    """interface for entities which may be represented as an ISIOC item"""
+
+    def isioc_content(self):
+        """return item's content"""
+
+    def isioc_container(self):
+        """return container entity"""
+
+    def isioc_type(self):
+        """return container type (post, BlogPost, MailMessage)"""
+
+    def isioc_replies(self):
+        """return replies items"""
+
+    def isioc_topics(self):
+        """return topics items"""
+
+# XXX deprecates in favor of ISIOCContainerAdapter
+class ISiocContainer(Interface):
+    """interface for entities which may be represented as an ISIOC container"""
+
+    def isioc_type(self):
+        """return container type (forum, Weblog, MailingList)"""
+
+    def isioc_items(self):
+        """return contained items"""
+
+# XXX deprecates in favor of IEmailableAdapter
+class IFeed(Interface):
+    """interface for entities with rss flux"""
+
+    def rss_feed_url(self):
+        """"""
+
+# XXX deprecates in favor of IDownloadableAdapter
+class IDownloadable(Interface):
+    """interface for downloadable entities"""
+
+    def download_url(self): # XXX not really part of this interface
+        """return an url to download entity's content"""
+    def download_content_type(self):
+        """return MIME type of the downloadable content"""
+    def download_encoding(self):
+        """return encoding of the downloadable content"""
+    def download_file_name(self):
+        """return file name of the downloadable content"""
+    def download_data(self):
+        """return actual data of the downloadable content"""
+
+# XXX deprecates in favor of IPrevNextAdapter
+class IPrevNext(Interface):
+    """interface for entities which can be linked to a previous and/or next
+    entity
+    """
+
+    def next_entity(self):
+        """return the 'next' entity"""
+    def previous_entity(self):
+        """return the 'previous' entity"""
+
+# XXX deprecates in favor of IBreadCrumbsAdapter
+class IBreadCrumbs(Interface):
+
+    def breadcrumbs(self, view, recurs=False):
+        pass
+
+# XXX deprecates in favor of ITreeAdapter
 class ITree(Interface):
 
     def parent(self):
@@ -159,141 +240,3 @@ class ITree(Interface):
     def root(self):
         """returns the root object"""
 
-
-## web specific interfaces ####################################################
-
-
-class IPrevNext(Interface):
-    """interface for entities which can be linked to a previous and/or next
-    entity
-    """
-
-    def next_entity(self):
-        """return the 'next' entity"""
-    def previous_entity(self):
-        """return the 'previous' entity"""
-
-
-class IBreadCrumbs(Interface):
-    """interface for entities which can be "located" on some path"""
-
-    # XXX fix recurs !
-    def breadcrumbs(self, view, recurs=False):
-        """return a list containing some:
-
-        * tuple (url, label)
-        * entity
-        * simple label string
-
-        defining path from a root to the current view
-
-        the main view is given as argument so breadcrumbs may vary according
-        to displayed view (may be None). When recursing on a parent entity,
-        the `recurs` argument should be set to True.
-        """
-
-
-class IDownloadable(Interface):
-    """interface for downloadable entities"""
-
-    def download_url(self): # XXX not really part of this interface
-        """return an url to download entity's content"""
-    def download_content_type(self):
-        """return MIME type of the downloadable content"""
-    def download_encoding(self):
-        """return encoding of the downloadable content"""
-    def download_file_name(self):
-        """return file name of the downloadable content"""
-    def download_data(self):
-        """return actual data of the downloadable content"""
-
-
-class IEmbedable(Interface):
-    """interface for embedable entities"""
-
-    def embeded_url(self):
-        """embed action interface"""
-
-class ICalendarable(Interface):
-    """interface for items that do have a begin date 'start' and an end date 'stop'
-    """
-
-    @property
-    def start(self):
-        """return start date"""
-
-    @property
-    def stop(self):
-        """return stop state"""
-
-class ICalendarViews(Interface):
-    """calendar views interface"""
-    def matching_dates(self, begin, end):
-        """
-        :param begin: day considered as begin of the range (`DateTime`)
-        :param end: day considered as end of the range (`DateTime`)
-
-        :return:
-          a list of dates (`DateTime`) in the range [`begin`, `end`] on which
-          this entity apply
-        """
-
-class ITimetableViews(Interface):
-    """timetable views interface"""
-    def timetable_date(self):
-        """XXX explain
-
-        :return: date (`DateTime`)
-        """
-
-class IGeocodable(Interface):
-    """interface required by geocoding views such as gmap-view"""
-
-    @property
-    def latitude(self):
-        """returns the latitude of the entity"""
-
-    @property
-    def longitude(self):
-        """returns the longitude of the entity"""
-
-    def marker_icon(self):
-        """returns the icon that should be used as the marker
-        (returns None for default)
-        """
-
-class IFeed(Interface):
-    """interface for entities with rss flux"""
-
-    def rss_feed_url(self):
-        """return an url which layout sub-entities item
-        """
-
-class ISiocItem(Interface):
-    """interface for entities (which are item
-    in sioc specification) with sioc views"""
-
-    def isioc_content(self):
-        """return content entity"""
-
-    def isioc_container(self):
-        """return container entity"""
-
-    def isioc_type(self):
-        """return container type (post, BlogPost, MailMessage)"""
-
-    def isioc_replies(self):
-        """return replies items"""
-
-    def isioc_topics(self):
-        """return topics items"""
-
-class ISiocContainer(Interface):
-    """interface for entities (which are container
-    in sioc specification) with sioc views"""
-
-    def isioc_type(self):
-        """return container type (forum, Weblog, MailingList)"""
-
-    def isioc_items(self):
-        """return contained items"""

@@ -5,13 +5,14 @@ include pylintrc
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
-recursive-include doc README makefile *.conf *.py *.rst *.txt *.html *.png *.svg *.zargo *.dia
+recursive-include doc README makefile *.conf *.css *.py *.rst *.txt *.html *.png *.svg *.zargo *.dia
 
 recursive-include misc *.py *.png *.display
 
 include web/views/*.pt
 recursive-include web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf
 recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
+recursive-include devtools/data *.js *.css
 
 recursive-include i18n *.pot *.po
 recursive-include schemas *.py *.sql
@@ -21,10 +22,15 @@ recursive-include entities/test/data bootstrap_cubes *.py
 recursive-include sobjects/test/data bootstrap_cubes *.py
 recursive-include hooks/test/data bootstrap_cubes *.py
 recursive-include server/test/data bootstrap_cubes *.py source*
-recursive-include web/test/data bootstrap_cubes *.py
-recursive-include devtools/test/data bootstrap_cubes *.py *.txt
+recursive-include devtools/test/data bootstrap_cubes *.py *.txt *.js
+recursive-include web/test/data bootstrap_cubes pouet.css *.py
+
+recursive-include web/test/jstests *.js *.html *.css *.json
+recursive-include web/test/windmill *.py
 
 recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
 
+prune doc/book/en/.static
+prune doc/book/fr/.static
 prune misc/cwfs
 prune goa

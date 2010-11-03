@@ -1,0 +1,14 @@
+[system]
+
+db-driver   = postgres
+db-host     = localhost
+db-port     = 
+adapter     = native
+db-name     = cw_fti_test
+db-encoding = UTF-8
+db-user     = syt
+db-password = syt
+
+[admin]
+login = admin
+password = gingkow

@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""base application's entities class implementation: `AnyEntity`
+"""base application's entities class implementation: `AnyEntity`"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -28,33 +27,13 @@ from logilab.common.decorators import cached
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.entity import Entity
 
-from cubicweb.interfaces import IBreadCrumbs, IFeed
-
 
 class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
     __regid__ = 'Any'
-    __implements__ = (IBreadCrumbs, IFeed)
-
-    fetch_attrs = ('modification_date',)
-    @classmethod
-    def fetch_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched
-        """
-        return cls.fetch_unrelated_order(attr, var)
-
-    @classmethod
-    def fetch_unrelated_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched to use in edition (eg propose them to create a
-        new relation on an edited entity).
-        """
-        if attr == 'modification_date':
-            return '%s DESC' % var
-        return None
+    __implements__ = ()
 
     # meta data api ###########################################################
 
@@ -63,7 +42,7 @@ class AnyEntity(Entity):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             if rschema.meta:
                 continue
-            value = self.get_value(rschema.type)
+            value = self.cw_attr_value(rschema.type)
             if value:
                 # make the value printable (dates, floats, bytes, etc.)
                 return self.printable_value(rschema.type, value, attrschema.type,
@@ -120,32 +99,6 @@ class AnyEntity(Entity):
         except (Unauthorized, IndexError):
             return None
 
-    def breadcrumbs(self, view=None, recurs=False):
-        path = [self]
-        if hasattr(self, 'parent'):
-            parent = self.parent()
-            if parent is not None:
-                try:
-                    path = parent.breadcrumbs(view, True) + [self]
-                except TypeError:
-                    warn("breadcrumbs method's now takes two arguments "
-                         "(view=None, recurs=False), please update",
-                         DeprecationWarning)
-                    path = parent.breadcrumbs(view) + [self]
-        if not recurs:
-            if view is None:
-                if 'vtitle' in self._cw.form:
-                    # embeding for instance
-                    path.append( self._cw.form['vtitle'] )
-            elif view.__regid__ != 'primary' and hasattr(view, 'title'):
-                path.append( self._cw._(view.title) )
-        return path
-
-    ## IFeed interface ########################################################
-
-    def rss_feed_url(self):
-        return self.absolute_url(vid='rss')
-
     # abstractions making the whole things (well, some at least) working ######
 
     def sortvalue(self, rtype=None):
@@ -154,7 +107,7 @@ class AnyEntity(Entity):
         """
         if rtype is None:
             return self.dc_title().lower()
-        value = self.get_value(rtype)
+        value = self.cw_attr_value(rtype)
         # do not restrict to `unicode` because Bytes will return a `str` value
         if isinstance(value, basestring):
             return self.printable_value(rtype, format='text/plain').lower()
@@ -189,34 +142,7 @@ class AnyEntity(Entity):
         self.__linkto[(rtype, role)] = linkedto
         return linkedto
 
-    # edit controller callbacks ###############################################
-
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        if hasattr(self, 'parent') and self.parent():
-            return self.parent().rest_path(), {}
-        return str(self.e_schema).lower(), {}
-
-    def pre_web_edit(self):
-        """callback called by the web editcontroller when an entity will be
-        created/modified, to let a chance to do some entity specific stuff.
-
-        Do nothing by default.
-        """
-        pass
-
     # server side helpers #####################################################
-
-    def notification_references(self, view):
-        """used to control References field of email send on notification
-        for this entity. `view` is the notification view.
-
-        Should return a list of eids which can be used to generate message ids
-        of previously sent email
-        """
-        return ()
 
 # XXX:  store a reference to the AnyEntity class since it is hijacked in goa
 #       configuration and we need the actual reference to avoid infinite loops

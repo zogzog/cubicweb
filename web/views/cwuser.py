@@ -19,9 +19,11 @@
 
 __docformat__ = "restructuredtext en"
 
+import hashlib
+
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import one_line_rset, implements, match_user_groups
+from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import action, uicfg
 from cubicweb.web.views import tabs
@@ -38,7 +40,7 @@ _pvs.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
 
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'
-    __select__ = (one_line_rset() & implements('CWUser') &
+    __select__ = (one_line_rset() & is_instance('CWUser') &
                   match_user_groups('owners', 'managers'))
 
     title = _('preferences')
@@ -51,7 +53,7 @@ class UserPreferencesEntityAction(action.Action):
 
 class FoafView(EntityView):
     __regid__ = 'foaf'
-    __select__ = implements('CWUser')
+    __select__ = is_instance('CWUser')
 
     title = _('foaf')
     templatable = False
@@ -68,21 +70,23 @@ class FoafView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)
-        self.w(u'''<foaf:PersonalProfileDocument rdf:about="">
-                      <foaf:maker rdf:resource="%s"/>
-                      <foaf:primaryTopic rdf:resource="%s"/>
-                   </foaf:PersonalProfileDocument>''' % (entity.absolute_url(), entity.absolute_url()))
-        self.w(u'<foaf:Person rdf:ID="%s">\n' % entity.eid)
-        self.w(u'<foaf:name>%s</foaf:name>\n' % xml_escape(entity.dc_long_title()))
+        # account
+        self.w(u'<foaf:OnlineAccount rdf:about="%s">\n' % entity.absolute_url())
+        self.w(u'  <foaf:accountName>%s</foaf:accountName>\n' % entity.login)
+        self.w(u'</foaf:OnlineAccount>\n')
+        # person
+        self.w(u'<foaf:Person rdf:about="%s#user">\n' % entity.absolute_url())
+        self.w(u'  <foaf:account rdf:resource="%s" />\n' % entity.absolute_url())
         if entity.surname:
-            self.w(u'<foaf:family_name>%s</foaf:family_name>\n'
+            self.w(u'<foaf:familyName>%s</foaf:familyName>\n'
                    % xml_escape(entity.surname))
         if entity.firstname:
-            self.w(u'<foaf:givenname>%s</foaf:givenname>\n'
+            self.w(u'<foaf:givenName>%s</foaf:givenName>\n'
                    % xml_escape(entity.firstname))
-        emailaddr = entity.get_email()
+        emailaddr = entity.cw_adapt_to('IEmailable').get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
+            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n'
+                   % hashlib.sha1(emailaddr.encode('utf-8')).hexdigest())
         self.w(u'</foaf:Person>\n')
 
 
@@ -93,14 +97,14 @@ _pvs.tag_object_of(('*', 'require_group', 'CWGroup'), 'hidden')
 
 
 class CWGroupPrimaryView(tabs.TabbedPrimaryView):
-    __select__ = implements('CWGroup')
+    __select__ = is_instance('CWGroup')
     tabs = [_('cwgroup-main'), _('cwgroup-permissions')]
     default_tab = 'cwgroup-main'
 
 
 class CWGroupMainTab(tabs.PrimaryTab):
     __regid__ = 'cwgroup-main'
-    __select__ = tabs.PrimaryTab.__select__ & implements('CWGroup')
+    __select__ = tabs.PrimaryTab.__select__ & is_instance('CWGroup')
 
     def render_entity_attributes(self, entity):
         rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
@@ -114,7 +118,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
 
 class CWGroupPermTab(EntityView):
     __regid__ = 'cwgroup-permissions'
-    __select__ = implements('CWGroup')
+    __select__ = is_instance('CWGroup')
 
     def cell_call(self, row, col):
         self._cw.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
@@ -140,7 +144,7 @@ class CWGroupPermTab(EntityView):
 
 class CWGroupInContextView(EntityView):
     __regid__ = 'incontext'
-    __select__ = implements('CWGroup')
+    __select__ = is_instance('CWGroup')
 
     def cell_call(self, row, col):
         entity = self.cw_rset.complete_entity(row, col)

@@ -1,9 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-.. _dependencies:
+.. _InstallDependencies:
 
-Dependencies
-============
+Installation dependencies
+=========================
 
 When you run CubicWeb from source, either by downloading the tarball or
 cloning the mercurial forest, here is the list of tools and libraries you need
@@ -27,6 +27,9 @@ to have installed in order for CubicWeb to work:
 * logilab-common - http://www.logilab.org/project/logilab-common -
   http://pypi.python.org/pypi/logilab-common/ - included in the forest
 
+* logilab-database - http://www.logilab.org/project/logilab-database -
+  http://pypi.python.org/pypi/logilab-database/ - included in the forest
+
 * logilab-constraint - http://www.logilab.org/project/logilab-constraint -
   http://pypi.python.org/pypi/constraint/ - included in the forest
 
@@ -44,7 +47,7 @@ to have installed in order for CubicWeb to work:
 
 To use network communication between cubicweb instances / clients:
 
-* Pyro - http://pyro.sourceforge.net/ - http://pypi.python.org/pypi/Pyro
+* Pyro - http://www.xs4all.nl/~irmen/pyro3/ - http://pypi.python.org/pypi/Pyro
 
 If you're using a Postgres database (recommended):
 
@@ -52,9 +55,7 @@ If you're using a Postgres database (recommended):
 * plpythonu extension
 * tsearch2 extension (for postgres < 8.3, in postgres-contrib)
 
-Other optional packages :
-
-:
+Other optional packages:
 
 * fyzz - http://www.logilab.org/project/fyzz -
   http://pypi.python.org/pypi/fyzz - included in the forest, *to activate Sparql querying*

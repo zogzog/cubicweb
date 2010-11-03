@@ -182,7 +182,7 @@ class AbstractSource(object):
             wsupport = self.support_relations[rtype]
         except KeyError:
             rschema = self.schema.rschema(rtype)
-            if not rschema.final or rschema == 'has_text':
+            if not rschema.final or rschema.type == 'has_text':
                 return False
             for etype in rschema.subjects():
                 try:
@@ -306,7 +306,7 @@ class AbstractSource(object):
         pass
 
     def authenticate(self, session, login, **kwargs):
-        """if the source support CWUser entity type, it should implements
+        """if the source support CWUser entity type, it should implement
         this method which should return CWUser eid for the given login/password
         if this account is defined in this source and valid login / password is
         given. Else raise `AuthenticationError`
@@ -342,7 +342,7 @@ class AbstractSource(object):
         entity.
         """
         entity = self.repo.vreg['etypes'].etype_class(etype)(session)
-        entity.set_eid(eid)
+        entity.eid = eid
         return entity
 
     def after_entity_insertion(self, session, lid, entity):

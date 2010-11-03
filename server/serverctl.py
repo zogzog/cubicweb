@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb-ctl commands and command handlers specific to the server.serverconfig
+"""cubicweb-ctl commands and command handlers specific to the repository"""
 
-"""
 __docformat__ = 'restructuredtext en'
 
 # *ctl module should limit the number of import to be imported as quickly as
@@ -27,11 +26,11 @@ import sys
 import os
 
 from logilab.common.configuration import Configuration
-from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 from logilab.common.shellutils import ASK
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
+from cubicweb.cwctl import CWCTL
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
                                           SourceConfiguration)
@@ -43,37 +42,44 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     given server.serverconfig
     """
     from getpass import getpass
-    from logilab.database import get_connection
+    from logilab.database import get_connection, get_db_helper
     dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
     driver = source['db-driver']
-    print '-> connecting to %s database' % driver,
-    if dbhost:
-        print '%s@%s' % (dbname, dbhost),
-    else:
-        print dbname,
-    if not verbose or (not special_privs and source.get('db-user')):
-        user = source['db-user']
-        print 'as', user
-        if source.get('db-password'):
-            password = source['db-password']
+    dbhelper = get_db_helper(driver)
+    if verbose:
+        print '-> connecting to %s database' % driver,
+        if dbhost:
+            print '%s@%s' % (dbname, dbhost),
         else:
-            password = getpass('password: ')
-    else:
-        print
-        if special_privs:
-            print 'WARNING'
-            print 'the user will need the following special access rights on the database:'
-            print special_privs
+            print dbname,
+    if dbhelper.users_support:
+        if not verbose or (not special_privs and source.get('db-user')):
+            user = source['db-user']
+            if verbose:
+                print 'as', user
+            if source.get('db-password'):
+                password = source['db-password']
+            else:
+                password = getpass('password: ')
+        else:
             print
-        default_user = source.get('db-user', os.environ.get('USER', ''))
-        user = raw_input('Connect as user ? [%r]: ' % default_user)
-        user = user or default_user
-        if user == source.get('db-user') and source.get('db-password'):
-            password = source['db-password']
-        else:
-            password = getpass('password: ')
+            if special_privs:
+                print 'WARNING'
+                print ('the user will need the following special access rights '
+                       'on the database:')
+                print special_privs
+                print
+            default_user = source.get('db-user', os.environ.get('USER', ''))
+            user = raw_input('Connect as user ? [%r]: ' % default_user)
+            user = user or default_user
+            if user == source.get('db-user') and source.get('db-password'):
+                password = source['db-password']
+            else:
+                password = getpass('password: ')
+    else:
+        user = password = None
     extra_args = source.get('db-extra-arguments')
     extra = extra_args and {'extra_args': extra_args} or {}
     cnx = get_connection(driver, dbhost, dbname, user, password=password,
@@ -152,8 +158,8 @@ class RepositoryCreateHandler(CommandHandler):
     cfgname = 'repository'
 
     def bootstrap(self, cubes, inputlevel=0):
-        """create an instance by copying files from the given cube and by
-        asking information necessary to build required configuration files
+        """create an instance by copying files from the given cube and by asking
+        information necessary to build required configuration files
         """
         from cubicweb.server.utils import ask_source_config
         config = self.config
@@ -168,7 +174,7 @@ class RepositoryCreateHandler(CommandHandler):
         sourcesfile = config.sources_file()
         # XXX hack to make Method('default_instance_id') usable in db option
         # defs (in native.py)
-        sconfig = SourceConfiguration(config.appid,
+        sconfig = SourceConfiguration(config,
                                       options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
@@ -211,7 +217,7 @@ class RepositoryCreateHandler(CommandHandler):
     def postcreate(self):
         if ASK.confirm('Run db-create to create the system database ?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
-            cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
+            CWCTL.run(['db-create', self.config.appid, '--verbose=%s' % verbosity])
         else:
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
@@ -228,6 +234,9 @@ class RepositoryDeleteHandler(CommandHandler):
         dbname = source['db-name']
         helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
+            if source['db-driver'] == 'sqlite':
+                os.unlink(source['db-name'])
+                return
             user = source['db-user'] or None
             cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
             cursor = cnx.cursor()
@@ -249,11 +258,12 @@ class RepositoryStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'repository'
 
-    def start_server(self, ctlconf, debug):
+    def start_server(self, config):
         command = ['cubicweb-ctl start-repository ']
-        if debug:
+        if config.debugmode:
             command.append('--debug')
-        command.append(self.config.appid)
+        command.append('--loglevel %s' % config['log-threshold'].lower())
+        command.append(config.appid)
         os.system(' '.join(command))
 
 
@@ -262,8 +272,7 @@ class RepositoryStopHandler(CommandHandler):
     cfgname = 'repository'
 
     def poststop(self):
-        """if pyro is enabled, ensure the repository is correctly
-        unregistered
+        """if pyro is enabled, ensure the repository is correctly unregistered
         """
         if self.config.pyro_enabled():
             from cubicweb.server.repository import pyro_unregister
@@ -271,6 +280,14 @@ class RepositoryStopHandler(CommandHandler):
 
 
 # repository specific commands ################################################
+
+def createdb(helper, source, dbcnx, cursor, **kwargs):
+    if dbcnx.logged_user != source['db-user']:
+        helper.create_database(cursor, source['db-name'], source['db-user'],
+                               source['db-encoding'], **kwargs)
+    else:
+        helper.create_database(cursor, source['db-name'],
+                               dbencoding=source['db-encoding'], **kwargs)
 
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
@@ -285,7 +302,7 @@ class CreateInstanceDBCommand(Command):
     """
     name = 'db-create'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = (
         ('create-db',
          {'short': 'c', 'type': 'yn', 'metavar': '<y or n>',
@@ -309,19 +326,18 @@ class CreateInstanceDBCommand(Command):
         from logilab.database import get_db_helper
         verbose = self.get('verbose')
         automatic = self.get('automatic')
-        appid = pop_arg(args, msg='No instance specified !')
+        appid = args.pop()
         config = ServerConfiguration.config_for(appid)
         source = config.sources()['system']
         dbname = source['db-name']
         driver = source['db-driver']
-        create_db = self.config.create_db
         helper = get_db_helper(driver)
         if driver == 'sqlite':
             if os.path.exists(dbname) and (
                 automatic or
                 ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
-        elif create_db:
+        elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
@@ -338,12 +354,7 @@ class CreateInstanceDBCommand(Command):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
                         return
-                if dbcnx.logged_user != source['db-user']:
-                    helper.create_database(cursor, dbname, source['db-user'],
-                                           source['db-encoding'])
-                else:
-                    helper.create_database(cursor, dbname,
-                                           dbencoding=source['db-encoding'])
+                createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
             except:
@@ -363,7 +374,7 @@ class CreateInstanceDBCommand(Command):
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
         if automatic or ASK.confirm('Run db-init to initialize the system database ?'):
-            cmd_run('db-init', config.appid)
+            CWCTL.run(['db-init', config.appid])
         else:
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-init %s".' % config.appid)
@@ -381,7 +392,7 @@ class InitInstanceCommand(Command):
     """
     name = 'db-init'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = (
         ('drop',
          {'short': 'd', 'action': 'store_true',
@@ -394,7 +405,7 @@ tables, indexes... (no by default)'}),
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
         from logilab.database import get_connection
-        appid = pop_arg(args, msg='No instance specified !')
+        appid = args[0]
         config = ServerConfiguration.config_for(appid)
         try:
             system = config.sources()['system']
@@ -423,7 +434,7 @@ class GrantUserOnInstanceCommand(Command):
     """
     name = 'db-grant-user'
     arguments = '<instance> <user>'
-
+    min_args = max_args = 2
     options = (
         ('set-owner',
          {'short': 'o', 'type' : 'yn', 'metavar' : '<yes or no>',
@@ -434,8 +445,7 @@ class GrantUserOnInstanceCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         from cubicweb.server.sqlutils import sqlexec, sqlgrants
-        appid = pop_arg(args, 1, msg='No instance specified !')
-        user = pop_arg(args, msg='No user specified !')
+        appid, user = args
         config = ServerConfiguration.config_for(appid)
         source = config.sources()['system']
         set_owner = self.config.set_owner
@@ -449,7 +459,7 @@ class GrantUserOnInstanceCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occured:', ex
+            print '-> an error occurred:', ex
         else:
             cnx.commit()
             print '-> rights granted to %s on instance %s.' % (appid, user)
@@ -467,7 +477,7 @@ class ResetAdminPasswordCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         from cubicweb.server.utils import crypt_password, manager_userpasswd
-        appid = pop_arg(args, 1, msg='No instance specified !')
+        appid = args[0]
         config = ServerConfiguration.config_for(appid)
         sourcescfg = config.read_sources_file()
         try:
@@ -491,7 +501,7 @@ class ResetAdminPasswordCommand(Command):
                                        passwdmsg='new password for %s' % adminlogin)
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': crypt_password(passwd), 'l': adminlogin})
+                           {'p': buffer(crypt_password(passwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
@@ -501,7 +511,7 @@ class ResetAdminPasswordCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occured:', ex
+            print '-> an error occurred:', ex
         else:
             cnx.commit()
             print '-> password reset, sources file regenerated.'
@@ -518,27 +528,33 @@ class StartRepositoryCommand(Command):
     """
     name = 'start-repository'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = (
         ('debug',
          {'short': 'D', 'action' : 'store_true',
           'help': 'start server in debug mode.'}),
+        ('loglevel',
+         {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
+          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
         )
 
     def run(self, args):
         from logilab.common.daemon import daemonize
+        from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.server import RepositoryServer
-        appid = pop_arg(args, msg='No instance specified !')
-        config = ServerConfiguration.config_for(appid)
-        if sys.platform == 'win32':
-            if not self.config.debug:
-                from logging import getLogger
-                logger = getLogger('cubicweb.ctl')
-                logger.info('Forcing debug mode on win32 platform')
-                self.config.debug = True
-        debug = self.config.debug
+        appid = args[0]
+        debug = self['debug']
+        if sys.platform == 'win32' and not debug:
+            from logging import getLogger
+            logger = getLogger('cubicweb.ctl')
+            logger.info('Forcing debug mode on win32 platform')
+            debug = True
+        config = ServerConfiguration.config_for(appid, debugmode=debug)
+        init_cmdline_log_threshold(config, self['loglevel'])
         # create the server
-        server = RepositoryServer(config, debug)
+        server = RepositoryServer(config)
         # ensure the directory where the pid-file should be set exists (for
         # instance /var/run/cubicweb may be deleted on computer restart)
         pidfile = config['pid-file']
@@ -581,7 +597,7 @@ def _remote_dump(host, appid, output, sudo=False):
     rmcmd = 'ssh -t %s "rm -f /tmp/%s"' % (host, filename)
     print rmcmd
     if os.system(rmcmd) and not ASK.confirm(
-        'An error occured while deleting remote dump at /tmp/%s. '
+        'An error occurred while deleting remote dump at /tmp/%s. '
         'Continue anyway?' % filename):
         raise ExecutionError('Error while deleting remote dump at /tmp/%s' % filename)
 
@@ -659,7 +675,7 @@ class DBDumpCommand(Command):
     """
     name = 'db-dump'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = (
         ('output',
          {'short': 'o', 'type' : 'string', 'metavar' : '<file>',
@@ -674,7 +690,7 @@ class DBDumpCommand(Command):
         )
 
     def run(self, args):
-        appid = pop_arg(args, 1, msg='No instance specified !')
+        appid = args[0]
         if ':' in appid:
             host, appid = appid.split(':')
             _remote_dump(host, appid, self.config.output, self.config.sudo)
@@ -690,6 +706,7 @@ class DBRestoreCommand(Command):
     """
     name = 'db-restore'
     arguments = '<instance> <backupfile>'
+    min_args = max_args = 2
 
     options = (
         ('no-drop',
@@ -707,8 +724,7 @@ class DBRestoreCommand(Command):
         )
 
     def run(self, args):
-        appid = pop_arg(args, 1, msg='No instance specified !')
-        backupfile = pop_arg(args, msg='No backup file or timestamp specified !')
+        appid, backupfile = args
         _local_restore(appid, backupfile,
                        drop=not self.config.no_drop,
                        systemonly=not self.config.restore_all)
@@ -726,7 +742,7 @@ class DBCopyCommand(Command):
     """
     name = 'db-copy'
     arguments = '<src-instance> <dest-instance>'
-
+    min_args = max_args = 2
     options = (
         ('no-drop',
          {'short': 'n', 'action' : 'store_true',
@@ -748,8 +764,7 @@ class DBCopyCommand(Command):
 
     def run(self, args):
         import tempfile
-        srcappid = pop_arg(args, 1, msg='No source instance specified !')
-        destappid = pop_arg(args, msg='No destination instance specified !')
+        srcappid, destappid = args
         fd, output = tempfile.mkstemp()
         os.close(fd)
         if ':' in srcappid:
@@ -772,7 +787,7 @@ class CheckRepositoryCommand(Command):
     """
     name = 'db-check'
     arguments = '<instance>'
-
+    min_args = max_args = 1
     options = (
         ('checks',
          {'short': 'c', 'type' : 'csv', 'metavar' : '<check list>',
@@ -803,7 +818,7 @@ option is set to "y" or "yes" (may be long for large database).'}
 
     def run(self, args):
         from cubicweb.server.checkintegrity import check
-        appid = pop_arg(args, 1, msg='No instance specified !')
+        appid = args[0]
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
         repo, cnx = repo_cnx(config)
@@ -819,12 +834,11 @@ class RebuildFTICommand(Command):
     """
     name = 'db-rebuild-fti'
     arguments = '<instance>'
-
-    options = ()
+    min_args = max_args = 1
 
     def run(self, args):
         from cubicweb.server.checkintegrity import reindex_entities
-        appid = pop_arg(args, 1, msg='No instance specified !')
+        appid = args[0]
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
         session = repo._get_session(cnx.sessionid, setpool=True)
@@ -843,23 +857,48 @@ class SynchronizeInstanceSchemaCommand(Command):
     """
     name = 'schema-sync'
     arguments = '<instance>'
+    min_args = max_args = 1
 
     def run(self, args):
-        appid = pop_arg(args, msg='No instance specified !')
+        appid = args[0]
         config = ServerConfiguration.config_for(appid)
         mih = config.migration_handler()
         mih.cmd_synchronize_schema()
 
 
-register_commands( (CreateInstanceDBCommand,
-                    InitInstanceCommand,
-                    GrantUserOnInstanceCommand,
-                    ResetAdminPasswordCommand,
-                    StartRepositoryCommand,
-                    DBDumpCommand,
-                    DBRestoreCommand,
-                    DBCopyCommand,
-                    CheckRepositoryCommand,
-                    RebuildFTICommand,
-                    SynchronizeInstanceSchemaCommand,
-                    ) )
+class CheckMappingCommand(Command):
+    """Check content of the mapping file of an external source.
+
+    The mapping is checked against the instance's schema, searching for
+    inconsistencies or stuff you may have forgotten. It's higly recommanded to
+    run it when you setup a multi-sources instance.
+
+    <instance>
+      the identifier of the instance.
+
+    <mapping file>
+      the mapping file to check.
+    """
+    name = 'check-mapping'
+    arguments = '<instance> <mapping file>'
+    min_args = max_args = 2
+
+    def run(self, args):
+        from cubicweb.server.checkintegrity import check_mapping
+        from cubicweb.server.sources.pyrorql import load_mapping_file
+        appid, mappingfile = args
+        config = ServerConfiguration.config_for(appid)
+        config.quick_start = True
+        mih = config.migration_handler(connect=False, verbosity=1)
+        repo = mih.repo_connect() # necessary to get cubes
+        check_mapping(config.load_schema(), load_mapping_file(mappingfile))
+
+for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
+                 GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
+                 StartRepositoryCommand,
+                 DBDumpCommand, DBRestoreCommand, DBCopyCommand,
+                 CheckRepositoryCommand, RebuildFTICommand,
+                 SynchronizeInstanceSchemaCommand,
+                 CheckMappingCommand,
+                 ):
+    CWCTL.register(cmdclass)

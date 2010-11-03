@@ -1,3 +1,5 @@
+.. _PROFILING:
+
 Profiling and performance
 =========================
 

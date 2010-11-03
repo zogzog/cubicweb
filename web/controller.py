@@ -23,6 +23,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
+from cubicweb.mail import format_mail
 from cubicweb.web import LOGGER, Redirect, RequestError
 
 
@@ -79,18 +80,20 @@ class Controller(AppObject):
 
     # generic methods useful for concrete implementations ######################
 
-    def process_rql(self, rql):
+    def process_rql(self):
         """execute rql if specified"""
-        # XXX assigning to self really necessary?
-        self.cw_rset = None
+        req = self._cw
+        rql = req.form.get('rql')
         if rql:
-            self._cw.ensure_ro_rql(rql)
+            req.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
-                rql = unicode(rql, self._cw.encoding)
-            pp = self._cw.vreg['components'].select_or_none('magicsearch', self._cw)
+                rql = unicode(rql, req.encoding)
+            pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
-                self.cw_rset = pp.process_query(rql)
-        return self.cw_rset
+                return pp.process_query(rql)
+        if 'eid' in req.form:
+            return req.eid_rset(req.form['eid'])
+        return None
 
     def notify_edited(self, entity):
         """called by edit_entity() to notify which entity is edited"""
@@ -103,6 +106,16 @@ class Controller(AppObject):
     def validate_cache(self, view):
         view.set_http_cache_headers()
         self._cw.validate_cache()
+
+    def sendmail(self, recipient, subject, body):
+        senderemail = self._cw.user.cw_adapt_to('IEmailable').get_email()
+        msg = format_mail({'email' : senderemail,
+                           'name' : self._cw.user.dc_title(),},
+                          [recipient], body, subject)
+        if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
+            msg = self._cw._('could not connect to the SMTP server')
+            url = self._cw.build_url(__message=msg)
+            raise Redirect(url)
 
     def reset(self):
         """reset form parameters and redirect to a view determinated by given

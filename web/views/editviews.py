@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Some views used to help to the edition process
+"""Some views used to help to the edition process"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -59,10 +58,10 @@ class SearchForAssociationView(EntityView):
         # them. Use fetch_order and not fetch_unrelated_order as sort method
         # since the latter is mainly there to select relevant items in the combo
         # box, it doesn't give interesting result in this context
-        rql, args = entity.unrelated_rql(rtype, etype, role,
-                                         ordermethod='fetch_order',
-                                         vocabconstraints=False)
-        rset = self._cw.execute(rql, args, tuple(args))
+        rql, args = entity.cw_unrelated_rql(rtype, etype, role,
+                                            ordermethod='fetch_order',
+                                            vocabconstraints=False)
+        rset = self._cw.execute(rql, args)
         return rset, 'list', "search-associate-content", True
 
 
@@ -90,7 +89,7 @@ class ComboboxView(EntityView):
     __regid__ = 'combobox'
     title = None
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, **kwargs):
         """the combo-box view for an entity: same as text out of context view
         by default
         """

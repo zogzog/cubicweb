@@ -29,9 +29,9 @@ class RestTC(CubicWebTC):
 
     def test_eid_role(self):
         context = self.context()
-        self.assertEquals(rest_publish(context, ':eid:`%s`' % context.eid),
+        self.assertEqual(rest_publish(context, ':eid:`%s`' % context.eid),
                           '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">#%s</a></p>\n' % context.eid)
-        self.assertEquals(rest_publish(context, ':eid:`%s:some text`' %  context.eid),
+        self.assertEqual(rest_publish(context, ':eid:`%s:some text`' %  context.eid),
                           '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">some text</a></p>\n')
 
     def test_bad_rest_no_crash(self):

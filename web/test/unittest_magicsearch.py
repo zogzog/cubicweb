@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Unit tests for magic_search service
-
-"""
+"""Unit tests for cw.web.views.magicsearch"""
 
 import sys
 
@@ -63,16 +61,16 @@ class QueryTranslatorTC(CubicWebTC):
         """tests basic translations (no ambiguities)"""
         rql = "Any C WHERE C is Adresse, P adel C, C adresse 'Logilab'"
         rql, = self.proc.preprocess_query(rql)
-        self.assertEquals(rql, "Any C WHERE C is EmailAddress, P use_email C, C address 'Logilab'")
+        self.assertEqual(rql, "Any C WHERE C is EmailAddress, P use_email C, C address 'Logilab'")
 
     def test_ambiguous_translations(self):
         """tests possibly ambiguous translations"""
         rql = "Any P WHERE P adel C, C is EmailAddress, C nom 'Logilab'"
         rql, = self.proc.preprocess_query(rql)
-        self.assertEquals(rql, "Any P WHERE P use_email C, C is EmailAddress, C alias 'Logilab'")
+        self.assertEqual(rql, "Any P WHERE P use_email C, C is EmailAddress, C alias 'Logilab'")
         rql = "Any P WHERE P is Utilisateur, P adel C, P nom 'Smith'"
         rql, = self.proc.preprocess_query(rql)
-        self.assertEquals(rql, "Any P WHERE P is CWUser, P use_email C, P surname 'Smith'")
+        self.assertEqual(rql, "Any P WHERE P is CWUser, P use_email C, P surname 'Smith'")
 
 
 class QSPreProcessorTC(CubicWebTC):
@@ -88,21 +86,21 @@ class QSPreProcessorTC(CubicWebTC):
     def test_entity_translation(self):
         """tests QSPreProcessor._get_entity_name()"""
         translate = self.proc._get_entity_type
-        self.assertEquals(translate(u'EmailAddress'), "EmailAddress")
-        self.assertEquals(translate(u'emailaddress'), "EmailAddress")
-        self.assertEquals(translate(u'Adresse'), "EmailAddress")
-        self.assertEquals(translate(u'adresse'), "EmailAddress")
+        self.assertEqual(translate(u'EmailAddress'), "EmailAddress")
+        self.assertEqual(translate(u'emailaddress'), "EmailAddress")
+        self.assertEqual(translate(u'Adresse'), "EmailAddress")
+        self.assertEqual(translate(u'adresse'), "EmailAddress")
         self.assertRaises(BadRQLQuery, translate, 'whatever')
 
     def test_attribute_translation(self):
         """tests QSPreProcessor._get_attribute_name"""
         translate = self.proc._get_attribute_name
         eschema = self.schema.eschema('CWUser')
-        self.assertEquals(translate(u'prÃ©nom', eschema), "firstname")
-        self.assertEquals(translate(u'nom', eschema), 'surname')
+        self.assertEqual(translate(u'prÃ©nom', eschema), "firstname")
+        self.assertEqual(translate(u'nom', eschema), 'surname')
         eschema = self.schema.eschema('EmailAddress')
-        self.assertEquals(translate(u'adresse', eschema), "address")
-        self.assertEquals(translate(u'nom', eschema), 'alias')
+        self.assertEqual(translate(u'adresse', eschema), "address")
+        self.assertEqual(translate(u'nom', eschema), 'alias')
         # should fail if the name is not an attribute for the given entity schema
         self.assertRaises(BadRQLQuery, translate, 'whatever', eschema)
         self.assertRaises(BadRQLQuery, translate, 'prÃ©nom', eschema)
@@ -110,64 +108,64 @@ class QSPreProcessorTC(CubicWebTC):
     def test_one_word_query(self):
         """tests the 'one word shortcut queries'"""
         transform = self.proc._one_word_query
-        self.assertEquals(transform('123'),
+        self.assertEqual(transform('123'),
                           ('Any X WHERE X eid %(x)s', {'x': 123}, 'x'))
-        self.assertEquals(transform('CWUser'),
+        self.assertEqual(transform('CWUser'),
                           ('CWUser C',))
-        self.assertEquals(transform('Utilisateur'),
+        self.assertEqual(transform('Utilisateur'),
                           ('CWUser C',))
-        self.assertEquals(transform('Adresse'),
+        self.assertEqual(transform('Adresse'),
                           ('EmailAddress E',))
-        self.assertEquals(transform('adresse'),
+        self.assertEqual(transform('adresse'),
                           ('EmailAddress E',))
         self.assertRaises(BadRQLQuery, transform, 'Workcases')
 
     def test_two_words_query(self):
         """tests the 'two words shortcut queries'"""
         transform = self.proc._two_words_query
-        self.assertEquals(transform('CWUser', 'E'),
+        self.assertEqual(transform('CWUser', 'E'),
                           ("CWUser E",))
-        self.assertEquals(transform('CWUser', 'Smith'),
-                          ('CWUser C WHERE C has_text %(text)s', {'text': 'Smith'}))
-        self.assertEquals(transform('utilisateur', 'Smith'),
-                          ('CWUser C WHERE C has_text %(text)s', {'text': 'Smith'}))
-        self.assertEquals(transform(u'adresse', 'Logilab'),
-                          ('EmailAddress E WHERE E has_text %(text)s', {'text': 'Logilab'}))
-        self.assertEquals(transform(u'adresse', 'Logi%'),
+        self.assertEqual(transform('CWUser', 'Smith'),
+                          ('CWUser C ORDERBY FTIRANK(C) DESC WHERE C has_text %(text)s', {'text': 'Smith'}))
+        self.assertEqual(transform('utilisateur', 'Smith'),
+                          ('CWUser C ORDERBY FTIRANK(C) DESC WHERE C has_text %(text)s', {'text': 'Smith'}))
+        self.assertEqual(transform(u'adresse', 'Logilab'),
+                          ('EmailAddress E ORDERBY FTIRANK(E) DESC WHERE E has_text %(text)s', {'text': 'Logilab'}))
+        self.assertEqual(transform(u'adresse', 'Logi%'),
                           ('EmailAddress E WHERE E alias LIKE %(text)s', {'text': 'Logi%'}))
         self.assertRaises(BadRQLQuery, transform, "pers", "taratata")
 
     def test_three_words_query(self):
         """tests the 'three words shortcut queries'"""
         transform = self.proc._three_words_query
-        self.assertEquals(transform('utilisateur', u'prÃ©nom', 'cubicweb'),
+        self.assertEqual(transform('utilisateur', u'prÃ©nom', 'cubicweb'),
                           ('CWUser C WHERE C firstname %(text)s', {'text': 'cubicweb'}))
-        self.assertEquals(transform('utilisateur', 'nom', 'cubicweb'),
+        self.assertEqual(transform('utilisateur', 'nom', 'cubicweb'),
                           ('CWUser C WHERE C surname %(text)s', {'text': 'cubicweb'}))
-        self.assertEquals(transform(u'adresse', 'nom', 'cubicweb'),
+        self.assertEqual(transform(u'adresse', 'nom', 'cubicweb'),
                           ('EmailAddress E WHERE E alias %(text)s', {'text': 'cubicweb'}))
-        self.assertEquals(transform('EmailAddress', 'nom', 'cubicweb'),
+        self.assertEqual(transform('EmailAddress', 'nom', 'cubicweb'),
                           ('EmailAddress E WHERE E alias %(text)s', {'text': 'cubicweb'}))
-        self.assertEquals(transform('utilisateur', u'prÃ©nom', 'cubicweb%'),
+        self.assertEqual(transform('utilisateur', u'prÃ©nom', 'cubicweb%'),
                           ('CWUser C WHERE C firstname LIKE %(text)s', {'text': 'cubicweb%'}))
         # expanded shortcuts
-        self.assertEquals(transform('CWUser', 'use_email', 'Logilab'),
-                          ('CWUser C WHERE C use_email C1, C1 has_text %(text)s', {'text': 'Logilab'}))
-        self.assertEquals(transform('CWUser', 'use_email', '%Logilab'),
+        self.assertEqual(transform('CWUser', 'use_email', 'Logilab'),
+                          ('CWUser C ORDERBY FTIRANK(C1) DESC WHERE C use_email C1, C1 has_text %(text)s', {'text': 'Logilab'}))
+        self.assertEqual(transform('CWUser', 'use_email', '%Logilab'),
                           ('CWUser C WHERE C use_email C1, C1 alias LIKE %(text)s', {'text': '%Logilab'}))
         self.assertRaises(BadRQLQuery, transform, 'word1', 'word2', 'word3')
 
     def test_quoted_queries(self):
         """tests how quoted queries are handled"""
         queries = [
-            (u'Adresse "My own EmailAddress"', ('EmailAddress E WHERE E has_text %(text)s', {'text': u'My own EmailAddress'})),
+            (u'Adresse "My own EmailAddress"', ('EmailAddress E ORDERBY FTIRANK(E) DESC WHERE E has_text %(text)s', {'text': u'My own EmailAddress'})),
             (u'Utilisateur prÃ©nom "Jean Paul"', ('CWUser C WHERE C firstname %(text)s', {'text': 'Jean Paul'})),
             (u'Utilisateur firstname "Jean Paul"', ('CWUser C WHERE C firstname %(text)s', {'text': 'Jean Paul'})),
             (u'CWUser firstname "Jean Paul"', ('CWUser C WHERE C firstname %(text)s', {'text': 'Jean Paul'})),
             ]
         transform = self.proc._quoted_words_query
         for query, expected in queries:
-            self.assertEquals(transform(query), expected)
+            self.assertEqual(transform(query), expected)
         self.assertRaises(BadRQLQuery, transform, "unquoted rql")
         self.assertRaises(BadRQLQuery, transform, 'pers "Jean Paul"')
         self.assertRaises(BadRQLQuery, transform, 'CWUser firstname other "Jean Paul"')
@@ -177,11 +175,11 @@ class QSPreProcessorTC(CubicWebTC):
         queries = [
             (u'Utilisateur', (u"CWUser C",)),
             (u'Utilisateur P', (u"CWUser P",)),
-            (u'Utilisateur cubicweb', (u'CWUser C WHERE C has_text %(text)s', {'text': u'cubicweb'})),
+            (u'Utilisateur cubicweb', (u'CWUser C ORDERBY FTIRANK(C) DESC WHERE C has_text %(text)s', {'text': u'cubicweb'})),
             (u'CWUser prÃ©nom cubicweb', (u'CWUser C WHERE C firstname %(text)s', {'text': 'cubicweb'},)),
             ]
         for query, expected in queries:
-            self.assertEquals(self.proc.preprocess_query(query), expected)
+            self.assertEqual(self.proc.preprocess_query(query), expected)
         self.assertRaises(BadRQLQuery,
                           self.proc.preprocess_query, 'Any X WHERE X is Something')
 
@@ -203,11 +201,11 @@ class ProcessorChainTC(CubicWebTC):
         """tests QUERY_PROCESSOR"""
         queries = [
             (u'foo',
-             ("Any X WHERE X has_text %(text)s", {'text': u'foo'})),
+             ("Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s", {'text': u'foo'})),
             # XXX this sounds like a language translator test...
             # and it fails
             (u'Utilisateur Smith',
-             ('CWUser C WHERE C has_text %(text)s', {'text': u'Smith'})),
+             ('CWUser C ORDERBY FTIRANK(C) DESC WHERE C has_text %(text)s', {'text': u'Smith'})),
             (u'utilisateur nom Smith',
              ('CWUser C WHERE C surname %(text)s', {'text': u'Smith'})),
             (u'Any P WHERE P is Utilisateur, P nom "Smith"',
@@ -215,13 +213,13 @@ class ProcessorChainTC(CubicWebTC):
             ]
         for query, expected in queries:
             rset = self.proc.process_query(query)
-            self.assertEquals((rset.rql, rset.args), expected)
+            self.assertEqual((rset.rql, rset.args), expected)
 
-    def test_iso88591_fulltext(self):
+    def test_accentuated_fulltext(self):
         """we must be able to type accentuated characters in the search field"""
-        rset = self.proc.process_query(u'Ã©crire')
-        self.assertEquals(rset.rql, "Any X WHERE X has_text %(text)s")
-        self.assertEquals(rset.args, {'text': u'Ã©crire'})
+        rset = self.proc.process_query(u'écrire')
+        self.assertEqual(rset.rql, "Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s")
+        self.assertEqual(rset.args, {'text': u'écrire'})
 
     def test_explicit_component(self):
         self.assertRaises(RQLSyntaxError,
@@ -229,8 +227,8 @@ class ProcessorChainTC(CubicWebTC):
         self.assertRaises(BadRQLQuery,
                           self.proc.process_query, u'rql: CWUser E WHERE E noattr "Smith"')
         rset = self.proc.process_query(u'text: utilisateur Smith')
-        self.assertEquals(rset.rql, 'Any X WHERE X has_text %(text)s')
-        self.assertEquals(rset.args, {'text': u'utilisateur Smith'})
+        self.assertEqual(rset.rql, 'Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s')
+        self.assertEqual(rset.args, {'text': u'utilisateur Smith'})
 
 if __name__ == '__main__':
     unittest_main()

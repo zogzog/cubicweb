@@ -188,7 +188,7 @@ class FieldsForm(form.Form):
         if self.formvalues is not None:
             return # already built
         self.formvalues = formvalues or {}
-        # use a copy in case fields are modified while context is build (eg
+        # use a copy in case fields are modified while context is built (eg
         # __linkto handling for instance)
         for field in self.fields[:]:
             for field in field.actual_fields(self):

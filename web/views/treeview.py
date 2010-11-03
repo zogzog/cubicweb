@@ -15,21 +15,98 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of tree-building widgets, based on jQuery treeview plugin"""
+"""Set of tree views / tree-building widgets, some based on jQuery treeview
+plugin.
+"""
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.mtconverter import xml_escape
-from cubicweb.utils import make_uid
-from cubicweb.interfaces import ITree
-from cubicweb.selectors import implements
+
+from cubicweb.utils import make_uid, json
+from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView
-from cubicweb.web import json
+from cubicweb.mixins import _done_init
+from cubicweb.web.views import baseviews
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
 
+
+class BaseTreeView(baseviews.ListView):
+    """base tree view"""
+    __regid__ = 'tree'
+    __select__ = adaptable('ITree')
+    item_vid = 'treeitem'
+
+    def call(self, done=None, **kwargs):
+        if done is None:
+            done = set()
+        super(BaseTreeView, self).call(done=done, **kwargs)
+
+    def cell_call(self, row, col=0, vid=None, done=None, maxlevel=None, **kwargs):
+        assert maxlevel is None or maxlevel > 0
+        done, entity = _done_init(done, self, row, col)
+        if done is None:
+            # entity is actually an error message
+            self.w(u'<li class="badcontent">%s</li>' % entity)
+            return
+        self.open_item(entity)
+        entity.view(vid or self.item_vid, w=self.w, **kwargs)
+        if maxlevel is not None:
+            maxlevel -= 1
+            if maxlevel == 0:
+                self.close_item(entity)
+                return
+        relatedrset = entity.cw_adapt_to('ITree').children(entities=False)
+        self.wview(self.__regid__, relatedrset, 'null', done=done,
+                   maxlevel=maxlevel, **kwargs)
+        self.close_item(entity)
+
+    def open_item(self, entity):
+        self.w(u'<li class="%s">\n' % entity.__regid__.lower())
+    def close_item(self, entity):
+        self.w(u'</li>\n')
+
+
+class TreePathView(EntityView):
+    """a recursive path view"""
+    __regid__ = 'path'
+    __select__ = adaptable('ITree')
+    item_vid = 'oneline'
+    separator = u'&#160;&gt;&#160;'
+
+    def call(self, **kwargs):
+        self.w(u'<div class="pathbar">')
+        super(TreePathView, self).call(**kwargs)
+        self.w(u'</div>')
+
+    def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
+        done, entity = _done_init(done, self, row, col)
+        if done is None:
+            # entity is actually an error message
+            self.w(u'<span class="badcontent">%s</span>' % entity)
+            return
+        parent = entity.cw_adapt_to('ITree').parent()
+        if parent:
+            parent.view(self.__regid__, w=self.w, done=done)
+            self.w(self.separator)
+        entity.view(vid or self.item_vid, w=self.w)
+
+
+class TreeComboBoxView(TreePathView):
+    """display folder in edition's combobox"""
+    __regid__ = 'combobox'
+    item_vid = 'text'
+    separator = u' > '
+
+# XXX rename regid to ajaxtree/foldabletree or something like that (same for
+# treeitemview)
 class TreeView(EntityView):
+    """ajax tree view, click to expand folder"""
+
     __regid__ = 'treeview'
     itemvid = 'treeitemview'
     subvid = 'oneline'
@@ -111,7 +188,8 @@ class FileItemInnerView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
-        if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
+        itree = entity.cw_adapt_to('ITree')
+        if itree and not itree.is_leaf():
             self.w(u'<div class="folder">%s</div>\n' % entity.view('oneline'))
         else:
             # XXX define specific CSS classes according to mime types
@@ -119,7 +197,7 @@ class FileItemInnerView(EntityView):
 
 
 class DefaultTreeViewItemView(EntityView):
-    """default treeitem view for entities which don't implement ITree"""
+    """default treeitem view for entities which don't adapt to ITree"""
     __regid__ = 'treeitemview'
 
     def cell_call(self, row, col, vid='oneline', treeid=None, **morekwargs):
@@ -130,12 +208,12 @@ class DefaultTreeViewItemView(EntityView):
 
 
 class TreeViewItemView(EntityView):
-    """specific treeitem view for entities which implement ITree
+    """specific treeitem view for entities which adapt to ITree
 
     (each item should be expandable if it's not a tree leaf)
     """
     __regid__ = 'treeitemview'
-    __select__ = implements(ITree)
+    __select__ = adaptable('ITree')
     default_branch_state_is_open = False
 
     def open_state(self, eeid, treeid):
@@ -149,15 +227,16 @@ class TreeViewItemView(EntityView):
                   is_last=False, **morekwargs):
         w = self.w
         entity = self.cw_rset.get_entity(row, col)
+        itree = entity.cw_adapt_to('ITree')
         liclasses = []
         is_open = self.open_state(entity.eid, treeid)
-        is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
+        is_leaf = itree is None or itree.is_leaf()
         if is_leaf:
             if is_last:
                 liclasses.append('last')
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
-            rql = entity.children_rql() % {'x': entity.eid}
+            rql = itree.children_rql() % {'x': entity.eid}
             url = xml_escape(self._cw.build_url('json', rql=rql, vid=parentvid,
                                                 pageid=self._cw.pageid,
                                                 treeid=treeid,
@@ -196,7 +275,7 @@ class TreeViewItemView(EntityView):
         # the local node info
         self.wview(vid, self.cw_rset, row=row, col=col, **morekwargs)
         if is_open and not is_leaf: #  => rql is defined
-            self.wview(parentvid, entity.children(entities=False), subvid=vid,
+            self.wview(parentvid, itree.children(entities=False), subvid=vid,
                        treeid=treeid, initial_load=False, **morekwargs)
         w(u'</li>')
 

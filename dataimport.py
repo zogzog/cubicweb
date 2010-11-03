@@ -34,7 +34,7 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
            ]
 
   def gen_users(ctl):
-      for row in ctl.get_data('utilisateurs'):
+      for row in ctl.iter_and_commit('utilisateurs'):
           entity = mk_entity(row, USERS)
           entity['upassword'] = u'motdepasse'
           ctl.check('login', entity['login'], None)
@@ -51,10 +51,15 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
   GENERATORS.append( (gen_users, CHK) )
 
   # create controller
-  ctl = CWImportController(RQLObjectStore(cnx))
+  if 'cnx' in globals():
+      ctl = CWImportController(RQLObjectStore(cnx))
+  else:
+      print 'debug mode (not connected)'
+      print 'run through cubicweb-ctl shell to access an instance'
+      ctl = CWImportController(ObjectStore())
   ctl.askerror = 1
   ctl.generators = GENERATORS
-  ctl.data['utilisateurs'] = lazytable(utf8csvreader(open('users.csv')))
+  ctl.data['utilisateurs'] = lazytable(ucsvreader(open('users.csv')))
   # run
   ctl.run()
 
@@ -77,17 +82,32 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb.server.utils import eschema_eid
 
-def ucsvreader_pb(filepath, encoding='utf-8', separator=',', quote='"',
+def count_lines(stream_or_filename):
+    if isinstance(stream_or_filename, basestring):
+        f = open(filename)
+    else:
+        f = stream_or_filename
+        f.seek(0)
+    for i, line in enumerate(f):
+        pass
+    f.seek(0)
+    return i+1
+
+def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
                   skipfirst=False, withpb=True):
     """same as ucsvreader but a progress bar is displayed as we iter on rows"""
-    if not osp.exists(filepath):
-        raise Exception("file doesn't exists: %s" % filepath)
-    rowcount = int(shellutils.Execute('wc -l "%s"' % filepath).out.strip().split()[0])
+    if isinstance(stream_or_path, basestring):
+        if not osp.exists(filepath):
+            raise Exception("file doesn't exists: %s" % filepath)
+        stream = open(stream_or_path)
+    else:
+        stream = stream_or_path
+    rowcount = count_lines(stream)
     if skipfirst:
         rowcount -= 1
     if withpb:
         pb = shellutils.ProgressBar(rowcount, 50)
-    for urow in ucsvreader(file(filepath), encoding, separator, quote, skipfirst):
+    for urow in ucsvreader(stream, encoding, separator, quote, skipfirst):
         yield urow
         if withpb:
             pb.update()
@@ -104,19 +124,21 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
     for row in it:
         yield [item.decode(encoding) for item in row]
 
-def commit_every(nbit, store, it):
-    for i, x in enumerate(it):
-        yield x
-        if nbit is not None and i % nbit:
-            store.commit()
-    if nbit is not None:
-        store.commit()
+def callfunc_every(func, number, iterable):
+    """yield items of `iterable` one by one and call function `func`
+    every `number` iterations. Always call function `func` at the end.
+    """
+    for idx, item in enumerate(iterable):
+        yield item
+        if idx % number:
+            func()
+    func()
 
 def lazytable(reader):
     """The first row is taken to be the header of the table and
     used to output a dict for each row of data.
 
-    >>> data = lazytable(utf8csvreader(open(filename)))
+    >>> data = lazytable(ucsvreader(open(filename)))
     """
     header = reader.next()
     for row in reader:
@@ -209,7 +231,7 @@ def optional(value):
     return None
 
 def required(value):
-    """raise ValueError is value is empty
+    """raise ValueError if value is empty
 
     This check should be often found in last position in the chain.
     """
@@ -396,20 +418,19 @@ class RQLObjectStore(ObjectStore):
 
     def __init__(self, session=None, commit=None):
         ObjectStore.__init__(self)
-        if session is not None:
-            if not hasattr(session, 'set_pool'):
-                # connection
-                cnx = session
-                session = session.request()
-                session.set_pool = lambda : None
-                commit = commit or cnx.commit
-            else:
-                session.set_pool()
-            self.session = session
-            self._commit = commit or session.commit
-        elif commit is not None:
-            self._commit = commit
-            # XXX .session
+        if session is None:
+            sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
+            session = cnx
+        if not hasattr(session, 'set_pool'):
+            # connection
+            cnx = session
+            session = session.request()
+            session.set_pool = lambda : None
+            commit = commit or cnx.commit
+        else:
+            session.set_pool()
+        self.session = session
+        self._commit = commit or session.commit
 
     @deprecated("[3.7] checkpoint() deprecated. use commit() instead")
     def checkpoint(self):
@@ -551,7 +572,12 @@ class CWImportController(object):
 
     def iter_and_commit(self, datakey):
         """iter rows, triggering commit every self.commitevery iterations"""
-        return commit_every(self.commitevery, self.store, self.get_data(datakey))
+        if self.commitevery is None:
+            return self.get_data(datakey)
+        else:
+            return callfunc_every(self.store.commit,
+                                  self.commitevery,
+                                  self.get_data(datakey))
 
 
 
@@ -584,7 +610,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
             kwargs[k] = getattr(v, 'eid', v)
         entity, rels = self.metagen.base_etype_dicts(etype)
         entity = copy(entity)
-        entity._related_cache = {}
+        entity.cw_clear_relation_cache()
         self.metagen.init_entity(entity)
         entity.update(kwargs)
         entity.edited_attributes = set(entity)

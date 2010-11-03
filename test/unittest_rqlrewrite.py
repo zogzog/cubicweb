@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main, TestCase
 from logilab.common.testlib import mock_object
 from yams import BadSchemaDefinition
@@ -109,7 +107,7 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any S WHERE S documented_by C, C eid %(u)s')
         rewrite(rqlst, {('C', 'X'): (card_constraint,), ('S', 'X'): affaire_constraints},
                 kwargs)
-        self.assertTextEquals(rqlst.as_string(),
+        self.assertMultiLineEqual(rqlst.as_string(),
                              "Any S WHERE S documented_by C, C eid %(u)s, B eid %(D)s, "
                              "EXISTS(C in_state A, B in_group E, F require_state A, "
                              "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission), "
@@ -272,7 +270,7 @@ class RQLRewriteTC(TestCase):
                              "EXISTS(U in_group B, B name 'managers', B is CWGroup), T is TrInfo")
 
     def test_unsupported_constraint_3(self):
-        self.skip('raise unauthorized for now')
+        self.skipTest('raise unauthorized for now')
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
         rqlst = parse('Any T WHERE T wf_info_for X')
         rewrite(rqlst, {('T', 'X'): (trinfo_constraint, 'X in_group G, G name "managers"')}, {})

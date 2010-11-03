@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
+from logilab.common.decorators import clear_cache
+
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
@@ -45,7 +48,7 @@ class FakeCardSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
-                         'multisource_crossed_rel': True}
+                         'multisource_crossed_rel': True,}
     dont_cross_relations = set(('fiche', 'state_of'))
     cross_relations = set(('multisource_crossed_rel',))
 
@@ -57,10 +60,11 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
                      {'X': 'CWGroup'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
                      {'X': 'CWRType'}, {'X': 'CWRelation'}, {'X': 'CWUser'},
+                     {'X': 'CWUniqueTogetherConstraint'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
                      {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
                      {'X': 'EmailThread'}, {'X': 'ExternalUri'}, {'X': 'File'},
-                     {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
+                     {'X': 'Folder'}, {'X': 'Note'},
                      {'X': 'Personne'}, {'X': 'RQLExpression'}, {'X': 'Societe'},
                      {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'SubWorkflowExitPoint'},
                      {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'},
@@ -137,8 +141,8 @@ class PartPlanInformationTC(BaseMSPlannerTC):
             for var in sourcevars.keys():
                 solindices = sourcevars.pop(var)
                 sourcevars[var._ms_table_key()] = solindices
-        self.assertEquals(ppi._sourcesterms, sourcesterms)
-        self.assertEquals(ppi.needsplit, needsplit)
+        self.assertEqual(ppi._sourcesterms, sourcesterms)
+        self.assertEqual(ppi.needsplit, needsplit)
 
 
     def test_simple_system_only(self):
@@ -364,6 +368,8 @@ class MSPlannerTC(BaseMSPlannerTC):
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
         self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
+        for cached in ('rel_type_sources', 'can_cross_relation', 'is_multi_sources_relation'):
+            clear_cache(self.repo, cached)
 
     _test = test_plan
 
@@ -413,7 +419,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         """retrieve CWUser X from both sources and return concatenation of results
         """
         self._test('CWUser X ORDERBY X LIMIT 10 OFFSET 10',
-                   [('AggrStep', 'Any X ORDERBY X', 10, 10, 'table0', None, [
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0 LIMIT 10 OFFSET 10', None, [
                        ('FetchStep', [('Any X WHERE X is CWUser', [{'X': 'CWUser'}])],
                         [self.ldap, self.system], {}, {'X': 'table0.C0'}, []),
                        ]),
@@ -423,7 +429,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         """
         # COUNT(X) is kept in sub-step and transformed into SUM(X) in the AggrStep
         self._test('Any COUNT(X) WHERE X is CWUser',
-                   [('AggrStep', 'Any COUNT(X)', None, None, 'table0', None, [
+                   [('AggrStep', 'SELECT SUM(table0.C0) FROM table0', None, [
                        ('FetchStep', [('Any COUNT(X) WHERE X is CWUser', [{'X': 'CWUser'}])],
                         [self.ldap, self.system], {}, {'COUNT(X)': 'table0.C0'}, []),
                        ]),
@@ -498,7 +504,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered(self):
         self._test('Any L ORDERBY L WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
@@ -507,7 +513,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered_limit_offset(self):
         self._test('Any L ORDERBY L LIMIT 10 OFFSET 10 WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', 10, 10, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY table0.C0 LIMIT 10 OFFSET 10', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
@@ -593,7 +599,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         2. return content of the table sorted
         """
         self._test('Any X,F ORDERBY F WHERE X firstname F',
-                   [('AggrStep', 'Any X,F ORDERBY F', None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0, table0.C1 FROM table0 ORDER BY table0.C1', None,
                      [('FetchStep', [('Any X,F WHERE X firstname F, X is CWUser',
                                       [{'X': 'CWUser', 'F': 'String'}])],
                        [self.ldap, self.system], {},
@@ -657,7 +663,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_typed_aggregat(self):
         self._test('Any MAX(X) WHERE X is Card',
-                   [('AggrStep', 'Any MAX(X)', None, None, 'table0',  None,
+                   [('AggrStep', 'SELECT MAX(table0.C0) FROM table0',  None,
                      [('FetchStep',
                        [('Any MAX(X) WHERE X is Card', [{'X': 'Card'}])],
                        [self.cards, self.system], {}, {'MAX(X)': 'table0.C0'}, [])
@@ -784,10 +790,10 @@ class MSPlannerTC(BaseMSPlannerTC):
                          [{'X': 'Basket'}]),
                         ('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser',
                          [{'X': 'CWUser'}]),
-                        ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, SubDivision, Tag)',
+                        ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Note, Personne, Societe, SubDivision, Tag)',
                          [{'X': 'Card'}, {'X': 'Comment'},
                           {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
-                          {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                          {'X': 'File'}, {'X': 'Folder'},
                           {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
                           {'X': 'SubDivision'}, {'X': 'Tag'}]),],
                        None, None, [self.system], {}, []),
@@ -810,10 +816,10 @@ class MSPlannerTC(BaseMSPlannerTC):
                             [{'X': 'Basket'}]),
                            ('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser',
                             [{'X': 'CWUser'}]),
-                           ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, SubDivision, Tag)',
+                           ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Note, Personne, Societe, SubDivision, Tag)',
                             [{'X': 'Card'}, {'X': 'Comment'},
                              {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
-                             {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                             {'X': 'File'}, {'X': 'Folder'},
                              {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
                              {'X': 'SubDivision'}, {'X': 'Tag'}])],
                           [self.system], {}, {'X': 'table0.C0'}, []),
@@ -823,7 +829,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [{'X': 'Affaire'}, {'X': 'Basket'},
                         {'X': 'CWUser'}, {'X': 'Card'}, {'X': 'Comment'},
                         {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
-                        {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                        {'X': 'File'}, {'X': 'Folder'},
                         {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
                         {'X': 'SubDivision'}, {'X': 'Tag'}])],
                      10, 10, [self.system], {'X': 'table0.C0'}, [])
@@ -888,18 +894,19 @@ class MSPlannerTC(BaseMSPlannerTC):
                                           [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
                            [self.cards, self.system], {}, {'X': 'table0.C0'}, []),
                           ('FetchStep',
-                           [('Any X WHERE X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                           [('Any X WHERE X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                              [{'X': 'BaseTransition'}, {'X': 'Bookmark'},
                               {'X': 'CWAttribute'}, {'X': 'CWCache'},
                               {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
                               {'X': 'CWEType'}, {'X': 'CWGroup'},
                               {'X': 'CWPermission'}, {'X': 'CWProperty'},
                               {'X': 'CWRType'}, {'X': 'CWRelation'},
+                              {'X': 'CWUniqueTogetherConstraint'},
                               {'X': 'Comment'}, {'X': 'Division'},
                               {'X': 'Email'}, {'X': 'EmailAddress'},
                               {'X': 'EmailPart'}, {'X': 'EmailThread'},
                               {'X': 'ExternalUri'}, {'X': 'File'},
-                              {'X': 'Folder'}, {'X': 'Image'},
+                              {'X': 'Folder'},
                               {'X': 'Personne'}, {'X': 'RQLExpression'},
                               {'X': 'Societe'}, {'X': 'SubDivision'},
                               {'X': 'SubWorkflowExitPoint'}, {'X': 'Tag'},
@@ -949,19 +956,21 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [self.system], {'X': 'table3.C0'}, {'ET': 'table0.C0', 'X': 'table0.C1'}, []),
                       # extra UnionFetchStep could be avoided but has no cost, so don't care
                       ('UnionFetchStep',
-                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                                         [{'X': 'BaseTransition', 'ET': 'CWEType'},
                                          {'X': 'Bookmark', 'ET': 'CWEType'}, {'X': 'CWAttribute', 'ET': 'CWEType'},
                                          {'X': 'CWCache', 'ET': 'CWEType'}, {'X': 'CWConstraint', 'ET': 'CWEType'},
                                          {'X': 'CWConstraintType', 'ET': 'CWEType'}, {'X': 'CWEType', 'ET': 'CWEType'},
                                          {'X': 'CWGroup', 'ET': 'CWEType'}, {'X': 'CWPermission', 'ET': 'CWEType'},
                                          {'X': 'CWProperty', 'ET': 'CWEType'}, {'X': 'CWRType', 'ET': 'CWEType'},
-                                         {'X': 'CWRelation', 'ET': 'CWEType'}, {'X': 'Comment', 'ET': 'CWEType'},
+                                         {'X': 'CWRelation', 'ET': 'CWEType'},
+                                         {'X': 'CWUniqueTogetherConstraint', 'ET': 'CWEType'},
+                                         {'X': 'Comment', 'ET': 'CWEType'},
                                          {'X': 'Division', 'ET': 'CWEType'}, {'X': 'Email', 'ET': 'CWEType'},
                                          {'X': 'EmailAddress', 'ET': 'CWEType'}, {'X': 'EmailPart', 'ET': 'CWEType'},
                                          {'X': 'EmailThread', 'ET': 'CWEType'}, {'X': 'ExternalUri', 'ET': 'CWEType'},
                                          {'X': 'File', 'ET': 'CWEType'}, {'X': 'Folder', 'ET': 'CWEType'},
-                                         {'X': 'Image', 'ET': 'CWEType'}, {'X': 'Personne', 'ET': 'CWEType'},
+                                         {'X': 'Personne', 'ET': 'CWEType'},
                                          {'X': 'RQLExpression', 'ET': 'CWEType'}, {'X': 'Societe', 'ET': 'CWEType'},
                                          {'X': 'SubDivision', 'ET': 'CWEType'}, {'X': 'SubWorkflowExitPoint', 'ET': 'CWEType'},
                                          {'X': 'Tag', 'ET': 'CWEType'}, {'X': 'TrInfo', 'ET': 'CWEType'},
@@ -1026,7 +1035,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [self.cards, self.system], None, {'X': 'table1.C0', 'X.title': 'table1.C1', 'XT': 'table1.C1'}, []),
                     ('OneFetchStep',
                      [('Any X,XT,U WHERE X owned_by U?, X title XT, X is Card',
-                       [{'X': 'Card', 'XT': 'String'}])],
+                       [{'X': 'Card', 'U': 'CWUser', 'XT': 'String'}])],
                      None, None, [self.system], {'L': 'table0.C1',
                                                  'U': 'table0.C0',
                                                  'X': 'table1.C0',
@@ -1299,9 +1308,66 @@ class MSPlannerTC(BaseMSPlannerTC):
                         ]),
                     ])
 
+    def test_has_text_orderby_rank(self):
+        self._test('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C0'}, []),
+                    ('AggrStep', 'SELECT table1.C1 FROM table1 ORDER BY table1.C0', None, [
+                        ('FetchStep', [('Any FTIRANK(X),X WHERE X has_text "bla", X is CWUser',
+                                        [{'X': 'CWUser'}])],
+                         [self.system], {'X': 'table0.C0'}, {'FTIRANK(X)': 'table1.C0', 'X': 'table1.C1'}, []),
+                        ('FetchStep', [('Any FTIRANK(X),X WHERE X has_text "bla", X firstname "bla", X is Personne',
+                                        [{'X': 'Personne'}])],
+                         [self.system], {}, {'FTIRANK(X)': 'table1.C0', 'X': 'table1.C1'}, []),
+                        ]),
+                    ])
+
+    def test_security_has_text_orderby_rank(self):
+        # use a guest user
+        self.session = self.user_groups_session('guests')
+        self._test('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table1.C0'}, []),
+                    ('UnionFetchStep',
+                     [('FetchStep', [('Any X WHERE X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                       [self.system], {}, {'X': 'table0.C0'}, []),
+                      ('FetchStep', [('Any X WHERE EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
+                       [self.system], {'X': 'table1.C0'}, {'X': 'table0.C0'}, [])]),
+                    ('OneFetchStep', [('Any X ORDERBY FTIRANK(X) WHERE X has_text "bla"',
+                                       [{'X': 'CWUser'}, {'X': 'Personne'}])],
+                     None, None, [self.system], {'X': 'table0.C0'}, []),
+                    ])
+
+    def test_has_text_select_rank(self):
+        self._test('Any X, FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   # XXX unecessary duplicate selection
+                   [('FetchStep', [('Any X,X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C1'}, []),
+                    ('UnionStep', None, None, [
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X is CWUser', [{'X': 'CWUser'}])],
+                         None, None, [self.system], {'X': 'table0.C1'}, []),
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                    ])
+
+    def test_security_has_text_select_rank(self):
+        # use a guest user
+        self.session = self.user_groups_session('guests')
+        self._test('Any X, FTIRANK(X) WHERE X has_text "bla", X firstname "bla"',
+                   [('FetchStep', [('Any X,X WHERE X firstname "bla", X is CWUser', [{'X': 'CWUser'}])],
+                     [self.ldap, self.system], None, {'X': 'table0.C1'}, []),
+                    ('UnionStep', None, None, [
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
+                         None, None, [self.system], {'X': 'table0.C1'}, []),
+                        ('OneFetchStep', [('Any X,FTIRANK(X) WHERE X has_text "bla", X firstname "bla", X is Personne', [{'X': 'Personne'}])],
+                         None, None, [self.system], {}, []),
+                        ]),
+                    ])
+
     def test_sort_func(self):
         self._test('Note X ORDERBY DUMB_SORT(RF) WHERE X type RF',
-                   [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)', None, None, 'table0', None, [
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY DUMB_SORT(table0.C1)', None, [
                        ('FetchStep', [('Any X,RF WHERE X type RF, X is Note',
                                        [{'X': 'Note', 'RF': 'String'}])],
                         [self.cards, self.system], {}, {'X': 'table0.C0', 'X.type': 'table0.C1', 'RF': 'table0.C1'}, []),
@@ -1310,8 +1376,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_ambigous_sort_func(self):
         self._test('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF, X is IN (Bookmark, Card, EmailThread)',
-                   [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)',
-                     None, None, 'table0', None,
+                   [('AggrStep', 'SELECT table0.C0 FROM table0 ORDER BY DUMB_SORT(table0.C1)', None,
                      [('FetchStep', [('Any X,RF WHERE X title RF, X is Card',
                                       [{'X': 'Card', 'RF': 'String'}])],
                        [self.cards, self.system], {},
@@ -1380,7 +1445,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',
                      [('Any B,C WHERE B login C, B is CWUser', [{'B': 'CWUser', 'C': 'String'}])],
                      [self.ldap, self.system], None, {'B': 'table1.C0', 'B.login': 'table1.C1', 'C': 'table1.C1'}, []),
-                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser',
+                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser, A is IN(Bookmark, Tag)',
                                        [{'A': 'Bookmark', 'B': 'CWUser', 'C': 'String'},
                                         {'A': 'Tag', 'B': 'CWUser', 'C': 'String'}])],
                      None, None, [self.system],
@@ -1414,7 +1479,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',
                      [('Any B,C WHERE B login C, B is CWUser', [{'B': 'CWUser', 'C': 'String'}])],
                      [self.ldap, self.system], None, {'B': 'table1.C0', 'B.login': 'table1.C1', 'C': 'table1.C1'}, []),
-                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser',
+                    ('OneFetchStep', [('DISTINCT Any B,C ORDERBY C WHERE A created_by B, B login C, EXISTS(B owned_by 5), B is CWUser, A is IN(Card, Tag)',
                                        [{'A': 'Card', 'B': 'CWUser', 'C': 'String'},
                                         {'A': 'Tag', 'B': 'CWUser', 'C': 'String'}])],
                      None, None, [self.system],
@@ -1480,20 +1545,11 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_crossed_relation_eid_2_needattr(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
-                   [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
-                     [self.cards, self.system], None,
-                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
-                    ('UnionStep', None, None,
-                     [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
-                                         [{'T': 'String', 'Y': 'Note'}])],
-                       None, None, [self.cards], None,
-                       []),
-                      ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
-                                         [{'T': 'String', 'Y': 'Note'}])],
-                       None, None, [self.system],
-                       {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'},
-                       [])]
-                     )],
+                   [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                       [{'T': 'String', 'Y': 'Note'}])],
+                     None, None, [self.cards, self.system], {},
+                     []),
+                    ],
                    {'x': 999999,})
 
     def test_crossed_relation_eid_not_1(self):
@@ -1701,6 +1757,54 @@ class MSPlannerTC(BaseMSPlannerTC):
 #                        ]),
 #                     ])
 
+    def test_ldap_user_related_to_invariant_and_dont_cross_rel(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.dont_cross_relations.add('created_by')
+        try:
+            self._test('Any X,XL WHERE E eid %(x)s, E created_by X, X login XL',
+                   [('FetchStep', [('Any X,XL WHERE X login XL, X is CWUser',
+                                    [{'X': 'CWUser', 'XL': 'String'}])],
+                     [self.ldap, self.system], None,
+                     {'X': 'table0.C0', 'X.login': 'table0.C1', 'XL': 'table0.C1'},
+                     []),
+                    ('OneFetchStep',
+                     [('Any X,XL WHERE 999999 created_by X, X login XL, X is CWUser',
+                       [{'X': 'CWUser', 'XL': 'String'}])],
+                     None, None,
+                     [self.system],
+                     {'X': 'table0.C0', 'X.login': 'table0.C1', 'XL': 'table0.C1'},
+                     [])],
+                       {'x': 999999})
+        finally:
+            self.cards.dont_cross_relations.remove('created_by')
+
+    def test_ambigous_cross_relation(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.cards.support_relations['see_also'] = True
+        self.cards.cross_relations.add('see_also')
+        try:
+            self._test('Any X,AA ORDERBY AA WHERE E eid %(x)s, E see_also X, X modification_date AA',
+                       [('AggrStep',
+                         'SELECT table0.C0, table0.C1 FROM table0 ORDER BY table0.C1',
+                         None,
+                         [('FetchStep',
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is Note',
+                             [{'AA': 'Datetime', 'X': 'Note'}])], [self.cards, self.system], {},
+                           {'AA': 'table0.C1', 'X': 'table0.C0',
+                            'X.modification_date': 'table0.C1'},
+                           []),
+                          ('FetchStep',
+                           [('Any X,AA WHERE 999999 see_also X, X modification_date AA, X is Bookmark',
+                             [{'AA': 'Datetime', 'X': 'Bookmark'}])],
+                           [self.system], {},
+                           {'AA': 'table0.C1', 'X': 'table0.C0',
+                            'X.modification_date': 'table0.C1'},
+                           [])])],
+                         {'x': 999999})
+        finally:
+            del self.cards.support_relations['see_also']
+            self.cards.cross_relations.remove('see_also')
+
     # non regression tests ####################################################
 
     def test_nonregr1(self):
@@ -1718,8 +1822,9 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_nonregr2(self):
-        self.session.user.fire_transition('deactivate')
-        treid = self.session.user.latest_trinfo().eid
+        iworkflowable = self.session.user.cw_adapt_to('IWorkflowable')
+        iworkflowable.fire_transition('deactivate')
+        treid = iworkflowable.latest_trinfo().eid
         self._test('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                    [('FetchStep', [('Any X,D WHERE X modification_date D, X is Note',
                                     [{'X': 'Note', 'D': 'Datetime'}])],
@@ -1727,7 +1832,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep', [('Any X,D WHERE X modification_date D, X is CWUser',
                                     [{'X': 'CWUser', 'D': 'Datetime'}])],
                      [self.ldap, self.system], None, {'X': 'table1.C0', 'X.modification_date': 'table1.C1', 'D': 'table1.C1'}, []),
-                    ('AggrStep', 'Any X ORDERBY D DESC', None, None, 'table2', None, [
+                    ('AggrStep', 'SELECT table2.C0 FROM table2 ORDER BY table2.C1 DESC', None, [
                         ('FetchStep', [('Any X,D WHERE E eid %s, E wf_info_for X, X modification_date D, E is TrInfo, X is Affaire'%treid,
                                         [{'X': 'Affaire', 'E': 'TrInfo', 'D': 'Datetime'}])],
                          [self.system],
@@ -1816,11 +1921,16 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_nonregr8(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any X,Z WHERE X eid %(x)s, X multisource_rel Y, Z concerne X',
-                   [('FetchStep', [('Any  WHERE 999999 multisource_rel Y, Y is Note', [{'Y': 'Note'}])],
-                     [self.cards], None, {}, []),
+                   [('FetchStep', [('Any 999999 WHERE 999999 multisource_rel Y, Y is Note',
+                                    [{'Y': 'Note'}])],
+                     [self.cards],
+                     None, {u'%(x)s': 'table0.C0'},
+                     []),
                     ('OneFetchStep', [('Any 999999,Z WHERE Z concerne 999999, Z is Affaire',
                                        [{'Z': 'Affaire'}])],
-                     None, None, [self.system], {}, [])],
+                     None, None, [self.system],
+                     {u'%(x)s': 'table0.C0'}, []),
+                    ],
                    {'x': 999999})
 
     def test_nonregr9(self):
@@ -1870,8 +1980,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                     [{'X': 'Note', 'Z': 'Datetime'}])],
                      [self.cards, self.system], None, {'X': 'table0.C0', 'X.modification_date': 'table0.C1', 'Z': 'table0.C1'},
                      []),
-                    ('AggrStep', 'Any X ORDERBY Z DESC',
-                     None, None, 'table1', None,
+                    ('AggrStep', 'SELECT table1.C0 FROM table1 ORDER BY table1.C1 DESC', None,
                      [('FetchStep', [('Any X,Z WHERE X modification_date Z, 999999 see_also X, X is Bookmark',
                                       [{'X': 'Bookmark', 'Z': 'Datetime'}])],
                        [self.system], {},   {'X': 'table1.C0', 'X.modification_date': 'table1.C1',
@@ -1923,7 +2032,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # identity relation. BUT I think it's better to leave it as is and to
         # explain constraint propagation rules, and so why this should be
         # wrapped in exists() if used in multi-source
-        self.skip('take a look at me if you wish')
+        self.skipTest('take a look at me if you wish')
         self._test('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
                    'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (U identity ME '
                    'OR (EXISTS(U in_group G, G name IN("managers", "staff")))) '
@@ -2140,14 +2249,67 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
 
+    def test_nonregr_not_is(self):
+        self._test("Any X WHERE X owned_by U, U login 'anon', NOT X is Comment",
+                   [('FetchStep', [('Any X WHERE X is IN(Card, Note, State)',
+                                    [{'X': 'Note'}, {'X': 'State'}, {'X': 'Card'}])],
+                     [self.cards, self.cards2, self.system],
+                     None, {'X': 'table0.C0'}, []),
+                    ('UnionStep', None, None,
+                     [('OneFetchStep',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                         [{'U': 'CWUser', 'X': 'Affaire'},
+                          {'U': 'CWUser', 'X': 'BaseTransition'},
+                          {'U': 'CWUser', 'X': 'Basket'},
+                          {'U': 'CWUser', 'X': 'Bookmark'},
+                          {'U': 'CWUser', 'X': 'CWAttribute'},
+                          {'U': 'CWUser', 'X': 'CWCache'},
+                          {'U': 'CWUser', 'X': 'CWConstraint'},
+                          {'U': 'CWUser', 'X': 'CWConstraintType'},
+                          {'U': 'CWUser', 'X': 'CWEType'},
+                          {'U': 'CWUser', 'X': 'CWGroup'},
+                          {'U': 'CWUser', 'X': 'CWPermission'},
+                          {'U': 'CWUser', 'X': 'CWProperty'},
+                          {'U': 'CWUser', 'X': 'CWRType'},
+                          {'U': 'CWUser', 'X': 'CWRelation'},
+                          {'U': 'CWUser', 'X': 'CWUniqueTogetherConstraint'},
+                          {'U': 'CWUser', 'X': 'CWUser'},
+                          {'U': 'CWUser', 'X': 'Division'},
+                          {'U': 'CWUser', 'X': 'Email'},
+                          {'U': 'CWUser', 'X': 'EmailAddress'},
+                          {'U': 'CWUser', 'X': 'EmailPart'},
+                          {'U': 'CWUser', 'X': 'EmailThread'},
+                          {'U': 'CWUser', 'X': 'ExternalUri'},
+                          {'U': 'CWUser', 'X': 'File'},
+                          {'U': 'CWUser', 'X': 'Folder'},
+                          {'U': 'CWUser', 'X': 'Personne'},
+                          {'U': 'CWUser', 'X': 'RQLExpression'},
+                          {'U': 'CWUser', 'X': 'Societe'},
+                          {'U': 'CWUser', 'X': 'SubDivision'},
+                          {'U': 'CWUser', 'X': 'SubWorkflowExitPoint'},
+                          {'U': 'CWUser', 'X': 'Tag'},
+                          {'U': 'CWUser', 'X': 'TrInfo'},
+                          {'U': 'CWUser', 'X': 'Transition'},
+                          {'U': 'CWUser', 'X': 'Workflow'},
+                          {'U': 'CWUser', 'X': 'WorkflowTransition'}])],
+                       None, None,
+                       [self.system], {}, []),
+                      ('OneFetchStep',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Card, Note, State)',
+                         [{'U': 'CWUser', 'X': 'Note'},
+                          {'U': 'CWUser', 'X': 'State'},
+                          {'U': 'CWUser', 'X': 'Card'}])],
+                       None, None,
+                       [self.system], {'X': 'table0.C0'}, [])
+                      ])
+                    ])
+
 
 class FakeVCSSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True}
     support_relations = {'multisource_inlined_rel': True,
                          'multisource_rel': True}
-    #dont_cross_relations = set(('fiche', 'in_state'))
-    #cross_relations = set(('multisource_crossed_rel',))
 
     def syntax_tree_search(self, *args, **kwargs):
         return []

@@ -15,10 +15,35 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""contains utility functions and some visual component to restrict results of
-a search
-
 """
+The :mod:`cubicweb.web.facet` module contains a set of abstract classes to use
+as bases to build your own facets
+
+All facet classes inherits from the :class:`AbstractFacet` class, though you'll
+usually find some more handy class that do what you want.
+
+Let's see available classes.
+
+Classes you'll want to use
+--------------------------
+.. autoclass:: cubicweb.web.facet.RelationFacet
+.. autoclass:: cubicweb.web.facet.RelationAttributeFacet
+.. autoclass:: cubicweb.web.facet.HasRelationFacet
+.. autoclass:: cubicweb.web.facet.AttributeFacet
+.. autoclass:: cubicweb.web.facet.RangeFacet
+.. autoclass:: cubicweb.web.facet.DateRangeFacet
+
+Classes for facets implementor
+------------------------------
+Unless you didn't find the class that does the job you want above, you may want
+to skip those classes...
+
+.. autoclass:: cubicweb.web.facet.AbstractFacet
+.. autoclass:: cubicweb.web.facet.VocabularyFacet
+
+.. comment: XXX widgets
+"""
+
 __docformat__ = "restructuredtext en"
 
 from copy import deepcopy
@@ -38,6 +63,14 @@ from cubicweb.utils import make_uid
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
 from cubicweb.web.htmlwidgets import HTMLWidget
+
+
+def rtype_facet_title(facet):
+    ptypes = facet.cw_rset.column_types(0)
+    if len(ptypes) == 1:
+        return display_name(facet._cw, facet.rtype, form=facet.role,
+                            context=iter(ptypes).next())
+    return display_name(facet._cw, facet.rtype, form=facet.role)
 
 ## rqlst manipulation functions used by facets ################################
 
@@ -145,7 +178,8 @@ def _add_rtype_relation(rqlst, mainvar, rtype, role):
         rqlst.add_relation(mainvar, rtype, newvar)
     return newvar
 
-def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
+def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                              select_target_entity=True):
     """prepare a syntax tree to generate a filter vocabulary rql using the given
     relation:
     * create a variable to filter on this relation
@@ -154,9 +188,10 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     * add the new variable to the selection
     """
     newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)
-    if rqlst.groupby:
-        rqlst.add_group_var(newvar)
-    rqlst.add_selected(newvar)
+    if select_target_entity:
+        if rqlst.groupby:
+            rqlst.add_group_var(newvar)
+        rqlst.add_selected(newvar)
     # add is restriction if necessary
     if mainvar.stinfo['typerel'] is None:
         etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
@@ -191,7 +226,8 @@ def _set_orderby(rqlst, newvar, sortasc, sortfuncname):
         rqlst.add_sort_term(term)
 
 def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
-                                sortfuncname=None, sortasc=True):
+                                sortfuncname=None, sortasc=True,
+                                select_target_entity=True):
     """modify a syntax tree to :
     * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
     * retrieve only the newly inserted variable and its `attrname`
@@ -202,7 +238,8 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
     * no sort if `sortasc` is None
     """
     _cleanup_rqlst(rqlst, mainvar)
-    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role)
+    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                                    select_target_entity)
     # not found, create one
     attrvar = rqlst.make_variable()
     rqlst.add_relation(var, attrname, attrvar)
@@ -264,20 +301,52 @@ def _cleanup_rqlst(rqlst, mainvar):
                 toremove.add(rqlst.defined_vars[ovarname])
 
 
+## base facet classes ##########################################################
 
-## base facet classes #########################################################
 class AbstractFacet(AppObject):
+    """Abstract base class for all facets. Facets are stored in their own
+    'facets' registry. They are similar to contextual components since the use
+    the following configurable properties:
+
+    * `visible`, boolean flag telling if a facet should be displayed or not
+
+    * `order`, integer to control facets display order
+
+    * `context`, telling if a facet should be displayed in the table form filter
+      (context = 'tablefilter') or in the facet box (context = 'facetbox') or in
+      both (context = '')
+
+    The following methods define the facet API:
+
+    .. automethod:: cubicweb.web.facet.AbstractFacet.get_widget
+    .. automethod:: cubicweb.web.facet.AbstractFacet.add_rql_restrictions
+
+    Facets will have the following attributes set (beside the standard
+    :class:`~cubicweb.appobject.AppObject` ones):
+
+    * `rqlst`, the rql syntax tree being facetted
+
+    * `filtered_variable`, the variable node in this rql syntax tree that we're
+      interested in filtering
+
+    Facets implementors may also be interested in the following properties /
+    methods:
+
+    .. automethod:: cubicweb.web.facet.AbstractFacet.operator
+    .. automethod:: cubicweb.web.facet.AbstractFacet.rqlexec
+    """
     __abstract__ = True
     __registry__ = 'facets'
     cw_property_defs = {
         _('visible'): dict(type='Boolean', default=True,
-                           help=_('display the box or not')),
+                           help=_('display the facet or not')),
         _('order'):   dict(type='Int', default=99,
-                           help=_('display order of the box')),
+                           help=_('display order of the facet')),
         _('context'): dict(type='String', default='',
                            # None <-> both
                            vocabulary=(_('tablefilter'), _('facetbox'), ''),
-                           help=_('context where this box should be displayed')),
+                           help=_('context where this facet should be displayed, '
+                                  'leave empty for both')),
         }
     visible = True
     context = ''
@@ -297,27 +366,54 @@ class AbstractFacet(AppObject):
 
     @property
     def operator(self):
+        """Return the operator (AND or OR) to use for this facet when multiple
+        values are selected.
+        """
         # OR between selected values by default
         return self._cw.form.get(self.__regid__ + '_andor', 'OR')
 
+    def rqlexec(self, rql, args=None):
+        """Utility method to execute some rql queries, and simply returning an
+        empty list if :exc:`Unauthorized` is raised.
+        """
+        try:
+            return self._cw.execute(rql, args)
+        except Unauthorized:
+            return []
+
     def get_widget(self):
-        """return the widget instance to use to display this facet
+        """Return the widget instance to use to display this facet, or None if
+        the facet can't do anything valuable (only one value in the vocabulary
+        for instance).
         """
         raise NotImplementedError
 
     def add_rql_restrictions(self):
-        """add restriction for this facet into the rql syntax tree"""
+        """When some facet criteria has been updated, this method is called to
+        add restriction for this facet into the rql syntax tree. It should get
+        back its value in form parameters, and modify the syntax tree
+        (`self.rqlst`) accordingly.
+        """
         raise NotImplementedError
 
 
 class VocabularyFacet(AbstractFacet):
+    """This abstract class extend :class:`AbstractFacet` to use the
+    :class:`FacetVocabularyWidget` as widget, suitable for facets that may
+    restrict values according to a (usually computed) vocabulary.
+
+    A class which inherits from VocabularyFacet must define at least these methods:
+
+    .. automethod:: cubicweb.web.facet.VocabularyFacet.vocabulary
+    .. automethod:: cubicweb.web.facet.VocabularyFacet.possible_values
+    """
     needs_update = True
 
     def get_widget(self):
-        """return the widget instance to use to display this facet
+        """Return the widget instance to use to display this facet.
 
-        default implentation expects a .vocabulary method on the facet and
-        return a combobox displaying this vocabulary
+        This implementation expects a .vocabulary method on the facet and
+        return a combobox displaying this vocabulary.
         """
         vocab = self.vocabulary()
         if len(vocab) <= 1:
@@ -332,33 +428,86 @@ class VocabularyFacet(AbstractFacet):
         return wdg
 
     def vocabulary(self):
-        """return vocabulary for this facet, eg a list of 2-uple (label, value)
+        """Return vocabulary for this facet, eg a list of 2-uple (label, value).
         """
         raise NotImplementedError
 
     def possible_values(self):
-        """return a list of possible values (as string since it's used to
-        compare to a form value in javascript) for this facet
+        """Return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet.
         """
         raise NotImplementedError
 
     def support_and(self):
         return False
 
-    def rqlexec(self, rql, args=None):
-        try:
-            return self._cw.execute(rql, args)
-        except Unauthorized:
-            return []
-
 
 class RelationFacet(VocabularyFacet):
+    """Base facet to filter some entities according to other entities to which
+    they are related. Create concret facet by inheriting from this class an then
+    configuring it by setting class attribute described below.
+
+    The relation is defined by the `rtype` and `role` attributes.
+
+    The values displayed for related entities will be:
+
+    * result of calling their `label_vid` view if specified
+    * else their `target_attr` attribute value if specified
+    * else their eid (you usually want something nicer...)
+
+    When no `label_vid` is set, you will get translated value if `i18nable` is
+    set.
+
+    You can filter out target entity types by specifying `target_type`
+
+    By default, vocabulary will be displayed sorted on `target_attr` value in an
+    ascending way. You can control sorting with:
+
+    * `sortfunc`: set this to a stored procedure name if you want to sort on the
+      result of this function's result instead of direct value
+
+    * `sortasc`: boolean flag to control ascendant/descendant sorting
+
+    To illustrate this facet, let's take for example an *excerpt* of the schema
+    of an office location search application:
+
+    .. sourcecode:: python
+
+      class Office(WorkflowableEntityType):
+          price = Int(description='euros / m2 / HC / HT')
+          surface = Int(description='m2')
+          has_address = SubjectRelation('PostalAddress',
+                                        cardinality='1?',
+                                        composite='subject')
+          proposed_by = SubjectRelation('Agency')
+
+
+    We can simply define a facet to filter offices according to the agency
+    proposing it:
+
+    .. sourcecode:: python
+
+      class AgencyFacet(RelationFacet):
+          __regid__ = 'agency'
+          # this facet should only be selected when visualizing offices
+          __select__ = RelationFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the 'Agency' entities linked to the office
+          # through the 'proposed_by' relation, where the office is the subject
+          # of the relation
+          rtype = 'has_address'
+          # 'subject' is the default but setting it explicitly doesn't hurt...
+          role = 'subject'
+          # we want to display the agency's name
+          target_attr = 'name'
+    """
     __select__ = partial_relation_possible() & match_context_prop()
     # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
     target_attr = 'eid'
     target_type = None
+    # should value be internationalized (XXX could be guessed from the schema)
+    i18nable = True
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -367,24 +516,33 @@ class RelationFacet(VocabularyFacet):
     # if you want to call a view on the entity instead of using `target_attr`
     label_vid = None
 
-    @property
-    def title(self):
-        return display_name(self._cw, self.rtype, form=self.role)
+    # internal purpose
+    _select_target_entity = True
 
+    title = property(rtype_facet_title)
+
+    @property
+    def rql_sort(self):
+        """return true if we can handle sorting in the rql query. E.g.  if
+        sortfunc is set or if we have not to transform the returned value (eg no
+        label_vid and not i18nable)
+        """
+        return self.sortfunc is not None or (self.label_vid is None
+                                             and not self.i18nable)
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
         rqlst = self.rqlst
         rqlst.save_state()
-        if self.label_vid is not None and self.sortfunc is None:
-            sort = None # will be sorted on label
-        else:
+        if self.rql_sort:
             sort = self.sortasc
+        else:
+            sort = None # will be sorted on label
         try:
             mainvar = self.filtered_variable
             var = insert_attr_select_relation(
                 rqlst, mainvar, self.rtype, self.role, self.target_attr,
-                self.sortfunc, sort)
+                self.sortfunc, sort, self._select_target_entity)
             if self.target_type is not None:
                 rqlst.add_type_restriction(var, self.target_type)
             try:
@@ -407,20 +565,37 @@ class RelationFacet(VocabularyFacet):
         rqlst.save_state()
         try:
             _cleanup_rqlst(rqlst, self.filtered_variable)
-            _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            if self._select_target_entity:
+                _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype,
+                                          self.role, select_target_entity=True)
+            else:
+                insert_attr_select_relation(
+                    rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
+                    select_target_entity=False)
             return [str(x) for x, in self.rqlexec(rqlst.as_string())]
+        except:
+            import traceback
+            traceback.print_exc()
         finally:
             rqlst.recover()
 
     def rset_vocabulary(self, rset):
-        if self.label_vid is None:
+        if self.i18nable:
             _ = self._cw._
+        else:
+            _ = unicode
+        if self.rql_sort:
             return [(_(label), eid) for eid, label in rset]
-        if self.sortfunc is None:
-            return sorted((entity.view(self.label_vid), entity.eid)
-                          for entity in rset.entities())
-        return [(entity.view(self.label_vid), entity.eid)
-                for entity in rset.entities()]
+        if self.label_vid is None:
+            assert self.i18nable
+            values = [(_(label), eid) for eid, label in rset]
+        else:
+            values = [(entity.view(self.label_vid), entity.eid)
+                      for entity in rset.entities()]
+        values = sorted(values)
+        if self.sortasc:
+            return values
+        return reversed(values)
 
     @cached
     def support_and(self):
@@ -449,10 +624,10 @@ class RelationFacet(VocabularyFacet):
             # only one value selected
             self.rqlst.add_eid_restriction(restrvar, value)
         elif self.operator == 'OR':
-            #  multiple values with OR operator
             # set_distinct only if rtype cardinality is > 1
             if self.support_and():
                 self.rqlst.set_distinct(True)
+            # multiple ORed values: using IN is fine
             self.rqlst.add_eid_restriction(restrvar, value)
         else:
             # multiple values with AND operator
@@ -462,12 +637,117 @@ class RelationFacet(VocabularyFacet):
                 self.rqlst.add_eid_restriction(restrvar, value.pop())
 
 
-class AttributeFacet(RelationFacet):
+class RelationAttributeFacet(RelationFacet):
+    """Base facet to filter some entities according to an attribute of other
+    entities to which they are related. Most things work similarly as
+    :class:`RelationFacet`, except that:
+
+    * `label_vid` doesn't make sense here
+
+    * you should specify the attribute type using `attrtype` if it's not a
+      String
+
+    * you can specify a comparison operator using `comparator`
+
+
+    Back to our example... if you want to search office by postal code and that
+    you use a :class:`RelationFacet` for that, you won't get the expected
+    behaviour: if two offices have the same postal code, they've however two
+    different addresses.  So you'll see in the facet the same postal code twice,
+    though linked to a different address entity. There is a great chance your
+    users won't understand that...
+
+    That's where this class come in ! It's used to said that you want to filter
+    according to the *attribute value* of a relatied entity, not to the entity
+    itself. Now here is the source code for the facet:
+
+    .. sourcecode:: python
+
+      class PostalCodeFacet(RelationAttributeFacet):
+          __regid__ = 'postalcode'
+          # this facet should only be selected when visualizing offices
+          __select__ = RelationAttributeFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the PostalAddress entities linked to the
+          # office through the 'has_address' relation, where the office is the
+          # subject of the relation
+          rtype = 'has_address'
+          role = 'subject'
+          # we want to search according to address 'postal_code' attribute
+          target_attr = 'postalcode'
+    """
+    _select_target_entity = False
     # attribute type
     attrtype = 'String'
     # type of comparison: default is an exact match on the attribute value
     comparator = '=' # could be '<', '<=', '>', '>='
-    i18nable = True
+
+    def rset_vocabulary(self, rset):
+        if self.i18nable:
+            _ = self._cw._
+        else:
+            _ = unicode
+        if self.rql_sort:
+            return [(_(value), value) for value, in rset]
+        values = [(_(value), value) for value, in rset]
+        if self.sortasc:
+            return sorted(values)
+        return reversed(sorted(values))
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        value = self._cw.form.get(self.__regid__)
+        if not value:
+            return
+        mainvar = self.filtered_variable
+        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
+        self.rqlst.set_distinct(True)
+        if isinstance(value, basestring) or self.operator == 'OR':
+            # only one value selected or multiple ORed values: using IN is fine
+            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value,
+                                                self.attrtype, self.comparator)
+        else:
+            # multiple values with AND operator
+            self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
+                                                self.attrtype, self.comparator)
+            while value:
+                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
+                self.rqlst.add_constant_restriction(restrvar, self.target_attr, value.pop(),
+                                                    self.attrtype, self.comparator)
+
+
+class AttributeFacet(RelationAttributeFacet):
+    """Base facet to filter some entities according one of their attribute.
+    Configuration is mostly similarly as :class:`RelationAttributeFacet`, except that:
+
+    * `target_attr` doesn't make sense here (you specify the attribute using `rtype`
+    * `role` neither, it's systematically 'subject'
+
+    So, suppose that in our office search example you want to refine search according
+    to the office's surface. Here is a code snippet achieving this:
+
+    .. sourcecode:: python
+
+      class SurfaceFacet(AttributeFacet):
+          __regid__ = 'surface'
+          __select__ = AttributeFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the office'surface
+          rtype = 'surface'
+          # override the default value of operator since we want to filter
+          # according to a minimal value, not an exact one
+          comparator = '>='
+
+          def vocabulary(self):
+              '''override the default vocabulary method since we want to
+              hard-code our threshold values.
+
+              Not overriding would generate a filter containing all existing
+              surfaces defined in the database.
+              '''
+              return [('> 200', '200'), ('> 250', '250'),
+                      ('> 275', '275'), ('> 300', '300')]
+    """
+
+    _select_target_entity = True
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -491,13 +771,6 @@ class AttributeFacet(RelationFacet):
         # *list* (see rqlexec implementation)
         return rset and self.rset_vocabulary(rset)
 
-    def rset_vocabulary(self, rset):
-        if self.i18nable:
-            _ = self._cw._
-        else:
-            _ = unicode
-        return [(_(value), value) for value, in rset]
-
     def support_and(self):
         return False
 
@@ -511,27 +784,35 @@ class AttributeFacet(RelationFacet):
                                             self.attrtype, self.comparator)
 
 
-class FilterRQLBuilder(object):
-    """called by javascript to get a rql string from filter form"""
-
-    def __init__(self, req):
-        self._cw = req
-
-    def build_rql(self):#, tablefilter=False):
-        form = self._cw.form
-        facetids = form['facets'].split(',')
-        select = self._cw.vreg.parse(self._cw, form['baserql']).children[0] # XXX Union unsupported yet
-        mainvar = filtered_variable(select)
-        toupdate = []
-        for facetid in facetids:
-            facet = get_facet(self._cw, facetid, select, mainvar)
-            facet.add_rql_restrictions()
-            if facet.needs_update:
-                toupdate.append(facetid)
-        return select.as_string(), toupdate
-
-
 class RangeFacet(AttributeFacet):
+    """This class allows to filter entities according to an attribute of
+    numerical type.
+
+    It displays a slider using `jquery`_ to choose a lower bound and an upper
+    bound.
+
+    The example below provides an alternative to the surface facet seen earlier,
+    in a more powerful way since
+
+    * lower/upper boundaries are computed according to entities to filter
+    * user can specify lower/upper boundaries, not only the lower one
+
+    .. sourcecode:: python
+
+      class SurfaceFacet(RangeFacet):
+          __regid__ = 'surface'
+          __select__ = RangeFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the office'surface
+          rtype = 'surface'
+
+    All this with even less code!
+
+    The image below display the rendering of the slider:
+
+    .. image:: ../images/facet_range.png
+
+    .. _jquery: http://www.jqueryui.com/
+    """
     attrtype = 'Float' # only numerical types are supported
 
     @property
@@ -572,6 +853,13 @@ class RangeFacet(AttributeFacet):
 
 
 class DateRangeFacet(RangeFacet):
+    """This class works similarly as the :class:`RangeFacet` but for attribute
+    of date type.
+
+    The image below display the rendering of the slider for a date range:
+
+    .. image:: ../images/facet_date_range.png
+    """
     attrtype = 'Date' # only date types are supported
 
     @property
@@ -584,12 +872,29 @@ class DateRangeFacet(RangeFacet):
 
 
 class HasRelationFacet(AbstractFacet):
+    """This class simply filter according to the presence of a relation
+    (whatever the entity at the other end). It display a simple checkbox that
+    lets you refine your selection in order to get only entities that actually
+    have this relation. You simply have to define which relation using the
+    `rtype` and `role` attributes.
+
+    Here is an example of the rendering of thos facet to filter book with image
+    and the corresponding code:
+
+    .. image:: ../images/facet_has_image.png
+
+    .. sourcecode:: python
+
+      class HasImageFacet(HasRelationFacet):
+          __regid__ = 'hasimage'
+          __select__ = HasRelationFacet.__select__ & is_instance('Book')
+          rtype = 'has_image'
+          role = 'subject'
+    """
     rtype = None # override me in subclass
     role = 'subject' # role of filtered entity in the relation
 
-    @property
-    def title(self):
-        return display_name(self._cw, self.rtype, self.role)
+    title = property(rtype_facet_title)
 
     def support_and(self):
         return False
@@ -802,3 +1107,25 @@ class FacetSeparator(HTMLWidget):
 
     def _render(self):
         pass
+
+# other classes ################################################################
+
+class FilterRQLBuilder(object):
+    """called by javascript to get a rql string from filter form"""
+
+    def __init__(self, req):
+        self._cw = req
+
+    def build_rql(self):#, tablefilter=False):
+        form = self._cw.form
+        facetids = form['facets'].split(',')
+        # XXX Union unsupported yet
+        select = self._cw.vreg.parse(self._cw, form['baserql']).children[0]
+        mainvar = filtered_variable(select)
+        toupdate = []
+        for facetid in facetids:
+            facet = get_facet(self._cw, facetid, select, mainvar)
+            facet.add_rql_restrictions()
+            if facet.needs_update:
+                toupdate.append(facetid)
+        return select.as_string(), toupdate

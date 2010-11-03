@@ -69,32 +69,32 @@ class RequestBaseTC(TestCase):
     def test_list_arg(self):
         """tests the list_arg() function"""
         list_arg = self._cw.list_form_param
-        self.assertEquals(list_arg('arg3', {}), [])
+        self.assertEqual(list_arg('arg3', {}), [])
         d = {'arg1' : "value1",
              'arg2' : ('foo', INTERNAL_FIELD_VALUE,),
              'arg3' : ['bar']}
-        self.assertEquals(list_arg('arg1', d, True), ['value1'])
-        self.assertEquals(d, {'arg2' : ('foo', INTERNAL_FIELD_VALUE), 'arg3' : ['bar'],})
-        self.assertEquals(list_arg('arg2', d, True), ['foo'])
-        self.assertEquals({'arg3' : ['bar'],}, d)
-        self.assertEquals(list_arg('arg3', d), ['bar',])
-        self.assertEquals({'arg3' : ['bar'],}, d)
+        self.assertEqual(list_arg('arg1', d, True), ['value1'])
+        self.assertEqual(d, {'arg2' : ('foo', INTERNAL_FIELD_VALUE), 'arg3' : ['bar'],})
+        self.assertEqual(list_arg('arg2', d, True), ['foo'])
+        self.assertEqual({'arg3' : ['bar'],}, d)
+        self.assertEqual(list_arg('arg3', d), ['bar',])
+        self.assertEqual({'arg3' : ['bar'],}, d)
 
 
     def test_from_controller(self):
         self._cw.vreg['controllers'] = {'view': 1, 'login': 1}
-        self.assertEquals(self._cw.from_controller(), 'view')
+        self.assertEqual(self._cw.from_controller(), 'view')
         req = FakeRequest(url='project?vid=list')
         req.vreg['controllers'] = {'view': 1, 'login': 1}
         # this assertion is just to make sure that relative_path can be
         # correctly computed as it is used in from_controller()
-        self.assertEquals(req.relative_path(False), 'project')
-        self.assertEquals(req.from_controller(), 'view')
+        self.assertEqual(req.relative_path(False), 'project')
+        self.assertEqual(req.from_controller(), 'view')
         # test on a valid non-view controller
         req = FakeRequest(url='login?x=1&y=2')
         req.vreg['controllers'] = {'view': 1, 'login': 1}
-        self.assertEquals(req.relative_path(False), 'login')
-        self.assertEquals(req.from_controller(), 'login')
+        self.assertEqual(req.relative_path(False), 'login')
+        self.assertEqual(req.from_controller(), 'login')
 
 
 class UtilsTC(TestCase):
@@ -107,22 +107,22 @@ class UtilsTC(TestCase):
     #    """tests which mapping is used (application or core)"""
     #    init_mapping()
     #    from cubicweb.common import mapping
-    #    self.assertEquals(mapping.MAPPING_USED, 'core')
+    #    self.assertEqual(mapping.MAPPING_USED, 'core')
     #    sys.modules['mapping'] = FakeMapping()
     #    init_mapping()
-    #    self.assertEquals(mapping.MAPPING_USED, 'application')
+    #    self.assertEqual(mapping.MAPPING_USED, 'application')
     #    del sys.modules['mapping']
 
     def test_execute_linkto(self):
         """tests the execute_linkto() function"""
-        self.assertEquals(self.ctrl.execute_linkto(), None)
-        self.assertEquals(self.ctrl._cursor.executed,
+        self.assertEqual(self.ctrl.execute_linkto(), None)
+        self.assertEqual(self.ctrl._cursor.executed,
                           [])
 
         self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:object',
                               'eid': 8})
         self.ctrl.execute_linkto()
-        self.assertEquals(self.ctrl._cursor.executed,
+        self.assertEqual(self.ctrl._cursor.executed,
                           ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
 
@@ -130,7 +130,7 @@ class UtilsTC(TestCase):
         self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:subject',
                               'eid': 8})
         self.ctrl.execute_linkto()
-        self.assertEquals(self.ctrl._cursor.executed,
+        self.assertEqual(self.ctrl._cursor.executed,
                           ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
 
@@ -138,14 +138,14 @@ class UtilsTC(TestCase):
         self.ctrl.new_cursor()
         self.ctrl._cw.form = {'__linkto' : 'works_for:12_13_14:object'}
         self.ctrl.execute_linkto(eid=8)
-        self.assertEquals(self.ctrl._cursor.executed,
+        self.assertEqual(self.ctrl._cursor.executed,
                           ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
 
         self.ctrl.new_cursor()
         self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:subject'})
         self.ctrl.execute_linkto(eid=8)
-        self.assertEquals(self.ctrl._cursor.executed,
+        self.assertEqual(self.ctrl._cursor.executed,
                           ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
 
@@ -159,13 +159,13 @@ class ApplicationTC(CubicWebTC):
 
     def test_cnx_user_groups_sync(self):
         user = self.user()
-        self.assertEquals(user.groups, set(('managers',)))
+        self.assertEqual(user.groups, set(('managers',)))
         self.execute('SET X in_group G WHERE X eid %s, G name "guests"' % user.eid)
         user = self.user()
-        self.assertEquals(user.groups, set(('managers',)))
+        self.assertEqual(user.groups, set(('managers',)))
         self.commit()
         user = self.user()
-        self.assertEquals(user.groups, set(('managers', 'guests')))
+        self.assertEqual(user.groups, set(('managers', 'guests')))
         # cleanup
         self.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
         self.commit()
@@ -193,13 +193,13 @@ class ApplicationTC(CubicWebTC):
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
         forminfo = req.session.data['view?vid=edition...']
         eidmap = forminfo['eidmap']
-        self.assertEquals(eidmap, {})
+        self.assertEqual(eidmap, {})
         values = forminfo['values']
-        self.assertEquals(values['login-subject:'+eid], '')
-        self.assertEquals(values['eid'], eid)
+        self.assertEqual(values['login-subject:'+eid], '')
+        self.assertEqual(values['eid'], eid)
         error = forminfo['error']
-        self.assertEquals(error.entity, user.eid)
-        self.assertEquals(error.errors['login-subject'], 'required field')
+        self.assertEqual(error.entity, user.eid)
+        self.assertEqual(error.errors['login-subject'], 'required field')
 
 
     def test_validation_error_dont_loose_subentity_data_ctrl(self):
@@ -222,13 +222,13 @@ class ApplicationTC(CubicWebTC):
                     }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
         forminfo = req.session.data['view?vid=edition...']
-        self.assertEquals(set(forminfo['eidmap']), set('XY'))
-        self.assertEquals(forminfo['eidmap']['X'], None)
+        self.assertEqual(set(forminfo['eidmap']), set('XY'))
+        self.assertEqual(forminfo['eidmap']['X'], None)
         self.assertIsInstance(forminfo['eidmap']['Y'], int)
-        self.assertEquals(forminfo['error'].entity, 'X')
-        self.assertEquals(forminfo['error'].errors,
+        self.assertEqual(forminfo['error'].entity, 'X')
+        self.assertEqual(forminfo['error'].errors,
                           {'login-subject': 'required field'})
-        self.assertEquals(forminfo['values'], req.form)
+        self.assertEqual(forminfo['values'], req.form)
 
 
     def test_validation_error_dont_loose_subentity_data_repo(self):
@@ -251,13 +251,13 @@ class ApplicationTC(CubicWebTC):
                     }
         path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
         forminfo = req.session.data['view?vid=edition...']
-        self.assertEquals(set(forminfo['eidmap']), set('XY'))
+        self.assertEqual(set(forminfo['eidmap']), set('XY'))
         self.assertIsInstance(forminfo['eidmap']['X'], int)
         self.assertIsInstance(forminfo['eidmap']['Y'], int)
-        self.assertEquals(forminfo['error'].entity, forminfo['eidmap']['X'])
-        self.assertEquals(forminfo['error'].errors,
+        self.assertEqual(forminfo['error'].entity, forminfo['eidmap']['X'])
+        self.assertEqual(forminfo['error'].errors,
                           {'login-subject': u'the value "admin" is already used, use another one'})
-        self.assertEquals(forminfo['values'], req.form)
+        self.assertEqual(forminfo['values'], req.form)
 
 
     def _test_cleaned(self, kwargs, injected, cleaned):
@@ -282,24 +282,24 @@ class ApplicationTC(CubicWebTC):
         # protocol
         vreg = self.app.vreg
         # default value
-        self.assertEquals(vreg.property_value('ui.language'), 'en')
+        self.assertEqual(vreg.property_value('ui.language'), 'en')
         self.execute('INSERT CWProperty X: X value "fr", X pkey "ui.language"')
-        self.assertEquals(vreg.property_value('ui.language'), 'en')
+        self.assertEqual(vreg.property_value('ui.language'), 'en')
         self.commit()
-        self.assertEquals(vreg.property_value('ui.language'), 'fr')
+        self.assertEqual(vreg.property_value('ui.language'), 'fr')
         self.execute('SET X value "de" WHERE X pkey "ui.language"')
-        self.assertEquals(vreg.property_value('ui.language'), 'fr')
+        self.assertEqual(vreg.property_value('ui.language'), 'fr')
         self.commit()
-        self.assertEquals(vreg.property_value('ui.language'), 'de')
+        self.assertEqual(vreg.property_value('ui.language'), 'de')
         self.execute('DELETE CWProperty X WHERE X pkey "ui.language"')
-        self.assertEquals(vreg.property_value('ui.language'), 'de')
+        self.assertEqual(vreg.property_value('ui.language'), 'de')
         self.commit()
-        self.assertEquals(vreg.property_value('ui.language'), 'en')
+        self.assertEqual(vreg.property_value('ui.language'), 'en')
 
     def test_login_not_available_to_authenticated(self):
         req = self.request()
         ex = self.assertRaises(Unauthorized, self.app_publish, req, 'login')
-        self.assertEquals(str(ex), 'log out first')
+        self.assertEqual(str(ex), 'log out first')
 
     def test_fb_login_concept(self):
         """see data/views.py"""
@@ -311,7 +311,7 @@ class ApplicationTC(CubicWebTC):
         req.form['__fblogin'] = u'turlututu'
         page = self.app_publish(req)
         self.failIf(req.cnx is origcnx)
-        self.assertEquals(req.user.login, 'turlututu')
+        self.assertEqual(req.user.login, 'turlututu')
         self.failUnless('turlututu' in page, page)
 
     # authentication tests ####################################################
@@ -320,13 +320,13 @@ class ApplicationTC(CubicWebTC):
         req, origsession = self.init_authentication('http')
         self.assertAuthFailure(req)
         self.assertRaises(AuthenticationError, self.app_publish, req, 'login')
-        self.assertEquals(req.cnx, None)
+        self.assertEqual(req.cnx, None)
         authstr = base64.encodestring('%s:%s' % (origsession.login, origsession.authinfo['password']))
         req._headers['Authorization'] = 'basic %s' % authstr
         self.assertAuthSuccess(req, origsession)
-        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertEqual(req.session.authinfo, {'password': origsession.authinfo['password']})
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
         req, origsession = self.init_authentication('cookie')
@@ -334,13 +334,13 @@ class ApplicationTC(CubicWebTC):
         form = self.app_publish(req, 'login')
         self.failUnless('__login' in form)
         self.failUnless('__password' in form)
-        self.assertEquals(req.cnx, None)
+        self.assertEqual(req.cnx, None)
         req.form['__login'] = origsession.login
         req.form['__password'] = origsession.authinfo['password']
         self.assertAuthSuccess(req, origsession)
-        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertEqual(req.session.authinfo, {'password': origsession.authinfo['password']})
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEqual(len(self.open_sessions), 0)
 
     def test_login_by_email(self):
         login = self.request().user.login
@@ -359,9 +359,9 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = address
         req.form['__password'] = origsession.authinfo['password']
         self.assertAuthSuccess(req, origsession)
-        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertEqual(req.session.authinfo, {'password': origsession.authinfo['password']})
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEqual(len(self.open_sessions), 0)
 
     def _reset_cookie(self, req):
         # preparing the suite of the test
@@ -376,18 +376,18 @@ class ApplicationTC(CubicWebTC):
     def _test_auth_anon(self, req):
         self.app.connect(req)
         asession = req.session
-        self.assertEquals(len(self.open_sessions), 1)
-        self.assertEquals(asession.login, 'anon')
-        self.assertEquals(asession.authinfo['password'], 'anon')
+        self.assertEqual(len(self.open_sessions), 1)
+        self.assertEqual(asession.login, 'anon')
+        self.assertEqual(asession.authinfo['password'], 'anon')
         self.failUnless(asession.anonymous_session)
         self._reset_cookie(req)
 
     def _test_anon_auth_fail(self, req):
-        self.assertEquals(len(self.open_sessions), 1)
+        self.assertEqual(len(self.open_sessions), 1)
         self.app.connect(req)
-        self.assertEquals(req.message, 'authentication failure')
-        self.assertEquals(req.session.anonymous_session, True)
-        self.assertEquals(len(self.open_sessions), 1)
+        self.assertEqual(req.message, 'authentication failure')
+        self.assertEqual(req.session.anonymous_session, True)
+        self.assertEqual(len(self.open_sessions), 1)
         self._reset_cookie(req)
 
     def test_http_auth_anon_allowed(self):
@@ -399,9 +399,9 @@ class ApplicationTC(CubicWebTC):
         authstr = base64.encodestring('%s:%s' % (origsession.login, origsession.authinfo['password']))
         req._headers['Authorization'] = 'basic %s' % authstr
         self.assertAuthSuccess(req, origsession)
-        self.assertEquals(req.session.authinfo, {'password': origsession.authinfo['password']})
+        self.assertEqual(req.session.authinfo, {'password': origsession.authinfo['password']})
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_anon_allowed(self):
         req, origsession = self.init_authentication('cookie', 'anon')
@@ -412,10 +412,10 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = origsession.login
         req.form['__password'] = origsession.authinfo['password']
         self.assertAuthSuccess(req, origsession)
-        self.assertEquals(req.session.authinfo,
+        self.assertEqual(req.session.authinfo,
                           {'password': origsession.authinfo['password']})
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0)
+        self.assertEqual(len(self.open_sessions), 0)
 
     def test_non_regr_optional_first_var(self):
         req = self.request()

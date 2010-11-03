@@ -82,7 +82,6 @@ named `vreg`):
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_all
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_and_replace
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register
-.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_if_interface_found
 .. automethod:: cubicweb.cwvreg.CubicWebVRegistry.unregister
 
 Examples:
@@ -162,14 +161,14 @@ For instance, if you are selecting the primary (`__regid__ =
 'primary'`) view (`__registry__ = 'views'`) for a result set
 containing a `Card` entity, two objects will probably be selectable:
 
-* the default primary view (`__select__ = implements('Any')`), meaning
+* the default primary view (`__select__ = is_instance('Any')`), meaning
   that the object is selectable for any kind of entity type
 
-* the specific `Card` primary view (`__select__ = implements('Card')`,
+* the specific `Card` primary view (`__select__ = is_instance('Card')`,
   meaning that the object is selectable for Card entities
 
 Other primary views specific to other entity types won't be selectable in this
-case. Among selectable objects, the `implements('Card')` selector will return a higher
+case. Among selectable objects, the `is_instance('Card')` selector will return a higher
 score since it's more specific, so the correct view will be selected as expected.
 
 .. _SelectionAPI:
@@ -194,6 +193,8 @@ selectors that will inspect their content and return a score accordingly.
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import  deprecated
 from logilab.common.modutils import cleanup_sys_modules
@@ -202,9 +203,9 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      CW_EVENT_MANAGER, onevent)
+                      CW_EVENT_MANAGER)
 from cubicweb.utils import dump_class
-from cubicweb.vregistry import VRegistry, Registry, class_regid
+from cubicweb.vregistry import VRegistry, Registry, class_regid, classid
 from cubicweb.rtags import RTAGS
 
 def clear_rtag_objects():
@@ -213,23 +214,23 @@ def clear_rtag_objects():
 
 def use_interfaces(obj):
     """return interfaces used by the given object by searching for implements
-    selectors, with a bw compat fallback to accepts_interfaces attribute
+    selectors
     """
     from cubicweb.selectors import implements
-    try:
-        # XXX deprecated
-        return sorted(obj.accepts_interfaces)
-    except AttributeError:
-        try:
-            impl = obj.__select__.search_selector(implements)
-            if impl:
-                return sorted(impl.expected_ifaces)
-        except AttributeError:
-            pass # old-style appobject classes with no accepts_interfaces
-        except:
-            print 'bad selector %s on %s' % (obj.__select__, obj)
-            raise
-        return ()
+    impl = obj.__select__.search_selector(implements)
+    if impl:
+        return sorted(impl.expected_ifaces)
+    return ()
+
+def require_appobject(obj):
+    """return interfaces used by the given object by searching for implements
+    selectors
+    """
+    from cubicweb.selectors import appobject_selectable
+    impl = obj.__select__.search_selector(appobject_selectable)
+    if impl:
+        return (impl.registry, impl.regids)
+    return None
 
 
 class CWRegistry(Registry):
@@ -309,11 +310,10 @@ class ETypeRegistry(CWRegistry):
     @cached
     def parent_classes(self, etype):
         if etype == 'Any':
-            return [self.etype_class('Any')]
-        eschema = self.schema.eschema(etype)
-        parents = [self.etype_class(e.type) for e in eschema.ancestors()]
-        parents.append(self.etype_class('Any'))
-        return parents
+            return (), self.etype_class('Any')
+        parents = tuple(self.etype_class(e.type)
+                        for e in self.schema.eschema(etype).ancestors())
+        return parents, self.etype_class('Any')
 
     @cached
     def etype_class(self, etype):
@@ -444,14 +444,13 @@ class CubicWebVRegistry(VRegistry):
     * contentnavigation XXX to merge with components? to kill?
     """
 
-    def __init__(self, config, debug=None, initlog=True):
+    def __init__(self, config, initlog=True):
         if initlog:
             # first init log service
-            config.init_log(debug=debug)
+            config.init_log()
         super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
         self.initialized = False
-        self.reset()
         # XXX give force_reload (or refactor [re]loading...)
         if self.config.mode != 'test':
             # don't clear rtags during test, this may cause breakage with
@@ -478,8 +477,10 @@ class CubicWebVRegistry(VRegistry):
         return (value for key, value in self.items())
 
     def reset(self):
+        CW_EVENT_MANAGER.emit('before-registry-reset', self)
         super(CubicWebVRegistry, self).reset()
         self._needs_iface = {}
+        self._needs_appobject = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
         # properties
@@ -488,6 +489,7 @@ class CubicWebVRegistry(VRegistry):
             self['propertyvalues'] = self.eprop_values = {}
             for key, propdef in self.config.eproperty_definitions():
                 self.register_property(key, **propdef)
+        CW_EVENT_MANAGER.emit('after-registry-reset', self)
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
@@ -521,7 +523,6 @@ class CubicWebVRegistry(VRegistry):
                 if not cube in cubes:
                     cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
                     cleanup_sys_modules(cpath)
-        self.reset()
         self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
@@ -540,6 +541,7 @@ class CubicWebVRegistry(VRegistry):
                 for obj in objects:
                     obj.schema = schema
 
+    @deprecated('[3.9] use .register instead')
     def register_if_interface_found(self, obj, ifaces, **kwargs):
         """register `obj` but remove it if no entity class implements one of
         the given `ifaces` interfaces at the end of the registration process.
@@ -565,7 +567,15 @@ class CubicWebVRegistry(VRegistry):
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
+            if not obj.__name__.endswith('Adapter') and \
+                   any(iface for iface in ifaces if not isinstance(iface, basestring)):
+                warn('[3.9] %s: interfaces in implements selector are '
+                     'deprecated in favor of adapters / adaptable '
+                     'selector' % obj.__name__, DeprecationWarning)
             self._needs_iface[obj] = ifaces
+        depends_on = require_appobject(obj)
+        if depends_on is not None:
+            self._needs_appobject[obj] = depends_on
 
     def register_objects(self, path):
         """overriden to give cubicweb's extrapath (eg cubes package's __path__)
@@ -583,13 +593,18 @@ class CubicWebVRegistry(VRegistry):
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
-            # remove appobjects that don't support any available interface
+            # XXX deprecated with cw 3.9: remove appobjects that don't support
+            # any available interface
             implemented_interfaces = set()
             if 'Any' in self.get('etypes', ()):
                 for etype in self.schema.entities():
                     if etype.final:
                         continue
                     cls = self['etypes'].etype_class(etype)
+                    if cls.__implements__:
+                        warn('[3.9] %s: using __implements__/interfaces are '
+                             'deprecated in favor of adapters' % cls.__name__,
+                             DeprecationWarning)
                     for iface in cls.__implements__:
                         implemented_interfaces.update(iface.__mro__)
                     implemented_interfaces.update(cls.__mro__)
@@ -600,17 +615,30 @@ class CubicWebVRegistry(VRegistry):
                                    or iface
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                    self.debug('kicking appobject %s (no implemented '
-                               'interface among %s)', obj, ifaces)
+                    self.debug('unregister %s (no implemented '
+                               'interface among %s)', classid(obj), ifaces)
                     self.unregister(obj)
-        # clear needs_iface so we don't try to remove some not-anymore-in
-        # objects on automatic reloading
-        self._needs_iface.clear()
+            # since 3.9: remove appobjects which depending on other, unexistant
+            # appobjects
+            for obj, (regname, regids) in self._needs_appobject.items():
+                try:
+                    registry = self[regname]
+                except RegistryNotFound:
+                    self.debug('unregister %s (no registry %s)', classid(obj),
+                               regname)
+                    self.unregister(obj)
+                    continue
+                for regid in regids:
+                    if registry.get(regid):
+                        break
+                else:
+                    self.debug('unregister %s (no %s object in registry %s)',
+                               classid(obj), ' or '.join(regids), regname)
+                    self.unregister(obj)
         super(CubicWebVRegistry, self).initialization_completed()
         for rtag in RTAGS:
             # don't check rtags if we don't want to cleanup_interface_sobjects
             rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
-
 
     # rql parsing utilities ####################################################
 

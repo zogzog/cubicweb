@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unittests for cw.web.formfields
-
-"""
+"""unittests for cw.web.formfields"""
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 
@@ -40,64 +38,64 @@ class GuessFieldTC(TestCase):
     def test_state_fields(self):
         title_field = guess_field(schema['State'], schema['name'])
         self.assertIsInstance(title_field, StringField)
-        self.assertEquals(title_field.required, True)
+        self.assertEqual(title_field.required, True)
 
 #         synopsis_field = guess_field(schema['State'], schema['synopsis'])
 #         self.assertIsInstance(synopsis_field, StringField)
 #         self.assertIsInstance(synopsis_field.widget, TextArea)
-#         self.assertEquals(synopsis_field.required, False)
-#         self.assertEquals(synopsis_field.help, 'an abstract for this state')
+#         self.assertEqual(synopsis_field.required, False)
+#         self.assertEqual(synopsis_field.help, 'an abstract for this state')
 
         description_field = guess_field(schema['State'], schema['description'])
         self.assertIsInstance(description_field, RichTextField)
-        self.assertEquals(description_field.required, False)
-        self.assertEquals(description_field.format_field, None)
+        self.assertEqual(description_field.required, False)
+        self.assertEqual(description_field.format_field, None)
+
+        # description_format_field = guess_field(schema['State'], schema['description_format'])
+        # self.assertEqual(description_format_field, None)
 
         description_format_field = guess_field(schema['State'], schema['description_format'])
-        self.assertEquals(description_format_field, None)
-
-        description_format_field = guess_field(schema['State'], schema['description_format'], skip_meta_attr=False)
-        self.assertEquals(description_format_field.internationalizable, True)
-        self.assertEquals(description_format_field.sort, True)
+        self.assertEqual(description_format_field.internationalizable, True)
+        self.assertEqual(description_format_field.sort, True)
 
 #         wikiid_field = guess_field(schema['State'], schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)
-#         self.assertEquals(wikiid_field.required, False)
+#         self.assertEqual(wikiid_field.required, False)
 
 
     def test_cwuser_fields(self):
         upassword_field = guess_field(schema['CWUser'], schema['upassword'])
         self.assertIsInstance(upassword_field, StringField)
         self.assertIsInstance(upassword_field.widget, PasswordInput)
-        self.assertEquals(upassword_field.required, True)
+        self.assertEqual(upassword_field.required, True)
 
         last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'])
         self.assertIsInstance(last_login_time_field, DateTimeField)
-        self.assertEquals(last_login_time_field.required, False)
+        self.assertEqual(last_login_time_field.required, False)
 
         in_group_field = guess_field(schema['CWUser'], schema['in_group'])
         self.assertIsInstance(in_group_field, RelationField)
-        self.assertEquals(in_group_field.required, True)
-        self.assertEquals(in_group_field.role, 'subject')
-        self.assertEquals(in_group_field.help, 'groups grant permissions to the user')
+        self.assertEqual(in_group_field.required, True)
+        self.assertEqual(in_group_field.role, 'subject')
+        self.assertEqual(in_group_field.help, 'groups grant permissions to the user')
 
         owned_by_field = guess_field(schema['CWUser'], schema['owned_by'], 'object')
         self.assertIsInstance(owned_by_field, RelationField)
-        self.assertEquals(owned_by_field.required, False)
-        self.assertEquals(owned_by_field.role, 'object')
+        self.assertEqual(owned_by_field.required, False)
+        self.assertEqual(owned_by_field.role, 'object')
 
 
     def test_file_fields(self):
-        data_format_field = guess_field(schema['File'], schema['data_format'])
-        self.assertEquals(data_format_field, None)
-        data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
-        self.assertEquals(data_encoding_field, None)
-        data_name_field = guess_field(schema['File'], schema['data_name'])
-        self.assertEquals(data_name_field, None)
+        # data_format_field = guess_field(schema['File'], schema['data_format'])
+        # self.assertEqual(data_format_field, None)
+        # data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
+        # self.assertEqual(data_encoding_field, None)
+        # data_name_field = guess_field(schema['File'], schema['data_name'])
+        # self.assertEqual(data_name_field, None)
 
         data_field = guess_field(schema['File'], schema['data'])
         self.assertIsInstance(data_field, FileField)
-        self.assertEquals(data_field.required, True)
+        self.assertEqual(data_field.required, True)
         self.assertIsInstance(data_field.format_field, StringField)
         self.assertIsInstance(data_field.encoding_field, StringField)
         self.assertIsInstance(data_field.name_field, StringField)
@@ -105,7 +103,7 @@ class GuessFieldTC(TestCase):
     def test_constraints_priority(self):
         salesterm_field = guess_field(schema['Salesterm'], schema['reason'])
         constraints = schema['reason'].rdef('Salesterm', 'String').constraints
-        self.assertEquals([c.__class__ for c in constraints],
+        self.assertEqual([c.__class__ for c in constraints],
                           [SizeConstraint, StaticVocabularyConstraint])
         self.assertIsInstance(salesterm_field, StringField)
         self.assertIsInstance(salesterm_field.widget, Select)
@@ -114,16 +112,16 @@ class GuessFieldTC(TestCase):
     def test_bool_field_base(self):
         field = guess_field(schema['CWAttribute'], schema['indexed'])
         self.assertIsInstance(field, BooleanField)
-        self.assertEquals(field.required, False)
+        self.assertEqual(field.required, False)
         self.assertIsInstance(field.widget, Radio)
-        self.assertEquals(field.vocabulary(mock(_cw=mock(_=unicode))),
+        self.assertEqual(field.vocabulary(mock(_cw=mock(_=unicode))),
                           [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):
         field = guess_field(schema['CWAttribute'], schema['indexed'],
                             choices=[(u'maybe', '1'), (u'no', '')])
         self.assertIsInstance(field.widget, Radio)
-        self.assertEquals(field.vocabulary(mock(req=mock(_=unicode))),
+        self.assertEqual(field.vocabulary(mock(req=mock(_=unicode))),
                           [(u'maybe', '1'), (u'no', '')])
 
 
@@ -135,18 +133,18 @@ class MoreFieldsTC(CubicWebTC):
         form = EntityFieldsForm(req, entity=e)
         description_field = guess_field(schema['State'], schema['description'])
         description_format_field = description_field.get_format_field(form)
-        self.assertEquals(description_format_field.internationalizable, True)
-        self.assertEquals(description_format_field.sort, True)
+        self.assertEqual(description_format_field.internationalizable, True)
+        self.assertEqual(description_format_field.sort, True)
         # unlike below, initial is bound to form.form_field_format
-        self.assertEquals(description_format_field.value(form), 'text/html')
+        self.assertEqual(description_format_field.value(form), 'text/html')
         self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
-        self.assertEquals(description_format_field.value(form), 'text/rest')
+        self.assertEqual(description_format_field.value(form), 'text/rest')
 
 
 class UtilsTC(TestCase):
     def test_vocab_sort(self):
-        self.assertEquals(vocab_sort([('Z', 1), ('A', 2),
+        self.assertEqual(vocab_sort([('Z', 1), ('A', 2),
                                       ('Group 1', None), ('Y', 3), ('B', 4),
                                       ('Group 2', None), ('X', 5), ('C', 6)]),
                           [('A', 2), ('Z', 1),

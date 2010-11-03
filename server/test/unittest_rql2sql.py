@@ -22,11 +22,13 @@ import sys
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
-
-#from cubicweb.server.sources.native import remove_unused_solutions
-from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
-
 from rql.utils import register_function, FunctionDescr
+
+from cubicweb.devtools import TestServerConfiguration
+from cubicweb.devtools.repotest import RQLGeneratorTC
+from cubicweb.server.sources.rql2sql import remove_unused_solutions
+
+
 # add a dumb registered procedure
 class stockproc(FunctionDescr):
     supported_backends = ('postgres', 'sqlite', 'mysql')
@@ -35,8 +37,6 @@ try:
 except AssertionError, ex:
     pass # already registered
 
-from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.repotest import RQLGeneratorTC
 
 config = TestServerConfiguration('data')
 config.bootstrap_cubes()
@@ -271,7 +271,7 @@ WHERE _X.cw_from_entity=44 AND _SE.cw_eid=44 AND _X.cw_relation_type=139 AND _R.
     ('Any O WHERE NOT S ecrit_par O, S eid 1, S inline1 P, O inline2 P',
      '''SELECT _O.cw_eid
 FROM cw_Note AS _S, cw_Personne AS _O
-WHERE NOT (_S.cw_ecrit_par=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
+WHERE (_S.cw_ecrit_par IS NULL OR _S.cw_ecrit_par!=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
 
     ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
@@ -424,26 +424,15 @@ FROM cw_Tag AS _X) AS T1
 GROUP BY T1.C1'''),
 
     ('Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 1, N, DF WHERE X data_name N, X data D, X data_format DF;',
-     '''SELECT (MAX(T1.C1) + MIN(LENGTH(T1.C0))), T1.C2 FROM (SELECT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
+     '''SELECT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))), _X.cw_data_name
 FROM cw_File AS _X
-UNION ALL
-SELECT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
-FROM cw_Image AS _X) AS T1
-GROUP BY T1.C2,T1.C3
-ORDER BY 1,2,T1.C3'''),
-
-    ('DISTINCT Any S ORDERBY R WHERE A is Affaire, A sujet S, A ref R',
-     '''SELECT T1.C0 FROM (SELECT DISTINCT _A.cw_sujet AS C0, _A.cw_ref AS C1
-FROM cw_Affaire AS _A
-ORDER BY 2) AS T1'''),
+GROUP BY _X.cw_data_name,_X.cw_data_format
+ORDER BY 1,2,_X.cw_data_format'''),
 
     ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
-     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(T1.C1) + MIN(LENGTH(T1.C0))) AS C0, T1.C2 AS C1, T1.C3 AS C2 FROM (SELECT DISTINCT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
+     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
 FROM cw_File AS _X
-UNION
-SELECT DISTINCT _X.cw_data AS C0, _X.cw_eid AS C1, _X.cw_data_name AS C2, _X.cw_data_format AS C3
-FROM cw_Image AS _X) AS T1
-GROUP BY T1.C2,T1.C3
+GROUP BY _X.cw_data_name,_X.cw_data_format
 ORDER BY 2,3) AS T1
 '''),
 
@@ -577,6 +566,11 @@ FROM cw_Tag AS _T, cw_Tag AS _X, tags_relation AS rel_tags0
 WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid) AS T1
 GROUP BY T1.C0,T1.C2
 ORDER BY T1.C2'''),
+
+    ('Any 1 WHERE X in_group G, X is CWUser',
+     '''SELECT 1
+FROM in_group_relation AS rel_in_group0'''),
+
 
     ]
 
@@ -838,7 +832,7 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid), cw_Note AS _S
-WHERE NOT (_S.cw_inline1=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
     ]
 
 VIRTUAL_VARS = [
@@ -988,7 +982,7 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any N WHERE NOT N ecrit_par P, P nom "toto"',
      '''SELECT _N.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _P.cw_nom=toto'''),
+WHERE (_N.cw_ecrit_par IS NULL OR _N.cw_ecrit_par!=_P.cw_eid) AND _P.cw_nom=toto'''),
 
     ('Any P WHERE NOT N ecrit_par P, P nom "toto"',
      '''SELECT _P.cw_eid
@@ -1008,7 +1002,7 @@ WHERE _N.cw_ecrit_par=_P.cw_eid AND _N.cw_eid=0'''),
     ('Any P WHERE NOT N ecrit_par P, P is Personne, N eid 512',
      '''SELECT _P.cw_eid
 FROM cw_Note AS _N, cw_Personne AS _P
-WHERE NOT (_N.cw_ecrit_par=_P.cw_eid) AND _N.cw_eid=512'''),
+WHERE (_N.cw_ecrit_par IS NULL OR _N.cw_ecrit_par!=_P.cw_eid) AND _N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
      # XXX "_T.cw_destination_state IS NOT NULL" could be avoided here but it's not worth it
@@ -1036,11 +1030,12 @@ WHERE NOT (EXISTS(SELECT 1 FROM cw_CWProperty AS _Y WHERE _Y.cw_for_user=123))''
     ('DISTINCT Any X WHERE X from_entity OET, NOT X from_entity NET, OET name "Image", NET eid 1',
      '''SELECT DISTINCT _X.cw_eid
 FROM cw_CWAttribute AS _X, cw_CWEType AS _OET
-WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image
+WHERE _X.cw_from_entity=_OET.cw_eid AND (_X.cw_from_entity IS NULL OR _X.cw_from_entity!=1) AND _OET.cw_name=Image
 UNION
 SELECT DISTINCT _X.cw_eid
 FROM cw_CWEType AS _OET, cw_CWRelation AS _X
-WHERE _X.cw_from_entity=_OET.cw_eid AND NOT (_X.cw_from_entity=1) AND _OET.cw_name=Image'''),
+WHERE _X.cw_from_entity=_OET.cw_eid AND (_X.cw_from_entity IS NULL OR _X.cw_from_entity!=1) AND _OET.cw_name=Image'''),
+
     ]
 
 INTERSECT = [
@@ -1082,11 +1077,9 @@ FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
 
     ]
-from logilab.database import get_db_helper
-
 class CWRQLTC(RQLGeneratorTC):
     schema = schema
-
+    backend = 'sqlite'
     def test_nonregr_sol(self):
         delete = self.rqlhelper.parse(
             'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
@@ -1103,21 +1096,19 @@ class CWRQLTC(RQLGeneratorTC):
             for sol in delete.solutions:
                 s.add(sol.get(var))
             return s
-        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
-        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
-        self.assertEquals(var_sols('ISOBJECT'),
+        self.assertEqual(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
+        self.assertEqual(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
+        self.assertEqual(var_sols('ISOBJECT'),
                           set(x.type for x in self.schema.entities() if not x.final))
-        self.assertEquals(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
+        self.assertEqual(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
 
+
+def strip(text):
+    return '\n'.join(l.strip() for l in text.strip().splitlines())
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
     schema = schema
-
-    #capture = True
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('postgres')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'postgres'
 
     def _norm_sql(self, sql):
         return sql.strip()
@@ -1130,7 +1121,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             r, nargs, cbs = self.o.generate(union, args,
                                             varmap=varmap)
             args.update(nargs)
-            self.assertLinesEquals((r % args).strip(), self._norm_sql(sql), striplines=True)
+            self.assertMultiLineEqual(strip(r % args), self._norm_sql(sql))
         except Exception, ex:
             if 'r' in locals():
                 try:
@@ -1212,7 +1203,7 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
     def test_is_null_transform(self):
         union = self._prepare('Any X WHERE X login %(login)s')
         r, args, cbs = self.o.generate(union, {'login': None})
-        self.assertLinesEquals((r % args).strip(),
+        self.assertMultiLineEqual((r % args).strip(),
                                '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
 WHERE _X.cw_login IS NULL''')
@@ -1377,13 +1368,53 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.c
 UNION ALL
 SELECT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-"""),
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu"""),
 
             ('Personne X where X has_text %(text)s, X travaille S, S has_text %(text)s',
              """SELECT _X.eid
 FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
 WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')"""),
+
+            ('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "toto tata"',
+             """SELECT appears0.uid
+FROM appears AS appears0
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata')
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight DESC"""),
+
+            ('Personne X ORDERBY FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.eid AND _X.type='Personne'
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight"""),
+
+            ('Personne X ORDERBY FTIRANK(X) WHERE X has_text %(text)s',
+             """SELECT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne'
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight"""),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
+             """SELECT T1.C0 FROM (SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+FROM appears AS appears0, cw_Basket AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+UNION ALL
+SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+FROM appears AS appears0, cw_Folder AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+ORDER BY 2) AS T1"""),
+
+            ('Personne X ORDERBY FTIRANK(X),FTIRANK(S) WHERE X has_text %(text)s, X travaille S, S has_text %(text)s',
+             """SELECT _X.eid
+FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight,ts_rank(appears2.words, to_tsquery('default', 'hip&hop&momo'))*appears2.weight"""),
+
+
+            ('Any X, FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT appears0.uid, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight
+FROM appears AS appears0
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata')"""),
+
             )):
             yield t
 
@@ -1426,8 +1457,8 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
         try:
             union = self._prepare('Any R WHERE X ref R')
             r, nargs, cbs = self.o.generate(union, args={})
-            self.assertLinesEquals(r.strip(), 'SELECT _X.cw_ref\nFROM cw_Affaire AS _X')
-            self.assertEquals(cbs, {0: [cb]})
+            self.assertMultiLineEqual(r.strip(), 'SELECT _X.cw_ref\nFROM cw_Affaire AS _X')
+            self.assertEqual(cbs, {0: [cb]})
         finally:
             self.o.attr_map.clear()
 
@@ -1443,13 +1474,18 @@ FROM cw_Affaire AS _X''')
 FROM cw_CWUser AS _X
 WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
 
+    def test_not_no_where(self):
+        # XXX will check if some in_group relation exists, that's it.
+        # We  can't actually know if we want to check if there are some
+        # X without in_group relation, or some G without it.
+        self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
+                    '''SELECT 1
+WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
-
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('sqlite')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'sqlite'
 
     def _norm_sql(self, sql):
         return sql.strip().replace(' ILIKE ', ' LIKE ')
@@ -1547,6 +1583,26 @@ SELECT DISTINCT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 """),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT DISTINCT appears0.uid
+FROM appears AS appears0
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
+
+            ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Basket AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+UNION
+SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Folder AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+"""),
+
+            ('Any X, FTIRANK(X) WHERE X has_text "toto tata"',
+             """SELECT DISTINCT appears0.uid, 1.0
+FROM appears AS appears0
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
             )):
             yield t
 
@@ -1560,11 +1616,7 @@ WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
-
-    def setUp(self):
-        RQLGeneratorTC.setUp(self)
-        dbhelper = get_db_helper('mysql')
-        self.o = SQLGenerator(schema, dbhelper)
+    backend = 'mysql'
 
     def _norm_sql(self, sql):
         sql = sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
@@ -1651,12 +1703,19 @@ FROM cw_CWUser AS _X
 WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
 
+    def test_not_no_where(self):
+        self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
+                    '''SELECT 1
+FROM (SELECT 1) AS _T
+WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                             {'A': 'FootGroup', 'B': 'FootTeam'}],
@@ -1667,10 +1726,11 @@ class removeUnsusedSolutionsTC(TestCase):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEquals(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                                                           {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
                           )
+
 
 if __name__ == '__main__':
     unittest_main()

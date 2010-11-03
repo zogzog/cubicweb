@@ -72,12 +72,12 @@ class RecipientsFinderTC(CubicWebTC):
         finder = self.vreg['components'].select('recipients_finder',
                                                 self.request(), rset=urset)
         self.set_option('default-recipients-mode', 'none')
-        self.assertEquals(finder.recipients(), [])
+        self.assertEqual(finder.recipients(), [])
         self.set_option('default-recipients-mode', 'users')
-        self.assertEquals(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
+        self.assertEqual(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
         self.set_option('default-recipients-mode', 'default-dest-addrs')
         self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
-        self.assertEquals(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
+        self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
 
 
 class StatusChangeViewsTC(CubicWebTC):
@@ -85,12 +85,12 @@ class StatusChangeViewsTC(CubicWebTC):
     def test_status_change_view(self):
         req = self.request()
         u = self.create_user('toto', req=req)
-        u.fire_transition('deactivate', comment=u'yeah')
+        u.cw_adapt_to('IWorkflowable').fire_transition('deactivate', comment=u'yeah')
         self.failIf(MAILBOX)
         self.commit()
-        self.assertEquals(len(MAILBOX), 1)
+        self.assertEqual(len(MAILBOX), 1)
         email = MAILBOX[0]
-        self.assertEquals(email.content,
+        self.assertEqual(email.content,
                           '''
 admin changed status from <activated> to <deactivated> for entity
 'toto'
@@ -99,7 +99,7 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEquals(email.subject, 'status changed cwuser #%s (admin)' % u.eid)
+        self.assertEqual(email.subject, 'status changed cwuser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()

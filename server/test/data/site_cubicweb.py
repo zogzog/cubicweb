@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 
 from logilab.database import FunctionDescr
 from logilab.database.sqlite import register_sqlite_pyfunc
@@ -25,7 +22,7 @@ from rql.utils import register_function
 
 try:
     class DUMB_SORT(FunctionDescr):
-        supported_backends = ('sqlite',)
+        pass
 
     register_function(DUMB_SORT)
     def dumb_sort(something):

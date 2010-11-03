@@ -37,6 +37,7 @@ Those selectors are somewhat dumb, which doesn't mean they're not (very) useful.
 .. autoclass:: cubicweb.appobject.yes
 .. autoclass:: cubicweb.selectors.match_kwargs
 .. autoclass:: cubicweb.selectors.appobject_selectable
+.. autoclass:: cubicweb.selectors.adaptable
 
 
 Result set selectors
@@ -66,7 +67,7 @@ or entity found in the result set ('rset' argument or the input context) and
 match or not according to entity's (instance or class) properties.
 
 .. autoclass:: cubicweb.selectors.non_final_entity
-.. autoclass:: cubicweb.selectors.implements
+.. autoclass:: cubicweb.selectors.is_instance
 .. autoclass:: cubicweb.selectors.score_entity
 .. autoclass:: cubicweb.selectors.rql_condition
 .. autoclass:: cubicweb.selectors.relation_possible
@@ -75,6 +76,8 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.selectors.partial_has_related_entities
 .. autoclass:: cubicweb.selectors.has_permission
 .. autoclass:: cubicweb.selectors.has_add_permission
+.. autoclass:: cubicweb.selectors.has_mimetype
+.. autoclass:: cubicweb.selectors.implements
 
 
 Logged user selectors

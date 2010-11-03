@@ -42,8 +42,6 @@ Actions box configuration
    # Adds all subjects of the entry_of relation in the add menu of the ``Blog``
    # primary view
    uicfg.actionbox_appearsin_addmenu.tag_object_of(('*', 'entry_of', 'Blog'), True)
-
-
 """
 __docformat__ = "restructuredtext en"
 
@@ -53,7 +51,8 @@ from logilab.common.compat import any
 
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
-                            RelationTagsDict, register_rtag, _ensure_str_key)
+                            RelationTagsDict, NoTargetRelationTagsDict,
+                            register_rtag, _ensure_str_key)
 from cubicweb.schema import META_RTYPES
 
 
@@ -83,35 +82,16 @@ primaryview_section = RelationTags('primaryview_section',
                                               'sideboxes', 'hidden')))
 
 
-class DisplayCtrlRelationTags(RelationTagsDict):
+class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
         self.counter = 0
 
-    def tag_subject_of(self, key, tag):
-        subj, rtype, obj = key
-        if obj != '*':
-            self.warning('using explict target type in display_ctrl.tag_subject_of() '
-                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
-                         subj, rtype, subj, rtype, obj)
-        super(DisplayCtrlRelationTags, self).tag_subject_of((subj, rtype, '*'), tag)
-
-    def tag_object_of(self, key, tag):
-        subj, rtype, obj = key
-        if subj != '*':
-            self.warning('using explict subject type in display_ctrl.tag_object_of() '
-                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
-                         rtype, obj, subj, rtype, obj)
-        super(DisplayCtrlRelationTags, self).tag_object_of(('*', rtype, obj), tag)
-
 def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     if role == 'subject':
         oschema = '*'
-        label = rschema.type
     else:
         sschema = '*'
-        label = '%s_%s' % (rschema, role)
-    rtag.setdefault((sschema, rschema, oschema, role), 'label', label)
     rtag.counter += 1
     rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag.counter)
 
@@ -215,6 +195,12 @@ class AutoformSectionRelationTags(RelationTagsSet):
         formsections = self.get(sschema, rschema, oschema, role)
         sectdict = _formsections_as_dict(formsections)
         if rschema in META_RTYPES:
+            sectdict.setdefault('main', 'hidden')
+            sectdict.setdefault('muledit', 'hidden')
+            sectdict.setdefault('inlined', 'hidden')
+        elif role == 'subject' and rschema in sschema.meta_attributes():
+            # meta attribute, usually embeded by the described attribute's field
+            # (eg RichTextField, FileField...)
             sectdict.setdefault('main', 'hidden')
             sectdict.setdefault('muledit', 'hidden')
             sectdict.setdefault('inlined', 'hidden')
@@ -375,13 +361,73 @@ autoform_section = AutoformSectionRelationTags('autoform_section')
 autoform_field = RelationTags('autoform_field')
 
 # relations'field explicit kwargs (given to field's __init__)
-autoform_field_kwargs = RelationTagsDict()
+autoform_field_kwargs = RelationTagsDict('autoform_field_kwargs')
 
 
 # set of tags of the form <action>_on_new on relations. <action> is a
 # schema action (add/update/delete/read), and when such a tag is found
 # permissions checking is by-passed and supposed to be ok
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
+
+class ReleditTags(NoTargetRelationTagsDict):
+    """Associate to relation a dictionnary to control `reledit` (e.g. edition of
+    attributes / relations from within views).
+
+    Possible keys and associated values are:
+
+    * `novalue_label`, alternative default value (shown when there is no value).
+
+    * `novalue_include_rtype`, when `novalue_label` is not specified, this boolean
+      flag control wether the generated default value should contains the
+      relation label or not. Will be the opposite of the `showlabel` value found
+      in the `primaryview_display_ctrl` rtag by default.
+
+    * `reload`, boolean, eid (to reload to) or function taking subject and
+      returning bool/eid. This is useful when editing a relation (or attribute)
+      that impacts the url or another parts of the current displayed
+      page. Defaults to False.
+
+    * `rvid`, alternative view id (as str) for relation or composite edition.
+      Default is 'autolimited'.
+
+    * `edit_target`, may be either 'rtype' (to edit the relation) or 'related'
+      (to edit the related entity).  This controls whether to edit the relation
+      or the target entity of the relation.  Currently only one-to-one relations
+      support target entity edition. By default, the 'related' option is taken
+      whenever the relation is composite.
+    """
+    _keys = frozenset('novalue_label novalue_include_rtype reload rvid edit_target'.split())
+
+    def tag_relation(self, key, tag):
+        for tagkey in tag.iterkeys():
+            assert tagkey in self._keys, 'tag %r not in accepted tags: %r' % (tag, self._keys)
+        return super(ReleditTags, self).tag_relation(key, tag)
+
+def init_reledit_ctrl(rtag, sschema, rschema, oschema, role):
+    if rschema.final:
+        return
+    composite = rschema.rdef(sschema, oschema).composite == role
+    if role == 'subject':
+        oschema = '*'
+    else:
+        sschema = '*'
+    values = rtag.get(sschema, rschema, oschema, role)
+    edittarget = values.get('edit_target')
+    if edittarget not in (None, 'rtype', 'related'):
+        rtag.warning('reledit: wrong value for edit_target on relation %s: %s',
+                     rschema, edittarget)
+        edittarget = None
+    if not edittarget:
+        edittarget = 'related' if composite else 'rtype'
+        rtag.tag_relation((sschema, rschema, oschema, role),
+                          {'edit_target': edittarget})
+    if not 'novalue_include_rtype' in values:
+        showlabel = primaryview_display_ctrl.get(
+            sschema, rschema, oschema, role).get('showlabel', True)
+        rtag.tag_relation((sschema, rschema, oschema, role),
+                          {'novalue_include_rtype': not showlabel})
+
+reledit_ctrl = ReleditTags('reledit', init_reledit_ctrl)
 
 # boxes.EditBox configuration #################################################
 

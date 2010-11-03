@@ -39,22 +39,22 @@ class UILIBTC(TestCase):
             ]
         for text, expected in data:
             got = uilib.remove_html_tags(text)
-            self.assertEquals(got, expected)
+            self.assertEqual(got, expected)
 
     def test_fallback_safe_cut(self):
-        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 4), u'ab c...')
-        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 5), u'ab <a href="hello">cd</a>')
-        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'ab &amp;...')
-        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a> ef', 5), u'ab &amp;d...')
-        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&igrave;d</a>', 4), u'ab ì...')
-        self.assertEquals(uilib.fallback_safe_cut(u'&amp; <a href="hello">&amp;d</a> ef', 4), u'&amp; &amp;d...')
+        self.assertEqual(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 4), u'ab c...')
+        self.assertEqual(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 5), u'ab <a href="hello">cd</a>')
+        self.assertEqual(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'ab &amp;...')
+        self.assertEqual(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a> ef', 5), u'ab &amp;d...')
+        self.assertEqual(uilib.fallback_safe_cut(u'ab <a href="hello">&igrave;d</a>', 4), u'ab ì...')
+        self.assertEqual(uilib.fallback_safe_cut(u'&amp; <a href="hello">&amp;d</a> ef', 4), u'&amp; &amp;d...')
 
     def test_lxml_safe_cut(self):
-        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 4), u'<p>aaa</p><div>a...</div>')
-        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 7), u'<p>aaa</p><div>aaad</div>...')
-        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div>', 7), u'<p>aaa</p><div>aaad</div>')
+        self.assertEqual(uilib.safe_cut(u'aaa<div>aaad</div> ef', 4), u'<p>aaa</p><div>a...</div>')
+        self.assertEqual(uilib.safe_cut(u'aaa<div>aaad</div> ef', 7), u'<p>aaa</p><div>aaad</div>...')
+        self.assertEqual(uilib.safe_cut(u'aaa<div>aaad</div>', 7), u'<p>aaa</p><div>aaad</div>')
         # Missing ellipsis due to space management but we don't care
-        self.assertEquals(uilib.safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'<p>ab <a href="hello">&amp;...</a></p>')
+        self.assertEqual(uilib.safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'<p>ab <a href="hello">&amp;...</a></p>')
 
     def test_cut(self):
         """tests uilib.cut() behaviour"""
@@ -65,7 +65,7 @@ class UILIBTC(TestCase):
             ]
         for text, expected in data:
             got = uilib.cut(text, 8)
-            self.assertEquals(got, expected)
+            self.assertEqual(got, expected)
 
     def test_text_cut(self):
         """tests uilib.text_cut() behaviour with no text"""
@@ -92,55 +92,63 @@ quis nostrud exercitation ullamco laboris nisi"),
                 ]
         for text, expected in data:
             got = uilib.text_cut(text, 30)
-            self.assertEquals(got, expected)
+            self.assertEqual(got, expected)
 
     def test_soup2xhtml_1_1(self):
-        self.assertEquals(uilib.soup2xhtml('hop <div>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <div>', 'ascii'),
                           'hop <div/>')
-        self.assertEquals(uilib.soup2xhtml('<div> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('<div> hop', 'ascii'),
                           '<div> hop</div>')
-        self.assertEquals(uilib.soup2xhtml('hop <div> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <div> hop', 'ascii'),
                           'hop <div> hop</div>')
 
     def test_soup2xhtml_1_2(self):
-        self.assertEquals(uilib.soup2xhtml('hop </div>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </div>', 'ascii'),
                           'hop ')
-        self.assertEquals(uilib.soup2xhtml('</div> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('</div> hop', 'ascii'),
                           '<div/> hop')
-        self.assertEquals(uilib.soup2xhtml('hop </div> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </div> hop', 'ascii'),
                           '<div>hop </div> hop')
 
     def test_soup2xhtml_2_1(self):
-        self.assertEquals(uilib.soup2xhtml('hop <body>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <body>', 'ascii'),
                           'hop ')
-        self.assertEquals(uilib.soup2xhtml('<body> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('<body> hop', 'ascii'),
                           ' hop')
-        self.assertEquals(uilib.soup2xhtml('hop <body> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <body> hop', 'ascii'),
                           'hop  hop')
 
     def test_soup2xhtml_2_2(self):
-        self.assertEquals(uilib.soup2xhtml('hop </body>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </body>', 'ascii'),
                           'hop ')
-        self.assertEquals(uilib.soup2xhtml('</body> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('</body> hop', 'ascii'),
                           ' hop')
-        self.assertEquals(uilib.soup2xhtml('hop </body> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </body> hop', 'ascii'),
                           'hop  hop')
 
     def test_soup2xhtml_3_1(self):
-        self.assertEquals(uilib.soup2xhtml('hop <html>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <html>', 'ascii'),
                           'hop ')
-        self.assertEquals(uilib.soup2xhtml('<html> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('<html> hop', 'ascii'),
                           ' hop')
-        self.assertEquals(uilib.soup2xhtml('hop <html> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop <html> hop', 'ascii'),
                           'hop  hop')
 
     def test_soup2xhtml_3_2(self):
-        self.assertEquals(uilib.soup2xhtml('hop </html>', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </html>', 'ascii'),
                           'hop ')
-        self.assertEquals(uilib.soup2xhtml('</html> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('</html> hop', 'ascii'),
                           ' hop')
-        self.assertEquals(uilib.soup2xhtml('hop </html> hop', 'ascii'),
+        self.assertEqual(uilib.soup2xhtml('hop </html> hop', 'ascii'),
                           'hop  hop')
+
+    def test_js(self):
+        self.assertEqual(str(uilib.js.pouet(1, "2")),
+                          'pouet(1,"2")')
+        self.assertEqual(str(uilib.js.cw.pouet(1, "2")),
+                          'cw.pouet(1,"2")')
+        self.assertEqual(str(uilib.js.cw.pouet(1, "2").pouet(None)),
+                          'cw.pouet(1,"2").pouet(null)')
 
 if __name__ == '__main__':
     unittest_main()

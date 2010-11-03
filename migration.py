@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""utilities for instances migration
+"""utilities for instances migration"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -25,14 +24,16 @@ import os
 import logging
 import tempfile
 from os.path import exists, join, basename, splitext
+from itertools import chain
 
+from logilab.common import IGNORED_EXTENSIONS
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
 from logilab.common.shellutils import ASK
 from logilab.common.changelog import Version
 
-from cubicweb import ConfigurationError
-
+from cubicweb import ConfigurationError, ExecutionError
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 
 def filter_scripts(config, directory, fromversion, toversion, quiet=True):
     """return a list of paths of migration files to consider to upgrade
@@ -52,8 +53,7 @@ def filter_scripts(config, directory, fromversion, toversion, quiet=True):
         return []
     result = []
     for fname in os.listdir(directory):
-        if fname.endswith('.pyc') or fname.endswith('.pyo') \
-               or fname.endswith('~'):
+        if fname.endswith(IGNORED_EXTENSIONS):
             continue
         fpath = join(directory, fname)
         try:
@@ -74,9 +74,6 @@ def filter_scripts(config, directory, fromversion, toversion, quiet=True):
         result.append((tver, fpath))
     # be sure scripts are executed in order
     return sorted(result)
-
-
-IGNORED_EXTENSIONS = ('.swp', '~')
 
 
 def execscript_confirm(scriptpath):
@@ -111,7 +108,7 @@ class MigrationHelper(object):
         self.config = config
         if config:
             # no config on shell to a remote instance
-            self.config.init_log(logthreshold=logging.ERROR, debug=True)
+            self.config.init_log(logthreshold=logging.ERROR)
         # 0: no confirmation, 1: only main commands confirmed, 2 ask for everything
         self.verbosity = verbosity
         self.need_wrap = True
@@ -125,13 +122,15 @@ class MigrationHelper(object):
                           'config': self.config,
                           'interactive_mode': interactive,
                           }
+        self._context_stack = []
 
     def __getattribute__(self, name):
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
             cmd = 'cmd_%s' % name
-            if hasattr(self, cmd):
+            # search self.__class__ to avoid infinite recursion
+            if hasattr(self.__class__, cmd):
                 meth = getattr(self, cmd)
                 return lambda *args, **kwargs: self.interact(args, kwargs,
                                                              meth=meth)
@@ -202,7 +201,8 @@ class MigrationHelper(object):
         if not ask_confirm or self.confirm(msg):
             return meth(*args, **kwargs)
 
-    def confirm(self, question, shell=True, abort=True, retry=False, default='y'):
+    def confirm(self, question, shell=True, abort=True, retry=False, pdb=False,
+                default='y'):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2
@@ -210,6 +210,8 @@ class MigrationHelper(object):
         possibleanswers = ['y', 'n']
         if abort:
             possibleanswers.append('abort')
+        if pdb:
+            possibleanswers.append('pdb')
         if shell:
             possibleanswers.append('shell')
         if retry:
@@ -224,9 +226,13 @@ class MigrationHelper(object):
             return 2
         if answer == 'abort':
             raise SystemExit(1)
-        if shell and answer == 'shell':
+        if answer == 'shell':
             self.interactive_shell()
-            return self.confirm(question)
+            return self.confirm(question, shell, abort, retry, pdb, default)
+        if answer == 'pdb':
+            import pdb
+            pdb.set_trace()
+            return self.confirm(question, shell, abort, retry, pdb, default)
         return True
 
     def interactive_shell(self):
@@ -280,27 +286,62 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     context[attr[4:]] = getattr(self, attr)
         return context
 
+    def update_context(self, key, value):
+        for context in self._context_stack:
+            context[key] = value
+        self.__context[key] = value
+
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
-        """execute a migration script
-        in interactive mode,  display the migration script path, ask for
-        confirmation and execute it if confirmed
+        """execute a migration script in interactive mode
+
+        Display the migration script path, ask for confirmation and execute it
+        if confirmed
+
+        Allowed input file formats for migration scripts:
+        - `python` (.py)
+        - `sql` (.sql)
+        - `doctest` (.txt or .rst)
+
+        .. warning:: sql migration scripts are not available in web-only instance
+
+        You can pass script parameters with using double dash (--) in the
+        command line
+
+        Context environment can have these variables defined:
+        - __name__ : will be determine by funcname parameter
+        - __file__ : is the name of the script if it exists
+        - __args__ : script arguments coming from command-line
+
+        :param migrscript: name of the script
+        :param funcname: defines __name__ inside the shell (or use __main__)
+        :params args: optional arguments for funcname
+        :keyword scriptargs: optional arguments of the script
         """
+        ftypes = {'python':  ('.py',),
+                  'doctest': ('.txt', '.rst'),
+                  'sql':     ('.sql',)}
+        # sql migration scripts are not available in web-only instance
+        if not hasattr(self, "session"):
+            ftypes.pop('sql')
         migrscript = os.path.normpath(migrscript)
-        if migrscript.endswith('.py'):
-            script_mode = 'python'
-        elif migrscript.endswith('.txt') or migrscript.endswith('.rst'):
-            script_mode = 'doctest'
+        for (script_mode, ftype) in ftypes.items():
+            if migrscript.endswith(ftype):
+                break
         else:
-            raise Exception('This is not a valid cubicweb shell input')
+            ftypes = ', '.join(chain(*ftypes.values()))
+            msg = 'ignoring %s, not a valid script extension (%s)'
+            raise ExecutionError(msg % (migrscript, ftypes))
         if not self.execscript_confirm(migrscript):
             return
         scriptlocals = self._create_context().copy()
+        self._context_stack.append(scriptlocals)
         if script_mode == 'python':
             if funcname is None:
                 pyname = '__main__'
             else:
                 pyname = splitext(basename(migrscript))[0]
-            scriptlocals.update({'__file__': migrscript, '__name__': pyname})
+            scriptlocals.update({'__file__': migrscript, '__name__': pyname,
+                                 '__args__': kwargs.pop("scriptargs", [])})
             execfile(migrscript, scriptlocals)
             if funcname is not None:
                 try:
@@ -311,10 +352,15 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     self.critical('no %s in script %s', funcname, migrscript)
                     return None
                 return func(*args, **kwargs)
+        elif script_mode == 'sql':
+            from cubicweb.server.sqlutils import sqlexec
+            sqlexec(open(migrscript).read(), self.session.system_sql)
+            self.commit()
         else: # script_mode == 'doctest'
             import doctest
             doctest.testfile(migrscript, module_relative=False,
                              optionflags=doctest.ELLIPSIS, globs=scriptlocals)
+        self._context_stack.pop()
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""
@@ -345,10 +391,8 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             cubes = (cubes,)
         origcubes = self.config.cubes()
         newcubes = [p for p in self.config.expand_cubes(cubes)
-                       if not p in origcubes]
+                    if not p in origcubes]
         if newcubes:
-            for cube in cubes:
-                assert cube in newcubes
             self.config.add_cubes(newcubes)
         return newcubes
 
@@ -410,8 +454,8 @@ class ConfigurationProblem(object):
     """
 
     def __init__(self, config):
-        self.cubes = {}
         self.config = config
+        self.cubes = {'cubicweb': cwcfg.cubicweb_version()}
 
     def add_cube(self, name, version):
         self.cubes[name] = version
@@ -419,44 +463,50 @@ class ConfigurationProblem(object):
     def solve(self):
         self.warnings = []
         self.errors = []
-        self.read_constraints()
-        for cube, versions in sorted(self.constraints.items()):
-            oper, version = None, None
-            # simplify constraints
-            if versions:
-                for constraint in versions:
-                    op, ver = constraint
-                    if oper is None:
-                        oper = op
-                        version = ver
-                    elif op == '>=' and oper == '>=':
-                        version = max_version(ver, version)
-                    else:
-                        print 'unable to handle this case', oper, version, op, ver
-            # "solve" constraint satisfaction problem
-            if cube not in self.cubes:
-                self.errors.append( ('add', cube, version) )
-            elif versions:
-                lower_strict = version_strictly_lower(self.cubes[cube], version)
-                if oper in ('>=','='):
-                    if lower_strict:
-                        self.errors.append( ('update', cube, version) )
-                else:
-                    print 'unknown operator', oper
-
-    def read_constraints(self):
+        self.dependencies = {}
+        self.reverse_dependencies = {}
         self.constraints = {}
-        self.reverse_constraints = {}
+        # read dependencies
         for cube in self.cubes:
-            use = self.config.cube_dependencies(cube)
-            for name, constraint in use.iteritems():
-                self.constraints.setdefault(name,set())
+            if cube == 'cubicweb': continue
+            self.dependencies[cube] = dict(self.config.cube_dependencies(cube))
+            self.dependencies[cube]['cubicweb'] = self.config.cube_depends_cubicweb_version(cube)
+        # compute reverse dependencies
+        for cube, dependencies in self.dependencies.iteritems():
+            for name, constraint in dependencies.iteritems():
+                self.reverse_dependencies.setdefault(name,set())
                 if constraint:
                     try:
                         oper, version = constraint.split()
-                        self.constraints[name].add( (oper, version) )
+                        self.reverse_dependencies[name].add( (oper, version, cube) )
                     except:
                         self.warnings.append(
                             'cube %s depends on %s but constraint badly '
                             'formatted: %s' % (cube, name, constraint))
-                self.reverse_constraints.setdefault(name, set()).add(cube)
+        # check consistency
+        for cube, versions in sorted(self.reverse_dependencies.items()):
+            oper, version, source = None, None, None
+            # simplify constraints
+            if versions:
+                for constraint in versions:
+                    op, ver, src = constraint
+                    if oper is None:
+                        oper = op
+                        version = ver
+                        source = src
+                    elif op == '>=' and oper == '>=':
+                        if version_strictly_lower(version, ver):
+                            version = ver
+                            source = src
+                    else:
+                        print 'unable to handle this case', oper, version, op, ver
+            # "solve" constraint satisfaction problem
+            if cube not in self.cubes:
+                self.errors.append( ('add', cube, version, source) )
+            elif versions:
+                lower_strict = version_strictly_lower(self.cubes[cube], version)
+                if oper in ('>=','='):
+                    if lower_strict:
+                        self.errors.append( ('update', cube, version, source) )
+                else:
+                    print 'unknown operator', oper

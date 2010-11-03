@@ -1,3 +1,5 @@
+.. _webform:
+
 HTML form construction
 ----------------------
 
