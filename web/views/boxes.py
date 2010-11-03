@@ -170,9 +170,10 @@ class PossibleViewsBox(component.CtxComponent):
     """display a box containing links to all possible views"""
     __regid__ = 'possible_views_box'
 
-    visible = False
+    contextual = True
     title = _('possible views')
     order = 10
+    visible = False # disabled by default
 
     def init_rendering(self):
         self.views = [v for v in self._cw.vreg['views'].possible_views(self._cw,
@@ -195,9 +196,10 @@ class StartupViewsBox(PossibleViewsBox):
     """display a box containing links to all startup views"""
     __regid__ = 'startup_views_box'
 
-    visible = False # disabled by default
+    contextual = False
     title = _('startup views')
     order = 70
+    visible = False # disabled by default
 
     def init_rendering(self):
         self.views = [v for v in self._cw.vreg['views'].possible_views(self._cw)
