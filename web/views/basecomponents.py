@@ -90,6 +90,7 @@ class ApplLogo(HeaderComponent):
     """build the instance logo, usually displayed in the header"""
     __regid__ = 'logo'
     order = -1
+    context = _('header-left')
 
     def render(self, w):
         w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
