@@ -1120,9 +1120,13 @@ class Repository(object):
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 if scleanup:
                     # source cleaning: only delete relations stored locally
-                    rql += ', NOT Y cw_source S, S name %(source)s'
-                session.execute(rql, {'x': eid, 'source': sourceuri},
-                                build_descr=False)
+                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                try:
+                    session.execute(rql, {'x': eid, 'source': sourceuri},
+                                    build_descr=False)
+                except:
+                    self.exception('error while cascading delete for entity %s '
+                                   'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
     def locate_relation_source(self, session, subject, rtype, object):
