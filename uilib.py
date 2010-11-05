@@ -147,11 +147,9 @@ try:
         # remove spurious </body> and </html> tags, then normalize line break
         # (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1)
         data = REM_ROOT_HTML_TAGS.sub('', u'\n'.join(data.splitlines()))
-        # XXX lxml 1.1 support still needed ?
         xmltree = etree.HTML(CLEANER.clean_html('<div>%s</div>' % data))
-        # NOTE: lxml 1.1 (etch platforms) doesn't recognize
-        #       the encoding=unicode parameter (lxml 2.0 does), this is
-        #       why we specify an encoding and re-decode to unicode later
+        # NOTE: lxml 2.0 does support encoding='unicode', but last time I (syt)
+        # tried I got weird results (lxml 2.2.8)
         body = etree.tostring(xmltree[0], encoding=encoding)
         # remove <body> and </body> and decode to unicode
         snippet = body[6:-7].decode(encoding)
