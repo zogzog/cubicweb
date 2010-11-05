@@ -342,6 +342,16 @@ def ureport_as_html(layout):
 
 import traceback
 
+def exc_message(ex, encoding):
+    try:
+        return unicode(ex)
+    except:
+        try:
+            return unicode(str(ex), encoding, 'replace')
+        except:
+            return unicode(repr(ex), encoding, 'replace')
+
+
 def rest_traceback(info, exception):
     """return a ReST formated traceback"""
     res = [u'Traceback\n---------\n::\n']
