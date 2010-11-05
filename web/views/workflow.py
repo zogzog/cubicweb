@@ -80,7 +80,9 @@ _afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 # IWorkflowable views #########################################################
 
 class ChangeStateForm(forms.CompositeEntityForm):
-    __regid__ = 'changestate'
+    # set dom id to ensure there is no conflict with edition form (see
+    # session_key() implementation)
+    __regid__ = domid = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
     form_buttons = [fwdgs.SubmitButton(),
