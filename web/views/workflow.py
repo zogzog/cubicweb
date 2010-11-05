@@ -104,7 +104,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
             'st1': entity.cw_adapt_to('IWorkflowable').printable_state,
             'st2': self._cw._(transition.destination(entity).name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.render())
+        form.render(w=self.w)
 
     def redirectpath(self, entity):
         return entity.rest_path()
