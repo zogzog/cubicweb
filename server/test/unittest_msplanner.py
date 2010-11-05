@@ -811,7 +811,8 @@ class MSPlannerTC(BaseMSPlannerTC):
         # use a guest user
         self.session = self.user_groups_session('guests')
         ueid = self.session.user.eid
-        # note: same as the above query but because of the subquery usage, the display differs (not printing solutions for each union)
+        # note: same as the above query but because of the subquery usage, the
+        # display differs (not printing solutions for each union)
         self._test('Any X LIMIT 10 OFFSET 10 WHERE X has_text "bla"',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                       [self.cards, self.system], None, {'E': 'table1.C0'}, []),
@@ -1938,7 +1939,6 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_3_2(self):
         self.skipTest('oops')
-        self.set_debug('DBG_MS')
         self._test('Any STN WHERE X is Note, X type XT, X in_state ST, ST name STN, X cw_source S, S name "cards"',
                    [('OneFetchStep',
                      [('Any X,XT WHERE X is Card, X title XT',
