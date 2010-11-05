@@ -24,8 +24,8 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
 from cubicweb.selectors import is_instance, one_line_rset
-from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web import action, component, uicfg, formwidgets as fw
+from cubicweb.web import (action, component, uicfg, htmlwidgets,
+                          formwidgets as fw)
 from cubicweb.web.views import primary
 
 _abaa = uicfg.actionbox_appearsin_addmenu
@@ -105,7 +105,7 @@ class BookmarksBox(component.CtxComponent):
                 label = '<div>%s %s</div>' % (dlink, label)
             self.append(label)
         if self.can_edit:
-            menu = BoxMenu(req._('manage bookmarks'))
+            menu = htmlwidgets.BoxMenu(req._('manage bookmarks'))
             linkto = 'bookmarked_by:%s:subject' % ueid
             # use a relative path so that we can move the instance without
             # loosing bookmarks

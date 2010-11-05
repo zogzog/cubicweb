@@ -201,6 +201,7 @@ class RepeatList(object):
     def pop(self, i):
         self._size -= 1
 
+
 class UStringIO(list):
     """a file wrapper which automatically encode unicode string to an encoding
     specifed in the constructor

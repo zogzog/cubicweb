@@ -253,6 +253,7 @@ def optional_kwargs(extraargs):
     # we receive unicode keys which is not supported by the **syntax
     return dict((str(key), value) for key, value in extraargs.iteritems())
 
+
 class JSonController(Controller):
     __regid__ = 'json'
 
