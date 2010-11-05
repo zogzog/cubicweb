@@ -54,7 +54,7 @@ class TimeTableView(EntityView):
         for row in xrange(self.cw_rset.rowcount):
             task = self.cw_rset.get_entity(row, 0)
             icalendarable = task.cw_adapt_to('ICalendarable')
-            if len(self.cw_rset[row]) > 1:
+            if len(self.cw_rset[row]) > 1 and self.cw_rset.description[row][1] == 'CWUser':
                 user = self.cw_rset.get_entity(row, 1)
             else:
                 user = ALL_USERS
