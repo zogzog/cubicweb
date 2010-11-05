@@ -888,7 +888,9 @@ class EditableURLWidget(FieldWidget):
         values = {}
         path = req.form.get(field.input_name(form, 'path'))
         if isinstance(path, basestring):
-            path = path.strip() or None
+            path = path.strip()
+        if path is None:
+            path = u''
         fqs = req.form.get(field.input_name(form, 'fqs'))
         if isinstance(fqs, basestring):
             fqs = fqs.strip() or None
