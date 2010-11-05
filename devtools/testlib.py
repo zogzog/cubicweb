@@ -661,6 +661,13 @@ class CubicWebTC(TestCase):
 
     # content validation #######################################################
 
+    def assertDocTestFile(self, testfile):
+        # doctest returns tuple (failure_count, test_count)
+        result = self.shell.process_script(testfile)
+        if result[0] and result[1]:
+            raise self.failureException("doctest file '%s' failed"
+                                        % testfile)
+
     # validators are used to validate (XML, DTD, whatever) view's content
     # validators availables are :
     #  DTDValidator : validates XML + declared DTD

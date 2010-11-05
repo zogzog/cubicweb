@@ -358,8 +358,10 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             self.commit()
         else: # script_mode == 'doctest'
             import doctest
-            doctest.testfile(migrscript, module_relative=False,
-                             optionflags=doctest.ELLIPSIS, globs=scriptlocals)
+            return doctest.testfile(migrscript, module_relative=False,
+                                    optionflags=doctest.ELLIPSIS,
+                                    encoding='utf-8',
+                                    globs=scriptlocals)
         self._context_stack.pop()
 
     def cmd_option_renamed(self, oldname, newname):
