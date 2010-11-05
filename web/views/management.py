@@ -24,7 +24,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView, View
-from cubicweb.uilib import html_traceback, rest_traceback
+from cubicweb.uilib import html_traceback, rest_traceback, exc_message
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.views.schema import SecurityViewMixIn
@@ -219,15 +219,6 @@ class ErrorView(AnyRsetView):
             form.action = req.build_url('reportbug')
             form.render(w=w)
 
-
-def exc_message(ex, encoding):
-    try:
-        return unicode(ex)
-    except:
-        try:
-            return unicode(str(ex), encoding, 'replace')
-        except:
-            return unicode(repr(ex), encoding, 'replace')
 
 def text_error_description(ex, excinfo, req, eversion, cubes):
     binfo = rest_traceback(excinfo, xml_escape(ex))

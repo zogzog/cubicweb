@@ -140,13 +140,7 @@ class AbstractAuthenticationManager(component.Component):
 
 
 class CookieSessionHandler(object):
-    """a session handler using a cookie to store the session identifier
-
-    :cvar SESSION_VAR:
-      string giving the name of the variable used to store the session
-      identifier
-    """
-    SESSION_VAR = '__session'
+    """a session handler using a cookie to store the session identifier"""
 
     def __init__(self, appli):
         self.vreg = appli.vreg
@@ -180,6 +174,14 @@ class CookieSessionHandler(object):
         """
         self.session_manager.clean_sessions()
 
+    def session_cookie(self, req):
+        """return a string giving the name of the cookie used to store the
+        session identifier.
+        """
+        if req.https:
+            return '__%s_https_session' % self.vreg.config.appid
+        return '__%s_session' % self.vreg.config.appid
+
     def set_session(self, req):
         """associate a session to the request
 
@@ -193,8 +195,9 @@ class CookieSessionHandler(object):
         :raise Redirect: if authentication has occurred and succeed
         """
         cookie = req.get_cookie()
+        sessioncookie = self.session_cookie(req)
         try:
-            sessionid = str(cookie[self.SESSION_VAR].value)
+            sessionid = str(cookie[sessioncookie].value)
         except KeyError: # no session cookie
             session = self.open_session(req)
         else:
@@ -206,7 +209,7 @@ class CookieSessionHandler(object):
                 try:
                     session = self.open_session(req)
                 except AuthenticationError:
-                    req.remove_cookie(cookie, self.SESSION_VAR)
+                    req.remove_cookie(cookie, sessioncookie)
                     raise
 
     def get_session(self, req, sessionid):
@@ -215,10 +218,11 @@ class CookieSessionHandler(object):
     def open_session(self, req):
         session = self.session_manager.open_session(req)
         cookie = req.get_cookie()
-        cookie[self.SESSION_VAR] = session.sessionid
+        sessioncookie = self.session_cookie(req)
+        cookie[sessioncookie] = session.sessionid
         if req.https and req.base_url().startswith('https://'):
-            cookie[self.SESSION_VAR]['secure'] = True
-        req.set_cookie(cookie, self.SESSION_VAR, maxage=None)
+            cookie[sessioncookie]['secure'] = True
+        req.set_cookie(cookie, sessioncookie, maxage=None)
         if not session.anonymous_session:
             self._postlogin(req)
         return session
@@ -265,7 +269,8 @@ class CookieSessionHandler(object):
         `AuthenticationError`
         """
         self.session_manager.close_session(req.session)
-        req.remove_cookie(req.get_cookie(), self.SESSION_VAR)
+        sessioncookie = self.session_cookie(req)
+        req.remove_cookie(req.get_cookie(), sessioncookie)
         raise LogOut(url=goto_url)
 
 

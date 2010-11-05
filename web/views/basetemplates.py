@@ -339,8 +339,7 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         w = self.w
         w(u'<table id="header"><tr>\n')
-        for colid, context in (('firstcolumn', 'header-left'),
-                               ('headtext', 'header-center'),
+        for colid, context in (('headtext', 'header-left'),
                                ('header-right', 'header-right'),
                                ):
             w(u'<td id="%s">' % colid)

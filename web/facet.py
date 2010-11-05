@@ -709,9 +709,18 @@ class RelationFacet(VocabularyFacet):
             subj = self.filtered_variable.name
             obj = utils.rqlvar_maker(defined=self.rqlst.defined_vars,
                                      aliases=self.rqlst.aliases).next()
-        rql = 'Any %s LIMIT 1 WHERE NOT %s %s %s, %s' % (
-            self.filtered_variable.name, subj, self.rtype, obj,
-            self.rqlst.where.as_string())
+        restrictions = []
+        if self.rqlst.where:
+            restrictions.append(self.rqlst.where.as_string())
+        if self.rqlst.with_:
+            restrictions.append('WITH ' + ','.join(
+                term.as_string() for term in self.rqlst.with_))
+        if restrictions:
+            restrictions = ',' + ','.join(restrictions)
+        else:
+            restrictions = ''
+        rql = 'Any %s LIMIT 1 WHERE NOT %s %s %s%s' % (
+            self.filtered_variable.name, subj, self.rtype, obj, restrictions)
         try:
             return bool(self.rqlexec(rql, self.cw_rset and self.cw_rset.args))
         except:

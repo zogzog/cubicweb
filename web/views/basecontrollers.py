@@ -27,6 +27,7 @@ from logilab.common.date import strptime
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
 from cubicweb.utils import UStringIO, json, json_dumps
+from cubicweb.uilib import exc_message
 from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
 from cubicweb.mail import format_mail
 from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse
@@ -252,6 +253,7 @@ def optional_kwargs(extraargs):
     # we receive unicode keys which is not supported by the **syntax
     return dict((str(key), value) for key, value in extraargs.iteritems())
 
+
 class JSonController(Controller):
     __regid__ = 'json'
 
@@ -281,15 +283,15 @@ class JSonController(Controller):
         except ValueError, exc:
             self.exception('error while decoding json arguments for js_%s: %s',
                            fname, args, exc)
-            raise RemoteCallFailed(repr(exc))
+            raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         try:
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
             raise
-        except Exception, ex:
+        except Exception, exc:
             self.exception('an exception occurred while calling js_%s(%s): %s',
-                           fname, args, ex)
-            raise RemoteCallFailed(repr(ex))
+                           fname, args, exc)
+            raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         if result is None:
             return ''
         # get unicode on @htmlize methods, encoded string on @jsonize methods

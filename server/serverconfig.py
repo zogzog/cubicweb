@@ -297,7 +297,12 @@ and if not set, it will be choosen randomly',
                 _sconfig = SourceConfiguration(
                     self, options=SOURCE_TYPES['native'].options)
                 for attr, val in sconfig.items():
-                    _sconfig.set_option(attr, val)
+                    try:
+                        _sconfig.set_option(attr, val)
+                    except lgconfig.OptionError:
+                        # skip adapter, may be present on pre 3.10 instances
+                        if attr != 'adapter':
+                            self.error('skip unknown option %s in sources file')
                 sconfig = _sconfig
             print >> stream, '[%s]' % section
             print >> stream, generate_source_config(sconfig)

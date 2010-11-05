@@ -235,9 +235,9 @@ class ListCommand(Command):
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
                     cfgpb.add_cube(cube, tversion)
-                except ConfigurationError:
+                except ConfigurationError, ex:
                     tinfo = None
-                    tversion = '[missing cube information]'
+                    tversion = '[missing cube information: %s]' % ex
                 print '* %s %s' % (cube.ljust(namesize), tversion)
                 if self.config.verbose:
                     if tinfo:

@@ -20,9 +20,15 @@
 
 __docformat__ = "restructuredtext en"
 
+
+import pkg_resources
 from logilab.common.testlib import TestCase, unittest_main
+from unittest2 import skipIf
 
 from cubicweb import uilib
+
+lxml_version = pkg_resources.get_distribution('lxml').version.split('.')
+
 
 class UILIBTC(TestCase):
 
@@ -91,7 +97,15 @@ quis nostrud exercitation ullamco laboris nisi"),
             got = uilib.text_cut(text, 30)
             self.assertEqual(got, expected)
 
+    def test_soup2xhtml_0(self):
+        self.assertEqual(uilib.soup2xhtml('hop\r\nhop', 'ascii'),
+                          'hop\nhop')
+
     def test_soup2xhtml_1_1(self):
+        self.assertEqual(uilib.soup2xhtml('hop', 'ascii'),
+                          'hop')
+        self.assertEqual(uilib.soup2xhtml('hop<div>', 'ascii'),
+                          'hop<div/>')
         self.assertEqual(uilib.soup2xhtml('hop <div>', 'ascii'),
                           'hop <div/>')
         self.assertEqual(uilib.soup2xhtml('<div> hop', 'ascii'),
@@ -115,11 +129,14 @@ quis nostrud exercitation ullamco laboris nisi"),
         self.assertEqual(uilib.soup2xhtml('hop <body> hop', 'ascii'),
                           'hop  hop')
 
-    def test_soup2xhtml_2_2(self):
+    def test_soup2xhtml_2_2a(self):
         self.assertEqual(uilib.soup2xhtml('hop </body>', 'ascii'),
                           'hop ')
         self.assertEqual(uilib.soup2xhtml('</body> hop', 'ascii'),
                           ' hop')
+
+    @skipIf(lxml_version < ['2', '2'], 'expected behaviour on recent version of lxml only')
+    def test_soup2xhtml_2_2b(self):
         self.assertEqual(uilib.soup2xhtml('hop </body> hop', 'ascii'),
                           'hop  hop')
 
@@ -139,6 +156,10 @@ quis nostrud exercitation ullamco laboris nisi"),
         self.assertEqual(uilib.soup2xhtml('hop </html> hop', 'ascii'),
                           'hop  hop')
 
+    def test_soup2xhtml_3_3(self):
+        self.assertEqual(uilib.soup2xhtml('<script>test</script> hop ', 'ascii'),
+                          ' hop ')
+
     def test_js(self):
         self.assertEqual(str(uilib.js.pouet(1, "2")),
                           'pouet(1,"2")')
@@ -146,6 +167,23 @@ quis nostrud exercitation ullamco laboris nisi"),
                           'cw.pouet(1,"2")')
         self.assertEqual(str(uilib.js.cw.pouet(1, "2").pouet(None)),
                           'cw.pouet(1,"2").pouet(null)')
+
+    def test_embedded_css(self):
+        incoming = u"""voir le ticket <style type="text/css">@font-face { font-family: "Cambria"; }p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0cm 0cm 10pt; font-size: 12pt; font-family: "Times New Roman"; }a:link, span.MsoHyperlink { color: blue; text-decoration: underline; }a:visited, span.MsoHyperlinkFollowed { color: purple; text-decoration: underline; }div.Section1 { page: Section1; }</style></p><p class="MsoNormal">text</p>"""
+        expected = 'voir le ticket <p class="MsoNormal">text</p>'
+        self.assertMultiLineEqual(uilib.soup2xhtml(incoming, 'ascii'), expected)
+
+    def test_unknown_namespace(self):
+        incoming = '''<table cellspacing="0" cellpadding="0" width="81" border="0" x:str="" style="width: 61pt; border-collapse: collapse">
+<colgroup><col width="81" style="width: 61pt; mso-width-source: userset; mso-width-alt: 2962"/></colgroup>
+<tbody><tr height="17" style="height: 12.75pt"><td width="81" height="17" style="border-right: #e0dfe3; border-top: #e0dfe3; border-left: #e0dfe3; width: 61pt; border-bottom: #e0dfe3; height: 12.75pt; background-color: transparent"><font size="2">XXXXXXX</font></td></tr></tbody>
+</table>'''
+        expected = '''<table cellspacing="0" cellpadding="0" width="81" border="0">\
+<colgroup><col width="81"/></colgroup>\
+<tbody><tr height="17"><td width="81" height="17">XXXXXXX</td></tr></tbody>\
+</table>'''
+        self.assertMultiLineEqual(uilib.soup2xhtml(incoming, 'ascii'), expected)
+
 
 if __name__ == '__main__':
     unittest_main()

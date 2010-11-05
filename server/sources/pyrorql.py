@@ -255,7 +255,7 @@ repository (default to 5 minutes).',
         try:
             for etype, extid in modified:
                 try:
-                    eid = self.local_eid(cnx, extid, session)
+                    eid = self.local_eid(cnx, extid, session)[0]
                     if eid is not None:
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)

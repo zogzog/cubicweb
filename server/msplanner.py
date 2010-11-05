@@ -745,6 +745,15 @@ class PartPlanInformation(object):
                                                and self._need_ext_source_access(term, rel):
                                             self.needsplit = True
                                             return
+        else:
+            # remove sources only accessing to constant nodes
+            for source, terms in self._sourcesterms.items():
+                if source is self.system_source:
+                    continue
+                if not any(x for x in terms if not isinstance(x, Constant)):
+                    del self._sourcesterms[source]
+            if len(self._sourcesterms) < 2:
+                self.needsplit = False
 
     @cached
     def _need_ext_source_access(self, var, rel):

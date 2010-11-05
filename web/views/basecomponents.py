@@ -80,10 +80,10 @@ class HeaderComponent(component.CtxComponent): # XXX rename properly along with 
     __abstract__ = True
     cw_property_defs = component.override_ctx(
         component.CtxComponent,
-        vocabulary=['header-left', 'header-center', 'header-right'])
+        vocabulary=['header-left', 'header-right'])
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    context = _('header-center')
+    context = _('header-left')
 
 
 class ApplLogo(HeaderComponent):
@@ -99,7 +99,6 @@ class ApplLogo(HeaderComponent):
 class ApplicationName(HeaderComponent):
     """display the instance name"""
     __regid__ = 'appliname'
-    context = _('header-center')
 
     def render(self, w):
         title = self._cw.property_value('ui.site-title')

@@ -22,6 +22,7 @@ This module contains functions to initialize a new repository.
 
 __docformat__ = "restructuredtext en"
 
+from copy import deepcopy
 from pprint import pprint
 
 from logilab.common.decorators import clear_cache
@@ -388,6 +389,11 @@ def _choose_term(self, sourceterms):
                 return x.value
     return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
 
+from cubicweb.server.sources.pyrorql import PyroRQLSource
+_orig_syntax_tree_search = PyroRQLSource.syntax_tree_search
+
+def _syntax_tree_search(*args, **kwargs):
+    return deepcopy(_orig_syntax_tree_search(*args, **kwargs))
 
 def do_monkey_patch():
     RQLRewriter.insert_snippets = _insert_snippets
@@ -397,6 +403,7 @@ def do_monkey_patch():
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
     PartPlanInformation._choose_term = _choose_term
+    PyroRQLSource.syntax_tree_search = _syntax_tree_search
 
 def undo_monkey_patch():
     RQLRewriter.insert_snippets = _orig_insert_snippets
@@ -405,3 +412,4 @@ def undo_monkey_patch():
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
     PartPlanInformation._choose_term = _orig_choose_term
+    PyroRQLSource.syntax_tree_search = _orig_syntax_tree_search

@@ -811,7 +811,8 @@ class MSPlannerTC(BaseMSPlannerTC):
         # use a guest user
         self.session = self.user_groups_session('guests')
         ueid = self.session.user.eid
-        # note: same as the above query but because of the subquery usage, the display differs (not printing solutions for each union)
+        # note: same as the above query but because of the subquery usage, the
+        # display differs (not printing solutions for each union)
         self._test('Any X LIMIT 10 OFFSET 10 WHERE X has_text "bla"',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                       [self.cards, self.system], None, {'E': 'table1.C0'}, []),
@@ -1709,6 +1710,18 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ],
                    {'x': ueid, 'y': ueid})
 
+    def test_delete_relation3(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self._test('DELETE Y multisource_inlined_rel X WHERE X eid %(x)s, NOT (Y cw_source S, S name %(source)s)',
+                   [('DeleteRelationsStep',
+                     [('OneFetchStep',
+                       [('Any Y,999999 WHERE Y multisource_inlined_rel 999999, NOT EXISTS(Y cw_source S, S name "cards"), S is CWSource, Y is IN(Card, Note)',
+                         [{'S': 'CWSource', 'Y': 'Card'}, {'S': 'CWSource', 'Y': 'Note'}])],
+                       None, None, [self.system], {},
+                       [])]
+                     )],
+                   {'x': 999999, 'source': 'cards'})
+
     def test_delete_entity1(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('DELETE Note X WHERE X eid %(x)s, NOT Y multisource_rel X',
@@ -1926,7 +1939,6 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_specified_3_2(self):
         self.skipTest('oops')
-        self.set_debug('DBG_MS')
         self._test('Any STN WHERE X is Note, X type XT, X in_state ST, ST name STN, X cw_source S, S name "cards"',
                    [('OneFetchStep',
                      [('Any X,XT WHERE X is Card, X title XT',

@@ -24,6 +24,8 @@ from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entities import fetch_config
+from cubicweb.uilib import soup2xhtml
+
 
 class EntityTC(CubicWebTC):
 
@@ -412,24 +414,14 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(e.printable_value('content'), u'hop\nhop\nhip\nmomo')
 
     def test_printable_value_bad_html_ms(self):
-        self.skipTest('fix soup2xhtml to handle this test')
         req = self.request()
         e = req.create_entity('Card', title=u'bad html', content=u'<div>R&D<br>',
                             content_format=u'text/html')
         tidy = lambda x: x.replace('\n', '')
         e.cw_attr_cache['content'] = u'<div x:foo="bar">ms orifice produces weird html</div>'
-        self.assertEqual(tidy(e.printable_value('content')),
-                          u'<div>ms orifice produces weird html</div>')
-        import tidy as tidymod # apt-get install python-tidy
-        tidy = lambda x: str(tidymod.parseString(x.encode('utf-8'),
-                                                 **{'drop_proprietary_attributes': True,
-                                                    'output_xhtml': True,
-                                                    'show_body_only' : True,
-                                                    'quote-nbsp' : False,
-                                                    'char_encoding' : 'utf8'})).decode('utf-8').strip()
-        self.assertEqual(tidy(e.printable_value('content')),
-                          u'<div>ms orifice produces weird html</div>')
-
+        # Caution! current implementation of soup2xhtml strips first div element
+        content = soup2xhtml(e.printable_value('content'), 'utf-8')
+        self.assertMultiLineEqual(content, u'<div>ms orifice produces weird html</div>')
 
     def test_fulltextindex(self):
         e = self.vreg['etypes'].etype_class('File')(self.request())
