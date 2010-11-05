@@ -1461,7 +1461,7 @@ class ServerMigrationHelper(MigrationHelper):
         return res
 
     def rqliter(self, rql, kwargs=None, ask_confirm=True):
-        return ForRqlIterator(self, rql, None, ask_confirm)
+        return ForRqlIterator(self, rql, kwargs, ask_confirm)
 
     # broken db commands ######################################################
 
