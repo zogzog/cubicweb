@@ -190,7 +190,7 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
 
     def available_languages(self, *args):
-        return ('en', 'fr', 'de')
+        return ('en', 'fr', 'de', 'es')
 
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
