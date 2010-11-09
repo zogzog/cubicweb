@@ -739,10 +739,8 @@ class CubicWebTC(TestCase):
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
                   encapsulation the generated HTML
         """
-        output = None
         try:
             output = viewfunc(**kwargs)
-            return self._check_html(output, view, template)
         except (SystemExit, KeyboardInterrupt):
             raise
         except:
@@ -753,22 +751,8 @@ class CubicWebTC(TestCase):
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
-            msg = str(msg) # ensure no unicode
-            if output is not None:
-                position = getattr(exc, "position", (0,))[0]
-                if position:
-                    # define filter
-                    output = output.splitlines()
-                    width = int(log(len(output), 10)) + 1
-                    line_template = " %" + ("%i" % width) + "i: %s"
-                    # XXX no need to iterate the whole file except to get
-                    # the line number
-                    output = '\n'.join(line_template % (idx + 1, line)
-                                for idx, line in enumerate(output)
-                                if line_context_filter(idx+1, position))
-                    msg += '\nfor output:\n%s' % output
             raise AssertionError, msg, tcbk
-
+        return self._check_html(output, view, template)
 
     @nocoverage
     def _check_html(self, output, view, template='main-template'):
@@ -792,7 +776,44 @@ class CubicWebTC(TestCase):
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
             output = re.sub('<canvas.*?></canvas>', '', output)
-        return validator.parse_string(output.strip())
+        return self.assertWellFormed(validator, output.strip(), context= view.__regid__)
+
+    def assertWellFormed(self, validator, content, context=None):
+        try:
+            return validator.parse_string(content)
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except:
+            # hijack exception: generative tests stop when the exception
+            # is not an AssertionError
+            klass, exc, tcbk = sys.exc_info()
+            if context is None:
+                msg = u'[%s]' % (klass,)
+            else:
+                msg = u'[%s in %s]' % (klass, context)
+            msg = msg.encode(sys.getdefaultencoding(), 'replace')
+
+            try:
+                str_exc = str(exc)
+            except:
+                str_exc = 'undisplayable exception'
+            msg += str_exc
+            if content is not None:
+                position = getattr(exc, "position", (0,))[0]
+                if position:
+                    # define filter
+                    if isinstance(content, str):
+                        content = unicode(content, sys.getdefaultencoding(), 'replace')
+                    content = content.splitlines()
+                    width = int(log(len(content), 10)) + 1
+                    line_template = " %" + ("%i" % width) + "i: %s"
+                    # XXX no need to iterate the whole file except to get
+                    # the line number
+                    content = u'\n'.join(line_template % (idx + 1, line)
+                                         for idx, line in enumerate(content)
+                                         if line_context_filter(idx+1, position))
+                    msg += u'\nfor content:\n%s' % content
+            raise AssertionError, msg, tcbk
 
     # deprecated ###############################################################
 
