@@ -34,6 +34,18 @@ cubicweb (3.10.0-1) unstable; urgency=low
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 13 Oct 2010 22:18:39 +0200
 
+cubicweb (3.9.9-3) unstable; urgency=low
+
+  * cubicweb-common must actually include shared/i18n folder
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 23 Nov 2010 16:18:46 +0200
+
+cubicweb (3.9.9-2) unstable; urgency=low
+
+  * fix cubicweb-common content
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 23 Nov 2010 14:00:46 +0200
+
 cubicweb (3.9.9-1) unstable; urgency=low
 
   * new upstream release
