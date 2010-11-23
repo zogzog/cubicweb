@@ -41,7 +41,9 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_install -vi
 	# cwctl in the cubicweb-ctl package
 	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/cwctl.py
-
+        # wdoc in the cubicweb-web package
+	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/wdoc
+	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/data
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
