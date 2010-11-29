@@ -361,6 +361,9 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             import doctest
             return doctest.testfile(migrscript, module_relative=False,
                                     optionflags=doctest.ELLIPSIS,
+                                    # verbose mode when user input is expected
+                                    verbose=self.verbosity==2,
+                                    report=True,
                                     encoding='utf-8',
                                     globs=scriptlocals)
         self._context_stack.pop()
