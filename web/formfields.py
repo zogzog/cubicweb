@@ -428,7 +428,9 @@ class Field(object):
                 vocab[i] = option
         return vocab
 
-    def format(self, form):
+    # support field as argument to avoid warning when used as format field value
+    # callback
+    def format(self, form, field=None):
         """return MIME type used for the given (text or bytes) field"""
         if self.eidparam and self.role == 'subject':
             entity = form.edited_entity

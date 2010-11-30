@@ -550,7 +550,7 @@ class ResetAdminPasswordCommand(Command):
 
 
 class StartRepositoryCommand(Command):
-    """Start an CubicWeb RQL server for a given instance.
+    """Start a CubicWeb RQL server for a given instance.
 
     The server will be accessible through pyro
 

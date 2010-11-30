@@ -184,6 +184,7 @@ class CubicWebTC(TestCase):
     * `repo`, the repository object
     * `admlogin`, login of the admin user
     * `admpassword`, password of the admin user
+    * `shell`, create and use shell environment
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
@@ -290,6 +291,14 @@ class CubicWebTC(TestCase):
     def adminsession(self):
         """return current server side session (using default manager account)"""
         return self.repo._sessions[self._orig_cnx[0].sessionid]
+
+    def shell(self):
+        """return a shell session object"""
+        from cubicweb.server.migractions import ServerMigrationHelper
+        return ServerMigrationHelper(None, repo=self.repo, cnx=self.cnx,
+                                     interactive=False,
+                                     # hack so it don't try to load fs schema
+                                     schema=1)
 
     def set_option(self, optname, value):
         self.config.global_set_option(optname, value)
@@ -663,7 +672,7 @@ class CubicWebTC(TestCase):
 
     def assertDocTestFile(self, testfile):
         # doctest returns tuple (failure_count, test_count)
-        result = self.shell.process_script(testfile)
+        result = self.shell().process_script(testfile)
         if result[0] and result[1]:
             raise self.failureException("doctest file '%s' failed"
                                         % testfile)

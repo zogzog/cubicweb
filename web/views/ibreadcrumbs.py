@@ -112,6 +112,7 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
     __select__ = (basecomponents.HeaderComponent.__select__
                   & one_line_rset() & adaptable('IBreadCrumbs'))
     order = basecomponents.ApplicationName.order + 1
+    context = basecomponents.ApplicationName.context
     separator = u'&#160;&gt;&#160;'
     link_template = u'<a href="%s">%s</a>'
     first_separator = True

@@ -328,6 +328,8 @@ class HTMLPageHeader(View):
     """default html page header"""
     __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
+    headers = (('headtext', 'header-left'),
+               ('header-right', 'header-right'))
 
     def call(self, view, **kwargs):
         self.main_header(view)
@@ -339,9 +341,7 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         w = self.w
         w(u'<table id="header"><tr>\n')
-        for colid, context in (('headtext', 'header-left'),
-                               ('header-right', 'header-right'),
-                               ):
+        for colid, context in self.headers:
             w(u'<td id="%s">' % colid)
             components = self._cw.vreg['ctxcomponents'].poss_visible_objects(
                 self._cw, rset=self.cw_rset, view=view, context=context)

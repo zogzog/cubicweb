@@ -57,11 +57,15 @@ class DownloadBox(component.EntityCtxComponent):
     order = 10
     title = _('download')
 
+    def init_rendering(self):
+        self.items = [self.entity]
+
     def render_body(self, w):
-        w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
-          % (xml_escape(self.entity.cw_adapt_to('IDownloadable').download_url()),
-             self._cw.uiprops['DOWNLOAD_ICON'],
-             self._cw._('download icon'), xml_escape(self.entity.dc_title())))
+        for item in self.items:
+            w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
+              % (xml_escape(item.cw_adapt_to('IDownloadable').download_url()),
+                 self._cw.uiprops['DOWNLOAD_ICON'],
+                 self._cw._('download icon'), xml_escape(item.dc_title())))
 
 
 class DownloadView(EntityView):

@@ -167,6 +167,8 @@ e4dba8ae963701a36be94ae58c790bc97ba029bb cubicweb-debian-version-3.9.8-1
 49f1226f2fab6d9ff17eb27d5a66732a4e5b5add cubicweb-debian-version-3.10.4-1
 df0b2de62cec10c84a2fff5233db05852cbffe93 cubicweb-version-3.9.9
 1ba51b00fc44faa0d6d57448000aaa1fd5c6ab57 cubicweb-debian-version-3.9.9-1
+b7db1f59355832a409d2032e19c84cfffdb3b265 cubicweb-debian-version-3.9.9-2
+09c98763ae9d43616d047c1b25d82b4e41a4362f cubicweb-debian-version-3.9.9-3
 3829498510a754b1b8a40582cb8dcbca9145fc9d cubicweb-version-3.10.4
 d73733479a3af453f06b849ed88d120784ce9224 cubicweb-version-3.10.4
 49f1226f2fab6d9ff17eb27d5a66732a4e5b5add cubicweb-debian-version-3.10.4-1
