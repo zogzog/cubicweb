@@ -8,9 +8,25 @@ Installation and set-up of a *CubicWeb* environment
 Installation of `Cubicweb` and its dependencies
 -----------------------------------------------
 
-|cubicweb| is packaged for Debian and Ubuntu, but can be installed from source
-using a tarball or the Mercurial version control system.
+|cubicweb| is packaged for `Debian and Ubuntu`_, is `pip installable`_ and
+`easy_install installable`_. It can be installed from source using a tarball_
+or the `Mercurial version control system`_ . Windows user may want to check the
+`Windows Installation`_ section.
 
+Since version 3.9, |cubicweb| is virtualenv friendly and can be safely
+installed, used and contained inside a `virtualenv`_.
+
+
+.. _`Debian and Ubuntu` : DebianInstallation_
+.. _`pip installable`: PipInstallation_
+.. _`easy_install installable`: EasyInstallInstallation_
+.. _tarball: TarballInstallation_
+.. _`Mercurial version control system`: MercurialInstallation_
+.. _`Windows Installation`: WindowsInstallation_
+.. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
+
+
+.. file:///home/pyves/tmp/cwdoc/html/admin/setup.html#pipinstallation
 
 .. _DebianInstallation:
 
@@ -36,7 +52,7 @@ For Ubuntu Hardy::
 You can now install the required packages with the following command::
 
   apt-get update
-  apt-get install cubicweb cubicweb-dev
+  apt-get install cubicweb cubicweb-dev.
 
 
 `cubicweb` installs the framework itself, allowing you to create new instances.
@@ -47,12 +63,12 @@ cubes.
 .. note::
 
    `cubicweb-dev` will install basic sqlite support. You can easily setup
-   `cubicweb with other database`_ with the following virtual packages :
+   `cubicweb with other database`_ using the following virtual packages :
    `cubicweb-postgresql-support` contains necessary dependency for using
    `cubicweb with postgresql datatabase`_ and `cubicweb-mysql-support` contains
    necessary dependency for using `cubicweb with mysql database`_ .
 
-There is also a wide variety of cubes listed on the `CubicWeb.org Forge`_
+There is also a wide variety of :ref:`cubes <Cubes>` listed on the `CubicWeb.org Forge`_
 available as debian packages and tarball.
 
 The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
@@ -75,24 +91,83 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
 Installation with pip
 `````````````````````
 
-|cubicweb| and its cubes have been pip_ installable since version 3.8. Search
+pip_ is a smart python utility that lets you automatically download, build,
+install, and manage python packages and their dependencies.
+
+|cubicweb| and its cubes have been pip_ installable since version 3.9. Search
 for them on pypi_::
 
   pip install cubicweb
+  pip install cubicweb-blog
+
+.. note::
+
+    Pip is the recommended way to install |cubicweb| if there is no binary
+    package available on your system or you want to install it inside a
+    `virtualenv`_. However pip doesn't install binary package and may require
+    several compilation steps while installing |cubicweb| dependencies. If you
+    don't have a compilation environment you should use  `easy_install
+    installation`_ to install |cubicweb|.
+
+    Once, |cubicweb| is installed, this limitation doesn't apply when installing
+    cubes.
+
 
 .. _pip: http://pypi.python.org/pypi/pip
 .. _pypi: http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb
+.. _`easy_install installation`: EasyInstallInstallation_
 
-.. _SourceInstallation:
 
 .. warning::
 
-  This method may still have hiccups. If it does not work for you,
-  please consider installing from version control system
-  (:ref:`MercurialInstallation`).
+  |cubicweb| depends upon the `lxml` python module. This module contains ``C``
+  code that must be compiled.  To successfully install |cubicweb| with pip, you
+  must either have an environment ables to compile Python ``C`` extensions or
+  preinstall lxml from a binary package.
+
+.. note::
+
+  For better performance the setup processor will compile a ``C`` extension for
+  the :ref:`RQL <RQL>` language if you have an environment ables to compile
+  Python ``C`` extensions and the `gecode library`_.  Otherwise, a pure python
+  alternative will be used for degraded performance.
+
+.. _`gecode library`: http://www.gecode.org/
+.. _`easy_install`:   http://packages.python.org/distribute/easy_install.html
+
+
+.. _EasyInstallInstallation:
+
+Installation with EasyInstall
+``````````````````````````````
+
+.. note::
+
+    We don't recommend the use of `easy_install` and setuptools in the generic
+    case. However as easy_install is currently the sole pure python package
+    system that support binary installation. Using `easy_install` is currently
+    the easiest way to install |cubicweb| when you don't have a compilation
+    environment set-up or Debian based distribution.
+
+
+|cubicweb| is easy_install_ installable for version 3.9::
+
+  easy_install cubicweb
+
+.. warning::
+
+    Cubes are **not** is easy_install_ installable. But they are
+    `pip installable`_
+
+
+
+
+.. _SourceInstallation:
 
 Install from source
 ```````````````````
+
+.. _TarballInstallation:
 
 You can download the archive containing the sources from our `ftp site`_ at::
 
@@ -428,7 +503,7 @@ To install the tsearch plain-text index extension on postgres prior to 8.3, run:
 
 MySql configuration
 ```````````````````
-Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
+You must add the following lines in ``/etc/mysql/my.cnf`` file::
 
     transaction-isolation=READ-COMMITTED
     default-storage-engine=INNODB
@@ -482,7 +557,7 @@ anything for db-user and db-password, they will be ignore anyway.
 Pyro configuration
 ------------------
 
-If you want to use Pyro to access your instance remotly, or to have multi-source
+If you want to use Pyro to access your instance remotely, or to have multi-source
 or distributed configuration, it is required to have a Pyro name server running
 on your network. By default it is detected by a broadcast request, but you can
 specify a location in the instance's configuration file.
