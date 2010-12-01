@@ -13,8 +13,8 @@ Installation of `Cubicweb` and its dependencies
 or the `Mercurial version control system`_ . Windows user may want to check the
 `Windows Installation`_ section.
 
-Since version 3.9, |cubicweb| is virtualenv friendly and can be safely
-installed, used and contained inside a `virtualenv`_.
+Also, since version 3.9, can be safely installed, used and contained inside a
+`virtualenv`_.
 
 
 .. _`Debian and Ubuntu` : DebianInstallation_
@@ -52,7 +52,7 @@ For Ubuntu Hardy::
 You can now install the required packages with the following command::
 
   apt-get update
-  apt-get install cubicweb cubicweb-dev.
+  apt-get install cubicweb cubicweb-dev
 
 
 `cubicweb` installs the framework itself, allowing you to create new instances.
