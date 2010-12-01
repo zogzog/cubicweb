@@ -109,7 +109,7 @@ Install from version control system
 
 You can keep up to date with on-going development by using Mercurial::
 
-  hg clone http://www.logilab.org/hg/forests/cubicweb
+  hg clone http://hg.logilab.org/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
 
