@@ -590,7 +590,7 @@ class Repository(object):
         sources = {}
         # remove sensitive information
         for uri, source in self.sources_by_uri.iteritems():
-            sources[uri] = source.cfg
+            sources[uri] = source.public_config
         return sources
 
     def properties(self):

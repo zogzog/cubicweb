@@ -109,8 +109,8 @@ class AbstractSource(object):
         self.set_schema(repo.schema)
         self.support_relations['identity'] = False
         self.eid = None
-        self.cfg = source_config.copy()
-        self.remove_sensitive_information(self.cfg)
+        self.public_config = source_config.copy()
+        self.remove_sensitive_information(self.public_config)
 
     def init_creating(self):
         """method called by the repository once ready to create a new instance"""
