@@ -44,6 +44,14 @@ You can now install the required packages with the following command::
 `cubicweb-dev` installs the development environment allowing you to develop new
 cubes.
 
+.. note::
+
+   `cubicweb-dev` will install basic sqlite support. You can easily setup
+   `cubicweb with other database`_ with the following virtual packages :
+   `cubicweb-postgresql-support` contains necessary dependency for using
+   `cubicweb with postgresql datatabase`_ and `cubicweb-mysql-support` contains
+   necessary dependency for using `cubicweb with mysql database`_ .
+
 There is also a wide variety of cubes listed on the `CubicWeb.org Forge`_
 available as debian packages and tarball.
 
@@ -57,6 +65,9 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
 
 .. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
+.. _`cubicweb with other database`: DatabaseInstallation_
+.. _`cubicweb with postgresql datatabase` : PostgresqlConfiguration_
+.. _`cubicweb with mysql database` : MySqlConfiguration_
 
 
 .. _PipInstallation:
