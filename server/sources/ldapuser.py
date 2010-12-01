@@ -199,14 +199,15 @@ directory (default to once a day).',
         self._cache = {}
         self._query_cache = TimedCache(self._cache_ttl)
 
-    def init(self):
+    def init(self, activated, session=None):
         """method called by the repository once ready to handle request"""
-        self.info('ldap init')
-        # set minimum period of 5min 1s (the additional second is to minimize
-        # resonnance effet)
-        self.repo.looping_task(max(301, self._interval), self.synchronize)
-        self.repo.looping_task(self._cache_ttl // 10,
-                               self._query_cache.clear_expired)
+        if activated:
+            self.info('ldap init')
+            # set minimum period of 5min 1s (the additional second is to
+            # minimize resonnance effet)
+            self.repo.looping_task(max(301, self._interval), self.synchronize)
+            self.repo.looping_task(self._cache_ttl // 10,
+                                   self._query_cache.clear_expired)
 
     def synchronize(self):
         """synchronize content known by this repository with content in the

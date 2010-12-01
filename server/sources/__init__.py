@@ -116,8 +116,10 @@ class AbstractSource(object):
         """method called by the repository once ready to create a new instance"""
         pass
 
-    def init(self):
-        """method called by the repository once ready to handle request"""
+    def init(self, activated, session=None):
+        """method called by the repository once ready to handle request.
+        `activated` is a boolean flag telling if the source is activated or not.
+        """
         pass
 
     def backup(self, backupfile, confirm):
@@ -146,7 +148,7 @@ class AbstractSource(object):
         pass
 
     def __repr__(self):
-        return '<%s source @%#x>' % (self.uri, id(self))
+        return '<%s source %s @%#x>' % (self.uri, self.eid, id(self))
 
     def __cmp__(self, other):
         """simple comparison function to get predictable source order, with the

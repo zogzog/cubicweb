@@ -295,14 +295,19 @@ class cw_source(RelationDefinition):
 class cw_support(RelationDefinition):
     subject = 'CWSource'
     object = ('CWEType', 'CWRType')
+    constraints = [RQLConstraint('NOT O final TRUE')]
 
 class cw_dont_cross(RelationDefinition):
     subject = 'CWSource'
     object = 'CWRType'
+    constraints = [RQLConstraint('NOT O final TRUE'),
+                   RQLConstraint('NOT S cw_may_cross O')]
 
 class cw_may_cross(RelationDefinition):
     subject = 'CWSource'
     object = 'CWRType'
+    constraints = [RQLConstraint('NOT O final TRUE'),
+                   RQLConstraint('NOT S cw_dont_cross O')]
 
 # "abtract" relation types, no definition in cubicweb itself ###################
 

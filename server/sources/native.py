@@ -326,17 +326,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """execute the query and return its result"""
         return self.process_result(self.doexec(session, sql, args))
 
-    def init_creating(self):
-        pool = self.repo._get_pool()
-        pool.pool_set()
+    def init_creating(self, pool=None):
         # check full text index availibility
         if self.do_fti:
-            if not self.dbhelper.has_fti_table(pool['system']):
+            if pool is None:
+                _pool = self.repo._get_pool()
+                _pool.pool_set()
+            else:
+                _pool = pool
+            if not self.dbhelper.has_fti_table(_pool['system']):
                 if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
-        pool.pool_reset()
-        self.repo._free_pool(pool)
+            if pool is None:
+                _pool.pool_reset()
+                self.repo._free_pool(_pool)
 
     def backup(self, backupfile, confirm):
         """method called to create a backup of the source's data"""
@@ -356,8 +360,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if self.repo.config.open_connections_pools:
                 self.open_pool_connections()
 
-    def init(self):
-        self.init_creating()
+    def init(self, activated, session=None):
+        self.init_creating(session and session.pool)
 
     def shutdown(self):
         if self._eid_creation_cnx:

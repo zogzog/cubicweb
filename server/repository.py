@@ -211,8 +211,8 @@ class Repository(object):
             # needed (for instance looking for persistent configuration using an
             # internal session, which is not possible until pools have been
             # initialized)
-            for source in self.sources:
-                source.init()
+            for source in self.sources_by_uri.itervalues():
+                source.init(source in self.sources)
         else:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
@@ -263,11 +263,14 @@ class Repository(object):
         self.sources_by_eid[sourceent.eid] = source
         self.sources_by_uri[sourceent.name] = source
         if self.config.source_enabled(source):
+            source.init(True, session=sourceent._cw)
             self.sources.append(source)
             self.querier.set_planner()
             if add_to_pools:
                 for pool in self.pools:
                     pool.add_source(source)
+        else:
+            source.init(False, session=sourceent._cw)
         self._clear_planning_caches()
 
     def remove_source(self, uri):
