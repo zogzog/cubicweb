@@ -39,6 +39,7 @@ from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
+from logilab.common.shellutils import getlogin
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, devtools, web, server
@@ -223,13 +224,7 @@ class CubicWebTC(TestCase):
         # set default-dest-addrs to a dumb email address to avoid mailbox or
         # mail queue pollution
         config.global_set_option('default-dest-addrs', ['whatever'])
-        try:
-            send_to =  '%s@logilab.fr' % os.getlogin()
-            # AttributeError since getlogin not available under all platforms
-        except (OSError, AttributeError):
-            send_to =  '%s@logilab.fr' % (os.environ.get('USER')
-                                          or os.environ.get('USERNAME')
-                                          or os.environ.get('LOGNAME'))
+        send_to =  '%s@logilab.fr' % getlogin()
         config.global_set_option('sender-addr', send_to)
         config.global_set_option('default-dest-addrs', send_to)
         config.global_set_option('sender-name', 'cubicweb-test')

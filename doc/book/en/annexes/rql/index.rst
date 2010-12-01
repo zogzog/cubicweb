@@ -1,3 +1,5 @@
+.. _RQLChapter
+
 Relation Query Language (RQL)
 =============================
 
