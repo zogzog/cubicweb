@@ -550,6 +550,7 @@ class GenericRelationsField(ff.Field):
         pending_inserts = set(get_pending_inserts(form._cw, form.edited_entity.eid))
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
+            pendingid = 'id' + pendingid
             if typed_eid(eidfrom) == entity.eid: # subject
                 label = display_name(form._cw, rtype, 'subject',
                                      entity.__regid__)
