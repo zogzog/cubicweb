@@ -11,7 +11,7 @@
 /**
  * .. function:: setPropValueWidget(varname, tabindex)
  *
- * called on Eproperty key selection:
+ * called on CWProperty key selection:
  * - get the selected value
  * - get a widget according to the key by a sync query to the server
  * - fill associated div with the returned html
@@ -66,11 +66,11 @@ function showMatchingSelect(selectedValue, eid) {
                 relation: selectedValue,
                 rql: rql_for_eid(eid),
                 '__notemplate': 1,
-                callback: function() {
-                    _showMatchingSelect(eid, jQuery('#' + divId));
-                }
             };
-            jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
+            var d = jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
+            d.addCallback(function() {
+                _showMatchingSelect(eid, jQuery('#' + divId));
+            });
         } else {
             _showMatchingSelect(eid, divNode);
         }
