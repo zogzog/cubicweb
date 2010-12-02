@@ -209,7 +209,7 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
         }
     }
     elementId = elementId.substring(2, elementId.length);
-    loadRemote('json', ajaxFuncArgs('remove_pending_inserts', null,
+    loadRemote('json', ajaxFuncArgs('remove_pending_insert', null,
                                     elementId.split(':')), 'GET', true);
 }
 
