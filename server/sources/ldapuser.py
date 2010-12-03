@@ -126,6 +126,12 @@ to respond to rql queries).',
           'help': 'classes of user',
           'group': 'ldap-source', 'level': 1,
           }),
+        ('user-filter',
+         {'type': 'string',
+          'default': '',
+          'help': 'additional filters to be set in the ldap query to find valid users',
+          'group': 'ldap-source', 'level': 2,
+          }),
         ('user-login-attr',
          {'type' : 'string',
           'default': 'uid',
@@ -178,11 +184,11 @@ directory (default to once a day).',
         self.user_login_attr = source_config['user-login-attr']
         self.user_default_groups = splitstrip(source_config['user-default-group'])
         self.user_attrs = dict(v.split(':', 1) for v in splitstrip(source_config['user-attrs-map']))
+        self.user_filter = source_config['user-filter']
         self.user_rev_attrs = {'eid': 'dn'}
         for ldapattr, cwattr in self.user_attrs.items():
             self.user_rev_attrs[cwattr] = ldapattr
-        self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
-                              for o in self.user_classes]
+        self.base_filters = self._make_base_filters()
         self._conn = None
         self._cache = {}
         # ttlm is in minutes!
@@ -194,6 +200,10 @@ directory (default to once a day).',
         self._interval = time_validator(None, None,
                                     source_config.get('synchronization-interval',
                                                       24*60*60))
+
+    def _make_base_filters(self):
+        return [filter_format('(%s=%s)', ('objectClass', o))
+                              for o in self.user_classes] + [self.user_filter]
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -284,8 +294,7 @@ directory (default to once a day).',
             # we really really don't want that
             raise AuthenticationError()
         searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
-        searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
-                             for o in self.user_classes])
+        searchfilter.extend(self._make_base_filters())
         searchstr = '(&%s)' % ''.join(searchfilter)
         # first search the user
         try:
