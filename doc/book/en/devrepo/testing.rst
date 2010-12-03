@@ -343,6 +343,60 @@ It is also possible to add a ``schema.py`` file in
 therefore making new entity types and relations available to the
 tests. 
 
+Literate programming
+--------------------
+
+CubicWeb provides some literate programming capabilities. The :ref:`cubicweb-ctl`
+`shell` command accepts differents format files. If your file ends with `.txt`
+or `.rst`, the file will be parsed by :mod:`doctest.testfile` with CubicWeb
+:ref:`migration` API enabled in it.
+
+Create a `scenario.txt` file into `test/` directory and fill with some content.
+Please refer the :mod:`doctest.testfile` `documentation`_.
+
+.. _documentation: http://docs.python.org/library/doctest.html
+
+Then, you can run it directly by::
+
+    $ cubicweb-ctl shell <cube_instance> test/scenario.txt
+
+When your scenario file is ready, put it in a new test case to be able to run
+it automatically.
+
+.. sourcecode:: python
+
+      from os.path import dirname, join
+      from logilab.common.testlib import unittest_main
+      from cubicweb.devtools.testlib import CubicWebTC
+
+      class AcceptanceTC(CubicWebTC):
+
+              def test_scenario(self):
+                      self.assertDocTestFile(join(dirname(__file__), 'scenario.txt'))
+
+      if __name__ == '__main__':
+              unittest_main()
+
+Skipping a scenario
+```````````````````
+
+If you want to set up initial conditions that you can't put in your unit test
+case, you have to use a :exc:`KeyboardInterrupt` exception only because of the
+way :mod:`doctest` module will catch all the exceptions internally.
+
+    >>> if condition_not_met:
+    ...     raise KeyboardInterrupt('please, check your fixture.')
+
+Passing paramaters
+``````````````````
+Using extra arguments to parametrize your scenario is possible by prepend them
+by double dashes.
+
+Please refer to the `cubicweb-ctl shell --help` usage.
+
+.. important::
+    Your scenario file must be utf-8 encoded.
+
 Test APIS
 ---------
 
