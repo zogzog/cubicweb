@@ -89,8 +89,11 @@ class TestServerConfiguration(ServerConfiguration):
         ServerConfiguration.options +
         tuple((opt, optdict) for opt, optdict in TwistedConfiguration.options
               if opt in ('anonymous-user', 'anonymous-password')))
+    # By default anonymous login are allow but some test need to deny of to
+    # change the default user. Set it to None to prevent anonymous login.
+    anonymous_credential = ('anon', 'anon')
 
-    def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
+    def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
             if exists(appid):
@@ -112,8 +115,10 @@ class TestServerConfiguration(ServerConfiguration):
 
     def load_configuration(self):
         super(TestServerConfiguration, self).load_configuration()
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
+        if self.anonymous_credential:
+            user, password = self.anonymous_credential
+            self.global_set_option('anonymous-user', user)
+            self.global_set_option('anonymous-password', password)
         # no undo support in tests
         self.global_set_option('undo-support', '')
 
