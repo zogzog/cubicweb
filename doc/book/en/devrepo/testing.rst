@@ -292,6 +292,27 @@ mechanism. These are:
   Take care to not let the imported `AutomaticWebTest` in your test module
   namespace, else both your subclass *and* this parent class will be run.
 
+Cache heavy database setup
+-------------------------------
+
+Some tests suite require a complex setup of the database that takes seconds (or
+event minutes) to complete. Doing the whole setup for all individual tests make
+the whole run very slow. The ``CubicWebTC`` class offer a simple way to prepare
+specific database once for multiple tests. The `test_db_id` class attribute of
+your ``CubicWebTC`` must be set a unique identifier and the
+:meth:`pre_setup_database` class method build the cached content. As the
+:meth:`pre_setup_database` method is not grantee to be called, you must not set
+any class attribut to be used during test there.  Databases for each `test_db_id`
+are automatically created if not already in cache.  Clearing the cache is up to
+the user. Cache files are found in the :file:`data/database` subdirectory of your
+test directory.
+
+.. warning::
+
+  Take care to always have the same :meth:`pre_setup_database` function for all
+  call with a given `test_db_id` otherwise you test will have unpredictable
+  result given the first encountered one.
+
 Testing on a real-life database
 -------------------------------
 

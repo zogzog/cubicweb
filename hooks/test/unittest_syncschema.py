@@ -30,18 +30,10 @@ def tearDownModule(*args):
 class SchemaModificationHooksTC(CubicWebTC):
     reset_schema = True
 
-    @classmethod
-    def init_config(cls, config):
-        super(SchemaModificationHooksTC, cls).init_config(config)
-        # we have to read schema from the database to get eid for schema entities
-        config._cubes = None
-        cls.repo.fill_schema()
-        cls.schema_eids = schema_eids_idx(cls.repo.schema)
-
-    @classmethod
-    def _refresh_repo(cls):
-        super(SchemaModificationHooksTC, cls)._refresh_repo()
-        restore_schema_eids_idx(cls.repo.schema, cls.schema_eids)
+    def setUp(self):
+        super(SchemaModificationHooksTC, self).setUp()
+        self.repo.fill_schema()
+        self.__class__.schema_eids = schema_eids_idx(self.repo.schema)
 
     def index_exists(self, etype, attr, unique=False):
         self.session.set_pool()

@@ -30,13 +30,12 @@ class BaseSecurityTC(CubicWebTC):
     def setup_database(self):
         super(BaseSecurityTC, self).setup_database()
         self.create_user('iaminusersgrouponly')
-        self.readoriggroups = self.schema['Personne'].permissions['read']
-        self.addoriggroups = self.schema['Personne'].permissions['add']
-
-    def tearDown(self):
-        CubicWebTC.tearDown(self)
-        self.schema['Personne'].set_action_permissions('read', self.readoriggroups)
-        self.schema['Personne'].set_action_permissions('add', self.addoriggroups)
+        readoriggroups = self.schema['Personne'].permissions['read']
+        addoriggroups = self.schema['Personne'].permissions['add']
+        def fix_perm():
+            self.schema['Personne'].set_action_permissions('read', readoriggroups)
+            self.schema['Personne'].set_action_permissions('add', addoriggroups)
+        self.addCleanup(fix_perm)
 
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
