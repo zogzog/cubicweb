@@ -567,6 +567,8 @@ class JQueryDatePicker(FieldWidget):
 
     def _render(self, form, field, renderer):
         req = form._cw
+        if req.lang != 'en':
+            req.add_js('jquery.ui.datepicker-%s.js' % req.lang)
         domid = field.dom_id(form, self.suffix)
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
