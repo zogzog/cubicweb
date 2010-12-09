@@ -282,13 +282,15 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.session.vreg.schema.rename_entity_type(oldname, newname)
         # we need sql to operate physical changes on the system database
         sqlexec = self.session.system_sql
-        sqlexec('ALTER TABLE %s%s RENAME TO %s%s' % (SQL_PREFIX, oldname,
-                                                     SQL_PREFIX, newname))
+        dbhelper= self.session.pool.source('system').dbhelper
+        sql = dbhelper.sql_rename_table(SQL_PREFIX+oldname,
+                                        SQL_PREFIX+newname)
+        sqlexec(sql)
         self.info('renamed table %s to %s', oldname, newname)
-        sqlexec('UPDATE entities SET type=%s WHERE type=%s',
-                (newname, oldname))
-        sqlexec('UPDATE deleted_entities SET type=%s WHERE type=%s',
-                (newname, oldname))
+        sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
+                {'newname': newname, 'oldname': oldname))
+        sqlexec('UPDATE deleted_entities SET type=%(newname)s WHERE type=%(oldname)s',
+                {'newname': newname, 'oldname': oldname))
         # XXX transaction records
 
     def precommit_event(self):

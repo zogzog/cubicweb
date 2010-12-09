@@ -126,8 +126,9 @@ def deserialize_schema(schema, session):
                 sqlexec('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
                         % {'p': sqlutils.SQL_PREFIX}, {'x': eid, 'n': netype})
                 if etype.lower() != netype.lower():
-                    sqlexec('ALTER TABLE %s%s RENAME TO %s%s' % (
-                        sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))
+                    alter_table_sql = dbhelper.sql_rename_table(sqlutils.SQL_PREFIX+etype,
+                                                                sqlutils.SQL_PREFIX+netype)
+                    sqlexec(alter_table_sql)
             sqlexec('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
                     {'x': etype, 'n': netype})
             session.commit(False)
