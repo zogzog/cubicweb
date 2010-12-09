@@ -947,9 +947,6 @@ the repository',
     def __init__(self, appid, debugmode=False):
         self.appid = appid
         CubicWebNoAppConfiguration.__init__(self, debugmode)
-        fake_gettext = (unicode, lambda ctx, msgid: unicode(msgid))
-        for lang in self.available_languages():
-            self.translations[lang] = fake_gettext
         self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
