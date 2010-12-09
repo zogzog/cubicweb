@@ -184,7 +184,7 @@ directory (default to once a day).',
         self.user_login_attr = source_config['user-login-attr']
         self.user_default_groups = splitstrip(source_config['user-default-group'])
         self.user_attrs = dict(v.split(':', 1) for v in splitstrip(source_config['user-attrs-map']))
-        self.user_filter = source_config['user-filter']
+        self.user_filter = source_config.get('user-filter')
         self.user_rev_attrs = {'eid': 'dn'}
         for ldapattr, cwattr in self.user_attrs.items():
             self.user_rev_attrs[cwattr] = ldapattr
@@ -202,8 +202,11 @@ directory (default to once a day).',
                                                       24*60*60))
 
     def _make_base_filters(self):
-        return [filter_format('(%s=%s)', ('objectClass', o))
-                              for o in self.user_classes] + [self.user_filter]
+        filters =  [filter_format('(%s=%s)', ('objectClass', o))
+                              for o in self.user_classes] 
+        if self.user_filter:
+            filters += [self.user_filter]
+        return filters
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
