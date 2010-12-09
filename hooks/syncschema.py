@@ -288,9 +288,9 @@ class CWETypeRenameOp(MemSchemaOperation):
         sqlexec(sql)
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
-                {'newname': newname, 'oldname': oldname))
+                {'newname': newname, 'oldname': oldname})
         sqlexec('UPDATE deleted_entities SET type=%(newname)s WHERE type=%(oldname)s',
-                {'newname': newname, 'oldname': oldname))
+                {'newname': newname, 'oldname': oldname})
         # XXX transaction records
 
     def precommit_event(self):
