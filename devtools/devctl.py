@@ -26,7 +26,7 @@ __docformat__ = "restructuredtext en"
 # completion). So import locally in command helpers.
 import sys
 from datetime import datetime
-from os import mkdir, chdir, listdir, path as osp
+from os import mkdir, chdir, path as osp
 from warnings import warn
 
 from logilab.common import STD_BLACKLIST
@@ -34,6 +34,7 @@ from logilab.common import STD_BLACKLIST
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
 from cubicweb.cwctl import CWCTL
+from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.toolsutils import (SKEL_EXCLUDE, Command, copy_skeleton,
                                  underline_title)
 from cubicweb.web.webconfig import WebConfiguration
@@ -64,6 +65,10 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
     @property
     def apphome(self):
         return None
+
+    def available_languages(self):
+        return self.cw_languages()
+
     def main_config_file(self):
         return None
     def init_log(self):
@@ -263,11 +268,6 @@ msgstr ""
 
 ''' % cubicwebversion
 
-def cw_languages():
-    for fname in listdir(osp.join(WebConfiguration.i18n_lib_dir())):
-        if fname.endswith('.po'):
-            yield osp.splitext(fname)[0]
-
 
 class UpdateCubicWebCatalogCommand(Command):
     """Update i18n catalogs for cubicweb library.
@@ -329,7 +329,7 @@ class UpdateCubicWebCatalogCommand(Command):
         print '-> merging main pot file with existing translations.'
         chdir(cwi18ndir)
         toedit = []
-        for lang in cw_languages():
+        for lang in CubicWebNoAppConfiguration.cw_languages():
             target = '%s.po' % lang
             execute('msgmerge -N --sort-output -o "%snew" "%s" "%s"'
                     % (target, target, cubicwebpot))
@@ -444,7 +444,7 @@ def update_cube_catalogs(cubedir):
     print '-> merging main pot file with existing translations:'
     chdir('i18n')
     toedit = []
-    for lang in cw_languages():
+    for lang in CubicWebNoAppConfiguration.cw_languages():
         print '-> language', lang
         cubepo = '%s.po' % lang
         if not osp.exists(cubepo):

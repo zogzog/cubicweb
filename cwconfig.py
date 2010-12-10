@@ -141,7 +141,7 @@ import logging
 from smtplib import SMTP
 from threading import Lock
 from os.path import (exists, join, expanduser, abspath, normpath,
-                     basename, isdir, dirname)
+                     basename, isdir, dirname, splitext)
 from warnings import warn
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
@@ -397,6 +397,13 @@ this option is set to yes",
         if CWDEV:
             return join(CW_SOFTWARE_ROOT, 'i18n')
         return join(cls.shared_dir(), 'i18n')
+
+    @classmethod
+    def cw_languages(cls):
+        for fname in os.listdir(join(cls.i18n_lib_dir())):
+            if fname.endswith('.po'):
+                yield splitext(fname)[0]
+
 
     @classmethod
     def available_cubes(cls):
@@ -947,6 +954,9 @@ the repository',
     def __init__(self, appid, debugmode=False):
         self.appid = appid
         super(CubicWebConfiguration, self).__init__(debugmode)
+        fake_gettext = (unicode, lambda ctx, msgid: unicode(msgid))
+        for lang in self.available_languages():
+            self.translations[lang] = fake_gettext
         self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
