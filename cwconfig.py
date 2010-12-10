@@ -681,7 +681,7 @@ this option is set to yes",
 
     def __init__(self, debugmode=False):
         register_stored_procedures()
-        ConfigurationMixIn.__init__(self)
+        super(CubicWebNoAppConfiguration, self).__init__()
         self.debugmode = debugmode
         self.adjust_sys_path()
         self.load_defaults()
@@ -946,12 +946,12 @@ the repository',
 
     def __init__(self, appid, debugmode=False):
         self.appid = appid
-        CubicWebNoAppConfiguration.__init__(self, debugmode)
+        super(CubicWebConfiguration, self).__init__(debugmode)
         self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
     def adjust_sys_path(self):
-        CubicWebNoAppConfiguration.adjust_sys_path(self)
+        super(CubicWebConfiguration, self).adjust_sys_path()
         # adding apphome to python path is not usually necessary in production
         # environments, but necessary for tests
         if self.apphome and not self.apphome in sys.path:
@@ -1069,8 +1069,8 @@ the repository',
         if not force and hasattr(self, '_logging_initialized'):
             return
         self._logging_initialized = True
-        CubicWebNoAppConfiguration.init_log(self, logthreshold,
-                                            logfile=self.get('log-file'))
+        super_self = super(CubicWebConfiguration, self)
+        super_self.init_log(logthreshold, logfile=self.get('log-file'))
         # read a config file if it exists
         logconfig = join(self.apphome, 'logging.conf')
         if exists(logconfig):
