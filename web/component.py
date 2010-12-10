@@ -234,7 +234,7 @@ class CtxComponent(AppObject):
     # argument
     def render(self, w, **kwargs):
         if hasattr(self, 'call'):
-            warn('[3.10] should not anymore implements call on %s, see new CtxComponent api'
+            warn('[3.10] should not anymore implement call on %s, see new CtxComponent api'
                  % self.__class__, DeprecationWarning)
             self.w = w
             def wview(__vid, rset=None, __fallback_vid=None, **kwargs):
