@@ -142,7 +142,7 @@ class RequestSessionBase(object):
 
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
-        first = rql.split(' ', 1)[0].lower()
+        first = rql.split(None, 1)[0].lower()
         if first in ('insert', 'set', 'delete'):
             raise Unauthorized(self._('only select queries are authorized'))
 
