@@ -56,5 +56,17 @@ class RestTC(CubicWebTC):
 
 ''')
 
+
+    def test_rql_role_with_vid(self):
+        context = self.context()
+        out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:table`')
+        self.assert_(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a>'
+                                  '</td></tr></tbody></table></div>\n</div>\n</p>\n'))
+
+    def test_rql_role_without_vid(self):
+        context = self.context()
+        out = rest_publish(context, ':rql:`Any X WHERE X is CWUser`')
+        self.assertEqual(out, u'<p><h1>cwuser_plural</h1><div class="section"><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div><div class="section"><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div></p>\n')
+
 if __name__ == '__main__':
     unittest_main()
