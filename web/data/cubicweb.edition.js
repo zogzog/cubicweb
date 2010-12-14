@@ -65,7 +65,7 @@ function showMatchingSelect(selectedValue, eid) {
                 vid: 'unrelateddivs',
                 relation: selectedValue,
                 rql: rql_for_eid(eid),
-                '__notemplate': 1,
+                '__notemplate': 1
             };
             var d = jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
             d.addCallback(function() {
