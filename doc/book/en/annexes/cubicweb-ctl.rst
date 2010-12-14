@@ -89,7 +89,7 @@ Commands to maintain instances
 
 * ``upgrade``, launches the existing instances migration when a new version
   of *CubicWeb* or the cubes installed is available
-* ``shell``, opens a migration shell for manual maintenance of the instance
+* ``shell``, opens a (Python based) migration shell for manual maintenance of the instance
 * ``db-dump``, creates a dump of the system database
 * ``db-restore``, restores a dump of the system database
 * ``db-check``, checks data integrity of an instance. If the automatic correction
