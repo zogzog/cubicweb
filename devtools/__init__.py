@@ -24,7 +24,7 @@ import sys
 import logging
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
-                     isfile, isabs)
+                     isfile, isabs, splitext)
 
 from logilab.common.date import strptime
 from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig
@@ -181,7 +181,7 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
 
     def available_languages(self, *args):
-        return ('en', 'fr', 'de')
+        return self.cw_languages()
 
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
