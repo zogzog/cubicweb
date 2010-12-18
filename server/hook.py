@@ -747,7 +747,7 @@ class DataOperationMixIn(object):
                 MyOperation.get_instance(self._cw).add_data(self.entity)
 
 
-        class MyOperation(DataOperation, DataOperationMixIn):
+        class MyOperation(DataOperationMixIn, Operation):
             def precommit_event(self):
                 for bucket in self.get_data():
                     process(bucket)

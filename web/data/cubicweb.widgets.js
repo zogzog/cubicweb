@@ -91,6 +91,11 @@ function getJSON(url, data, callback) {
                 };
                 var hiHandlers = methods.hiddenInputHandlers;
                 $(this).data('cwautocomplete', instanceData);
+                // in case of an existing value, the hidden input must be initialized even if
+                // the value is not changed
+                if (($(instanceData.userInput).attr('cubicweb:initialvalue') !== undefined) && !instanceData.hiddenInput){
+                    hiHandlers.initializeHiddenInput(instanceData);
+                }
                 $.ui.autocomplete.prototype._search = methods.search;
                 if (settings.multiple) {
                     $.ui.autocomplete.filter = methods.multiple.makeFilter(this);

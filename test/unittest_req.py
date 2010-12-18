@@ -18,7 +18,7 @@
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.req import RequestSessionBase
 from cubicweb.devtools.testlib import CubicWebTC
-
+from cubicweb import Unauthorized
 
 class RebuildURLTC(TestCase):
     def test_rebuild_url(self):
@@ -42,6 +42,12 @@ class RebuildURLTC(TestCase):
         self.assertRaises(AssertionError, req.build_url, 'one', 'two not allowed')
         self.assertRaises(AssertionError, req.build_url, 'view', test=None)
 
+    def test_ensure_no_rql(self):
+        req = RequestSessionBase(None)
+        self.assertEqual(req.ensure_ro_rql('Any X WHERE X is CWUser'), None)
+        self.assertEqual(req.ensure_ro_rql('  Any X WHERE X is CWUser  '), None)
+        self.assertRaises(Unauthorized, req.ensure_ro_rql, 'SET X login "toto" WHERE X is CWUser')
+        self.assertRaises(Unauthorized, req.ensure_ro_rql, '   SET X login "toto" WHERE X is CWUser   ')
 
 if __name__ == '__main__':
     unittest_main()

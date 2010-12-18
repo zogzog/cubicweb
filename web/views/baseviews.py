@@ -188,7 +188,7 @@ class MetaDataView(EntityView):
     def cell_call(self, row, col):
         _ = self._cw._
         entity = self.cw_rset.get_entity(row, col)
-        self.w(u'<div class="metadata">')
+        self.w(u'<div>')
         if self.show_eid:
             self.w(u'%s #%s - ' % (entity.dc_type(), entity.eid))
         if entity.modification_date != entity.creation_date:

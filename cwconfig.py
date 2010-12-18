@@ -142,7 +142,7 @@ import logging
 from smtplib import SMTP
 from threading import Lock
 from os.path import (exists, join, expanduser, abspath, normpath,
-                     basename, isdir, dirname)
+                     basename, isdir, dirname, splitext)
 from warnings import warn
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
@@ -398,6 +398,13 @@ this option is set to yes",
         if CWDEV:
             return join(CW_SOFTWARE_ROOT, 'i18n')
         return join(cls.shared_dir(), 'i18n')
+
+    @classmethod
+    def cw_languages(cls):
+        for fname in os.listdir(join(cls.i18n_lib_dir())):
+            if fname.endswith('.po'):
+                yield splitext(fname)[0]
+
 
     @classmethod
     def available_cubes(cls):
@@ -682,8 +689,8 @@ this option is set to yes",
 
     def __init__(self, debugmode=False):
         register_stored_procedures()
-        ConfigurationMixIn.__init__(self)
         self._cubes = None
+        super(CubicWebNoAppConfiguration, self).__init__()
         self.debugmode = debugmode
         self.adjust_sys_path()
         self.load_defaults()
@@ -973,11 +980,15 @@ the repository',
 
     def __init__(self, appid, debugmode=False):
         self.appid = appid
-        CubicWebNoAppConfiguration.__init__(self, debugmode)
+        super(CubicWebConfiguration, self).__init__(debugmode)
+        fake_gettext = (unicode, lambda ctx, msgid: unicode(msgid))
+        for lang in self.available_languages():
+            self.translations[lang] = fake_gettext
+        self._cubes = None
         self.load_file_configuration(self.main_config_file())
 
     def adjust_sys_path(self):
-        CubicWebNoAppConfiguration.adjust_sys_path(self)
+        super(CubicWebConfiguration, self).adjust_sys_path()
         # adding apphome to python path is not usually necessary in production
         # environments, but necessary for tests
         if self.apphome and not self.apphome in sys.path:
@@ -1075,8 +1086,8 @@ the repository',
         if not force and hasattr(self, '_logging_initialized'):
             return
         self._logging_initialized = True
-        CubicWebNoAppConfiguration.init_log(self, logthreshold,
-                                            logfile=self.get('log-file'))
+        super_self = super(CubicWebConfiguration, self)
+        super_self.init_log(logthreshold, logfile=self.get('log-file'))
         # read a config file if it exists
         logconfig = join(self.apphome, 'logging.conf')
         if exists(logconfig):
