@@ -191,6 +191,8 @@ class FireTransitionHook(WorkflowHook):
             msg = session._('mandatory relation')
             raise ValidationError(entity.eid, {qname: msg})
         forentity = session.entity_from_eid(foreid)
+        # see comment in the TrInfo entity definition
+        entity.cw_edited['tr_count']=len(forentity.reverse_wf_info_for)
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
         # then check it has a workflow set, unless we're in the process of changing
         # entity's workflow

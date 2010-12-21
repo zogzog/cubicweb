@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            RichString, String)
+                            RichString, String, Int)
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
 from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
                               HOOKS_RTYPE_PERMS)
@@ -159,13 +159,21 @@ class TrInfo(EntityType):
         'delete': (), # XXX should we allow managers to delete TrInfo?
         'update': ('managers', 'owners',),
     }
-
-    from_state = SubjectRelation('State', cardinality='1*')
-    to_state = SubjectRelation('State', cardinality='1*')
+    # The unique_together constraint ensures that 2 repositories
+    # sharing the db won't be able to fire a transition simultaneously
+    # on the same entity tr_count is filled in the FireTransitionHook
+    # to the number of TrInfo attached to the entity on which we
+    # attempt to fire a transition. In other word, it contains the
+    # rank of the TrInfo for that entity, and the constraint says we
+    # cannot have 2 TrInfo with the same rank.
+    __unique_together__ = [('tr_count', 'wf_info_for')]
+    from_state = SubjectRelation('State', cardinality='1*', inlined=True)
+    to_state = SubjectRelation('State', cardinality='1*', inlined=True)
     # make by_transition optional because we want to allow managers to set
     # entity into an arbitrary state without having to respect wf transition
     by_transition = SubjectRelation('BaseTransition', cardinality='?*')
     comment = RichString(fulltextindexed=True)
+    tr_count = Int(description='autocomputed attribute used to ensure transition coherency')
     # get actor and date time using owned_by and creation_date
 
 class from_state(RelationType):
