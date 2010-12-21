@@ -484,5 +484,5 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
     def raise_user_exception(self):
         etype, rtypes = self.exc.args
         msg = self._cw._('violates unique_together constraints (%s)') % (
-            ', '.join(self._cw._(rtypes)))
+            ', '.join([self._cw._(rtype) for rtype in rtypes]))
         raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))
