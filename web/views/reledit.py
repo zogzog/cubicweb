@@ -78,7 +78,7 @@ class ClickAndEditFormView(EntityView):
         assert rtype
         assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
         self._cw.add_css('cubicweb.form.css')
-        self._cw.add_js('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js')
+        self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema[rtype]
         self._rules = rctrl.etype_get(entity.e_schema.type, rschema.type, role, '*')
