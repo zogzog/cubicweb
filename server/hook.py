@@ -105,17 +105,17 @@ Entity modification related events
 When called for one of these events, hook will have an `entity` attribute
 containing the entity instance.
 
-* 'before_add_entity', 'before_update_entity':
+* `before_add_entity`, `before_update_entity`:
 
   - on those events, you can check what attributes of the entity are modified in
     `entity.cw_edited` (by definition the database is not yet updated in a before
     event)
 
-  - you are allowed to further modify the entity before database operations,
-    using the dictionary notation. By doing this, you'll avoid the need for a
-    whole new rql query processing, the only difference is that the underlying
-    backend query (eg usually sql) will contains the additional data. For
-    example:
+  - you are allowed to further modify the entity before database
+    operations, using the dictionary notation on `cw_edited`. By doing
+    this, you'll avoid the need for a whole new rql query processing,
+    the only difference is that the underlying backend query (eg
+    usually sql) will contains the additional data. For example:
 
     .. sourcecode:: python
 
@@ -136,17 +136,17 @@ containing the entity instance.
     Similarly, removing an attribute from `cw_edited` will cancel its
     modification.
 
-  - on 'before_update_entity' event, you can access to old and new values in
+  - on `before_update_entity` event, you can access to old and new values in
     this hook, by using `entity.cw_edited.oldnewvalue(attr)`
 
 
-* 'after_add_entity', 'after_update_entity'
+* `after_add_entity`, `after_update_entity`
 
   - on those events, you can still check what attributes of the entity are
     modified in `entity.cw_edited` but you can't get anymore the old value, nor
     modify it.
 
-* 'before_delete_entity', 'after_delete_entity'
+* `before_delete_entity`, `after_delete_entity`
 
   - on those events, the entity has no `cw_edited` set.
 
@@ -158,11 +158,11 @@ When called for one of these events, hook will have `eidfrom`, `rtype`, `eidto`
 attributes containing respectivly the eid of the subject entity, the relation
 type and the eid of the object entity.
 
-* 'before_add_relation', 'before_delete_relation'
+* `before_add_relation`, `before_delete_relation`
 
   - on those events, you can still get original relation by issuing a rql query
 
-* 'after_add_relation', 'after_delete_relation'
+* `after_add_relation`, `after_delete_relation`
 
 This is an occasion to remind us that relations support the add / delete
 operation, but no update.
@@ -171,8 +171,8 @@ operation, but no update.
 Non data events
 ~~~~~~~~~~~~~~~
 
-Hooks called on server start/maintenance/stop event (eg 'server_startup',
-'server_maintenance', 'server_shutdown') have a `repo` attribute, but *their
+Hooks called on server start/maintenance/stop event (eg `server_startup`,
+`server_maintenance`, `server_shutdown`) have a `repo` attribute, but *their
 `_cw` attribute is None*.  The `server_startup` is called on regular startup,
 while `server_maintenance` is called on cubicweb-ctl upgrade or shell
 commands. `server_shutdown` is called anyway.
@@ -180,7 +180,7 @@ commands. `server_shutdown` is called anyway.
 Hooks called on backup/restore event (eg 'server_backup', 'server_restore') have
 a `repo` and a `timestamp` attributes, but *their `_cw` attribute is None*.
 
-Hooks called on session event (eg 'session_open', 'session_close') have no
+Hooks called on session event (eg `session_open`, `session_close`) have no
 special attribute.
 
 
@@ -400,7 +400,7 @@ class Hook(AppObject):
 
     .. Note::
 
-      Do not forget to extend the base class selectors as in ::
+      Do not forget to extend the base class selectors as in:
 
       .. sourcecode:: python
 
@@ -609,7 +609,7 @@ class Operation(object):
     An operation is triggered on connections pool events related to
     commit / rollback transations. Possible events are:
 
-    * 'precommit':
+    * `precommit`:
 
       the transaction is being prepared for commit. You can freely do any heavy
       computation, raise an exception if the commit can't go. or even add some
@@ -618,13 +618,13 @@ class Operation(object):
       instance), you'll have to support the 'revertprecommit' event to revert
       things by yourself
 
-    * 'revertprecommit':
+    * `revertprecommit`:
 
       if an operation failed while being pre-commited, this event is triggered
       for all operations which had their 'precommit' event already fired to let
       them revert things (including the operation which made the commit fail)
 
-    * 'rollback':
+    * `rollback`:
 
       the transaction has been either rollbacked either:
 
@@ -632,7 +632,7 @@ class Operation(object):
        * a 'precommit' event failed, in which case all operations are rollbacked
          once 'revertprecommit'' has been called
 
-    * 'postcommit':
+    * `postcommit`:
 
       the transaction is over. All the ORM entities accessed by the earlier
       transaction are invalid. If you need to work on the database, you need to
@@ -642,7 +642,7 @@ class Operation(object):
     For an operation to support an event, one has to implement the `<event
     name>_event` method with no arguments.
 
-    Notice order of operations may be important, and is controlled according to
+    The order of operations may be important, and is controlled according to
     the insert_index's method output (whose implementation vary according to the
     base hook class used).
     """
@@ -736,6 +736,7 @@ class DataOperationMixIn(object):
     `value`, since handling operations becomes costly on massive data import.
 
     Usage looks like:
+
     .. sourcecode:: python
 
         class MyEntityHook(Hook):

@@ -131,7 +131,7 @@ exceptions are usually programming errors.
 In the above example, our hook will instantiate an operation each time the hook
 is called, i.e. each time the `subsidiary_of` relation is set. There is an
 alternative method to schedule an operation from a hook, using the
-:func:`set_operation` function.
+:func:`get_instance` class method.
 
 .. sourcecode:: python
 
@@ -143,13 +143,12 @@ alternative method to schedule an operation from a hook, using the
        __select__ = Hook.__select__ & match_rtype('subsidiary_of')
 
        def __call__(self):
-           set_operation(self._cw, 'subsidiary_cycle_detection', self.eidto,
-                         CheckSubsidiaryCycleOp)
+           CheckSubsidiaryCycleOp.get_instance(self._cw).add_data(self.eidto)
 
    class CheckSubsidiaryCycleOp(Operation):
 
        def precommit_event(self):
-           for eid in self.session.transaction_data['subsidiary_cycle_detection']:
+           for eid in self.get_data():
                check_cycle(self.session, eid, self.rtype)
 
 
@@ -169,30 +168,31 @@ Hooks writing tips
 Reminder
 ~~~~~~~~
 
-Never, ever use the `entity.foo = 42` notation to update an entity. It will not
-work.To updating an entity attribute or relation, uses :meth:`set_attributes` and
+You should never use the `entity.foo = 42` notation to update an
+entity. It will not do what you expect (updating the
+database). Instead, use the :meth:`set_attributes` and
 :meth:`set_relations` methods.
 
 
 How to choose between a before and an after event ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-'before_*' hooks give you access to the old attribute (or relation)
-values. You can also hi-jack actually edited stuff in the case of entity
-modification. Needing one of this will definitly guide your choice.
+`before_*` hooks give you access to the old attribute (or relation)
+values. You can also intercept and update edited values in the case of
+entity modification before they reach the database.
 
 Else the question is: should I need to do things before or after the actual
-modification. If the answer is "it doesn't matter", use an 'after' event.
+modification ? If the answer is "it doesn't matter", use an 'after' event.
 
 
 Validation Errors
 ~~~~~~~~~~~~~~~~~
 
-When a hook is responsible to maintain the consistency of the data model detect
-an error, it must use a specific exception named
+When a hook which is responsible to maintain the consistency of the
+data model detects an error, it must use a specific exception named
 :exc:`~cubicweb.ValidationError`. Raising anything but a (subclass of)
-:exc:`~cubicweb.ValidationError` is a programming error. Raising a it entails
-aborting the current transaction.
+:exc:`~cubicweb.ValidationError` is a programming error. Raising it
+entails aborting the current transaction.
 
 This exception is used to convey enough information up to the user
 interface. Hence its constructor is different from the default Exception
@@ -203,6 +203,11 @@ constructor. It accepts, positionally:
 * a dict whose keys represent attribute (or relation) names and values
   an end-user facing message (hence properly translated) relating the
   problem.
+
+.. sourcecode:: python
+
+  raise ValidationError(earth.eid, {'sea_level': self._cw._('too high'),
+                                    'temperature': self._cw._('too hot')})
 
 
 Checking for object created/deleted in the current transaction
@@ -228,7 +233,8 @@ Peculiarities of inlined relations
 
 Relations which are defined in the schema as `inlined` (see :ref:`RelationType`
 for details) are inserted in the database at the same time as entity attributes.
-This may have some side effect, for instance when creating entity and setting an
-inlined relation in the same rql query, when 'before_add_relation' for that
-relation will be run, the relation will already exist in the database (it's
-usually not the case).
+
+This may have some side effect, for instance when creating an entity
+and setting an inlined relation in the same rql query, then at
+`before_add_relation` time, the relation will already exist in the
+database (it is otherwise not the case).
