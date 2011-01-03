@@ -97,7 +97,7 @@ be set at commit time.
 
 .. sourcecode:: python
 
-    from cubicweb.server.hook import Hook, Operation, match_rtype
+    from cubicweb.server.hook import Hook, DataOperationMixIn, Operation, match_rtype
 
     def check_cycle(self, session, eid, rtype, role='subject'):
         parents = set([eid])
@@ -110,7 +110,7 @@ be set at commit time.
             parents.add(parent.eid)
 
 
-    class CheckSubsidiaryCycleOp(Operation):
+    class CheckSubsidiaryCycleOp(DataOperationMixIn, Operation):
 
         def precommit_event(self):
             check_cycle(self.session, self.eidto, 'subsidiary_of')
