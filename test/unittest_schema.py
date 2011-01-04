@@ -226,7 +226,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'value',
 
-                              'wf_info_for', 'wikiid', 'workflow_of']
+                              'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
 
         self.assertListEqual(relations, sorted(expected_relations))
 
