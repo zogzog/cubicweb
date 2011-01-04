@@ -141,7 +141,7 @@ from logilab.database import get_db_helper
 from rql import RQLHelper
 
 from cubicweb.devtools.fake import FakeRepo, FakeSession
-from cubicweb.server import set_debug
+from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
 from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
@@ -171,6 +171,8 @@ class RQLGeneratorTC(TestCase):
 
     def set_debug(self, debug):
         set_debug(debug)
+    def debugged(self, debug):
+        return debugged(debug)
 
     def _prepare(self, rql):
         #print '******************** prepare', rql
@@ -222,6 +224,8 @@ class BaseQuerierTC(TestCase):
 
     def set_debug(self, debug):
         set_debug(debug)
+    def debugged(self, debug):
+        return debugged(debug)
 
     def _rqlhelper(self):
         rqlhelper = self.repo.vreg.rqlhelper

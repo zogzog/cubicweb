@@ -1607,19 +1607,49 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',  [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
                      [self.cards, self.system], None,
                      {'T': 'table1.C1', 'Y': 'table1.C0', 'Y.type': 'table1.C1'},  []),
-                    ('UnionStep', None,  None,
-                     [('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
-                                         [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
-                       None, None, [self.cards], None,
-                       []),
-                      ('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
-                                         [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
-                       None, None, [self.system],
-                       {'T': 'table1.C1', 'X': 'table0.C0', 'X.type': 'table0.C1',
-                        'Y': 'table1.C0', 'Y.type': 'table1.C1'},
-                       [])]
-                     )],
+                    ('FetchStep', [('Any X,Y WHERE X multisource_crossed_rel Y, X is Note, Y is Note',
+                                    [{'X': 'Note', 'Y': 'Note'}])],
+                     [self.cards, self.system], None,
+                     {'X': 'table2.C0', 'Y': 'table2.C1'},
+                     []),
+                    ('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, '
+                                       'X is Note, Y is Note, Y identity A, X identity B, A is Note, B is Note',
+                                       [{u'A': 'Note', u'B': 'Note', 'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
+                     None, None,
+                     [self.system],
+                     {'A': 'table1.C0',
+                      'B': 'table0.C0',
+                      'T': 'table1.C1',
+                      'X': 'table2.C0',
+                      'X.type': 'table0.C1',
+                      'Y': 'table2.C1',
+                      'Y.type': 'table1.C1'},
+                     []),
+                    ],
                     {'x': 999999,})
+
+    def test_crossed_relation_noeid_needattr(self):
+        # http://www.cubicweb.org/ticket/1382452
+        self._test('DISTINCT Any DEP WHERE DEP is Note, P type "cubicweb-foo", P multisource_crossed_rel DEP, DEP type LIKE "cubicweb%"',
+                   [('FetchStep', [(u'Any DEP WHERE DEP type LIKE "cubicweb%", DEP is Note',
+                                    [{'DEP': 'Note'}])],
+                     [self.cards, self.system], None,
+                     {'DEP': 'table0.C0'},
+                     []),
+                    ('FetchStep', [(u'Any P WHERE P type "cubicweb-foo", P is Note', [{'P': 'Note'}])],
+                     [self.cards, self.system], None, {'P': 'table1.C0'},
+                     []),
+                    ('FetchStep', [('Any DEP,P WHERE P multisource_crossed_rel DEP, DEP is Note, P is Note',
+                                    [{'DEP': 'Note', 'P': 'Note'}])],
+                     [self.cards, self.system], None, {'DEP': 'table2.C0', 'P': 'table2.C1'},
+                     []),
+                    ('OneFetchStep',
+                     [('DISTINCT Any DEP WHERE P multisource_crossed_rel DEP, DEP is Note, '
+                       'P is Note, DEP identity A, P identity B, A is Note, B is Note',
+                       [{u'A': 'Note', u'B': 'Note', 'DEP': 'Note', 'P': 'Note'}])],
+                     None, None, [self.system],
+                     {'A': 'table0.C0', 'B': 'table1.C0', 'DEP': 'table2.C0', 'P': 'table2.C1'},
+                     [])])
 
     # edition queries tests ###################################################
 

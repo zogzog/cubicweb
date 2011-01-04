@@ -856,6 +856,25 @@ class PartPlanInformation(object):
                 needsel = set()
                 if not self._sourcesterms:
                     terms += scope.defined_vars.values() + scope.aliases.values()
+                    if isinstance(term, Relation) and len(sources) > 1:
+                        variants = set()
+                        partterms = [term]
+                        for vref in term.get_nodes(VariableRef):
+                            if not vref.variable._q_invariant:
+                                variants.add(vref.name)
+                        if len(variants) == 2:
+                            # we need an extra-step to fetch relations from each source
+                            # before a join with prefetched inputs
+                            # (see test_crossed_relation_noeid_needattr in
+                            #  unittest_msplanner / unittest_multisources)
+                            needsel2 = needsel.copy()
+                            needsel2.update(variants)
+                            lhs, rhs = term.get_variable_parts()
+                            steps.append( (sources, [term, getattr(lhs, 'variable', lhs),
+                                                     getattr(rhs, 'variable', rhs)],
+                                           solindices, scope,
+                                           needsel2, False) )
+                            sources = [self.system_source]
                     final = True
                 else:
                     # suppose this is a final step until the contrary is proven
@@ -1548,7 +1567,7 @@ class TermsFiltererVisitor(object):
 
     def visit_relation(self, node, newroot, terms):
         if not node.is_types_restriction():
-            if node in self.skip and self.solindices.issubset(self.skip[node]):
+            if not node in terms and node in self.skip and self.solindices.issubset(self.skip[node]):
                 if not self.schema.rschema(node.r_type).final:
                     # can't really skip the relation if one variable is selected
                     # and only referenced by this relation

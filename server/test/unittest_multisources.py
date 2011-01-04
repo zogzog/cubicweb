@@ -76,7 +76,9 @@ def teardown_module(*args):
     TestServerConfiguration.no_sqlite_wrap = False
 
 class TwoSourcesTC(CubicWebTC):
-
+    """Main repo -> extern-multi -> extern
+                  \-------------/
+    """
     @classmethod
     def _refresh_repo(cls):
         super(TwoSourcesTC, cls)._refresh_repo()
@@ -322,6 +324,19 @@ mapping-file = extern_mapping.py
         self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         cnx3.commit()
+
+    def test_crossed_relation_noeid_needattr(self):
+        """http://www.cubicweb.org/ticket/1382452"""
+        aff1 = self.sexecute('INSERT Affaire X: X ref "AFFREF"')[0][0]
+        # link within extern source
+        ec1 = self.sexecute('Card X WHERE X wikiid "zzz"')[0][0]
+        self.sexecute('SET A documented_by C WHERE E eid %(a)s, C eid %(c)s',
+                      {'a': aff1, 'c': ec1})
+        # link from system to extern source
+        self.sexecute('SET A documented_by C WHERE E eid %(a)s, C eid %(c)s',
+                      {'a': aff1, 'c': self.ic2})
+        rset = self.sexecute('DISTINCT Any DEP WHERE P ref "AFFREF", P documented_by DEP, DEP wikiid LIKE "z%"')
+        self.assertEqual(sorted(rset.rows), [[ec1], [self.ic2]])
 
     def test_nonregr1(self):
         ueid = self.session.user.eid
