@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+"""mapping file for source used in unittest_multisources.py"""
 
-"""
 support_entities = {'Card': True, 'Affaire': True, 'State': True}
 support_relations = {'in_state': True, 'documented_by': True, 'multisource_inlined_rel': True}
+
+cross_relations = set( ('documented_by',) )
