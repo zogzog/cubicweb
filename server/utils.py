@@ -20,6 +20,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import string
+import logging
 from threading import Timer, Thread
 from getpass import getpass
 from random import choice
@@ -129,6 +130,10 @@ class LoopTask(object):
         def auto_restart_func(self=self, func=func, args=args):
             try:
                 func(*args)
+            except:
+                logger = logging.getLogger('cubicweb.repository')
+                logger.exception('Unhandled exception in LoopTask %s', self.name)
+                raise
             finally:
                 self.start()
         self.func = auto_restart_func
@@ -158,6 +163,10 @@ class RepoThread(Thread):
         def auto_remove_func(self=self, func=target):
             try:
                 func()
+            except:
+                logger = logging.getLogger('cubicweb.repository')
+                logger.exception('Unhandled exception in RepoThread %s', self._name)
+                raise
             finally:
                 self.running_threads.remove(self)
         Thread.__init__(self, target=auto_remove_func)

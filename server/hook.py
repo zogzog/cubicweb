@@ -307,9 +307,10 @@ class HooksManager(object):
 
     def call_hooks(self, event, session=None, **kwargs):
         try:
-            self.vreg['%s_hooks' % event].call_hooks(event, session, **kwargs)
+            registry = self.vreg['%s_hooks' % event]
         except RegistryNotFound:
-            pass # no hooks for this event
+            return # no hooks for this event
+        registry.call_hooks(event, session, **kwargs)
 
 
 for event in ALL_HOOKS:
