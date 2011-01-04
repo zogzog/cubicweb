@@ -18,6 +18,7 @@
 
 from logilab.common.decorators import clear_cache
 
+from yams.buildobjs import RelationDefinition
 from rql import BadRQLQuery
 
 from cubicweb.devtools import init_test_database
@@ -1650,6 +1651,40 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system],
                      {'A': 'table0.C0', 'B': 'table1.C0', 'DEP': 'table2.C0', 'P': 'table2.C1'},
                      [])])
+
+    def test_crossed_relation_noeid_invariant(self):
+        # see comment in http://www.cubicweb.org/ticket/1382452
+        self.schema.add_relation_def(
+            RelationDefinition(subject='Note', name='multisource_crossed_rel', object='Affaire'))
+        self.repo.set_schema(self.schema)
+        try:
+            self._test('DISTINCT Any P,DEP WHERE P type "cubicweb-foo", P multisource_crossed_rel DEP',
+                       [('FetchStep',
+                         [('Any DEP WHERE DEP is Note', [{'DEP': 'Note'}])],
+                         [self.cards, self.system], None, {'DEP': 'table0.C0'}, []),
+                        ('FetchStep',
+                         [(u'Any P WHERE P type "cubicweb-foo", P is Note', [{'P': 'Note'}])],
+                         [self.cards, self.system], None, {'P': 'table1.C0'}, []),
+                        ('UnionStep', None, None,
+                         [('OneFetchStep',
+                           [('DISTINCT Any P,DEP WHERE P multisource_crossed_rel DEP, DEP is Note, P is Note',
+                             [{'DEP': 'Note', 'P': 'Note'}])],
+                           None, None, [self.cards], None, []),
+                          ('OneFetchStep',
+                           [('DISTINCT Any P,DEP WHERE P multisource_crossed_rel DEP, DEP is Note, P is Note',
+                             [{'DEP': 'Note', 'P': 'Note'}])],
+                           None, None, [self.system],
+                           {'DEP': 'table0.C0', 'P': 'table1.C0'},
+                           []),
+                          ('OneFetchStep',
+                           [('DISTINCT Any P,DEP WHERE P multisource_crossed_rel DEP, DEP is Affaire, P is Note',
+                             [{'DEP': 'Affaire', 'P': 'Note'}])],
+                           None, None, [self.system], {'P': 'table1.C0'},
+                           [])])
+                        ])
+        finally:
+            self.schema.del_relation_def('Note', 'multisource_crossed_rel', 'Affaire')
+            self.repo.set_schema(self.schema)
 
     # edition queries tests ###################################################
 

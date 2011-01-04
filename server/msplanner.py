@@ -1329,8 +1329,8 @@ class MSPlanner(SSPlanner):
                 # in this case we have to merge input maps before call to
                 # filter so already processed restriction are correctly
                 # removed
-                solsinputmaps = ppi.merge_input_maps(solindices,
-                                                     complete=not (final and multifinal))
+                solsinputmaps = ppi.merge_input_maps(
+                    solindices, complete=not (final and multifinal))
                 for solindices, inputmap in solsinputmaps:
                     minrqlst, insertedvars = vfilter.filter(
                         sources, terms, scope, set(solindices), needsel, final)
@@ -1347,7 +1347,8 @@ class MSPlanner(SSPlanner):
                 minrqlst, insertedvars = vfilter.filter(
                     sources, terms, scope, solindices, needsel, final)
                 if final:
-                    solsinputmaps = ppi.merge_input_maps(solindices)
+                    solsinputmaps = ppi.merge_input_maps(
+                        solindices, complete=not (final and multifinal))
                     if len(solsinputmaps) > 1:
                         refrqlst = minrqlst
                     for solindices, inputmap in solsinputmaps:
