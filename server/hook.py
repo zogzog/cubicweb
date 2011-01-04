@@ -355,6 +355,7 @@ class match_rtype(ExpectedValueSelector):
         self.expected = expected
         self.frometypes = more.pop('frometypes', None)
         self.toetypes = more.pop('toetypes', None)
+        assert not more, "unexpected kwargs in match_rtype: %s" % more
 
     @lltrace
     def __call__(self, cls, req, *args, **kwargs):
