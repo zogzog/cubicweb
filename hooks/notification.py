@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.textutils import normalize_text
 
+from cubicweb import RegistryNotFound
 from cubicweb.selectors import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
@@ -42,8 +43,14 @@ class NotificationHook(hook.Hook):
     category = 'notification'
 
     def select_view(self, vid, rset, row=0, col=0):
-        return self._cw.vreg['views'].select_or_none(vid, self._cw, rset=rset,
-                                                     row=row, col=col)
+        try:
+            return self._cw.vreg['views'].select_or_none(vid, self._cw, rset=rset,
+                                                         row=row, col=col)
+        except RegistryNotFound: # can happen in some config
+                                 # (e.g. repo only config with no
+                                 # notification views registered by
+                                 # the instance's cubes)
+            return None
 
 
 class StatusChangeHook(NotificationHook):
@@ -68,7 +75,6 @@ class StatusChangeHook(NotificationHook):
         RenderAndSendNotificationView(self._cw, view=view, viewargs={
             'comment': comment, 'previous_state': entity.previous_state.name,
             'current_state': entity.new_state.name})
-
 
 class RelationChangeHook(NotificationHook):
     __regid__ = 'notifyrelationchange'
