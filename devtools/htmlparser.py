@@ -22,6 +22,8 @@ import sys
 
 from lxml import etree
 
+from logilab.common.deprecation import class_deprecated
+
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE
 
 STRICT_DOCTYPE = str(STRICT_DOCTYPE)
@@ -90,6 +92,7 @@ class XMLDemotingValidator(SaxOnlyValidator):
     this is typically related to the use of external dependencies
     which do not produce valid xhtml (google maps, ...)
     """
+    __metaclass__ = class_deprecated
 
     def preprocess_data(self, data):
         if data.startswith('<?xml'):
