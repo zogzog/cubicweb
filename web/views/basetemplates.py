@@ -347,7 +347,7 @@ class HTMLPageHeader(View):
                 self._cw, rset=self.cw_rset, view=view, context=context)
             for comp in components:
                 comp.render(w=w)
-                w(u'&nbsp;')
+                w(u'&#160;')
             w(u'</td>')
         w(u'</tr></table>\n')
 
