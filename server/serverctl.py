@@ -237,6 +237,7 @@ class RepositoryStartHandler(CommandHandler):
         command.append('--loglevel %s' % config['log-threshold'].lower())
         command.append(config.appid)
         os.system(' '.join(command))
+        return 1
 
 
 class RepositoryStopHandler(CommandHandler):

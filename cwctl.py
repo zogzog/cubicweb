@@ -494,7 +494,8 @@ running.'}),
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
-        helper.start_server(config)
+        if helper.start_server(config) == 1:
+            print 'instance %s started' % appid
 
 
 def init_cmdline_log_threshold(config, loglevel):
