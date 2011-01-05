@@ -74,6 +74,7 @@ _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 _afs = uicfg.autoform_section
 _afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
 _afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
 _afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 
 

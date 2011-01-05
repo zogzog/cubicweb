@@ -45,6 +45,7 @@ from cubicweb.dbapi import Connection
 PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/server/test/unittest_multisources.py
 def add_extern_mapping(source):
     execute = source._cw.execute
     for etype in ('Card', 'Affaire', 'State'):
@@ -56,6 +57,9 @@ def add_extern_mapping(source):
 
 
 def setup_module(*args):
+=======
+def setUpModule(*args):
+>>>>>>> /tmp/unittest_multisources.py~other.zhOXgM
     global repo2, cnx2, repo3, cnx3
     cfg1 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
     repo2, cnx2 = init_test_database(config=cfg1)
@@ -74,7 +78,7 @@ def setup_module(*args):
     # pool though we want to keep cnx2 valid
     Connection.close = lambda x: None
 
-def teardown_module(*args):
+def tearDownModule(*args):
     PyroRQLSource.get_connection = PyroRQLSource_get_connection
     Connection.close = Connection_close
     global repo2, cnx2, repo3, cnx3

@@ -24,7 +24,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.devtools.repotest import schema_eids_idx, restore_schema_eids_idx
 
-def teardown_module(*args):
+def tearDownModule(*args):
     del SchemaModificationHooksTC.schema_eids
 
 class SchemaModificationHooksTC(CubicWebTC):

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2010-09-15 15:12+0200\n"
+"PO-Revision-Date: 2011-01-03 14:35+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -215,7 +215,7 @@ msgid "About this site"
 msgstr "À propos de ce site"
 
 msgid "Any"
-msgstr "N'importe"
+msgstr "Tous"
 
 msgid "Attributes permissions:"
 msgstr "Permissions des attributs"

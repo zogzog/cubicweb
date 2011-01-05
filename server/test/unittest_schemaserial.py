@@ -25,14 +25,14 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 
-def setup_module(*args):
+def setUpModule(*args):
     global schema, config
     loader = CubicWebSchemaLoader()
     config = TestServerConfiguration('data', apphome=Schema2RQLTC.datadir)
     config.bootstrap_cubes()
     schema = loader.load(config)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global schema, config
     del schema, config
 

@@ -415,8 +415,9 @@ def run(config, vreg=None, debug=None):
                                      "commands (e.g : 'net start my_instance)'")
         from logilab.common.daemon import daemonize
         LOGGER.info('instance started in the background on %s', root_resource.base_url)
-        if daemonize(config['pid-file']):
-            return # child process
+        whichproc = daemonize(config['pid-file'], umask=config['umask'])
+        if whichproc: # 1 = orig process, 2 = first fork, None = second fork (eg daemon process)
+            return whichproc # parent process
     root_resource.init_publisher() # before changing uid
     if config['uid'] is not None:
         try:

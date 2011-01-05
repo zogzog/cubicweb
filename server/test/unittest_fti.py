@@ -7,13 +7,18 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.selectors import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
+AT_LOGILAB = socket.gethostname().endswith('.logilab.fr')
+
+from logilab.common.testlib import SkipTest
+
+
 class PostgresFTITC(CubicWebTC):
     config = ApptestConfiguration('data', sourcefile='sources_fti')
 
-    def setUp(self):
-        if not socket.gethostname().endswith('.logilab.fr'):
-            self.skipTest('XXX require logilab configuration')
-        super(PostgresFTITC, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        if not AT_LOGILAB:
+            raise SkipTest('XXX %s: require logilab configuration' % cls.__name__)
 
     def test_occurence_count(self):
         req = self.request()
@@ -44,7 +49,6 @@ class PostgresFTITC(CubicWebTC):
             self.assertEqual(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c3.eid], [c1.eid], [c2.eid]])
 
-
     def test_entity_weight(self):
         class PersonneIFTIndexableAdapter(IFTIndexableAdapter):
             __select__ = is_instance('Personne')
@@ -57,6 +61,7 @@ class PostgresFTITC(CubicWebTC):
             self.commit()
             self.assertEqual(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c1.eid], [c3.eid], [c2.eid]])
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

@@ -22,11 +22,11 @@ from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BaseQuerierTC
 
 
-def setup_module(*args):
+def setUpModule(*args):
     global repo, cnx
     repo, cnx = init_test_database(apphome=SQLGenAnnotatorTC.datadir)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo, cnx
     del repo, cnx
 

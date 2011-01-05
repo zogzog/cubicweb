@@ -334,30 +334,39 @@ class EntityCtxComponent(CtxComponent):
 # high level abstract classes ##################################################
 
 class RQLCtxComponent(CtxComponent):
-    """abstract box for boxes displaying the content of a rql query not
-    related to the current result set.
+    """abstract box for boxes displaying the content of a rql query not related
+    to the current result set.
+
+    Notice that this class's init_rendering implemention is overwriting context
+    result set (eg `cw_rset`) with the result set returned by execution of
+    `to_display_rql()`.
     """
-    rql  = None
+    rql = None
 
     def to_display_rql(self):
+        """return arguments to give to self._cw.execute, as a tuple, to build
+        the result set to be displayed by this box.
+        """
         assert self.rql is not None, self.__regid__
         return (self.rql,)
 
     def init_rendering(self):
-        rset = self._cw.execute(*self.to_display_rql())
-        if not rset:
+        super(RQLCtxComponent, self).init_rendering()
+        self.cw_rset = self._cw.execute(*self.to_display_rql())
+        if not self.cw_rset:
             raise EmptyComponent()
-        if len(rset[0]) == 2:
-            self.items = []
-            for i, (eid, label) in enumerate(rset):
-                entity = rset.get_entity(i, 0)
-                self.items.append(self.build_link(label, entity.absolute_url()))
-        else:
-            self.items = [self.build_link(e.dc_title(), e.absolute_url())
-                          for e in rset.entities()]
 
     def render_body(self, w):
-        self.render_items(w)
+        rset = self.cw_rset
+        if len(rset[0]) == 2:
+            items = []
+            for i, (eid, label) in enumerate(rset):
+                entity = rset.get_entity(i, 0)
+                items.append(self.build_link(label, entity.absolute_url()))
+        else:
+            items = [self.build_link(e.dc_title(), e.absolute_url())
+                     for e in rset.entities()]
+        self.render_items(w, items)
 
 
 class EditRelationMixIn(ReloadableMixIn):

@@ -317,6 +317,12 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
           'help': 'server\'s log level',
           'group': 'main', 'level': 1,
           }),
+        ('umask',
+         {'type' : 'int',
+          'default': 077,
+          'help': 'permission umask for files created by the server',
+          'group': 'main', 'level': 2,
+          }),
         # pyro options
         ('pyro-instance-id',
          {'type' : 'string',

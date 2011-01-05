@@ -70,13 +70,13 @@ def nopwd_authenticate(self, session, login, password):
     # don't check upassword !
     return self.extid2eid(user['dn'], 'CWUser', session)
 
-def setup_module(*args):
+def setUpModule(*args):
     global repo
     LDAPUserSourceTC._init_repo()
     repo = LDAPUserSourceTC.repo
     add_ldap_source(LDAPUserSourceTC.cnx)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo
     repo.shutdown()
     del repo

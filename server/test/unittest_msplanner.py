@@ -76,11 +76,11 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
 
 
 # keep cnx so it's not garbage collected and the associated session is closed
-def setup_module(*args):
+def setUpModule(*args):
     global repo, cnx
     repo, cnx = init_test_database(apphome=BaseMSPlannerTC.datadir)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo, cnx
     del repo, cnx
 

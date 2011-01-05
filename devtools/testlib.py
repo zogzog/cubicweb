@@ -775,20 +775,21 @@ class CubicWebTC(TestCase):
     @nocoverage
     def _check_html(self, output, view, template='main-template'):
         """raises an exception if the HTML is invalid"""
+        output = output.strip()
         try:
             validatorclass = self.vid_validators[view.__regid__]
         except KeyError:
             if view.content_type in ('text/html', 'application/xhtml+xml'):
-                if template is None:
-                    default_validator = htmlparser.HTMLValidator
-                else:
+                if output.startswith('<?xml'):
                     default_validator = htmlparser.DTDValidator
+                else:
+                    default_validator = htmlparser.HTMLValidator
             else:
                 default_validator = None
             validatorclass = self.content_type_validators.get(view.content_type,
                                                               default_validator)
         if validatorclass is None:
-            return output.strip()
+            return
         validator = validatorclass()
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
