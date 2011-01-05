@@ -594,7 +594,7 @@ class StartRepositoryCommand(Command):
         # go ! (don't daemonize in debug mode)
         if not os.path.exists(piddir):
             os.makedirs(piddir)
-        if not debug and daemonize(pidfile):
+        if not debug and daemonize(pidfile, umask=config['umask']):
             return
         uid = config['uid']
         if uid is not None:
