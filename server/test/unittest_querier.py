@@ -62,11 +62,11 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-def setup_module(*args):
+def setUpModule(*args):
     global repo, cnx
     repo, cnx = init_test_database(apphome=UtilsTC.datadir)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo, cnx
     cnx.close()
     repo.shutdown()

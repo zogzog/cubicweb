@@ -29,7 +29,7 @@ from cubicweb.web.views.forms import EntityFieldsForm
 
 from cubes.file.entities import File
 
-def setup_module(*args):
+def setUpModule(*args):
     global schema
     config = TestServerConfiguration('data', apphome=GuessFieldTC.datadir)
     config.bootstrap_cubes()

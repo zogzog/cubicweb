@@ -38,7 +38,7 @@ except AssertionError, ex:
     pass # already registered
 
 
-def setup_module(*args):
+def setUpModule():
     global config, schema
     config = TestServerConfiguration('data', apphome=CWRQLTC.datadir)
     config.bootstrap_cubes()
@@ -47,7 +47,7 @@ def setup_module(*args):
     schema['state_of'].inlined = False
     schema['comments'].inlined = False
 
-def teardown_module(*args):
+def tearDownModule():
     global config, schema
     del config, schema
 

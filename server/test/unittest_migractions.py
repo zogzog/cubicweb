@@ -34,7 +34,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
 migrschema = None
-def teardown_module(*args):
+def tearDownModule(*args):
     global migrschema
     del migrschema
     del MigrationCommandsTC.origschema

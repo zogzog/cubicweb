@@ -21,11 +21,11 @@ from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 from cubicweb.server.ssplanner import SSPlanner
 
 # keep cnx so it's not garbage collected and the associated session closed
-def setup_module(*args):
+def setUpModule(*args):
     global repo, cnx
     repo, cnx = init_test_database(apphome=SSPlannerTC.datadir)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo, cnx
     del repo, cnx
 

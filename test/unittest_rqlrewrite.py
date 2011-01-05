@@ -27,7 +27,7 @@ from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
 
-def setup_module(*args):
+def setUpModule(*args):
     global rqlhelper, schema
     config = TestServerConfiguration(RQLRewriteTC.datapath('rewrite'))
     config.bootstrap_cubes()
@@ -39,7 +39,7 @@ def setup_module(*args):
                                                      'has_text': 'fti'})
     repotest.do_monkey_patch()
 
-def teardown_module(*args):
+def tearDownModule(*args):
     repotest.undo_monkey_patch()
     global rqlhelper, schema
     del rqlhelper, schema

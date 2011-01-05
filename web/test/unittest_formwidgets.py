@@ -24,7 +24,7 @@ from cubicweb.web import uicfg, formwidgets, formfields
 
 from cubes.file.entities import File
 
-def setup_module(*args):
+def setUpModule(*args):
     global schema
     config = TestServerConfiguration('data', apphome=WidgetsTC.datadir)
     config.bootstrap_cubes()

@@ -79,7 +79,7 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global config, schema
     del config, schema
 
