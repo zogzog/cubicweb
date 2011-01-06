@@ -30,7 +30,6 @@ from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
 from yams import buildobjs as ybo, schema2sql as y2sql
 
 from logilab.common.decorators import clear_cache
-from logilab.common.testlib import mock_object
 
 from cubicweb import ValidationError
 from cubicweb.selectors import is_instance
@@ -129,6 +128,11 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
                                display_name(session, attr)
     if errors:
         raise ValidationError(entity.eid, errors)
+
+
+class _MockEntity(object): # XXX use a named tuple with python 2.6
+    def __init__(self, eid):
+        self.eid = eid
 
 
 class SyncSchemaHook(hook.Hook):
@@ -266,8 +270,8 @@ class CWETypeAddOp(MemSchemaOperation):
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
-            rdef.subject = mock_object(eid=entity.eid)
-            mock = mock_object(eid=None)
+            rdef.subject = _MockEntity(eid=entity.eid)
+            mock = _MockEntity(eid=None)
             ss.execschemarql(session.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
 
     def revertprecommit_event(self):
