@@ -1278,7 +1278,9 @@ def register_stored_procedures():
             stack[0] = self.source_execute
 
         def as_sql(self, backend, args):
-            raise NotImplementedError('source only callback')
+            raise NotImplementedError(
+                'This callback is only available for BytesFileSystemStorage '
+                'managed attribute. Is FSPATH() argument BFSS managed?')
 
         def source_execute(self, source, session, value):
             fpath = source.binary_to_str(value)

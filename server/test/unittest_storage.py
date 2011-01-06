@@ -75,6 +75,15 @@ class StorageTC(CubicWebTC):
                               {'f': entity.eid})[0][0]
         return fspath.getvalue()
 
+    def test_bfss_wrong_fspath_usage(self):
+        f1 = self.create_file()
+        self.execute('Any fspath(D) WHERE F eid %(f)s, F data D', {'f': f1.eid})
+        with self.assertRaises(NotImplementedError) as cm:
+            self.execute('Any fspath(F) WHERE F eid %(f)s', {'f': f1.eid})
+        self.assertEqual(str(cm.exception),
+                         'This callback is only available for BytesFileSystemStorage '
+                         'managed attribute. Is FSPATH() argument BFSS managed?')
+
     def test_bfss_storage(self):
         f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data_%s' %
