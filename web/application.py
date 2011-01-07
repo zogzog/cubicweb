@@ -31,7 +31,7 @@ from rql import BadRQLQuery
 from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
-    RepositoryError, BadConnectionId, CW_EVENT_MANAGER)
+    BadConnectionId, CW_EVENT_MANAGER)
 from cubicweb.dbapi import DBAPISession
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
@@ -148,8 +148,6 @@ class CookieSessionHandler(object):
                                                               vreg=self.vreg)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
-        if not 'last_login_time' in self.vreg.schema:
-            self._update_last_login_time = lambda x: None
         if self.vreg.config.mode != 'test':
             # don't try to reset session manager during test, this leads to
             # weird failures when running multiple tests
@@ -224,45 +222,8 @@ class CookieSessionHandler(object):
             cookie[sessioncookie]['secure'] = True
         req.set_cookie(cookie, sessioncookie, maxage=None)
         if not session.anonymous_session:
-            self._postlogin(req)
+            self.session_manager.postlogin(req)
         return session
-
-    def _update_last_login_time(self, req):
-        # XXX should properly detect missing permission / non writeable source
-        # and avoid "except (RepositoryError, Unauthorized)" below
-        if req.user.cw_metainformation()['source']['type'] == 'ldapuser':
-            return
-        try:
-            req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
-                        {'x' : req.user.eid})
-            req.cnx.commit()
-        except (RepositoryError, Unauthorized):
-            req.cnx.rollback()
-        except:
-            req.cnx.rollback()
-            raise
-
-    def _postlogin(self, req):
-        """postlogin: the user has been authenticated, redirect to the original
-        page (index by default) with a welcome message
-        """
-        # Update last connection date
-        # XXX: this should be in a post login hook in the repository, but there
-        #      we can't differentiate actual login of automatic session
-        #      reopening. Is it actually a problem?
-        self._update_last_login_time(req)
-        args = req.form
-        for forminternal_key in ('__form_id', '__domid', '__errorurl'):
-            args.pop(forminternal_key, None)
-        args['__message'] = req._('welcome %s !') % req.user.login
-        if 'vid' in req.form:
-            args['vid'] = req.form['vid']
-        if 'rql' in req.form:
-            args['rql'] = req.form['rql']
-        path = req.relative_path(False)
-        if path == 'login':
-            path = 'view'
-        raise Redirect(req.build_url(path, **args))
 
     def logout(self, req, goto_url):
         """logout from the instance by cleaning the session and raising

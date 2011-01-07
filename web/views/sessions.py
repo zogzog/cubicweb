@@ -21,7 +21,8 @@ object :/
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb.web import InvalidSession
+from cubicweb import RepositoryError, Unauthorized
+from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.dbapi import DBAPISession
 
@@ -74,6 +75,44 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         # associate the connection to the current request
         req.set_session(session)
         return session
+
+    def postlogin(self, req):
+        """postlogin: the user has been authenticated, redirect to the original
+        page (index by default) with a welcome message
+        """
+        # Update last connection date
+        # XXX: this should be in a post login hook in the repository, but there
+        #      we can't differentiate actual login of automatic session
+        #      reopening. Is it actually a problem?
+        if 'last_login_time' in req.vreg.schema:
+            self._update_last_login_time(req)
+        args = req.form
+        for forminternal_key in ('__form_id', '__domid', '__errorurl'):
+            args.pop(forminternal_key, None)
+        args['__message'] = req._('welcome %s !') % req.user.login
+        if 'vid' in req.form:
+            args['vid'] = req.form['vid']
+        if 'rql' in req.form:
+            args['rql'] = req.form['rql']
+        path = req.relative_path(False)
+        if path == 'login':
+            path = 'view'
+        raise Redirect(req.build_url(path, **args))
+
+    def _update_last_login_time(self, req):
+        # XXX should properly detect missing permission / non writeable source
+        # and avoid "except (RepositoryError, Unauthorized)" below
+        if req.user.cw_metainformation()['source']['type'] == 'ldapuser':
+            return
+        try:
+            req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
+                        {'x' : req.user.eid})
+            req.cnx.commit()
+        except (RepositoryError, Unauthorized):
+            req.cnx.rollback()
+        except:
+            req.cnx.rollback()
+            raise
 
     def close_session(self, session):
         """close session on logout or on invalid session detected (expired out,
