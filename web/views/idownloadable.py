@@ -62,10 +62,12 @@ class DownloadBox(component.EntityCtxComponent):
 
     def render_body(self, w):
         for item in self.items:
+            idownloadable = item.cw_adapt_to('IDownloadable')
             w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
-              % (xml_escape(item.cw_adapt_to('IDownloadable').download_url()),
+              % (xml_escape(idownloadable.download_url()),
                  self._cw.uiprops['DOWNLOAD_ICON'],
-                 self._cw._('download icon'), xml_escape(item.dc_title())))
+                 self._cw._('download icon'),
+                 xml_escape(idownloadable.download_file_name())))
 
 
 class DownloadView(EntityView):
@@ -154,7 +156,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         return False
 
 
-class IDownloadableLineView(baseviews.OneLineView):
+class IDownloadableOneLineView(baseviews.OneLineView):
     __select__ = adaptable('IDownloadable')
 
     def cell_call(self, row, col, title=None, **kwargs):
@@ -162,7 +164,7 @@ class IDownloadableLineView(baseviews.OneLineView):
         entity = self.cw_rset.get_entity(row, col)
         url = xml_escape(entity.absolute_url())
         adapter = entity.cw_adapt_to('IDownloadable')
-        name = xml_escape(title or adapter.download_file_name())
+        name = xml_escape(title or entity.dc_title())
         durl = xml_escape(adapter.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self._cw._('download')))
