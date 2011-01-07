@@ -77,6 +77,10 @@ class MigrationCommandsTC(CubicWebTC):
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
+    def tearDown(self):
+        CubicWebTC.tearDown(self)
+        self.repo.vreg['etypes'].clear_caches()
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
         self.request().create_entity('Note')
@@ -88,8 +92,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
         self.assertEqual(self.schema['Note'].default('whatever'), 2)
+        # test default value set on existing entities
         note = self.execute('Note X').get_entity(0, 0)
         self.assertEqual(note.whatever, 2)
+        # test default value set for next entities
+        self.assertEqual(self.request().create_entity('Note').whatever, 2)
+        # test attribute order
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
@@ -108,6 +116,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_attribute_varchar(self):
+        self.failIf('whatever' in self.schema)
         self.request().create_entity('Note')
         self.commit()
         self.failIf('shortpara' in self.schema)
