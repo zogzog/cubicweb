@@ -108,6 +108,8 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_attribute_varchar(self):
+        self.request().create_entity('Note')
+        self.commit()
         self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
         self.failUnless('shortpara' in self.schema)
@@ -117,6 +119,11 @@ class MigrationCommandsTC(CubicWebTC):
         notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
         self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
+        req = self.request()
+        # test default value set on existing entities
+        self.assertEqual(req.execute('Note X').get_entity(0, 0).shortpara, 'hop')
+        # test default value set for next entities
+        self.assertEqual(req.create_entity('Note').shortpara, 'hop')
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
