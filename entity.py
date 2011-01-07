@@ -996,7 +996,7 @@ class Entity(AppObject):
         return self.cw_edited.skip_security
 
     @property
-    @deprecated('[3.10] use entity.cw_edited.skip_security')
+    @deprecated('[3.10] use entity.cw_edited.querier_pending_relations')
     def querier_pending_relations(self):
         return self.cw_edited.querier_pending_relations
 
