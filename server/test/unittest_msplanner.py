@@ -2473,6 +2473,37 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      )]
                    )
 
+    def test_version_crossed_depends_on_4(self):
+        self._test('Any X,AD,AE WHERE EXISTS(E multisource_crossed_rel X), X in_state AD, AD name AE, E is Note',
+                   [('FetchStep',
+                     [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
+                       [{'X': 'Note', 'AD': 'State', 'AE': 'String'}])],
+                     [self.cards, self.cards2, self.system], None,
+                     {'X': 'table0.C0',
+                      'AD': 'table0.C1',
+                      'AD.name': 'table0.C2',
+                      'AE': 'table0.C2'},
+                     []),
+                    ('FetchStep',
+                     [('Any A WHERE E multisource_crossed_rel A, A is Note, E is Note',
+                       [{'A': 'Note', 'E': 'Note'}])],
+                     [self.cards, self.cards2, self.system], None,
+                     {'A': 'table1.C0'},
+                     []),
+                    ('OneFetchStep',
+                     [('Any X,AD,AE WHERE EXISTS(X identity A), AD name AE, A is Note, AD is State, X is Note',
+                       [{'A': 'Note', 'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     None, None,
+                     [self.system],
+                     {'A': 'table1.C0',
+                      'AD': 'table0.C1',
+                      'AD.name': 'table0.C2',
+                      'AE': 'table0.C2',
+                      'X': 'table0.C0'},
+                     []
+                     )]
+                       )
+
     def test_nonregr_dont_cross_rel_source_filtering_1(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any S WHERE E eid %(x)s, E in_state S, NOT S name "moved"',

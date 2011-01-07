@@ -378,7 +378,7 @@ _orig_choose_term = PartPlanInformation._choose_term
 def _merge_input_maps(*args, **kwargs):
     return sorted(_orig_merge_input_maps(*args, **kwargs))
 
-def _choose_term(self, sourceterms):
+def _choose_term(self, source, sourceterms):
     # predictable order for test purpose
     def get_key(x):
         try:
@@ -391,7 +391,7 @@ def _choose_term(self, sourceterms):
             except AttributeError:
                 # const
                 return x.value
-    return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
+    return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
 from cubicweb.server.sources.pyrorql import PyroRQLSource
 _orig_syntax_tree_search = PyroRQLSource.syntax_tree_search
