@@ -115,8 +115,9 @@ class CoreHooksTC(CubicWebTC):
 
     def test_unsatisfied_constraints(self):
         releid = self.execute('SET U in_group G WHERE G name "owners", U login "admin"')[0][0]
-        ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEqual(ex.errors,
+        with self.assertRaises(ValidationError) as cm:
+            self.commit()
+        self.assertEqual(cm.exception.errors,
                           {'in_group-object': u'RQLConstraint NOT O name "owners" failed'})
 
     def test_html_tidy_hook(self):
@@ -227,25 +228,25 @@ class UserGroupHooksTC(CubicWebTC):
 class CWPropertyHooksTC(CubicWebTC):
 
     def test_unexistant_eproperty(self):
-        ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key bla.bla'})
-        ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEqual(ex.errors, {'pkey-subject': 'unknown property key bla.bla'})
+        with self.assertRaises(ValidationError) as cm:
+            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
+        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
+        with self.assertRaises(ValidationError) as cm:
+            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
+        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
 
     def test_site_wide_eproperty(self):
-        ex = self.assertRaises(ValidationError,
-                               self.execute, 'INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
-        self.assertEqual(ex.errors, {'for_user-subject': "site-wide property can't be set for user"})
+        with self.assertRaises(ValidationError) as cm:
+            self.execute('INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
+        self.assertEqual(cm.exception.errors, {'for_user-subject': "site-wide property can't be set for user"})
 
     def test_bad_type_eproperty(self):
-        ex = self.assertRaises(ValidationError,
-                               self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
-        self.assertEqual(ex.errors, {'value-subject': u'unauthorized value'})
-        ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop"')
-        self.assertEqual(ex.errors, {'value-subject': u'unauthorized value'})
+        with self.assertRaises(ValidationError) as cm:
+            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
+        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
+        with self.assertRaises(ValidationError) as cm:
+            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop"')
+        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
 
 
 class SchemaHooksTC(CubicWebTC):

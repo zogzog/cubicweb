@@ -298,8 +298,9 @@ class ApplicationTC(CubicWebTC):
 
     def test_login_not_available_to_authenticated(self):
         req = self.request()
-        ex = self.assertRaises(Unauthorized, self.app_publish, req, 'login')
-        self.assertEqual(str(ex), 'log out first')
+        with self.assertRaises(Unauthorized) as cm:
+            self.app_publish(req, 'login')
+        self.assertEqual(str(cm.exception), 'log out first')
 
     def test_fb_login_concept(self):
         """see data/views.py"""

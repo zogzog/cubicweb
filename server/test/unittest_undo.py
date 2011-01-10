@@ -212,9 +212,10 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertEqual(errors,
                           [u"Can't restore relation in_group, object entity "
                           "%s doesn't exist anymore." % g.eid])
-        ex = self.assertRaises(ValidationError, self.commit)
-        self.assertEqual(ex.entity, self.toto.eid)
-        self.assertEqual(ex.errors,
+        with self.assertRaises(ValidationError) as cm:
+            self.commit()
+        self.assertEqual(cm.exception.entity, self.toto.eid)
+        self.assertEqual(cm.exception.errors,
                           {'in_group-subject': u'at least one relation in_group is '
                            'required on CWUser (%s)' % self.toto.eid})
 
@@ -252,10 +253,10 @@ class UndoableTransactionTC(CubicWebTC):
                                             value=u'text/html')
         tutu.set_relations(use_email=email, reverse_for_user=prop)
         self.commit()
-        ex = self.assertRaises(ValidationError,
-                               self.cnx.undo_transaction, txuuid)
-        self.assertEqual(ex.entity, tutu.eid)
-        self.assertEqual(ex.errors,
+        with self.assertRaises(ValidationError) as cm:
+            self.cnx.undo_transaction(txuuid)
+        self.assertEqual(cm.exception.entity, tutu.eid)
+        self.assertEqual(cm.exception.errors,
                           {None: 'some later transaction(s) touch entity, undo them first'})
 
     def test_undo_creation_integrity_2(self):
@@ -265,17 +266,17 @@ class UndoableTransactionTC(CubicWebTC):
         session.execute('DELETE U in_group G WHERE U eid %(x)s', {'x': self.toto.eid})
         self.toto.set_relations(in_group=g)
         self.commit()
-        ex = self.assertRaises(ValidationError,
-                               self.cnx.undo_transaction, txuuid)
-        self.assertEqual(ex.entity, g.eid)
-        self.assertEqual(ex.errors,
+        with self.assertRaises(ValidationError) as cm:
+            self.cnx.undo_transaction(txuuid)
+        self.assertEqual(cm.exception.entity, g.eid)
+        self.assertEqual(cm.exception.errors,
                           {None: 'some later transaction(s) touch entity, undo them first'})
         # self.assertEqual(errors,
         #                   [u"Can't restore relation in_group, object entity "
         #                   "%s doesn't exist anymore." % g.eid])
-        # ex = self.assertRaises(ValidationError, self.commit)
-        # self.assertEqual(ex.entity, self.toto.eid)
-        # self.assertEqual(ex.errors,
+        # with self.assertRaises(ValidationError) as cm: self.commit()
+        # self.assertEqual(cm.exception.entity, self.toto.eid)
+        # self.assertEqual(cm.exception.errors,
         #                   {'in_group-subject': u'at least one relation in_group is '
         #                    'required on CWUser (%s)' % self.toto.eid})
 

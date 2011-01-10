@@ -552,8 +552,9 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
     def test_remove_dep_cube(self):
-        ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
-        self.assertEqual(str(ex), "can't remove cube file, used as a dependency")
+        with self.assertRaises(ConfigurationError) as cm:
+            self.mh.cmd_remove_cube('file')
+        self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')

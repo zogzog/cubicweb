@@ -123,34 +123,34 @@ class StorageTC(CubicWebTC):
             self.create_file()
 
     def test_source_mapped_attribute_error_cases(self):
-        ex = self.assertRaises(QueryError, self.execute,
-                               'Any X WHERE X data ~= "hop", X is File')
-        self.assertEqual(str(ex), 'can\'t use File.data (X data ILIKE "hop") in restriction')
-        ex = self.assertRaises(QueryError, self.execute,
-                               'Any X, Y WHERE X data D, Y data D, '
-                               'NOT X identity Y, X is File, Y is File')
-        self.assertEqual(str(ex), "can't use D as a restriction variable")
+        with self.assertRaises(QueryError) as cm:
+            self.execute('Any X WHERE X data ~= "hop", X is File')
+        self.assertEqual(str(cm.exception), 'can\'t use File.data (X data ILIKE "hop") in restriction')
+        with self.assertRaises(QueryError) as cm:
+            self.execute('Any X, Y WHERE X data D, Y data D, '
+                         'NOT X identity Y, X is File, Y is File')
+        self.assertEqual(str(cm.exception), "can't use D as a restriction variable")
         # query returning mix of mapped / regular attributes (only file.data
         # mapped, not image.data for instance)
-        ex = self.assertRaises(QueryError, self.execute,
-                               'Any X WITH X BEING ('
-                               ' (Any NULL)'
-                               '  UNION '
-                               ' (Any D WHERE X data D, X is File)'
-                               ')')
-        self.assertEqual(str(ex), 'query fetch some source mapped attribute, some not')
-        ex = self.assertRaises(QueryError, self.execute,
-                               '(Any D WHERE X data D, X is File)'
-                               ' UNION '
-                               '(Any D WHERE X title D, X is Bookmark)')
-        self.assertEqual(str(ex), 'query fetch some source mapped attribute, some not')
+        with self.assertRaises(QueryError) as cm:
+            self.execute('Any X WITH X BEING ('
+                         ' (Any NULL)'
+                         '  UNION '
+                         ' (Any D WHERE X data D, X is File)'
+                         ')')
+        self.assertEqual(str(cm.exception), 'query fetch some source mapped attribute, some not')
+        with self.assertRaises(QueryError) as cm:
+            self.execute('(Any D WHERE X data D, X is File)'
+                         ' UNION '
+                         '(Any D WHERE X title D, X is Bookmark)')
+        self.assertEqual(str(cm.exception), 'query fetch some source mapped attribute, some not')
 
         storages.set_attribute_storage(self.repo, 'State', 'name',
                                        storages.BytesFileSystemStorage(self.tempdir))
         try:
-            ex = self.assertRaises(QueryError,
-                                   self.execute, 'Any D WHERE X name D, X is IN (State, Transition)')
-            self.assertEqual(str(ex), 'query fetch some source mapped attribute, some not')
+            with self.assertRaises(QueryError) as cm:
+                self.execute('Any D WHERE X name D, X is IN (State, Transition)')
+            self.assertEqual(str(cm.exception), 'query fetch some source mapped attribute, some not')
         finally:
             storages.unset_attribute_storage(self.repo, 'State', 'name')
 
@@ -181,10 +181,10 @@ class StorageTC(CubicWebTC):
         self.assertEqual(rset[1][0], f1.eid)
         self.assertEqual(rset[0][1], len('the-data'))
         self.assertEqual(rset[1][1], len('the-data'))
-        ex = self.assertRaises(QueryError, self.execute,
-                               'Any X,UPPER(D) WHERE X eid %(x)s, X data D',
-                               {'x': f1.eid})
-        self.assertEqual(str(ex), 'UPPER can not be called on mapped attribute')
+        with self.assertRaises(QueryError) as cm:
+            self.execute('Any X,UPPER(D) WHERE X eid %(x)s, X data D',
+                         {'x': f1.eid})
+        self.assertEqual(str(cm.exception), 'UPPER can not be called on mapped attribute')
 
 
     def test_bfss_fs_importing_transparency(self):

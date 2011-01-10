@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""unit tests for module cubicweb.server.msplanner"""
+
+from __future__ import with_statement
 
 from logilab.common.decorators import clear_cache
 
@@ -2013,15 +2016,15 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_conflict_1(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        ex = self.assertRaises(BadRQLQuery,
-                               self._test, 'Any X WHERE X cw_source S, S name "system", X eid %(x)s',
-                               [], {'x': 999999})
-        self.assertEqual(str(ex), 'source conflict for term %(x)s')
+        with self.assertRaises(BadRQLQuery) as cm:
+            self._test('Any X WHERE X cw_source S, S name "system", X eid %(x)s',
+                       [], {'x': 999999})
+        self.assertEqual(str(cm.exception), 'source conflict for term %(x)s')
 
     def test_source_conflict_2(self):
-        ex = self.assertRaises(BadRQLQuery,
-                               self._test, 'Card X WHERE X cw_source S, S name "systeme"', [])
-        self.assertEqual(str(ex), 'source conflict for term X')
+        with self.assertRaises(BadRQLQuery) as cm:
+            self._test('Card X WHERE X cw_source S, S name "systeme"', [])
+        self.assertEqual(str(cm.exception), 'source conflict for term X')
 
     def test_source_conflict_3(self):
         self.skipTest('oops')

@@ -154,8 +154,9 @@ class RepositoryTC(CubicWebTC):
             self.assertRaises(ValidationError,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
             self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            ex = self.assertRaises(QueryError, self.commit)
-            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            with self.assertRaises(QueryError) as cm:
+                self.commit()
+            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -170,8 +171,9 @@ class RepositoryTC(CubicWebTC):
             self.assertRaises(Unauthorized,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
             self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            ex = self.assertRaises(QueryError, self.commit)
-            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            with self.assertRaises(QueryError) as cm:
+                self.commit()
+            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -276,8 +278,9 @@ class RepositoryTC(CubicWebTC):
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
         try:
-            ex = self.assertRaises(Exception, run_transaction)
-            self.assertEqual(str(ex), 'try to access pool on a closed session')
+            with self.assertRaises(Exception) as cm:
+                run_transaction()
+            self.assertEqual(str(cm.exception), 'try to access pool on a closed session')
         finally:
             t.join()
 
@@ -668,8 +671,9 @@ class InlineRelHooksTC(CubicWebTC):
         req.cnx.commit()
         req = self.request()
         req.create_entity('Note', type=u'todo', inline1=a01)
-        ex = self.assertRaises(ValidationError, req.cnx.commit)
-        self.assertEqual(ex.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
+        with self.assertRaises(ValidationError) as cm:
+            req.cnx.commit()
+        self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
 if __name__ == '__main__':
     unittest_main()
