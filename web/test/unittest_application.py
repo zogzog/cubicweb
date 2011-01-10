@@ -368,8 +368,9 @@ class ApplicationTC(CubicWebTC):
         # preparing the suite of the test
         # set session id in cookie
         cookie = Cookie.SimpleCookie()
-        cookie['__session'] = req.session.sessionid
-        req._headers['Cookie'] = cookie['__session'].OutputString()
+        sessioncookie = self.app.session_handler.session_cookie(req)
+        cookie[sessioncookie] = req.session.sessionid
+        req._headers['Cookie'] = cookie[sessioncookie].OutputString()
         clear_cache(req, 'get_authorization')
         # reset session as if it was a new incoming request
         req.session = req.cnx = None
