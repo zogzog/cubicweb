@@ -20,6 +20,7 @@
 
 note: most schemahooks.py hooks are actually tested in unittest_migrations.py
 """
+from __future__ import with_statement
 
 from logilab.common.testlib import TestCase, unittest_main
 
