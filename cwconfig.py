@@ -450,14 +450,15 @@ this option is set to yes",
 
     @classmethod
     def cube_dir(cls, cube):
-        """return the cube directory for the given cube id,
-        raise `ConfigurationError` if it doesn't exists
+        """return the cube directory for the given cube id, raise
+        `ConfigurationError` if it doesn't exist
         """
         for directory in cls.cubes_search_path():
             cubedir = join(directory, cube)
             if exists(cubedir):
                 return cubedir
-        raise ConfigurationError('no cube %s in %s' % (cube, cls.cubes_search_path()))
+        raise ConfigurationError('no cube %r in %s' % (
+            cube, cls.cubes_search_path()))
 
     @classmethod
     def cube_migration_scripts_dir(cls, cube):
