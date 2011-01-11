@@ -149,6 +149,15 @@ from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solution
 class RQLGeneratorTC(TestCase):
     schema = backend = None # set this in concret test
 
+
+    @classmethod
+    def setUpClass(cls):
+        if cls.backend is not None:
+            try:
+                cls.dbhelper = get_db_helper(cls.backend)
+            except ImportError, ex:
+                cls.skipTest(str(ex))
+
     def setUp(self):
         self.repo = FakeRepo(self.schema)
         self.repo.system_source = mock_object(dbdriver=self.backend)
@@ -159,11 +168,7 @@ class RQLGeneratorTC(TestCase):
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
         if self.backend is not None:
-            try:
-                dbhelper = get_db_helper(self.backend)
-            except ImportError, ex:
-                self.skipTest(str(ex))
-            self.o = SQLGenerator(self.schema, dbhelper)
+            self.o = SQLGenerator(self.schema, self.dbhelper)
 
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
