@@ -697,7 +697,7 @@ class Entity(AppObject):
         if not self.has_eid():
             if entities:
                 return []
-            return self.empty_rset()
+            return self._cw.empty_rset()
         rql = self.cw_related_rql(rtype, role)
         rset = self._cw.execute(rql, {'x': self.eid})
         self.cw_set_relation_cache(rtype, role, rset)

@@ -27,7 +27,7 @@ from logilab.common.deprecation import class_renamed, class_moved, deprecated
 
 from cubicweb.selectors import yes
 from cubicweb.view import Component
-from cubicweb.mail import NotificationView, SkipEmail
+from cubicweb.mail import NotificationView as BaseNotificationView, SkipEmail
 from cubicweb.server.hook import SendMailOp
 
 
@@ -59,7 +59,7 @@ class RecipientsFinder(Component):
 
 # abstract or deactivated notification views and mixin ########################
 
-class NotificationView(NotificationView):
+class NotificationView(BaseNotificationView):
     """overriden to delay actual sending of mails to a commit operation by
     default
     """
