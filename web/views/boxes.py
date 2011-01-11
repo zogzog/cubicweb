@@ -51,7 +51,7 @@ BoxHtml = htmlwidgets.BoxHtml
 class EditBox(component.CtxComponent): # XXX rename to ActionsBox
     """
     box with all actions impacting the entity displayed: edit, copy, delete
-    change state, add related entities
+    change state, add related entities...
     """
     __regid__ = 'edit_box'
     __select__ = component.CtxComponent.__select__ & non_final_entity()
@@ -127,7 +127,7 @@ class EditBox(component.CtxComponent): # XXX rename to ActionsBox
                 if hasattr(boxlink, 'label'):
                     boxlink.label = u'%s %s' % (submenu.label_prefix, boxlink.label)
                 else:
-                    submenu.items[0] = u'%s %s' % (submenu.label_prefix, boxlink)
+                    boxlink = u'%s %s' % (submenu.label_prefix, boxlink)
             box.append(boxlink)
         elif submenu.items:
             box.append(submenu)
@@ -187,7 +187,7 @@ class PossibleViewsBox(component.CtxComponent):
         for category, views in box.sort_by_category(self.views):
             menu = htmlwidgets.BoxMenu(category)
             for view in views:
-                menu.append(self.box_action(view))
+                menu.append(self.action_link(view))
             self.append(menu)
         self.render_items(w)
 

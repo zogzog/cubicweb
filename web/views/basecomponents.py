@@ -36,8 +36,7 @@ from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
 from cubicweb.web import component, uicfg
-from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
-                                      BoxLink)
+from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu
 
 VISIBLE_PROP_DEF = {
     _('visible'):  dict(type='Boolean', default=True,
@@ -167,13 +166,11 @@ class AuthenticatedUserStatus(AnonUserStatusLink):
         menu = PopupBoxMenu(self._cw.user.login, isitem=False)
         box.append(menu)
         for action in actions.get('useractions', ()):
-            menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                action.html_class()))
+            menu.append(self.action_link(action))
         if actions.get('useractions') and actions.get('siteactions'):
-            menu.append(BoxSeparator())
+            menu.append(self.separator())
         for action in actions.get('siteactions', ()):
-            menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                action.html_class()))
+            menu.append(self.action_link(action))
         box.render(w=w)
 
 

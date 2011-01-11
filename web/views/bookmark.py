@@ -98,7 +98,7 @@ class BookmarksBox(component.CtxComponent):
         if self.can_delete:
             req.add_js('cubicweb.ajax.js')
         for bookmark in self.bookmarks_rset.entities():
-            label = self.build_link(bookmark.title, bookmark.action_url())
+            label = self.link(bookmark.title, bookmark.action_url())
             if self.can_delete:
                 dlink = u'[<a class="action" href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
                     bookmark.eid, req._('delete this bookmark'))
@@ -114,7 +114,7 @@ class BookmarksBox(component.CtxComponent):
             # default value for bookmark's title
             url = req.vreg['etypes'].etype_class('Bookmark').cw_create_url(
                 req, __linkto=linkto, path=path)
-            menu.append(self.build_link(req._('bookmark this page'), url))
+            menu.append(self.link(req._('bookmark this page'), url))
             if self.bookmarks_rset:
                 if req.user.is_in_group('managers'):
                     bookmarksrql = 'Bookmark B WHERE B bookmarked_by U, U eid %s' % ueid
@@ -127,9 +127,9 @@ class BookmarksBox(component.CtxComponent):
                     bookmarksrql %= {'x': ueid}
                 if erset:
                     url = req.build_url(vid='muledit', rql=bookmarksrql)
-                    menu.append(self.build_link(req._('edit bookmarks'), url))
+                    menu.append(self.link(req._('edit bookmarks'), url))
             url = req.user.absolute_url(vid='xaddrelation', rtype='bookmarked_by',
                                         target='subject')
-            menu.append(self.build_link(req._('pick existing bookmarks'), url))
+            menu.append(self.link(req._('pick existing bookmarks'), url))
             self.append(menu)
         self.render_items(w)

@@ -28,8 +28,9 @@ from cubicweb.view import EntityView, AnyRsetView
 from cubicweb import tags
 from cubicweb.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize
+from cubicweb.web.component import Link
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
-                                      PopupBoxMenu, BoxLink)
+                                      PopupBoxMenu)
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):
@@ -212,7 +213,7 @@ class TableView(AnyRsetView):
                             ident='%sActions' % divid)
         box.append(menu)
         for url, label, klass, ident in actions:
-            menu.append(BoxLink(url, label, klass, ident=ident, escape=True))
+            menu.append(Link(url, label, klass=klass, id=ident))
         box.render(w=self.w)
         self.w(u'<div class="clear"/>')
 

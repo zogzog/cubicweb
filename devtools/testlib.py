@@ -480,9 +480,7 @@ class CubicWebTC(TestCase):
             def items(self):
                 return self
         class fake_box(object):
-            def mk_action(self, label, url, **kwargs):
-                return (label, url)
-            def box_action(self, action, **kwargs):
+            def action_link(self, action, **kwargs):
                 return (action.title, action.url())
         submenu = fake_menu()
         action.fill_menu(fake_box(), submenu)

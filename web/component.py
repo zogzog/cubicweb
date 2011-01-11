@@ -24,7 +24,7 @@ _ = unicode
 
 from warnings import warn
 
-from logilab.common.deprecation import class_deprecated, class_renamed
+from logilab.common.deprecation import class_deprecated, class_renamed, deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, role, target, tags
@@ -36,7 +36,7 @@ from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
                                 non_final_entity, partial_relation_possible,
                                 partial_has_related_entities)
 from cubicweb.appobject import AppObject
-from cubicweb.web import INTERNAL_FIELD_VALUE, htmlwidgets, stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 
 
 # abstract base class for navigation components ################################
@@ -162,6 +162,57 @@ class EmptyComponent(Exception):
     """some selectable component has actually no content and should not be
     rendered
     """
+
+
+class Link(object):
+    """a link to a view or action in the ui.
+
+    Use this rather than `cw.web.htmlwidgets.BoxLink`.
+
+    Note this class could probably be avoided with a proper DOM on the server
+    side.
+    """
+    newstyle = True
+
+    def __init__(self, href, label, **attrs):
+        self.href = href
+        self.label = label
+        self.attrs = attrs
+
+    def __unicode__(self):
+        return tags.a(self.label, href=self.href, **self.attrs)
+
+    def render(self, w):
+        w(tags.a(self.label, href=self.href, **self.attrs))
+
+
+class Separator(object):
+    """a menu separator.
+
+    Use this rather than `cw.web.htmlwidgets.BoxSeparator`.
+    """
+    newstyle = True
+
+    def render(self, w):
+        w(u'<hr class="boxSeparator"/>')
+
+
+def _bwcompatible_render_item(w, item):
+    if hasattr(item, 'render'):
+        if getattr(item, 'newstyle', False):
+            if isinstance(item, Separator):
+                w(u'</ul>')
+                item.render(w)
+                w(u'<ul>')
+            else:
+                w(u'<li>')
+                item.render(w)
+                w(u'</li>')
+        else:
+            item.render(w) # XXX displays <li> by itself
+    else:
+        w(u'<li>%s</li>' % item)
+
 
 class Layout(Component):
     __regid__ = 'layout'
@@ -289,20 +340,31 @@ class CtxComponent(AppObject):
         assert items
         w(u'<ul class="%s">' % klass)
         for item in items:
-            if hasattr(item, 'render'):
-                item.render(w) # XXX displays <li> by itself
-            else:
-                w(u'<li>')
-                w(item)
-                w(u'</li>')
+            _bwcompatible_render_item(w, item)
         w(u'</ul>')
 
     def append(self, item):
         self.items.append(item)
 
+    def action_link(self, action):
+        return self.link(self._cw._(action.title), action.url())
+
+    def link(self, title, url, **kwargs):
+        if self._cw.selected(url):
+            try:
+                kwargs['klass'] += ' selected'
+            except KeyError:
+                kwargs['klass'] = 'selected'
+        return Link(url, title, **kwargs)
+
+    def separator(self):
+        return Separator()
+
+    @deprecated('[3.10] use action_link() / link()')
     def box_action(self, action): # XXX action_link
         return self.build_link(self._cw._(action.title), action.url())
 
+    @deprecated('[3.10] use action_link() / link()')
     def build_link(self, title, url, **kwargs):
         if self._cw.selected(url):
             try:
@@ -362,9 +424,9 @@ class RQLCtxComponent(CtxComponent):
             items = []
             for i, (eid, label) in enumerate(rset):
                 entity = rset.get_entity(i, 0)
-                items.append(self.build_link(label, entity.absolute_url()))
+                items.append(self.link(label, entity.absolute_url()))
         else:
-            items = [self.build_link(e.dc_title(), e.absolute_url())
+            items = [self.link(e.dc_title(), e.absolute_url())
                      for e in rset.entities()]
         self.render_items(w, items)
 
