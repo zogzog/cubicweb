@@ -1350,8 +1350,9 @@ class Repository(object):
 
     # pyro handling ###########################################################
 
-    def pyro_register(self, host=''):
-        """register the repository as a pyro object"""
+    @property
+    @cached
+    def pyro_appid(self):
         from logilab.common import pyro_ext as pyro
         config = self.config
         appid = '%s.%s' % pyro.ns_group_and_id(
@@ -1359,12 +1360,26 @@ class Repository(object):
             config['pyro-ns-group'])
         # ensure config['pyro-instance-id'] is a full qualified pyro name
         config['pyro-instance-id'] = appid
-        daemon = pyro.register_object(self, appid,
-                                      daemonhost=config['pyro-host'],
-                                      nshost=config['pyro-ns-host'])
-        self.info('repository registered as a pyro object %s', appid)
+        return appid
+
+    def pyro_register(self, host=''):
+        """register the repository as a pyro object"""
+        from logilab.common import pyro_ext as pyro
+        daemon = pyro.register_object(self, self.pyro_appid,
+                                      daemonhost=self.config['pyro-host'],
+                                      nshost=self.config['pyro-ns-host'])
+        self.info('repository registered as a pyro object %s', self.pyro_appid)
         self.pyro_registered = True
+        # register a looping task to regularly ensure we're still registered
+        # into the pyro name server
+        self.looping_task(60*10, self._ensure_pyro_ns)
         return daemon
+
+    def _ensure_pyro_ns(self):
+        from logilab.common import pyro_ext as pyro
+        pyro.ns_reregister(self.pyro_appid, nshost=self.config['pyro-ns-host'])
+        self.info('repository re-registered as a pyro object %s',
+                  self.pyro_appid)
 
     # multi-sources planner helpers ###########################################
 
