@@ -972,7 +972,7 @@ class Entity(AppObject):
     def set_related_cache(self, rtype, role, rset):
         self.cw_set_relation_cache(rtype, role, rset)
 
-    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role, rset)')
+    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role)')
     def clear_related_cache(self, rtype=None, role=None):
         self.cw_clear_relation_cache(rtype, role)
 
