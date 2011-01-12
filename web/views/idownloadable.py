@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
+from logilab.common.deprecation import class_renamed
 
 from cubicweb import tags
 from cubicweb.view import EntityView
@@ -168,6 +169,10 @@ class IDownloadableOneLineView(baseviews.OneLineView):
         durl = xml_escape(adapter.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self._cw._('download')))
+
+IDownloadableLineView = class_renamed(
+    'IDownloadableLineView', IDownloadableOneLineView,
+    '[3.10] IDownloadableLineView is deprecated, use %IDownloadableOneLineView')
 
 
 class AbstractEmbeddedView(EntityView):
