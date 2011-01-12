@@ -2593,8 +2593,8 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "contient le texte"
 
-msgid "header-center"
-msgstr "en-tête (centre)"
+msgid "header-left"
+msgstr "en-tête (gauche)"
 
 msgid "header-right"
 msgstr "en-tête (droite)"
@@ -3935,6 +3935,13 @@ msgstr "à faire par"
 
 msgid "toggle check boxes"
 msgstr "inverser les cases à cocher"
+
+msgid "tr_count"
+msgstr "n° de transition"
+
+msgctxt "TrInfo"
+msgid "tr_count"
+msgstr "n° de transition"
 
 msgid "transaction undoed"
 msgstr "transaction annulées"

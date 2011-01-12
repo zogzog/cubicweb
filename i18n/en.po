@@ -2496,8 +2496,8 @@ msgstr ""
 msgid "has_text"
 msgstr "has text"
 
-msgid "header-center"
-msgstr "header (center)"
+msgid "header-left"
+msgstr "header (left)"
 
 msgid "header-right"
 msgstr "header (right)"
@@ -3798,6 +3798,13 @@ msgstr "to do by"
 
 msgid "toggle check boxes"
 msgstr ""
+
+msgid "tr_count"
+msgstr "transition number"
+
+msgctxt "TrInfo"
+msgid "tr_count"
+msgstr "transition number"
 
 msgid "transaction undoed"
 msgstr ""

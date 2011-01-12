@@ -2591,7 +2591,7 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "Contiene el texto"
 
-msgid "header-center"
+msgid "header-left"
 msgstr ""
 
 msgid "header-right"
@@ -3926,6 +3926,13 @@ msgstr "Asignada a"
 
 msgid "toggle check boxes"
 msgstr "Cambiar valor"
+
+msgid "tr_count"
+msgstr ""
+
+msgctxt "TrInfo"
+msgid "tr_count"
+msgstr ""
 
 msgid "transaction undoed"
 msgstr "Transacciones Anuladas"
