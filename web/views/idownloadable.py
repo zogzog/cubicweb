@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
-from logilab.common.deprecation import class_renamed
+from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb import tags
 from cubicweb.view import EntityView
@@ -32,7 +32,7 @@ from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
-# XXX deprecated
+@deprecated('[3.10] use a custom IDownloadable adapter instead')
 def download_box(w, entity, title=None, label=None, footer=u''):
     req = entity._cw
     w(u'<div class="sideBox">')
