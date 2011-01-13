@@ -26,6 +26,7 @@ from copy import deepcopy
 from pprint import pprint
 
 from logilab.common.decorators import clear_cache
+from logilab.common.testlib import SkipTest
 
 def tuplify(list):
     for i in range(len(list)):
@@ -156,7 +157,7 @@ class RQLGeneratorTC(TestCase):
             try:
                 cls.dbhelper = get_db_helper(cls.backend)
             except ImportError, ex:
-                cls.skipTest(str(ex))
+                raise SkipTest(str(ex))
 
     def setUp(self):
         self.repo = FakeRepo(self.schema)

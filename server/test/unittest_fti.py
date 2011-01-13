@@ -2,14 +2,14 @@ from __future__ import with_statement
 
 import socket
 
+from logilab.common.testlib import SkipTest
+
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.selectors import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
 AT_LOGILAB = socket.gethostname().endswith('.logilab.fr')
-
-from logilab.common.testlib import SkipTest
 
 
 class PostgresFTITC(CubicWebTC):
