@@ -235,7 +235,7 @@ def deserialize_schema(schema, session):
             uniquecstreid, eeid, releid = values
             eschema = schema.schema_by_eid(eeid)
             relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
-            relations[1].append(ertidx[releid].rtype.type)
+            relations[1].append(ertidx[releid])
         for eschema, unique_together in unique_togethers.itervalues():
             eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
@@ -355,6 +355,7 @@ def serialize_schema(cursor, schema):
     for eschema in eschemas:
         for unique_together in eschema._unique_together:
             execschemarql(execute, eschema, [uniquetogether2rql(eschema, unique_together)])
+    # serialize yams inheritance relationships
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
         if pb is not None:
@@ -417,23 +418,17 @@ def uniquetogether2rql(eschema, unique_together):
     restrictions = []
     substs = {}
     for i, name in enumerate(unique_together):
-        rschema = eschema.rdef(name)
-        var = 'R%d' % i
+        rschema = eschema.schema.rschema(name)
         rtype = 'T%d' % i
-        substs[rtype] = rschema.rtype.type
-        relations.append('C relations %s' % var)
-        restrictions.append('%(var)s from_entity X, '
-                            '%(var)s relation_type %(rtype)s, '
-                            '%(rtype)s name %%(%(rtype)s)s' \
-                            % {'var': var,
-                               'rtype':rtype})
+        substs[rtype] = rschema.type
+        relations.append('C relations %s' % rtype)
+        restrictions.append('%(rtype)s name %%(%(rtype)s)s' % {'rtype': rtype})
     relations = ', '.join(relations)
     restrictions = ', '.join(restrictions)
     rql = ('INSERT CWUniqueTogetherConstraint C: '
            '    C constraint_of X, %s  '
            'WHERE '
-           '    X eid %%(x)s, %s' )
-
+           '    X eid %%(x)s, %s')
     return rql % (relations, restrictions), substs
 
 

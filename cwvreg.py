@@ -290,13 +290,18 @@ VRegistry.REGISTRY_FACTORY[None] = CWRegistry
 
 class ETypeRegistry(CWRegistry):
 
+    def clear_caches(self):
+        clear_cache(self, 'etype_class')
+        clear_cache(self, 'parent_classes')
+        from cubicweb import selectors
+        selectors._reset_is_instance_cache(self.vreg)
+
     def initialization_completed(self):
         """on registration completed, clear etype_class internal cache
         """
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
-        clear_cache(self, 'etype_class')
-        clear_cache(self, 'parent_classes')
+        self.clear_caches()
 
     def register(self, obj, **kwargs):
         oid = kwargs.get('oid') or class_regid(obj)

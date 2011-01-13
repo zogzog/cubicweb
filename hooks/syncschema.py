@@ -30,7 +30,6 @@ from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
 from yams import buildobjs as ybo, schema2sql as y2sql
 
 from logilab.common.decorators import clear_cache
-from logilab.common.testlib import mock_object
 
 from cubicweb import ValidationError
 from cubicweb.selectors import is_instance
@@ -129,6 +128,11 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
                                display_name(session, attr)
     if errors:
         raise ValidationError(entity.eid, errors)
+
+
+class _MockEntity(object): # XXX use a named tuple with python 2.6
+    def __init__(self, eid):
+        self.eid = eid
 
 
 class SyncSchemaHook(hook.Hook):
@@ -266,8 +270,8 @@ class CWETypeAddOp(MemSchemaOperation):
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
-            rdef.subject = mock_object(eid=entity.eid)
-            mock = mock_object(eid=None)
+            rdef.subject = _MockEntity(eid=entity.eid)
+            mock = _MockEntity(eid=None)
             ss.execschemarql(session.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
 
     def revertprecommit_event(self):
@@ -701,14 +705,14 @@ class CWConstraintAddOp(CWConstraintDelOp):
             syssource.update_rdef_unique(session, rdef)
             self.unique_changed = True
 
+
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
-        cols = ['%s%s' % (prefix, r.rtype.name)
-                for r in self.entity.relations]
+        cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
         dbhelper= session.pool.source('system').dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
         for sql in sqls:
@@ -718,8 +722,9 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
 
     def postcommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
-        attrs = [r.rtype.name for r in self.entity.relations]
+        attrs = [r.name for r in self.entity.relations]
         eschema._unique_together.append(attrs)
+
 
 class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
     entity = oldcstr = None # for pylint
@@ -742,6 +747,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         unique_together = [ut for ut in eschema._unique_together
                            if set(ut) != cols]
         eschema._unique_together = unique_together
+
 
 # operations for in-memory schema synchronization  #############################
 
@@ -1138,9 +1144,9 @@ class BeforeDeleteConstraintOfHook(SyncSchemaHook):
         schema = self._cw.vreg.schema
         cstr = self._cw.entity_from_eid(self.eidfrom)
         entity = schema.schema_by_eid(self.eidto)
-        cols = [r.rtype.name
-                for r in cstr.relations]
-        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity, oldcstr=cstr, cols=cols)
+        cols = [r.name for r in cstr.relations]
+        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity,
+                                        oldcstr=cstr, cols=cols)
 
 
 # permissions synchronization hooks ############################################

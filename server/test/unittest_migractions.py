@@ -77,6 +77,10 @@ class MigrationCommandsTC(CubicWebTC):
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
+    def tearDown(self):
+        CubicWebTC.tearDown(self)
+        self.repo.vreg['etypes'].clear_caches()
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
         self.request().create_entity('Note')
@@ -88,8 +92,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
         self.assertEqual(self.schema['Note'].default('whatever'), 2)
+        # test default value set on existing entities
         note = self.execute('Note X').get_entity(0, 0)
         self.assertEqual(note.whatever, 2)
+        # test default value set for next entities
+        self.assertEqual(self.request().create_entity('Note').whatever, 2)
+        # test attribute order
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
@@ -108,6 +116,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_attribute_varchar(self):
+        self.failIf('whatever' in self.schema)
+        self.request().create_entity('Note')
+        self.commit()
         self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
         self.failUnless('shortpara' in self.schema)
@@ -117,6 +128,11 @@ class MigrationCommandsTC(CubicWebTC):
         notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
         self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
+        req = self.request()
+        # test default value set on existing entities
+        self.assertEqual(req.execute('Note X').get_entity(0, 0).shortpara, 'hop')
+        # test default value set for next entities
+        self.assertEqual(req.create_entity('Note').shortpara, 'hop')
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
@@ -173,7 +189,8 @@ class MigrationCommandsTC(CubicWebTC):
 
 
     def test_workflow_actions(self):
-        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'),
+                                      ensure_workflowable=False)
         for etype in ('Personne', 'Email'):
             s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
@@ -209,7 +226,8 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2',
+                                      ensure_workflowable=False)
         todo = wf.add_state(u'todo', initial=True)
         done = wf.add_state(u'done')
         wf.add_transition(u'redoit', done, todo)
@@ -416,7 +434,7 @@ class MigrationCommandsTC(CubicWebTC):
                                            ('nom', 'prenom', 'datenaiss'))
         rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint, C constraint_of ET, ET name "Personne"')
         self.assertEqual(len(rset), 1)
-        relations = [r.rtype.name for r in rset.get_entity(0, 0).relations]
+        relations = [r.name for r in rset.get_entity(0, 0).relations]
         self.assertItemsEqual(relations, ('nom', 'prenom', 'datenaiss'))
 
     def _erqlexpr_rset(self, action, ertype):
@@ -536,8 +554,9 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
     def test_remove_dep_cube(self):
-        ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
-        self.assertEqual(str(ex), "can't remove cube file, used as a dependency")
+        with self.assertRaises(ConfigurationError) as cm:
+            self.mh.cmd_remove_cube('file')
+        self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')

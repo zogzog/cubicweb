@@ -824,7 +824,7 @@ class PartPlanInformation(object):
             while sourceterms:
                 # take a term randomly, and all terms supporting the
                 # same solutions
-                term, solindices = self._choose_term(sourceterms)
+                term, solindices = self._choose_term(source, sourceterms)
                 if source.uri == 'system':
                     # ensure all variables are available for the latest step
                     # (missing one will be available from temporary tables
@@ -854,7 +854,7 @@ class PartPlanInformation(object):
                 # set of terms which should be additionaly selected when
                 # possible
                 needsel = set()
-                if not self._sourcesterms:
+                if not self._sourcesterms and scope is select:
                     terms += scope.defined_vars.values() + scope.aliases.values()
                     if isinstance(term, Relation) and len(sources) > 1:
                         variants = set()
@@ -867,13 +867,10 @@ class PartPlanInformation(object):
                             # before a join with prefetched inputs
                             # (see test_crossed_relation_noeid_needattr in
                             #  unittest_msplanner / unittest_multisources)
-                            needsel2 = needsel.copy()
-                            needsel2.update(variants)
                             lhs, rhs = term.get_variable_parts()
                             steps.append( (sources, [term, getattr(lhs, 'variable', lhs),
                                                      getattr(rhs, 'variable', rhs)],
-                                           solindices, scope,
-                                           needsel2, False) )
+                                           solindices, scope, variants, False) )
                             sources = [self.system_source]
                     final = True
                 else:
@@ -906,7 +903,7 @@ class PartPlanInformation(object):
                                 break
                         else:
                             if not scope is select:
-                                self._exists_relation(rel, terms, needsel)
+                                self._exists_relation(rel, terms, needsel, source)
                             # if relation is supported by all sources and some of
                             # its lhs/rhs variable isn't in "terms", and the
                             # other end *is* in "terms", mark it have to be
@@ -950,9 +947,14 @@ class PartPlanInformation(object):
                     self._cleanup_sourcesterms(sources, solindices)
                 steps.append((sources, terms, solindices, scope, needsel, final)
                              )
+        if not steps[-1][-1]:
+            # add a final step
+            terms = select.defined_vars.values() + select.aliases.values()
+            steps.append( ([self.system_source], terms, set(self._solindices),
+                           select, set(), True) )
         return steps
 
-    def _exists_relation(self, rel, terms, needsel):
+    def _exists_relation(self, rel, terms, needsel, source):
         rschema = self._schema.rschema(rel.r_type)
         lhs, rhs = rel.get_variable_parts()
         try:
@@ -965,13 +967,24 @@ class PartPlanInformation(object):
             # variable is refed by an outer scope and should be substituted
             # using an 'identity' relation (else we'll get a conflict of
             # temporary tables)
-            if rhsvar in terms and not lhsvar in terms and ms_scope(lhsvar) is lhsvar.stmt:
-                self._identity_substitute(rel, lhsvar, terms, needsel)
-            elif lhsvar in terms and not rhsvar in terms and ms_scope(rhsvar) is rhsvar.stmt:
-                self._identity_substitute(rel, rhsvar, terms, needsel)
+            relscope = ms_scope(rel)
+            lhsscope = ms_scope(lhsvar)
+            rhsscope = ms_scope(rhsvar)
+            if rhsvar in terms and not lhsvar in terms and lhsscope is lhsvar.stmt:
+                self._identity_substitute(rel, lhsvar, terms, needsel, relscope)
+            elif lhsvar in terms and not rhsvar in terms and rhsscope is rhsvar.stmt:
+                self._identity_substitute(rel, rhsvar, terms, needsel, relscope)
+            elif self.crossed_relation(source, rel):
+                if lhsscope is not relscope:
+                    self._identity_substitute(rel, lhsvar, terms, needsel,
+                                              relscope, lhsscope)
+                if rhsscope is not relscope:
+                    self._identity_substitute(rel, rhsvar, terms, needsel,
+                                              relscope, rhsscope)
 
-    def _identity_substitute(self, relation, var, terms, needsel):
-        newvar = self._insert_identity_variable(ms_scope(relation), var)
+    def _identity_substitute(self, relation, var, terms, needsel, exist,
+                             idrelscope=None):
+        newvar = self._insert_identity_variable(exist, var, idrelscope)
         # ensure relation is using '=' operator, else we rely on a
         # sqlgenerator side effect (it won't insert an inequality operator
         # in this case)
@@ -979,12 +992,28 @@ class PartPlanInformation(object):
         terms.append(newvar)
         needsel.add(newvar.name)
 
-    def _choose_term(self, sourceterms):
+    def _choose_term(self, source, sourceterms):
         """pick one term among terms supported by a source, which will be used
         as a base to generate an execution step
         """
         secondchoice = None
         if len(self._sourcesterms) > 1:
+            # first, return non invariant variable of crossed relation, then the
+            # crossed relation itself
+            for term in sourceterms:
+                if (isinstance(term, Relation)
+                    and self.crossed_relation(source, term)
+                    and not ms_scope(term) is self.rqlst):
+                    for vref in term.get_variable_parts():
+                        try:
+                            var = vref.variable
+                        except AttributeError:
+                            # Constant
+                            continue
+                        if ((len(var.stinfo['relations']) > 1 or var.stinfo['selected'])
+                            and var in sourceterms):
+                            return var, sourceterms.pop(var)
+                    return term, sourceterms.pop(term)
             # priority to variable from subscopes
             for term in sourceterms:
                 if not ms_scope(term) is self.rqlst:

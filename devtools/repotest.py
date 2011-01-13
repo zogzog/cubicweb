@@ -26,6 +26,7 @@ from copy import deepcopy
 from pprint import pprint
 
 from logilab.common.decorators import clear_cache
+from logilab.common.testlib import SkipTest
 
 def tuplify(list):
     for i in range(len(list)):
@@ -149,6 +150,15 @@ from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solution
 class RQLGeneratorTC(TestCase):
     schema = backend = None # set this in concret test
 
+
+    @classmethod
+    def setUpClass(cls):
+        if cls.backend is not None:
+            try:
+                cls.dbhelper = get_db_helper(cls.backend)
+            except ImportError, ex:
+                raise SkipTest(str(ex))
+
     def setUp(self):
         self.repo = FakeRepo(self.schema)
         self.repo.system_source = mock_object(dbdriver=self.backend)
@@ -159,11 +169,7 @@ class RQLGeneratorTC(TestCase):
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
         if self.backend is not None:
-            try:
-                dbhelper = get_db_helper(self.backend)
-            except ImportError, ex:
-                self.skipTest(str(ex))
-            self.o = SQLGenerator(self.schema, dbhelper)
+            self.o = SQLGenerator(self.schema, self.dbhelper)
 
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
@@ -378,7 +384,7 @@ _orig_choose_term = PartPlanInformation._choose_term
 def _merge_input_maps(*args, **kwargs):
     return sorted(_orig_merge_input_maps(*args, **kwargs))
 
-def _choose_term(self, sourceterms):
+def _choose_term(self, source, sourceterms):
     # predictable order for test purpose
     def get_key(x):
         try:
@@ -391,7 +397,7 @@ def _choose_term(self, sourceterms):
             except AttributeError:
                 # const
                 return x.value
-    return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
+    return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
 from cubicweb.server.sources.pyrorql import PyroRQLSource
 _orig_syntax_tree_search = PyroRQLSource.syntax_tree_search

@@ -697,7 +697,7 @@ class Entity(AppObject):
         if not self.has_eid():
             if entities:
                 return []
-            return self.empty_rset()
+            return self._cw.empty_rset()
         rql = self.cw_related_rql(rtype, role)
         rset = self._cw.execute(rql, {'x': self.eid})
         self.cw_set_relation_cache(rtype, role, rset)
@@ -972,7 +972,7 @@ class Entity(AppObject):
     def set_related_cache(self, rtype, role, rset):
         self.cw_set_relation_cache(rtype, role, rset)
 
-    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role, rset)')
+    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role)')
     def clear_related_cache(self, rtype=None, role=None):
         self.cw_clear_relation_cache(rtype, role)
 
@@ -996,7 +996,7 @@ class Entity(AppObject):
         return self.cw_edited.skip_security
 
     @property
-    @deprecated('[3.10] use entity.cw_edited.skip_security')
+    @deprecated('[3.10] use entity.cw_edited.querier_pending_relations')
     def querier_pending_relations(self):
         return self.cw_edited.querier_pending_relations
 

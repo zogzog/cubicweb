@@ -43,7 +43,7 @@ class Action(AppObject):
     def fill_menu(self, box, menu):
         """add action(s) to the given submenu of the given box"""
         for action in self.actual_actions():
-            menu.append(box.box_action(action))
+            menu.append(box.action_link(action))
 
     def html_class(self):
         if self._cw.selected(self.url()):

@@ -298,8 +298,9 @@ class ApplicationTC(CubicWebTC):
 
     def test_login_not_available_to_authenticated(self):
         req = self.request()
-        ex = self.assertRaises(Unauthorized, self.app_publish, req, 'login')
-        self.assertEqual(str(ex), 'log out first')
+        with self.assertRaises(Unauthorized) as cm:
+            self.app_publish(req, 'login')
+        self.assertEqual(str(cm.exception), 'log out first')
 
     def test_fb_login_concept(self):
         """see data/views.py"""
@@ -367,8 +368,9 @@ class ApplicationTC(CubicWebTC):
         # preparing the suite of the test
         # set session id in cookie
         cookie = Cookie.SimpleCookie()
-        cookie['__session'] = req.session.sessionid
-        req._headers['Cookie'] = cookie['__session'].OutputString()
+        sessioncookie = self.app.session_handler.session_cookie(req)
+        cookie[sessioncookie] = req.session.sessionid
+        req._headers['Cookie'] = cookie[sessioncookie].OutputString()
         clear_cache(req, 'get_authorization')
         # reset session as if it was a new incoming request
         req.session = req.cnx = None

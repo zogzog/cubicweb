@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
+from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb import tags
 from cubicweb.view import EntityView
@@ -31,7 +32,7 @@ from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
-# XXX deprecated
+@deprecated('[3.10] use a custom IDownloadable adapter instead')
 def download_box(w, entity, title=None, label=None, footer=u''):
     req = entity._cw
     w(u'<div class="sideBox">')
@@ -62,10 +63,12 @@ class DownloadBox(component.EntityCtxComponent):
 
     def render_body(self, w):
         for item in self.items:
+            idownloadable = item.cw_adapt_to('IDownloadable')
             w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
-              % (xml_escape(item.cw_adapt_to('IDownloadable').download_url()),
+              % (xml_escape(idownloadable.download_url()),
                  self._cw.uiprops['DOWNLOAD_ICON'],
-                 self._cw._('download icon'), xml_escape(item.dc_title())))
+                 self._cw._('download icon'),
+                 xml_escape(idownloadable.download_file_name())))
 
 
 class DownloadView(EntityView):
@@ -154,7 +157,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         return False
 
 
-class IDownloadableLineView(baseviews.OneLineView):
+class IDownloadableOneLineView(baseviews.OneLineView):
     __select__ = adaptable('IDownloadable')
 
     def cell_call(self, row, col, title=None, **kwargs):
@@ -162,10 +165,14 @@ class IDownloadableLineView(baseviews.OneLineView):
         entity = self.cw_rset.get_entity(row, col)
         url = xml_escape(entity.absolute_url())
         adapter = entity.cw_adapt_to('IDownloadable')
-        name = xml_escape(title or adapter.download_file_name())
+        name = xml_escape(title or entity.dc_title())
         durl = xml_escape(adapter.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self._cw._('download')))
+
+IDownloadableLineView = class_renamed(
+    'IDownloadableLineView', IDownloadableOneLineView,
+    '[3.10] IDownloadableLineView is deprecated, use %IDownloadableOneLineView')
 
 
 class AbstractEmbeddedView(EntityView):

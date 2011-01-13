@@ -419,7 +419,7 @@ class JSonController(Controller):
                                               **optional_kwargs(extraargs))
         #except NoSelectableObject:
         #    raise RemoteCallFailed('unselectable')
-        return self._call_view(comp, **extraargs)
+        return self._call_view(comp, **optional_kwargs(extraargs))
 
     @xhtmlize
     def js_render(self, registry, oid, eid=None,

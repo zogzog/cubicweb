@@ -408,7 +408,8 @@ def run(config, vreg=None, debug=None):
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
-    reactor.listenTCP(port, website)
+    interface = config['interface']
+    reactor.listenTCP(port, website, interface=interface)
     if not config.debugmode:
         if sys.platform == 'win32':
             raise ConfigurationError("Under windows, you must use the service management "

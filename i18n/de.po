@@ -2566,7 +2566,7 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "enthält Text"
 
-msgid "header-center"
+msgid "header-left"
 msgstr ""
 
 msgid "header-right"
@@ -3917,6 +3917,13 @@ msgstr "zu erledigen bis"
 
 msgid "toggle check boxes"
 msgstr "Kontrollkästchen umkehren"
+
+msgid "tr_count"
+msgstr ""
+
+msgctxt "TrInfo"
+msgid "tr_count"
+msgstr ""
 
 msgid "transaction undoed"
 msgstr "Transaktion rückgängig gemacht"

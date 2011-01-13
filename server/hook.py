@@ -239,8 +239,8 @@ Hooks and operations classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.server.hook.Hook
 .. autoclass:: cubicweb.server.hook.Operation
-.. autoclass:: cubicweb.server.hook.DataOperation
 .. autoclass:: cubicweb.server.hook.LateOperation
+.. autoclass:: cubicweb.server.hook.DataOperationMixIn
 """
 
 from __future__ import with_statement

@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""unit tests for module cubicweb.server.msplanner"""
+
+from __future__ import with_statement
 
 from logilab.common.decorators import clear_cache
 
@@ -2013,15 +2016,15 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_source_conflict_1(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        ex = self.assertRaises(BadRQLQuery,
-                               self._test, 'Any X WHERE X cw_source S, S name "system", X eid %(x)s',
-                               [], {'x': 999999})
-        self.assertEqual(str(ex), 'source conflict for term %(x)s')
+        with self.assertRaises(BadRQLQuery) as cm:
+            self._test('Any X WHERE X cw_source S, S name "system", X eid %(x)s',
+                       [], {'x': 999999})
+        self.assertEqual(str(cm.exception), 'source conflict for term %(x)s')
 
     def test_source_conflict_2(self):
-        ex = self.assertRaises(BadRQLQuery,
-                               self._test, 'Card X WHERE X cw_source S, S name "systeme"', [])
-        self.assertEqual(str(ex), 'source conflict for term X')
+        with self.assertRaises(BadRQLQuery) as cm:
+            self._test('Card X WHERE X cw_source S, S name "systeme"', [])
+        self.assertEqual(str(cm.exception), 'source conflict for term X')
 
     def test_source_conflict_3(self):
         self.skipTest('oops')
@@ -2472,6 +2475,37 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                        [])]
                      )]
                    )
+
+    def test_version_crossed_depends_on_4(self):
+        self._test('Any X,AD,AE WHERE EXISTS(E multisource_crossed_rel X), X in_state AD, AD name AE, E is Note',
+                   [('FetchStep',
+                     [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
+                       [{'X': 'Note', 'AD': 'State', 'AE': 'String'}])],
+                     [self.cards, self.cards2, self.system], None,
+                     {'X': 'table0.C0',
+                      'AD': 'table0.C1',
+                      'AD.name': 'table0.C2',
+                      'AE': 'table0.C2'},
+                     []),
+                    ('FetchStep',
+                     [('Any A WHERE E multisource_crossed_rel A, A is Note, E is Note',
+                       [{'A': 'Note', 'E': 'Note'}])],
+                     [self.cards, self.cards2, self.system], None,
+                     {'A': 'table1.C0'},
+                     []),
+                    ('OneFetchStep',
+                     [('Any X,AD,AE WHERE EXISTS(X identity A), AD name AE, A is Note, AD is State, X is Note',
+                       [{'A': 'Note', 'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     None, None,
+                     [self.system],
+                     {'A': 'table1.C0',
+                      'AD': 'table0.C1',
+                      'AD.name': 'table0.C2',
+                      'AE': 'table0.C2',
+                      'X': 'table0.C0'},
+                     []
+                     )]
+                       )
 
     def test_nonregr_dont_cross_rel_source_filtering_1(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)

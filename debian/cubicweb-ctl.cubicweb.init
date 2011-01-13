@@ -24,12 +24,12 @@ cd /tmp
 
 case $1 in
     force-reload)
-        /usr/bin/cubicweb-ctl reload --force
+        python -W ignore /usr/bin/cubicweb-ctl reload --force
         ;;
     status)
-        /usr/bin/cubicweb-ctl status
+        python -W ignore /usr/bin/cubicweb-ctl status
         ;;
     *)
-        /usr/bin/cubicweb-ctl $1 --force
+        python -W ignore /usr/bin/cubicweb-ctl $1 --force
         ;;
 esac

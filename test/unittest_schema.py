@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema"""
 
+from __future__ import with_statement
+
 import sys
 from os.path import join, isabs, basename, dirname
 
@@ -279,9 +281,9 @@ class BadSchemaRQLExprTC(TestCase):
 
     def _test(self, schemafile, msg):
         self.loader.handle_file(join(DATADIR, schemafile))
-        ex = self.assertRaises(BadSchemaDefinition,
-                               self.loader._build_schema, 'toto', False)
-        self.assertEqual(str(ex), msg)
+        with self.assertRaises(BadSchemaDefinition) as cm:
+            self.loader._build_schema('toto', False)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_rrqlexpr_on_etype(self):
         self._test('rrqlexpr_on_eetype.py',

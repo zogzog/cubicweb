@@ -367,13 +367,15 @@ class HTMLPageHeader(View):
 
 
 class HTMLPageFooter(View):
-    """default html page footer: include footer actions
-    """
+    """default html page footer: include footer actions"""
     __regid__ = 'footer'
 
     def call(self, **kwargs):
-        req = self._cw
         self.w(u'<div id="footer">')
+        self.footer_content()
+        self.w(u'</div>')
+
+    def footer_content(self):
         actions = self._cw.vreg['actions'].possible_actions(self._cw,
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
@@ -382,8 +384,6 @@ class HTMLPageFooter(View):
                                              self._cw._(action.title)))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
-        self.w(u'</div>')
-
 
 class HTMLContentHeader(View):
     """default html page content header:

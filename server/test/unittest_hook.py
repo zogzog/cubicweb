@@ -18,6 +18,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit/functional tests for cubicweb.server.hook"""
 
+from __future__ import with_statement
+
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 
@@ -101,20 +103,23 @@ class HooksRegistryTC(TestCase):
     def test_register_bad_hook1(self):
         class _Hook(hook.Hook):
             events = ('before_add_entiti',)
-        ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEqual(str(ex), 'bad event before_add_entiti on %s._Hook' % __name__)
+        with self.assertRaises(Exception) as cm:
+            self.o.register(_Hook)
+        self.assertEqual(str(cm.exception), 'bad event before_add_entiti on %s._Hook' % __name__)
 
     def test_register_bad_hook2(self):
         class _Hook(hook.Hook):
             events = None
-        ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEqual(str(ex), 'bad .events attribute None on %s._Hook' % __name__)
+        with self.assertRaises(Exception) as cm:
+            self.o.register(_Hook)
+        self.assertEqual(str(cm.exception), 'bad .events attribute None on %s._Hook' % __name__)
 
     def test_register_bad_hook3(self):
         class _Hook(hook.Hook):
             events = 'before_add_entity'
-        ex = self.assertRaises(Exception, self.o.register, _Hook)
-        self.assertEqual(str(ex), 'bad event b on %s._Hook' % __name__)
+        with self.assertRaises(Exception) as cm:
+            self.o.register(_Hook)
+        self.assertEqual(str(cm.exception), 'bad event b on %s._Hook' % __name__)
 
     def test_call_hook(self):
         self.o.register(AddAnyHook)

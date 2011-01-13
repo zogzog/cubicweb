@@ -1,9 +1,4 @@
-MKHTML=mkdoc
-MKHTMLOPTS=--doctype article --target html --stylesheet standard
 SRC=.
-
-TXTFILES:= $(wildcard *.txt)
-TARGET := $(TXTFILES:.txt=.html)
 
 # You can set these sphinx variables from the command line.
 SPHINXOPTS    =
@@ -41,10 +36,7 @@ clean:
 	-rm -rf ${BUILDDIR}/*
 	-rm -rf ${BUILDJS}
 
-all: ${TARGET} html
-
-%.html: %.txt
-	${MKHTML} ${MKHTMLOPTS} $<
+all: html
 
 # run sphinx ###
 html: js
