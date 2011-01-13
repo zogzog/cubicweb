@@ -536,38 +536,21 @@ class ServerMigrationHelper(MigrationHelper):
             unique_together = set([frozenset(ut)
                                    for ut in eschema._unique_together])
             for ut in repo_unique_together - unique_together:
-                restrictions  = ', '.join(['C relations R%(i)d, '
-                                           'R%(i)d relation_type T%(i)d, '
-                                           'R%(i)d from_entity X, '
-                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
-                                                                        'col':col}
-                                           for (i, col) in enumerate(ut)])
-                substs = {'etype': etype}
+                restrictions = []
+                substs = {'x': repoeschema.eid}
                 for i, col in enumerate(ut):
+                    restrictions.append('C relations T%(i)d, '
+                                       'T%(i)d name %%(T%(i)d)s' % {'i': i})
                     substs['T%d'%i] = col
                 self.rqlexec('DELETE CWUniqueTogetherConstraint C '
                              'WHERE C constraint_of E, '
-                             '      E name %%(etype)s,'
-                             '      %s' % restrictions,
+                             '      E eid %%(x)s,'
+                             '      %s' % ', '.join( restrictions),
                              substs)
             for ut in unique_together - repo_unique_together:
-                relations = ', '.join(['C relations R%d' % i
-                                       for (i, col) in enumerate(ut)])
-                restrictions  = ', '.join(['R%(i)d relation_type T%(i)d, '
-                                           'R%(i)d from_entity E, '
-                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
-                                                                        'col':col}
-                                           for (i, col) in enumerate(ut)])
-                substs = {'etype': etype}
-                for i, col in enumerate(ut):
-                    substs['T%d'%i] = col
-                self.rqlexec('INSERT CWUniqueTogetherConstraint C:'
-                             '       C constraint_of E, '
-                             '       %s '
-                             'WHERE '
-                             '      E name %%(etype)s,'
-                             '      %s' % (relations, restrictions),
-                             substs)
+                rql, substs = ss.uniquetogether2rql(eschema, ut)
+                substs['x'] = repoeschema.eid
+                self.rqlexec(rql, substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):

@@ -159,10 +159,10 @@ class CWUniqueTogetherConstraint(EntityType):
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
     constraint_of = SubjectRelation('CWEType', cardinality='1*', composite='object',
                                     inlined=True)
-    relations = SubjectRelation(('CWAttribute', 'CWRelation'), cardinality='+*',
-                                 constraints=[RQLConstraint(
-           'O from_entity X, S constraint_of X, O relation_type T, '
-           'T final TRUE OR (T final FALSE AND T inlined TRUE)')])
+    relations = SubjectRelation('CWRType', cardinality='+*',
+                                constraints=[RQLConstraint(
+           'S constraint_of ET, RDEF relation_type O, RDEF from_entity ET, '
+           'O final TRUE OR (O final FALSE AND O inlined TRUE)')])
 
 
 class CWConstraintType(EntityType):

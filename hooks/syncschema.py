@@ -705,14 +705,14 @@ class CWConstraintAddOp(CWConstraintDelOp):
             syssource.update_rdef_unique(session, rdef)
             self.unique_changed = True
 
+
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
-        cols = ['%s%s' % (prefix, r.rtype.name)
-                for r in self.entity.relations]
+        cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
         dbhelper= session.pool.source('system').dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
         for sql in sqls:
@@ -722,8 +722,9 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
 
     def postcommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
-        attrs = [r.rtype.name for r in self.entity.relations]
+        attrs = [r.name for r in self.entity.relations]
         eschema._unique_together.append(attrs)
+
 
 class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
     entity = oldcstr = None # for pylint
@@ -746,6 +747,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         unique_together = [ut for ut in eschema._unique_together
                            if set(ut) != cols]
         eschema._unique_together = unique_together
+
 
 # operations for in-memory schema synchronization  #############################
 
@@ -1142,9 +1144,9 @@ class BeforeDeleteConstraintOfHook(SyncSchemaHook):
         schema = self._cw.vreg.schema
         cstr = self._cw.entity_from_eid(self.eidfrom)
         entity = schema.schema_by_eid(self.eidto)
-        cols = [r.rtype.name
-                for r in cstr.relations]
-        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity, oldcstr=cstr, cols=cols)
+        cols = [r.name for r in cstr.relations]
+        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity,
+                                        oldcstr=cstr, cols=cols)
 
 
 # permissions synchronization hooks ############################################
