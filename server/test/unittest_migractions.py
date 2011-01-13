@@ -189,7 +189,8 @@ class MigrationCommandsTC(CubicWebTC):
 
 
     def test_workflow_actions(self):
-        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'),
+                                      ensure_workflowable=False)
         for etype in ('Personne', 'Email'):
             s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
@@ -225,7 +226,8 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2',
+                                      ensure_workflowable=False)
         todo = wf.add_state(u'todo', initial=True)
         done = wf.add_state(u'done')
         wf.add_transition(u'redoit', done, todo)

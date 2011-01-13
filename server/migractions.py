@@ -1208,7 +1208,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.cmd_add_relation_definition('TrInfo', 'wf_info_for', etype)
 
     def cmd_add_workflow(self, name, wfof, default=True, commit=False,
-                         **kwargs):
+                         ensure_workflowable=True, **kwargs):
         """
         create a new workflow and links it to entity types
          :type name: unicode
@@ -1232,9 +1232,10 @@ class ServerMigrationHelper(MigrationHelper):
             return 'missing workflow relations, see make_workflowable(%s)' % etype
         for etype in wfof:
             eschema = self.repo.schema[etype]
-            assert 'in_state' in eschema.subjrels, _missing_wf_rel(etype)
-            assert 'custom_workflow' in eschema.subjrels, _missing_wf_rel(etype)
-            assert 'wf_info_for' in eschema.objrels, _missing_wf_rel(etype)
+            if ensure_workflowable:
+                assert 'in_state' in eschema.subjrels, _missing_wf_rel(etype)
+                assert 'custom_workflow' in eschema.subjrels, _missing_wf_rel(etype)
+                assert 'wf_info_for' in eschema.objrels, _missing_wf_rel(etype)
             rset = self.rqlexec(
                 'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
                 {'x': wf.eid, 'et': etype}, ask_confirm=False)
