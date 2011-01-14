@@ -196,13 +196,13 @@ Let us look at simple example from the ``blog`` cube.
             blog_entry_2 = req.create_entity('BlogEntry', title=u'yes',
                                              content=u'cubicweb yes')
             blog_entry_2.set_relations(entry_of=cubicweb_blog)
-            self.assertEquals(len(MAILBOX), 0)
+            self.assertEqual(len(MAILBOX), 0)
             self.commit()
-            self.assertEquals(len(MAILBOX), 2)
+            self.assertEqual(len(MAILBOX), 2)
             mail = MAILBOX[0]
-            self.assertEquals(mail.subject, '[data] hop')
+            self.assertEqual(mail.subject, '[data] hop')
             mail = MAILBOX[1]
-            self.assertEquals(mail.subject, '[data] yes')
+            self.assertEqual(mail.subject, '[data] yes')
 
 Visible actions tests
 `````````````````````
@@ -229,7 +229,7 @@ user or to a category of users. Let's take an example in the
         def test_admin(self):
             req = self.request()
             rset = req.execute('Any C WHERE C is Conference')
-            self.assertListEquals(self.pactions(req, rset),
+            self.assertListEqual(self.pactions(req, rset),
                                   [('workflow', workflow.WorkflowActions),
                                    ('edit', confactions.ModifyAction),
                                    ('managepermission', actions.ManagePermissionsAction),
@@ -238,7 +238,7 @@ user or to a category of users. Let's take an example in the
                                    ('generate_badge_action', badges.GenerateBadgeAction),
                                    ('addtalkinconf', confactions.AddTalkInConferenceAction)
                                    ])
-            self.assertListEquals(self.action_submenu(req, rset, 'addrelated'),
+            self.assertListEqual(self.action_submenu(req, rset, 'addrelated'),
                                   [(u'add Track in_conf Conference object',
                                     u'http://testing.fr/cubicweb/add/Track'
                                     u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
