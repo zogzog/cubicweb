@@ -172,7 +172,7 @@ class IDownloadableOneLineView(baseviews.OneLineView):
 
 IDownloadableLineView = class_renamed(
     'IDownloadableLineView', IDownloadableOneLineView,
-    '[3.10] IDownloadableLineView is deprecated, use %IDownloadableOneLineView')
+    '[3.10] IDownloadableLineView is deprecated, use IDownloadableOneLineView')
 
 
 class AbstractEmbeddedView(EntityView):
