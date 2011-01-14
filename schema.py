@@ -83,7 +83,7 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'SubWorkflowExitPoint'))
 
 INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri',
-                      'CWSource', 'CWSourceAlias',
+                      'CWSource', 'CWSourceHostConfig',
 ))
 
 

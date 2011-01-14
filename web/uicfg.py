@@ -128,6 +128,7 @@ class InitializableDict(dict):
 indexview_etype_section = InitializableDict(
     EmailAddress='subobject',
     # entity types in the 'system' table by default (managers only)
+    CWSource='system',
     CWUser='system', CWGroup='system',
     CWPermission='system',
     CWCache='system',
