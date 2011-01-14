@@ -226,6 +226,12 @@ relations:
 	cardinality = '11' # required
 
     class may_be_read_by(RelationDefinition):
+        __permissions__ = {
+	    'read':   ('managers', 'users'),
+	    'add':    ('managers',),
+	    'delete': ('managers',),
+	    }
+
 	subject = ('Folder', 'File', 'Image', 'Comment',)
 	object = 'CWUser'
 
@@ -240,6 +246,9 @@ We can note the following points:
   hidden by the `vocabulary` argument)
 
 * the `parent` possible value will be used for visibility propagation
+
+* think to secure the `may_be_read_by` permissions, else any user can add/delte it
+  by default, which somewhat breaks our security model...
 
 Now, we should be able to define security rules in the schema, based on these new
 attribute and relation. Here is the code to add to *schema.py*:
