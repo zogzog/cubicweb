@@ -347,10 +347,10 @@ msgid "CWSource_plural"
 msgstr "Source de données"
 
 msgid "CWUniqueTogetherConstraint"
-msgstr "Contrainte unique_together"
+msgstr "Contrainte d'unicité"
 
 msgid "CWUniqueTogetherConstraint_plural"
-msgstr "Contraintes unique_together"
+msgstr "Contraintes d'unicité"
 
 msgid "CWUser"
 msgstr "Utilisateur"

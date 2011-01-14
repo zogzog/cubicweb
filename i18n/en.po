@@ -328,22 +328,22 @@ msgid "CWRelation_plural"
 msgstr "Relations"
 
 msgid "CWSource"
-msgstr ""
+msgstr "Data source"
 
 msgid "CWSourceHostConfig"
-msgstr ""
+msgstr "Host configuration"
 
 msgid "CWSourceHostConfig_plural"
-msgstr ""
+msgstr "Host configurations"
 
 msgid "CWSource_plural"
-msgstr ""
+msgstr "Data sources"
 
 msgid "CWUniqueTogetherConstraint"
-msgstr ""
+msgstr "Unicity constraint"
 
 msgid "CWUniqueTogetherConstraint_plural"
-msgstr ""
+msgstr "Unicity constraints"
 
 msgid "CWUser"
 msgstr "User"
@@ -525,13 +525,13 @@ msgid "New CWRelation"
 msgstr "New relation"
 
 msgid "New CWSource"
-msgstr ""
+msgstr "New source"
 
 msgid "New CWSourceHostConfig"
-msgstr ""
+msgstr "New host configuration"
 
 msgid "New CWUniqueTogetherConstraint"
-msgstr ""
+msgstr "New unicity constraint"
 
 msgid "New CWUser"
 msgstr "New user"
@@ -733,13 +733,13 @@ msgid "This CWRelation"
 msgstr "This relation"
 
 msgid "This CWSource"
-msgstr ""
+msgstr "This data source"
 
 msgid "This CWSourceHostConfig"
-msgstr ""
+msgstr "This host configuration"
 
 msgid "This CWUniqueTogetherConstraint"
-msgstr ""
+msgstr "This unicity constraint"
 
 msgid "This CWUser"
 msgstr "This user"
@@ -933,10 +933,10 @@ msgid "add CWRelation relation_type CWRType object"
 msgstr "relation definition"
 
 msgid "add CWSourceHostConfig cw_host_config_of CWSource object"
-msgstr ""
+msgstr "host configuration"
 
 msgid "add CWUniqueTogetherConstraint constraint_of CWEType object"
-msgstr ""
+msgstr "unicity constraint"
 
 msgid "add CWUser in_group CWGroup object"
 msgstr "user"
@@ -1433,18 +1433,18 @@ msgid "constraint factory"
 msgstr ""
 
 msgid "constraint_of"
-msgstr ""
+msgstr "constraint of"
 
 msgctxt "CWUniqueTogetherConstraint"
 msgid "constraint_of"
-msgstr ""
+msgstr "constraint of"
 
 msgid "constraint_of_object"
-msgstr ""
+msgstr "constrained by"
 
 msgctxt "CWEType"
 msgid "constraint_of_object"
-msgstr ""
+msgstr "constrained by"
 
 msgid "constraints"
 msgstr ""
@@ -1540,7 +1540,7 @@ msgstr "creating host configuration for source %(linkto)s"
 msgid ""
 "creating CWUniqueTogetherConstraint (CWUniqueTogetherConstraint "
 "constraint_of CWEType %(linkto)s)"
-msgstr "creating unique together constrain for entity type %(linkto)s"
+msgstr "creating unique together constraint for entity type %(linkto)s"
 
 msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "creating a new user in group %(linkto)s"
@@ -3305,15 +3305,11 @@ msgid "relations deleted"
 msgstr ""
 
 msgid "relations_object"
-msgstr ""
+msgstr "constrained by"
 
-msgctxt "CWAttribute"
+msgctxt "CWRType"
 msgid "relations_object"
-msgstr ""
-
-msgctxt "CWRelation"
-msgid "relations_object"
-msgstr ""
+msgstr "constrained by"
 
 msgid "relative url of the bookmarked page"
 msgstr ""
