@@ -66,7 +66,7 @@ existing cubes that I'll extend for my need. So I'll pick the following cubes:
   entities supporting the `tags` relation by linking the to `Tag` entities. This
   will allows navigation into a large number of picture.
 
-Ok, now I'll tell my cube requires all this by editing cubes/sytweb/__pkginfo__.py:
+Ok, now I'll tell my cube requires all this by editing :file:`cubes/sytweb/__pkginfo__.py`:
 
   .. sourcecode:: python
 
@@ -180,9 +180,11 @@ This part will cover various topics:
 Here is the ``read`` security model I want:
 
 * folders, files, images and comments should have one of the following visibility:
+
   - ``public``, everyone can see it
   - ``authenticated``, only authenticated users can see it
   - ``restricted``, only a subset of authenticated users can see it
+
 * managers (e.g. me) can see everything
 * only authenticated users can see people
 * everyone can see classifier entities, such as tag and zone

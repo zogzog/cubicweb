@@ -9,33 +9,38 @@ The following steps will help you to create and customize a new cube.
 
 1. :ref:`CreateYourCube`
 
-Create the directory to hold the code of your cube. The most important
-files that will be useful to customize your newly created cube are:
+   Create the directory to hold the code of your cube. The most important files
+   that will be useful to customize your newly created cube are:
 
-  * schema.py: contains the data model
-  * views.py: contains your custom views
-  * entities.py: contains XXX
+     * schema.py: contains the data model
+     * views.py: contains your custom views
+     * entities.py: contains logic on top of the data model
 
-The detailed structure of the code directory is described in :ref:`cubelayout`.
+   The detailed structure of the cube directory is described in
+   :ref:`cubelayout`.
 
 2. :ref:`DefineDataModel`
 
-Define the data model of your application.
+   Define the data model of your application.
 
 3. :ref:`ExploreYourInstance`
 
-Create, run, and explore an instance of your cube.
+   Create, run, and explore an instance of your cube.
 
 4. :ref:`DefineViews`
 
-Customize the views of your data: how and which part of your data are showed.
+   Customize the views of your data: how and which part of your data are showed.
 
-.. note:: views do not define the look'n'feel and the design of your application. For that, you will use CSS and the files located 'blog/data/'.
+   .. note::
+
+     views usually do not define the look'n'feel and the design of your
+     application. For that, you will use CSS and the files located 'blog/data/'.
 
 
 5. :ref:`DefineEntities`
 
-Define your own entities to add useful functions when you manipulate your data, especially when you write view.
+   Define your own entities to add useful functions when you manipulate your
+   data, especially when you write view.
 
 
 .. _CreateYourCube:
@@ -44,27 +49,27 @@ Create your cube
 ----------------
 
 The packages ``cubicweb`` and ``cubicweb-dev`` install a command line
-tool for *CubicWeb* called ``cubicweb-ctl``. This tool provides a wide
+tool for |cubicweb| called ``cubicweb-ctl``. This tool provides a wide
 range of commands described in details in :ref:`cubicweb-ctl`.
 
-Once your *CubicWeb* development environment is set up, you can create
+Once your |cubicweb| development environment is set up, you can create
 a new cube::
 
   cubicweb-ctl newcube blog
 
-This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
-installation, ``/usr/share/cubicweb/cubes`` for debian packages installation)
+This will create in the cubes directory (:file:`/path/to/forest/cubes` for Mercurial
+installation, :file:`/usr/share/cubicweb/cubes` for debian packages installation)
 a directory named ``blog`` reflecting the structure described in :ref:`Concepts`.
 
 
-For packages installation, you can still create new cubes in your home directory using the following configuration. Let's say you want to develop your new cubes in `~src/cubes`, then set the following environment variables:
-::
+For packages installation, you can still create new cubes in your home directory
+using the following configuration. Let's say you want to develop your new cubes
+in `~src/cubes`, then set the following environment variables: ::
 
   CW_CUBES_PATH=~/src/cubes
   CW_MODE=user
 
-and then create your new cube using:
-::
+and then create your new cube using: ::
 
   cubicweb-ctl newcube --directory=~/src/cubes blog
 
@@ -74,14 +79,14 @@ and then create your new cube using:
 Define your data model
 ----------------------
 
-The data model or schema is the core of your *CubicWeb* application.
+The data model or schema is the core of your |cubicweb| application.
 It defines the type of content your application will handle.
 
 The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
 .. sourcecode:: python
 
-  from yams.buildobjs import EntityType, String, SubjectRelation, Date
+  from yams.buildobjs import EntityType, SubjectRelation, String, Date
 
   class Blog(EntityType):
     title = String(maxsize=50, required=True)
@@ -93,8 +98,8 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
     content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*')
 
-The first step is the import of the EntityType (generic class for entity and
-attributes that will be used in both Blog and BlogEntry entities.
+The first step is the import of the :class:`EntityType` (generic class for entity
+and attributes that will be used in both Blog and BlogEntry entities.
 
 A Blog has a title and a description. The title is a string that is
 required and must be less than 50 characters.  The
@@ -156,7 +161,7 @@ and create entities.
 
 .. image:: ../../images/blog-demo-first-page.png
 
-Please notice that so far, the *CubicWeb* framework managed all aspects of
+Please notice that so far, the |cubicweb| framework managed all aspects of
 the web application based on the schema provided at the beginning.
 
 .. _AddEntities:
@@ -249,7 +254,7 @@ The view selection principle
 
 A view is defined by a Python class which includes:
 
-  - an identifier (all objects in *CubicWeb* are recorded in a
+  - an identifier (all objects in |cubicweb| are recorded in a
     registry and this identifier will be used as a key)
 
   - a filter to select the result sets it can be applied to
@@ -257,11 +262,11 @@ A view is defined by a Python class which includes:
 A view has a set of methods complying with the `View` class interface
 (`cubicweb.common.view`).
 
-*CubicWeb* provides a lot of standard views for the type `EntityView`;
+|cubicweb| provides a lot of standard views for the type `EntityView`;
 for a complete list, read the code in directory ``cubicweb/web/views/``.
 
 A view is applied on a `result set` which contains a set of entities
-we are trying to display. *CubicWeb* uses a selector mechanism which
+we are trying to display. |cubicweb| uses a selector mechanism which
 computes for each available view a score: the view with the highest
 score is then used to display the given `result set`.  The standard
 library of selectors is in ``cubicweb.selector``.
