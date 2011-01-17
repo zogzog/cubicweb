@@ -225,8 +225,9 @@ The existing categories are:
 
 
 Nothing precludes one to invent new categories and use the
-:class:`~cubicweb.server.session.hooks_control` context manager to filter them
-in or out.
+:class:`~cubicweb.server.session.hooks_control` context manager to
+filter them in or out. Note that ending the transaction with commit()
+or rollback() will restore the hooks.
 
 
 Hooks specific selector
@@ -299,6 +300,7 @@ class HooksRegistry(CWRegistry):
                                key=lambda x: x.order)
                 with security_enabled(session, write=False):
                     for hook in hooks:
+                        #print hook.category, hook.__regid__
                         hook()
 
 class HooksManager(object):
