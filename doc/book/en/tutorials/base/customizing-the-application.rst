@@ -132,9 +132,10 @@ changing in the instance.
 
 One easy way, as we've no really valuable data in the instance would be to trash and recreated it::
 
-  cubicweb-ctl stop myblog
+  cubicweb-ctl stop myblog # or Ctrl-C in the terminal running the server in debug mode
   cubicweb-ctl delete myblog
   cubicweb-ctl create myblog
+  cubicweb-ctl start -D myblog
 
 Another way is to add our cube to the instance using the cubicweb-ctl shell
 facility. It's a python shell connected to the instance with some special
@@ -142,13 +143,14 @@ commands available to manipulate it (the same as you'll have in migration
 scripts, which are not covered in this tutorial). In that case, we're interested
 in the `add_cube` command: ::
 
-  $ cubicweb-ctl stop myblog
+  $ cubicweb-ctl stop myblog # or Ctrl-C in the terminal running the server in debug mode
   $ cubicweb-ctl shell myblog
   entering the migration python shell
   just type migration commands or arbitrary python code and type ENTER to execute it
   type "exit" or Ctrl-D to quit the shell and resume operation
   >>> add_cube('myblog')
   >>>
+  $ cubicweb-ctl start -D myblog
 
 The `add_cube` command is enough since it automatically updates our
 application to the cube's schema. There are plenty of other migration
