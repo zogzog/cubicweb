@@ -6,7 +6,7 @@ Customizing your application
 ----------------------------
 
 So far so good. The point is that usually, you won't get enough by assembling
-cubes out-of-the-box. You'll want to customize them, have a personal look and
+cubes out-of-the-box. You will want to customize them, have a personal look and
 feel, add your own data model and so on. Or maybe start from scratch?
 
 So let's get a bit deeper and start coding our own cube. In our case, we want
@@ -16,7 +16,7 @@ to customize the blog we created to add more features to it.
 Create your own cube
 ~~~~~~~~~~~~~~~~~~~~
 
-First, notice that if you've installed |cubicweb| using debian packages, you'll
+First, notice that if you've installed |cubicweb| using Debian packages, you will
 need the additional ``cubicweb-dev`` package to get the commands necessary to
 |cubicweb| development. All `cubicweb-ctl` commands are described in details in
 :ref:`cubicweb-ctl`.
@@ -27,7 +27,7 @@ cube::
   cubicweb-ctl newcube myblog
 
 This will create in the cubes directory (:file:`/path/to/forest/cubes` for source
-installation, :file:`/usr/share/cubicweb/cubes` for debian packages installation)
+installation, :file:`/usr/share/cubicweb/cubes` for Debian packages installation)
 a directory named :file:`blog` reflecting the structure described in
 :ref:`cubelayout`.
 
@@ -48,8 +48,8 @@ and then create your new cube using: ::
    specify when we talk about one or another, but keep in mind this difference.
 
 
-Cube's metadata
-~~~~~~~~~~~~~~~
+Cube metadata
+~~~~~~~~~~~~~
 
 A simple set of metadata about your cube are stored in the :file:`__pkginfo__.py`
 file. In our case, we want to extend the blog cube, so we have to tell that our
@@ -69,7 +69,7 @@ Extending the data model
 
 The data model or schema is the core of your |cubicweb| application.  It defines
 the type of content your application will handle. It is defined in the file
-:file:`schema.py` of cubes.
+:file:`schema.py` of the cube.
 
 
 Defining our model
@@ -102,9 +102,9 @@ This file defines the following:
   - the name is a string that is required and can't be longer than 50 characters
 
   - the description is a string that is not constrained and may contains rich
-    content such as html or Restructured text.
+    content such as HTML or Restructured text.
 
-* a `Commnunity` may be linked to a `Blog` using the `community_blog` relation
+* a `Community` may be linked to a `Blog` using the `community_blog` relation
 
   - ``*`` means a community may be linked to 0 to N blog, ``?`` means a blog may
     be linked to 0 to 1 community. For completeness, remember that you can also
@@ -118,8 +118,8 @@ Of course, there are a lot of other data types and things such as constraints,
 permissions, etc, that may be defined in the schema, but those won't be covered
 in this tutorial.
 
-Notice that our schema refers to the `Blog` entity types which is not defined
-here.  But we know this type is available since we depends on the `blog` cube
+Notice that our schema refers to the `Blog` entity type which is not defined
+here.  But we know this type is available since we depend on the `blog` cube
 which is defining it.
 
 
@@ -150,8 +150,9 @@ in the `add_cube` command: ::
   >>> add_cube('myblog')
   >>>
 
-The `add_cube` command is enough since it automatically updates our application
-to the cube'schema. There are plenty of other migration commands of a more finer grain. They are described in :ref:`migration`
+The `add_cube` command is enough since it automatically updates our
+application to the cube's schema. There are plenty of other migration
+commands of a more finer grain. They are described in :ref:`migration`
 
 As explained, leave the shell by typing Ctrl-D. If you restart the instance and
 take another look at the schema, you'll see that changes to the data model have
@@ -159,17 +160,17 @@ actually been applied (meaning database schema updates and all necessary stuff
 has been done).
 
 .. image:: ../../images/tutos-base_myblog-schema_en.png
-   :alt: the instance'schema after adding our cube
+   :alt: the instance schema after adding our cube
 
 If you follow the 'info' link in the user pop-up menu, you'll also see that the
 instance is using blog and myblog cubes.
 
 .. image:: ../../images/tutos-base_myblog-siteinfo_en.png
-   :alt: the instance'schema after adding our cube
+   :alt: the instance schema after adding our cube
 
-You can now add some community, link them to blog, etc... You'll see that the
-framework provides default views for this entity type (we've not yet defined any
-view for it!), and also that the blog primary view'll show the community it's
+You can now add some communities, link them to blog, etc... You'll see that the
+framework provides default views for this entity type (we have not yet defined any
+view for it!), and also that the blog primary view will show the community it's
 linked to if any. All this thanks to the model driven interface provided by the
 framework.
 
@@ -227,16 +228,16 @@ preferences. So let's see how to do such thing.
 Changing the layout of the application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The layout is the general organization of pages of the site. Views that generates
-the layout ore sometimes refered as 'templates'. They are implemented in the
+The layout is the general organization of the pages in the site. Views that generate
+the layout are sometimes referred to as 'templates'. They are implemented in the
 framework in the module :mod:`cubicweb.web.views.basetemplates`. By overriding
 classes in this module, you can customize whatever part you wish of the default
 layout.
 
-But notice that |cubicweb| provides a lot of other ways to customize the
+But notice that |cubicweb| provides many other ways to customize the
 interface, thanks to actions and components (which you can individually
 (de)activate, control their location, customize their look...) as well as
-"simple" CSS customization. You should first try to acheive your goal using such
+"simple" CSS customization. You should first try to achieve your goal using such
 fine grained parametrization rather then overriding a whole template, which usually
 embeds customisation access points that you may loose in the process.
 
@@ -258,17 +259,17 @@ e.g. :file:`cubes/myblog/views.py`, the code below:
       vreg.register_and_replace(MyHTMLPageFooter, basetemplates.HTMLPageFooter)
 
 
-* Our class inherit from the default page footer to ease getting things right,
+* Our class inherits from the default page footer to ease getting things right,
   but this is not mandatory.
 
 * When we want to write something to the output stream, we simply call `self.w`,
-  that *must be given an unicode string*.
+  with *must be passed an unicode string*.
 
-* The latest function is the more exotic stuff. The point is that without it, you
-  would get an error at display time because the framework woulnd't be able to
+* The latest function is the most exotic stuff. The point is that without it, you
+  would get an error at display time because the framework wouldn't be able to
   choose which footer to use between :class:`HTMLPageFooter` and
   :class:`MyHTMLPageFooter`, since both have the same selector, hence the same
-  score...  In this case, we want our footer to replace the default one, so we've
+  score...  In this case, we want our footer to replace the default one, so we have
   to define a :func:`registration_callback` function to control object
   registration: the first instruction tells to register everything in the module
   but the :class:`MyHTMLPageFooter` class, then the second to register it instead
@@ -281,22 +282,22 @@ e.g. :file:`cubes/myblog/views.py`, the code below:
   restart the instance server. Save the Python file and reload the page in your
   web browser to view the changes.
 
-We'll now have on every page of the site this simple footer.
+We will now have this simple footer on every page of the site.
 
 
 Primary view customization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The 'primary' view (e.g. whose identifier is 'primary') is the one used to
-display all information about a single entity. The standard primary view is one
-of the most sophisticated view of all. It has several customisation points, but
+The 'primary' view (i.e. any view with the identifier set to 'primary') is the one used to
+display all the information about a single entity. The standard primary view is one
+of the most sophisticated views of all. It has several customisation points, but
 its power comes with `uicfg`, allowing you to control it without having to
 subclass it.
 
-But, this is a bit off-topic for this first tutorial. Let say we simply want a
+However this is a bit off-topic for this first tutorial. Let's say we simply want a
 custom primary view for my `Community` entity type, using directly the view
 interface without trying to benefit from the default implementation (you should
-do that though if you're rewriting reusable cubes; this is all described in more
+do that though if you're rewriting reusable cubes; everything is described in more
 details in :ref:`primary_view`).
 
 
@@ -318,7 +319,7 @@ So... Some code! That we'll put again in the module ``views`` of our cube.
 
 What's going on here?
 
-* Our class inherit from the default primary view, here mainly to get the correct
+* Our class inherits from the default primary view, here mainly to get the correct
   view identifier, since we don't use any of its features.
 
 * We set on it a selector telling that it only applies when trying to display
@@ -326,12 +327,12 @@ What's going on here?
   the default view for entities of this type.
 
 * View applying to entities usually have to define `cell_call` as entry point,
-  where given `row` and `col` arguments tell to which entity in the result set
-  the view is applied. We can then get this entity on the result set
+  and are given `row` and `col` arguments tell to which entity in the result set
+  the view is applied. We can then get this entity from the result set
   (`self.cw_rset`) by using the `get_entity` method.
 
 * To ease thing, we access our entity's attribute for display using its
-  printable_value method, which will handle formating and escaping when
+  printable_value method, which will handle formatting and escaping when
   necessary. As you can see, you can also access attributes by their name on the
   entity to get the raw value.
 
@@ -342,7 +343,7 @@ You can now reload the page of the community we just created and see the changes
    :alt: the custom primary view for our community entity type
 
 We've seen here a lot of thing you'll have to deal with to write views in
-|cubicweb|. The good news is that here is almost everything that is then used to
+|cubicweb|. The good news is that this is almost everything that is used to
 build higher level layers.
 
 .. Note::
@@ -356,9 +357,10 @@ You can find more details about views and selectors in :ref:`Views`.
 Write entities to add logic in your data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|cubicweb| provides an ORM to easily programitically manipulate entities (as
-we've fetched ealier by calling `get_entity` on a reslut set). By default, entity
-types are instances of the :class:`AnyEntity` class, which hold a set of
+|cubicweb| provides an ORM to easily programmaticaly manipulate
+entities (just like the one we have fetched earlier by calling
+`get_entity` on a result set). By default, entity
+types are instances of the :class:`AnyEntity` class, which holds a set of
 predefined methods as well as property automatically generated for
 attributes/relations of the type it represents.
 
@@ -366,7 +368,7 @@ You can redefine each entity to provide additional methods or whatever you want
 to help you write your application. Customizing an entity requires that your
 entity:
 
-- inherits from :class:`cubicweb.entities.AnyEntyt` or any subclass
+- inherits from :class:`cubicweb.entities.AnyEntity` or any subclass
 
 - defines a :attr:`__regid__` linked to the corresponding data type of your schema
 
@@ -390,13 +392,13 @@ method, etc...
         def display_cw_logo(self):
             return 'CubicWeb' in self.description
 
-Here :
+In this example:
 
 * we used convenience :func:`fetch_config` function to tell which attributes
   should be prefetched by the ORM when looking for some related entities of this
   type, and how they should be ordered
 
-* we overrided standard `dc_title` method, used in various place in the interface
+* we overrode the standard `dc_title` method, used in various place in the interface
   to display the entity (though in this case the default implementation would
   have had the same result)
 
@@ -436,17 +438,17 @@ One of the goal of the |cubicweb| framework was to have truly reusable
 components. To do so, they must both behave nicely when plugged into the
 application and be easily customisable, from the data model to the user
 interface. And I think the result is pretty successful, thanks to system such as
-the selection mecanism and the choice to write views as python code which allow
-use to build our page using true object oriented programming technics, that no
-template langage provides.
+the selection mechanism and the choice to write views as python code which allows
+to build our page using true object oriented programming techniques, that no
+template language provides.
 
 
-A library of standard cubes are available from `CubicWeb Forge`_, to address a
+A library of standard cubes is available from `CubicWeb Forge`_, to address a
 lot of common concerns such has manipulating people, files, things to do, etc. In
-our community blog case, we could be interested for instance in functionnalities
+our community blog case, we could be interested for instance in functionalities
 provided by the `comment` and `tag` cubes. The former provides threaded
-discussion functionalities, the later a simple tag mecanism to classify content.
-Let's say we want to try those. We'll first modify our cube's :file:`__pkginfo__.py`
+discussion functionalities, the latter a simple tag mechanism to classify content.
+Let's say we want to try those. We will first modify our cube's :file:`__pkginfo__.py`
 file:
 
 .. sourcecode:: python
@@ -457,7 +459,7 @@ file:
                    'cubicweb-tag': None}
 
 Now, we'll simply tell on which entity types we want to activate the 'comment'
-and 'tag' facilities by adding respectivly the 'comments' and 'tags' relations on
+and 'tag' facilities by adding respectively the 'comments' and 'tags' relations on
 them in our schema (:file:`schema.py`).
 
 .. sourcecode:: python
@@ -500,7 +502,7 @@ anything in our views, thanks to the design of generic views provided by the
 framework. Though if we take a look at a community, we won't see the tags box!
 That's because by default this box try to locate itself in the left column within
 the white frame, and this column is handled by the primary view we
-hi-jacked. Let's change our view to make it more extensible, by keeping both our
+hijacked. Let's change our view to make it more extensible, by keeping both our
 custom rendering but also extension points provided by the default
 implementation.
 
@@ -524,7 +526,7 @@ It appears now properly:
 .. image:: ../../images/tutos-base_myblog-community-taggable-primary_en.png
    :alt: the custom primary view for a community entry with tags activated
 
-You can control part of the interface independantly from each others, piece by
+You can control part of the interface independently from each others, piece by
 piece. Really.
 
 
