@@ -373,8 +373,23 @@ class match_rtype(ExpectedValueSelector):
 
 
 class match_rtype_sets(ExpectedValueSelector):
-    """accept if parameters specified as initializer arguments are specified
-    in named arguments given to the selector
+    """accept if the relation type is in one of the sets given as initializer
+    argument. The goal of this selector is that it keeps reference to original sets,
+    so modification to thoses sets are considered by the selector. For instance
+
+    MYSET = set()
+
+    class Hook1(Hook):
+        __regid__ = 'hook1'
+        __select__ = Hook.__select__ & match_rtype_sets(MYSET)
+        ...
+
+    class Hook2(Hook):
+        __regid__ = 'hook2'
+        __select__ = Hook.__select__ & match_rtype_sets(MYSET)
+
+    Client code can now change `MYSET`, this will changes the selection criteria
+    of :class:`Hook1` and :class:`Hook1`.
     """
 
     def __init__(self, *expected):
