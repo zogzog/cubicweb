@@ -1,6 +1,6 @@
 .. -*- coding: utf-8 -*-
 
-.. _BlogFiveMinutes:
+.. _TutosBaseBlogFiveMinutes:
 
 Get a blog running in five minutes!
 -----------------------------------
@@ -17,23 +17,42 @@ Then create and initialize your instance::
 
     cubicweb-ctl create blog myblog
 
-And start it::
+You'll be asked a few questions, and you can keep the default answer for most of
+them. The one question you'll have to think about is the database you'll want to
+use for that instance. For a quick test, if you don't have `postgresql` installed
+and configured (see :ref:`PostgresqlConfiguration`), it's higly recommended to
+choose `sqlite` when asked for which database driber to use, since it has a much
+simple setup (no database server needed).
+
+One the process is completed (including database initialisation), you can start
+your instance by using: ::
 
     cubicweb-ctl start -D myblog
 
-The -D option is the debugging mode of |cubicweb|, removing it will lauch the
-instance in the background.
+The `-D` option activate the debugging mode, removing it will launch the instance
+as a daemon in the background.
 
-Permission
-~~~~~~~~~~
 
-This command assumes that you have root access to the /etc/ path. In order to initialize your instance as a `user` (from scratch), please check your current PYTHONPATH then create the ~/etc/cubicweb.d directory.
+About file-system permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Unless you installed from sources, above commands assumes that you have root
+access to the :file:`/etc/` path. In order to initialize your instance as a
+regulary user, within your home directory, you can use the :envvar:`CW_MODE`
+environment variable: ::
+
+  export CW_MODE=user
+
+then create a :file:`~/etc/cubicweb.d` directory that will hold your instances.
+
+More information about how to configure your own environment in :ref:`ResourceMode`.
+
 
 Instance parameters
 ~~~~~~~~~~~~~~~~~~~
 
-If you would like to change some instance parameters, for example, the main
-database host or the user name, edit the `sources` file located in the
+If you would like to change database parameters such as the database host or the
+user name used to connect to the database, edit the `sources` file located in the
 :file:`/etc/cubicweb.d/myblog` directory.
 
 Then relaunch the database creation::
@@ -43,8 +62,7 @@ Then relaunch the database creation::
 Other paramaters, like web server or emails parameters, can be modified in the
 :file:`/etc/cubicweb.d/myblog/all-in-one.conf` file.
 
-This is it. Your blog is running. Visit http://localhost:8080 and enjoy it! This
-blog is fully functionnal. The next section section will present the way to
-develop new cubes and customizing the look of your instance.
+You'll have to restart the instance after modification in one of those files.
 
+This is it. Your blog is functionnal and running. Visit http://localhost:8080 and enjoy it!
 
