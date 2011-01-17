@@ -288,17 +288,12 @@ point calls the following sequence of (redefinable) methods:
 
  * render_entity_title
 
- * render_entity_metadata
-
  * render_entity_attributes
 
  * render_entity_relations
 
- * render_side_boxes
-
-Excepted side boxes, we can see all of them already in action in the
-blog entry view. This is all described in more details in
-:ref:`primary_view`.
+We can see all of them already in action in the blog entry view. This is all
+described in more details in :ref:`primary_view`.
 
 We can for example add in front of the publication date a prefix
 specifying that the date we see is the publication date.

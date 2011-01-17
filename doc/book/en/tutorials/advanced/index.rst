@@ -70,21 +70,31 @@ Ok, now I'll tell my cube requires all this by editing cubes/sytweb/__pkginfo__.
 
   .. sourcecode:: python
 
-    __depends_cubes__ = {'file': '>= 1.2.0',
-			 'folder': '>= 1.1.0',
-			 'person': '>= 1.2.0',
-			 'comment': '>= 1.2.0',
-			 'tag': '>= 1.2.0',
-			 'zone': None,
-			 }
-    __depends__ = {'cubicweb': '>= 3.5.10',
-		   }
-    for key,value in __depends_cubes__.items():
-	__depends__['cubicweb-'+key] = value
-    __use__ = tuple(__depends_cubes__)
+    __depends__ = {'cubicweb': '>= 3.8.0',
+                   'cubicweb-file': '>= 1.2.0',
+		   'cubicweb-folder': '>= 1.1.0',
+		   'cubicweb-person': '>= 1.2.0',
+		   'cubicweb-comment': '>= 1.2.0',
+		   'cubicweb-tag': '>= 1.2.0',
+		   'cubicweb-zone': None}
 
 Notice that you can express minimal version of the cube that should be used,
-`None` meaning whatever version available.
+`None` meaning whatever version available. All packages starting with 'cubicweb-'
+will be recognized as being cube, not bare python packages. You can still specify
+this explicitly using instead the `__depends_cubes__` dictionary which should
+contains cube's name without the prefix. So the example below would be written
+as:
+
+  .. sourcecode:: python
+
+    __depends__ = {'cubicweb': '>= 3.8.0'}
+    __depends_cubes__ = {'file': '>= 1.2.0',
+		         'folder': '>= 1.1.0',
+		   	 'person': '>= 1.2.0',
+		   	 'comment': '>= 1.2.0',
+		   	 'tag': '>= 1.2.0',
+		   	 'zone': None}
+
 
 Step 3: glue everything together in my cube's schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -550,7 +560,7 @@ test instance. The second one will be much quicker:
 If you do some changes in your schema, you'll have to force regeneration of that
 database. You do that by removing the tmpdb files before running the test: ::
 
-    $ rm tmpdb*
+    $ rm data/tmpdb*
 
 
 .. Note::

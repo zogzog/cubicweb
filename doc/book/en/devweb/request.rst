@@ -1,5 +1,5 @@
-The `Request` class (`cubicweb.web`)
-------------------------------------
+The `Request` class (`cubicweb.web.request`)
+--------------------------------------------
 
 Overview
 ````````
@@ -7,7 +7,8 @@ Overview
 A request instance is created when an HTTP request is sent to the web
 server.  It contains informations such as form parameters,
 authenticated user, etc. It is a very prevalent object and is used
-throughout all of the framework and applications.
+throughout all of the framework and applications, as you'll access to
+almost every resources through it.
 
 **A request represents a user query, either through HTTP or not (we
 also talk about RQL queries on the server side for example).**
@@ -24,8 +25,8 @@ request objects (grouped by category):
 
 * `User and identification`:
 
-  * `user`, instance of `cubicweb.common.utils.User` corresponding to
-    the authenticated user
+  * `user`, instance of `cubicweb.entities.authobjs.CWUser` corresponding to the
+    authenticated user
 
 * `Session data handling`
 
