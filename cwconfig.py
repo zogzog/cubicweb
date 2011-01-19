@@ -22,7 +22,7 @@
 Resource mode
 -------------
 
-A resource *mode* is a predifined set of settings for various resources
+A resource *mode* is a predefined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
 framework. There are two running modes with *CubicWeb*:
 
