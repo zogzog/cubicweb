@@ -159,14 +159,6 @@ CONFIGURATIONS = []
 SMTP_LOCK = Lock()
 
 
-class metaconfiguration(type):
-    """metaclass to automaticaly register configuration"""
-    def __new__(mcs, name, bases, classdict):
-        cls = super(metaconfiguration, mcs).__new__(mcs, name, bases, classdict)
-        if classdict.get('name'):
-            CONFIGURATIONS.append(cls)
-        return cls
-
 def configuration_cls(name):
     """return the configuration class registered with the given name"""
     try:
@@ -290,7 +282,6 @@ _USR_INSTALL = _INSTALL_PREFIX == '/usr'
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
     """
-    __metaclass__ = metaconfiguration
     # to set in concrete configuration
     name = None
     # log messages format (see logging module documentation for available keys)

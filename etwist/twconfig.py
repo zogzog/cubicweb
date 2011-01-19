@@ -23,7 +23,6 @@
 * the "all-in-one" configuration to get a web instance running in a twisted
   web server integrating a repository server in the same process (only available
   if the repository part of the software is installed
-
 """
 __docformat__ = "restructuredtext en"
 
@@ -31,7 +30,9 @@ from os.path import join
 
 from logilab.common.configuration import Method
 
+from cubicweb.cwconfig import CONFIGURATIONS
 from cubicweb.web.webconfig import WebConfiguration, merge_options
+
 
 class TwistedConfiguration(WebConfiguration):
     """web instance (in a twisted web server) client of a RQL server"""
@@ -98,6 +99,9 @@ the repository rather than the user running the command',
         from socket import gethostname
         return 'http://%s:%s/' % (self['host'] or gethostname(), self['port'] or 8080)
 
+
+CONFIGURATIONS.append(TwistedConfiguration)
+
 try:
     from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -113,6 +117,9 @@ try:
         def pyro_enabled(self):
             """tell if pyro is activated for the in memory repository"""
             return self['pyro-server']
+
+
+    CONFIGURATIONS.append(AllInOneConfiguration)
 
 except ImportError:
     pass

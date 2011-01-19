@@ -27,7 +27,7 @@ import logilab.common.configuration as lgconfig
 from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
-from cubicweb.cwconfig import CubicWebConfiguration, merge_options
+from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration, merge_options
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -346,3 +346,6 @@ and if not set, it will be choosen randomly',
         return ServerMigrationHelper(self, schema, interactive=interactive,
                                      cnx=cnx, repo=repo, connect=connect,
                                      verbosity=verbosity)
+
+
+CONFIGURATIONS.append(ServerConfiguration)
