@@ -1016,8 +1016,7 @@ class Repository(object):
             raise UnknownEid(eid)
         return extid
 
-    def extid2eid(self, source, extid, etype, session=None, insert=True,
-                  recreate=False):
+    def extid2eid(self, source, extid, etype, session=None, insert=True):
         """get eid from a local id. An eid is attributed if no record is found"""
         cachekey = (extid, source.uri)
         try:
@@ -1032,16 +1031,6 @@ class Repository(object):
         if eid is not None:
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
-            # XXX used with extlite (eg vcsfile), probably not needed anymore
-            if recreate:
-                entity = source.before_entity_insertion(session, extid, etype, eid)
-                entity._cw_recreating = True
-                if source.should_call_hooks:
-                    self.hm.call_hooks('before_add_entity', session, entity=entity)
-                # XXX add fti op ?
-                source.after_entity_insertion(session, extid, entity)
-                if source.should_call_hooks:
-                    self.hm.call_hooks('after_add_entity', session, entity=entity)
             if reset_pool:
                 session.reset_pool()
             return eid

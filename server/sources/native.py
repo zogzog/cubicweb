@@ -886,20 +886,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                  'source': source.uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
-        if not hasattr(entity, '_cw_recreating'):
-            try:
-                self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                            % (entity.eid, eschema_eid(session, entity.e_schema)))
-            except IndexError:
-                # during schema serialization, skip
-                pass
-            else:
-                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                    self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                               % (entity.eid, eschema_eid(session, eschema)))
-            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-                self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
-                            'VALUES (%s,%s)' % (entity.eid, source.eid))
+        try:
+            self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                        % (entity.eid, eschema_eid(session, entity.e_schema)))
+        except IndexError:
+            # during schema serialization, skip
+            pass
+        else:
+            for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                           % (entity.eid, eschema_eid(session, eschema)))
+        if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+            self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
+                        'VALUES (%s,%s)' % (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
