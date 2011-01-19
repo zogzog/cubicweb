@@ -266,6 +266,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def __init__(self, repo, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
         self.authentifiers = [LoginPasswordAuthentifier(self)]
+        if repo.config['allow-email-login']:
+            self.authentifiers.insert(0, EmailPasswordAuthentifier(self))
         AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         # sql generator
         self._rql_sqlgen = self.sqlgen_class(self.schema, self.dbhelper,
@@ -1495,3 +1497,19 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             return rset[0][0]
         except IndexError:
             raise AuthenticationError('bad password')
+
+
+class EmailPasswordAuthentifier(BaseAuthentifier):
+    def authenticate(self, session, login, **authinfo):
+        # email_auth flag prevent from infinite recursion (call to
+        # repo.check_auth_info at the end of this method may lead us here again)
+        if not '@' in login or authinfo.pop('email_auth', None):
+            raise AuthenticationError('not an email')
+        rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                               'M address %(login)s', {'login': login},
+                               build_descr=False)
+        if rset.rowcount != 1:
+            raise AuthenticationError('unexisting email')
+        login = rset.rows[0][0]
+        authinfo['email_auth'] = True
+        return self.source.repo.check_auth_info(session, login, authinfo)

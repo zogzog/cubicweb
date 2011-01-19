@@ -430,33 +430,24 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
-    def _login_from_email(self, login):
-        session = self.internal_session()
-        try:
-            rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                                   'M address %(login)s', {'login': login},
-                                   build_descr=False)
-            if rset.rowcount == 1:
-                login = rset[0][0]
-        finally:
-            session.close()
-        return login
-
-    def authenticate_user(self, session, login, **kwargs):
-        """validate login / password, raise AuthenticationError on failure
-        return associated CWUser instance on success
+    def check_auth_info(self, session, login, authinfo):
+        """validate authentication, raise AuthenticationError on failure, return
+        associated CWUser's eid on success.
         """
-        if self.vreg.config['allow-email-login'] and '@' in login:
-            login = self._login_from_email(login)
         for source in self.sources:
             if source.support_entity('CWUser'):
                 try:
-                    eid = source.authenticate(session, login, **kwargs)
-                    break
+                    return source.authenticate(session, login, **authinfo)
                 except AuthenticationError:
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')
+
+    def authenticate_user(self, session, login, **authinfo):
+        """validate login / password, raise AuthenticationError on failure
+        return associated CWUser instance on success
+        """
+        eid = self.check_auth_info(session, login, authinfo)
         cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
                not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:

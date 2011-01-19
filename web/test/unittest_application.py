@@ -22,7 +22,7 @@ import sys
 from urllib import unquote
 
 from logilab.common.testlib import TestCase, unittest_main
-from logilab.common.decorators import clear_cache
+from logilab.common.decorators import clear_cache, classproperty
 
 from cubicweb import AuthenticationError, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
@@ -156,6 +156,15 @@ class ApplicationTC(CubicWebTC):
         def raise_hdlr(*args, **kwargs):
             raise
         self.app.error_handler = raise_hdlr
+
+    @classproperty
+    def config(cls):
+        try:
+            return cls.__dict__['_config']
+        except KeyError:
+            config = super(ApplicationTC, cls).config
+            config.global_set_option('allow-email-login', True)
+            return config
 
     def test_cnx_user_groups_sync(self):
         user = self.user()
@@ -347,7 +356,7 @@ class ApplicationTC(CubicWebTC):
         self.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
                      'WHERE U login %(login)s', {'address': address, 'login': login})
         self.commit()
-        # option allow-email-login not set
+        # # option allow-email-login not set
         req, origsession = self.init_authentication('cookie')
         # req.form['__login'] = address
         # req.form['__password'] = self.admpassword
