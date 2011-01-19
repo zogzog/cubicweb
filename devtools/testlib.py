@@ -259,8 +259,7 @@ class CubicWebTC(TestCase):
         cls.init_config(cls.config)
         cls.repo.hm.call_hooks('server_startup', repo=cls.repo)
         cls.vreg = cls.repo.vreg
-        cls.websession = DBAPISession(cls.cnx, cls.admlogin,
-                                      {'password': cls.admpassword})
+        cls.websession = DBAPISession(cls.cnx, cls.admlogin)
         cls._orig_cnx = (cls.cnx, cls.websession)
         cls.config.repository = lambda x=None: cls.repo
 

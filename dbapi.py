@@ -220,11 +220,10 @@ class _NeedAuthAccessMock(object):
         return False
 
 class DBAPISession(object):
-    def __init__(self, cnx, login=None, authinfo=None):
+    def __init__(self, cnx, login=None):
         self.cnx = cnx
         self.data = {}
         self.login = login
-        self.authinfo = authinfo
         # dbapi session identifier is the same as the first connection
         # identifier, but may later differ in case of auto-reconnection as done
         # by the web authentication manager (in cw.web.views.authentication)
@@ -586,9 +585,8 @@ class Connection(object):
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
         if self.vreg is not None and 'etypes' in self.vreg:
-            user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
-                                                             groups=groups,
-                                                             properties=properties)
+            user = self.vreg['etypes'].etype_class('CWUser')(
+                req, rset, row=0, groups=groups, properties=properties)
         else:
             from cubicweb.entity import Entity
             user = Entity(req, rset, row=0)

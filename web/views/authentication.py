@@ -100,17 +100,13 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             self.anoninfo = (self.anoninfo[0], {'password': self.anoninfo[1]})
 
     def validate_session(self, req, session):
-        """check session validity, reconnecting it to the repository if the
-        associated connection expired in the repository side (hence the
-        necessity for this method). Return the connected user on success.
+        """check session validity and return the connected user on success.
 
         raise :exc:`InvalidSession` if session is corrupted for a reason or
         another and should be closed
 
         also invoked while going from anonymous to logged in
         """
-        # with this authentication manager, session is actually a dbapi
-        # connection
         for retriever in self.authinforetrievers:
             if retriever.request_has_auth_info(req):
                 login = retriever.revalidate_login(req)
@@ -135,8 +131,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     def authenticate(self, req):
         """authenticate user using connection information found in the request,
         and return corresponding a :class:`~cubicweb.dbapi.Connection` instance,
-        as well as login and authentication information dictionary used to open
-        the connection.
+        as well as login used to open the connection.
 
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
@@ -152,8 +147,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
                 continue # the next one may succeed
             for retriever_ in self.authinforetrievers:
                 retriever_.authenticated(retriever, req, cnx, login, authinfo)
-            return cnx, login, authinfo
-
+            return cnx, login
         # false if no authentication info found, eg this is not an
         # authentication failure
         if 'login' in locals():
@@ -162,7 +156,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         if login:
             cnx = self._authenticate(login, authinfo)
             cnx.anonymous_connection = True
-            return cnx, login, authinfo
+            return cnx, login
         raise AuthenticationError()
 
     def _authenticate(self, login, authinfo):
