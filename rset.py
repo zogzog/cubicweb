@@ -386,6 +386,19 @@ class ResultSet(object):
             if self.rows[i][col] is not None:
                 yield self.get_entity(i, col)
 
+    def iter_rows_with_entities(self):
+        """ iterates over rows, and for each row
+        eids are converted to plain entities
+        """
+        for i, row in enumerate(self):
+            _row = []
+            for j, col in enumerate(row):
+                try:
+                    _row.append(self.get_entity(i, j) if col is not None else col)
+                except NotAnEntity:
+                    _row.append(col)
+            yield _row
+
     def complete_entity(self, row, col=0, skip_bytes=True):
         """short cut to get an completed entity instance for a particular
         row (all instance's attributes have been fetched)

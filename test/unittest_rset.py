@@ -382,6 +382,14 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(set(e.e_schema.type for e in rset.entities(1)),
                           set(['CWGroup',]))
 
+    def test_iter_rows_with_entities(self):
+        rset = self.execute('Any U,UN,G,GN WHERE U in_group G, U login UN, G name GN')
+        # make sure we have at least one element
+        self.failUnless(rset)
+        out = list(rset.iter_rows_with_entities())[0]
+        self.assertEqual( out[0].login, out[1] )
+        self.assertEqual( out[2].name, out[3] )
+
     def test_printable_rql(self):
         rset = self.execute(u'CWEType X WHERE X final FALSE')
         self.assertEqual(rset.printable_rql(),
