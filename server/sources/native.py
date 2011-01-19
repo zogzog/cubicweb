@@ -843,8 +843,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self._eid_creation_cnx is None:
             self._eid_creation_cnx = self.get_connection()
         cnx = self._eid_creation_cnx
-        cursor = cnx.cursor()
         try:
+            cursor = cnx.cursor()
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
                 cursor.execute(sql)
             eid = cursor.fetchone()[0]
