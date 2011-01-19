@@ -209,10 +209,11 @@ class View(AppObject):
         if rset is None:
             raise NotImplementedError, (self, "an rset is required")
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
-        # XXX propagate self.extra_kwars?
+        # XXX propagate self.extra_kwargs?
         for i in xrange(len(rset)):
             if wrap:
                 self.w(u'<div class="section">')
+            self.cw_row = i
             self.wview(self.__regid__, rset, row=i, **kwargs)
             if wrap:
                 self.w(u"</div>")

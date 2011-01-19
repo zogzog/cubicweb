@@ -52,10 +52,8 @@ class PrimaryView(EntityView):
         """
         return []
 
-    def cell_call(self, row, col):
-        self.cw_row = row
-        self.cw_col = col
-        entity = self.cw_rset.complete_entity(row, col)
+    def entity_call(self, entity):
+        entity.complete()
         self.render_entity(entity)
 
     def render_entity(self, entity):
