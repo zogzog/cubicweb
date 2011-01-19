@@ -18,20 +18,16 @@
 
 from __future__ import with_statement
 
-from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import ValidationError
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.session import security_enabled
+
 
 def add_wf(self, etype, name=None, default=False):
     if name is None:
         name = etype
-    wf = self.execute('INSERT Workflow X: X name %(n)s', {'n': unicode(name)}).get_entity(0, 0)
-    self.execute('SET WF workflow_of ET WHERE WF eid %(wf)s, ET name %(et)s',
-                 {'wf': wf.eid, 'et': etype})
-    if default:
-        self.execute('SET ET default_workflow WF WHERE WF eid %(wf)s, ET name %(et)s',
-                     {'wf': wf.eid, 'et': etype})
-    return wf
+    return self.shell().add_workflow(name, etype, default=default,
+                                     ensure_workflowable=False)
 
 def parse_hist(wfhist):
     return [(ti.previous_state.name, ti.new_state.name,
