@@ -194,9 +194,10 @@ if USE_SETUPTOOLS:
         old_ok = DS._ok
         def _ok(self, path):
             """Return True if ``path`` can be written during installation."""
-            out = old_ok(self, path)
+            out = old_ok(self, path) # here for side effect from setuptools
             realpath = os.path.normcase(os.path.realpath(path))
-            if realpath.startswith(sys.prefix):
+            allowed_path = os.path.normcase(sys.prefix)
+            if realpath.startswith(allowed_path):
                 out = True
             return out
         DS._ok = _ok

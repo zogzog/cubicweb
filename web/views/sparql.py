@@ -52,7 +52,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
     __regid__ = 'sparql'
     def call(self):
         form = self._cw.vreg['forms'].select('sparql', self._cw)
-        self.w(form.render())
+        form.render(w=self.w)
         sparql = self._cw.form.get('sparql')
         vid = self._cw.form.get('resultvid', 'table')
         if sparql:
@@ -67,7 +67,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
             else:
                 rql, args = qinfo.finalize()
                 if vid == 'sparqlxml':
-                    url = self._cw.build_url('view', rql=(rql,args), vid=vid)
+                    url = self._cw.build_url('view', rql=rql % args, vid=vid)
                     raise Redirect(url)
                 rset = self._cw.execute(rql, args)
                 self.wview(vid, rset, 'null')

@@ -49,7 +49,7 @@ class TwistedConfiguration(WebConfiguration):
          {'type' : 'string',
           'default': "",
           'help': 'http server address on which to listen (default to everywhere)',
-          'group': 'web', 'level': 0,
+          'group': 'web', 'level': 1,
           }),
         ('max-post-length',
          {'type' : 'bytes',

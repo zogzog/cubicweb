@@ -66,25 +66,35 @@ existing cubes that I'll extend for my need. So I'll pick the following cubes:
   entities supporting the `tags` relation by linking the to `Tag` entities. This
   will allows navigation into a large number of picture.
 
-Ok, now I'll tell my cube requires all this by editing cubes/sytweb/__pkginfo__.py:
+Ok, now I'll tell my cube requires all this by editing :file:`cubes/sytweb/__pkginfo__.py`:
 
   .. sourcecode:: python
 
-    __depends_cubes__ = {'file': '>= 1.2.0',
-			 'folder': '>= 1.1.0',
-			 'person': '>= 1.2.0',
-			 'comment': '>= 1.2.0',
-			 'tag': '>= 1.2.0',
-			 'zone': None,
-			 }
-    __depends__ = {'cubicweb': '>= 3.5.10',
-		   }
-    for key,value in __depends_cubes__.items():
-	__depends__['cubicweb-'+key] = value
-    __use__ = tuple(__depends_cubes__)
+    __depends__ = {'cubicweb': '>= 3.8.0',
+                   'cubicweb-file': '>= 1.2.0',
+		   'cubicweb-folder': '>= 1.1.0',
+		   'cubicweb-person': '>= 1.2.0',
+		   'cubicweb-comment': '>= 1.2.0',
+		   'cubicweb-tag': '>= 1.2.0',
+		   'cubicweb-zone': None}
 
 Notice that you can express minimal version of the cube that should be used,
-`None` meaning whatever version available.
+`None` meaning whatever version available. All packages starting with 'cubicweb-'
+will be recognized as being cube, not bare python packages. You can still specify
+this explicitly using instead the `__depends_cubes__` dictionary which should
+contains cube's name without the prefix. So the example below would be written
+as:
+
+  .. sourcecode:: python
+
+    __depends__ = {'cubicweb': '>= 3.8.0'}
+    __depends_cubes__ = {'file': '>= 1.2.0',
+		         'folder': '>= 1.1.0',
+		   	 'person': '>= 1.2.0',
+		   	 'comment': '>= 1.2.0',
+		   	 'tag': '>= 1.2.0',
+		   	 'zone': None}
+
 
 Step 3: glue everything together in my cube's schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,9 +180,11 @@ This part will cover various topics:
 Here is the ``read`` security model I want:
 
 * folders, files, images and comments should have one of the following visibility:
+
   - ``public``, everyone can see it
   - ``authenticated``, only authenticated users can see it
   - ``restricted``, only a subset of authenticated users can see it
+
 * managers (e.g. me) can see everything
 * only authenticated users can see people
 * everyone can see classifier entities, such as tag and zone
@@ -226,6 +238,12 @@ relations:
 	cardinality = '11' # required
 
     class may_be_read_by(RelationDefinition):
+        __permissions__ = {
+	    'read':   ('managers', 'users'),
+	    'add':    ('managers',),
+	    'delete': ('managers',),
+	    }
+
 	subject = ('Folder', 'File', 'Image', 'Comment',)
 	object = 'CWUser'
 
@@ -240,6 +258,9 @@ We can note the following points:
   hidden by the `vocabulary` argument)
 
 * the `parent` possible value will be used for visibility propagation
+
+* think to secure the `may_be_read_by` permissions, else any user can add/delte it
+  by default, which somewhat breaks our security model...
 
 Now, we should be able to define security rules in the schema, based on these new
 attribute and relation. Here is the code to add to *schema.py*:
@@ -541,7 +562,7 @@ test instance. The second one will be much quicker:
 If you do some changes in your schema, you'll have to force regeneration of that
 database. You do that by removing the tmpdb files before running the test: ::
 
-    $ rm tmpdb*
+    $ rm data/tmpdb*
 
 
 .. Note::

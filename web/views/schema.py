@@ -45,7 +45,7 @@ from cubicweb.web.views import primary, baseviews, tabs, tableview, ibreadcrumbs
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
 SKIP_TYPES  = (ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES | WORKFLOW_TYPES
                | INTERNAL_TYPES)
-SKIP_TYPES.update(set(('CWUser', 'CWGroup')))
+SKIP_TYPES.update(set(('CWUser', 'CWGroup', 'EmailAddress', 'Bookmark')))
 
 def skip_types(req):
     if int(req.form.get('skipmeta', True)):

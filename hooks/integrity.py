@@ -79,8 +79,6 @@ class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
         session = self.session
         pendingeids = session.transaction_data.get('pendingeids', ())
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
-        # poping key is not optional: if further operation trigger new deletion
-        # of relation, we'll need a new operation
         for eid, rtype in self.get_data():
             # recheck pending eids / relation types
             if eid in pendingeids:
@@ -301,8 +299,6 @@ class _DelayedDeleteOp(hook.DataOperationMixIn, hook.Operation):
         session = self.session
         pendingeids = session.transaction_data.get('pendingeids', ())
         neweids = session.transaction_data.get('neweids', ())
-        # poping key is not optional: if further operation trigger new deletion
-        # of composite relation, we'll need a new operation
         for eid, rtype in self.get_data():
             # don't do anything if the entity is being created or deleted
             if not (eid in pendingeids or eid in neweids):
