@@ -550,7 +550,11 @@ class CubicWebSchema(Schema):
     def add_entity_type(self, edef):
         edef.name = edef.name.encode()
         edef.name = bw_normalize_etype(edef.name)
-        assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
+        if not re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name):
+            raise BadSchemaDefinition(
+                '%r is not a valid name for an entity type. It should start '
+                'with an upper cased letter and be followed by at least a '
+                'lower cased letter' % edef.name)
         eschema = super(CubicWebSchema, self).add_entity_type(edef)
         if not eschema.final:
             # automatically add the eid relation to non final entity types
@@ -565,7 +569,11 @@ class CubicWebSchema(Schema):
         return eschema
 
     def add_relation_type(self, rdef):
-        rdef.name = rdef.name.lower().encode()
+        if not rdef.name.islower():
+            raise BadSchemaDefinition(
+                '%r is not a valid name for a relation type. It should be '
+                'lower cased' % rdef.name)
+        rdef.name = rdef.name.encode()
         rschema = super(CubicWebSchema, self).add_relation_type(rdef)
         self._eid_index[rschema.eid] = rschema
         return rschema

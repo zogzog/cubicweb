@@ -74,7 +74,6 @@ RELS = (
     ('Personne tel Int'),
     ('Personne fax Int'),
     ('Personne datenaiss Date'),
-    ('Personne TEST Boolean'),
     ('Personne promo String'),
     # real relations
     ('Personne  travaille Societe'),
@@ -82,7 +81,7 @@ RELS = (
     ('Societe evaluee   Note'),
     ('Personne  concerne  Affaire'),
     ('Personne  concerne  Societe'),
-    ('Affaire Concerne  Societe'),
+    ('Affaire concerne  Societe'),
     )
 done = {}
 for rel in RELS:
@@ -114,10 +113,8 @@ class CubicWebSchemaTC(TestCase):
         """test that entities, relations and attributes name are normalized
         """
         self.assertEqual(esociete.type, 'Societe')
-        self.assertEqual(schema.has_relation('TEST'), 0)
         self.assertEqual(schema.has_relation('test'), 1)
         self.assertEqual(eperson.subjrels['test'].type, 'test')
-        self.assertEqual(schema.has_relation('Concerne'), 0)
         self.assertEqual(schema.has_relation('concerne'), 1)
         self.assertEqual(schema.rschema('concerne').type, 'concerne')
 
@@ -271,7 +268,7 @@ class SchemaReaderClassTest(TestCase):
         self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
                           ['U has_update_permission X'])
 
-class BadSchemaRQLExprTC(TestCase):
+class BadSchemaTC(TestCase):
     def setUp(self):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
@@ -284,6 +281,16 @@ class BadSchemaRQLExprTC(TestCase):
         with self.assertRaises(BadSchemaDefinition) as cm:
             self.loader._build_schema('toto', False)
         self.assertEqual(str(cm.exception), msg)
+
+    def test_lowered_etype(self):
+        self._test('lowered_etype.py',
+                   "'my_etype' is not a valid name for an entity type. It should "
+                   "start with an upper cased letter and be followed by at least "
+                   "a lower cased letter")
+
+    def test_uppered_rtype(self):
+        self._test('uppered_rtype.py',
+                   "'ARelation' is not a valid name for a relation type. It should be lower cased")
 
     def test_rrqlexpr_on_etype(self):
         self._test('rrqlexpr_on_eetype.py',
