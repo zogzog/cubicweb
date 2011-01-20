@@ -56,16 +56,14 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
         else:
             print dbname,
     if dbhelper.users_support:
-        if not verbose or (not special_privs and source.get('db-user')):
+        if not special_privs and source.get('db-user'):
             user = source['db-user']
             if verbose:
                 print 'as', user
-            if source.get('db-password'):
-                password = source['db-password']
-            else:
-                password = getpass('password: ')
+            password = source.get('db-password')
         else:
-            print
+            if verbose:
+                print
             if special_privs:
                 print 'WARNING'
                 print ('the user will need the following special access rights '
@@ -74,8 +72,8 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
                 print
             default_user = source.get('db-user', os.environ.get('USER', ''))
             user = raw_input('Connect as user ? [%r]: ' % default_user)
-            user = user or default_user
-            if user == source.get('db-user') and source.get('db-password'):
+            user = user.strip() or default_user
+            if user == source.get('db-user'):
                 password = source['db-password']
             else:
                 password = getpass('password: ')
@@ -108,22 +106,18 @@ def system_source_cnx(source, dbms_system_base=False,
         return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
     return source_cnx(source, special_privs=special_privs, verbose=verbose)
 
-def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
-    """return a connection on the RDMS system table (to create/drop a user
-    or a database
+def _db_sys_cnx(source, special_privs, verbose=True):
+    """return a connection on the RDMS system table (to create/drop a user or a
+    database)
     """
     import logilab.common as lgp
     from logilab.database import get_db_helper
     lgp.USE_MX_DATETIME = False
-    special_privs = ''
     driver = source['db-driver']
     helper = get_db_helper(driver)
-    if user is not None and helper.users_support:
-        special_privs += '%s USER' % what
-    if db is not None:
-        special_privs += ' %s DATABASE' % what
     # connect on the dbms system base to create our base
-    cnx = system_source_cnx(source, True, special_privs=special_privs, verbose=verbose)
+    cnx = system_source_cnx(source, True, special_privs=special_privs,
+                            verbose=verbose)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
     try:
@@ -313,7 +307,7 @@ class CreateInstanceDBCommand(Command):
         elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
-            dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
+            dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER', verbose=verbose)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
@@ -333,7 +327,8 @@ class CreateInstanceDBCommand(Command):
             except:
                 dbcnx.rollback()
                 raise
-        cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose)
+        cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
+                                verbose=verbose)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
         # postgres specific stuff
