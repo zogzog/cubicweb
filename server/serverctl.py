@@ -207,7 +207,7 @@ class RepositoryDeleteHandler(CommandHandler):
             cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
             cursor = cnx.cursor()
             try:
-                cursor.execute('DROP DATABASE %s' % dbname)
+                cursor.execute('DROP DATABASE "%s"' % dbname)
                 print '-> database %s dropped.' % dbname
                 # XXX should check we are not connected as user
                 if user and helper.users_support and \
