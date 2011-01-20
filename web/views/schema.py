@@ -145,7 +145,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
     __regid__ = 'schema'
     title = _('instance schema')
     tabs = [_('schema-diagram'), _('schema-entity-types'),
-            _('schema-relation-types'), _('schema-security')]
+            _('schema-relation-types')]
     default_tab = 'schema-diagram'
 
     def call(self):
@@ -182,110 +182,6 @@ class SchemaRTypeTab(StartupView):
     def call(self):
         self.wview('table', self._cw.execute(
             'Any X ORDERBY N WHERE X is CWRType, X name N, X final FALSE'))
-
-
-class SchemaPermissionsTab(SecurityViewMixIn, StartupView):
-    __regid__ = 'schema-security'
-    __select__ = StartupView.__select__ & match_user_groups('managers')
-
-    def call(self, display_relations=True):
-        skiptypes = skip_types(self._cw)
-        schema = self._cw.vreg.schema
-        # compute entities
-        entities = sorted(eschema for eschema in schema.entities()
-                          if not (eschema.final or eschema in skiptypes))
-        # compute relations
-        if display_relations:
-            relations = sorted(rschema for rschema in schema.relations()
-                               if not (rschema.final
-                                       or rschema in skiptypes
-                                       or rschema in META_RTYPES))
-        else:
-            relations = []
-        # index
-        _ = self._cw._
-        url = xml_escape(self._cw.build_url('schema'))
-        self.w(u'<div id="schema_security">')
-        self.w(u'<h2 class="schema">%s</h2>' % _('Index'))
-        self.w(u'<h3 id="entities">%s</h3>' % _('Entity types'))
-        ents = []
-        for eschema in sorted(entities):
-            ents.append(u'<a class="grey" href="%s#%s">%s</a>' % (
-                url,  eschema.type, eschema.type))
-        self.w(u', '.join(ents))
-        self.w(u'<h3 id="relations">%s</h3>' % _('Relation types'))
-        rels = []
-        for rschema in sorted(relations):
-            rels.append(u'<a class="grey" href="%s#%s">%s</a>' %  (
-                url , rschema.type, rschema.type))
-        self.w(u', '.join(rels))
-        # permissions tables
-        self.display_entities(entities)
-        if relations:
-            self.display_relations(relations)
-        self.w(u'</div>')
-
-    def has_non_default_perms(self, rdef):
-        """return true if the given *attribute* relation definition has custom
-        permission
-        """
-        for action in rdef.ACTIONS:
-            def_rqlexprs = []
-            def_groups = []
-            for perm in DEFAULT_ATTRPERMS[action]:
-                if not isinstance(perm, basestring):
-                    def_rqlexprs.append(perm.expression)
-                else:
-                    def_groups.append(perm)
-            rqlexprs = [rql.expression for rql in rdef.get_rqlexprs(action)]
-            groups = rdef.get_groups(action)
-            if groups != frozenset(def_groups) or \
-                frozenset(rqlexprs) != frozenset(def_rqlexprs):
-                return True
-        return False
-
-    def display_entities(self, entities):
-        _ = self._cw._
-        url = xml_escape(self._cw.build_url('schema'))
-        self.w(u'<h2 id="entities" class="schema">%s</h2>' % _('Permissions for entity types'))
-        for eschema in entities:
-            self.w(u'<h3 id="%s" class="schema"><a href="%s">%s (%s)</a> ' % (
-                eschema.type, self._cw.build_url('cwetype/%s' % eschema.type),
-                eschema.type, _(eschema.type)))
-            self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.uiprops['UP_ICON'], _('up')))
-            self.w(u'</h3>')
-            self.w(u'<div style="margin: 0px 1.5em">')
-            self.permissions_table(eschema)
-            # display entity attributes only if they have some permissions modified
-            modified_attrs = []
-            for attr, etype in  eschema.attribute_definitions():
-                rdef = eschema.rdef(attr)
-                if attr not in META_RTYPES and self.has_non_default_perms(rdef):
-                    modified_attrs.append(rdef)
-            if modified_attrs:
-                self.w(u'<h4>%s</h4>' % _('Attributes with non default permissions:'))
-                self.w(u'</div>')
-                self.w(u'<div style="margin: 0px 6em">')
-                for rdef in modified_attrs:
-                    attrtype = str(rdef.rtype)
-                    self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attrtype, _(attrtype)))
-                    self.permissions_table(rdef)
-            self.w(u'</div>')
-
-    def display_relations(self, relations):
-        _ = self._cw._
-        url = xml_escape(self._cw.build_url('schema'))
-        self.w(u'<h2 id="relations" class="schema">%s</h2>' % _('Permissions for relations'))
-        for rschema in relations:
-            self.w(u'<h3 id="%s" class="schema"><a href="%s">%s (%s)</a> ' % (
-                rschema.type, self._cw.build_url('cwrtype/%s' % rschema.type),
-                rschema.type, _(rschema.type)))
-            self.w(u'<a href="%s#schema_security"><img src="%s" alt="%s"/></a>' % (
-                url,  self._cw.uiprops['UP_ICON'], _('up')))
-            self.w(u'</h3>')
-            self.grouped_permissions_table(rschema)
-
 
 # CWEType ######################################################################
 
