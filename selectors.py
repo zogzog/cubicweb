@@ -817,6 +817,9 @@ class score_entity(EntitySelector):
     This is a very useful selector that will usually interest you since it
     allows a lot of things without having to write a specific selector.
 
+    The function can return arbitrary value which will be casted to an integer
+    value at the end.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
