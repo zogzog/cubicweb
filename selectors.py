@@ -1145,6 +1145,11 @@ class rql_condition(EntitySelector):
     must use 'X' variable to represent the context entity and may use 'U' to
     represent the request's user.
 
+    .. warning::
+        If simply testing value of some attribute/relation of context entity (X),
+        you should rather use the :class:`score_entity` selector which will
+        benefit from the ORM's request entities cache.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
