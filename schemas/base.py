@@ -242,6 +242,12 @@ class CWCache(EntityType):
 
 
 class CWSource(EntityType):
+    __permissions__ = {
+        'read':   ('managers', 'users', 'guests'),
+        'add':    ('managers',),
+        'update': ('managers',),
+        'delete': ('managers',),
+        }
     name = String(required=True, unique=True, maxsize=128,
                   description=_('name of the source'))
     type = String(required=True, maxsize=20, description=_('type of the source'))
