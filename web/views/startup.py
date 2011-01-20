@@ -120,10 +120,6 @@ class ManageView(StartupView):
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
                                 if uicfg.indexview_etype_section.get(eschema) == 'system')
-            if 'CWAttribute' in schema: # check schema support
-                self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('schema entities'))
-                self.entity_types_table(eschema for eschema in schema.entities()
-                                        if uicfg.indexview_etype_section.get(eschema) == 'schema')
         self.w(u'</table>')
 
     def entity_types_table(self, eschemas):
