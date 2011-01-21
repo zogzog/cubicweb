@@ -214,6 +214,9 @@ class Selector(object):
         return NotImplementedError("selector %s must implement its logic "
                                    "in its __call__ method" % self.__class__)
 
+    def __repr__(self):
+        return u'<Selector %s at %x>' % (self.__class__.__name__, id(self))
+
 
 class MultiSelector(Selector):
     """base class for compound selector classes"""

@@ -1156,8 +1156,8 @@ class rql_condition(EntitySelector):
             rql = 'Any COUNT(X) WHERE X eid %%(x)s, %s' % expression
         self.rql = rql
 
-    def __repr__(self):
-        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+    def __str__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.rql)
 
     def score(self, req, rset, row, col):
         try:
