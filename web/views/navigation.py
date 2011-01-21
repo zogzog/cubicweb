@@ -187,6 +187,7 @@ class IPrevNextAdapter(EntityAdapter):
     """interface for entities which can be linked to a previous and/or next
     entity
     """
+    __needs_bw_compat__ = True
     __regid__ = 'IPrevNext'
     __select__ = implements(IPrevNext, warn=False) # XXX for bw compat, else should be abstract
 

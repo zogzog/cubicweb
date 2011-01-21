@@ -32,6 +32,7 @@ from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
 
 class ICalendarViewsAdapter(EntityAdapter):
     """calendar views interface"""
+    __needs_bw_compat__ = True
     __regid__ = 'ICalendarViews'
     __select__ = implements(ICalendarViews, warn=False) # XXX for bw compat, should be abstract
 
