@@ -129,6 +129,8 @@ class Registry(dict):
         # or simplify by calling unregister then register here
         if not isinstance(replaced, basestring):
             replaced = classid(replaced)
+        # prevent from misspelling
+        assert obj is not replaced, 'replacing an object by itself: %s' % obj
         registered_objs = self.get(class_regid(obj), ())
         for index, registered in enumerate(registered_objs):
             if classid(registered) == replaced:
