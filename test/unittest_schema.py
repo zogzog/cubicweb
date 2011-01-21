@@ -109,15 +109,6 @@ class CubicWebSchemaTC(TestCase):
         self.failIf(issubclass(RQLUniqueConstraint, RQLConstraint))
         self.failUnless(issubclass(RQLConstraint, RQLVocabularyConstraint))
 
-    def test_normalize(self):
-        """test that entities, relations and attributes name are normalized
-        """
-        self.assertEqual(esociete.type, 'Societe')
-        self.assertEqual(schema.has_relation('test'), 1)
-        self.assertEqual(eperson.subjrels['test'].type, 'test')
-        self.assertEqual(schema.has_relation('concerne'), 1)
-        self.assertEqual(schema.rschema('concerne').type, 'concerne')
-
     def test_entity_perms(self):
         self.assertEqual(eperson.get_groups('read'), set(('managers', 'users', 'guests')))
         self.assertEqual(eperson.get_groups('update'), set(('managers', 'owners',)))
