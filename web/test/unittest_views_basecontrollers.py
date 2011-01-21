@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
 
+from __future__ import with_statement
+
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
