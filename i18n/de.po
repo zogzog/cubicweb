@@ -3399,13 +3399,9 @@ msgstr "Relationen entfernt"
 msgid "relations_object"
 msgstr "Relationen von"
 
-msgctxt "CWAttribute"
+msgctxt "CWRType"
 msgid "relations_object"
-msgstr "eingeschränkt durch"
-
-msgctxt "CWRelation"
-msgid "relations_object"
-msgstr "eingeschränkt durch"
+msgstr ""
 
 msgid "relative url of the bookmarked page"
 msgstr "URL relativ zu der Seite"
@@ -4335,12 +4331,3 @@ msgstr "Sie sind jetzt abgemeldet."
 
 msgid "you should probably delete that property"
 msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
-
-#~ msgid "ctxcomponents_loggeduserlink"
-#~ msgstr "Nutzer-Link"
-
-#~ msgid "ctxcomponents_loggeduserlink_description"
-#~ msgstr ""
-#~ "for anonymous users, this is a link pointing to authentication form, for "
-#~ "logged in users, this is a link that makes a box appear and listing some "
-#~ "possible user actions"

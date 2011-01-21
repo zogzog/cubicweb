@@ -3422,11 +3422,7 @@ msgstr "Relaciones Eliminadas"
 msgid "relations_object"
 msgstr ""
 
-msgctxt "CWAttribute"
-msgid "relations_object"
-msgstr ""
-
-msgctxt "CWRelation"
+msgctxt "CWRType"
 msgid "relations_object"
 msgstr ""
 

@@ -3427,13 +3427,9 @@ msgstr "relations supprimées"
 msgid "relations_object"
 msgstr "relations de"
 
-msgctxt "CWAttribute"
+msgctxt "CWRType"
 msgid "relations_object"
-msgstr "contraint par"
-
-msgctxt "CWRelation"
-msgid "relations_object"
-msgstr "contraint par"
+msgstr "relations de"
 
 msgid "relative url of the bookmarked page"
 msgstr "url relative de la page"
