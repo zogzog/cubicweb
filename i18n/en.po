@@ -1312,6 +1312,9 @@ msgstr ""
 msgid "click here to see created entity"
 msgstr ""
 
+msgid "click here to see edited entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr ""
 

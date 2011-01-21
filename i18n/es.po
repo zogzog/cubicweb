@@ -1360,6 +1360,9 @@ msgstr "Cambios realizados"
 msgid "click here to see created entity"
 msgstr "Ver la entidad creada"
 
+msgid "click here to see edited entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr "Seleccione la zona de edición para cancelar la eliminación"
 

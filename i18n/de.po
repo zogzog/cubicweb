@@ -1360,6 +1360,9 @@ msgstr "Änderungen übernommen"
 msgid "click here to see created entity"
 msgstr "Hier klicken, um die angelegte Entität anzusehen"
 
+msgid "click here to see edited entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr "Klicken Sie die Box an, um das Löschen rückgängig zu machen."
 
