@@ -25,6 +25,7 @@ __docformat__ = 'restructuredtext en'
 import sys
 import os
 
+from logilab.common import nullobject
 from logilab.common.configuration import Configuration
 from logilab.common.shellutils import ASK
 
@@ -188,6 +189,16 @@ class RepositoryCreateHandler(CommandHandler):
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
 
+ERROR = nullobject()
+
+def confirm_on_error_or_die(msg, func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except Exception, ex:
+        print 'ERROR', ex
+        if not ASK.confirm('An error occurred while %s. Continue anyway?' % msg):
+            raise ExecutionError(str(ex))
+    return ERROR
 
 class RepositoryDeleteHandler(CommandHandler):
     cmdname = 'delete'
@@ -201,19 +212,29 @@ class RepositoryDeleteHandler(CommandHandler):
         helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
             if source['db-driver'] == 'sqlite':
-                os.unlink(source['db-name'])
+                if confirm_on_error_or_die(
+                    'deleting database file %s' % dbname,
+                    os.unlink, source['db-name']) is not ERROR:
+                    print '-> database %s dropped.' % dbname
                 return
             user = source['db-user'] or None
-            cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
+            cnx = confirm_on_error_or_die('connecting to database %s' % dbname,
+                                          _db_sys_cnx, source, 'DROP DATABASE', user=user)
+            if cnx is ERROR:
+                return
             cursor = cnx.cursor()
             try:
-                cursor.execute('DROP DATABASE "%s"' % dbname)
-                print '-> database %s dropped.' % dbname
+                if confirm_on_error_or_die(
+                    'dropping database %s' % dbname,
+                    cursor.execute, 'DROP DATABASE "%s"' % dbname) is not ERROR:
+                    print '-> database %s dropped.' % dbname
                 # XXX should check we are not connected as user
                 if user and helper.users_support and \
                        ASK.confirm('Delete user %s ?' % user, default_is_yes=False):
-                    cursor.execute('DROP USER %s' % user)
-                    print '-> user %s dropped.' % user
+                    if confirm_on_error_or_die(
+                        'dropping user %s' % user,
+                        cursor.execute, 'DROP USER %s' % user) is not ERROR:
+                        print '-> user %s dropped.' % user
                 cnx.commit()
             except:
                 cnx.rollback()
