@@ -248,7 +248,7 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
 class ScoreEntitySelectorTC(CubicWebTC):
 
     def test_intscore_entity_selector(self):
-        req = request()
+        req = self.request()
         selector = score_entity(lambda x: None)
         rset = req.execute('Any E WHERE E eid 0')
         self.assertEqual(selector(None, req, rset), 0)
