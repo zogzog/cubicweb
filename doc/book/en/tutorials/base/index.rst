@@ -16,7 +16,7 @@ This tutorial is designed to help in your very first steps to start with
 * discovering the default user interface
 * basic extending and customizing the look and feel of that application
 
-More advanced concepts are covered in :ref:`advanced_tutorial`.
+More advanced concepts are covered in :ref:`TutosPhotoWebSite`.
 
 
 .. _TutosBaseVocab:

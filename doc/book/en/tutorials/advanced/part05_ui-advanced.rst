@@ -1,0 +1,357 @@
+Building my photos web site with |cubicweb| part V: let's make it even more user friendly
+=========================================================================================
+
+We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of cubicweb
+
+Step 1: Tired of the default look?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ok... Now our site has most desired features. But... I would like to make it look
+somewhat like *my* website, That's not cubicweb.org after all. Let's tackle this
+first!
+
+The first thing we can to is to change the logo. There are various way to achieve
+this. The easiest way is to put a `logo.png` file into the cube's `data`
+directory. As data files are looked at according to cubes order (cubicweb
+resources coming last). The first one being picked, the file will be selected
+instead of cubicweb's one.
+
+.. Note::
+   As the location for static resources are cached, you'll have to restart
+   your instance for this to be taken into account.
+
+Though there are some cases where you don't want to use a `logo.png` file.  For
+instance if it's a JPEG file. You can still change the logo by defining in the
+cube's `:file:`uiprops.py`` file:
+
+.. sourcecode:: python
+
+   LOGO = data('logo.jpg')
+
+The uiprops machinery has been introduced in `CubicWeb 3.9`_. It's used to define
+some static file resources, such as the logo, default javascript / CSS files, as
+well as CSS properties (we'll see that later).
+
+.. Note::
+   This file is imported specifically by |cubicweb|, with a predefined name space,
+   containing for instance the `data` function, telling the file is somewhere
+   in a cube or cubicweb's data directory.
+
+   One side effect of this is that it can't be imported as a regular python
+   module.
+
+The nice thing is that in debug mode, change to a :file:`uiprops.py` file are detected
+and then automatically reloaded.
+
+Now, as it's a photos web-site, I would like to have a photo of mine as background...
+After some trials I won't detail here, I've found a working recipe explained `here`_.
+All I've to do is to override some stuff of the default cubicweb user interface to
+apply it as explained.
+
+The first thing to to get the "<img/>" tag as first element after the "<body>"
+tag.  If you know a way to avoid this by simply specifying the image in the CSS,
+tell me!  The easiest way to do so is to override the `HTMLPageHeader` view,
+since that's the one that is directly called once the "<body>" has been written
+. How did I find this?  By looking in the `cubiweb.web.views.basetemplates`
+module, since I know that global page layouts sits there. I could also have
+grep the "body" tag in `cubicweb.web.views`... Finding this was the hardest
+part. Now all I need is to customize it to write that "img" tag, as below:
+
+.. sourcecode:: python
+
+    class HTMLPageHeader(basetemplates.HTMLPageHeader):
+	# override this since it's the easier way to have our bg image
+	# as the first element following <body>
+	def call(self, **kwargs):
+            self.w(u'<img id="bg-image" src="%sbackground.jpg" alt="background image"/>'
+                   % self._cw.datadir_url)
+	    super(HTMLPageHeader, self).call(**kwargs)
+
+
+    def registration_callback(vreg):
+	vreg.register_all(globals().values(), __name__, (HTMLPageHeader))
+	vreg.register_and_replace(HTMLPageHeader, basetemplates.HTMLPageHeader)
+
+
+Besides that, as you may I've guess, my background image is in a `backgroundjpg`
+file in the cube's `data` directory, there are still some things to explain to
+newcomers here though.
+
+* The `call` method is there the main access point of the view. It's called by
+  the view's `render` method. That's not the onlyu access point for a view, but
+  that will be detailed later.
+
+* Calling `self.w` write something to the output stream. Except for binary view
+  (not generating text), it *must* be an Unicode string.
+
+* The proper way to get a file in `data` directory is to use the `datadir_url`
+  attribute of the incoming request (e.g. `self._cw`).
+
+I won't explain again the `registration_callback` stuff, you should understand it
+know!  If not, go back to previous posts in the series :)
+
+Fine. Now all I've to do is to add a bit of CSS to get it behaves nicely (that's
+not yet the case at all). I'll put all this in a `cubes.sytweb.css` file, as usual
+in our `data` directory:
+
+.. sourcecode:: css
+
+
+    /* fixed full screen background image
+     * as explained on http://webdesign.about.com/od/css3/f/blfaqbgsize.htm
+     *
+     * syt update: set z-index=0 on the img instead of z-index=1 on div#page & co to
+     * avoid pb with the user actions menu
+     */
+    img#bg-image {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+    }
+
+    div#page, table#header, div#footer {
+	background: transparent;
+	position: relative;
+    }
+
+    /* add some space around the logo
+     */
+    img#logo {
+	padding: 5px 15px 0px 15px;
+    }
+
+    /* more dark font for metadata to have a chance to see them with the background
+     *  image
+     */
+    div.metadata {
+	color: black;
+    }
+
+You can see here stuff explained in the cited page, with only a slight modification
+explained in the comments, plus some additional rules to make thing somewhat cleaner:
+
+* a bit of padding around the logo
+
+* darker metadata which appears by default below the content (the white frame in the page)
+
+To get this CSS file used everywhere in the site, I've to modify the :file:`uiprops.py` file
+we've encountered above:
+
+.. sourcecode:: python
+
+   STYLESHEETS = sheet['STYLESHEETS'] + [data('cubes.sytweb.css')]
+
+.. Note:
+   `sheet` is another predefined variable containing values defined by
+   already process `:file:`uiprops.py`` file, notably the cubicweb's one.
+
+Here we simply want our CSS additionally to cubicweb's base CSS files, so we
+redefine the `STYLESHEETS` variable to existing CSS (accessed through the `sheet`
+variable) with our one added. I could also have done:
+
+.. sourcecode:: python
+
+   sheet['STYLESHEETS'].append(data('cubes.sytweb.css'))
+
+But this is less interesting since we don't see the overriding mechanism...
+
+At this point, the site should start looking good, the background image being
+resized to fit the screen.
+
+.. image:: ../../images/tutos-photowebsite_background-image.png
+
+The final touch: let's customize cubicweb's CSS to get less orange... By simply adding
+
+.. sourcecode:: python
+
+  contextualBoxTitleBg = incontextBoxTitleBg = '#AAAAAA'
+
+and reloading the page we've just seen, we know have a nice greyed box instead of
+the orange one:
+
+.. image:: ../../images/tutos-photowebsite_grey-box.png
+
+This is because cubicweb's CSS include some variables which are
+expanded by values defined in uiprops file. In our case we controlled the
+properties of the CSS `background` property of boxes with CSS class
+`contextualBoxTitleBg` and `incontextBoxTitleBg`.
+
+
+Step 2: configuring boxes
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Boxes present to the user some ways to use the application. Lets first do a few tweaks:
+
+.. sourcecode:: python
+
+  from cubicweb.selectors import none_rset
+  from cubicweb.web.views import bookmark
+  from cubes.zone import views as zone
+  from cubes.tag import views as tag
+
+  # change bookmarks box selector so it's only displayed on startup view
+gro  bookmark.BookmarksBox.__select__ = bookmark.BookmarksBox.__select__ & none_rset()
+  # move zone box to the left instead of in the context frame and tweak its order
+  zone.ZoneBox.context = 'left'
+  zone.ZoneBox.order = 100
+  # move tags box to the left instead of in the context frame and tweak its order
+  tag.TagsBox.context = 'left'
+  tag.TagsBox.order = 102
+  # hide similarity box, not interested
+  tag.SimilarityBox.visible = False
+
+The idea is to move all boxes in the left column, so we get more spaces for the
+photos.  Now, serious things: I want a box similar as the tags box but to handle
+the `Person displayed_on File` relation. We can do this simply by configuring a
+:class:`AjaxEditRelationCtxComponent` subclass as below:
+
+.. sourcecode:: python
+
+    from logilab.common.decorators import monkeypatch
+    from cubicweb import ValidationError
+    from cubicweb.web import uicfg, component
+    from cubicweb.web.views import basecontrollers
+
+    # hide displayed_on relation using uicfg since it will be displayed by the box below
+    uicfg.primaryview_section.tag_object_of(('*', 'displayed_on', '*'), 'hidden')
+
+    class PersonBox(component.AjaxEditRelationCtxComponent):
+	__regid__ = 'sytweb.displayed-on-box'
+	# box position
+	order = 101
+	context = 'left'
+	# define relation to be handled
+	rtype = 'displayed_on'
+	role = 'object'
+	target_etype = 'Person'
+	# messages
+	added_msg = _('person has been added')
+	removed_msg = _('person has been removed')
+	# bind to js_* methods of the json controller
+	fname_vocabulary = 'unrelated_persons'
+	fname_validate = 'link_to_person'
+	fname_remove = 'unlink_person'
+
+
+    @monkeypatch(basecontrollers.JSonController)
+    @basecontrollers.jsonize
+    def js_unrelated_persons(self, eid):
+	"""return tag unrelated to an entity"""
+	rql = "Any F + ' ' + S WHERE P surname S, P firstname F, X eid %(x)s, NOT P displayed_on X"
+	return [name for (name,) in self._cw.execute(rql, {'x' : eid})]
+
+
+    @monkeypatch(basecontrollers.JSonController)
+    def js_link_to_person(self, eid, people):
+	req = self._cw
+	for name in people:
+	    name = name.strip().title()
+	    if not name:
+		continue
+	    try:
+		firstname, surname = name.split(None, 1)
+	    except:
+		raise ValidationError(eid, {('displayed_on', 'object'): 'provide <first name> <surname>'})
+	    rset = req.execute('Person P WHERE '
+			       'P firstname %(firstname)s, P surname %(surname)s',
+			       locals())
+	    if rset:
+		person = rset.get_entity(0, 0)
+	    else:
+		person = req.create_entity('Person', firstname=firstname,
+						surname=surname)
+	    req.execute('SET P displayed_on X WHERE '
+			'P eid %(p)s, X eid %(x)s, NOT P displayed_on X',
+			{'p': person.eid, 'x' : eid})
+
+    @monkeypatch(basecontrollers.JSonController)
+    def js_unlink_person(self, eid, personeid):
+	self._cw.execute('DELETE P displayed_on X WHERE P eid %(p)s, X eid %(x)s',
+			 {'p': personeid, 'x': eid})
+
+
+You basically subclass to configure by some class attributes. The `fname_*`
+attributes gives name of methods that should be defined on the json control to
+make the AJAX part of the widget working: one to get the vocabulary, one to add a
+relation and another to delete a relation. Those methods must start by a `ks_`
+prefix and are added to the controller using the `@monkeypatch` decorator.Here
+the most complicated is the one to add a relation, since it tries to see if the
+person already exists, and else automatically create it by supposing the user
+entered "firstname surname".
+
+Let's see how it looks like on a file primary view:
+
+.. image:: ../../images/tutos-photowebsite_boxes.png
+
+Great, it's now as easy for me to link my pictures to people than to tag them.
+Also, visitors get a consistent display of those two informations.
+
+.. note:
+  The ui component system has been refactored in `CubicWeb 3.10`_, which also
+  introduced the :class:`AjaxEditRelationCtxComponent` class.
+
+
+Step 3: configuring facets
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The last feature we'll add today is facet configuration. If you access to the
+'/file' url, you'll see a set of 'facet' appearing in the left column. Facets
+provide an intuitive way to build a query incrementally, by proposing to the user
+various way to restrict result set. For instance cubicweb propose a facet to
+restrict according to who's created an entity; the tag cube a facet to restrict
+according to tags. I want to propose similarly a facet to restrict according to
+people displayed on the picture. To do so, there are various classes in the
+:mod:`cubicweb.web.facet` module which you've simple to configure using class
+attributes as we've done for the box. In our case, we'll define a subclass of
+:class:`RelationFacet`:
+
+.. sourcecode:: python
+
+    from cubicweb.web import facet
+
+    class DisplayedOnFacet(facet.RelationFacet):
+	__regid__ = 'displayed_on-facet'
+	# relation to be displayed
+	rtype = 'displayed_on'
+	role = 'object'
+	# view to use to display persons
+	label_vid = 'combobox'
+
+Let's say we also want a filter according to the `visibility` attribute. this is
+even more simple, by inheriting from the :class:`AttributeFacet` class:
+
+.. sourcecode:: python
+
+    class VisibilityFacet(facet.AttributeFacet):
+	__regid__ = 'visibility-facet'
+	rtype = 'visibility'
+
+Now if I search some pictures on my site, I get the following facets available:
+
+.. image:: ../../images/tutos-photowebsite_facets.png
+
+.. Note:
+
+  Facets which have no choice to propose (i.e. one or less elements of
+  vocabulary) are not displayed. That's may be why you don't see yours.
+
+
+Conclusion
+~~~~~~~~~~
+
+We started to see the power behind the infrastructure provided by the
+framework. Both on the pure ui (CSS, javascript) stuff as on the python side
+(high level generic classes for components, including boxes and facets). We now
+have, by a few lines of code, a full-featured web site with a personnalized look.
+
+Of course we'll probably want more as the time goes, but we can now start
+concentrate on making good pictures, publishing albums and sharing them with
+friends...
+
+
+
+.. _`CubicWeb 3.10`: https://www.cubicweb.org/blogentry/1330518
+.. _`CubicWeb 3.9`: http://www.cubicweb.org/blogentry/1179899
+.. _`here`: http://webdesign.about.com/od/css3/f/blfaqbgsize.htm
