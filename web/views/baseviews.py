@@ -31,7 +31,7 @@ from warnings import warn
 
 from rql import nodes
 
-from logilab.mtconverter import TransformError, xml_escape, xml_escape
+from logilab.mtconverter import TransformError, xml_escape
 
 from cubicweb import NoSelectableObject, tags
 from cubicweb.selectors import yes, empty_rset, one_etype_rset, match_kwargs
