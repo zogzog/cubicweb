@@ -1,4 +1,4 @@
-Building my photos web site with |CubiWeb| part V: let's make it even more user friendly
+Building my photos web site with |cubiweb| part V: let's make it even more user friendly
 =========================================================================================
 
 We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubiWeb
@@ -11,7 +11,7 @@ somewhat like *my* website. It is not www.cubicweb.org after all. Let's tackle t
 first!
 
 The first thing we can to is to change the logo. There are various way to achieve
-this. The easiest way is to put a `logo.png` file into the cube's `data`
+this. The easiest way is to put a :file:`logo.png` file into the cube's :file:`data`
 directory. As data files are looked at according to cubes order (CubiWeb
 resources coming last), that file will be selected instead of CubiWeb's one.
 
@@ -19,9 +19,9 @@ resources coming last), that file will be selected instead of CubiWeb's one.
    As the location for static resources are cached, you'll have to restart
    your instance for this to be taken into account.
 
-Though there are some cases where you don't want to use a `logo.png` file.  For
-instance if it's a JPEG file. You can still change the logo by defining in the
-cube's `:file:`uiprops.py`` file:
+Though there are some cases where you don't want to use a :file:`logo.png` file.
+For instance if it's a JPEG file. You can still change the logo by defining in
+the cube's :file:`uiprops.py` file:
 
 .. sourcecode:: python
 
@@ -47,14 +47,15 @@ After some trials I won't detail here, I've found a working recipe explained `he
 All I've to do is to override some stuff of the default CubiWeb user interface to
 apply it as explained.
 
-The first thing to to get the ``<img/>`` tag as first element after the ``<body>``
-tag.  If you know a way to avoid this by simply specifying the image in the CSS,
-tell me!  The easiest way to do so is to override the `HTMLPageHeader` view,
-since that's the one that is directly called once the ``<body>`` has
-been written. How did I find this?  By looking in the `cubiweb.web.views.basetemplates`
-module, since I know that global page layouts sits there. I could also have
-grep the "body" tag in `cubicweb.web.views`... Finding this was the hardest
-part. Now all I need is to customize it to write that ``img`` tag, as below:
+The first thing to to get the ``<img/>`` tag as first element after the
+``<body>`` tag.  If you know a way to avoid this by simply specifying the image
+in the CSS, tell me!  The easiest way to do so is to override the
+:class:`HTMLPageHeader` view, since that's the one that is directly called once
+the ``<body>`` has been written. How did I find this?  By looking in the
+:mod:`cubiweb.web.views.basetemplates` module, since I know that global page
+layouts sits there. I could also have grep the "body" tag in
+:mod:`cubicweb.web.views`... Finding this was the hardest part. Now all I need is
+to customize it to write that ``img`` tag, as below:
 
 .. sourcecode:: python
 
@@ -72,26 +73,26 @@ part. Now all I need is to customize it to write that ``img`` tag, as below:
 	vreg.register_and_replace(HTMLPageHeader, basetemplates.HTMLPageHeader)
 
 
-As you may have guessed, my background image is in a `backgroundjpg`
-file in the cube's `data` directory, but there are still some things to explain to
-newcomers here:
+As you may have guessed, my background image is in a :file:`background.jpg` file
+in the cube's :file:`data` directory, but there are still some things to explain
+to newcomers here:
 
-* The `call` method is there the main access point of the view. It's called by
-  the view's `render` method. It is not the only access point for a view, but
+* The :meth:`call` method is there the main access point of the view. It's called by
+  the view's :meth:`render` method. It is not the only access point for a view, but
   this will be detailed later.
 
 * Calling `self.w` writes something to the output stream. Except for binary views
   (which do not generate text), it *must* be passed an Unicode string.
 
-* The proper way to get a file in `data` directory is to use the `datadir_url`
+* The proper way to get a file in :file:`data` directory is to use the `datadir_url`
   attribute of the incoming request (e.g. `self._cw`).
 
-I won't explain again the `registration_callback` stuff, you should understand it
+I won't explain again the :func:`registration_callback` stuff, you should understand it
 now!  If not, go back to previous posts in the series :)
 
-Fine. Now all I've to do is to add a bit of CSS to get it to behave
-nicely (which is not the case at all for now). I'll put all this in a 
-`cubes.sytweb.css` file, stored as usual in our `data` directory:
+Fine. Now all I've to do is to add a bit of CSS to get it to behave nicely (which
+is not the case at all for now). I'll put all this in a :file:`cubes.sytweb.css`
+file, stored as usual in our :file:`data` directory:
 
 .. sourcecode:: css
 
@@ -181,7 +182,9 @@ properties of the CSS `background` property of boxes with CSS class
 
 Step 2: configuring boxes
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Boxes present to the user some ways to use the application. Let's first do a few tweaks:
+
+Boxes present to the user some ways to use the application. Let's first do a few
+user interface tweaks in our :file:`views.py` file:
 
 .. sourcecode:: python
 
@@ -203,8 +206,8 @@ Boxes present to the user some ways to use the application. Let's first do a few
 
 The idea is to move all boxes in the left column, so we get more space for the
 photos.  Now, serious things: I want a box similar to the tags box but to handle
-the `Person displayed_on File` relation. We can do this simply by configuring a
-:class:`AjaxEditRelationCtxComponent` subclass as below:
+the `Person displayed_on File` relation. We can do this simply by adding a
+:class:`AjaxEditRelationCtxComponent` subclass to our views, as below:
 
 .. sourcecode:: python
 
@@ -275,10 +278,10 @@ You basically subclass to configure with some class attributes. The `fname_*`
 attributes give the name of methods that should be defined on the json control to
 make the AJAX part of the widget work: one to get the vocabulary, one to add a
 relation and another to delete a relation. These methods must start by a `js_`
-prefix and are added to the controller using the `@monkeypatch`
-decorator. In my case, the most complicated method is the one which adds a relation, since it tries to see if the
-person already exists, and else automatically create it, assuming the user
-entered "firstname surname".
+prefix and are added to the controller using the `@monkeypatch` decorator. In my
+case, the most complicated method is the one which adds a relation, since it
+tries to see if the person already exists, and else automatically create it,
+assuming the user entered "firstname surname".
 
 Let's see how it looks like on a file primary view:
 
@@ -299,12 +302,26 @@ The last feature we'll add today is facet configuration. If you access to the
 '/file' url, you'll see a set of 'facets' appearing in the left column. Facets
 provide an intuitive way to build a query incrementally, by proposing to the user
 various way to restrict the result set. For instance CubiWeb proposes a facet to
-restrict based on who created an entity; the tag cube proposes a facet to restrict
-based on tags. In that gist, I want to propose a facet to restrict based
-on the people displayed on the picture. To do so, there are various classes in the
+restrict based on who created an entity; the tag cube proposes a facet to
+restrict based on tags; the zoe cube a facet to restrict based on geographical
+location, and so on. In that gist, I want to propose a facet to restrict based on
+the people displayed on the picture. To do so, there are various classes in the
 :mod:`cubicweb.web.facet` module which simply have to be configured using class
 attributes as we've done for the box. In our case, we'll define a subclass of
-:class:`RelationFacet`:
+:class:`RelationFacet`.
+
+.. Note:
+
+   Since that's ui stuff, we'll continue to add code below to our
+   :file:`views.py` file. Though we begin to have a lot of various code their, so
+   it's may be a good time to split our views module into submodules of a `view`
+   package. In our case of a simple application (glue) cube, we could start using
+   for instance the layout below: ::
+
+     views/__init__.py   # uicfg configuration, facets
+     views/layout.py     # header/footer/background stuff
+     views/components.py # boxes, adapters
+     views/pages.py      # index view, 404 view
 
 .. sourcecode:: python
 
@@ -333,8 +350,10 @@ Now if I search for some pictures on my site, I get the following facets availab
 
 .. Note:
 
-  Facets which have no choice to propose (i.e. one or less elements of
-  vocabulary) are not displayed. This may be why you don't see yours.
+  By default a facet must be applyable to every entity in the result set and
+  provide at leat two elements of vocabulary to be displayed (for instance you
+  won't see the `created_by` facet if the same user has created all
+  entities). This may explain why you don't see yours...
 
 
 Conclusion
