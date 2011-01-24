@@ -1438,6 +1438,10 @@ class match_transition(ExpectedValueSelector):
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
+        if transition is None:
+            treid = req.form.get('treid', None)
+            if treid:
+                transition = req.entity_from_eid(treid)
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
