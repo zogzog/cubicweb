@@ -44,6 +44,7 @@ MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
 
 
 class ICalendarableAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'ICalendarable'
     __select__ = implements(ICalendarable, warn=False) # XXX for bw compat, should be abstract
 

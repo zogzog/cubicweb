@@ -248,9 +248,11 @@ function makeConstructor(userctor) {
  * this is a js class factory. objects returned by this function behave
  * more or less like a python class. The `class` function prototype is
  * inspired by the python `type` builtin
- * Important notes :
- *  -> methods are _STATICALLY_ attached when the class it created
- *  -> multiple inheritance was never tested, which means it doesn't work ;-)
+ *
+ * .. Note::
+ *
+ *    * methods are _STATICALLY_ attached when the class it created
+ *    * multiple inheritance was never tested, which means it doesn't work ;-)
  */
 function defclass(name, bases, classdict) {
     var baseclasses = bases || [];

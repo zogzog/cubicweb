@@ -1360,6 +1360,9 @@ msgstr "Änderungen übernommen"
 msgid "click here to see created entity"
 msgstr "Hier klicken, um die angelegte Entität anzusehen"
 
+msgid "click here to see edited entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr "Klicken Sie die Box an, um das Löschen rückgängig zu machen."
 
@@ -3405,13 +3408,9 @@ msgstr "Relationen"
 msgid "relations deleted"
 msgstr "Relationen entfernt"
 
-msgctxt "CWAttribute"
+msgctxt "CWRType"
 msgid "relations_object"
-msgstr "eingeschränkt durch"
-
-msgctxt "CWRelation"
-msgid "relations_object"
-msgstr "eingeschränkt durch"
+msgstr "Relationen von"
 
 msgid "relations_object"
 msgstr "Relationen von"
@@ -4347,12 +4346,3 @@ msgstr "Sie sind jetzt abgemeldet."
 
 msgid "you should probably delete that property"
 msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
-
-#~ msgid "ctxcomponents_loggeduserlink"
-#~ msgstr "Nutzer-Link"
-
-#~ msgid "ctxcomponents_loggeduserlink_description"
-#~ msgstr ""
-#~ "for anonymous users, this is a link pointing to authentication form, for "
-#~ "logged in users, this is a link that makes a box appear and listing some "
-#~ "possible user actions"

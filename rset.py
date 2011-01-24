@@ -386,6 +386,19 @@ class ResultSet(object):
             if self.rows[i][col] is not None:
                 yield self.get_entity(i, col)
 
+    def iter_rows_with_entities(self):
+        """ iterates over rows, and for each row
+        eids are converted to plain entities
+        """
+        for i, row in enumerate(self):
+            _row = []
+            for j, col in enumerate(row):
+                try:
+                    _row.append(self.get_entity(i, j) if col is not None else col)
+                except NotAnEntity:
+                    _row.append(col)
+            yield _row
+
     def complete_entity(self, row, col=0, skip_bytes=True):
         """short cut to get an completed entity instance for a particular
         row (all instance's attributes have been fetched)
@@ -401,9 +414,9 @@ class ResultSet(object):
 
         .. warning::
 
-          Due to the cache wrapping this function, you should NEVER
-          give row as a named parameter (i.e. rset.get_entity(req, 0)
-          is OK but rset.get_entity(row=0, req=req) isn't)
+          Due to the cache wrapping this function, you should NEVER give row as
+          a named parameter (i.e. `rset.get_entity(0, 1)` is OK but
+          `rset.get_entity(row=0, col=1)` isn't)
 
         :type row,col: int, int
         :param row,col:
@@ -421,11 +434,11 @@ class ResultSet(object):
         return self._build_entity(row, col)
 
     def _build_entity(self, row, col):
-        """internal method to get a single entity, returns a
-        partially initialized Entity instance.
+        """internal method to get a single entity, returns a partially
+        initialized Entity instance.
 
-        partially means that only attributes selected in the RQL
-        query will be directly assigned to the entity.
+        partially means that only attributes selected in the RQL query will be
+        directly assigned to the entity.
 
         :type row,col: int, int
         :param row,col:

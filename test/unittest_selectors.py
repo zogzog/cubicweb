@@ -24,7 +24,7 @@ from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
-                                multi_lines_rset)
+                                multi_lines_rset, score_entity)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.web import action
 
@@ -243,6 +243,24 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
         for (expected, operator, assertion) in testdata:
             selector = multi_lines_rset(expected, operator)
             yield self.assertEqual, selector(None, self.req, self.rset), assertion
+
+
+class ScoreEntitySelectorTC(CubicWebTC):
+
+    def test_intscore_entity_selector(self):
+        req = self.request()
+        selector = score_entity(lambda x: None)
+        rset = req.execute('Any E WHERE E eid 0')
+        self.assertEqual(selector(None, req, rset), 0)
+        selector = score_entity(lambda x: "something")
+        self.assertEqual(selector(None, req, rset), 1)
+        selector = score_entity(lambda x: object)
+        self.assertEqual(selector(None, req, rset), 1)
+        rset = req.execute('Any G LIMIT 2 WHERE G is CWGroup')
+        selector = score_entity(lambda x: 10)
+        self.assertEqual(selector(None, req, rset), 20)
+        selector = score_entity(lambda x: 10, once_is_enough=True)
+        self.assertEqual(selector(None, req, rset), 10)
 
 
 if __name__ == '__main__':

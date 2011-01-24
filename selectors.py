@@ -817,6 +817,9 @@ class score_entity(EntitySelector):
     This is a very useful selector that will usually interest you since it
     allows a lot of things without having to write a specific selector.
 
+    The function can return arbitrary value which will be casted to an integer
+    value at the end.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
@@ -1142,6 +1145,11 @@ class rql_condition(EntitySelector):
     must use 'X' variable to represent the context entity and may use 'U' to
     represent the request's user.
 
+    .. warning::
+        If simply testing value of some attribute/relation of context entity (X),
+        you should rather use the :class:`score_entity` selector which will
+        benefit from the ORM's request entities cache.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
@@ -1153,8 +1161,8 @@ class rql_condition(EntitySelector):
             rql = 'Any COUNT(X) WHERE X eid %%(x)s, %s' % expression
         self.rql = rql
 
-    def __repr__(self):
-        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+    def __str__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.rql)
 
     def score(self, req, rset, row, col):
         try:
@@ -1430,6 +1438,10 @@ class match_transition(ExpectedValueSelector):
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
+        if transition is None:
+            treid = req.form.get('treid', None)
+            if treid:
+                transition = req.entity_from_eid(treid)
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0

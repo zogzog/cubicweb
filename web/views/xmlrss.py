@@ -122,6 +122,7 @@ class XMLRsetView(AnyRsetView):
 # RSS stuff ###################################################################
 
 class IFeedAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'IFeed'
     __select__ = is_instance('Any')
 

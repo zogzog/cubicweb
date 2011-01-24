@@ -16,12 +16,14 @@ TODAY = new Date();
  * .. class:: Calendar
  *
  * Calendar (graphical) widget
+ *
  * public methods are :
+ *
  *   __init__ :
- *    @param containerId: the DOM node's ID where the calendar will be displayed
- *    @param inputId: which input needs to be updated when a date is selected
- *    @param year, @param month: year and month to be displayed
- *    @param cssclass: CSS class of the calendar widget (default is commandCal)
+ *    :attr:`containerId`: the DOM node's ID where the calendar will be displayed
+ *    :attr:`inputId`: which input needs to be updated when a date is selected
+ *    :attr:`year`, :attr:`month`: year and month to be displayed
+ *    :attr:`cssclass`: CSS class of the calendar widget (default is 'commandCal')
  *
  *   show() / hide():
  *    show or hide the calendar widget

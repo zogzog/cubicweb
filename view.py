@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+import types, new
 from cStringIO import StringIO
 from warnings import warn
 
@@ -543,17 +544,6 @@ class Adapter(AppObject):
     __registry__ = 'adapters'
 
 
-class EntityAdapter(Adapter):
-    """base class for entity adapters (eg adapt an entity to an interface)"""
-    def __init__(self, _cw, **kwargs):
-        try:
-            self.entity = kwargs.pop('entity')
-        except KeyError:
-            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
-                                                    kwargs.get('col') or 0)
-        Adapter.__init__(self, _cw, **kwargs)
-
-
 def implements_adapter_compat(iface):
     def _pre39_compat(func):
         def decorated(self, *args, **kwargs):
@@ -568,5 +558,35 @@ def implements_adapter_compat(iface):
                     return member(*args, **kwargs)
                 return member
             return func(self, *args, **kwargs)
+        decorated.decorated = func
         return decorated
     return _pre39_compat
+
+
+def unwrap_adapter_compat(cls):
+    parent = cls.__bases__[0]
+    for member_name in dir(parent):
+        member = getattr(parent, member_name)
+        if isinstance(member, types.MethodType) and hasattr(member.im_func, 'decorated') and not member_name in cls.__dict__:
+            method = new.instancemethod(member.im_func.decorated, None, cls)
+            setattr(cls, member_name, method)
+
+
+class auto_unwrap_bw_compat(type):
+    def __new__(mcs, name, bases, classdict):
+        cls = type.__new__(mcs, name, bases, classdict)
+        if not classdict.get('__needs_bw_compat__'):
+            unwrap_adapter_compat(cls)
+        return cls
+
+
+class EntityAdapter(Adapter):
+    """base class for entity adapters (eg adapt an entity to an interface)"""
+    __metaclass__ = auto_unwrap_bw_compat
+    def __init__(self, _cw, **kwargs):
+        try:
+            self.entity = kwargs.pop('entity')
+        except KeyError:
+            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
+                                                    kwargs.get('col') or 0)
+        Adapter.__init__(self, _cw, **kwargs)

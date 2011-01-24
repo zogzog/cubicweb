@@ -34,6 +34,7 @@ from cubicweb.web.views import basecontrollers, autoform
 
 
 class IEditControlAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
 

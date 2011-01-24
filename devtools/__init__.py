@@ -175,6 +175,7 @@ class TestServerConfiguration(ServerConfiguration):
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
+    name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
                                      + TwistedConfiguration.options)
     cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path

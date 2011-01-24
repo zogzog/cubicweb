@@ -13,19 +13,28 @@ principles.
 
 Its main features are:
 
-* an engine driven by the explicit :ref:`data model <DefineDataModel>` of the application,
+* an engine driven by the explicit :ref:`data model
+  <TutosBaseCustomizingTheApplicationDataModel>` of the application,
+
 * a query language named :ref:`RQL <RQL>` similar to W3C's SPARQL,
-* a :ref:`selection+view <DefineViews>` mechanism for semi-automatic XHTML/XML/JSON/text generation,
-* a library of reusable :ref:`components <cubes>` (data model and views) that fulfill common needs,
+
+* a :ref:`selection+view <TutosBaseCustomizingTheApplicationCustomViews>`
+  mechanism for semi-automatic XHTML/XML/JSON/text generation,
+
+* a library of reusable :ref:`components <Cube>` (data model and views) that
+  fulfill common needs,
+
 * the power and flexibility of the Python_ programming language,
-* the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
+
+* the reliability of SQL databases, LDAP directories, Subversion and Mercurial
+  for storage backends.
 
 Built since 2000 from an R&D effort still continued, supporting 100,000s of
 daily visits at some production sites, |cubicweb| is a proven end to end solution
 for semantic web application development that promotes quality, reusability and
 efficiency.
 
-The unbeliever will read the :ref:`Tutorial`.
+The unbeliever will read the :ref:`Tutorials`.
 
 The hacker will join development at the forge_.
 

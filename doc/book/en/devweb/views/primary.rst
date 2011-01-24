@@ -226,8 +226,6 @@ Example of customization and creation
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
-We continue along the basic tutorial :ref:`tuto_blog`.
-
 If you want to change the way a ``BlogEntry`` is displayed, just
 override the method ``cell_call()`` of the view ``primary`` in
 ``BlogDemo/views.py``.
@@ -247,7 +245,7 @@ override the method ``cell_call()`` of the view ``primary`` in
 
 
 The above source code defines a new primary view for
-``BlogEntry``. The `id` class attribute is not repeated there since it
+``BlogEntry``. The `__reid__` class attribute is not repeated there since it
 is inherited through the `primary.PrimaryView` class.
 
 The selector for this view chains the selector of the inherited class

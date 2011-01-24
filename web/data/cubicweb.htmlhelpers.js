@@ -18,9 +18,9 @@ jQuery.extend(cw.htmlhelpers, {
 function baseuri() {
     var uri = document.baseURI;
     if (uri) { // some browsers don't define baseURI
-        return uri;
+        return uri.toLowerCase();
     }
-    return jQuery('base').attr('href');
+    return jQuery('base').attr('href').toLowerCase();
 }
 
 /**

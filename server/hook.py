@@ -212,7 +212,7 @@ The existing categories are:
 
 * ``integrity``, data integrity checking hooks
 
-* ``activeintegrity``, data integrity consistency hooks, that you should *never*
+* ``activeintegrity``, data integrity consistency hooks, that you should **never**
   want to disable
 
 * ``syncsession``, hooks synchronizing existing sessions

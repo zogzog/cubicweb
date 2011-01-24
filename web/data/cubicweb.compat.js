@@ -32,14 +32,15 @@ forEach = cw.utils.deprecatedFunction(
 /**
  * .. function:: cw.utils.deprecatedFunction(msg, function)
  *
- * jQUery flattens arrays returned by the mapping function:
- * >>> y = ['a:b:c', 'd:e']
- * >>> jQuery.map(y, function(y) { return y.split(':');})
- * ["a", "b", "c", "d", "e"]
- *  // where one would expect:
- *  [ ["a", "b", "c"], ["d", "e"] ]
- *  XXX why not the same argument order as $.map and forEach ?
+ * jQUery flattens arrays returned by the mapping function: ::
+ *
+ *   >>> y = ['a:b:c', 'd:e']
+ *   >>> jQuery.map(y, function(y) { return y.split(':');})
+ *   ["a", "b", "c", "d", "e"]
+ *   // where one would expect:
+ *   [ ["a", "b", "c"], ["d", "e"] ]
  */
+ // XXX why not the same argument order as $.map and forEach ?
 map = cw.utils.deprecatedFunction(
     '[3.9] map() is deprecated, use $.map instead',
     function(func, array) {

@@ -283,7 +283,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
  * dictionary, `reqtype` the HTTP request type (get 'GET' or 'POST').
  */
 function loadRemote(url, form, reqtype, sync) {
-    if (!url.startswith(baseuri())) {
+    if (!url.toLowerCase().startswith(baseuri())) {
         url = baseuri() + url;
     }
     if (!sync) {

@@ -1362,6 +1362,9 @@ msgstr "changements appliqués"
 msgid "click here to see created entity"
 msgstr "cliquez ici pour voir l'entité créée"
 
+msgid "click here to see edited entity"
+msgstr "cliquez ici pour voir l'entité modifiée"
+
 msgid "click on the box to cancel the deletion"
 msgstr "cliquez dans la zone d'édition pour annuler la suppression"
 
@@ -3433,13 +3436,9 @@ msgstr "relations"
 msgid "relations deleted"
 msgstr "relations supprimées"
 
-msgctxt "CWAttribute"
+msgctxt "CWRType"
 msgid "relations_object"
-msgstr "contraint par"
-
-msgctxt "CWRelation"
-msgid "relations_object"
-msgstr "contraint par"
+msgstr "relations de"
 
 msgid "relations_object"
 msgstr "relations de"

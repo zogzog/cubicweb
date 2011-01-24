@@ -1,4 +1,4 @@
-.. _RQLChapter
+.. _RQLChapter:
 
 Relation Query Language (RQL)
 =============================

@@ -26,6 +26,7 @@ from cubicweb.utils import json_dumps
 
 class IGeocodableAdapter(EntityAdapter):
     """interface required by geocoding views such as gmap-view"""
+    __needs_bw_compat__ = True
     __regid__ = 'IGeocodable'
     __select__ = implements(IGeocodable, warn=False) # XXX for bw compat, should be abstract
 
