@@ -112,8 +112,8 @@ Here is the code, samples from my cube's `views.py` file:
 .. sourcecode:: python
 
     from cubicweb.selectors import is_instance
-    from cubicweb.web import box
-    from cubicweb.web.views import basetemplates, error
+    from cubicweb.web import component
+    from cubicweb.web.views import error
 
     class FourOhFour(error.FourOhFour):
 	__select__ = error.FourOhFour.__select__ & anonymous_user()
@@ -122,19 +122,19 @@ Here is the code, samples from my cube's `views.py` file:
 	    self.w(u"<h1>%s</h1>" % self._cw._('this resource does not exist'))
 	    self.w(u"<p>%s</p>" % self._cw._('have you tried to login?'))
 
-    class LoginBox(box.BoxTemplate, basetemplates.LogFormView):
+
+    class LoginBox(component.CtxComponent):
 	"""display a box containing links to all startup views"""
 	__regid__ = 'sytweb.loginbox'
-	__select__ = box.BoxTemplate.__select__ & anonymous_user()
+	__select__ = component.CtxComponent.__select__ & anonymous_user()
 
 	title = _('Authenticate yourself')
 	order = 70
 
-	def call(self, **kwargs):
-	    self.w(u'<div class="sideBoxTitle"><span>%s</span></div>' % self.title)
-	    self.w(u'<div class="sideBox"><div class="sideBoxBody">')
-	    self.login_form('loginBox')
-	    self.w(u'</div></div>')
+	def render_body(self, w):
+	    cw = self._cw
+	    form = cw.vreg['forms'].select('logform', cw)
+	    form.render(w=w, table_class='', display_progress_div=False)
 
 The first class provides a new specific implementation of the default page you
 get on 404 error, to display an adapted message to anonymous user.
@@ -147,11 +147,9 @@ get on 404 error, to display an adapted message to anonymous user.
   such case (hence the object won't be selectable)
 
 The second class defines a simple box, that will be displayed by default with
-boxes in the left column, thanks to default `box.BoxTemplate`'selector. The HTML
-is written to match default CubicWeb boxes style. To get the actual login form,
-we inherit from the `LogFormView` view which provides a `login_form` method
-(handling some stuff under the cover for us, hence the multiple inheritance), that
-we simply have to call to get the form's HTML.
+boxes in the left column, thanks to default :class:`component.CtxComponent`
+selector. The HTML is written to match default CubicWeb boxes style. The code
+fetch the actual login form and render it.
 
 
 .. figure:: ../../images/tutos-photowebsite_login-box.png
